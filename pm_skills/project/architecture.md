@@ -18,16 +18,29 @@ src/
   main.js              — RoutePlotter class: app entry point and orchestrator
   config/              — constants, keybindings, help content, tooltips
   core/                — EventBus (pub-sub)
-  models/              — Waypoint, AnimationState, ImageAsset
+  models/              — Waypoint, AnimationState, ImageAsset + GraphNode, GraphEdge, GraphModel (unwired until Phase 2)
   services/            — single-responsibility services (18 modules)
   controllers/         — UIController, SectionController
   components/          — SwatchPicker, Dropdown, Tooltip, ParamTooltip
   handlers/            — InteractionHandler (mouse, keyboard, touch, DnD)
   utils/               — CatmullRom, Easing, focusTrap
-  workers/             — pathWorker (off-thread path calculation)
 styles/                — tokens.css, main.css, swatch-picker.css, dropdown.css, tooltip.css
+specs/                 — archived dot-crowd-navigator material (spec, memory, salvaged tests/src) for Phases 2–4
 tests/                 — Vitest unit tests
 ```
+
+(The former `workers/` layer was deleted 2026-06-18 — it never initialised
+under the old esbuild targets; see the v2 decision-log entry. es2022 targets
+re-legalise workers if ever needed again.)
+
+## v3 direction (founded 2026-08-17)
+
+Layered scene over one master timeline: the Waypoint chain remains the
+"hero route" layer; **flow layers** (GraphModel guide networks + emitters)
+add crowd/particle animation. Everything renders as a pure function of
+(timelineMs, projectState, seed) — the deterministic-timeline mandate —
+via a to-be-extracted **PlayerCore** shared by the app, VideoExporter, and
+HTMLExportService. Phases and rationale: backlog + decision-log 2026-08-17.
 
 ## Key modules
 
@@ -53,8 +66,9 @@ Exceptions: none. This is a hard rule.
 
 ## Dependency policy
 
-- **One runtime dependency: mediabunny.** No new runtime packages
-  without explicit approval.
+- **Two bundled runtime dependencies: mediabunny and jszip** (jszip
+  bundled 2026-08-17, replacing a runtime CDN load). No new runtime
+  packages without explicit approval.
 - Dev dependencies (esbuild, vitest, jsdom) are established.
 
 ## Dev workflow

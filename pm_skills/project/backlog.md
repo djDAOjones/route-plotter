@@ -13,7 +13,7 @@
 - [x] Cherry-pick `GraphNode`/`GraphEdge` + 37 tests from dot-crowd-navigator (left unwired by design until Phase 2); fork spec docs archived to `specs/dot-crowd-navigator/`
 - [x] Fresh-clone build fixed: `package-lock.json` now tracked; esbuild target `chrome58/firefox57/safari11` → `es2022` (was 200+ errors under esbuild 0.27.7; build + 106/106 tests green)
 - [x] Bundle JSZip as an npm dependency (2026-08-17: jszip 3.10.1 pinned, `_loadJSZip()` CDN loader removed from ImageAssetService — offline save/load now works)
-- [ ] Run PM-Skills `adopt.md` pass to reconcile memory with v3 reality (brief/architecture/file-map still describe the v2 repo)
+- [x] Reconcile project memory with v3 reality (2026-08-17: brief, architecture, file-map, trajectory updated — v3 scope + flow layers, deterministic-timeline mandate, graph models, specs/ folder, two-bundled-deps policy, phantom workers/ note removed)
 - [x] Archive dot-crowd-navigator + router-plotter-01 on GitHub — gate paid off: local copy held a never-pushed working graph editor + Phase 2 swarm core, partially destroyed by OneDrive offloading; recovered via git + Windsurf local history, pushed to the fork (see its SALVAGE-NOTE.md), mined into `specs/dot-crowd-navigator/`, then both repos archived (2026-08-17). Four files remain lost (SwarmEngine/SimulationState/DotRenderer/GraphUIController implementations — tests survive); owner may still find them in OneDrive web recycle bin.
 
 **Phase 1 — enabling refactor (deterministic core)**

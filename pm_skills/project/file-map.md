@@ -11,6 +11,9 @@
 - `src/models/Waypoint.js` — Waypoint data model (normalised coords, style, camera, area)
 - `src/models/AnimationState.js` — Playback state (progress, timing, pause tracking)
 - `src/models/ImageAsset.js` — Custom image references (marker, path head)
+- `src/models/GraphNode.js` — Flow-network node (normalised pos, entry/exit type) — unwired until Phase 2
+- `src/models/GraphEdge.js` — Weighted directed edge with control points — unwired until Phase 2
+- `src/models/GraphModel.js` — Node/edge collection: CRUD, referential integrity, adjacency — unwired until Phase 2
 
 ## Services
 
@@ -61,6 +64,10 @@
 - `src/utils/CatmullRom.js` — Catmull-Rom spline interpolation
 - `src/utils/Easing.js` — Easing functions (linear, quad, cubic, etc.)
 - `src/utils/focusTrap.js` — Modal focus trapping for accessibility
+
+## Specs (reference, not live code)
+
+- `specs/dot-crowd-navigator/` — archived fork material: spec docs, the fork's pm_skills project memory, salvaged SwarmEngine/SimulationState test suites (behavioural spec only — tick() API superseded), and recovered graph-editor source for Phase 4 pattern mining. See its README.md.
 
 ## Tests
 

@@ -17,6 +17,17 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Route Plotter v3 founding + dot-crowd salvage (shipped 2026-08-17)
+
+- v3 founding — fresh-history repo `route-plotter` created; router-plotter-02 imported @ v3.1 build 573 and frozen as the v2 line (its Pages URL stays live). See decision-log 2026-08-17 (founding).
+- PM-Skills 4.7.0 — fresh manifest-verified install replacing embedded v2.3.0; v2 project memory ported forward.
+- Graph models landed — GraphNode, GraphEdge, GraphModel + 62 tests cherry-picked/salvaged from the dot-crowd fork (unwired until Phase 2).
+- Toolchain fix — package-lock.json now tracked; esbuild target chrome58/firefox57/safari11 → es2022 (fresh clones were unbuildable under esbuild 0.27.7).
+- JSZip bundled — jszip 3.10.1 as a real dependency; CDN script-injection removed; offline save/load works.
+- Dot-crowd salvage — the fork's never-pushed working state (graph editor + Phase 2 swarm core, partially destroyed by OneDrive offloading) recovered via git + Windsurf local history, pushed to the fork, mined into `specs/dot-crowd-navigator/`; dot-crowd-navigator and router-plotter-01 archived on GitHub. Four implementation files remain lost (their test suites survive). See decision-log 2026-08-17 (salvage) and the fork's SALVAGE-NOTE.md.
+
+Outcome: v3 founded on the mature trunk with the swarm feature specced and its graph data layer already tested in-tree; build + 131 tests green; Phase 0 remaining: adopt.md memory pass.
+
 ## Path glow + casing parity (shipped 2026-06-17)
 
 - Path glow (Next-milestone feature) — an optional soft, per-segment-coloured halo beneath the path casing, surfaced via a new "Path emphasis" fieldset (Path casing + Path glow toggle + intensity slider). Renders in preview, the animated head segment, and the HTML-export player → MP4/WebM/HTML parity; off by default, round-trips through autosave + project save/load + undo/redo. Layered additive underlay computed by the pure `RenderingService.glowLayers()` (unit-tested). See decision-log 2026-06-17.

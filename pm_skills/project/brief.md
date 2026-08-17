@@ -2,20 +2,32 @@
 
 ## What are we building?
 
-Route Plotter — an animated route editor for maps and images. Users drop
-in a background image, click to place waypoints, configure styles and
-timing, and export as MP4, WebM, or a self-contained HTML file.
+Route Plotter v3 — an animated route editor for maps and images. Users
+drop in a background image, click to place waypoints, configure styles
+and timing, and export as MP4, WebM, or a self-contained HTML file.
+
+v3 extends the single narrative route into a **layered scene over one
+master timeline**: the existing waypoint chain stays as the "hero route",
+and new **flow layers** add particle/crowd animation — many dots
+following guide networks (weighted, directed graphs) or the hero route
+itself, with emitter controls for count, release window, onset/speed
+variance, intensity ramp and lifecycle (absorbed from the archived
+dot-crowd-navigator fork; spec in `specs/dot-crowd-navigator/`).
 
 ## Who is it for?
 
-University educators and presentation makers who need animated map or
-image overlays showing routes, processes, or sequences. Primary user:
+University educators, students, and presentation makers who need
+animated map or image overlays showing routes, processes, sequences, or
+flows (people moving across a map, particles in a system). Primary user:
 Gary Priestnall, University of Nottingham (geography/cartography).
 
 ## Platform and deployment
 
-Web app. Single-page, client-side only. No server. Deployed via GitHub
-Pages from `docs/` on `main` branch.
+Web app. Single-page, client-side only. No server. Repo:
+`djDAOjones/route-plotter` (fresh-history v3 line, founded 2026-08-17).
+Deploys via GitHub Pages from `docs/` on `main` — Pages goes live for v3
+at Phase 5; until then the v2 line stays served from
+`djdaojones.github.io/router-plotter-02/`.
 
 ## Core features (v1)
 
@@ -28,9 +40,15 @@ Pages from `docs/` on `main` branch.
 
 ## Constraints
 
-- Pure JavaScript, no frameworks. Single runtime dependency: mediabunny.
+- Pure JavaScript, no frameworks. Two bundled runtime dependencies:
+  mediabunny (video mux) and jszip (project ZIPs). Nothing from CDNs.
 - Canvas 2D rendering.
-- npm + esbuild for bundling, Vitest for testing.
+- **Deterministic timeline (v3 mandate):** the scene is a pure function
+  of (timelineMs, projectState, seed) — no wall-clock or delta-time
+  accumulated state in any renderer. Play/scrub/export share one
+  evaluation path. See decision-log 2026-08-17.
+- npm + esbuild for bundling (target es2022; lockfile committed),
+  Vitest for testing.
 - WCAG 2.2 AAA accessibility.
 - IBM Carbon Design System for UI patterns (implemented, not installed).
 - Okabe-Ito colour-blind safe palette for map data.
