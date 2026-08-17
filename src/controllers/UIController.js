@@ -1,0 +1,2215 @@
+/**
+ * UIController - Manages all UI interactions and updates
+ * Handles waypoint list, editor controls, tabs, and animation controls
+ */
+
+import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT } from '../config/constants.js';
+import { getInlineHelpHTML, getSplashHelpHTML } from '../config/helpContent.js';
+import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
+import { createFocusTrap } from '../utils/focusTrap.js';
+import { VideoExporter } from '../services/VideoExporter.js';
+
+/**
+ * Logarithmic speed curve for perceptually uniform slider control
+ * Maps linear slider position (1-4000) to exponential speed values
+ * This gives fine control at low speeds while allowing high speeds
+ */
+const SPEED_CURVE = {
+  MIN_SLIDER: 1,
+  MAX_SLIDER: 4000,
+  MIN_SPEED: 1,      // px/s at slider minimum
+  MAX_SPEED: 4000,   // px/s at slider maximum
+};
+
+/**
+ * Segment speed slider configuration
+ * Logarithmic scale centered at 1.0x (slider midpoint = default speed)
+ * Symmetric log ranges: left = slow down, right = speed up
+ * 
+ * Range: 0.1x to 10x, center at 1.0x
+ * Left half:  slider 0-500  → 0.1x to 1.0x (slow down)
+ * Right half: slider 500-1000 → 1.0x to 10x (speed up)
+ */
+const SEGMENT_SPEED = {
+  MIN_SPEED: 0.1,    // 0.1x = 10× slower than normal
+  MAX_SPEED: 10.0,   // 10x = 10× faster than normal
+  CENTER: 1.0,       // 1.0x = normal speed (slider midpoint)
+  SLIDER_CENTER: 500,
+  SLIDER_MAX: 1000,
+};
+
+/**
+ * Convert linear slider value to logarithmic speed
+ * Slider is labeled "Duration" so polarity is inverted:
+ * - Left (low value) = short duration = HIGH speed
+ * - Right (high value) = long duration = LOW speed
+ * @param {number} sliderValue - Linear slider position (1-4000)
+ * @returns {number} Speed in px/s with log curve applied
+ */
+function sliderToSpeed(sliderValue) {
+  const { MIN_SLIDER, MAX_SLIDER, MIN_SPEED, MAX_SPEED } = SPEED_CURVE;
+  // Normalize to 0-1 range, then INVERT for duration polarity
+  const normalized = 1 - (sliderValue - MIN_SLIDER) / (MAX_SLIDER - MIN_SLIDER);
+  // Apply exponential curve: speed = min * (max/min)^normalized
+  // This gives logarithmic perception
+  const speed = MIN_SPEED * Math.pow(MAX_SPEED / MIN_SPEED, normalized);
+  return Math.round(speed);
+}
+
+/**
+ * Convert logarithmic speed back to linear slider value
+ * Inverted polarity: high speed = low slider (short duration on left)
+ * @param {number} speed - Speed in px/s
+ * @returns {number} Linear slider position (1-4000)
+ */
+function speedToSlider(speed) {
+  const { MIN_SLIDER, MAX_SLIDER, MIN_SPEED, MAX_SPEED } = SPEED_CURVE;
+  // Clamp speed to valid range
+  const clampedSpeed = Math.max(MIN_SPEED, Math.min(MAX_SPEED, speed));
+  // Reverse the exponential: normalized = log(speed/min) / log(max/min)
+  const normalized = Math.log(clampedSpeed / MIN_SPEED) / Math.log(MAX_SPEED / MIN_SPEED);
+  // Convert back to slider range, then INVERT for duration polarity
+  return Math.round(MIN_SLIDER + (1 - normalized) * (MAX_SLIDER - MIN_SLIDER));
+}
+
+// ============================================================================
+// CONDITIONAL VISIBILITY UTILITIES
+// ============================================================================
+
+/**
+ * Visibility condition registry for conditional UI elements
+ * Maps element IDs to their visibility conditions
+ * 
+ * Usage:
+ * - Register conditions with registerVisibilityCondition()
+ * - Update visibility with updateConditionalVisibility()
+ * - Supports multiple condition types: 'equals', 'notEquals', 'in', 'notIn'
+ * 
+ * @type {Map<string, {element: HTMLElement, condition: Object}>}
+ */
+const visibilityRegistry = new Map();
+
+/**
+ * Register a conditional visibility rule for a UI element
+ * 
+ * @param {string} elementId - ID of the element to show/hide
+ * @param {Object} condition - Visibility condition
+ * @param {string} condition.dependsOn - ID of the element this depends on (e.g., dropdown)
+ * @param {string} condition.type - Condition type: 'equals', 'notEquals', 'in', 'notIn'
+ * @param {*} condition.value - Value(s) to compare against
+ * 
+ * @example
+ * // Show ripple controls when beacon style is 'ripple'
+ * registerVisibilityCondition('ripple-controls', {
+ *   dependsOn: 'editor-beacon-style',
+ *   type: 'equals',
+ *   value: 'ripple'
+ * });
+ */
+function registerVisibilityCondition(elementId, condition) {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    console.warn(`[Visibility] Element not found: ${elementId}`);
+    return;
+  }
+  visibilityRegistry.set(elementId, { element, condition });
+}
+
+/**
+ * Update visibility of all registered elements that depend on a specific control
+ * 
+ * @param {string} dependsOnId - ID of the control that changed
+ * @param {*} currentValue - Current value of the control
+ */
+function updateConditionalVisibility(dependsOnId, currentValue) {
+  for (const [elementId, { element, condition }] of visibilityRegistry) {
+    if (condition.dependsOn !== dependsOnId) continue;
+    
+    let shouldShow = false;
+    switch (condition.type) {
+      case 'equals':
+        shouldShow = currentValue === condition.value;
+        break;
+      case 'notEquals':
+        shouldShow = currentValue !== condition.value;
+        break;
+      case 'in':
+        shouldShow = Array.isArray(condition.value) && condition.value.includes(currentValue);
+        break;
+      case 'notIn':
+        shouldShow = Array.isArray(condition.value) && !condition.value.includes(currentValue);
+        break;
+    }
+    
+    element.style.display = shouldShow ? '' : 'none';
+  }
+}
+
+/**
+ * Initialize visibility for all registered elements based on current control values
+ * Call this on page load and when waypoint selection changes
+ */
+function initializeConditionalVisibility() {
+  // Get unique dependsOn IDs
+  const dependsOnIds = new Set();
+  for (const { condition } of visibilityRegistry.values()) {
+    dependsOnIds.add(condition.dependsOn);
+  }
+  
+  // Update visibility for each dependency
+  for (const dependsOnId of dependsOnIds) {
+    const control = document.getElementById(dependsOnId);
+    if (control) {
+      updateConditionalVisibility(dependsOnId, control.value);
+    }
+  }
+}
+
+/**
+ * UIController - Manages all UI interactions and state
+ * 
+ * ## Responsibilities
+ * - Waypoint list rendering and interaction (selection, renaming, reordering)
+ * - Waypoint editor panel (single waypoint or "all waypoints" mode)
+ * - Animation transport controls (play, pause, seek)
+ * - Tab switching and general settings
+ * 
+ * ## "All Waypoints" Mode
+ * When user selects "All Waypoints" in the list:
+ * - `_allWaypointsSelected` = true
+ * - Editor shows "All Waypoints Settings" title
+ * - Label text control is hidden (labels are per-waypoint)
+ * - Property changes emit 'waypoint:all-change' event
+ * - First change shows warning modal (once per session)
+ * 
+ * ## Performance Considerations
+ * - Waypoint list uses event delegation where possible
+ * - Display indices are pre-calculated by main.js (O(n) once, O(1) lookup)
+ * - Modal elements are cached on init, not queried repeatedly
+ * 
+ * @class
+ */
+export class UIController {
+  /**
+   * @param {Object} elements - DOM element references
+   * @param {EventBus} eventBus - Application event bus for decoupled communication
+   */
+  constructor(elements, eventBus) {
+    this.elements = elements;
+    this.eventBus = eventBus;
+    
+    /** @type {Object|null} Currently selected waypoint (primary selection) */
+    this.selectedWaypoint = null;
+    
+    /** @type {Set<Object>} Set of selected waypoints for multi-select */
+    this.selectedWaypoints = new Set();
+    
+    /** @type {number|null} Last selected waypoint index for shift-click range selection */
+    this._lastSelectedIndex = null;
+    
+    // Trail and playback state for display updates
+    /** @private */
+    this._currentTrailFraction = MOTION.PATH_TRAIL_DEFAULT;
+    /** @private */
+    this._currentPlaybackSpeed = 1;
+    
+    // "All Waypoints" mode state
+    /** @private @type {boolean} Whether "All Waypoints" is selected in list */
+    this._allWaypointsSelected = false;
+    /** @private @type {boolean} Whether warning modal has been shown this session */
+    this._allWaypointsWarningShown = false;
+    /** @private @type {Function|null} Pending change callback while modal is shown */
+    this._pendingAllChange = null;
+    
+    // Double-click rename detection — survives DOM rebuilds by tracking at instance level.
+    // Standard dblclick events break because selectWaypoint rebuilds the DOM between clicks.
+    /** @private @type {number} Timestamp of last waypoint row click */
+    this._renameLastClickTime = 0;
+    /** @private @type {Object|null} Waypoint from last row click */
+    this._renameLastClickWaypoint = null;
+    
+    // Bind methods that are passed as callbacks
+    this.updateWaypointList = this.updateWaypointList.bind(this);
+    this.updateWaypointEditor = this.updateWaypointEditor.bind(this);
+    this.syncAnimationControls = this.syncAnimationControls.bind(this);
+    
+    this.setupEventListeners();
+    this._setupAllWaypointsModal();
+    this._setupCodecModal();
+    this._registerConditionalVisibility();
+  }
+  
+  /**
+   * Register conditional visibility rules for beacon-specific controls
+   * These rules automatically show/hide controls based on dropdown selections
+   * @private
+   */
+  _registerConditionalVisibility() {
+    // Ripple controls: show when beacon style is 'ripple'
+    registerVisibilityCondition('ripple-controls', {
+      dependsOn: 'editor-beacon-style',
+      type: 'equals',
+      value: 'ripple'
+    });
+    
+    // Pulse controls: show when beacon style is 'pulse'
+    registerVisibilityCondition('pulse-controls', {
+      dependsOn: 'editor-beacon-style',
+      type: 'equals',
+      value: 'pulse'
+    });
+  }
+  
+  /**
+   * Setup modal for "All Waypoints" warning.
+   * Caches modal element reference for O(1) access.
+   * @private
+   */
+  _setupAllWaypointsModal() {
+    // Cache modal reference to avoid repeated DOM queries
+    this._allWaypointsModal = document.getElementById('all-waypoints-warning-modal');
+    const confirmBtn = document.getElementById('all-waypoints-confirm');
+    const cancelBtn = document.getElementById('all-waypoints-cancel');
+    
+    if (!this._allWaypointsModal || !confirmBtn || !cancelBtn) return;
+    
+    // MOD-02: Create focus trap for accessibility
+    this._modalFocusTrap = createFocusTrap(this._allWaypointsModal);
+    
+    const closeModal = () => {
+      this._allWaypointsModal.style.display = 'none';
+      this._modalFocusTrap.deactivate();
+    };
+    
+    confirmBtn.addEventListener('click', () => {
+      closeModal();
+      this._allWaypointsWarningShown = true;
+      
+      // Execute the pending change
+      if (this._pendingAllChange) {
+        this._pendingAllChange();
+        this._pendingAllChange = null;
+      }
+    });
+    
+    cancelBtn.addEventListener('click', () => {
+      closeModal();
+      this._pendingAllChange = null;
+    });
+    
+    // Close on backdrop click
+    this._allWaypointsModal.addEventListener('click', (e) => {
+      if (e.target === this._allWaypointsModal) {
+        closeModal();
+        this._pendingAllChange = null;
+      }
+    });
+    
+    // MOD-02: Handle ESC key via focus trap event
+    this._allWaypointsModal.addEventListener('focustrap:escape', () => {
+      closeModal();
+      this._pendingAllChange = null;
+    });
+  }
+  
+  /**
+   * Setup modal for codec-unsupported warning (MP4 → WebM fallback).
+   * Supports two modes:
+   * - "no H.264": only WebM or Cancel
+   * - "resolution too large": MP4 at reduced res, WebM at full res, or Cancel
+   * @private
+   */
+  _setupCodecModal() {
+    this._codecModal = document.getElementById('codec-unsupported-modal');
+    this._codecTitle = document.getElementById('modal-title-codec');
+    this._codecMessage = document.getElementById('codec-modal-message');
+    this._codecMp4Btn = document.getElementById('codec-mp4-reduced');
+    this._codecWebmBtn = document.getElementById('codec-webm');
+    const cancelBtn = document.getElementById('codec-cancel');
+    const closeXBtn = this._codecModal?.querySelector('[data-modal-close]');
+    
+    if (!this._codecModal || !this._codecWebmBtn || !cancelBtn) return;
+    
+    this._codecFocusTrap = createFocusTrap(this._codecModal);
+    
+    const closeModal = () => {
+      this._codecModal.style.display = 'none';
+      this._codecFocusTrap.deactivate();
+    };
+    
+    this._codecWebmBtn.addEventListener('click', () => {
+      closeModal();
+      this.eventBus.emit('video:export-request', 'webm');
+    });
+    
+    this._codecMp4Btn?.addEventListener('click', () => {
+      closeModal();
+      // Apply the reduced resolution stored when modal was configured
+      if (this._codecReducedRes) {
+        this.eventBus.emit('video:resolution-change', {
+          width: this._codecReducedRes.w,
+          height: this._codecReducedRes.h
+        });
+      }
+      this.eventBus.emit('video:export-request', 'mp4');
+    });
+    
+    cancelBtn.addEventListener('click', () => closeModal());
+    closeXBtn?.addEventListener('click', () => closeModal());
+    
+    this._codecModal.addEventListener('click', (e) => {
+      if (e.target === this._codecModal) closeModal();
+    });
+    
+    this._codecModal.addEventListener('focustrap:escape', () => closeModal());
+  }
+  
+  /**
+   * Show the codec-unsupported modal configured for the appropriate scenario.
+   * @param {Object} [opts] - Options for the modal
+   * @param {number} [opts.fullW] - Full export width
+   * @param {number} [opts.fullH] - Full export height
+   * @param {number} [opts.reducedW] - Reduced MP4-compatible width (if available)
+   * @param {number} [opts.reducedH] - Reduced MP4-compatible height (if available)
+   * @private
+   */
+  _showCodecModal(opts) {
+    if (!this._codecModal) return;
+    
+    if (opts?.reducedW && opts?.reducedH) {
+      // Resolution too large — offer MP4 at reduced res or WebM at full res
+      this._codecTitle.textContent = 'MP4 resolution too large';
+      this._codecMessage.textContent =
+        `H.264 encoding does not support ${opts.fullW}\u00d7${opts.fullH} on this device. ` +
+        `You can export MP4 at a reduced resolution, or export as WebM at full resolution.`;
+      this._codecMp4Btn.textContent = `Export MP4 at ${opts.reducedW}\u00d7${opts.reducedH}`;
+      this._codecMp4Btn.style.display = '';
+      this._codecWebmBtn.textContent = `Export WebM at ${opts.fullW}\u00d7${opts.fullH}`;
+      this._codecReducedRes = { w: opts.reducedW, h: opts.reducedH };
+    } else {
+      // No H.264 support at all
+      this._codecTitle.textContent = 'MP4 export unavailable';
+      this._codecMessage.textContent =
+        'Your browser does not support H.264 encoding, which is required for MP4 export. ' +
+        'You can export as WebM instead \u2014 most video players and editors support this format.';
+      this._codecMp4Btn.style.display = 'none';
+      this._codecWebmBtn.textContent = 'Export as WebM';
+      this._codecReducedRes = null;
+    }
+    
+    this._codecModal.style.display = 'flex';
+    this._codecFocusTrap?.activate();
+  }
+  
+  /**
+   * Show warning modal for first "All Waypoints" change.
+   * After first confirmation, subsequent changes execute immediately.
+   * 
+   * @param {Function} changeCallback - Function to execute if confirmed
+   * @returns {boolean} True if change was executed immediately, false if modal shown
+   * @private
+   */
+  _confirmAllWaypointsChange(changeCallback) {
+    // Fast path: warning already shown this session
+    if (this._allWaypointsWarningShown) {
+      changeCallback();
+      return true;
+    }
+    
+    // Show warning modal (uses cached reference)
+    if (this._allWaypointsModal) {
+      this._pendingAllChange = changeCallback;
+      this._allWaypointsModal.style.display = 'flex';
+      // MOD-02: Activate focus trap when modal opens
+      if (this._modalFocusTrap) {
+        this._modalFocusTrap.activate();
+      }
+      return false;
+    }
+    
+    // No modal found, execute anyway (graceful degradation)
+    changeCallback();
+    return true;
+  }
+  
+  /**
+   * Get display index for a waypoint (1-based, major waypoints only)
+   * @param {Object} waypoint - Waypoint to find index for
+   * @returns {number} 1-based display index
+   * @private
+   */
+  _getWaypointDisplayIndex(waypoint) {
+    // This is called from updateWaypointEditor, we need to find the waypoint's index
+    // We'll emit an event to get the waypoints array from main.js
+    // For now, return a placeholder - the actual index will be set by main.js
+    return waypoint._displayIndex || '?';
+  }
+  
+  /**
+   * Check if "All Waypoints" mode is active
+   * @returns {boolean} True if all waypoints mode is selected
+   */
+  isAllWaypointsMode() {
+    return this._allWaypointsSelected;
+  }
+  
+  /**
+   * Switch to the Waypoint Settings tab in the right sidebar.
+   * Called when a waypoint is selected from the list.
+   * Now handled by SectionController via events.
+   * @private
+   * @deprecated Tabs replaced with collapsible sections
+   */
+  _switchToWaypointTab() {
+    // No-op: SectionController handles section state via events
+  }
+  
+  /**
+   * Emit a waypoint property change, handling both single and "all" modes
+   * @param {string} eventName - Event name to emit for single waypoint
+   * @param {string} property - Property name being changed
+   * @param {*} value - New value
+   * @private
+   */
+  _emitWaypointChange(eventName, property, value) {
+    if (this._allWaypointsSelected) {
+      // "All Waypoints" mode - show warning on first change
+      this._confirmAllWaypointsChange(() => {
+        this.eventBus.emit('waypoint:all-change', { property, value });
+      });
+    } else if (this.selectedWaypoint) {
+      // Single waypoint mode
+      this.eventBus.emit(eventName, {
+        waypoint: this.selectedWaypoint,
+        property,
+        value
+      });
+    }
+  }
+  
+  /**
+   * Format trail display showing percentage (1-100% UI range).
+   * Actual trail fraction is 4x the displayed percentage.
+   * @param {number} trailFraction - Trail as fraction of sequence (0-4.0)
+   * @returns {string} Formatted display string
+   * @private
+   */
+  _formatTrailDisplay(trailFraction) {
+    if (trailFraction === 0) return 'Off';
+    // Display as 1-100% even though actual range is 0.04-4.0
+    const displayPercent = (trailFraction / MOTION.PATH_TRAIL_MAX) * 100;
+    return MotionVisibilityService.formatUIValue(displayPercent, '%');
+  }
+  
+  /**
+   * Update trail display with current values.
+   * @private
+   */
+  _updateTrailDisplay() {
+    if (this.elements.pathTrailValue) {
+      this.elements.pathTrailValue.textContent = this._formatTrailDisplay(this._currentTrailFraction);
+    }
+  }
+  
+  /**
+   * Set trail value (for loading saved state).
+   * @param {number} trailFraction - Trail as fraction of sequence (0-1)
+   */
+  setTrailValue(trailFraction) {
+    this._currentTrailFraction = trailFraction;
+    this._updateTrailDisplay();
+  }
+  
+  // ========== TRAIL SLIDER CONVERSION ==========
+  // Uses ^5 power curve for more control in lower range
+  // UI displays 0-100%, actual values are 0-400% of path duration
+  
+  /**
+   * Convert slider value (0-1000) to trail fraction.
+   * 
+   * Uses a ^5 power curve to provide fine-grained control in the lower range
+   * where most useful trail values exist.
+   * 
+   * ## Mapping
+   * - Slider 0 → OFF (trail disabled)
+   * - Slider 500 (50%) → ~3% of max → ~0.16 fraction
+   * - Slider 1000 (100%) → 100% of max → 4.0 fraction
+   * 
+   * ## Why ^5?
+   * Most useful trail values are 1-20% of path duration. The ^5 curve
+   * dedicates ~80% of slider range to this region.
+   * 
+   * @param {number} sliderValue - Slider value (0-1000)
+   * @returns {number} Trail fraction (0 or 0.04-4.0)
+   */
+  sliderToTrailFraction(sliderValue) {
+    if (sliderValue === 0) return 0; // OFF
+    const normalized = (sliderValue - 1) / 999; // 0-1 for slider 1-1000
+    const curved = Math.pow(normalized, 5);     // ^5 power curve
+    return MOTION.PATH_TRAIL_MIN + curved * (MOTION.PATH_TRAIL_MAX - MOTION.PATH_TRAIL_MIN);
+  }
+  
+  /**
+   * Convert trail fraction to slider value (0-1000).
+   * Inverse of sliderToTrailFraction using fifth root.
+   * 
+   * @param {number} trailFraction - Trail fraction (0 or 0.04-4.0)
+   * @returns {number} Slider value (0-1000)
+   */
+  trailFractionToSlider(trailFraction) {
+    if (trailFraction === 0) return 0; // OFF
+    const range = MOTION.PATH_TRAIL_MAX - MOTION.PATH_TRAIL_MIN;
+    const normalized = (trailFraction - MOTION.PATH_TRAIL_MIN) / range;
+    const curved = Math.pow(normalized, 0.2);   // ^(1/5) = fifth root
+    return Math.round(1 + curved * 999);
+  }
+  
+  /**
+   * Set playback speed (for loading saved state).
+   * @param {number} speed - Playback speed multiplier
+   */
+  setPlaybackSpeed(speed) {
+    this._currentPlaybackSpeed = speed;
+    this._updateTrailDisplay();
+  }
+  
+  /**
+   * Set up all UI event listeners
+   */
+  setupEventListeners() {
+    console.debug('🔧 [UIController] Setting up event listeners');
+    // Note: Tab switching removed - now using collapsible sections via SectionController
+    
+    // Background controls
+    this.elements.bgUploadBtn?.addEventListener('click', () => {
+      this.elements.bgUpload.click();
+    });
+    
+    this.elements.bgUpload?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        this.eventBus.emit('background:upload', file);
+      }
+    });
+    
+    // Background tint (log2 scaled for fine control near 0)
+    this.elements.bgOverlay?.addEventListener('input', (e) => {
+      const sliderValue = parseInt(e.target.value);
+      const tintValue = MotionVisibilityService.bipolarSliderToLog2Value(
+        sliderValue,
+        MOTION.TINT_MIN,
+        MOTION.TINT_MAX
+      );
+      this.elements.bgOverlayValue.textContent = MotionVisibilityService.formatUIValue(tintValue);
+      this.eventBus.emit('background:overlay-change', tintValue);
+    });
+    
+    this.elements.bgFitToggle?.addEventListener('click', () => {
+      const currentMode = this.elements.bgFitToggle.dataset.mode;
+      const newMode = currentMode === 'fit' ? 'fill' : 'fit';
+      this.elements.bgFitToggle.dataset.mode = newMode;
+      this.elements.bgFitToggle.textContent = newMode === 'fit' ? 'Fit' : 'Fill';
+      this.eventBus.emit('background:mode-change', newMode);
+    });
+    
+    // Animation controls
+    this.elements.playBtn?.addEventListener('click', () => {
+      this.eventBus.emit('ui:animation:play');
+    });
+    
+    this.elements.pauseBtn?.addEventListener('click', () => {
+      this.eventBus.emit('ui:animation:pause');
+    });
+    
+    this.elements.skipStartBtn?.addEventListener('click', () => {
+      this.eventBus.emit('ui:animation:skip-start');
+    });
+    
+    this.elements.skipEndBtn?.addEventListener('click', () => {
+      this.eventBus.emit('ui:animation:skip-end');
+    });
+    
+    this.elements.timelineSlider?.addEventListener('input', (e) => {
+      const progress = e.target.value / ANIMATION.TIMELINE_RESOLUTION;
+      this.eventBus.emit('ui:animation:seek', progress);
+    });
+    
+    /**
+     * Animation speed slider with feedback loop prevention
+     * Uses multiple checks to distinguish between user input and programmatic updates
+     * to avoid circular event chains when slider value is set by code
+     */
+    let isUpdatingSlider = false;
+    
+    // Helper to handle speed slider input (shared by both sliders)
+    const handleSpeedSliderInput = (e) => {
+      const currentValue = parseInt(e.target.value);
+      
+      // Check if this is a programmatic change
+      if (isUpdatingSlider) {
+        return;
+      }
+      
+      // Apply logarithmic curve for perceptually uniform speed control
+      const speed = sliderToSpeed(currentValue);
+      this.eventBus.emit('animation:speed-change', speed);
+      
+      // Sync the other slider
+      const otherSlider = e.target.id === 'animation-speed' 
+        ? this.elements.animationSpeedRight 
+        : this.elements.animationSpeed;
+      const otherValue = e.target.id === 'animation-speed'
+        ? this.elements.animationSpeedValueRight
+        : this.elements.animationSpeedValue;
+      if (otherSlider) {
+        otherSlider.value = currentValue;
+      }
+    };
+    
+    this.elements.animationSpeed?.addEventListener('input', handleSpeedSliderInput);
+    this.elements.animationSpeedRight?.addEventListener('input', handleSpeedSliderInput);
+    
+    /**
+     * Listen for programmatic slider updates from other parts of the app
+     * Temporarily sets flag to prevent the input event from firing
+     * Rounds speed to nearest step value (5) to prevent snap-back
+     * @param {number} speed - The speed value to set on the slider
+     */
+    this.eventBus.on('ui:slider:update-speed', (speed) => {
+      // Convert speed back to slider position using inverse log curve
+      const sliderValue = speedToSlider(speed);
+      
+      // Set protection and update both sliders
+      isUpdatingSlider = true;
+      if (this.elements.animationSpeed) this.elements.animationSpeed.value = sliderValue;
+      if (this.elements.animationSpeedRight) this.elements.animationSpeedRight.value = sliderValue;
+      
+      // Clear protection after brief delay to ensure queued events are blocked
+      setTimeout(() => { 
+        isUpdatingSlider = false;
+      }, 50);
+    });
+    
+    // Clear button — show confirmation modal (N5-1)
+    this.elements.clearBtn?.addEventListener('click', () => {
+      const modal = document.getElementById('clear-confirm-modal');
+      if (!modal) { this.eventBus.emit('waypoints:clear-all'); return; }
+      modal.style.display = 'flex';
+      const confirmBtn = document.getElementById('clear-confirm');
+      const cancelBtn = document.getElementById('clear-cancel');
+      const close = () => { modal.style.display = 'none'; };
+      const handleConfirm = () => { close(); cleanup(); this.eventBus.emit('waypoints:clear-all'); };
+      const handleCancel = () => { close(); cleanup(); };
+      const cleanup = () => {
+        confirmBtn?.removeEventListener('click', handleConfirm);
+        cancelBtn?.removeEventListener('click', handleCancel);
+      };
+      confirmBtn?.addEventListener('click', handleConfirm);
+      cancelBtn?.addEventListener('click', handleCancel);
+      cancelBtn?.focus();
+    });
+    
+    // Help button
+    this.elements.helpBtn?.addEventListener('click', () => {
+      this.showHelp();
+    });
+    
+    // Export MP4 button — cascading H.264 probe at actual export dimensions
+    this.elements.exportMp4Btn?.addEventListener('click', async () => {
+      const w = parseInt(this.elements.exportResX?.value) || 1920;
+      const h = parseInt(this.elements.exportResY?.value) || 1080;
+      console.log(`🎬 [Export] MP4 probe at ${w}×${h}`);
+      
+      // 1. Probe at actual export dimensions
+      const fullConfig = await VideoExporter._testWebCodecsConfig(
+        w, h, undefined, undefined, 'mp4'
+      );
+      if (fullConfig) {
+        this.eventBus.emit('video:export-request', 'mp4');
+        return;
+      }
+      
+      // 2. H.264 failed at full res — try a reduced resolution.
+      //    Always attempt a fallback before declaring H.264 unsupported,
+      //    since autosaved dimensions from a previous session may exceed
+      //    the codec limit even when H.264 itself is available.
+      const MAX_PIXELS = 9_000_000;
+      const totalPixels = w * h;
+      let rW, rH;
+      if (totalPixels > MAX_PIXELS) {
+        // Scale to fit within H.264 Level 5.1 (~9M pixels),
+        // round to even for 4:2:0 chroma subsampling
+        const scale = Math.sqrt(MAX_PIXELS / totalPixels);
+        rW = Math.floor(w * scale / 2) * 2;
+        rH = Math.floor(h * scale / 2) * 2;
+      } else {
+        // Resolution within pixel budget but probe still failed —
+        // try a safe baseline (1920×1080 or halved, whichever is smaller)
+        rW = Math.min(w, 1920);
+        rH = Math.min(h, 1080);
+        // Round to even
+        rW = Math.floor(rW / 2) * 2;
+        rH = Math.floor(rH / 2) * 2;
+      }
+      
+      console.log(`🎬 [Export] Trying reduced ${rW}×${rH}`);
+      const reducedConfig = await VideoExporter._testWebCodecsConfig(
+        rW, rH, undefined, undefined, 'mp4'
+      );
+      if (reducedConfig) {
+        this._showCodecModal({ fullW: w, fullH: h, reducedW: rW, reducedH: rH });
+        return;
+      }
+      
+      // 3. No H.264 support at any resolution
+      this._showCodecModal();
+    });
+    
+    // Export WebM button
+    this.elements.exportWebmBtn?.addEventListener('click', () => {
+      this.eventBus.emit('video:export-request', 'webm');
+    });
+    
+    // Export HTML button
+    this.elements.exportHtmlBtn?.addEventListener('click', () => {
+      this.eventBus.emit('html:export-request');
+    });
+    
+    // Export frame rate (number input)
+    this.elements.exportFrameRate?.addEventListener('change', (e) => {
+      // Clamp value to valid range
+      let frameRate = parseInt(e.target.value) || 25;
+      frameRate = Math.max(1, Math.min(60, frameRate));
+      e.target.value = frameRate;
+      this.eventBus.emit('video:frame-rate-change', frameRate);
+    });
+    
+    // Export: include background image (unchecked = path only / transparent)
+    this.elements.exportIncludeImage?.addEventListener('change', (e) => {
+      // emits video:layers-change(pathOnly) → main.js sets exportSettings.pathOnly
+      this.eventBus.emit('video:layers-change', !e.target.checked);
+    });
+    
+    // Export: include camera movement (per-waypoint zoom/pan)
+    this.elements.exportIncludeCamera?.addEventListener('change', (e) => {
+      this.eventBus.emit('video:camera-change', e.target.checked);
+    });
+    
+    // Export: include waypoint text labels
+    this.elements.exportIncludeText?.addEventListener('change', (e) => {
+      this.eventBus.emit('video:text-change', e.target.checked);
+    });
+    
+    // Export resolution X
+    this.elements.exportResX?.addEventListener('change', (e) => {
+      let resX = parseInt(e.target.value) || 1920;
+      resX = Math.max(100, Math.min(7680, resX));
+      e.target.value = resX;
+      this.eventBus.emit('video:resolution-change', { width: resX, height: null });
+    });
+    
+    // Export resolution Y
+    this.elements.exportResY?.addEventListener('change', (e) => {
+      let resY = parseInt(e.target.value) || 1080;
+      resY = Math.max(100, Math.min(4320, resY));
+      e.target.value = resY;
+      this.eventBus.emit('video:resolution-change', { width: null, height: resY });
+    });
+    
+    // Aspect ratio preset buttons
+    // Native - use loaded image dimensions
+    this.elements.presetBtnNative?.addEventListener('click', () => {
+      this.eventBus.emit('video:resolution-native');
+    });
+    
+    // 16:9 - 1920x1080 (HD, good for web and Surface Hub)
+    this.elements.presetBtn16_9?.addEventListener('click', () => {
+      this.setExportResolution(1920, 1080);
+    });
+    
+    // 1:1 - 1080x1080 (Square, good for social media)
+    this.elements.presetBtn1_1?.addEventListener('click', () => {
+      this.setExportResolution(1080, 1080);
+    });
+    
+    // 9:16 - 1080x1920 (Portrait, good for mobile/stories)
+    this.elements.presetBtn9_16?.addEventListener('click', () => {
+      this.setExportResolution(1080, 1920);
+    });
+    
+    // Background zoom slider
+    this.elements.backgroundZoom?.addEventListener('input', (e) => {
+      const zoom = parseInt(e.target.value);
+      if (this.elements.backgroundZoomValue) {
+        this.elements.backgroundZoomValue.textContent = `${zoom}%`;
+      }
+      this.eventBus.emit('background:zoom-change', zoom);
+    });
+    
+    // ========== MOTION VISIBILITY CONTROLS ==========
+    
+    // Preview mode toggle
+    this.elements.previewModeBtn?.addEventListener('click', () => {
+      const isPressed = this.elements.previewModeBtn.getAttribute('aria-pressed') === 'true';
+      const newState = !isPressed;
+      this.elements.previewModeBtn.setAttribute('aria-pressed', newState);
+      this.elements.previewModeBtn.textContent = newState ? 'Edit Mode' : 'Preview Mode';
+      this.elements.previewModeBtn.classList.toggle('btn-primary', newState);
+      this.elements.previewModeBtn.classList.toggle('btn-secondary', !newState);
+      this.eventBus.emit('motion:preview-mode-change', newState);
+    });
+    
+    // Path visibility
+    this.elements.pathVisibility?.addEventListener('change', (e) => {
+      this.eventBus.emit('motion:path-visibility-change', e.target.value);
+      // Show/hide trail control based on mode
+      this.updateTrailControlVisibility(e.target.value);
+      // Blur to prevent keyboard shortcuts from changing the dropdown
+      e.target.blur();
+    });
+    
+    // Path trail (0=off, then log scale 1%-100% of sequence)
+    this.elements.pathTrail?.addEventListener('input', (e) => {
+      const sliderValue = parseInt(e.target.value);
+      const trailFraction = this.sliderToTrailFraction(sliderValue);
+      this._currentTrailFraction = trailFraction;
+      this._updateTrailDisplay();
+      this.eventBus.emit('motion:path-trail-change', trailFraction);
+    });
+    
+    // Listen for playback speed changes to update trail display
+    this.eventBus.on('animation:playbackSpeedChange', (speed) => {
+      this._currentPlaybackSpeed = speed;
+      this._updateTrailDisplay();
+    });
+    
+    // Waypoint visibility
+    this.elements.waypointVisibility?.addEventListener('change', (e) => {
+      this.eventBus.emit('motion:waypoint-visibility-change', e.target.value);
+      e.target.blur();
+    });
+    
+    // Background visibility
+    this.elements.backgroundVisibility?.addEventListener('change', (e) => {
+      this.eventBus.emit('motion:background-visibility-change', e.target.value);
+      // Show/hide controls based on mode
+      const spotlightControls = document.getElementById('spotlight-controls');
+      const aovControls = document.getElementById('aov-controls');
+      const mode = e.target.value;
+      const isSpotlight = mode === 'spotlight' || mode === 'spotlight-reveal';
+      const isAOV = mode === 'angle-of-view' || mode === 'angle-of-view-reveal';
+      if (spotlightControls) spotlightControls.style.display = isSpotlight ? 'block' : 'none';
+      if (aovControls) aovControls.style.display = isAOV ? 'block' : 'none';
+      e.target.blur();
+    });
+    
+    // Spotlight size (log2 scale slider)
+    this.elements.revealSize?.addEventListener('input', (e) => {
+      const sliderValue = parseInt(e.target.value);
+      const sizePercent = MotionVisibilityService.sliderToLog2Value(
+        sliderValue,
+        MOTION.SPOTLIGHT_SIZE_MIN,
+        MOTION.SPOTLIGHT_SIZE_MAX
+      );
+      this.elements.revealSizeValue.textContent = MotionVisibilityService.formatUIValue(sizePercent, '%');
+      this.eventBus.emit('motion:reveal-size-change', sizePercent);
+    });
+    
+    // Spotlight feather (log2 scale slider, % of spotlight size)
+    this.elements.revealFeather?.addEventListener('input', (e) => {
+      const sliderValue = parseInt(e.target.value);
+      const featherPercent = MotionVisibilityService.sliderToLog2Value(
+        sliderValue,
+        MOTION.SPOTLIGHT_FEATHER_MIN,
+        MOTION.SPOTLIGHT_FEATHER_MAX
+      );
+      this.elements.revealFeatherValue.textContent = MotionVisibilityService.formatUIValue(featherPercent, '%');
+      this.eventBus.emit('motion:reveal-feather-change', featherPercent);
+    });
+    
+    // Angle of View - angle (tan-based curve for perceptual smoothness)
+    this.elements.aovAngle?.addEventListener('input', (e) => {
+      const sliderValue = parseInt(e.target.value);
+      const angleDegrees = MotionVisibilityService.sliderToAngle(
+        sliderValue,
+        MOTION.AOV_ANGLE_MIN,
+        MOTION.AOV_ANGLE_MAX
+      );
+      this.elements.aovAngleValue.textContent = MotionVisibilityService.formatUIValue(angleDegrees, '°');
+      this.eventBus.emit('motion:aov-angle-change', angleDegrees);
+    });
+    
+    // Angle of View - distance (log2 scale, same as spotlight size)
+    this.elements.aovDistance?.addEventListener('input', (e) => {
+      const sliderValue = parseInt(e.target.value);
+      const distancePercent = MotionVisibilityService.sliderToLog2Value(
+        sliderValue,
+        MOTION.AOV_DISTANCE_MIN,
+        MOTION.AOV_DISTANCE_MAX
+      );
+      this.elements.aovDistanceValue.textContent = MotionVisibilityService.formatUIValue(distancePercent, '%');
+      this.eventBus.emit('motion:aov-distance-change', distancePercent);
+    });
+    
+    // Angle of View - dropoff (LINEAR scale 0-100%, not log2)
+    this.elements.aovDropoff?.addEventListener('input', (e) => {
+      const sliderValue = parseInt(e.target.value);
+      // Linear mapping: slider 0-1000 → value 0-100%
+      const dropoffPercent = (sliderValue / 1000) * MOTION.AOV_DROPOFF_MAX;
+      this.elements.aovDropoffValue.textContent = MotionVisibilityService.formatUIValue(dropoffPercent, '%');
+      this.eventBus.emit('motion:aov-dropoff-change', dropoffPercent);
+    });
+    
+    // Waypoint editor controls
+    this.setupWaypointEditorControls();
+  }
+  
+  /**
+   * Update trail control visibility based on path visibility mode.
+   * Trail only applies to instantaneous (comet) mode.
+   * @param {string} pathVisibility - Current path visibility mode
+   */
+  updateTrailControlVisibility(pathVisibility) {
+    const trailControl = document.getElementById('path-trail-control');
+    if (trailControl) {
+      // Trail only applies to instantaneous mode (comet effect)
+      const showTrail = pathVisibility === 'instantaneous';
+      trailControl.style.opacity = showTrail ? '1' : '0.5';
+      const input = trailControl.querySelector('input');
+      if (input) {
+        input.disabled = !showTrail;
+      }
+    }
+  }
+  
+  /**
+   * Setup waypoint editor controls
+   */
+  setupWaypointEditorControls() {
+    // Marker style - supports "all waypoints" mode
+    this.elements.markerStyle?.addEventListener('change', (e) => {
+      this._emitWaypointChange('waypoint:style-changed', 'markerStyle', e.target.value);
+    });
+    
+    this.elements.dotColor?.addEventListener('input', (e) => {
+      this._emitWaypointChange('waypoint:style-changed', 'dotColor', e.target.value);
+    });
+    
+    this.elements.dotSize?.addEventListener('input', (e) => {
+      const size = parseInt(e.target.value);
+      this.elements.dotSizeValue.textContent = size;
+      this._emitWaypointChange('waypoint:style-changed', 'dotSize', size);
+    });
+    
+    // Segment properties - supports "all waypoints" mode
+    this.elements.segmentColor?.addEventListener('input', (e) => {
+      this._emitWaypointChange('waypoint:path-property-changed', 'segmentColor', e.target.value);
+    });
+    
+    this.elements.segmentWidth?.addEventListener('input', (e) => {
+      const width = parseInt(e.target.value);
+      this.elements.segmentWidthValue.textContent = width;
+      this._emitWaypointChange('waypoint:path-property-changed', 'segmentWidth', width);
+    });
+    
+    this.elements.segmentStyle?.addEventListener('change', (e) => {
+      this._emitWaypointChange('waypoint:path-property-changed', 'segmentStyle', e.target.value);
+    });
+    
+    // Path shape - supports "all waypoints" mode
+    this.elements.pathShape?.addEventListener('change', (e) => {
+      this._emitWaypointChange('waypoint:path-property-changed', 'pathShape', e.target.value);
+    });
+    
+    // Beacon style - supports "all waypoints" mode
+    // Beacon types: none, ripple, glow, pop, grow, pulse
+    // Beacon color is derived from marker color (dotColor)
+    this.elements.editorBeaconStyle?.addEventListener('change', (e) => {
+      this._emitWaypointChange('waypoint:style-changed', 'beaconStyle', e.target.value);
+      // Update conditional visibility for beacon-specific controls (ripple, pulse)
+      updateConditionalVisibility('editor-beacon-style', e.target.value);
+    });
+    
+    // Label controls - label text only for single waypoint (hidden in "all" mode)
+    this.elements.waypointLabel?.addEventListener('input', (e) => {
+      if (this.selectedWaypoint) {
+        this.eventBus.emit('waypoint:style-changed', {
+          waypoint: this.selectedWaypoint,
+          property: 'label',
+          value: e.target.value
+        });
+      }
+    });
+    
+    // Label mode and position - supports "all waypoints" mode
+    this.elements.labelMode?.addEventListener('change', (e) => {
+      this._emitWaypointChange('waypoint:style-changed', 'labelMode', e.target.value);
+    });
+    
+    this.elements.labelPosition?.addEventListener('change', (e) => {
+      this._emitWaypointChange('waypoint:style-changed', 'labelPosition', e.target.value);
+    });
+    
+    // Pause time - power-curve slider (0-30 seconds)
+    // Slider value 0-1000 maps via power curve to 0-30 seconds
+    this.elements.waypointPauseTime?.addEventListener('input', (e) => {
+      const sliderValue = parseInt(e.target.value);
+      const timeSec = this.sliderToPauseTime(sliderValue);
+      const timeMs = timeSec * 1000;
+      
+      // Format display nicely
+      this.elements.waypointPauseTimeValue.textContent = MotionVisibilityService.formatUIValue(timeSec, 's');
+      
+      // Handle "All Waypoints" mode
+      if (this._allWaypointsSelected) {
+        this._confirmAllWaypointsChange(() => {
+          this.eventBus.emit('waypoint:all-change', { property: 'pauseTime', value: timeMs });
+        });
+        return;
+      }
+      
+      if (this.selectedWaypoint) {
+        // Update waypoint properties directly
+        this.selectedWaypoint.pauseTime = timeMs;
+        this.selectedWaypoint.pauseMode = timeSec > 0 ? 'timed' : 'none';
+        
+        console.debug(`⏱️ [UIController] Set waypoint pause: ${timeSec}s (${timeMs}ms), mode: ${this.selectedWaypoint.pauseMode}`);
+        
+        // Emit event to trigger pause marker update and save
+        this.eventBus.emit('waypoint:pause-changed', {
+          waypoint: this.selectedWaypoint,
+          pauseTime: timeMs,
+          pauseMode: this.selectedWaypoint.pauseMode
+        });
+      }
+    });
+    
+    // Segment speed - logarithmic slider (0.1x to 10x)
+    // Slider value 0-1000 maps logarithmically: 0→0.1x, 500→1.0x, 1000→10x
+    this.elements.waypointSegmentSpeed?.addEventListener('input', (e) => {
+      const sliderValue = parseInt(e.target.value);
+      const speedMultiplier = this.sliderToSegmentSpeed(sliderValue);
+      
+      // Format display nicely (speed uses 2 decimal places when < 1 for precision)
+      const displaySpeed = speedMultiplier < 1 ? speedMultiplier.toFixed(2) : MotionVisibilityService.formatUIValue(speedMultiplier);
+      this.elements.waypointSegmentSpeedValue.textContent = `${displaySpeed}x`;
+      
+      // Handle "All Waypoints" mode
+      if (this._allWaypointsSelected) {
+        this._confirmAllWaypointsChange(() => {
+          this.eventBus.emit('waypoint:all-change', { property: 'segmentSpeed', value: speedMultiplier });
+        });
+        return;
+      }
+      
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.segmentSpeed = speedMultiplier;
+        
+        console.debug(`🏃 [UIController] Set segment speed: ${displaySpeed}x`);
+        
+        // Emit event to trigger recalculation
+        this.eventBus.emit('waypoint:speed-changed', {
+          waypoint: this.selectedWaypoint,
+          segmentSpeed: speedMultiplier
+        });
+      }
+    });
+    
+    // Path head controls
+    this.elements.pathHeadStyle?.addEventListener('change', (e) => {
+      this.eventBus.emit('pathhead:style-changed', e.target.value);
+    });
+    
+    this.elements.pathHeadColor?.addEventListener('input', (e) => {
+      this.eventBus.emit('pathhead:color-changed', e.target.value);
+    });
+    
+    this.elements.pathHeadSize?.addEventListener('input', (e) => {
+      const size = parseInt(e.target.value);
+      this.elements.pathHeadSizeValue.textContent = size;
+      this.eventBus.emit('pathhead:size-changed', size);
+    });
+    
+    // ========== AREA HIGHLIGHT CONTROLS ==========
+    
+    // Shape dropdown — toggles sub-control visibility and updates model
+    this.elements.areaShape?.addEventListener('change', (e) => {
+      const shape = e.target.value;
+      this._updateAreaSubControls(shape);
+      
+      if (this.selectedWaypoint) {
+        const ah = this.selectedWaypoint.areaHighlight;
+        ah.shape = shape;
+        ah.enabled = shape !== 'none';
+        // Default center to waypoint position for new shapes
+        if (ah.enabled && ah.centerX === 0.5 && ah.centerY === 0.5) {
+          ah.centerX = this.selectedWaypoint.imgX;
+          ah.centerY = this.selectedWaypoint.imgY;
+        }
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Circle radius slider (0-1000 → CIRCLE_RADIUS_MIN to CIRCLE_RADIUS_MAX)
+    this.elements.areaCircleRadius?.addEventListener('input', (e) => {
+      const normalized = parseInt(e.target.value) / 1000;
+      const radius = AREA_HIGHLIGHT.CIRCLE_RADIUS_MIN + normalized * (AREA_HIGHLIGHT.CIRCLE_RADIUS_MAX - AREA_HIGHLIGHT.CIRCLE_RADIUS_MIN);
+      this.elements.areaCircleRadiusValue.textContent = `${Math.round(radius * 100)}%`;
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.radius = radius;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Rectangle width slider (0-1000 → RECT_SIZE_MIN to RECT_SIZE_MAX)
+    this.elements.areaRectWidth?.addEventListener('input', (e) => {
+      const normalized = parseInt(e.target.value) / 1000;
+      const width = AREA_HIGHLIGHT.RECT_SIZE_MIN + normalized * (AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN);
+      this.elements.areaRectWidthValue.textContent = `${Math.round(width * 100)}%`;
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.width = width;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Rectangle height slider (0-1000 → RECT_SIZE_MIN to RECT_SIZE_MAX)
+    this.elements.areaRectHeight?.addEventListener('input', (e) => {
+      const normalized = parseInt(e.target.value) / 1000;
+      const height = AREA_HIGHLIGHT.RECT_SIZE_MIN + normalized * (AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN);
+      this.elements.areaRectHeightValue.textContent = `${Math.round(height * 100)}%`;
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.height = height;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Fill colour (swatch picker writes to hidden input)
+    this.elements.areaFillColor?.addEventListener('input', (e) => {
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.fillColor = e.target.value;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Fill opacity slider (0-100 → 0-1)
+    this.elements.areaFillOpacity?.addEventListener('input', (e) => {
+      const pct = parseInt(e.target.value);
+      this.elements.areaFillOpacityValue.textContent = `${pct}%`;
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.fillOpacity = pct / 100;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Border colour (swatch picker writes to hidden input)
+    this.elements.areaBorderColor?.addEventListener('input', (e) => {
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.borderColor = e.target.value;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Border style dropdown
+    this.elements.areaBorderStyle?.addEventListener('change', (e) => {
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.borderStyle = e.target.value;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Border width slider
+    this.elements.areaBorderWidth?.addEventListener('input', (e) => {
+      const width = parseInt(e.target.value);
+      this.elements.areaBorderWidthValue.textContent = `${width}px`;
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.borderWidth = width;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Visibility dropdown
+    this.elements.areaVisibility?.addEventListener('change', (e) => {
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.visibility = e.target.value;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Fade in slider (0-10000ms)
+    this.elements.areaFadeIn?.addEventListener('input', (e) => {
+      const ms = parseInt(e.target.value);
+      this.elements.areaFadeInValue.textContent = `${(ms / 1000).toFixed(1)}s`;
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.fadeInMs = ms;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Fade out slider (0-10000ms)
+    this.elements.areaFadeOut?.addEventListener('input', (e) => {
+      const ms = parseInt(e.target.value);
+      this.elements.areaFadeOutValue.textContent = `${(ms / 1000).toFixed(1)}s`;
+      if (this.selectedWaypoint) {
+        this.selectedWaypoint.areaHighlight.fadeOutMs = ms;
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Draw Area button (enters polygon draw mode)
+    this.elements.areaDrawBtn?.addEventListener('click', () => {
+      if (this.selectedWaypoint) {
+        this.eventBus.emit('area:draw-start', { waypoint: this.selectedWaypoint });
+      }
+    });
+    
+    // Delete Area button
+    this.elements.areaDeleteBtn?.addEventListener('click', () => {
+      if (this.selectedWaypoint) {
+        const ah = this.selectedWaypoint.areaHighlight;
+        ah.enabled = false;
+        ah.shape = 'none';
+        ah.points = [];
+        this.elements.areaShape.value = 'none';
+        this._updateAreaSubControls('none');
+        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+      }
+    });
+  }
+  
+  /**
+   * Update waypoint list UI
+   * 
+   * ## Structure
+   * 1. "All Waypoints" item (distinct styling, always at top)
+   * 2. Individual waypoint items (renamable, draggable, deletable)
+   * 
+   * ## Features
+   * - Double-click waypoint name to rename
+   * - Drag handle for reordering
+   * - Delete button (×) for removal
+   * - Click to select (updates editor panel)
+   * 
+   * ## Performance
+   * - O(n) where n = major waypoints
+   * - Uses pre-calculated _displayIndex from main.js
+   * - Event listeners attached per-item (not delegation, for drag/drop support)
+   * 
+   * @param {Array<Waypoint>} waypoints - Array of Waypoint objects
+   */
+  updateWaypointList(waypoints) {
+    if (!this.elements.waypointList) return;
+    
+    // Set ARIA listbox role for proper screen reader semantics
+    this.elements.waypointList.setAttribute('role', 'listbox');
+    this.elements.waypointList.setAttribute('aria-label', 'Waypoints');
+    this.elements.waypointList.setAttribute('aria-multiselectable', 'true');
+    
+    this.elements.waypointList.innerHTML = '';
+    
+    // Filter to major waypoints only (O(n) single pass)
+    const majorWaypoints = waypoints.filter(wp => wp.isMajor);
+    
+    // When no waypoints exist, show empty state message
+    if (majorWaypoints.length === 0) {
+      this.elements.waypointList.innerHTML = `
+        <div class="waypoint-list-empty" role="status" aria-live="polite">
+          <p>No waypoints yet</p>
+          <p class="hint">Click on the map to add waypoints</p>
+        </div>
+      `;
+      this._allWaypointsSelected = false;
+      return;
+    }
+    
+    // Add "Select All Waypoints" item at top
+    // Uses a real <button> inside <li> for proper keyboard semantics
+    const allItem = document.createElement('li');
+    allItem.className = 'waypoint-item waypoint-item-all';
+    if (this._allWaypointsSelected) {
+      allItem.classList.add('selected');
+      allItem.classList.add('is-selected');
+    }
+    
+    // Row button - receives focus and handles selection
+    const allRowBtn = document.createElement('button');
+    allRowBtn.type = 'button';
+    allRowBtn.className = 'waypoint-row';
+    allRowBtn.setAttribute('aria-selected', this._allWaypointsSelected ? 'true' : 'false');
+    
+    const allLabel = document.createElement('span');
+    allLabel.className = 'waypoint-title';
+    allLabel.textContent = 'Select All Waypoints';
+    
+    allRowBtn.appendChild(allLabel);
+    allItem.appendChild(allRowBtn);
+    
+    // Click handler for select all
+    const handleSelectAll = (e) => {
+      e.stopPropagation();
+      this._allWaypointsSelected = true;
+      this.selectedWaypoint = null;
+      this.selectedWaypoints.clear(); // Clear multi-select
+      this._lastSelectedIndex = null;
+      this.eventBus.emit('waypoint:all-selected');
+      this.updateWaypointList(waypoints);
+      this.updateWaypointEditor(null, true); // true = all mode
+      this._switchToWaypointTab(); // Switch to waypoint settings tab
+    };
+    
+    // Button click handles both mouse and keyboard (Enter/Space)
+    allRowBtn.addEventListener('click', handleSelectAll);
+    
+    this.elements.waypointList.appendChild(allItem);
+    
+    // Add Waypoint button - keyboard-accessible way to add waypoints (AAA)
+    const addItem = document.createElement('li');
+    addItem.className = 'waypoint-item waypoint-item-add';
+    
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'waypoint-row waypoint-add-btn';
+    addBtn.innerHTML = '<span class="waypoint-add-icon" aria-hidden="true">+</span><span>Add Waypoint</span>';
+    addBtn.setAttribute('aria-label', 'Add new waypoint at center of map');
+    
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.eventBus.emit('waypoint:add-at-center');
+    });
+    
+    addItem.appendChild(addBtn);
+    this.elements.waypointList.appendChild(addItem);
+    
+    // Add individual waypoint items (first waypoint at top, natural order)
+    // Each item is a <li> with a <button> row for proper keyboard semantics
+    majorWaypoints.forEach((waypoint, index) => {
+      const item = document.createElement('li');
+      item.className = 'waypoint-item';
+      item.draggable = true; // Enable drag and drop
+      // Check if waypoint is in multi-select set OR is the primary selection
+      // OR if "All Waypoints" is selected (show tint on all)
+      const isSelected = this._allWaypointsSelected ||
+        this.selectedWaypoints.has(waypoint) || 
+        (waypoint === this.selectedWaypoint);
+      if (isSelected) {
+        item.classList.add('selected');
+        item.classList.add('is-selected');
+      }
+      
+      // Row button - receives focus and handles selection
+      const rowBtn = document.createElement('button');
+      rowBtn.type = 'button';
+      rowBtn.className = 'waypoint-row';
+      rowBtn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+      
+      // Colour dot — shows waypoint's marker colour for quick recognition (N6-1)
+      const colorDot = document.createElement('span');
+      colorDot.className = 'waypoint-color-dot'
+        + (waypoint.dotColor === 'transparent' ? ' is-none' : '');
+      colorDot.setAttribute('aria-hidden', 'true');
+      colorDot.style.backgroundColor = waypoint.dotColor === 'transparent'
+        ? '#fff' : (waypoint.dotColor || '');
+      
+      // Drag handle (inside button, aria-hidden)
+      const handle = document.createElement('span');
+      handle.className = 'waypoint-handle';
+      handle.setAttribute('aria-hidden', 'true');
+      handle.textContent = '≡';
+      
+      // Waypoint title — name is independent from canvas label (N6-3)
+      const defaultName = `Waypoint ${index + 1}`;
+      const displayName = waypoint.name || defaultName;
+      const title = document.createElement('span');
+      title.className = 'waypoint-title';
+      title.textContent = displayName;
+      
+      rowBtn.appendChild(colorDot);
+      rowBtn.appendChild(handle);
+      rowBtn.appendChild(title);
+      
+      // Move up/down buttons - keyboard alternative to drag reorder (AAA requirement)
+      const moveContainer = document.createElement('span');
+      moveContainer.className = 'waypoint-move-btns';
+      
+      const moveUpBtn = document.createElement('button');
+      moveUpBtn.type = 'button';
+      moveUpBtn.className = 'waypoint-move-btn';
+      moveUpBtn.innerHTML = '&#x25B2;'; // ▲
+      moveUpBtn.setAttribute('aria-label', `Move ${waypoint.name || defaultName} up`);
+      moveUpBtn.disabled = index === 0;
+      
+      const moveDownBtn = document.createElement('button');
+      moveDownBtn.type = 'button';
+      moveDownBtn.className = 'waypoint-move-btn';
+      moveDownBtn.innerHTML = '&#x25BC;'; // ▼
+      moveDownBtn.setAttribute('aria-label', `Move ${waypoint.name || defaultName} down`);
+      moveDownBtn.disabled = index === majorWaypoints.length - 1;
+      
+      moveContainer.appendChild(moveUpBtn);
+      moveContainer.appendChild(moveDownBtn);
+      
+      // Delete button - separate from row button, has own focus ring
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'waypoint-delete';
+      delBtn.textContent = '×';
+      delBtn.setAttribute('aria-label', `Delete ${waypoint.name || defaultName}`);
+      
+      item.appendChild(rowBtn);
+      item.appendChild(moveContainer);
+      item.appendChild(delBtn);
+      
+      // Selection handler - supports shift-click and cmd/ctrl-click
+      const selectWaypoint = (e) => {
+        this._allWaypointsSelected = false;
+        
+        const isShiftClick = e.shiftKey;
+        const isMultiClick = e.metaKey || e.ctrlKey;
+        
+        if (isShiftClick && this._lastSelectedIndex !== null) {
+          // Shift-click: select range
+          const start = Math.min(this._lastSelectedIndex, index);
+          const end = Math.max(this._lastSelectedIndex, index);
+          for (let i = start; i <= end; i++) {
+            this.selectedWaypoints.add(majorWaypoints[i]);
+          }
+          this.selectedWaypoint = waypoint;
+          this.eventBus.emit('waypoint:multi-selected', {
+            waypoints: Array.from(this.selectedWaypoints),
+            primary: waypoint
+          });
+        } else if (isMultiClick) {
+          // Cmd/Ctrl-click: toggle
+          if (this.selectedWaypoints.has(waypoint)) {
+            this.selectedWaypoints.delete(waypoint);
+            if (this.selectedWaypoint === waypoint) {
+              this.selectedWaypoint = this.selectedWaypoints.size > 0 
+                ? Array.from(this.selectedWaypoints)[0] 
+                : null;
+            }
+          } else {
+            this.selectedWaypoints.add(waypoint);
+            this.selectedWaypoint = waypoint;
+          }
+          this._lastSelectedIndex = index;
+          
+          if (this.selectedWaypoints.size > 1) {
+            this.eventBus.emit('waypoint:multi-selected', {
+              waypoints: Array.from(this.selectedWaypoints),
+              primary: this.selectedWaypoint
+            });
+          } else if (this.selectedWaypoints.size === 1) {
+            this.eventBus.emit('waypoint:selected', this.selectedWaypoint);
+          } else {
+            this.eventBus.emit('waypoint:deselected');
+          }
+        } else {
+          // Normal click: single select
+          this.selectedWaypoints.clear();
+          this.selectedWaypoints.add(waypoint);
+          this.selectedWaypoint = waypoint;
+          this._lastSelectedIndex = index;
+          this.eventBus.emit('waypoint:selected', waypoint);
+        }
+        
+        this._switchToWaypointTab();
+        this.updateWaypointList(majorWaypoints);
+      };
+      
+      // Inline rename — replaces title span with a text input.
+      // Triggered by F2 (desktop convention) or double-click (Nielsen N7: flexibility).
+      // Enter/blur commits, Escape cancels. Focus returns to row button after.
+      const startInlineRename = () => {
+        // Find the current title span in the DOM (may be a freshly rebuilt element)
+        const currentTitle = item.querySelector('.waypoint-title');
+        if (!currentTitle) return;
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'waypoint-rename-input';
+        input.value = waypoint.name || '';
+        input.placeholder = defaultName;
+        input.setAttribute('aria-label', `Rename ${displayName}`);
+        
+        currentTitle.replaceWith(input);
+        input.focus();
+        input.select();
+        
+        const commit = () => {
+          const trimmed = input.value.trim();
+          waypoint.name = trimmed; // Empty string = revert to default display
+          waypoint._autoNamed = false; // Manual rename breaks auto-name link to label
+          // Restore title span
+          const newTitle = document.createElement('span');
+          newTitle.className = 'waypoint-title';
+          newTitle.textContent = trimmed || defaultName;
+          input.replaceWith(newTitle);
+          this.eventBus.emit('waypoint:name-changed', { waypoint, name: trimmed });
+          // Update aria-labels to reflect new name
+          const newDisplay = trimmed || defaultName;
+          moveUpBtn.setAttribute('aria-label', `Move ${newDisplay} up`);
+          moveDownBtn.setAttribute('aria-label', `Move ${newDisplay} down`);
+          delBtn.setAttribute('aria-label', `Delete ${newDisplay}`);
+          requestAnimationFrame(() => rowBtn.focus());
+        };
+        
+        const cancel = () => {
+          const restoreTitle = document.createElement('span');
+          restoreTitle.className = 'waypoint-title';
+          restoreTitle.textContent = waypoint.name || defaultName;
+          input.replaceWith(restoreTitle);
+          requestAnimationFrame(() => rowBtn.focus());
+        };
+        
+        input.addEventListener('keydown', (ke) => {
+          if (ke.key === 'Enter') { ke.preventDefault(); commit(); }
+          if (ke.key === 'Escape') { ke.preventDefault(); cancel(); }
+          ke.stopPropagation(); // Don't trigger global shortcuts while renaming
+        });
+        input.addEventListener('blur', commit, { once: true });
+      };
+      
+      // Row button click — selects waypoint, and detects double-click for rename.
+      // Standard dblclick events break because selectWaypoint rebuilds the DOM
+      // (innerHTML=''), so the element is destroyed before the browser fires dblclick.
+      // Instead, we track click timing at the instance level which survives rebuilds.
+      rowBtn.addEventListener('click', (e) => {
+        const now = Date.now();
+        const isDblClick = (this._renameLastClickWaypoint === waypoint) &&
+                           (now - this._renameLastClickTime < 400);
+        
+        if (isDblClick) {
+          // Double-click detected — select then rename
+          this._renameLastClickWaypoint = null;
+          this._renameLastClickTime = 0;
+          selectWaypoint(e);
+          // Defer rename to next frame so the rebuilt DOM is ready
+          requestAnimationFrame(() => {
+            // Find the freshly rebuilt item for this waypoint
+            const items = this.elements.waypointList.querySelectorAll('.waypoint-item');
+            for (const li of items) {
+              const idx = li.dataset.originalIndex;
+              if (idx !== undefined && majorWaypoints[parseInt(idx)] === waypoint) {
+                // Call startInlineRename in the context of the new item
+                const newTitle = li.querySelector('.waypoint-title');
+                const newRowBtn = li.querySelector('.waypoint-row');
+                if (!newTitle || !newRowBtn) break;
+                
+                const renameInput = document.createElement('input');
+                renameInput.type = 'text';
+                renameInput.className = 'waypoint-rename-input';
+                renameInput.value = waypoint.name || '';
+                renameInput.placeholder = defaultName;
+                renameInput.setAttribute('aria-label', `Rename ${waypoint.name || defaultName}`);
+                
+                newTitle.replaceWith(renameInput);
+                renameInput.focus();
+                renameInput.select();
+                
+                const doCommit = () => {
+                  const trimmed = renameInput.value.trim();
+                  waypoint.name = trimmed;
+                  waypoint._autoNamed = false;
+                  const restored = document.createElement('span');
+                  restored.className = 'waypoint-title';
+                  restored.textContent = trimmed || defaultName;
+                  renameInput.replaceWith(restored);
+                  this.eventBus.emit('waypoint:name-changed', { waypoint, name: trimmed });
+                  requestAnimationFrame(() => newRowBtn.focus());
+                };
+                const doCancel = () => {
+                  const restored = document.createElement('span');
+                  restored.className = 'waypoint-title';
+                  restored.textContent = waypoint.name || defaultName;
+                  renameInput.replaceWith(restored);
+                  requestAnimationFrame(() => newRowBtn.focus());
+                };
+                renameInput.addEventListener('keydown', (ke) => {
+                  if (ke.key === 'Enter') { ke.preventDefault(); doCommit(); }
+                  if (ke.key === 'Escape') { ke.preventDefault(); doCancel(); }
+                  ke.stopPropagation();
+                });
+                renameInput.addEventListener('blur', doCommit, { once: true });
+                break;
+              }
+            }
+          });
+        } else {
+          // Single click — normal selection
+          this._renameLastClickWaypoint = waypoint;
+          this._renameLastClickTime = now;
+          selectWaypoint(e);
+        }
+      });
+      
+      // F2 to rename (common desktop pattern)
+      rowBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'F2') {
+          e.preventDefault();
+          selectWaypoint(e);
+          startInlineRename();
+        }
+      });
+      
+      // Delete button
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.eventBus.emit('waypoint:delete', waypoint);
+      });
+      
+      // Move up button - reorder waypoint
+      moveUpBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (index > 0) {
+          const newOrder = [...majorWaypoints];
+          [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+          this.eventBus.emit('waypoints:reordered', newOrder);
+          this.announce(`${waypoint.name || defaultName} moved up`);
+        }
+      });
+      
+      // Move down button - reorder waypoint
+      moveDownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (index < majorWaypoints.length - 1) {
+          const newOrder = [...majorWaypoints];
+          [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+          this.eventBus.emit('waypoints:reordered', newOrder);
+          this.announce(`${waypoint.name || defaultName} moved down`);
+        }
+      });
+      
+      // Drag and drop handlers
+      item.addEventListener('dragstart', (e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', index.toString());
+        item.classList.add('dragging');
+      });
+      
+      item.addEventListener('dragend', (e) => {
+        item.classList.remove('dragging');
+      });
+      
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        const dragging = this.elements.waypointList.querySelector('.waypoint-item.dragging');
+        if (dragging && dragging !== item) {
+          const rect = item.getBoundingClientRect();
+          const midpoint = rect.top + rect.height / 2;
+          
+          if (e.clientY < midpoint) {
+            item.parentNode.insertBefore(dragging, item);
+          } else {
+            item.parentNode.insertBefore(dragging, item.nextSibling);
+          }
+        }
+      });
+      
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        // Emit reorder event with new order
+        const items = Array.from(this.elements.waypointList.querySelectorAll('.waypoint-item'));
+        const newOrder = items.map(el => {
+          return majorWaypoints[parseInt(el.dataset.originalIndex)];
+        }).filter(wp => wp); // Filter out undefined
+        this.eventBus.emit('waypoints:reordered', newOrder);
+      });
+      
+      // Store original index for reordering
+      item.dataset.originalIndex = index;
+      
+      this.elements.waypointList.appendChild(item);
+      
+      // Focus the row button if this is the primary selected waypoint (for keyboard navigation).
+      // Skip when an input/textarea/select has focus — avoids stealing focus during typing (e.g. label text).
+      if (waypoint === this.selectedWaypoint && !this._allWaypointsSelected && this.selectedWaypoints.size <= 1) {
+        const active = document.activeElement;
+        const isEditing = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
+        if (!isEditing) {
+          requestAnimationFrame(() => rowBtn.focus());
+        }
+      }
+    });
+  }
+  
+  /**
+   * Update waypoint editor panel with selected waypoint data.
+   * 
+   * ## Modes
+   * - **Single waypoint**: Shows waypoint name in title, populates all controls
+   * - **Multiple waypoints**: Shows "N Waypoints Selected", hides label text control
+   * - **All waypoints**: Shows "All Waypoints Settings", hides label text control
+   * - **No selection**: Hides editor, shows placeholder message
+   * 
+   * ## Title Format
+   * - Single: "[Waypoint Name] Settings" or "Waypoint N Settings"
+   * - Multiple: "N Waypoints Selected"
+   * - All: "All Waypoints"
+   * - None: "Waypoint Settings"
+   * 
+   * @param {Waypoint|null} waypoint - Selected waypoint (primary), or null
+   * @param {boolean} [allMode=false] - If true, show "All Waypoints" mode
+   * @param {Array<Waypoint>} [multiSelect=null] - Array of selected waypoints for multi-select mode
+   */
+  updateWaypointEditor(waypoint, allMode = false, multiSelect = null) {
+    this.selectedWaypoint = waypoint;
+    this._allWaypointsSelected = allMode;
+    
+    // Determine if we're in multi-select mode
+    const isMultiSelect = multiSelect && multiSelect.length > 1;
+    
+    // N1-1: Update sidebar subtitle with selection context
+    const subtitle = document.getElementById('sidebar-subtitle');
+    if (subtitle) {
+      if (allMode) {
+        subtitle.textContent = 'All waypoints';
+      } else if (isMultiSelect) {
+        subtitle.textContent = `${multiSelect.length} waypoints selected`;
+      } else if (waypoint) {
+        subtitle.textContent = waypoint.name || waypoint.label || '';
+      } else {
+        subtitle.textContent = 'No waypoint selected';
+      }
+    }
+    
+    // Note: Section visibility is handled by SectionController which listens to
+    // the same waypoint:selected/deselected events that trigger this method.
+    // We don't emit events here to avoid infinite loops.
+    
+    if (!waypoint && !allMode && !isMultiSelect) {
+      // No waypoint selected - controls will be disabled by SectionController
+      return;
+    }
+    
+    // Hide label text control in "all" or multi-select mode (can't edit individual labels)
+    const labelTextControl = this.elements.waypointLabel?.closest('label');
+    if (labelTextControl) {
+      labelTextControl.style.display = (allMode || isMultiSelect) ? 'none' : 'block';
+    }
+    
+    // In "all" or multi-select mode, don't populate with specific values
+    if (allMode || isMultiSelect) {
+      // Clear/reset controls to show they affect multiple waypoints
+      if (this.elements.waypointLabel) {
+        this.elements.waypointLabel.value = '';
+      }
+      // Initialize conditional visibility based on current dropdown values
+      // This ensures ripple/pulse controls show/hide correctly in "All Waypoints" mode
+      initializeConditionalVisibility();
+      return;
+    }
+    
+    // Update controls with waypoint values
+    if (this.elements.markerStyle) {
+      this.elements.markerStyle.value = waypoint.markerStyle || 'dot';
+    }
+    
+    if (this.elements.dotColor) {
+      this.elements.dotColor.value = waypoint.dotColor || RENDERING.DEFAULT_PATH_COLOR;
+    }
+    
+    if (this.elements.dotSize) {
+      this.elements.dotSize.value = waypoint.dotSize || 8;
+      this.elements.dotSizeValue.textContent = waypoint.dotSize || 8;
+    }
+    
+    if (this.elements.segmentColor) {
+      this.elements.segmentColor.value = waypoint.segmentColor || RENDERING.DEFAULT_PATH_COLOR;
+    }
+    
+    if (this.elements.segmentWidth) {
+      this.elements.segmentWidth.value = waypoint.segmentWidth || 3;
+      this.elements.segmentWidthValue.textContent = waypoint.segmentWidth || 3;
+    }
+    
+    if (this.elements.segmentStyle) {
+      this.elements.segmentStyle.value = waypoint.segmentStyle || 'solid';
+    }
+    
+    if (this.elements.pathShape) {
+      this.elements.pathShape.value = waypoint.pathShape || 'line';
+    }
+    
+    if (this.elements.editorBeaconStyle) {
+      this.elements.editorBeaconStyle.value = waypoint.beaconStyle || 'none';
+      // Update conditional visibility for beacon-specific controls
+      updateConditionalVisibility('editor-beacon-style', waypoint.beaconStyle || 'none');
+    }
+    
+    // Update ripple-specific controls
+    if (this.elements.rippleThickness) {
+      const thickness = waypoint.rippleThickness || 2;
+      this.elements.rippleThickness.value = thickness;
+      if (this.elements.rippleThicknessValue) {
+        this.elements.rippleThicknessValue.textContent = `${thickness}px`;
+      }
+    }
+    
+    if (this.elements.rippleMaxScale) {
+      const maxScale = waypoint.rippleMaxScale || 1000;
+      this.elements.rippleMaxScale.value = maxScale;
+      if (this.elements.rippleMaxScaleValue) {
+        this.elements.rippleMaxScaleValue.textContent = `${maxScale}%`;
+      }
+    }
+    
+    if (this.elements.rippleWait) {
+      this.elements.rippleWait.checked = waypoint.rippleWait !== false; // Default to true
+    }
+    
+    if (this.elements.waypointLabel) {
+      this.elements.waypointLabel.value = waypoint.label || '';
+    }
+    
+    if (this.elements.labelMode) {
+      this.elements.labelMode.value = waypoint.labelMode || 'off';
+    }
+    
+    if (this.elements.labelPosition) {
+      this.elements.labelPosition.value = waypoint.labelPosition || 'auto';
+    }
+    
+    if (this.elements.waypointPauseTime) {
+      const pauseSeconds = (waypoint.pauseTime || 0) / 1000;
+      // Convert seconds to slider value using logarithmic scale
+      this.elements.waypointPauseTime.value = this.pauseTimeToSlider(pauseSeconds);
+      // Format display nicely
+      this.elements.waypointPauseTimeValue.textContent = MotionVisibilityService.formatUIValue(pauseSeconds, 's');
+    }
+    
+    // Update segment speed slider
+    if (this.elements.waypointSegmentSpeed) {
+      const speed = waypoint.segmentSpeed || 1.0;
+      this.elements.waypointSegmentSpeed.value = this.segmentSpeedToSlider(speed);
+      const displaySpeed = speed < 1 ? speed.toFixed(2) : MotionVisibilityService.formatUIValue(speed);
+      this.elements.waypointSegmentSpeedValue.textContent = `${displaySpeed}x`;
+    }
+    
+    // Update pause control visibility
+    const pauseControl = this.elements.pauseTimeControl;
+    if (pauseControl) {
+      pauseControl.style.display = waypoint.isMajor ? 'block' : 'none';
+    }
+    
+    // Segment speed is keyframed on majors only: minor waypoints are geometry
+    // (they shape the path) and never carry their own leg timing, so the
+    // control is hidden for them. Mirrors the pause control above and the
+    // major-leg timing model. See decision-log: major-leg keyframing.
+    const speedControl = this.elements.segmentSpeedControl;
+    if (speedControl) {
+      speedControl.style.display = waypoint.isMajor ? 'block' : 'none';
+    }
+    
+    // ========== AREA HIGHLIGHT CONTROLS ==========
+    this._syncAreaHighlightControls(waypoint);
+  }
+  
+  /**
+   * Sync all area highlight controls with the selected waypoint's areaHighlight state
+   * Called from updateWaypointEditor when a waypoint is selected
+   * 
+   * @private
+   * @param {Object} waypoint - Selected waypoint
+   */
+  _syncAreaHighlightControls(waypoint) {
+    if (!waypoint) return;
+    const ah = waypoint.areaHighlight;
+    
+    // Shape dropdown
+    if (this.elements.areaShape) {
+      this.elements.areaShape.value = ah.shape || 'none';
+    }
+    
+    // Circle radius slider (reverse map from value to 0-1000)
+    if (this.elements.areaCircleRadius) {
+      const range = AREA_HIGHLIGHT.CIRCLE_RADIUS_MAX - AREA_HIGHLIGHT.CIRCLE_RADIUS_MIN;
+      const sliderVal = Math.round(((ah.radius - AREA_HIGHLIGHT.CIRCLE_RADIUS_MIN) / range) * 1000);
+      this.elements.areaCircleRadius.value = Math.max(0, Math.min(1000, sliderVal));
+      if (this.elements.areaCircleRadiusValue) {
+        this.elements.areaCircleRadiusValue.textContent = `${Math.round(ah.radius * 100)}%`;
+      }
+    }
+    
+    // Rectangle width/height sliders
+    if (this.elements.areaRectWidth) {
+      const range = AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN;
+      this.elements.areaRectWidth.value = Math.round(((ah.width - AREA_HIGHLIGHT.RECT_SIZE_MIN) / range) * 1000);
+      if (this.elements.areaRectWidthValue) {
+        this.elements.areaRectWidthValue.textContent = `${Math.round(ah.width * 100)}%`;
+      }
+    }
+    if (this.elements.areaRectHeight) {
+      const range = AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN;
+      this.elements.areaRectHeight.value = Math.round(((ah.height - AREA_HIGHLIGHT.RECT_SIZE_MIN) / range) * 1000);
+      if (this.elements.areaRectHeightValue) {
+        this.elements.areaRectHeightValue.textContent = `${Math.round(ah.height * 100)}%`;
+      }
+    }
+    
+    // Fill colour + opacity
+    if (this.elements.areaFillColor) {
+      this.elements.areaFillColor.value = ah.fillColor || AREA_HIGHLIGHT.FILL_COLOR_DEFAULT;
+    }
+    if (this.elements.areaFillOpacity) {
+      const pct = Math.round((ah.fillOpacity ?? AREA_HIGHLIGHT.FILL_OPACITY_DEFAULT) * 100);
+      this.elements.areaFillOpacity.value = pct;
+      if (this.elements.areaFillOpacityValue) {
+        this.elements.areaFillOpacityValue.textContent = `${pct}%`;
+      }
+    }
+    
+    // Border colour, style, width
+    if (this.elements.areaBorderColor) {
+      this.elements.areaBorderColor.value = ah.borderColor || AREA_HIGHLIGHT.BORDER_COLOR_DEFAULT;
+    }
+    if (this.elements.areaBorderStyle) {
+      this.elements.areaBorderStyle.value = ah.borderStyle || AREA_HIGHLIGHT.BORDER_STYLE_DEFAULT;
+    }
+    if (this.elements.areaBorderWidth) {
+      this.elements.areaBorderWidth.value = ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT;
+      if (this.elements.areaBorderWidthValue) {
+        this.elements.areaBorderWidthValue.textContent = `${ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT}px`;
+      }
+    }
+    
+    // Visibility
+    if (this.elements.areaVisibility) {
+      this.elements.areaVisibility.value = ah.visibility || AREA_HIGHLIGHT.VISIBILITY_DEFAULT;
+    }
+    
+    // Fade sliders
+    if (this.elements.areaFadeIn) {
+      this.elements.areaFadeIn.value = ah.fadeInMs ?? AREA_HIGHLIGHT.FADE_IN_DEFAULT;
+      if (this.elements.areaFadeInValue) {
+        this.elements.areaFadeInValue.textContent = `${((ah.fadeInMs ?? AREA_HIGHLIGHT.FADE_IN_DEFAULT) / 1000).toFixed(1)}s`;
+      }
+    }
+    if (this.elements.areaFadeOut) {
+      this.elements.areaFadeOut.value = ah.fadeOutMs ?? AREA_HIGHLIGHT.FADE_OUT_DEFAULT;
+      if (this.elements.areaFadeOutValue) {
+        this.elements.areaFadeOutValue.textContent = `${((ah.fadeOutMs ?? AREA_HIGHLIGHT.FADE_OUT_DEFAULT) / 1000).toFixed(1)}s`;
+      }
+    }
+    
+    // Request swatch picker refresh for area colours (handled by main.js)
+    this.eventBus.emit('ui:refresh-swatches', { targets: ['#area-fill-color', '#area-border-color'] });
+    
+    // Toggle sub-control visibility based on shape
+    this._updateAreaSubControls(ah.shape || 'none');
+  }
+  
+  /**
+   * Toggle visibility of area highlight sub-controls based on selected shape
+   * Shows/hides circle, rectangle, polygon, fill, border, visibility, and delete controls
+   * 
+   * @private
+   * @param {string} shape - Shape type: 'none', 'circle', 'rectangle', 'polygon'
+   */
+  _updateAreaSubControls(shape) {
+    const isActive = shape !== 'none';
+    const isCircle = shape === 'circle';
+    const isRect = shape === 'rectangle';
+    const isPoly = shape === 'polygon';
+    
+    // Shape-specific geometry controls
+    if (this.elements.areaCircleControls) this.elements.areaCircleControls.style.display = isCircle ? '' : 'none';
+    if (this.elements.areaRectControls) this.elements.areaRectControls.style.display = isRect ? '' : 'none';
+    if (this.elements.areaDrawControls) this.elements.areaDrawControls.style.display = isPoly ? '' : 'none';
+    
+    // Shared controls (fill, border, visibility, delete) — visible when any shape is active
+    if (this.elements.areaFillControls) this.elements.areaFillControls.style.display = isActive ? '' : 'none';
+    if (this.elements.areaBorderControls) this.elements.areaBorderControls.style.display = isActive ? '' : 'none';
+    if (this.elements.areaVisibilityControls) this.elements.areaVisibilityControls.style.display = isActive ? '' : 'none';
+    if (this.elements.areaDeleteControls) this.elements.areaDeleteControls.style.display = isActive ? '' : 'none';
+  }
+  
+  /**
+   * Sync animation controls with animation state
+   */
+  syncAnimationControls(state) {
+    // Toggle play/pause button visibility
+    if (state.isPlaying) {
+      if (this.elements.playBtn) this.elements.playBtn.style.display = 'none';
+      if (this.elements.pauseBtn) this.elements.pauseBtn.style.display = 'inline-block';
+    } else {
+      if (this.elements.playBtn) this.elements.playBtn.style.display = 'inline-block';
+      if (this.elements.pauseBtn) this.elements.pauseBtn.style.display = 'none';
+    }
+    
+    // Update timeline
+    if (this.elements.timelineSlider && !state.isDraggingTimeline) {
+      this.elements.timelineSlider.value = Math.round(state.progress * ANIMATION.TIMELINE_RESOLUTION);
+    }
+    
+    // Update time display
+    this.updateTimeDisplay(state.currentTime, state.duration);
+  }
+  
+  /**
+   * Update time display
+   */
+  updateTimeDisplay(currentTime, duration) {
+    const formatTime = (ms) => {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
+    
+    if (this.elements.currentTime) {
+      this.elements.currentTime.textContent = formatTime(currentTime);
+    }
+    if (this.elements.totalTime) {
+      this.elements.totalTime.textContent = formatTime(duration);
+    }
+  }
+  
+  /**
+   * Show help/splash screen
+   * Populates help content from centralized source
+   */
+  showHelp() {
+    if (this.elements.splash) {
+      // Populate help content from centralized source
+      const helpContainer = document.getElementById('splash-help');
+      if (helpContainer) {
+        helpContainer.innerHTML = getSplashHelpHTML();
+      }
+      this.elements.splash.style.display = 'flex';
+    }
+  }
+  
+  /**
+   * Hide help/splash screen
+   */
+  hideHelp() {
+    if (this.elements.splash) {
+      this.elements.splash.style.display = 'none';
+    }
+  }
+  
+  /**
+   * Make an announcement for screen readers
+   */
+  announce(message) {
+    if (this.elements.announcer) {
+      this.elements.announcer.textContent = message;
+    }
+  }
+  
+  /**
+   * Set export resolution and update UI inputs
+   * @param {number} width - Export width in pixels
+   * @param {number} height - Export height in pixels
+   */
+  setExportResolution(width, height) {
+    if (this.elements.exportResX) {
+      this.elements.exportResX.value = width;
+    }
+    if (this.elements.exportResY) {
+      this.elements.exportResY.value = height;
+    }
+    this.eventBus.emit('video:resolution-change', { width, height });
+  }
+  
+  /**
+   * Convert slider value (0-1000) to pause time in seconds (0-30)
+   * Uses power curve for better control at low values
+   * @param {number} sliderValue - Slider position 0-1000
+   * @returns {number} Time in seconds 0-30
+   */
+  sliderToPauseTime(sliderValue) {
+    if (sliderValue <= 0) return 0;
+    // Power curve: slider 0-1000 maps to 0-30 seconds
+    const maxSlider = 1000;
+    const maxTime = 30;
+    const normalized = sliderValue / maxSlider;
+    // Use power curve for smoother feel: time = maxTime * (normalized ^ 2.5)
+    // This gives more precision at low values
+    return maxTime * Math.pow(normalized, 2.5);
+  }
+  
+  /**
+   * Convert pause time in seconds to slider value (0-1000)
+   * Inverse of sliderToPauseTime
+   * @param {number} timeSec - Time in seconds 0-30
+   * @returns {number} Slider position 0-1000
+   */
+  pauseTimeToSlider(timeSec) {
+    if (timeSec <= 0) return 0;
+    const maxSlider = 1000;
+    const maxTime = 30;
+    // Inverse of power curve
+    const normalized = Math.pow(timeSec / maxTime, 1 / 2.5);
+    return Math.round(normalized * maxSlider);
+  }
+  
+  /**
+   * Convert slider value (0-1000) to segment speed multiplier
+   * Uses symmetric logarithmic scale centered at 1.0x (slider value 500)
+   * - Slider 0 → MIN_SPEED (0.1x)
+   * - Slider 500 → 1.0x (normal)
+   * - Slider 1000 → MAX_SPEED (10x)
+   * 
+   * @param {number} sliderValue - Slider position 0-1000
+   * @returns {number} Speed multiplier (0.1 to 10)
+   */
+  sliderToSegmentSpeed(sliderValue) {
+    const { MIN_SPEED, MAX_SPEED, CENTER, SLIDER_CENTER, SLIDER_MAX } = SEGMENT_SPEED;
+    
+    if (sliderValue <= SLIDER_CENTER) {
+      // Lower half: logarithmic from MIN_SPEED to CENTER
+      // normalized: 0 at slider=0, 1 at slider=500
+      const normalized = sliderValue / SLIDER_CENTER;
+      // Log interpolation: MIN_SPEED * (CENTER/MIN_SPEED)^normalized
+      return MIN_SPEED * Math.pow(CENTER / MIN_SPEED, normalized);
+    } else {
+      // Upper half: logarithmic from CENTER to MAX_SPEED
+      // normalized: 0 at slider=500, 1 at slider=1000
+      const normalized = (sliderValue - SLIDER_CENTER) / (SLIDER_MAX - SLIDER_CENTER);
+      // Log interpolation: CENTER * (MAX_SPEED/CENTER)^normalized
+      return CENTER * Math.pow(MAX_SPEED / CENTER, normalized);
+    }
+  }
+  
+  /**
+   * Convert segment speed multiplier to slider value (0-1000)
+   * Inverse of sliderToSegmentSpeed - handles symmetric log scale
+   * 
+   * @param {number} speed - Speed multiplier (0.1 to 10)
+   * @returns {number} Slider position 0-1000
+   */
+  segmentSpeedToSlider(speed) {
+    const { MIN_SPEED, MAX_SPEED, CENTER, SLIDER_CENTER, SLIDER_MAX } = SEGMENT_SPEED;
+    
+    // Clamp speed to valid range
+    const clampedSpeed = Math.max(MIN_SPEED, Math.min(MAX_SPEED, speed));
+    
+    if (clampedSpeed <= CENTER) {
+      // Lower half: inverse log from MIN_SPEED to CENTER
+      // normalized = log(speed/MIN_SPEED) / log(CENTER/MIN_SPEED)
+      const normalized = Math.log(clampedSpeed / MIN_SPEED) / Math.log(CENTER / MIN_SPEED);
+      return Math.round(normalized * SLIDER_CENTER);
+    } else {
+      // Upper half: inverse log from CENTER to MAX_SPEED
+      // normalized = log(speed/CENTER) / log(MAX_SPEED/CENTER)
+      const normalized = Math.log(clampedSpeed / CENTER) / Math.log(MAX_SPEED / CENTER);
+      return Math.round(SLIDER_CENTER + normalized * (SLIDER_MAX - SLIDER_CENTER));
+    }
+  }
+  
+  /**
+   * Get HTML for getting started instructions
+   * 
+   * Displayed in the waypoint list area when no waypoints exist.
+   * Provides quick reference for basic controls and shortcuts.
+   * 
+   * Uses centralized help content from helpContent.js for consistency.
+   * 
+   * @returns {string} HTML string for instructions
+   */
+  getGettingStartedHTML() {
+    return getInlineHelpHTML();
+  }
+}

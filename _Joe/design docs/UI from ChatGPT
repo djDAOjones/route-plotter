@@ -1,0 +1,217 @@
+from pathlib import Path
+md_path = Path("/mnt/data/route_plotter_v3_1_327_checklist_status_next_todo.md")
+
+content = """# Route Plotter v3.1.327 — Checklist status + next UX To‑Do (WCAG AAA intent + Carbon‑aligned, relative units)
+
+Scope: this is an update against **“Route Plotter v3.1.256 — Comprehensive UI To‑Do”** based on the latest screenshot you provided (v3.1.327) + the live demo.  
+Note: anything marked “code‑verify” can’t be confirmed from screenshots alone (needs CSS/DOM check).
+
+---
+
+## 1) What’s clearly improved since v3.1.256 (✅ done)
+
+### Layout & structure
+- [x] **Duration moved** to the right sidebar area above Waypoints (high visibility, good placement).
+- [x] “Global Settings” order is now **Background → Animation → Export**.
+- [x] Background section now contains **Tint + Zoom + Upload** (matches the plan).
+- [x] Animation section is named **Animation**, and contains **Marker Mode + Path Mode + Background Mode** (plus new “view” controls).
+- [x] Export contains **Width/Height + Presets + Frame rate + Included**.
+- [x] **Wait Time** has been moved to the bottom of the Marker section.
+- [x] **Auto‑Position** sits at the bottom of the Text section (good “last step” control).
+- [x] **Head colour controls removed** (head is now a single treatment; fewer user decisions).
+
+### Visual system
+- [x] Overall **black text on light UI** approach is consistent (good for AAA intent).
+- [x] Subtle per‑section tints are now present (Marker/Text/Path/Camera).
+- [x] Sidebars appear free of accidental **horizontal scrolling**.
+- [x] Canvas now prioritises **show the full image** with surrounding whitespace (no cropping).
+
+---
+
+## 2) Items that look “partly done” (🟨 needs polish)
+
+### Section tint implementation
+- [ ] **(PARTIAL)** Tint is applied to the section background, but the **inner rounded “card” stays white**.  
+  *Impact:* feels like “panel inside panel”, increases visual clutter.
+- [ ] **(PARTIAL)** Section headers (“MARKER”, “TEXT”, “PATH”, “CAMERA”) are still largely **neutral grey** rather than a slightly stronger version of each section tint.
+
+### Controls & density
+- [ ] **(PARTIAL)** Colour swatches are more consistent, but still take more space than needed and lack a clear **keyboard focus state** (code‑verify).
+- [ ] **(PARTIAL)** Slider rows are more consistent, but value presentation is inconsistent across sections (some show units nicely, others not).
+
+### Header / top bar
+- [ ] **(PARTIAL)** Header looks cleaner, but the **Edit/Preview switch** still reads slightly “off” in height/inner geometry relative to adjacent buttons.
+- [ ] **(PARTIAL)** Undo/redo button heights still look *slightly* inconsistent vs the other buttons (depends on browser zoom; code‑verify).
+
+---
+
+## 3) Items that appear not implemented or have regressed (❌)
+
+- [ ] Colour swatches **in two rows of four** (still visually reads like a long single row; on smaller widths this will get tight).
+- [ ] The “three bottom sections must all be grey” intent is only half‑met:
+  - headers are grey,
+  - but bodies are a mixed **grey container + white inner card** (still looks busy).
+- [ ] Camera section no longer matches the earlier “Zoom transition switch fidelity” plan (scope changed; see below).
+
+---
+
+## 4) Scope changes to note (camera section)
+
+Camera in v3.1.327 is now extremely minimal (essentially “Selected Zooms”).  
+That’s not “wrong”, but it means the earlier checklist items about the zoom transition switch are now **obsolete**.
+
+- [ ] Decide whether Camera is:
+  1) intentionally minimal for now (**keep**)  
+  2) or should re‑introduce the planned controls (**restore**) with proper Carbon switch sizing
+
+If you keep it minimal: mark those earlier camera‑switch tasks as **deprecated** rather than “not done”.
+
+---
+
+# 5) Recommended next To‑Do (explicit + implementable)
+
+## A) Make the tints feel intentional (reduce “panel inside panel”)
+
+### A1. Use “flat tinted section” instead of “tint + inner white card”
+- [ ] Remove the inner white rounded card for each tinted section (Marker/Text/Path/Camera).  
+  **Target:** controls sit directly on the tinted background.
+- [ ] Keep only one border: the section’s outer boundary.
+  - Border: `1px` equivalent → `0.0625rem`
+  - Border colour: `#D8D8D8`
+  - Radius: `0.5rem` (or `0.375rem` if you want sharper Carbon feel)
+
+### A2. Darken the section header strip slightly (text stays black)
+Keep text black. Only the header background shifts.
+
+Use these body tints (observed from screenshot samples) and header tints (recommended):
+- [ ] Marker body: `#F2F7FC` → Marker header: `#D8DFE6`
+- [ ] Text body: `#F2FBF5` → Text header: `#DCEEE2`
+- [ ] Path body: `#FFF9E8` → Path header: `#EFE4C0`
+- [ ] Camera body: `#E9E3ED` → Camera header: `#D8D0E0`
+
+**Rule:** header tint should be ~10–15% darker than body tint, never dark enough to require white text.
+
+---
+
+## B) Colour swatches: smaller, tighter, and keyboard‑safe
+
+### B1. Compact grid and consistent hit targets
+- [ ] Render swatches as a **2×4 grid** (always), with gap `0.5rem`.
+- [ ] Swatch size: `2.25rem` square (meets touch target intent when combined with spacing).
+- [ ] No default border on unselected swatches.
+- [ ] Selected swatch:
+  - Outline: `0.125rem` solid `#0F0F0F`
+  - Offset: `0.125rem` (so it doesn’t shrink the fill)
+
+### B2. Focus ring (AAA intent; code requirement)
+- [ ] Add `:focus-visible` ring on swatch buttons:
+  - Outer: `0.1875rem` `#0F62FE`
+  - Inner: `0.125rem` `#FFFFFF`
+  - Total ring should sit *outside* the swatch box (avoid layout shift).
+
+---
+
+## C) Header / top bar clean-up
+
+### C1. Button row padding + rhythm
+- [ ] Add more breathing room above/below buttons:
+  - Header vertical padding: `0.75rem` (target)
+  - Button height: `2.25rem` (target)
+- [ ] Ensure **every** header control matches the same height:
+  - Save/Open/Examples/Export Video/Export HTML/Help/Clear
+  - Undo/redo squares
+  - Edit/Preview switch container
+
+### C2. Edit/Preview switch geometry (the “still not right” issue)
+- [ ] Treat the switch as a Carbon‑like toggle:
+  - Track height: `1.25rem`
+  - Track radius: `999rem`
+  - Thumb diameter: `1.0rem`
+  - Thumb inset: `0.125rem`
+- [ ] Ensure the **outer grey pill** around the switch is the same height as buttons (≈`2.25rem`) and the toggle sits centred inside it.
+
+### C3. Reduce header lines / dividers
+- [ ] Remove faint vertical separators between button groups unless they convey state.  
+  Use spacing instead:
+  - Group gap: `0.75rem`
+  - Within‑group gap: `0.5rem`
+
+---
+
+## D) Export section alignment (current “odd placement” issue)
+
+### D1. Presets + frame rate baseline alignment
+- [ ] Put **Presets** and **Frame Rate** on a consistent grid:
+  - Two‑column layout:
+    - left column label (fixed width)
+    - right column controls (flex)
+- [ ] Preset buttons:
+  - Height: `2.25rem`
+  - Min width: `3.25rem`
+  - Same radius and border as other buttons
+- [ ] Frame rate input + “fps” suffix:
+  - Make “fps” a suffix chip (same height as input) rather than floating text.
+
+### D2. Units: treat “px” like “fps”
+- [ ] Width/Height: input + “px” suffix chip with:
+  - Background: `#FBFBFB`
+  - Border: `#D8D8D8`
+  - Text: `#3A3A3A`
+
+---
+
+## E) Global Settings sections (Background / Animation / Export) — make them feel like one family
+
+Right now they’re *close*, but still visually mixed.
+
+- [ ] Set all three section containers to the same neutral tint:
+  - Container background: `#F4F4F4`
+  - Header strip: `#E5E5E5`
+- [ ] Internal controls sit on white only where necessary (inputs), not as a big inner card.
+
+---
+
+## F) Canvas + whitespace (keep the “full image always visible” behaviour)
+
+- [ ] Lock canvas to “contain” behaviour (never crop):
+  - CSS: `object-fit: contain` equivalent for images, or canvas draw with contain math.
+- [ ] Keep the large whitespace region, but consider a **soft boundary** so users understand it’s “safe empty space”:
+  - a single 1px border `#D8D8D8` around the canvas region OR
+  - a very subtle background `#FBFBFB` behind the canvas only (not the whole page).
+
+---
+
+## G) New items to add (not in the original v3.1.256 checklist)
+
+### G1. Duration duplication
+- [ ] Decide whether Duration should exist in:
+  - right sidebar only (recommended), or
+  - both right sidebar and Animation section (avoid duplication unless one is a “quick control”).
+
+### G2. Waypoint list density for long routes
+You’ve got 15 waypoints now; this will grow.
+- [ ] Add a “compact mode” toggle (row height down by ~15–20%).
+- [ ] Add optional “scroll to waypoint on map” affordance (icon/button per row) (later).
+
+### G3. Extreme duration formatting
+- [ ] When Duration exceeds a threshold, show as `mm:ss` or `h:mm:ss` in the UI label (value can remain seconds internally).
+
+---
+
+# 6) Quick critique (v3.1.327)
+
+What’s working:
+- The overall direction is strong: calmer header, better hierarchy, cleaner sidebars, tints are subtle, map behaviour is back to “full image”.
+
+What still makes it feel “not quite Carbon”:
+- Too many nested rounded rectangles and borders (panel inside panel).
+- Slight height inconsistencies (switch + undo/redo vs buttons).
+- Export layout lacks a clear grid baseline (presets + frame rate).
+
+If you do only *one* change next:
+- **Remove the inner white cards inside the tinted sections** and make each section a single, flat tinted panel with inputs sitting directly on it. That will instantly cut visual noise.
+
+"""
+md_path.write_text(content, encoding="utf-8")
+str(md_path)
+

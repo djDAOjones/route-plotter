@@ -1,0 +1,83 @@
+/* Tooltip Component Styles
+   WCAG AAA compliant: 7:1 contrast, reduced motion support
+   Uses CSS custom properties for scalability
+*/
+
+.tooltip {
+  position: fixed;
+  z-index: 10000;
+  max-width: 20rem;
+  padding: var(--space-2) var(--space-3);
+  background: var(--ui-05);
+  color: var(--text-04);
+  font-size: var(--text-sm);
+  line-height: var(--line-base);
+  border-radius: var(--radius-2);
+  box-shadow: var(--elev-2);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(0.25rem);
+  transition: 
+    opacity var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.tooltip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Position-based arrow indicators */
+.tooltip[data-position="top"]::after,
+.tooltip[data-position="bottom"]::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 0.375rem solid transparent;
+}
+
+.tooltip[data-position="top"]::after {
+  bottom: -0.75rem;
+  border-top-color: var(--ui-05);
+  border-bottom: none;
+}
+
+.tooltip[data-position="bottom"]::after {
+  top: -0.375rem;
+  border-bottom-color: var(--ui-05);
+  border-top: none;
+}
+
+.tooltip[data-position="left"]::after,
+.tooltip[data-position="right"]::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0.375rem solid transparent;
+}
+
+.tooltip[data-position="left"]::after {
+  right: -0.75rem;
+  border-left-color: var(--ui-05);
+  border-right: none;
+}
+
+.tooltip[data-position="right"]::after {
+  left: -0.375rem;
+  border-right-color: var(--ui-05);
+  border-left: none;
+}
+
+/* Reduced motion: instant show/hide */
+@media (prefers-reduced-motion: reduce) {
+  .tooltip {
+    transition: opacity var(--motion-fast) var(--ease-out);
+    transform: none;
+  }
+  
+  .tooltip.is-visible {
+    transform: none;
+  }
+}

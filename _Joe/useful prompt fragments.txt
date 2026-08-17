@@ -1,0 +1,28 @@
+Please clarify anything needed
+
+ensure this is done in a way that maintains the computationally efficient, well documented, and modular approach that adheres to IBM carbon, WCAG AAA, and Nielsen normal 10 heuristics for UX.
+
+
+
+can you ensure only optimal recent changes are kept, and that any recent unnecessary bloat is omitted. can this all be done in a way that maintains the computationally efficient, well documented, and modular approach
+
+
+
+verify this is done in a way that maintains the computationally efficient, well documented, and modular approach
+
+
+Can you verify the recent changes have been done in a way that maintains the computationally efficient, well documented, and modular approach
+
+
+What solution for this would maintains the computationally efficient, well documented, and modular approach
+
+--
+
+Approach constraints:
+- preserve computational efficiency
+- preserve modularity
+- document any non-obvious logic or public API changes where that materially improves maintainability
+- avoid redundant comments
+- keep UX aligned with IBM Carbon patterns where relevant
+- avoid accessibility regressions and consider WCAG AAA aspirations
+- avoid usability regressions and consider Nielsen’s heuristics

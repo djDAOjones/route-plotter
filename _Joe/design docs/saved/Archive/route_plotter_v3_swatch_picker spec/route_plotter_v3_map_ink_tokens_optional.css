@@ -1,0 +1,9 @@
+/* Optional: Map neutral inks (recommended)
+   Merge into route_plotter_v3_tokens.css under :root if desired.
+*/
+:root{
+  --map-ink:#111111;
+  --map-ink-soft:#525252;
+  --map-mid:#6f6f6f;
+  --map-paper:#ffffff;
+}

@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# Build outputs
+dist/
+build/
+# docs/ - NOT ignored (needed for GitHub Pages)
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+*.tmp
+temp/
+tmp/
+
+# Logs
+logs/
+*.log
+
+# OS files
+Thumbs.db
+
+# Archive folders
+Obsolete/

@@ -1,0 +1,29 @@
+# Build output (duplicates src/ + styles/ + index.html)
+docs/
+
+# Personal dev notes, design docs, helper scripts
+_Joe/*
+
+# Allow Cascade to read the required agent dev guide only
+!_Joe/dev notes/
+_Joe/dev notes/*
+!_Joe/dev notes/needs consolidating and deleting/
+_Joe/dev notes/needs consolidating and deleting/*
+!_Joe/dev notes/needs consolidating and deleting/dev guide.md
+
+# Binary assets — no code value
+images/
+examples/
+
+# Standard exclusions
+node_modules/
+dist/
+.git/
+
+# Binary file types (belt-and-suspenders)
+*.png
+*.jpg
+*.jpeg
+*.zip
+*.mp4
+*.webm

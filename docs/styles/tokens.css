@@ -1,0 +1,374 @@
+/* Route Plotter v3 — Design Tokens (UoN UI + Okabe–Ito Map) — AAA-first
+   Purpose:
+   - UI uses UoN palette through Carbon-style semantic roles
+   - Map/canvas data series use Okabe–Ito ONLY
+   - Defaults are tuned for WCAG AAA text contrast and strong non-text affordances
+
+   Load this BEFORE component CSS.
+*/
+
+:root {
+  /* =========================
+     UoN palette (source colours)
+     ========================= */
+  --uon-blue: #003A65;        /* primary button fill per spec v3.1.241 */
+  --uon-nottingham-blue: #10263B;
+
+  --uon-nottingham-blue-80: #405162;
+  --uon-nottingham-blue-60: #707D89;
+  --uon-nottingham-blue-40: #9FA8B1;
+  --uon-nottingham-blue-20: #CFD4D8;
+  --uon-nottingham-blue-05: #F3F4F5;
+
+  --uon-jubilee-red: #B91C2E;
+  --uon-jubilee-red-20: #F1D2D5;
+  --uon-jubilee-red-05: #FCF4F5;
+
+  --uon-mandarin-orange: #F98109;
+  --uon-mandarin-orange-20: #FEE6CE;
+  --uon-mandarin-orange-05: #FFF9F3;
+
+  --uon-rebels-gold: #DEB406;
+  --uon-rebels-gold-20: #F8F0CD;
+
+  --uon-forest-green: #005F36;
+  --uon-forest-green-20: #CCDFD7;
+  --uon-forest-green-05: #F3FAF6;
+
+  --uon-malaysia-sky-blue: #009BC1;
+  --uon-malaysia-sky-blue-20: #CCEBF3;
+  --uon-malaysia-sky-blue-05: #F2FBFD;
+
+  --uon-trent-turquoise: #37B4B0;
+  --uon-trent-turquoise-20: #D7F0EF;
+
+  --uon-civic-purple: #792D85;
+  --uon-pioneering-pink: #D7336C;
+  --uon-bramley-apple: #93D500;
+
+  --uon-portland-stone: #FAF6EF;
+  --uon-white: #FFFFFF;
+
+  /* =========================
+     UI surfaces (light-first) - per spec v3.1.220 §1.1
+     ========================= */
+  --ui-00: #FFFFFF;                       /* pure white */
+  --ui-background: var(--ui-00);
+  --ui-01: #FBFBFB;                       /* top bar / subtle panels */
+  --ui-02: #F4F4F4;                       /* control surfaces */
+  --ui-03: #EAEAEA;                       /* rare */
+  --ui-04: var(--uon-nottingham-blue-60); /* strong borders (>=3:1 on white) */
+  --ui-05: var(--uon-nottingham-blue);    /* strongest */
+
+  /* Borders (explicit; per spec §1.1)
+     - passive: panel separators, dividers (decorative)
+     - interactive: inputs, buttons, list items (must meet 3:1 on white per WCAG 2.1 SC 1.4.11) */
+  --border-passive: #D8D8D8;
+  --border-subtle: var(--border-passive); /* alias for legacy */
+  --border-interactive: #767676;          /* 4.54:1 on white - AAA non-text contrast */
+  --border-strong: var(--border-interactive); /* alias for migration */
+  --border-strongest: #5A5A5A;            /* 7:1 on white - for emphasis */
+
+  /* =========================
+     Text (AAA-first) - per spec §1.1
+     ========================= */
+  --text-01: #0F0F0F; /* primary text; headings and labels */
+  --text-02: #3A3A3A; /* secondary; helper text */
+  --text-03: #595959; /* tertiary/helper */
+  --text-04: #FFFFFF; /* inverse */
+  --text-05: #3D3D3D; /* muted-but-readable */
+
+  /* Links: always underlined */
+  --link-01: var(--uon-nottingham-blue);  /* AAA on white */
+  --link-visited: var(--uon-civic-purple);/* AAA on white */
+
+  /* =========================
+     Icons
+     ========================= */
+  --icon-01: var(--text-01);
+  --icon-02: var(--text-03);
+  --icon-03: var(--text-04);
+
+  /* =========================
+     Interactive (Carbon-ish)
+     ========================= */
+  --interactive-01: var(--uon-blue); /* primary CTA - UoN blue for sliders/switches */
+  --hover-primary: var(--uon-nottingham-blue); /* darker on hover */
+  --active-primary: #0C1C2C; /* derived darker Nottingham Blue */
+
+  /* Control accent — sliders, switches, checkboxes, native form inputs.
+     UoN dark blue (#003A65), deliberately NOT black; text stays black.
+     Single seam so the control fill colour can be retuned in one place. */
+  --control-accent: var(--interactive-01);
+  --control-accent-hover: var(--hover-primary);
+
+  /* Focus (AAA intent per spec §1.4) - 7px total visible halo */
+  --focus-inner: #FFFFFF;  /* 2px inner ring */
+  --focus-white: var(--focus-inner); /* alias for spec compatibility */
+  --focus-outer: #0F62FE;  /* 5px outer ring */
+  --focus-blue: var(--focus-outer);  /* alias for spec compatibility */
+  --focus-width: 0.1875rem;          /* 3px at 16px base — exceeds 2px WCAG minimum */
+  --focus-offset: 0.125rem;          /* 2px offset */
+  --focus-glow: 0.375rem;            /* 6px glow radius */
+  --focus-glow-color: rgba(15, 98, 254, 0.3);
+
+  /* Selection highlight */
+  --highlight: var(--uon-malaysia-sky-blue-20);
+
+  /* =========================
+     Section tints (greyscale, uniform) - per greyscale accordion spec
+     UI reads as "tool" not "map" - black text preserves WCAG AAA contrast
+     ========================= */
+  --tint-marker:     #F4F4F4;
+  --tint-text:       #F4F4F4;
+  --tint-path:       #F4F4F4;
+  --tint-camera:     #F4F4F4;
+  --tint-background: #F4F4F4;
+  --tint-animation:  #F4F4F4;
+  --tint-export:     #F4F4F4;
+  --tint-system:     #F4F4F4;  /* alias for all global settings sections */
+  
+  /* Section heading cap bands (slightly darker than body) */
+  --cap-marker:     #E5E5E5;
+  --cap-text:       #E5E5E5;
+  --cap-path:       #E5E5E5;
+  --cap-camera:     #E5E5E5;
+  --cap-background: #E5E5E5;
+  --cap-animation:  #E5E5E5;
+  --cap-export:     #E5E5E5;
+  --cap-system:     #E5E5E5;
+  
+  /* Last-interacted section emphasis - subtle blue tint per user preference */
+  --cap-last:      rgba(15, 98, 254, 0.08);   /* when collapsed - subtle blue */
+  --cap-last-open: rgba(15, 98, 254, 0.12);   /* when expanded - slightly stronger */
+  --section-last-ring: rgba(15, 98, 254, 0.15); /* outer glow */
+
+  /* UI interaction surfaces */
+  --hover-ui: #E9E9E9;
+  --active-ui: #D1D1D1;
+  --selected-ui: #E0E0E0;
+  
+  /* Waypoint list row states (Phase 3: calmness) */
+  --waypoint-row-bg: transparent;
+  --waypoint-row-hover: rgba(0,0,0,0.04);
+  --waypoint-row-selected: #EDEDED;
+  --waypoint-accent-selected: #161616;
+  
+  /* Border hierarchy (reduce visual noise) */
+  --border-quiet: rgba(0,0,0,0.12);  /* very subtle row separators */
+  --border-control: var(--border-interactive); /* inputs/sliders/switches — 4.53:1, meets WCAG 1.4.11 (was #BDBDBD ≈1.9:1, failed 3:1) */
+  
+  /* Row heights for touch/click targets */
+  --row-height: 2.75rem;              /* list row min-height (~44px) */
+  --control-height-sm: 2.25rem;       /* compact controls */
+
+  /* =========================
+     Support / feedback (AAA-safe usage)
+     Pattern: dark text on tinted background + strong border/icon
+     ========================= */
+  --support-error: var(--uon-jubilee-red);
+  --support-error-bg: var(--uon-jubilee-red-20);
+
+  --support-success: var(--uon-forest-green);
+  --support-success-bg: var(--uon-forest-green-20);
+
+  /* Derived strong warning & info for non-text contrast (>=3:1 on their tints) */
+  --support-warning: var(--uon-mandarin-orange);
+  --support-warning-strong: #D06A05;
+  --support-warning-bg: var(--uon-mandarin-orange-20);
+
+  --support-info: var(--uon-malaysia-sky-blue);
+  --support-info-strong: #008FB3;
+  --support-info-bg: var(--uon-malaysia-sky-blue-20);
+
+  /* Disabled (contrast exempt, but keep readable where possible) */
+  --disabled-01: #F4F4F4;
+  --disabled-02: #C6C6C6;
+  --disabled-03: #8D8D8D;
+
+  /* Overlay: rare impact moments (modals / critical flows) */
+  --overlay-01: rgba(16, 38, 59, 0.60);
+
+  /* =========================
+     Typography (relative units for zoom-safe UI)
+     ========================= */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Font sizes in rem for browser zoom compatibility */
+  --text-xs: 0.75rem;   /* 12px @16px base */
+  --text-sm: 0.875rem;  /* 14px */
+  --text-md: 1rem;      /* 16px */
+  --text-lg: 1.125rem;  /* 18px */
+  --text-xl: 1.5rem;    /* 24px */
+
+  /* Line heights (unitless for proper scaling) */
+  --line-tight: 1.2;
+  --line-base: 1.5;
+
+  /* Legacy px mappings (for gradual migration) */
+  --type-h1: var(--text-xl);  --lh-h1: var(--line-tight);  --w-h1: 600;
+  --type-h2: var(--text-lg);  --lh-h2: var(--line-tight);  --w-h2: 600;
+  --type-label: var(--text-xs); --lh-label: var(--line-tight); --w-label: 600; --ls-label: 0.06em;
+  --type-body: var(--text-sm); --lh-body: var(--line-base); --w-body: 400;
+  --type-caption: var(--text-xs); --lh-caption: var(--line-tight); --w-caption: 400;
+  --type-mono: var(--text-sm); --lh-mono: var(--line-tight); --w-mono: 500;
+
+  /* =========================
+     Layout widths (responsive, relative units) - per spec §2
+     ========================= */
+  --sidebar-left: clamp(20rem, 28vw, 27.5rem);    /* 320–440px */
+  --sidebar-right: clamp(17.5rem, 22vw, 22.5rem); /* 280–360px */
+
+  /* =========================
+     Section layout aliases (per spec v3.1.256 §B)
+     Semantic names for consistent section styling
+     ========================= */
+  --section-pad: 0.75rem;     /* Section body padding */
+  --section-gap: 0.75rem;     /* Vertical gap between sections */
+  --row-gap: 0.5rem;          /* Gap between control rows inside a section */
+  --label-gap: 0.25rem;       /* Label→control spacing */
+  --radius: 0.5rem;           /* Default rounding (≈8px) */
+
+  /* =========================
+     Spacing (relative units for zoom-safe UI)
+     ========================= */
+  --space-1: 0.25rem;   /* 4px @16px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.5rem;    /* 24px */
+  --space-6: 2rem;      /* 32px */
+
+  /* Legacy px spacing (for gradual migration) */
+  --space-0: 2px;
+  --space-7: 3rem;      /* 48px */
+  --space-8: 4rem;      /* 64px */
+
+  /* Shape - radii (per spec v3.1.241 §2) */
+  --radius-1: 4px;      /* small */
+  --radius-2: 8px;      /* medium - standard for sections/controls */
+  --radius-3: 12px;     /* large */
+  --radius-0: 0;
+  
+  /* Stroke widths */
+  --stroke-1: 1px;
+  --stroke-2: 2px;
+
+  /* =========================
+     Control sizing (relative for zoom-safe UI, per spec v3.1.241 §2)
+     ========================= */
+  --control-font: 0.875rem;   /* 14px */
+  --control-line: var(--line-tight);
+  --control-h: 2.25rem;       /* 36px - compact control height (spec §0) */
+  --control-minh: 2.5rem;     /* 40px - standard button/input height */
+  --control-min-h: var(--control-minh); /* alias for compatibility */
+  --control-pad-x: 0.9em;
+  --control-pad-y: 0.35em;
+
+  /* Header sizing */
+  --topbar-min-h: 2.75rem;    /* ~44px */
+  --topbar-gap: var(--space-2);
+  --topbar-group-gap: var(--space-4);
+
+  /* Legacy px control sizes (for components not yet migrated) */
+  --control-sm: 2rem;         /* 32px */
+  --control-md: 2.375rem;     /* 38px */
+  --control-lg: 2.75rem;      /* 44px */
+
+  /* Elevation (light) */
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --elev-2: 0 6px 18px rgba(0, 0, 0, 0.12);
+  --elev-3: 0 16px 40px rgba(0, 0, 0, 0.16);
+  --shadow-01: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.1);  /* Subtle canvas shadow */
+
+  /* Border widths (scalable) */
+  --border-width-focus: 0.1875rem;   /* 3px accent border for selection */
+
+  /* Sidebar constraints (scalable) */
+  --sidebar-max-width: 20rem;        /* 320px at 16px base */
+  --sidebar-min-width: 15rem;        /* 240px at 16px base */
+  --sidebar-label-width: 6rem;       /* Form label column */
+  --sidebar-value-width: 3rem;       /* Form value column */
+
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-med: 180ms;
+  --motion-slow: 240ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* =========================
+     Map / Canvas (Okabe–Ito categorical)
+     9 swatches: white + 7 chromatic + black
+     Visual order in swatch picker: warm→cool, neutral bookends
+     ========================= */
+  --map-series-0: #FFFFFF; /* white — outline required (light on light) */
+  --map-series-1: #0072B2;
+  --map-series-2: #E69F00;
+  --map-series-3: #009E73;
+  --map-series-4: #D55E00;
+  --map-series-5: #CC79A7;
+  --map-series-6: #56B4E9;
+  --map-series-7: #F0E442; /* outline required (light on light) */
+  --map-series-8: #000000;
+
+  /* Map neutrals ("ink") */
+  --map-ink: #111111;
+  --map-ink-soft: #595959;
+  --map-mid: #6F6F6F;
+  --map-paper: #FFFFFF;
+
+  /* Map rendering defaults */
+  --map-marker-stroke: rgba(0, 0, 0, 0.85);
+  --map-marker-stroke-width: 2px;
+
+  --map-path-stroke-width: 3px;
+  --map-path-head-stroke: rgba(0, 0, 0, 0.85);
+
+  --map-selection-outline: var(--focus-outer);
+  --map-selection-outline-width: 3px;
+
+  --map-label-size: 16px;
+  --map-label-weight: 600;
+  --map-label-text: rgba(0, 0, 0, 0.92);
+  --map-label-halo: rgba(255, 255, 255, 0.92);
+  --map-label-halo-width: 3px;
+
+  /* =========================
+     Legacy compatibility (map old vars to new)
+     ========================= */
+  --primary: var(--uon-blue);  /* alias for spec compatibility */
+  --color-primary: var(--interactive-01);
+  --color-primary-dark: var(--hover-primary);
+  --color-text-primary: var(--text-01);
+  --color-text-secondary: var(--text-02);
+  --color-text-muted: var(--text-03);
+  --color-text-disabled: var(--disabled-03);
+  --color-bg-primary: var(--ui-background);
+  --color-bg-secondary: var(--ui-01);
+  --color-bg-tertiary: var(--ui-01);
+  --color-border: var(--border-subtle);
+  --color-border-focus: var(--focus-outer);
+  --focus-ring: var(--focus-width) solid var(--focus-outer);
+  --focus-ring-offset: var(--focus-offset);
+  --touch-target-min: var(--control-lg);
+}
+
+/* Higher contrast preference: thicken strokes and strengthen borders */
+@media (prefers-contrast: more) {
+  :root {
+    --map-marker-stroke-width: 3px;
+    --map-path-stroke-width: 4px;
+    --border-strong: #525252;
+  }
+}
+
+/* Reduced motion: collapse animation timing */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 1ms;
+    --motion-med: 1ms;
+    --motion-slow: 1ms;
+  }
+}

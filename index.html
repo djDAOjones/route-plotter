@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Route Plotter</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=470">
+  <link rel="stylesheet" href="styles/main.css?v=470">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=470">
+  <link rel="stylesheet" href="styles/tooltip.css?v=470">
+  <link rel="stylesheet" href="styles/dropdown.css?v=470">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <!-- Min-width warning for small screens (R-3) -->
+  <div id="screen-warning" class="screen-warning" role="alert">
+    <div class="screen-warning-content">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="14"/><line x1="16" y1="10" x2="16" y2="18"/><circle cx="16" cy="22" r="1" fill="currentColor" stroke="none"/></svg>
+      <h2>Screen too narrow</h2>
+      <p>Route Plotter requires a screen width of at least 1440px for the full editing experience.</p>
+      <p class="screen-warning-hint">Current width: <span id="screen-width-display"></span>px</p>
+      <button id="screen-warning-dismiss" class="btn btn-secondary">Continue anyway</button>
+    </div>
+  </div>
+  <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <!-- Application Container -->
+  <div id="app">
+    <!-- Header -->
+    <header class="header" role="banner">
+      <h1 id="app-title" class="header-title">Route Plotter</h1>
+      <div class="header-controls">
+        <!-- Mode Switch (Edit/Preview toggle) -->
+        <div class="mode-switch" id="mode-switch">
+          <span class="mode-label mode-label-edit active">Edit</span>
+          <button class="mode-toggle" id="mode-toggle-btn" role="switch" aria-checked="false" aria-label="Toggle preview mode">
+            <span class="mode-toggle-thumb"></span>
+          </button>
+          <span class="mode-label mode-label-preview">Preview</span>
+        </div>
+        <!-- History Controls -->
+        <div class="header-group">
+          <button id="undo-btn" class="btn btn-icon" title="Undo (Cmd+Z)" disabled aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6a4 4 0 0 1 0 8H9"/><polyline points="6 4 3 7 6 10"/></svg></button>
+          <button id="redo-btn" class="btn btn-icon" title="Redo (Cmd+Shift+Z)" disabled aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7H7a4 4 0 0 0 0 8h1"/><polyline points="10 4 13 7 10 10"/></svg></button>
+        </div>
+        <!-- File Dropdown (consolidates Save, Open, Examples, Clear) -->
+        <div class="dropdown" id="file-dropdown">
+          <button class="btn btn-secondary dropdown-toggle" id="file-dropdown-btn" aria-haspopup="true" aria-expanded="false">
+            File ▾
+          </button>
+          <div class="dropdown-menu dropdown-menu-file" id="file-menu" role="menu" aria-labelledby="file-dropdown-btn">
+            <button id="save-project-btn" class="dropdown-item" role="menuitem" type="button">
+              <span class="dropdown-item-label">Save Project</span>
+              <kbd>⌘S</kbd>
+            </button>
+            <button id="load-project-btn" class="dropdown-item" role="menuitem" type="button">
+              <span class="dropdown-item-label">Open Project</span>
+              <kbd>⌘O</kbd>
+            </button>
+            <input id="load-project-input" type="file" accept=".zip" style="display:none" aria-label="Load project file" />
+            <div class="dropdown-separator" role="separator"></div>
+            <div class="dropdown-submenu-label" aria-hidden="true">Example Backgrounds</div>
+            <div id="example-backgrounds-menu" role="group" aria-label="Example backgrounds">
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Courts.jpg">Courts</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Garlic.jpg">Garlic</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Nervous_System.jpg">Nervous System</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/PARM_Aerial.jpg">PARM Aerial</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Rocketry.jpg">Rocketry</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/UoN_map.png">UoN Map</button>
+            </div>
+            <div class="dropdown-separator" role="separator"></div>
+            <button id="clear-btn" class="dropdown-item dropdown-item-danger" role="menuitem" type="button">Clear All</button>
+          </div>
+        </div>
+        <!-- Export Dropdown -->
+        <div class="dropdown" id="export-dropdown">
+          <button class="btn btn-primary dropdown-toggle" id="export-dropdown-btn" aria-haspopup="true" aria-expanded="false" title="Export animation">
+            Export ▾
+          </button>
+          <div class="dropdown-menu" id="export-menu" role="menu" aria-labelledby="export-dropdown-btn">
+            <button id="export-mp4-btn" class="dropdown-item" role="menuitem" type="button">Export MP4</button>
+            <button id="export-webm-btn" class="dropdown-item" role="menuitem" type="button">Export WebM</button>
+            <button id="export-html-btn" class="dropdown-item" role="menuitem" type="button">Export HTML</button>
+            <div class="dropdown-separator" role="separator"></div>
+            <button id="download-debug-btn" class="dropdown-item" role="menuitem" type="button">Download Debug Log</button>
+            <button id="copy-debug-btn" class="dropdown-item" role="menuitem" type="button">Copy Debug Log</button>
+          </div>
+        </div>
+        <!-- Support (ghost style per spec) -->
+        <button id="help-btn" class="btn btn-ghost" title="Show help and keyboard shortcuts">Help</button>
+      </div>
+    </header>
+
+    <!-- Toast notification (replaces tip banner) -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Main Content -->
+    <main class="main" id="main-content" role="main" aria-labelledby="app-title">
+      <!-- Left Sidebar - Settings with Collapsible Sections -->
+      <aside class="sidebar" role="complementary" aria-label="Settings panel">
+        <!-- Selection context subtitle -->
+        <div class="sidebar-header sidebar-header-compact">
+          <span id="sidebar-subtitle" class="sidebar-subtitle"></span>
+        </div>
+        
+        <!-- Settings Sections Container -->
+        <div id="settings-sections" class="settings-sections">
+          
+          <!-- Help Placeholder (shown when no waypoints exist) -->
+          <div id="settings-help-placeholder" class="waypoint-editor-placeholder" style="display: none;">
+            <!-- Help content injected here by UIController -->
+          </div>
+          
+          <!-- ============================================================
+               MARKER SECTION
+               ============================================================ -->
+          <div class="settings-section" data-section="marker">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-marker-content">
+              <h2 class="section-title">Marker</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-marker-content" class="section-content">
+              <!-- Colour (Okabe-Ito swatch picker) -->
+              <input type="hidden" id="dot-color" value="#D55E00">
+              <div class="swatch-picker" 
+                   data-target-input="#dot-color" 
+                   data-mode="okabe-ito" 
+                   data-label="Colour" 
+                   data-allow-custom="false">
+              </div>
+              
+              <!-- Icon dropdown -->
+              <label for="marker-style">
+                <span data-tip="Shape of the waypoint marker on the map">Icon</span>
+                <select id="marker-style">
+                  <option value="dot">Dot</option>
+                  <option value="square">Square</option>
+                  <option value="flag">Flag</option>
+                  <option value="custom">Custom Image</option>
+                  <option value="none">None</option>
+                </select>
+              </label>
+              
+              <!-- Custom Marker Upload Controls (shown when marker=custom) -->
+              <div id="custom-marker-controls" style="display:none;">
+                <div class="upload-row">
+                  <button id="marker-upload-btn" class="btn btn-secondary" aria-label="Upload custom marker image">Upload Image</button>
+                  <input id="marker-upload" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style="display:none" aria-label="Upload custom marker image" />
+                </div>
+                <div id="marker-preview" style="display:none; margin-bottom:0.5rem;">
+                  <span id="marker-filename" style="font-size:0.75rem; opacity:0.7;"></span>
+                  <img id="marker-preview-img" style="max-width:48px; max-height:48px; margin-left:0.5rem; vertical-align:middle;" alt="Marker preview" />
+                </div>
+              </div>
+              
+              <!-- Size (was Marker Size) -->
+              <label for="dot-size">
+                <span data-tip="Diameter of the waypoint marker in pixels">Size</span>
+                <input type="range" id="dot-size" min="4" max="16" value="8" step="1">
+                <span id="dot-size-value">8</span>
+              </label>
+              
+              <!-- Beacon Effect (moved before Wait Time per spec §5.2) -->
+              <label for="editor-beacon-style">
+                <span data-tip="Animation effect played when the path reaches this waypoint">Beacon</span>
+                <select id="editor-beacon-style">
+                  <option value="none">None</option>
+                  <option value="ripple">Ripple</option>
+                  <option value="glow">Glow</option>
+                  <option value="pop">Pop</option>
+                  <option value="grow">Grow</option>
+                  <option value="pulse">Pulse</option>
+                </select>
+              </label>
+              
+              <!-- Ripple-specific controls (hidden unless ripple selected) -->
+              <div id="ripple-controls" style="display: none;">
+                <label for="ripple-thickness">
+                  <span data-tip="Line thickness of the ripple rings">Thickness</span>
+                  <input type="range" id="ripple-thickness" min="1" max="10" value="2" step="0.5" aria-describedby="ripple-thickness-value">
+                  <span id="ripple-thickness-value">2px</span>
+                </label>
+                <label for="ripple-max-scale">
+                  <span data-tip="Maximum expansion radius of the ripple effect">Size</span>
+                  <input type="range" id="ripple-max-scale" min="500" max="4000" value="1000" step="100" aria-describedby="ripple-max-scale-value">
+                  <span id="ripple-max-scale-value">1000%</span>
+                </label>
+                <label class="checkbox-label" for="ripple-wait">
+                  <input type="checkbox" id="ripple-wait" checked>
+                  <span>Wait during ripple</span>
+                </label>
+              </div>
+              
+              <!-- Pulse-specific controls (hidden unless pulse selected) -->
+              <div id="pulse-controls" class="beacon-sub-controls" role="group" aria-labelledby="pulse-controls-label" style="display: none;">
+                <span id="pulse-controls-label" class="sub-controls-label">Pulse Settings</span>
+                <label for="pulse-amplitude">
+                  <span data-tip="How much the marker grows and shrinks during pulse">Amplitude</span>
+                  <input type="range" id="pulse-amplitude" min="0" max="3" value="1" step="0.1" aria-describedby="pulse-amplitude-value">
+                  <span id="pulse-amplitude-value">1.0</span>
+                </label>
+                <label for="pulse-cycle-speed">
+                  <span data-tip="Duration of one complete pulse cycle">Cycle Speed</span>
+                  <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value">
+                  <span id="pulse-cycle-speed-value">4s</span>
+                </label>
+              </div>
+              
+              <!-- Wait Time (moved to bottom per spec §5.2) -->
+              <label id="pause-time-control" for="waypoint-pause-time">
+                <span data-tip="How long the animation pauses at this waypoint">Wait Time</span>
+                <input type="range" id="waypoint-pause-time" min="0" max="1000" value="500" step="1">
+                <span id="waypoint-pause-time-value">1.5s</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- ============================================================
+               TEXT SECTION
+               ============================================================ -->
+          <div class="settings-section" data-section="text">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-text-content">
+              <h2 class="section-title">Text</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-text-content" class="section-content">
+              <!-- Text Input -->
+              <label for="waypoint-label">
+                <span data-tip="Label text displayed near this waypoint">Text</span>
+                <input type="text" id="waypoint-label" placeholder="Enter label text...">
+              </label>
+              
+              <!-- Text Visibility Mode -->
+              <label for="label-mode">
+                <span data-tip="When the label appears during animation playback">Visibility</span>
+                <select id="label-mode">
+                  <option value="off">Off</option>
+                  <option value="on">Always On</option>
+                  <option value="fade-up" selected>Fade Up</option>
+                  <option value="fade-up-down">Fade Up & Down</option>
+                </select>
+              </label>
+              
+              <!-- Text Size (1-10 scale, maps to 16-48px) -->
+              <label for="label-size">
+                <span data-tip="Font size of the label text">Size</span>
+                <input type="range" id="label-size" min="1" max="10" value="1" step="1">
+                <span id="label-size-value">1</span>
+              </label>
+              
+              <!-- Text Width (for wrapping) -->
+              <label for="label-width">
+                <span data-tip="Maximum width before text wraps to a new line">Text Area Width</span>
+                <input type="range" id="label-width" min="5" max="50" value="15" step="1">
+                <span id="label-width-value">15%</span>
+              </label>
+              
+              <!-- Position X Offset -->
+              <label for="label-offset-x">
+                <span data-tip="Horizontal offset of label from the waypoint">Horizontal Position</span>
+                <input type="range" id="label-offset-x" min="-50" max="50" value="0" step="1">
+                <span id="label-offset-x-value">0%</span>
+              </label>
+              
+              <!-- Position Y Offset -->
+              <label for="label-offset-y">
+                <span data-tip="Vertical offset of label from the waypoint">Vertical Position</span>
+                <input type="range" id="label-offset-y" min="-50" max="50" value="-5" step="1">
+                <span id="label-offset-y-value">-5%</span>
+              </label>
+              
+              <!-- Auto-Position Button (moved to bottom per spec §6.2) -->
+              <div class="control-row">
+                <button id="label-auto-position" class="btn btn-secondary" style="width:100%;" title="Auto-position text to avoid collisions">Auto-Position</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ============================================================
+               PATH SECTION
+               ============================================================ -->
+          <div class="settings-section" data-section="path">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-path-content">
+              <h2 class="section-title">Path</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-path-content" class="section-content">
+              <!-- Colour (Okabe-Ito swatch picker) -->
+              <input type="hidden" id="segment-color" value="#D55E00">
+              <div class="swatch-picker" 
+                   data-target-input="#segment-color" 
+                   data-mode="okabe-ito" 
+                   data-label="Colour" 
+                   data-allow-custom="false">
+              </div>
+              
+              <!-- Head Colour removed per spec - enforced black head with white stroke -->
+              <input type="hidden" id="path-head-color" value="#111111">
+              
+              <!-- Head Icon dropdown (renamed from Head) -->
+              <label for="path-head-style">
+                <span data-tip="Shape of the animated path head indicator">Arrow Style</span>
+                <select id="path-head-style">
+                  <option value="arrow">Arrow</option>
+                  <option value="dot">Dot</option>
+                  <option value="custom">Custom</option>
+                  <option value="none">None</option>
+                </select>
+              </label>
+              
+              <!-- Custom Head Upload Controls -->
+              <div id="custom-head-controls" style="display:none;">
+                <div class="upload-row">
+                  <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
+                  <input id="head-upload" type="file" accept="image/png,image/jpeg,image/svg+xml" style="display:none" aria-label="Upload custom path head image" />
+                </div>
+                <div id="head-preview" class="preview-box" style="display:none;">
+                  <p id="head-filename">No image selected</p>
+                  <img id="head-preview-img" style="max-width:100%; max-height:100px; margin:0.5rem 0;" alt="Custom path head preview">
+                </div>
+                <label for="head-rotation-mode">
+                  <span data-tip="Whether the custom image rotates to follow the path direction">Rotation</span>
+                  <select id="head-rotation-mode">
+                    <option value="auto">Follow Path</option>
+                    <option value="fixed">Fixed</option>
+                  </select>
+                </label>
+                <label id="head-rotation-offset-control" for="head-rotation-offset">
+                  <span data-tip="Degrees added to the auto-rotation angle">Offset</span>
+                  <input type="range" id="head-rotation-offset" min="-180" max="180" value="0" step="5">
+                  <span id="head-rotation-offset-value">0°</span>
+                </label>
+              </div>
+              
+              <!-- Head Size -->
+              <label for="path-head-size">
+                <span data-tip="Size of the path head indicator">Head Size</span>
+                <input type="range" id="path-head-size" min="4" max="24" value="8" step="1">
+                <span id="path-head-size-value">8</span>
+              </label>
+              
+              <!-- Thickness (was Path Thickness) - increased range to 4x with log scale -->
+              <label for="segment-width">
+                <span data-tip="Width of the path line in pixels">Thickness</span>
+                <input type="range" id="segment-width" min="0" max="1000" value="333" step="1">
+                <span id="segment-width-value">3</span>
+              </label>
+              
+              <!-- Shape (was Path Shape) -->
+              <label for="path-shape">
+                <span data-tip="Geometry of the path line between waypoints">Shape</span>
+                <select id="path-shape">
+                  <option value="line">Line</option>
+                  <option value="squiggle">Squiggle</option>
+                  <option value="randomised">Randomised</option>
+                </select>
+              </label>
+              
+              <!-- Shape Parameters (shown for squiggle/randomised) -->
+              <div id="shape-params-controls" style="display: none;">
+                <label for="shape-amplitude">
+                  <span data-tip="Height of squiggle waves">Amplitude</span>
+                  <input type="range" id="shape-amplitude" min="1" max="50" value="10" step="1">
+                  <span id="shape-amplitude-value">10</span>
+                </label>
+                <label for="shape-frequency">
+                  <span data-tip="Number of squiggle waves per path segment">Frequency</span>
+                  <input type="range" id="shape-frequency" min="1" max="20" value="5" step="1">
+                  <span id="shape-frequency-value">5</span>
+                </label>
+              </div>
+              
+              <!-- Style (was Path Style) -->
+              <label for="segment-style">
+                <span data-tip="Line style of the path (solid, dashed, dotted)">Style</span>
+                <select id="segment-style">
+                  <option value="solid">Solid</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                </select>
+              </label>
+              
+              <!-- Segment Speed -->
+              <label id="segment-speed-control" for="waypoint-segment-speed">
+                <span data-tip="Speed multiplier for this path segment relative to base duration">Segment Speed</span>
+                <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1">
+                <span id="waypoint-segment-speed-value">1.0x</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- ============================================================
+               AREA HIGHLIGHT SECTION (per-waypoint overlay regions)
+               ============================================================ -->
+          <div class="settings-section" data-section="area-highlight">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-area-highlight-content">
+              <h2 class="section-title">Area</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-area-highlight-content" class="section-content">
+              <!-- Shape type -->
+              <label for="area-shape">
+                <span data-tip="Shape of the highlighted area attached to this waypoint">Shape</span>
+                <select id="area-shape">
+                  <option value="none">None</option>
+                  <option value="circle">Circle</option>
+                  <option value="rectangle">Rectangle</option>
+                  <option value="polygon">Draw</option>
+                </select>
+              </label>
+              
+              <!-- Draw Area button (shown when draw shape selected) -->
+              <div id="area-draw-controls" style="display: none;">
+                <button id="area-draw-btn" class="btn btn-secondary" style="width:100%;" aria-label="Enter polygon drawing mode">Draw Area</button>
+              </div>
+              
+              <!-- Circle size slider (shown when circle selected) -->
+              <div id="area-circle-controls" style="display: none;">
+                <label for="area-circle-radius">
+                  <span data-tip="Radius of the circular highlight area">Size</span>
+                  <input type="range" id="area-circle-radius" min="0" max="1000" value="100" step="1">
+                  <span id="area-circle-radius-value">5%</span>
+                </label>
+              </div>
+              
+              <!-- Rectangle size sliders (shown when rectangle selected) -->
+              <div id="area-rect-controls" style="display: none;">
+                <label for="area-rect-width">
+                  <span data-tip="Width of the rectangular highlight area">Width</span>
+                  <input type="range" id="area-rect-width" min="0" max="1000" value="125" step="1">
+                  <span id="area-rect-width-value">10%</span>
+                </label>
+                <label for="area-rect-height">
+                  <span data-tip="Height of the rectangular highlight area">Height</span>
+                  <input type="range" id="area-rect-height" min="0" max="1000" value="125" step="1">
+                  <span id="area-rect-height-value">10%</span>
+                </label>
+              </div>
+              
+              <!-- Fill Colour (Okabe-Ito swatch picker with None/transparent) -->
+              <div id="area-fill-controls" style="display: none;">
+                <input type="hidden" id="area-fill-color" value="#56B4E9">
+                <div class="swatch-picker" 
+                     data-target-input="#area-fill-color" 
+                     data-mode="okabe-ito" 
+                     data-label="Fill" 
+                     data-allow-custom="false">
+                </div>
+                
+                <!-- Fill Opacity -->
+                <label for="area-fill-opacity">
+                  <span data-tip="Opacity of the area fill. Set to 0 for outline-only mode">Fill Opacity</span>
+                  <input type="range" id="area-fill-opacity" min="0" max="100" value="30" step="1">
+                  <span id="area-fill-opacity-value">30%</span>
+                </label>
+              </div>
+              
+              <!-- Border controls -->
+              <div id="area-border-controls" style="display: none;">
+                <!-- Border Colour -->
+                <input type="hidden" id="area-border-color" value="#0072B2">
+                <div class="swatch-picker" 
+                     data-target-input="#area-border-color" 
+                     data-mode="okabe-ito" 
+                     data-label="Border" 
+                     data-allow-custom="false">
+                </div>
+                
+                <!-- Border Style -->
+                <label for="area-border-style">
+                  <span data-tip="Line style of the area border">Border Style</span>
+                  <select id="area-border-style">
+                    <option value="solid">Solid</option>
+                    <option value="dashed">Dashed</option>
+                    <option value="dotted">Dotted</option>
+                    <option value="none">None</option>
+                  </select>
+                </label>
+                
+                <!-- Border Width -->
+                <label for="area-border-width">
+                  <span data-tip="Thickness of the area border in pixels">Border Width</span>
+                  <input type="range" id="area-border-width" min="1" max="10" value="2" step="1">
+                  <span id="area-border-width-value">2px</span>
+                </label>
+              </div>
+              
+              <!-- Visibility mode -->
+              <div id="area-visibility-controls" style="display: none;">
+                <label for="area-visibility">
+                  <span data-tip="When this area highlight is visible during animation">Visibility</span>
+                  <select id="area-visibility">
+                    <option value="always-show">Always Show</option>
+                    <option value="hide-before" selected>Hide Before</option>
+                    <option value="hide-after">Hide After</option>
+                    <option value="hide-before-and-after">Hide Before &amp; After</option>
+                    <option value="always-hide">Always Hide</option>
+                  </select>
+                </label>
+                
+                <!-- Fade In -->
+                <label for="area-fade-in">
+                  <span data-tip="Duration of the fade-in animation when the area appears">Fade In</span>
+                  <input type="range" id="area-fade-in" min="0" max="10000" value="500" step="100">
+                  <span id="area-fade-in-value">0.5s</span>
+                </label>
+                
+                <!-- Fade Out -->
+                <label for="area-fade-out">
+                  <span data-tip="Duration of the fade-out animation when the area disappears">Fade Out</span>
+                  <input type="range" id="area-fade-out" min="0" max="10000" value="500" step="100">
+                  <span id="area-fade-out-value">0.5s</span>
+                </label>
+              </div>
+              
+              <!-- Delete Area button -->
+              <div id="area-delete-controls" style="display: none;">
+                <button id="area-delete-btn" class="btn btn-secondary btn-danger" style="width:100%;" aria-label="Remove area highlight from this waypoint">Delete Area</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ============================================================
+               CAMERA SECTION
+               ============================================================ -->
+          <div class="settings-section" data-section="camera">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-camera-content">
+              <h2 class="section-title">Camera</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-camera-content" class="section-content">
+              <!-- Single waypoint zoom controls (hidden when multiple selected) -->
+              <div id="camera-single-controls">
+                <!-- Previous Waypoint Zoom (read-only display) -->
+                <div class="control-row control-row-inline">
+                  <span class="control-label control-label-short">Prev Zoom</span>
+                  <span id="camera-prev-zoom-value" class="slider-value slider-value-readonly">—</span>
+                </div>
+                
+                <!-- Current Waypoint Zoom -->
+                <div class="control-row control-row-inline">
+                  <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Smoothly transitions between waypoints">This Zoom</label>
+                  <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0">
+                  <span id="camera-zoom-value" class="slider-value">1.0x</span>
+                </div>
+                
+                <!-- Next Waypoint Zoom (read-only display) -->
+                <div class="control-row control-row-inline">
+                  <span class="control-label control-label-short">Next Zoom</span>
+                  <span id="camera-next-zoom-value" class="slider-value slider-value-readonly">—</span>
+                </div>
+              </div>
+              
+              <!-- Multi-select zoom control (shown when multiple waypoints selected) -->
+              <div id="camera-multi-controls" style="display: none;">
+                <div class="control-row control-row-inline">
+                  <label class="control-label control-label-short" for="camera-selected-zoom" data-tip="Set zoom level for all selected waypoints at once">Selected Zooms</label>
+                  <input type="range" id="camera-selected-zoom" min="0" max="1" step="0.01" value="0">
+                  <span id="camera-selected-zoom-value" class="slider-value">1.0x</span>
+                </div>
+              </div>
+              
+              <!-- Hidden select for zoom mode - defaults to continuous -->
+              <select id="camera-zoom-mode" hidden aria-label="Camera zoom mode">
+                <option value="continuous" selected>Continuous</option>
+                <option value="immediate">Immediate</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- ============================================================
+               BACKGROUND SECTION (per spec §4.2)
+               ============================================================ -->
+          <div class="settings-section" data-section="background">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-background-content">
+              <h2 class="section-title">Background</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-background-content" class="section-content">
+              <!-- Tint (was Background Tint/Overlay) - log2 scaled for fine control near 0 -->
+              <label for="bg-overlay">
+                <span data-tip="Darkens (left) or lightens (right) the background image">Tint</span>
+                <input type="range" id="bg-overlay" min="-1000" max="1000" step="1" value="0">
+                <span id="bg-overlay-value">0</span>
+              </label>
+              
+              <!-- Zoom (moved from Export) -->
+              <label class="control-row-inline" for="background-zoom">
+                <span data-tip="Scale of the background image">Zoom</span>
+                <input type="range" id="background-zoom" min="50" max="400" step="1" value="100" style="flex: 1;">
+                <span id="background-zoom-value">100%</span>
+              </label>
+              
+              <!-- Upload -->
+              <div class="upload-row">
+                <span>Upload</span>
+                <button id="bg-upload-btn" class="btn btn-secondary" aria-label="Upload background image">Choose Image</button>
+                <input id="bg-upload" type="file" accept="image/png,image/jpeg" style="display:none" aria-label="Upload background image" />
+              </div>
+              <p class="sr-only" id="bg-drop-hint">Tip: Drag an image onto the canvas to set the background.</p>
+            </div>
+          </div>
+          
+          <!-- ============================================================
+               ANIMATION SECTION (renamed from General per spec §4.3)
+               ============================================================ -->
+          <div class="settings-section" data-section="animation">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-animation-content">
+              <h2 class="section-title">Animation</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-animation-content" class="section-content">
+              <!-- Marker Mode (renamed from Waypoint Mode per spec) -->
+              <label for="waypoint-visibility">
+                <span data-tip="When waypoint markers are visible during animation">Marker Mode</span>
+                <select id="waypoint-visibility">
+                  <option value="always-show" selected>Always Show</option>
+                  <option value="hide-before">Hide Before</option>
+                  <option value="hide-after">Hide After</option>
+                  <option value="hide-before-and-after">Hide Before & After</option>
+                  <option value="always-hide">Always Hide</option>
+                </select>
+              </label>
+              
+              <!-- Path Mode -->
+              <label for="path-visibility">
+                <span data-tip="How the path line appears during animation">Path Mode</span>
+                <select id="path-visibility">
+                  <option value="always-show">Always Show</option>
+                  <option value="show-on-progression" selected>Show on Progression</option>
+                  <option value="hide-on-progression">Hide on Progression</option>
+                  <option value="instantaneous">Instantaneous (Comet)</option>
+                  <option value="always-hide">Always Hide</option>
+                </select>
+              </label>
+              
+              <!-- Trail Size (for instantaneous/comet mode) - hidden unless comet selected -->
+              <label id="path-trail-control" for="path-trail" style="display: none;">
+                <span data-tip="Length of the visible path trail in comet mode">Trail Size</span>
+                <input type="range" id="path-trail" min="0" max="1000" value="590" step="1">
+                <span id="path-trail-value">15%</span>
+              </label>
+              
+              <!-- Background Mode -->
+              <label for="background-visibility">
+                <span data-tip="Visibility effect applied to the background during animation">Background Mode</span>
+                <select id="background-visibility">
+                  <option value="always-show" selected>Always Show</option>
+                  <option value="spotlight">Spotlight</option>
+                  <option value="spotlight-reveal">Spotlight Reveal</option>
+                  <option value="angle-of-view">Angle of View</option>
+                  <option value="angle-of-view-reveal">Angle of View Reveal</option>
+                  <option value="always-hide">Hide</option>
+                </select>
+              </label>
+              
+              <!-- Spotlight Settings (only shown when background = spotlight or spotlight-reveal) -->
+              <div id="spotlight-controls" style="display:none;">
+                <label for="reveal-size">
+                  <span data-tip="Radius of the visible area around the path head">Spotlight Size</span>
+                  <input type="range" id="reveal-size" min="0" max="1000" value="500" step="1">
+                  <span id="reveal-size-value">10%</span>
+                </label>
+                <label for="reveal-feather">
+                  <span data-tip="Softness of the spotlight edge">Spotlight Feather</span>
+                  <input type="range" id="reveal-feather" min="0" max="1000" value="500" step="1">
+                  <span id="reveal-feather-value">25%</span>
+                </label>
+              </div>
+              
+              <!-- Angle of View Settings (only shown when background = angle-of-view or angle-of-view-reveal) -->
+              <div id="aov-controls" style="display:none;">
+                <label for="aov-angle">
+                  <span data-tip="Width of the angle-of-view cone in degrees">View Angle</span>
+                  <input type="range" id="aov-angle" min="0" max="1000" value="500" step="1">
+                  <span id="aov-angle-value">60°</span>
+                </label>
+                <label for="aov-distance">
+                  <span data-tip="How far the view cone extends from the path head">View Distance</span>
+                  <input type="range" id="aov-distance" min="0" max="1000" value="500" step="1">
+                  <span id="aov-distance-value">10%</span>
+                </label>
+                <label for="aov-dropoff">
+                  <span data-tip="How quickly visibility fades at the cone edges">View Dropoff</span>
+                  <input type="range" id="aov-dropoff" min="0" max="1000" value="500" step="1">
+                  <span id="aov-dropoff-value">25%</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ============================================================
+               EXPORT SECTION
+               ============================================================ -->
+          <div class="settings-section" data-section="export">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-export-content">
+              <h2 class="section-title">Export</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-export-content" class="section-content">
+              <!-- Resolution Controls - vertical block per spec §L -->
+              <label for="export-res-x">
+                <span data-tip="Horizontal resolution of exported video in pixels">Width</span>
+                <input type="number" id="export-res-x" min="100" max="7680" step="1" value="1920">
+                <span>px</span>
+              </label>
+              <label for="export-res-y">
+                <span data-tip="Vertical resolution of exported video in pixels">Height</span>
+                <input type="number" id="export-res-y" min="100" max="4320" step="1" value="1080">
+                <span>px</span>
+              </label>
+              
+              <!-- Aspect Ratio Presets - directly under resolution per spec §L -->
+              <div class="export-presets">
+                <span>Presets</span>
+                <div class="btn-group-inline">
+                  <button id="preset-native" class="btn btn-secondary btn-small" title="Use loaded image dimensions">Native</button>
+                  <button id="preset-16-9" class="btn btn-secondary btn-small" title="1920×1080 (16:9 HD)">16:9</button>
+                  <button id="preset-1-1" class="btn btn-secondary btn-small" title="1080×1080 (Square)">1:1</button>
+                  <button id="preset-9-16" class="btn btn-secondary btn-small" title="1080×1920 (Portrait)">9:16</button>
+                </div>
+              </div>
+              
+              <!-- Frame Rate - under presets per spec §L -->
+              <label for="export-frame-rate">
+                <span data-tip="Frames per second in the exported video">Frame Rate</span>
+                <input type="number" id="export-frame-rate" min="10" max="60" step="1" value="25">
+                <span>fps</span>
+              </label>
+              
+              <!-- Include in export - consolidated checkbox group (image / camera / text) -->
+              <fieldset class="export-include-group">
+                <legend>Include in export</legend>
+                <label class="checkbox-label" for="export-include-image">
+                  <input type="checkbox" id="export-include-image" checked>
+                  <span data-tip="Include the background image. Uncheck to export the path only (transparent).">Background image</span>
+                </label>
+                <label class="checkbox-label" for="export-include-camera">
+                  <input type="checkbox" id="export-include-camera" checked>
+                  <span data-tip="Include per-waypoint camera zoom and pan in the export. Uncheck for a flat, fixed view.">Camera movement</span>
+                </label>
+                <label class="checkbox-label" for="export-include-text">
+                  <input type="checkbox" id="export-include-text" checked>
+                  <span data-tip="Include waypoint text labels in the export. Uncheck to hide all labels.">Text labels</span>
+                </label>
+              </fieldset>
+            </div>
+          </div>
+          
+        </div>
+      </aside>
+      
+      <!-- Canvas Area (center column) - contains canvas + controls -->
+      <div class="canvas-area">
+        <canvas id="canvas" role="img" aria-label="Route animation canvas"></canvas>
+        
+        <!-- Controls Panel -->
+        <div class="controls">
+          <div class="transport-controls">
+            <button id="skip-start-btn" class="btn btn-icon" title="Skip to Start">⏮</button>
+            <button id="play-btn" class="btn btn-icon btn-primary" title="Play">▶</button>
+            <button id="pause-btn" class="btn btn-icon btn-primary" style="display:none" title="Pause">⏸</button>
+            <button id="skip-end-btn" class="btn btn-icon" title="Skip to End">⏭</button>
+          </div>
+          
+          <div class="timeline">
+            <span id="current-time" class="time">0:00</span>
+            <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="1000" value="0" step="1" aria-label="Timeline position">
+            <span id="total-time" class="time">0:00</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Sidebar - Duration + Waypoints (per spec §10) -->
+      <aside class="sidebar-right" role="complementary" aria-label="Waypoints panel">
+        <!-- Duration control at top of right sidebar per spec §10.1 -->
+        <div class="duration-block">
+          <label id="speed-control-right" class="sidebar-control-row" for="animation-speed-right">
+            <span data-tip="Total animation playback time. Adjusts the base speed of all path segments">Duration</span>
+            <input type="range" id="animation-speed-right" min="1" max="4000" step="5">
+            <span id="animation-speed-value-right" class="slider-value">10s</span>
+          </label>
+          <!-- Graphics Scale — global multiplier for all vector element sizes -->
+          <div id="graphics-scale-control" style="margin-top:0.5rem;">
+            <label class="sidebar-control-row" for="graphics-scale">
+              <span id="graphics-scale-label" data-tip="Scales all graphics (paths, markers, labels, beacons) uniformly. Adjust individual sizes first, then fine-tune overall scale">Scale</span>
+              <input type="range" id="graphics-scale" min="-200" max="200" value="0" step="1">
+              <span id="graphics-scale-value" class="slider-value">1×</span>
+            </label>
+          </div>
+          <!-- Path emphasis — make the path readable on busy backgrounds (casing + glow) -->
+          <fieldset class="path-emphasis">
+            <legend>Path emphasis</legend>
+            <label class="checkbox-label" for="path-casing-toggle">
+              <input type="checkbox" id="path-casing-toggle" checked>
+              <span data-tip="Show white outline behind path for contrast on busy backgrounds">Path casing</span>
+            </label>
+            <label class="checkbox-label" for="path-glow-toggle">
+              <input type="checkbox" id="path-glow-toggle">
+              <span data-tip="Show a soft coloured halo around the path (distinct from the beacon glow effect)">Path glow</span>
+            </label>
+            <label class="sidebar-control-row" for="path-glow-intensity">
+              <span data-tip="How far the path glow spreads outward from the path">Glow intensity</span>
+              <input type="range" id="path-glow-intensity" min="0" max="100" value="50" step="1" disabled>
+              <span id="path-glow-value" class="slider-value">50%</span>
+            </label>
+          </fieldset>
+        </div>
+        <div class="control-group" style="padding: 0 0.75rem 0.75rem;">
+          <h2 style="margin-bottom:0.5rem;">Waypoints</h2>
+          <!-- Waypoint list container - instructions shown inside when empty -->
+          <div id="waypoint-list" class="waypoint-list"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Splash Screen (Hidden by default) - MOD-02/03: ARIA + focus trap -->
+  <!-- Help content populated dynamically from helpContent.js -->
+  <div id="splash" class="splash-screen" role="dialog" aria-modal="true" aria-labelledby="splash-title" style="display: none;">
+    <div class="splash-content">
+      <!-- MOD-01: Close button in top-right corner -->
+      <button id="splash-close-x" class="modal-close-x" aria-label="Close" title="Close">×</button>
+      <h2 id="splash-title">Welcome to Route Plotter v3</h2>
+      
+      <!-- Help content injected here by main.js -->
+      <div id="splash-help"></div>
+
+      <button id="splash-close" class="btn btn-primary">Get Started</button>
+      
+      <label class="checkbox-label" for="splash-dont-show">
+        <input type="checkbox" id="splash-dont-show">
+        Don't show this again
+      </label>
+    </div>
+  </div>
+
+  <!-- Codec Unsupported Modal — shown when MP4 (H.264) is unavailable or resolution too large -->
+  <div id="codec-unsupported-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-codec" style="display: none;">
+    <div class="modal-content">
+      <button class="modal-close-x" aria-label="Close" title="Close" data-modal-close>×</button>
+      <h3 id="modal-title-codec">MP4 export unavailable</h3>
+      <p id="codec-modal-message">Your browser does not support H.264 encoding, which is required for MP4 export. You can export as WebM instead — most video players and editors support this format.</p>
+      <div class="modal-buttons">
+        <button id="codec-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="codec-mp4-reduced" class="btn btn-secondary" style="display:none">Export MP4</button>
+        <button id="codec-webm" class="btn btn-primary">Export as WebM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warning Modal for "All Waypoints" changes - MOD-02/03: ARIA + focus trap -->
+  <div id="all-waypoints-warning-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-all-waypoints" style="display: none;">
+    <div class="modal-content">
+      <h3 id="modal-title-all-waypoints">Apply to All Waypoints?</h3>
+      <p>This will change this setting for <strong>all waypoints</strong> in your route. This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button id="all-waypoints-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="all-waypoints-confirm" class="btn btn-primary">Apply to All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear Confirmation Modal (N5-1) -->
+  <div id="clear-confirm-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-clear" style="display: none;">
+    <div class="modal-content">
+      <h3 id="modal-title-clear">Clear all waypoints?</h3>
+      <p>This will remove all waypoints and reset the canvas. This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button id="clear-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="clear-confirm" class="btn btn-danger">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "route-plotter",
+  "version": "3.1.0",
+  "description": "Route Plotter v3 - Interactive path animation tool",
+  "type": "module",
+  "scripts": {
+    "start": "node build.js --watch --serve",
+    "dev": "node build.js --watch --serve",
+    "build": "NODE_ENV=production node build.js",
+    "build:deploy": "npm run build",
+    "push": "node push.js",
+    "test": "vitest run --pool=threads --no-file-parallelism",
+    "test:watch": "vitest watch --pool=threads --no-file-parallelism",
+    "serve": "python3 -m http.server 3000",
+    "serve:dist": "cd docs && python3 -m http.server 3000"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.27.0",
+    "jsdom": "^27.2.0",
+    "vitest": "^4.0.8"
+  },
+  "dependencies": {
+    "mediabunny": "^1.39.2"
+  }
+}

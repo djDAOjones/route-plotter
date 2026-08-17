@@ -1,0 +1,346 @@
+/* Route Plotter v3 — Components (UoN + Carbon principles) — AAA-first
+   Assumptions:
+   - Light UI, black text on white by default
+   - Coloured text is rare; links are underlined
+   - Focus is always visible, keyboard-first
+   - Control boundaries meet non-text contrast requirements
+
+   Requires: route_plotter_v3_tokens_uon_carbon_AAA.css
+*/
+
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--font-sans);
+  font-size:var(--type-body);
+  line-height:var(--lh-body);
+  color:var(--text-01);
+  background:var(--ui-background);
+}
+
+/* Screen-reader only */
+.sr-only{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+
+/* Links: always underlined; colour is permitted here */
+a{
+  color:var(--link-01);
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+a:visited{color:var(--link-visited);}
+
+/* Universal focus style: robust two-layer ring (meets focus visibility on light surfaces) */
+:where(a,button,[role="button"],input,select,textarea,[tabindex]:not([tabindex="-1"])):focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+/* =========================
+   Layout surfaces
+   ========================= */
+
+.header{
+  height:var(--control-lg);
+  background:var(--ui-02);
+  border-bottom:1px solid var(--border-subtle);
+  padding:0 var(--space-4);
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+}
+
+.header-title{
+  font-size:var(--type-h1);
+  line-height:var(--lh-h1);
+  font-weight:var(--w-h1);
+  margin:0;
+  color:var(--text-01);
+}
+
+.header-controls{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  margin-left:auto;
+}
+
+.sidebar,.sidebar-right{
+  background:var(--ui-01);
+  padding:var(--space-4);
+}
+.sidebar{border-right:1px solid var(--border-subtle);}
+.sidebar-right{border-left:1px solid var(--border-subtle);}
+
+.sidebar-header{
+  font-size:var(--type-h2);
+  line-height:var(--lh-h2);
+  font-weight:var(--w-h2);
+  padding-bottom:var(--space-3);
+  margin:0 0 var(--space-3) 0;
+  border-bottom:1px solid var(--border-subtle);
+  color:var(--text-01);
+}
+
+/* =========================
+   Collapsible sections
+   ========================= */
+
+.section-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:var(--space-3) var(--space-2);
+  border-radius:var(--radius-2);
+  user-select:none;
+}
+
+.section-header:hover{background:var(--hover-ui);}
+
+.settings-section.expanded .section-header{
+  background:var(--selected-ui);
+  box-shadow:inset 4px 0 0 0 var(--interactive-01);
+}
+
+.section-title{
+  font-size:var(--type-label);
+  line-height:var(--lh-label);
+  font-weight:var(--w-label);
+  letter-spacing:var(--ls-label);
+  text-transform:uppercase;
+  color:var(--text-02);
+  margin:0;
+}
+
+.section-chevron{
+  color:var(--icon-02);
+  transition:transform var(--motion-med) var(--ease-out);
+}
+.settings-section.expanded .section-chevron{transform:rotate(90deg);}
+
+/* =========================
+   Buttons (hit targets first)
+   ========================= */
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:var(--space-2);
+  font:inherit;
+  font-weight:600;
+  height:var(--control-lg);
+  padding:0 var(--space-4);
+  border-radius:var(--radius-2);
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--text-01);
+  cursor:pointer;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.btn:disabled{
+  cursor:not-allowed;
+  background:var(--disabled-01);
+  color:var(--disabled-03);
+  border-color:var(--disabled-02);
+}
+
+.btn-primary{
+  background:var(--interactive-01);
+  color:var(--text-04);
+}
+.btn-primary:hover{background:var(--hover-primary);}
+.btn-primary:active{background:var(--active-primary);transform:translateY(1px);}
+
+.btn-secondary{
+  background:transparent;
+  border-color:var(--border-strong);
+  color:var(--text-01);
+}
+.btn-secondary:hover{background:var(--hover-ui);}
+.btn-secondary:active{background:var(--active-ui);transform:translateY(1px);}
+
+.btn-icon{
+  width:var(--control-lg);
+  padding:0;
+  border-color:transparent;
+}
+.btn-icon:hover{background:var(--hover-ui);}
+.btn-icon:active{background:var(--active-ui);transform:translateY(1px);}
+
+/* Destructive actions: AAA-safe pattern (do not use red body text) */
+.btn-danger{
+  border-color:var(--support-error);
+}
+.btn-danger:hover{background:var(--support-error-bg);}
+.btn-danger:active{background:var(--uon-jubilee-red-05);transform:translateY(1px);}
+
+/* =========================
+   Inputs / selects
+   ========================= */
+
+input[type="text"],
+input[type="number"],
+select{
+  width:100%;
+  height:var(--control-lg);
+  box-sizing:border-box;
+  background:var(--ui-02);
+  border:1px solid var(--border-strong); /* non-text contrast */
+  border-radius:var(--radius-1);
+  padding:0 var(--space-3);
+  font:inherit;
+  color:var(--text-01);
+}
+
+input::placeholder{color:var(--text-03);} /* AAA-safe placeholder */
+
+input:hover,select:hover{border-color:var(--border-strongest);}
+
+input:disabled,select:disabled{
+  background:var(--disabled-01);
+  border-color:var(--disabled-02);
+  color:var(--disabled-03);
+}
+
+/* =========================
+   Mono readouts
+   ========================= */
+
+.value-readout,#current-time,#total-time{
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  line-height:var(--lh-mono);
+  font-weight:var(--w-mono);
+  color:var(--text-02);
+}
+
+/* =========================
+   Lists / waypoint items
+   ========================= */
+
+.waypoint-item,.waypoint-item-all{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  background:var(--ui-02);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-2);
+  padding:var(--space-2) var(--space-3);
+  min-height:var(--control-lg);
+}
+
+.waypoint-item:hover,.waypoint-item-all:hover{background:var(--hover-ui);}
+
+.waypoint-item.selected,.waypoint-item-all.selected{
+  background:var(--selected-ui);
+  border-color:var(--border-strongest);
+  box-shadow:inset 4px 0 0 0 var(--interactive-01);
+}
+
+.waypoint-item-handle{color:var(--icon-02);cursor:grab;}
+.waypoint-item-label{color:var(--text-01);}
+
+.waypoint-item-delete{
+  margin-left:auto;
+  width:var(--control-lg);
+  height:var(--control-lg);
+  border-radius:var(--radius-2);
+  border:1px solid transparent;
+  background:transparent;
+  cursor:pointer;
+  color:var(--icon-02);
+}
+.waypoint-item-delete:hover{background:var(--hover-ui);}
+
+/* =========================
+   Controls bar
+   ========================= */
+
+.controls{
+  background:var(--ui-01);
+  border-top:1px solid var(--border-subtle);
+  padding:var(--space-3) var(--space-4);
+  height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-4);
+}
+
+/* =========================
+   Notices (AAA-safe)
+   ========================= */
+
+.notice{
+  border-left:4px solid var(--border-strong);
+  background:var(--ui-01);
+  padding:var(--space-3) var(--space-4);
+  color:var(--text-01);
+}
+
+.notice--error{border-left-color:var(--support-error);background:var(--support-error-bg);}
+.notice--success{border-left-color:var(--support-success);background:var(--support-success-bg);}
+.notice--warning{border-left-color:var(--support-warning-strong);background:var(--support-warning-bg);}
+.notice--info{border-left-color:var(--support-info-strong);background:var(--support-info-bg);}
+
+/* =========================
+   Modals (rare inverse moment)
+   ========================= */
+
+.modal,.splash-screen{
+  position:fixed;
+  inset:0;
+  background:var(--overlay-01);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:var(--space-4);
+  z-index:999;
+}
+
+.modal-content,.splash-content{
+  background:var(--ui-02);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-3);
+  box-shadow:var(--elev-3);
+  padding:var(--space-6);
+  max-width:720px;
+  width:100%;
+}
+
+/* =========================
+   Toast (impact moment)
+   ========================= */
+
+.toast{
+  position:fixed;
+  left:50%;
+  top:20%;
+  transform:translateX(-50%);
+  background:var(--interactive-01);
+  color:var(--text-04);
+  border-radius:var(--radius-2);
+  box-shadow:var(--elev-2);
+  padding:var(--space-3) var(--space-4);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--motion-med) var(--ease-out);
+  z-index:1000;
+}
+.toast.visible{opacity:1;pointer-events:auto;}

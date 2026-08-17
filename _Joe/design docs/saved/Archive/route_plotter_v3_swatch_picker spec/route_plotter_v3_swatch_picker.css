@@ -1,0 +1,117 @@
+/* Route Plotter v3 — Swatch Picker
+   Requires route_plotter_v3_tokens.css and route_plotter_v3_components.css
+*/
+
+.swatch-picker {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* fieldset created by JS */
+.swatch-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.swatch-legend {
+  font-size: var(--type-label);
+  line-height: var(--lh-label);
+  font-weight: var(--w-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-02);
+  margin-bottom: var(--space-2);
+}
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 44px);
+  gap: var(--space-2);
+}
+
+@media (min-width: 520px) {
+  .swatch-grid {
+    grid-template-columns: repeat(8, 44px);
+  }
+}
+
+.swatch-option {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-2);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.swatch-option:hover {
+  background: var(--hover-ui);
+}
+
+.swatch-option:focus-within {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+.swatch-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.swatch-chip {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-1);
+  border: 2px solid rgba(0,0,0,0.12);
+  box-sizing: border-box;
+}
+
+/* Selected state: double outline (works even without colour perception) */
+.swatch-radio:checked + .swatch-chip {
+  border: 2px solid #ffffff;
+  box-shadow:
+    0 0 0 2px var(--ui-05),     /* outer ring */
+    0 0 0 4px rgba(0,0,0,0.08); /* soft separation */
+}
+
+/* Yellow must always have a visible outline */
+.swatch-chip.is-yellow {
+  border: 2px solid var(--map-marker-stroke);
+}
+
+/* Disabled */
+.swatch-fieldset:disabled .swatch-option {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.swatch-fieldset:disabled .swatch-option:hover {
+  background: transparent;
+}
+
+/* Optional actions row */
+.swatch-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.swatch-disclosure {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--ui-03);
+  border-radius: var(--radius-2);
+  background: var(--ui-02);
+}
+
+/* small buttons */
+.btn-sm {
+  height: 36px;
+  padding: 6px 10px;
+  border-radius: var(--radius-2);
+  font-size: var(--type-caption);
+}

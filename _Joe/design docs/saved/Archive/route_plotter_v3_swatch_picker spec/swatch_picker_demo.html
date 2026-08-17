@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Swatch Picker Demo</title>
+
+  <link rel="stylesheet" href="route_plotter_v3_tokens.css" />
+  <link rel="stylesheet" href="route_plotter_v3_components.css" />
+  <link rel="stylesheet" href="route_plotter_v3_swatch_picker.css" />
+</head>
+<body style="padding: 24px; max-width: 720px;">
+
+  <h1 style="font-size: var(--type-h2); line-height: var(--lh-h2);">Swatch Picker Demo</h1>
+  <p style="color: var(--text-02);">This demo shows Okabe–Ito swatches bound to existing hidden colour inputs.</p>
+
+  <h2 style="font-size: var(--type-body); font-weight: 600;">Marker colour</h2>
+  <input id="dot-color" type="color" class="sr-only" value="#0072B2" aria-hidden="true">
+  <div class="swatch-picker" data-target-input="#dot-color" data-mode="okabe-ito" data-label="Marker colour" data-allow-custom="false"></div>
+
+  <hr style="margin: 24px 0; border: 0; border-top: 1px solid var(--ui-03);" />
+
+  <h2 style="font-size: var(--type-body); font-weight: 600;">Path head colour</h2>
+  <input id="path-head-color" type="color" class="sr-only" value="#111111" aria-hidden="true">
+  <div class="swatch-picker" data-target-input="#path-head-color" data-mode="neutral-ink" data-label="Path head colour" data-allow-custom="true"></div>
+
+  <script type="module">
+    import { attachSwatchPickers } from './route_plotter_v3_swatch_picker.js';
+    attachSwatchPickers();
+  </script>
+</body>
+</html>
