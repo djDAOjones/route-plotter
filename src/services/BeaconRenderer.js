@@ -1,12 +1,24 @@
 /**
  * BeaconRenderer - Modular beacon effect system for waypoint animations
- * 
- * ## Architecture
+ *
+ * ## Architecture (deterministic-timeline mandate)
+ * Every beacon's visual state is a CLOSED-FORM function of its local clock:
+ * `localSec = (timelineMs - clockStartMs) / 1000`, where clockStartMs comes
+ * from the per-waypoint schedule PlayerCore precomputes (arrival time, or the
+ * early-onset window start for scale-controlling beacons). There is no
+ * delta-time accumulation and no per-phase memory — evaluating any timeline
+ * instant yields the same beacon state whether reached by playing, scrubbing
+ * (forwards or backwards), or export stepping.
+ *
  * Each beacon type is a separate class implementing a common interface:
- * - update(deltaTime, phase, pauseProgress) - Update animation state
+ * - sync(localSec, win, options) - Derive full state from the local clock
  * - render(ctx, x, y, markerSize, color, markerScale) - Draw the effect
- * - reset() - Reset animation state
- * 
+ * - reset() - Clear cached state (config changes, project reload)
+ *
+ * `win` carries the schedule windows in local seconds:
+ * - win.arrivalSec - when the path head reaches the waypoint
+ * - win.holdEndSec - when its pause window ends (== arrivalSec if no pause)
+ *
  * ## Beacon Types
  * - **none**: No beacon effect
  * - **ripple**: Concentric rings radiating outward (4 rings, 1s apart)
@@ -14,21 +26,19 @@
  * - **pop**: Quick scale 100%→200%→100% (or 0%→200%→0% with hide-before/after)
  * - **grow**: Smooth scale to 200%, hold during pause, then back to 100%
  * - **pulse**: Oscillating scale 200%↔50% during pause
- * 
- * ## Phases
- * - `onset`: Animation building up (approaching waypoint)
- * - `hold`: Holding at waypoint (during pause)
- * - `offset`: Animation winding down (leaving waypoint)
- * - `inactive`: Beacon not active
- * 
+ *
+ * ## Phases (derived, kept for renderer queries)
+ * - `onset`: local clock running, path head not yet at the waypoint
+ * - `hold`: inside the pause window
+ * - `offset`: past the pause window, winding down
+ * - `inactive`: local clock has not started (localSec < 0)
+ *
  * ## Integration with Waypoint Visibility
  * Pop, grow, and pulse beacons can override waypoint visibility animations
  * when hide-before or hide-after modes are active.
- * 
+ *
  * @module BeaconRenderer
  */
-
-import { Easing } from '../utils/Easing.js';
 
 // ============================================================================
 // BEACON TIMING CONSTANTS
@@ -153,26 +163,38 @@ const BeaconEasing = {
  */
 class BaseBeacon {
   constructor() {
-    /** @type {number} Current animation time in seconds */
+    /** @type {number} Local clock in seconds (negative = not started) */
     this.time = 0;
-    /** @type {string} Current phase: 'inactive', 'onset', 'hold', 'offset' */
+    /** @type {string} Derived phase: 'inactive', 'onset', 'hold', 'offset' */
     this.phase = 'inactive';
     /** @type {boolean} Whether beacon has completed its animation */
     this.completed = false;
+    /** @type {boolean} Whether the local clock has started (localSec >= 0) */
+    this.started = false;
   }
-  
+
   /**
-   * Update beacon animation state
-   * @param {number} deltaTime - Time elapsed in seconds
-   * @param {string} phase - Current animation phase
-   * @param {number} pauseProgress - Progress through pause (0-1), -1 if not pausing
-   * @param {Object} options - Additional options (hidesBefore, hidesAfter, etc.)
+   * Derive the shared clock/phase state from the local clock. Subclasses call
+   * this first, then compute their visuals closed-form from `this.time`.
+   * @param {number} localSec - Seconds since this beacon's clock start (can be < 0)
+   * @param {{arrivalSec: number, holdEndSec: number}} win - Schedule windows, local seconds
+   * @param {Object} options - hidesBefore/hidesAfter + per-style settings
    */
-  update(deltaTime, phase, pauseProgress, options = {}) {
-    this.time += deltaTime;
-    this.phase = phase;
+  sync(localSec, win, options = {}) {
+    this.time = localSec;
+    this.started = localSec >= 0;
+    if (localSec < 0) {
+      this.phase = 'inactive';
+    } else if (localSec < win.arrivalSec) {
+      this.phase = 'onset';
+    } else if (localSec < win.holdEndSec) {
+      this.phase = 'hold';
+    } else {
+      this.phase = 'offset';
+    }
+    this.completed = false; // Subclasses derive their own completion time
   }
-  
+
   /**
    * Render the beacon effect
    * @param {CanvasRenderingContext2D} ctx - Canvas context
@@ -186,7 +208,7 @@ class BaseBeacon {
   render(ctx, x, y, markerSize, color, markerScale) {
     return null; // No scale override by default
   }
-  
+
   /**
    * Reset beacon to initial state
    */
@@ -194,8 +216,9 @@ class BaseBeacon {
     this.time = 0;
     this.phase = 'inactive';
     this.completed = false;
+    this.started = false;
   }
-  
+
   /**
    * Check if beacon is currently active
    * @returns {boolean}
@@ -225,13 +248,12 @@ class BaseBeacon {
  * Ring Animation:
  * - Scale: Linear growth from 0% to maxScale% over full duration
  * - Opacity: 100% for first 50% of duration, then fades to 0% over remaining 50%
- * 
- * Phase Handling:
- * - During 'hold' phase: time is synchronized with pauseElapsedMs from AnimationEngine
- * - During 'onset'/'offset': time accumulates via deltaTime
- * - Rings spawn during 'onset', 'hold', or 'offset' (if already started)
- * - This synchronization ensures beacon animation matches actual pause duration
- * 
+ *
+ * Ring state is rebuilt closed-form from the local clock on every sync:
+ * ring k exists from k*interval, ages linearly, and fades on schedule —
+ * the pause window (precomputed by PlayerCore) is sized so all rings
+ * complete inside it.
+ *
  * Timeline Example (1000% scale, 4 rings):
  * - Ring 0: spawns t=0s, full opacity 0-0.5s, fades 0.5-1s
  * - Ring 1: spawns t=1s, full opacity 1-1.5s, fades 1.5-2s
@@ -279,120 +301,38 @@ class RippleBeacon extends BaseBeacon {
     return T.RIPPLE_BASE_DURATION * (maxScalePercent / T.RIPPLE_REFERENCE_SCALE);
   }
   
-  update(deltaTime, phase, pauseProgress, options = {}) {
-    // Don't call super.update() - we manage time ourselves for synchronization
-    this.phase = phase;
-    
-    // Update settings from options
+  sync(localSec, win, options = {}) {
+    super.sync(localSec, win, options);
+
     this.thickness = options.rippleThickness || 2;
-    const newMaxScale = options.rippleMaxScale || 1000;
-    const pauseElapsedMs = options.pauseElapsedMs || 0;
-    
-    // Detect maxScale change and reset if needed to prevent visual glitches
-    if (newMaxScale !== this.maxScale && this.rings.length > 0) {
-      // MaxScale changed mid-animation - reset to start fresh
-      this.rings = [];
-      this.allSpawned = false;
-      this.spawnCount = 0;
-      this.time = 0;
-      this._lastPhase = null;
-    }
-    this.maxScale = newMaxScale;
-    
-    // Synchronize beacon time with pause elapsed time during hold phase
-    // This ensures the beacon animation matches the actual pause duration
-    if (phase === 'hold' && pauseElapsedMs > 0) {
-      // Use pause elapsed time directly (convert ms to seconds)
-      this.time = pauseElapsedMs / 1000;
-      // Remember the hold time so we can continue from it in offset phase
-      this._lastHoldTime = this.time;
-    } else if (phase === 'onset') {
-      // During onset, accumulate time normally
-      this.time += deltaTime;
-    } else if (phase === 'offset') {
-      // During offset, continue from where hold phase left off
-      // This ensures rings spawned during hold continue their animation
-      if (this._lastHoldTime !== undefined && this._lastHoldTime > this.time) {
-        this.time = this._lastHoldTime;
-      }
-      this.time += deltaTime;
-    }
-    // During inactive phase, don't accumulate time
-    
-    // Track phase transitions for debugging (controlled by static flag)
-    if (RippleBeacon.DEBUG && phase !== this._lastPhase) {
-      console.log(`🔔 [Ripple] Phase transition: ${this._lastPhase || 'none'} → ${phase} at t=${this.time.toFixed(2)}s pauseEl:${pauseElapsedMs}ms`);
-    }
-    this._lastPhase = phase;
-    
+    this.maxScale = options.rippleMaxScale || 1000;
+
     const T = BEACON_TIMING;
-    // Duration and interval scale with maxScale for constant visual speed
     const ringDuration = this.calculateDuration(this.maxScale);
     const spawnInterval = ringDuration; // Each ring spawns as previous completes
-    
-    // Debug logging (throttled, controlled by static flag)
-    if (RippleBeacon.DEBUG && (!this._lastDebugTime || this.time - this._lastDebugTime > 0.25)) {
-      const nextSpawnTime = this.spawnCount * spawnInterval;
-      const timeUntilNextSpawn = nextSpawnTime - this.time;
-      console.log(`🔔 [Ripple] t:${this.time.toFixed(2)}s scale:${this.maxScale}% dur:${ringDuration.toFixed(2)}s rings:${this.rings.length} spawned:${this.spawnCount}/${T.RIPPLE_COUNT} phase:${phase} pauseEl:${pauseElapsedMs}ms nextSpawn:${timeUntilNextSpawn.toFixed(2)}s`);
-      this._lastDebugTime = this.time;
-    }
-    
-    // Spawn new rings during onset/hold phases, OR continue spawning in offset if already started
-    // This ensures all rings spawn even if the wait ends slightly early due to timing
-    const canSpawn = (phase === 'onset' || phase === 'hold') || 
-                     (phase === 'offset' && this.spawnCount > 0 && !this.allSpawned);
-    
-    if (canSpawn && !this.allSpawned) {
-      // Calculate how many rings should exist based on elapsed time
-      const targetRingCount = Math.min(
-        T.RIPPLE_COUNT,
-        Math.floor(this.time / spawnInterval) + 1
-      );
-      
-      // Spawn rings to catch up to target count
-      while (this.spawnCount < targetRingCount) {
-        this.rings.push({
-          startTime: this.spawnCount * spawnInterval,
-          opacity: 1.0
-        });
-        this.spawnCount++;
-        if (RippleBeacon.DEBUG) {
-          console.log(`🔔 [Ripple] Spawned ring ${this.spawnCount} at t=${((this.spawnCount-1) * spawnInterval).toFixed(2)}s (phase:${phase})`);
-        }
-        
-        if (this.spawnCount >= T.RIPPLE_COUNT) {
-          this.allSpawned = true;
-          if (RippleBeacon.DEBUG) {
-            console.log(`🔔 [Ripple] All ${T.RIPPLE_COUNT} rings spawned`);
-          }
-        }
-      }
-    }
-    
-    // Update ring opacities and remove completed rings
-    // Opacity held at 100% for RIPPLE_FADE_START fraction, then fades to 0%
     const fadeStartTime = ringDuration * T.RIPPLE_FADE_START;
-    
-    this.rings = this.rings.filter(ring => {
-      const age = this.time - ring.startTime;
-      
-      // Calculate opacity: 100% until fadeStart, then smooth fade to 0%
-      if (age >= fadeStartTime) {
-        const fadeProgress = (age - fadeStartTime) / (ringDuration - fadeStartTime);
-        ring.opacity = 1.0 - BeaconEasing.smoothStep(Math.min(1, fadeProgress));
-      } else {
-        ring.opacity = 1.0; // Full opacity before fade starts
+
+    // Rebuild ring state closed-form: ring k spawns at k*interval, grows for
+    // ringDuration, holds opacity then fades. No spawn/fade bookkeeping to
+    // carry between frames — scrubbing backwards revives rings correctly.
+    this.rings = [];
+    this.spawnCount = 0;
+    if (localSec >= 0) {
+      this.spawnCount = Math.min(T.RIPPLE_COUNT, Math.floor(localSec / spawnInterval) + 1);
+      for (let k = 0; k < this.spawnCount; k++) {
+        const startTime = k * spawnInterval;
+        const age = localSec - startTime;
+        if (age >= ringDuration) continue;
+        let opacity = 1.0;
+        if (age >= fadeStartTime) {
+          const fadeProgress = (age - fadeStartTime) / (ringDuration - fadeStartTime);
+          opacity = 1.0 - BeaconEasing.smoothStep(Math.min(1, fadeProgress));
+        }
+        if (opacity > 0.01) this.rings.push({ startTime, opacity });
       }
-      
-      // Keep ring if still visible
-      return age < ringDuration && ring.opacity > 0.01;
-    });
-    
-    // Mark as completed when all rings are done
-    if (this.allSpawned && this.rings.length === 0) {
-      this.completed = true;
     }
+    this.allSpawned = this.spawnCount >= T.RIPPLE_COUNT;
+    this.completed = localSec >= T.RIPPLE_COUNT * ringDuration;
   }
   
   render(ctx, x, y, markerSize, color, markerScale, sizeScale = 1) {
@@ -432,8 +372,6 @@ class RippleBeacon extends BaseBeacon {
     this.rings = [];
     this.allSpawned = false;
     this.spawnCount = 0;
-    this._lastPhase = null;
-    this._lastDebugTime = null;
   }
 }
 
@@ -467,34 +405,24 @@ class GlowBeacon extends BaseBeacon {
     this.elapsedTime = 0;
   }
   
-  update(deltaTime, phase, pauseProgress, options = {}) {
-    super.update(deltaTime, phase, pauseProgress, options);
-    
-    // Start animation when we first reach the waypoint
-    if (phase !== 'inactive' && !this.started) {
-      this.started = true;
-      this.elapsedTime = 0;
-    }
-    
-    // Don't animate if not started
-    if (!this.started) return;
-    
-    // Accumulate time (continuous animation, ignores phase)
-    this.elapsedTime += deltaTime;
-    
+  sync(localSec, win, options = {}) {
+    super.sync(localSec, win, options);
+
     const T = BEACON_TIMING;
     const totalDuration = T.GLOW_ONSET_DURATION + T.GLOW_FADE_DURATION; // 3s total
-    
-    if (this.elapsedTime <= T.GLOW_ONSET_DURATION) {
+    this.elapsedTime = Math.max(0, localSec);
+
+    if (localSec < 0) {
+      this.radius = 0;
+      this.opacity = 0;
+    } else if (localSec <= T.GLOW_ONSET_DURATION) {
       // Phase 1: 0s-1s - Radius eases in, opacity at 100%
-      const progress = this.elapsedTime / T.GLOW_ONSET_DURATION;
-      this.radius = BeaconEasing.easeIn(progress);
+      this.radius = BeaconEasing.easeIn(localSec / T.GLOW_ONSET_DURATION);
       this.opacity = 1.0;
-    } else if (this.elapsedTime <= totalDuration) {
+    } else if (localSec <= totalDuration) {
       // Phase 2: 1s-3s - Radius at max, opacity fades linearly
       this.radius = 1.0;
-      const fadeProgress = (this.elapsedTime - T.GLOW_ONSET_DURATION) / T.GLOW_FADE_DURATION;
-      this.opacity = 1.0 - fadeProgress; // Linear fade
+      this.opacity = 1.0 - (localSec - T.GLOW_ONSET_DURATION) / T.GLOW_FADE_DURATION;
     } else {
       // Animation complete
       this.radius = 1.0;
@@ -600,75 +528,53 @@ class PopBeacon extends BaseBeacon {
     this.offsetTime = 0;
   }
   
-  update(deltaTime, phase, pauseProgress, options = {}) {
-    super.update(deltaTime, phase, pauseProgress, options);
-    
+  sync(localSec, win, options = {}) {
+    super.sync(localSec, win, options);
+
     this.hidesBefore = options.hidesBefore || false;
     this.hidesAfter = options.hidesAfter || false;
-    
+
     const T = BEACON_TIMING;
     const startScale = this.hidesBefore ? T.POP_MIN_SCALE : T.POP_BASE_SCALE;
-    
-    // Start animation when beacon phase becomes active
-    // For scale-controlling beacons with hidesBefore, the beacon takes over EARLY
-    // (during the visibility animation window) so it controls the full 0%→200%→100%
-    // animation as a single coherent gesture
-    if (phase !== 'inactive' && !this.started) {
-      this.started = true;
-      this.elapsedTime = 0;
-      this.scale = startScale; // 0% if hidesBefore, 100% otherwise
-    }
-    
-    // Don't animate if not started
-    if (!this.started) return;
-    
-    // If intro animation not complete, run it regardless of phase
-    if (!this.introComplete) {
-      this.elapsedTime += deltaTime;
-      
-      if (this.elapsedTime <= T.POP_SCALE_UP_DURATION) {
-        // Phase 1: 0s-0.5s - Scale up to 200%
-        const progress = this.elapsedTime / T.POP_SCALE_UP_DURATION;
-        const eased = BeaconEasing.easeInOut(progress);
-        this.scale = startScale + eased * (T.POP_PEAK_SCALE - startScale);
-      } else if (this.elapsedTime <= T.POP_SCALE_UP_DURATION + T.POP_SCALE_DOWN_DURATION) {
-        // Phase 2: 0.5s-1s - Scale down to 100%
-        const progress = (this.elapsedTime - T.POP_SCALE_UP_DURATION) / T.POP_SCALE_DOWN_DURATION;
-        const eased = BeaconEasing.easeInOut(progress);
-        this.scale = T.POP_PEAK_SCALE - eased * (T.POP_PEAK_SCALE - T.POP_BASE_SCALE);
-      } else {
-        // Intro complete, hold at 100%
-        this.introComplete = true;
-        this.scale = T.POP_BASE_SCALE;
-      }
+    const introDur = T.POP_SCALE_UP_DURATION + T.POP_SCALE_DOWN_DURATION; // 1s
+    // The intro always runs to completion once the clock starts; the
+    // wind-down begins after the pause window (or after the intro when the
+    // window is shorter than the intro itself).
+    const offsetStart = Math.max(introDur, win.holdEndSec);
+
+    this.elapsedTime = Math.max(0, localSec);
+    this.introComplete = localSec > introDur;
+    this.offsetTime = Math.max(0, localSec - offsetStart);
+
+    if (localSec < 0) {
+      this.scale = startScale;
       return;
     }
-    
-    // Intro complete - handle hold and offset phases
-    if (phase === 'hold' || phase === 'onset') {
-      // Hold at 100%
+    if (localSec <= T.POP_SCALE_UP_DURATION) {
+      // 0s-0.5s: scale up to 200%
+      const eased = BeaconEasing.easeInOut(localSec / T.POP_SCALE_UP_DURATION);
+      this.scale = startScale + eased * (T.POP_PEAK_SCALE - startScale);
+      return;
+    }
+    if (localSec <= introDur) {
+      // 0.5s-1s: scale down to 100%
+      const eased = BeaconEasing.easeInOut((localSec - T.POP_SCALE_UP_DURATION) / T.POP_SCALE_DOWN_DURATION);
+      this.scale = T.POP_PEAK_SCALE - eased * (T.POP_PEAK_SCALE - T.POP_BASE_SCALE);
+      return;
+    }
+    if (localSec <= offsetStart) {
+      // Hold at 100% through the pause window
       this.scale = T.POP_BASE_SCALE;
-      this.offsetTime = 0;
-    } else if (phase === 'offset') {
-      if (this.hidesAfter) {
-        // Scale down to 0%
-        this.offsetTime += deltaTime;
-        const progress = Math.min(1, this.offsetTime / T.POP_SCALE_DOWN_DURATION);
-        const eased = BeaconEasing.easeInOut(progress);
-        this.scale = T.POP_BASE_SCALE - eased * T.POP_BASE_SCALE;
-        
-        if (progress >= 1) {
-          this.completed = true;
-        }
-      } else {
-        // Stay at 100%
-        this.scale = T.POP_BASE_SCALE;
-        // Mark complete after brief hold
-        this.offsetTime += deltaTime;
-        if (this.offsetTime > 0.5) {
-          this.completed = true;
-        }
-      }
+      return;
+    }
+    // Past the pause window: wind down
+    if (this.hidesAfter) {
+      const progress = Math.min(1, (localSec - offsetStart) / T.POP_SCALE_DOWN_DURATION);
+      this.scale = T.POP_BASE_SCALE - BeaconEasing.easeInOut(progress) * T.POP_BASE_SCALE;
+      this.completed = progress >= 1;
+    } else {
+      this.scale = T.POP_BASE_SCALE;
+      this.completed = (localSec - offsetStart) > 0.5;
     }
   }
   
@@ -747,77 +653,58 @@ class GrowBeacon extends BaseBeacon {
     this.hidesAfter = false;
   }
   
-  update(deltaTime, phase, pauseProgress, options = {}) {
-    super.update(deltaTime, phase, pauseProgress, options);
-    
+  /** Fixed hold at peak scale (seconds) — the pause budget in PlayerCore
+   *  (remaining grow-up + this hold + scale-down + buffer) is sized to it. */
+  static HOLD_DURATION_SEC = 1.0;
+
+  sync(localSec, win, options = {}) {
+    super.sync(localSec, win, options);
+
     this.hidesBefore = options.hidesBefore || false;
     this.hidesAfter = options.hidesAfter || false;
-    
+
     const T = BEACON_TIMING;
     const startScale = this.hidesBefore ? 0 : T.GROW_BASE_SCALE;
     const endScale = this.hidesAfter ? 0 : T.GROW_BASE_SCALE;
-    
-    // Fixed hold duration at peak scale (1 second)
-    // The AnimationEngine extends the pause to accommodate grow-up + hold + scale-down
-    // So we use a fixed hold time here, not the user's pauseTime
-    const HOLD_DURATION_SEC = 1.0;
-    
-    // Start animation when beacon phase becomes active
-    if (phase !== 'inactive' && !this.started) {
-      this.started = true;
-      this.onsetTime = 0;
-      this.holdTime = 0;
-      this.scaleDownTime = 0;
+
+    // Fixed local milestones: up 0-2s, hold 2-3s, down 3-4s, then rest at
+    // endScale. The early-onset schedule aims the grow-up completion at the
+    // waypoint arrival; whatever lead was unavailable spills into the pause,
+    // whose PlayerCore budget covers exactly that spill.
+    const upEnd = T.GROW_SCALE_UP_DURATION;
+    const holdEnd = upEnd + GrowBeacon.HOLD_DURATION_SEC;
+    const downEnd = holdEnd + T.GROW_SCALE_DOWN_DURATION;
+    const restEnd = Math.max(downEnd, win.holdEndSec);
+
+    this.onsetTime = Math.min(Math.max(0, localSec), upEnd);
+    this.holdTime = Math.min(Math.max(0, localSec - upEnd), GrowBeacon.HOLD_DURATION_SEC);
+    this.scaleDownTime = Math.min(Math.max(0, localSec - holdEnd), T.GROW_SCALE_DOWN_DURATION);
+    this.growUpComplete = localSec >= upEnd;
+    this.scaleDownComplete = localSec >= downEnd;
+    this.offsetTime = Math.max(0, localSec - restEnd);
+
+    if (localSec < 0) {
       this.scale = startScale;
-    }
-    
-    if (!this.started) return;
-    
-    // PHASE 1: Grow-up animation (2 seconds)
-    if (!this.growUpComplete) {
-      this.onsetTime += deltaTime;
-      const progress = Math.min(1, this.onsetTime / T.GROW_SCALE_UP_DURATION);
-      const eased = BeaconEasing.easeInOut(progress);
-      this.scale = startScale + eased * (T.GROW_PEAK_SCALE - startScale);
-      
-      if (progress >= 1) {
-        this.growUpComplete = true;
-        this.scale = T.GROW_PEAK_SCALE;
-        this.holdTime = 0;
-      }
       return;
     }
-    
-    // PHASE 2: Hold at peak for fixed duration (1 second)
-    if (!this.scaleDownComplete && this.holdTime < HOLD_DURATION_SEC) {
-      this.holdTime += deltaTime;
+    if (localSec <= upEnd) {
+      const eased = BeaconEasing.easeInOut(localSec / upEnd);
+      this.scale = startScale + eased * (T.GROW_PEAK_SCALE - startScale);
+      return;
+    }
+    if (localSec <= holdEnd) {
       this.scale = T.GROW_PEAK_SCALE;
       return;
     }
-    
-    // PHASE 3: Scale-down animation (1 second)
-    if (!this.scaleDownComplete) {
-      this.scaleDownTime += deltaTime;
-      const progress = Math.min(1, this.scaleDownTime / T.GROW_SCALE_DOWN_DURATION);
-      const eased = BeaconEasing.easeInOut(progress);
+    if (localSec <= downEnd) {
+      const eased = BeaconEasing.easeInOut((localSec - holdEnd) / T.GROW_SCALE_DOWN_DURATION);
       this.scale = T.GROW_PEAK_SCALE - eased * (T.GROW_PEAK_SCALE - endScale);
-      
-      if (progress >= 1) {
-        this.scaleDownComplete = true;
-        this.scale = endScale;
-      }
       return;
     }
-    
-    // PHASE 4: Hold at end scale to override visibility animation
+    // Rest at end scale to override the visibility animation, then complete
+    // half a second after the pause window releases the path.
     this.scale = endScale;
-    this.offsetTime += deltaTime;
-    
-    // Only mark completed after holding for 0.5s in offset phase
-    // This ensures we override the visibility animation's scale-down
-    if (phase === 'offset' && this.offsetTime > 0.5) {
-      this.completed = true;
-    }
+    this.completed = this.offsetTime > 0.5;
   }
   
   render(ctx, x, y, markerSize, color, markerScale, sizeScale = 1) {
@@ -942,129 +829,80 @@ class PulseBeacon extends BaseBeacon {
     }
   }
   
-  update(deltaTime, phase, pauseProgress, options = {}) {
-    super.update(deltaTime, phase, pauseProgress, options);
-    
+  sync(localSec, win, options = {}) {
+    super.sync(localSec, win, options);
+
     this.hidesBefore = options.hidesBefore || false;
     this.hidesAfter = options.hidesAfter || false;
-    
-    // Update amplitude and cycle duration from waypoint options
+
+    // Amplitude and cycle duration from waypoint options
     const amplitude = options.pulseAmplitude !== undefined ? options.pulseAmplitude : 1.0;
     this.cycleDuration = options.pulseCycleSpeed !== undefined ? options.pulseCycleSpeed : 4.0;
     this._updateScaleRange(amplitude);
-    
-    // Quarter cycle duration (used for onset/exit transitions)
+
     const quarterCycle = this.cycleDuration / 4;
-    
-    // Get pause elapsed time for syncing animation during pauses
-    const pauseElapsedMs = options.pauseElapsedMs || 0;
-    const pauseElapsedSec = pauseElapsedMs / 1000;
-    
-    if (phase === 'onset') {
-      // Onset phase uses this.time (accumulated via deltaTime) for smooth animation
-      // We do NOT use pauseElapsedSec here because:
-      // 1. pauseElapsedSec starts at 0 when pause begins, but this.time has already accumulated
-      // 2. Switching to pauseElapsedSec would cause a visual jump/restart
-      // 3. The onset animation should continue smoothly regardless of pause state
-      
-      if (this.hidesBefore) {
-        // With hide-before: fade in 0%→100%, then 100%→maxScale
-        if (this.subPhase !== 'fade-in' && this.subPhase !== 'initial') {
-          this.subPhase = 'fade-in';
-          this.subPhaseTime = 0;
-        }
-        
-        if (this.subPhase === 'fade-in') {
-          this.subPhaseTime += deltaTime;
-          const progress = Math.min(1, this.subPhaseTime / quarterCycle);
-          const eased = BeaconEasing.easeInOut(progress);
-          this.scale = eased; // 0→1
-          
-          if (progress >= 1) {
-            this.subPhase = 'initial';
-            this.subPhaseTime = 0;
-          }
-        } else {
-          // initial: 100%→maxScale
-          this.subPhaseTime += deltaTime;
-          const progress = Math.min(1, this.subPhaseTime / quarterCycle);
-          const eased = BeaconEasing.easeInOut(progress);
-          this.scale = 1 + eased * (this._maxScale - 1);
-        }
-      } else {
-        // Normal: 100%→maxScale
-        this.subPhase = 'initial';
-        const progress = Math.min(1, this.time / quarterCycle);
-        const eased = BeaconEasing.easeInOut(progress);
-        this.scale = 1 + eased * (this._maxScale - 1);
-      }
-      
+    // Onset: rise to maxScale over a quarter cycle; with hide-before a
+    // fade-in quarter (0%→100%) precedes it.
+    const onsetDur = this.hidesBefore ? quarterCycle * 2 : quarterCycle;
+
+    if (localSec < 0) {
+      this.scale = this.hidesBefore ? 0 : BEACON_TIMING.PULSE_BASE_SCALE;
+      this.subPhase = 'initial';
+      this.subPhaseTime = 0;
       this.loopTime = 0;
       this.exiting = false;
-    } else if (phase === 'hold') {
+      return;
+    }
+
+    if (localSec < onsetDur) {
+      if (this.hidesBefore && localSec < quarterCycle) {
+        // Fade in 0%→100%
+        this.subPhase = 'fade-in';
+        this.subPhaseTime = localSec;
+        this.scale = BeaconEasing.easeInOut(localSec / quarterCycle);
+      } else {
+        // Rise 100%→maxScale
+        this.subPhase = 'initial';
+        const riseSec = this.hidesBefore ? localSec - quarterCycle : localSec;
+        this.subPhaseTime = riseSec;
+        const progress = Math.min(1, riseSec / quarterCycle);
+        this.scale = 1 + BeaconEasing.easeInOut(progress) * (this._maxScale - 1);
+      }
+      this.loopTime = 0;
+      this.exiting = false;
+      return;
+    }
+
+    // Loop: maxScale→minScale→maxScale from the end of onset. The exit point
+    // is the first upward 100%-crossing (~75% of a cycle) at or after the
+    // pause window ends — computed directly, no per-frame crossing detection.
+    const loopTime = localSec - onsetDur;
+    this.loopTime = loopTime;
+    const holdEndLoopTime = Math.max(0, win.holdEndSec - onsetDur);
+    const k = Math.max(0, Math.ceil((holdEndLoopTime - 0.75 * this.cycleDuration) / this.cycleDuration));
+    const exitLoopTime = (k + 0.75) * this.cycleDuration;
+
+    if (loopTime < exitLoopTime) {
       this.subPhase = 'loop';
-      
-      // Sync loop time with pause elapsed time for smooth animation during pause
-      // This ensures the pulse continues animating even when the path is waiting
-      // (pauseElapsedMs already extracted at top of method)
-      if (pauseElapsedMs > 0) {
-        // Subtract onset duration from pauseElapsedMs since onset happens first
-        // Onset duration is quarterCycle (1s for 4s cycle)
-        const onsetDurationMs = quarterCycle * 1000;
-        const holdElapsedMs = Math.max(0, pauseElapsedMs - onsetDurationMs);
-        this.loopTime = holdElapsedMs / 1000;
-      } else {
-        this.loopTime += deltaTime;
-      }
-      // Remember the loop time so we can continue from it in offset phase
-      this._lastLoopTime = this.loopTime;
-      
-      // Calculate position in loop cycle (0-1 for full cycle)
-      const cycleProgress = (this.loopTime % this.cycleDuration) / this.cycleDuration;
-      this.scale = this._calculateLoopScale(cycleProgress);
-    } else if (phase === 'offset') {
-      if (!this.exiting) {
-        // Continue loop until we reach 100% (base scale)
-        // Ensure we continue from where hold phase left off
-        if (this._lastLoopTime !== undefined && this._lastLoopTime > this.loopTime) {
-          this.loopTime = this._lastLoopTime;
-        }
-        this.loopTime += deltaTime;
-        const cycleProgress = (this.loopTime % this.cycleDuration) / this.cycleDuration;
-        
-        // Find when we cross 100% (happens at ~25% and ~75% of cycle)
-        // We want to exit when going UP through 100% (at ~75% of cycle)
-        const crossingPoint = 0.75;
-        const tolerance = 0.05;
-        
-        if (cycleProgress >= crossingPoint - tolerance && cycleProgress <= crossingPoint + tolerance) {
-          this.exiting = true;
-          this.scale = 1.0; // Snap to 100%
-          this.subPhaseTime = 0;
-          this.subPhase = this.hidesAfter ? 'fade-out' : 'exit-to-base';
-        } else {
-          // Continue loop until we can exit
-          this.scale = this._calculateLoopScale(cycleProgress);
-        }
-      } else {
-        // Exit animation
-        this.subPhaseTime += deltaTime;
-        
-        if (this.subPhase === 'fade-out') {
-          // Fade out: 100%→0%
-          const progress = Math.min(1, this.subPhaseTime / quarterCycle);
-          const eased = BeaconEasing.easeInOut(progress);
-          this.scale = 1 - eased; // 1→0
-          
-          if (progress >= 1) {
-            this.completed = true;
-          }
-        } else {
-          // Already at 100%, just mark complete
-          this.scale = 1.0;
-          this.completed = true;
-        }
-      }
+      this.subPhaseTime = 0;
+      this.exiting = false;
+      this.scale = this._calculateLoopScale((loopTime % this.cycleDuration) / this.cycleDuration);
+      return;
+    }
+
+    // Exit: snap to 100% at the crossing, then fade out if hide-after
+    this.exiting = true;
+    const sinceExit = loopTime - exitLoopTime;
+    this.subPhaseTime = sinceExit;
+    if (this.hidesAfter) {
+      this.subPhase = 'fade-out';
+      const progress = Math.min(1, sinceExit / quarterCycle);
+      this.scale = 1 - BeaconEasing.easeInOut(progress);
+      this.completed = progress >= 1;
+    } else {
+      this.subPhase = 'exit-to-base';
+      this.scale = BEACON_TIMING.PULSE_BASE_SCALE;
+      this.completed = true;
     }
   }
   
@@ -1079,7 +917,6 @@ class PulseBeacon extends BaseBeacon {
     this.subPhase = 'initial';
     this.subPhaseTime = 0;
     this.loopTime = 0;
-    this._lastLoopTime = undefined;
     this.exiting = false;
     this.hidesBefore = false;
     this.hidesAfter = false;
@@ -1164,18 +1001,14 @@ export class BeaconRenderer {
   getBeacon(waypoint) {
     const style = waypoint.beaconStyle || 'none';
     if (style === 'none') return null;
-    
+
     const id = waypoint.id;
     let beacon = this.beacons.get(id);
-    
-    // Completed beacons are preserved until animation reset
-    // This prevents infinite recreation at 100% progress
-    if (beacon && beacon.completed) {
-      return beacon;
-    }
-    
+
     // Create new beacon if needed or if style changed
     // Use beacon.type property instead of constructor.name (survives minification)
+    // (Completed beacons need no special casing: state is re-derived from the
+    // local clock each sync, so scrubbing backwards simply revives them.)
     if (!beacon || beacon.type !== style) {
       const factory = this.beaconFactory[style];
       if (factory) {
@@ -1185,7 +1018,7 @@ export class BeaconRenderer {
         }
       }
     }
-    
+
     return beacon;
   }
   
@@ -1216,195 +1049,52 @@ export class BeaconRenderer {
    * @param {number} options.prevWaypointProgress - Previous waypoint's progress (-1 if first)
    * @returns {{phase: string, pauseProgress: number, pauseElapsedMs: number}}
    */
-  getBeaconPhase(waypoint, waypointIndex, animationEngine, waypointPathProgress, currentPathProgress, beacon, options = {}) {
-    const state = animationEngine.state;
-    const { hidesBefore = false, prevWaypointProgress = -1 } = options;
-    
-    // Check if waiting at this waypoint
-    const isWaitingHere = state.isWaitingAtWaypoint && state.pauseWaypointIndex === waypointIndex;
-    
-    // Check position relative to waypoint
-    const reachedWaypoint = currentPathProgress >= waypointPathProgress - 0.001;
-    const pastWaypoint = currentPathProgress > waypointPathProgress + 0.001 && !isWaitingHere;
-    
-    // Scale-controlling beacons (pop, grow, pulse) need to start earlier when hidesBefore
-    // is active, so they can control the full scale animation from 0% instead of clashing
-    // with the visibility animation
-    const beaconStyle = waypoint.beaconStyle || 'none';
-    const isScaleControllingBeacon = beaconStyle === 'pop' || beaconStyle === 'grow' || beaconStyle === 'pulse';
-    
-    // Calculate early onset for scale-controlling beacons
-    // - Pop/Pulse with hidesBefore: 0.25s early (matches visibility animation)
-    // - Grow: Always 2s early (full grow-up animation completes before waypoint)
-    const needsEarlyOnset = (isScaleControllingBeacon && hidesBefore) || beaconStyle === 'grow';
-    
-    if (needsEarlyOnset && !reachedWaypoint) {
-      const pathDuration = animationEngine.state.duration || 10000;
-      
-      // Grow beacon needs 2 second lead time for full scale-up animation (2s grow-up)
-      // Pop/Pulse with hidesBefore use 0.25s to match visibility animation
-      const targetAnimMs = beaconStyle === 'grow' ? 2000 : 250;
-      
-      let idealAnimProgress = pathDuration > 0 ? targetAnimMs / pathDuration : 0.01;
-      // For grow, allow up to 50% of path progress; for others, 8%
-      const maxProgress = beaconStyle === 'grow' ? 0.50 : 0.08;
-      idealAnimProgress = Math.max(0.01, Math.min(maxProgress, idealAnimProgress));
-      
-      // Constrain to available space before waypoint
-      const availableBefore = prevWaypointProgress >= 0 
-        ? (waypointPathProgress - prevWaypointProgress) / 2
-        : waypointPathProgress;
-      const animInProgress = Math.max(0.01, Math.min(idealAnimProgress, availableBefore));
-      const animInStart = Math.max(0, waypointPathProgress - animInProgress);
-      
-      // If we're in the animation window, start onset phase early
-      if (currentPathProgress >= animInStart) {
-        return { phase: 'onset', pauseProgress: -1, pauseElapsedMs: 0 };
-      }
-    }
-    
-    // Standard logic for all other cases
-    
-    // If we haven't reached the waypoint yet
-    if (!reachedWaypoint) {
-      return { phase: 'inactive', pauseProgress: -1, pauseElapsedMs: 0 };
-    }
-    
-    // If we're waiting at this waypoint (paused)
-    if (isWaitingHere) {
-      const pauseProgress = state.waitProgress || 0;
-      // Calculate elapsed time in ms for beacon synchronization
-      const pauseElapsedMs = this._getPauseElapsed(animationEngine, waypointIndex);
-      
-      // For Pulse beacons, stay in onset phase until onset animation completes
-      // Onset duration is quarterCycle (cycleDuration / 4)
-      // This ensures smooth transition from onset to hold during pause
-      if (beaconStyle === 'pulse') {
-        const cycleDuration = waypoint.pulseCycleSpeed || 4.0; // seconds
-        const quarterCycle = cycleDuration / 4;
-        const onsetDurationMs = quarterCycle * 1000;
-        
-        // If we're still in onset phase, return onset with pauseElapsedMs
-        if (pauseElapsedMs < onsetDurationMs) {
-          return { phase: 'onset', pauseProgress, pauseElapsedMs };
-        }
-      }
-      
-      return { phase: 'hold', pauseProgress, pauseElapsedMs };
-    }
-    
-    // If we've passed the waypoint and are no longer waiting
-    if (pastWaypoint) {
-      return { phase: 'offset', pauseProgress: -1, pauseElapsedMs: 0 };
-    }
-    
-    // Special case: at 100% progress (end of timeline), check if beacon is complete
-    // This prevents infinite spawning at the final waypoint
-    // Only transition to offset if the beacon has actually completed (all rings faded out)
-    if (currentPathProgress >= 0.999 && beacon && beacon.completed) {
-      return { phase: 'offset', pauseProgress: -1, pauseElapsedMs: 0 };
-    }
-    
-    // We're at the waypoint but not yet in hold phase
-    // This is the onset phase - beacon is starting up
-    return { phase: 'onset', pauseProgress: -1, pauseElapsedMs: 0 };
-  }
-  
   /**
-   * Get elapsed time within current waypoint pause.
-   * @param {Object} animationEngine - Animation engine instance
-   * @param {number} waypointIndex - Index of the waypoint
-   * @returns {number} Elapsed pause time in ms, or 0 if not paused
-   * @private
-   */
-  _getPauseElapsed(animationEngine, waypointIndex) {
-    if (!animationEngine.pauseMarkers) return 0;
-    
-    const marker = animationEngine.pauseMarkers.find(m => m.waypointIndex === waypointIndex);
-    if (!marker) return 0;
-    
-    // Use absolute time (timelineStartMs) instead of percentage
-    // Subtract startHandleTime since marker times are relative to animation start (after handle)
-    const timelineTime = animationEngine.state.progress * animationEngine.state.duration;
-    const adjustedTime = timelineTime - (animationEngine.startHandleTime || 0);
-    return Math.max(0, adjustedTime - marker.timelineStartMs);
-  }
-  
-  /**
-   * Enable/disable debug logging for beacon effects
-   * @type {boolean}
-   */
-  static DEBUG_BEACONS = false;
-  
-  /**
-   * Update all active beacons
-   * @param {number} deltaTime - Time elapsed in seconds
+   * Sync all beacons to a timeline instant.
+   *
+   * Each beacon's local clock and phase windows come from the schedules
+   * PlayerCore precomputed (animationEngine.beaconSchedules) — the same data
+   * that sized the pause windows — so beacon phases are closed-form in
+   * timeline time and identical for play, scrub, and export.
+   *
+   * @param {number} adjustedTimelineMs - Timeline time in ms on the pause-marker
+   *   axis (raw time minus start handle and intro)
    * @param {Array} waypoints - Array of waypoints
-   * @param {Object} animationEngine - Animation engine instance
+   * @param {Object} animationEngine - Animation engine instance (schedule source)
    * @param {Object} motionSettings - Motion visibility settings
-   * @param {Array} waypointProgressValues - Pre-calculated waypoint progress values
+   * @param {Array} waypointProgressValues - Unused; kept for call-site stability
    */
-  update(deltaTime, waypoints, animationEngine, motionSettings, waypointProgressValues = null) {
+  update(adjustedTimelineMs, waypoints, animationEngine, motionSettings, waypointProgressValues = null) {
     if (!waypoints || !animationEngine) return;
-    
-    const currentPathProgress = animationEngine.getPathProgress();
+
     const { waypointVisibility } = motionSettings || {};
-    
-    // Determine hide-before/after from motion settings
-    const hidesBefore = waypointVisibility === 'hide-before' || 
+    const hidesBefore = waypointVisibility === 'hide-before' ||
                         waypointVisibility === 'hide-before-and-after';
-    const hidesAfter = waypointVisibility === 'hide-after' || 
+    const hidesAfter = waypointVisibility === 'hide-after' ||
                        waypointVisibility === 'hide-before-and-after';
-    
-    // Build list of major waypoint progress values for prev/next lookups
-    const majorWaypointProgresses = [];
-    waypoints.forEach((wp, idx) => {
-      if (wp.isMajor) {
-        const progress = waypointProgressValues?.[idx] ?? idx / Math.max(1, waypoints.length - 1);
-        majorWaypointProgresses.push({ index: idx, progress });
-      }
-    });
-    
-    waypoints.forEach((waypoint, index) => {
+    const schedules = animationEngine.beaconSchedules || [];
+
+    waypoints.forEach((waypoint) => {
       if (!waypoint.isMajor) return;
-      
+
       const beacon = this.getBeacon(waypoint);
       if (!beacon) return;
-      
-      // Get waypoint progress
-      const waypointPathProgress = waypointProgressValues?.[index] ?? 
-        index / Math.max(1, waypoints.length - 1);
-      
-      // Find previous major waypoint progress for animation window calculation
-      const majorIdx = majorWaypointProgresses.findIndex(m => m.index === index);
-      const prevWaypointProgress = majorIdx > 0 
-        ? majorWaypointProgresses[majorIdx - 1].progress 
-        : -1;
-      
-      // Get beacon phase (pass options for early onset of scale-controlling beacons)
-      const { phase, pauseProgress, pauseElapsedMs } = this.getBeaconPhase(
-        waypoint, index, animationEngine, waypointPathProgress, currentPathProgress, beacon,
-        { hidesBefore, prevWaypointProgress }
-      );
-      
-      // Pass waypoint-specific beacon settings
-      const options = { 
-        hidesBefore, 
-        hidesAfter,
-        // Ripple settings
-        rippleThickness: waypoint.rippleThickness,
-        rippleMaxScale: waypoint.rippleMaxScale,
-        // Pulse settings
-        pulseAmplitude: waypoint.pulseAmplitude,
-        pulseCycleSpeed: waypoint.pulseCycleSpeed,
-        // Timing info for synchronization
-        pauseElapsedMs
+
+      const sched = schedules.find(s => s.waypointId === waypoint.id);
+      if (!sched) return; // Timeline not built yet (e.g. before first path calc)
+
+      // Scale-controlling beacons take over early when they own the reveal
+      // (hide-before); grow always leads by its grow-up window. Overlay
+      // beacons (ripple, glow) start at waypoint arrival.
+      const useEarly = sched.style === 'grow' ||
+        ((sched.style === 'pop' || sched.style === 'pulse') && hidesBefore);
+      const clockStartMs = useEarly ? sched.earlyOnsetStartMs : sched.arrivalMs;
+      const localSec = (adjustedTimelineMs - clockStartMs) / 1000;
+      const win = {
+        arrivalSec: (sched.arrivalMs - clockStartMs) / 1000,
+        holdEndSec: (sched.holdEndMs - clockStartMs) / 1000,
       };
-      
-      // Skip update if beacon has completed its animation cycle
-      // Completed beacons remain in the map to prevent recreation
-      if (beacon.completed) return;
-      
+
       // AAA (WCAG 2.3.3 / motion discipline): suppress animated beacons under
       // prefers-reduced-motion. pulse/ripple loop continuously and glow is a
       // ~3s radial bloom — all skipped (marker held static). pop/grow are brief
@@ -1416,21 +1106,18 @@ export class BeaconRenderer {
           return;
         }
       }
-      
-      // Update beacon state (time accumulation, ring spawning, opacity fading, etc.)
-      beacon.update(deltaTime, phase, pauseProgress, options);
-      
-      // Debug logging (disabled by default for performance)
-      if (BeaconRenderer.DEBUG_BEACONS && phase !== 'inactive' && !beacon.completed) {
-        const beaconType = waypoint.beaconStyle;
-        const scale = beacon.scale !== undefined ? beacon.scale.toFixed(2) : 'N/A';
-        const subPhase = beacon.subPhase || 'N/A';
-        console.log(`🔔 [Beacon] wp${index} ${beaconType} phase:${phase} subPhase:${subPhase} scale:${scale} time:${beacon.time.toFixed(2)}s`);
-      }
+
+      beacon.sync(localSec, win, {
+        hidesBefore,
+        hidesAfter,
+        // Ripple settings
+        rippleThickness: waypoint.rippleThickness,
+        rippleMaxScale: waypoint.rippleMaxScale,
+        // Pulse settings
+        pulseAmplitude: waypoint.pulseAmplitude,
+        pulseCycleSpeed: waypoint.pulseCycleSpeed,
+      });
     });
-    
-    // Completed beacons stay in map until animation reset (via reset())
-    // This is more efficient than delete/recreate cycles
   }
   
   /**
@@ -1483,29 +1170,6 @@ export class BeaconRenderer {
     }
   }
   
-  /**
-   * Enable or disable debug logging
-   * Can be called from console: window.routePlotter.renderingService.beaconRenderer.setDebug(true)
-   * @param {boolean} enabled - Whether to enable debug logging
-   */
-  setDebug(enabled) {
-    BeaconRenderer.DEBUG_BEACONS = enabled;
-    console.log(`🔔 [Beacon] Debug logging ${enabled ? 'enabled' : 'disabled'}`);
-  }
-  
-  /**
-   * Check if a Grow beacon is still animating (scale-down not complete)
-   * Used by AnimationEngine to dynamically extend pause duration
-   * @param {Object} waypoint - Waypoint object
-   * @returns {boolean} True if Grow beacon is still animating
-   */
-  isGrowBeaconAnimating(waypoint) {
-    if (!waypoint || waypoint.beaconStyle !== 'grow') return false;
-    const beacon = this.beacons.get(waypoint.id);
-    if (!beacon) return false;
-    // Grow beacon is animating if it has started but scale-down is not complete
-    return beacon.started && !beacon.scaleDownComplete;
-  }
 }
 
 // Export beacon types for testing

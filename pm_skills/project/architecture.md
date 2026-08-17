@@ -19,7 +19,7 @@ src/
   app/                 — RoutePlotter prototype mixins (wiring, playback, undo/redo, camera,
                          viewport, path timing, persistence, exporting, editor panel, pointer)
   config/              — constants, keybindings, help content, tooltips
-  core/                — EventBus (pub-sub)
+  core/                — EventBus (pub-sub), PlayerCore (pure timeline math)
   models/              — Waypoint, AnimationState, ImageAsset + GraphNode, GraphEdge, GraphModel (unwired until Phase 2)
   services/            — single-responsibility services (18 modules)
   controllers/         — UIController, SectionController
@@ -40,9 +40,15 @@ re-legalise workers if ever needed again.)
 Layered scene over one master timeline: the Waypoint chain remains the
 "hero route" layer; **flow layers** (GraphModel guide networks + emitters)
 add crowd/particle animation. Everything renders as a pure function of
-(timelineMs, projectState, seed) — the deterministic-timeline mandate —
-via a to-be-extracted **PlayerCore** shared by the app, VideoExporter, and
-HTMLExportService. Phases and rationale: backlog + decision-log 2026-08-17.
+(timelineMs, projectState, seed) — the deterministic-timeline mandate,
+implemented since Phase 1 (2026-08-17) by **`src/core/PlayerCore.js`**: it
+builds the timeline (segments, exact pause budgets, beacon schedules) and
+evaluates any instant with no wall-clock reads or mutation. AnimationEngine
+is transport + events; beacons are closed-form in timeline time; play,
+scrub, and export share the one evaluation path (golden harness:
+`tests/goldenFrames.test.js`). The HTML export player still replays
+serialised markers with its own mapping copy — unified in Phase 5.
+Phases and rationale: backlog + decision-log 2026-08-17.
 
 ## Key modules
 

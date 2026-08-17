@@ -23,6 +23,7 @@
 ## Core modules
 
 - `src/core/EventBus.js` — Pub-sub event system
+- `src/core/PlayerCore.js` — Pure timeline math (deterministic-timeline mandate): segment/pause/beacon-schedule builders + timeline↔path mappings; one evaluation path shared by play, scrub, and export
 - `src/models/Waypoint.js` — Waypoint data model (normalised coords, style, camera, area)
 - `src/models/AnimationState.js` — Playback state (progress, timing, pause tracking)
 - `src/models/ImageAsset.js` — Custom image references (marker, path head)
@@ -32,10 +33,10 @@
 
 ## Services
 
-- `src/services/AnimationEngine.js` — Playback loop, timing, per-major-leg segment speed, pause markers
+- `src/services/AnimationEngine.js` — Transport (play/pause/seek/reverse), wait-event edge-detection; all timeline mapping delegates to PlayerCore; marker fields keep their serialised shapes
 - `src/services/PathCalculator.js` — Catmull-Rom spline, corner-slowing reparameterisation, curvature; `legTimingLengths()` gives per-major-leg timing lengths (progress-span basis)
 - `src/services/RenderingService.js` — Canvas drawing: path, markers, labels, overlays; static `glowLayers()` computes the path-glow underlay strokes; static `VECTOR_LAYERS` registry drives the vector draw order (Phase 2 flow layers insert here)
-- `src/services/BeaconRenderer.js` — Animated waypoint effects (ripple, glow, pop, grow, pulse)
+- `src/services/BeaconRenderer.js` — Animated waypoint effects (ripple, glow, pop, grow, pulse); closed-form: each animator's `sync(localSec, win, options)` derives state from a timeline-local clock (schedules from PlayerCore via `engine.beaconSchedules`)
 - `src/services/TextLabelService.js` — Text label layout, fade, auto-positioning
 - `src/services/MotionVisibilityService.js` — Path/waypoint/background visibility calculations
 - `src/services/CameraService.js` — Per-major-waypoint zoom with continuous interpolation; `toMajorKeyframes()` drops minors (minors shape geometry, not zoom)
@@ -91,6 +92,8 @@
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
 - `tests/mixins.test.js` — Mixin split guards: cross-mixin name-collision check, cluster spot-checks, snapToAngle unit tests
 - `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch
+- `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings
+- `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/setup.js` — Vitest jsdom setup (uses defineProperty for getter-only jsdom globals)
 
 ## Build and tooling

@@ -17,6 +17,14 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Phase 1 enabling refactor, item 3 — PlayerCore teardown (shipped 2026-08-17; PHASE 1 COMPLETE)
+
+- PlayerCore extraction — `src/core/PlayerCore.js` owns all timeline math (segments, exact pause budgets, beacon schedules, timeline↔path mappings) as pure functions; AnimationEngine delegates and keeps only transport + wait-event edge-detection. See decision-log 2026-08-17 (PlayerCore teardown).
+- Closed-form beacons — all five animators derive state from a timeline-local clock (`sync(localSec, win, options)`); delta-time accumulation, pause-sync hacks, and the grow runtime pause extension are gone; reverse scrubbing revives/un-fades beacons exactly. Interim export fixed-delta patch removed as planned.
+- Golden-frame harness — `tests/goldenFrames.test.js` pins play == scrub == reverse == export stepping at the state level and proves evaluation never mutates the timeline; `tests/playerCore.test.js` pins the builders and windows.
+
+Outcome: the scene is a pure function of (timelineMs, projectState) — the deterministic-timeline mandate is implemented for everything that exists today, ready for Phase 2's seeded flow layers. 158/158 tests; verified live incl. a fully-throttled 105-frame export with zero console errors. Phase 1 closed.
+
 ## Phase 1 enabling refactor, items 1–2 (shipped 2026-08-17)
 
 - Export slowdown fix (owner report, interim) — beacon time is pinned to 1/frameRate per encoded frame during video export, so encodes no longer depend on the browser staying active (background-tab throttling used to speed wall-clock beacons ~25x/frame and distort grow-pause timing). Superseded by PlayerCore later. See decision-log 2026-08-17 (export slowdown).

@@ -77,6 +77,8 @@ src/
     SectionController.js          Collapsible settings sections
   core/
     EventBus.js                   Pub-sub event system
+    PlayerCore.js                 Pure timeline math — segments, pause budgets, beacon schedules,
+                                  timeline↔path mapping; play/scrub/export share this one evaluation path
   handlers/
     InteractionHandler.js         Mouse, keyboard, touch, and drag-and-drop input
   models/

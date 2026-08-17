@@ -2,6 +2,70 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-17 — PlayerCore teardown: the scene is now a pure function of timeline time (Phase 1 complete)
+
+**Task:** Phase 1 item 3 — PlayerCore extraction + deterministic
+animation-core teardown + scrub-vs-play golden-frame harness.
+
+**Decision — PlayerCore owns all timeline math.** New `src/core/PlayerCore.js`
+(pure, no wall-clock, no mutation): segment building, pause building, beacon
+schedules, and the timeline↔path mappings. AnimationEngine keeps its public
+surface (setSegmentMarkers/setPauseMarkers/timelineToPathProgress/
+pathToTimelineProgress and the marker fields the HTML export serialises —
+shapes unchanged) but every mapping delegates to PlayerCore; the engine's
+remaining jobs are transport state and wait-event edge-detection
+(`_applyWaitState`). Play advances time, scrub sets it, export steps it —
+one evaluation path.
+
+**Decision — beacon phases are closed-form.** Every animator's
+`update(deltaTime, phase, …)` accumulation (plus the `_lastHoldTime`/
+`_lastLoopTime`/pauseElapsed sync hacks) is replaced by
+`sync(localSec, win, options)`: full visual state derived from the beacon's
+local clock `timelineMs - clockStartMs`, where clock starts and hold windows
+come from PlayerCore's per-waypoint schedules (`engine.beaconSchedules`).
+Consequences: reverse playback and backward scrubbing render beacons exactly
+(rings un-fade, completed beacons revive); pulse's exit-crossing is computed,
+not frame-detected; ripple ring state rebuilds per evaluation.
+
+**Decision — grow pauses are exact, runtime extension deleted.** One
+early-onset formula (`PlayerCore.beaconEarlyOnsetMs`: lead capped by the
+half-gap to the previous major) feeds BOTH the pause budget and the beacon
+schedule, so the scale-down always completes inside the precomputed pause.
+The `isGrowBeaconAnimating` hook, the mid-evaluation marker mutation /
+`timeShiftApplied` machinery, and the interim export fixed-frame-delta patch
+(+ its test) are all deleted. The export render-loop gate stays as a plain
+perf optimisation.
+
+**Known behaviour deltas (deliberate):** grow early-onset now uses exact
+path-times with a half-gap-to-previous-major cap (the engine and renderer
+previously used two *different* approximations — the drift the 750ms buffer
+papered over; buffer retained as visual margin). Ripple pause budgets read
+`rippleMaxScale` (the value the rings actually use) rather than the stale
+`beaconScale`. `pathToTimelineProgress` now includes start-handle/intro
+offsets, making it a true inverse under export handles and reveal intros.
+Pulse under hide-before begins its loop after its full 2-quarter onset
+(previously desynced by one quarter). Per-frame SegSpeed/Timeline debug
+traces were dropped with the duplicated math; `dumpSegmentState()` remains.
+
+**Verification:** `tests/goldenFrames.test.js` — sequential jittered playback,
+reverse traversal, and fixed-step export stepping each equal direct seeks in
+full scene state (path + waits + every beacon field); evaluation provably
+never mutates the timeline; grow completes by pause end; backward scrub
+revives beacons byte-identically. `tests/playerCore.test.js` pins builders,
+budgets, windows, and inverse mappings. 158/158 tests; ESLint sweep clean.
+Live in the throttled pane: seek-into-beacon renders mid-animation state,
+end-and-back round-trip identical, reverse JKL un-fades rings, and a 105-frame
+MP4 exported clean at 1.1fps (fully throttled) with zero console errors and
+no interim patch.
+
+**Scope:** new `src/core/PlayerCore.js`; `AnimationEngine.js` (−~350 lines),
+`BeaconRenderer.js` (all five animators + service update), `RenderingService.js`
+(timeline-time beacon sync; fixed-delta machinery removed), `exporting.js`,
+`playback.js`, `main.js` (hook removal); tests: goldenFrames + playerCore
+added, exportFrameDelta removed (superseded).
+
+---
+
 ## 2026-08-17 — Export slowdown when browser inactive: fixed-frame-delta interim fix
 
 **Task:** Owner report — video export "encodes weirdly (slowed animation)"

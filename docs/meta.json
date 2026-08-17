@@ -75,18 +75,23 @@
       "format": "esm"
     },
     "src/services/BeaconRenderer.js": {
-      "bytes": 57562,
+      "bytes": 43702,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/core/PlayerCore.js": {
+      "bytes": 19655,
       "imports": [
         {
-          "path": "src/utils/Easing.js",
+          "path": "src/services/BeaconRenderer.js",
           "kind": "import-statement",
-          "original": "../utils/Easing.js"
+          "original": "../services/BeaconRenderer.js"
         }
       ],
       "format": "esm"
     },
     "src/services/AnimationEngine.js": {
-      "bytes": 55083,
+      "bytes": 34802,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -99,9 +104,9 @@
           "original": "../models/AnimationState.js"
         },
         {
-          "path": "src/services/BeaconRenderer.js",
+          "path": "src/core/PlayerCore.js",
           "kind": "import-statement",
-          "original": "./BeaconRenderer.js"
+          "original": "../core/PlayerCore.js"
         }
       ],
       "format": "esm"
@@ -139,7 +144,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 90472,
+      "bytes": 89004,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2617,7 +2622,7 @@
       "format": "esm"
     },
     "src/app/playback.js": {
-      "bytes": 11867,
+      "bytes": 11718,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2691,7 +2696,7 @@
       "format": "esm"
     },
     "src/app/exporting.js": {
-      "bytes": 16726,
+      "bytes": 16219,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2734,7 +2739,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 46369,
+      "bytes": 46165,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2920,7 +2925,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2437199
+      "bytes": 2417443
     },
     "docs/app.js": {
       "imports": [],
@@ -2955,10 +2960,13 @@
           "bytesInOutput": 1873
         },
         "src/services/BeaconRenderer.js": {
-          "bytesInOutput": 14265
+          "bytesInOutput": 10271
+        },
+        "src/core/PlayerCore.js": {
+          "bytesInOutput": 5682
         },
         "src/services/AnimationEngine.js": {
-          "bytesInOutput": 16685
+          "bytesInOutput": 11194
         },
         "src/services/AreaHighlightRenderer.js": {
           "bytesInOutput": 3825
@@ -2967,7 +2975,7 @@
           "bytesInOutput": 3381
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 22946
+          "bytesInOutput": 22751
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 998
@@ -3141,7 +3149,7 @@
           "bytesInOutput": 13055
         },
         "src/app/exporting.js": {
-          "bytesInOutput": 7070
+          "bytesInOutput": 6949
         },
         "src/app/editorPanel.js": {
           "bytesInOutput": 8438
@@ -3150,10 +3158,10 @@
           "bytesInOutput": 266
         },
         "src/main.js": {
-          "bytesInOutput": 22934
+          "bytesInOutput": 22826
         }
       },
-      "bytes": 606530
+      "bytes": 602303
     }
   }
 }

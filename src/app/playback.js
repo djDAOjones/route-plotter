@@ -289,10 +289,8 @@ export const playbackMixin = {
     
     // Start AnimationEngine with update callback
     this.animationEngine.start((state) => {
-      // During frame-stepped video export the export loop owns rendering:
-      // its seeks change state.progress, and a duplicate render here would
-      // double-advance the fixed-delta beacon time (renders are time-advancing
-      // while setFixedFrameDelta is active). Skip until export mode exits.
+      // The export loop owns rendering while export mode is active (its seeks
+      // change state.progress); rendering here too would just duplicate work.
       if (this._isExportMode) return;
 
       // Performance optimization: Only render when animation state changes

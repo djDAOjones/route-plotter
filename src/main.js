@@ -183,9 +183,6 @@ class RoutePlotter {
     this.renderingService = new RenderingService();
     this.eventBus = new EventBus(); // Event-driven architecture for decoupled communication
     this.animationEngine = new AnimationEngine(this.eventBus); // Animation loop management
-    // Wire up callback for dynamic Grow beacon pause extension
-    this.animationEngine.isGrowBeaconAnimating = (waypoint) => 
-      this.renderingService.beaconRenderer.isGrowBeaconAnimating(waypoint);
     this.videoExporter = null; // Initialized after canvas is available
     this.motionVisibilityService = new MotionVisibilityService(); // Motion visibility calculations
     this.undoService = new UndoService(this.eventBus); // Undo/redo with 150-step history
