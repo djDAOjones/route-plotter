@@ -14,7 +14,7 @@
 - [x] Fresh-clone build fixed: `package-lock.json` now tracked; esbuild target `chrome58/firefox57/safari11` → `es2022` (was 200+ errors under esbuild 0.27.7; build + 106/106 tests green)
 - [ ] Bundle JSZip as an npm dependency (drop the runtime CDN load — offline project save/load currently fails silently)
 - [ ] Run PM-Skills `adopt.md` pass to reconcile memory with v3 reality (brief/architecture/file-map still describe the v2 repo)
-- [ ] Archive dot-crowd-navigator + router-plotter-01 on GitHub — GATED on diffing the OneDrive working copies for unpushed work (esp. the `Migration.md` the fork's overview references but GitHub lacks)
+- [x] Archive dot-crowd-navigator + router-plotter-01 on GitHub — gate paid off: local copy held a never-pushed working graph editor + Phase 2 swarm core, partially destroyed by OneDrive offloading; recovered via git + Windsurf local history, pushed to the fork (see its SALVAGE-NOTE.md), mined into `specs/dot-crowd-navigator/`, then both repos archived (2026-08-17). Four files remain lost (SwarmEngine/SimulationState/DotRenderer/GraphUIController implementations — tests survive); owner may still find them in OneDrive web recycle bin.
 
 **Phase 1 — enabling refactor (deterministic core)**
 
@@ -24,7 +24,8 @@
 
 **Phase 2 — scene model**
 
-- [ ] `Scene`/`FlowLayer`/`Emitter` models; `GraphModel` collection (adjacency, serialisation); coordVersion 7→8 additive save/load (layer params + seeds only — runtime dot state never persists)
+- [ ] `Scene`/`FlowLayer`/`Emitter` models; coordVersion 7→**9** additive save/load (layer params + seeds only — runtime dot state never persists; 8 is skipped — the fork's local builds used it for graph-only saves, decision-log 2026-08-17)
+- [x] `GraphModel` collection — salvaged from the fork with its 25 tests (landed 2026-08-17, unwired until FlowLayer integration; adjacency + referential integrity + serialisation included)
 
 **Phase 3 — swarm engine**
 

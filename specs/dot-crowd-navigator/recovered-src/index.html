@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dot Crowd Navigator</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2210%22 cy=%2216%22 r=%224%22 fill=%22%230072B2%22/><circle cx=%2222%22 cy=%2210%22 r=%223%22 fill=%22%23E69F00%22/><circle cx=%2220%22 cy=%2222%22 r=%223%22 fill=%22%23009E73%22/><line x1=%2210%22 y1=%2216%22 x2=%2222%22 y2=%2210%22 stroke=%22%23525252%22 stroke-width=%221.5%22/><line x1=%2210%22 y1=%2216%22 x2=%2220%22 y2=%2222%22 stroke=%22%23525252%22 stroke-width=%221.5%22/></svg>">
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/tooltip.css">
+  <link rel="stylesheet" href="styles/dropdown.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <div id="app">
+    <!-- Header -->
+    <header class="header" role="banner">
+      <h1 id="app-title" class="header-title">Dot Crowd Navigator</h1>
+      <div class="header-controls">
+        <!-- History Controls -->
+        <div class="header-group">
+          <button id="undo-btn" class="btn btn-icon" title="Undo (Cmd+Z)" disabled aria-label="Undo">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6a4 4 0 0 1 0 8H9"/><polyline points="6 4 3 7 6 10"/></svg>
+          </button>
+          <button id="redo-btn" class="btn btn-icon" title="Redo (Cmd+Shift+Z)" disabled aria-label="Redo">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7H7a4 4 0 0 0 0 8h1"/><polyline points="10 4 13 7 10 10"/></svg>
+          </button>
+        </div>
+
+        <!-- File Dropdown -->
+        <div class="dropdown" id="file-dropdown">
+          <button class="btn btn-secondary dropdown-toggle" id="file-dropdown-btn" aria-haspopup="true" aria-expanded="false">File &#9662;</button>
+          <div class="dropdown-menu dropdown-menu-file" id="file-menu" role="menu" aria-labelledby="file-dropdown-btn">
+            <button id="save-project-btn" class="dropdown-item" role="menuitem" type="button">
+              <span class="dropdown-item-label">Save Project</span><kbd>&#8984;S</kbd>
+            </button>
+            <button id="load-project-btn" class="dropdown-item" role="menuitem" type="button">
+              <span class="dropdown-item-label">Open Project</span><kbd>&#8984;O</kbd>
+            </button>
+            <input id="load-project-input" type="file" accept=".json" style="display:none" aria-label="Load project file" />
+            <div class="dropdown-separator" role="separator"></div>
+            <div class="dropdown-submenu-label" aria-hidden="true">Example Backgrounds</div>
+            <div id="example-backgrounds-menu" role="group" aria-label="Example backgrounds">
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Courts.jpg">Courts</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Garlic.jpg">Garlic</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Nervous_System.jpg">Nervous System</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/PARM_Aerial.jpg">PARM Aerial</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Rocketry.jpg">Rocketry</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/UoN_map.png">UoN Map</button>
+            </div>
+            <div class="dropdown-separator" role="separator"></div>
+            <button id="clear-btn" class="dropdown-item dropdown-item-danger" role="menuitem" type="button">Clear All</button>
+          </div>
+        </div>
+
+        <!-- Debug Dropdown -->
+        <div class="dropdown" id="debug-dropdown">
+          <button class="btn btn-secondary dropdown-toggle" id="debug-dropdown-btn" aria-haspopup="true" aria-expanded="false">Debug &#9662;</button>
+          <div class="dropdown-menu" id="debug-menu" role="menu" aria-labelledby="debug-dropdown-btn">
+            <button id="download-debug-btn" class="dropdown-item" role="menuitem" type="button">Download Debug Log</button>
+            <button id="copy-debug-btn" class="dropdown-item" role="menuitem" type="button">Copy Debug Log</button>
+          </div>
+        </div>
+
+        <button id="reset-view-btn" class="btn btn-ghost" title="Reset zoom &amp; pan (F)" aria-label="Reset view">Reset view</button>
+        <button id="help-btn" class="btn btn-ghost" title="Show help and keyboard shortcuts">Help</button>
+      </div>
+    </header>
+
+    <!-- Toast -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Main Content -->
+    <main class="main" id="main-content" role="main" aria-labelledby="app-title">
+
+      <!-- Left Sidebar -->
+      <aside class="sidebar" role="complementary" aria-label="Settings panel">
+        <div class="sidebar-header sidebar-header-compact">
+          <span id="graph-status" class="sidebar-subtitle">0 nodes &middot; 0 edges</span>
+        </div>
+
+        <div id="settings-sections" class="settings-sections">
+
+          <!-- Background Section -->
+          <div class="settings-section" data-section="background">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="true" aria-controls="section-background-content">
+              <h2 class="section-title">Background</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-background-content" class="section-content" style="display:block;">
+              <div class="control-row">
+                <button id="bg-upload-btn" class="btn btn-secondary btn-full-width" aria-label="Upload background image">Upload Image</button>
+                <input id="bg-upload" type="file" accept="image/*" style="display:none" aria-label="Upload background image" />
+              </div>
+              <label for="bg-overlay">
+                <span data-tip="Lighten or darken the background image">Overlay</span>
+                <input type="range" id="bg-overlay" min="-100" max="100" value="0" step="1">
+                <span id="bg-overlay-value">0</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Graph Empty State / Instructions -->
+          <div id="graph-empty-state" class="settings-section-content" style="padding: var(--space-3);">
+            <p>Click on the map to add a node.<br>Shift-click between nodes to connect them.</p>
+          </div>
+
+          <!-- Node Properties (hidden until a node is selected) -->
+          <div id="node-properties" class="settings-section" style="display:none;">
+            <div class="section-header">
+              <h2 class="section-title">Node Properties</h2>
+            </div>
+            <div class="section-content" style="display:block;">
+              <label for="node-type">
+                <span data-tip="Node type: normal junction, entry point, or exit point">Type</span>
+                <select id="node-type">
+                  <option value="normal">Normal</option>
+                  <option value="entry">Entry</option>
+                  <option value="exit">Exit</option>
+                </select>
+              </label>
+              <div class="info-row">
+                <span class="info-label">Position</span>
+                <span class="info-value"><span id="node-x">0.000</span>, <span id="node-y">0.000</span></span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">ID</span>
+                <span class="info-value info-mono" id="node-id-display">—</span>
+              </div>
+              <button id="delete-selected-btn" class="btn btn-danger btn-full-width" style="margin-top: var(--space-3);">Delete</button>
+            </div>
+          </div>
+
+          <!-- Simulation Controls -->
+          <div class="settings-section" data-section="simulation">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="true" aria-controls="section-simulation-content">
+              <h2 class="section-title">Simulation</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-simulation-content" class="section-content" style="display:block;">
+              <!-- Transport -->
+              <div class="sim-transport">
+                <button id="sim-play-btn" class="btn btn-primary">&#9654; Play</button>
+                <button id="sim-pause-btn" class="btn btn-secondary" disabled>&#10074;&#10074; Pause</button>
+                <button id="sim-reset-btn" class="btn btn-secondary">&#8635; Reset</button>
+              </div>
+              <!-- Dot count -->
+              <label for="sim-dot-count">
+                <span data-tip="Total number of dots in the simulation">Dot count</span>
+                <input type="range" id="sim-dot-count" min="1" max="500" value="50" step="1">
+                <span id="sim-dot-count-value">50</span>
+              </label>
+              <!-- Speed -->
+              <label for="sim-speed">
+                <span data-tip="Base movement speed of dots through the network">Speed</span>
+                <input type="range" id="sim-speed" min="0.01" max="0.5" value="0.15" step="0.01">
+                <span id="sim-speed-value">0.15</span>
+              </label>
+              <!-- Lifecycle -->
+              <label for="sim-lifecycle">
+                <span data-tip="What happens when a dot reaches an exit node">Lifecycle</span>
+                <select id="sim-lifecycle">
+                  <option value="respawn">Respawn at entry</option>
+                  <option value="disappear">Disappear</option>
+                  <option value="loop">Turn around</option>
+                  <option value="collect">Collect at exit</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <!-- Edge Properties (hidden until an edge is selected) -->
+          <div id="edge-properties" class="settings-section" style="display:none;">
+            <div class="section-header">
+              <h2 class="section-title">Edge Properties</h2>
+            </div>
+            <div class="section-content" style="display:block;">
+              <label for="edge-weight">
+                <span data-tip="Relative flow weight — higher weight attracts more dots">Weight</span>
+                <input type="range" id="edge-weight" min="0.1" max="10" value="1" step="0.1">
+                <span id="edge-weight-value">1.0</span>
+              </label>
+              <label for="edge-direction">
+                <span data-tip="Flow direction along this edge">Direction</span>
+                <select id="edge-direction">
+                  <option value="two-way">Two-way</option>
+                  <option value="one-way">One-way</option>
+                </select>
+              </label>
+              <div class="info-row">
+                <span class="info-label">ID</span>
+                <span class="info-value info-mono" id="edge-id-display">—</span>
+              </div>
+              <button id="delete-selected-btn" class="btn btn-danger btn-full-width" style="margin-top: var(--space-3);">Delete</button>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Canvas Area -->
+      <div class="canvas-area">
+        <canvas id="canvas"></canvas>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Splash / Help Modal -->
+  <div id="splash" class="splash-screen" style="display:none;">
+    <div class="splash-content" role="dialog" aria-labelledby="splash-title" aria-modal="true">
+      <button id="splash-close-x" class="splash-close-x" aria-label="Close help">&times;</button>
+      <div id="splash-help">
+        <h2 id="splash-title">Dot Crowd Navigator</h2>
+        <p>Draw a network of nodes and edges over a map, then simulate crowd flow through the network.</p>
+
+        <h3>Quick start</h3>
+        <ol>
+          <li>Load a background image (drag-drop, or <strong>File &rarr; Example Backgrounds</strong>)</li>
+          <li><strong>Click</strong> on the map to add nodes</li>
+          <li><strong>Double-click</strong> nodes to cycle: normal &rarr; entry &rarr; exit</li>
+          <li><strong>Shift-click</strong> from one node to another to draw an edge</li>
+          <li>Hit <strong>Play</strong> in the Simulation panel to see dots flow</li>
+        </ol>
+
+        <h3>Editing</h3>
+        <ul>
+          <li><strong>Click</strong> a node or edge to select &amp; edit properties</li>
+          <li><strong>Drag</strong> a node to reposition it</li>
+          <li><strong>Delete</strong> / <strong>Backspace</strong> &mdash; remove selection</li>
+          <li><strong>Escape</strong> &mdash; deselect</li>
+        </ul>
+
+        <h3>View</h3>
+        <ul>
+          <li><strong>Scroll wheel</strong> &mdash; zoom in/out (centered on cursor)</li>
+          <li><strong>&#8984; / Ctrl + drag</strong>, or <strong>middle-click drag</strong> &mdash; pan</li>
+          <li><strong>F</strong> &mdash; reset view to fit</li>
+        </ul>
+
+        <h3>Simulation</h3>
+        <ul>
+          <li><strong>Space</strong> &mdash; toggle play / pause</li>
+          <li>Set node type to <strong>Entry</strong> for spawning, <strong>Exit</strong> for collection</li>
+          <li>Higher edge <strong>weight</strong> attracts more dots at junctions</li>
+        </ul>
+
+        <h3>File &amp; History</h3>
+        <ul>
+          <li><strong>&#8984;S</strong> / <strong>Ctrl+S</strong> &mdash; save project as JSON</li>
+          <li><strong>&#8984;O</strong> / <strong>Ctrl+O</strong> &mdash; open project file</li>
+          <li><strong>&#8984;Z</strong> / <strong>Ctrl+Z</strong> &mdash; undo</li>
+          <li><strong>&#8984;&#8679;Z</strong> / <strong>Ctrl+Shift+Z</strong> &mdash; redo</li>
+        </ul>
+      </div>
+      <div class="splash-actions">
+        <button id="splash-close" class="btn btn-primary">Get Started</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

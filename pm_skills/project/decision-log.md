@@ -2,6 +2,48 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-17 — Dot-crowd salvage: recovered fork state, GraphModel landed, coordVersion goes to 9
+
+**Task:** Before archiving dot-crowd-navigator, verify the local OneDrive
+working copy held nothing unpushed (founding-entry gate).
+
+**Finding:** It held a lot. The fork's last local state (2026-05-03, never
+pushed) was a working standalone graph editor — clean ~700-line app shell,
+GraphModel/GraphRenderer/GraphInteractionHandler/GraphUIController, JSON
+save/load with graph-only autosave at coordVersion 8, zoom/pan, undo — plus
+Phase 2 core: SimulationState (9 tests), SwarmEngine (7 tests, weighted
+routing, 4 lifecycle modes), DotRenderer, and sim controls UI. OneDrive
+file-offloading (~2026-07-14) then destroyed most of `src/`. Recovered:
+tracked files from git; newer files from Windsurf local-history snapshots.
+Unrecoverable (agent-written, no history entries): SwarmEngine.js,
+SimulationState.js, DotRenderer.js, GraphUIController.js — their test
+suites survive. Full story: SALVAGE-NOTE.md in the archived fork.
+
+**Decision — carried into v3 now:** `GraphModel.js` + its 25 tests land in
+src/models/ and tests/ (unwired until Phase 2, same treatment as
+GraphNode/GraphEdge — total graph tests now 62). Fork memory, the two
+swarm test suites, and the recovered graph-editor source are archived under
+`specs/dot-crowd-navigator/` as Phase 2–4 reference.
+
+**Decision — tick() API superseded, behaviour retained.** The recovered
+SwarmEngine tests specify a stateful `tick(deltaMs)` engine — exactly the
+architecture the deterministic-timeline mandate forbids. v3 carries the
+*behavioural* spec (release scheduling, weighted junction choice, lifecycle
+modes disappear/respawn/loop/collect, normalised dot positions) into the
+pure `evaluate(timelineMs, layer)` design; the tick-based tests are kept as
+reference only, not ported as-is.
+
+**Decision — coordVersion for the layered scene is 9, not 8.** The fork's
+local builds already shipped a *different* coordVersion 8 (graph-only JSON,
+clears v≤7 data). v3 skips 8 entirely to keep the number unambiguous:
+7 = current route-only, 9 = layered scene (routeLayer + flowLayers).
+
+**Repo state:** dot-crowd-navigator final state pushed (as-found +
+restoration commits) and the repo archived; router-plotter-01 archived.
+router-plotter-02 stays live as the frozen v2 line.
+
+---
+
 ## 2026-08-17 — Route Plotter v3 founding: fresh repo, dot-crowd fold-in, deterministic-timeline mandate
 
 **Task:** Owner-commissioned review of router-plotter-02 (mature) vs
