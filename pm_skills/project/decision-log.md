@@ -2,6 +2,48 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-17 — Export slowdown when browser inactive: fixed-frame-delta interim fix
+
+**Task:** Owner report — video export "encodes weirdly (slowed animation)"
+unless the browser stays active during export.
+
+**Mechanism (confirmed in code + live):** the export loop itself is
+deterministic — `seekToProgress(progress)` per frame with explicit WebCodecs
+timestamps — but `RenderingService.renderBeacons()` advanced beacon animators
+by **wall-clock delta between renders**. Foreground encodes only looked right
+because the loop happens to run near real-time; in a background tab the
+loop's `setTimeout` yields stretch to ~1s, advancing beacon phases ~25x per
+encoded frame, and grow-beacon pause extension (driven by those same clocks)
+mutates the progress→time map mid-export — the hero motion stretches through
+the extended sections. Exactly the stateful-animation defect class from the
+founding entry, showing up in encodes.
+
+**Decision — pin beacon time to encoded-frame time during export.**
+`RenderingService.setFixedFrameDelta(seconds)`: when set, beacon updates
+advance by exactly that delta per rendered frame (export sets 1/frameRate,
+clears to wall-clock in the export `finally`; unpinning re-arms the
+wall-clock tracker so the first live frame never inherits an export-length
+delta). Because fixed-delta renders are time-advancing, the AnimationEngine
+update callback now skips rendering while `_isExportMode` — the export loop
+owns rendering (previously duplicate renders were harmless only because
+wall-clock deltas are render-count-independent).
+
+**Interim, not the fix:** the PlayerCore teardown still replaces accumulation
+with closed-form beacon phases; this patch (and its `_isExportMode` render
+gate) should be removed as part of that work — noted on the backlog item.
+
+**Verified live in the throttled in-app browser** (unfocused pane = the
+failing environment): 75-frame MP4 export completed; all 76 beacon updates
+during export received exactly 0.100s (1/10fps), none wall-clock — proving
+both the pin and the render gate; post-export preview resumed on the 0.016s
+bootstrap. `tests/exportFrameDelta.test.js` pins the selection logic
+(145 tests total).
+
+**Scope:** `RenderingService.js`, `src/app/exporting.js`,
+`src/app/playback.js`, `tests/exportFrameDelta.test.js`.
+
+---
+
 ## 2026-08-17 — Phase 1 enabling refactor: main.js mixin split + renderer layer registry
 
 **Task:** Phase 1 items 1–2 — split the 6,235-line `main.js` and formalise

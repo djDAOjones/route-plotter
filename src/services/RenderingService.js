@@ -33,6 +33,14 @@ export class RenderingService {
      * @type {number}
      */
     this.lastFrameTime = 0;
+
+    /**
+     * When non-null, beacon animations advance by this fixed delta
+     * (seconds per rendered frame) instead of wall-clock time.
+     * Set by frame-stepped video export; null = wall-clock.
+     * @type {number|null}
+     */
+    this._fixedFrameDelta = null;
     
     /**
      * Intro animation duration in milliseconds
@@ -1613,9 +1621,14 @@ export class RenderingService {
   renderBeacons(ctx, waypoints, animationEngine, beaconAnimation, imageToCanvas, styles, motionSettings = null, waypointProgressValues = null) {
     if (!waypoints.length || !animationEngine) return;
     
-    // Calculate delta time for beacon animations
+    // Calculate delta time for beacon animations.
+    // During frame-stepped video export this is pinned via setFixedFrameDelta():
+    // beacon phases must advance by encoded-frame time, not wall time, or
+    // background-tab timer throttling (~1s per loop tick) advances beacons ~25x
+    // per encoded frame and grow-beacon pause extension distorts the timing map.
     const now = performance.now();
-    const deltaTime = this.lastFrameTime > 0 ? (now - this.lastFrameTime) / 1000 : 0.016;
+    const deltaTime = this._fixedFrameDelta ??
+      (this.lastFrameTime > 0 ? (now - this.lastFrameTime) / 1000 : 0.016);
     this.lastFrameTime = now;
     
     // Update all beacon animations
@@ -1692,6 +1705,26 @@ export class RenderingService {
    */
   resetBeacons() {
     this.beaconRenderer.reset();
+    this.lastFrameTime = 0;
+  }
+
+  /**
+   * Pin (or unpin) beacon-animation time to a fixed per-frame delta.
+   *
+   * Frame-stepped video export calls this with 1/frameRate so that beacon
+   * phases — and the grow-beacon pause extension derived from them — advance
+   * by encoded-frame time, making encodes deterministic and immune to
+   * background-tab timer throttling. Interim measure until the PlayerCore
+   * teardown makes beacon phases closed-form functions of timeline time
+   * (decision-log 2026-08-17).
+   *
+   * @param {number|null} seconds - Delta per rendered frame, or null to
+   *   return to wall-clock deltas.
+   */
+  setFixedFrameDelta(seconds) {
+    this._fixedFrameDelta = seconds;
+    // Re-arm wall-clock tracking so the first live frame afterwards does not
+    // inherit a stale (export-long) delta.
     this.lastFrameTime = 0;
   }
   

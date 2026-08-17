@@ -19,6 +19,7 @@
 
 ## Phase 1 enabling refactor, items 1–2 (shipped 2026-08-17)
 
+- Export slowdown fix (owner report, interim) — beacon time is pinned to 1/frameRate per encoded frame during video export, so encodes no longer depend on the browser staying active (background-tab throttling used to speed wall-clock beacons ~25x/frame and distort grow-pause timing). Superseded by PlayerCore later. See decision-log 2026-08-17 (export slowdown).
 - main.js mixin split — 6,235 → ~1,120 lines; twelve method groups moved verbatim to `src/app/*` prototype mixins (Object.assign onto RoutePlotter.prototype); snapToAngle now a tested util; mixin-collision guard test added. See decision-log 2026-08-17 (Phase 1).
 - Renderer layer registry — vector draw order formalised as `RenderingService.VECTOR_LAYERS` (data-driven, bottom → top) so Phase 2 flow layers insert beneath the hero route by adding an entry; order + visibility guards pinned by tests. See the same entry.
 

@@ -139,7 +139,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 89014,
+      "bytes": 90472,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2617,7 +2617,7 @@
       "format": "esm"
     },
     "src/app/playback.js": {
-      "bytes": 11521,
+      "bytes": 11867,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2691,7 +2691,7 @@
       "format": "esm"
     },
     "src/app/exporting.js": {
-      "bytes": 16223,
+      "bytes": 16726,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2920,7 +2920,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2434640
+      "bytes": 2437199
     },
     "docs/app.js": {
       "imports": [],
@@ -2967,7 +2967,7 @@
           "bytesInOutput": 3381
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 22827
+          "bytesInOutput": 22946
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 998
@@ -3126,7 +3126,7 @@
           "bytesInOutput": 3403
         },
         "src/app/playback.js": {
-          "bytesInOutput": 4116
+          "bytesInOutput": 4145
         },
         "src/app/camera.js": {
           "bytesInOutput": 3671
@@ -3141,7 +3141,7 @@
           "bytesInOutput": 13055
         },
         "src/app/exporting.js": {
-          "bytesInOutput": 6949
+          "bytesInOutput": 7070
         },
         "src/app/editorPanel.js": {
           "bytesInOutput": 8438
@@ -3153,7 +3153,7 @@
           "bytesInOutput": 22934
         }
       },
-      "bytes": 606261
+      "bytes": 606530
     }
   }
 }

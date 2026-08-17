@@ -181,7 +181,13 @@ export const exportingMixin = {
     // Resize canvas to export resolution so captureStream captures at the
     // correct pixel dimensions (not screen size × DPR)
     this._enterExportMode(this.exportSettings.resolutionX, this.exportSettings.resolutionY);
-    
+
+    // Pin beacon animation to encoded-frame time: each rendered frame advances
+    // beacons by exactly 1/fps, so the encode is identical whether or not the
+    // browser stays focused (background tabs throttle the export loop's timers,
+    // which used to speed up wall-clock-driven beacons ~25x per frame).
+    this.renderingService.setFixedFrameDelta(1 / this.exportSettings.frameRate);
+
     try {
       const blob = await this.videoExporter.export({
         frameRate: this.exportSettings.frameRate,
@@ -223,6 +229,9 @@ export const exportingMixin = {
       this.eventBus.off('video:export-paused', onExportPaused);
       this.eventBus.off('video:export-resumed', onExportResumed);
       
+      // Back to wall-clock beacon time for live preview
+      this.renderingService.setFixedFrameDelta(null);
+
       // Restore canvas to display resolution (must happen before render)
       this._exitExportMode();
       
