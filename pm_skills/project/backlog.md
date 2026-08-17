@@ -6,7 +6,7 @@
 
 ### Current milestone — v3.0 refactor (founded 2026-08-17, rationale in decision-log)
 
-**Phase 0 — stabilise**
+**Phase 0 — stabilise (complete 2026-08-17)**
 
 - [x] Fresh-history repo `route-plotter`; imported router-plotter-02 @ v3.1 build 573
 - [x] PM-Skills 4.7.0 fresh install; v2 project memory ported forward

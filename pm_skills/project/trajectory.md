@@ -26,7 +26,7 @@
 - JSZip bundled — jszip 3.10.1 as a real dependency; CDN script-injection removed; offline save/load works.
 - Dot-crowd salvage — the fork's never-pushed working state (graph editor + Phase 2 swarm core, partially destroyed by OneDrive offloading) recovered via git + Windsurf local history, pushed to the fork, mined into `specs/dot-crowd-navigator/`; dot-crowd-navigator and router-plotter-01 archived on GitHub. Four implementation files remain lost (their test suites survive). See decision-log 2026-08-17 (salvage) and the fork's SALVAGE-NOTE.md.
 
-Outcome: v3 founded on the mature trunk with the swarm feature specced and its graph data layer already tested in-tree; build + 131 tests green; Phase 0 remaining: adopt.md memory pass.
+Outcome: v3 founded on the mature trunk with the swarm feature specced and its graph data layer already tested in-tree; build + 131 tests green. Phase 0 closed 2026-08-17 (memory reconciled, JSZip bundled, offline-capable). Next: Phase 1 — main.js split, renderer layer registry, PlayerCore + deterministic animation-core teardown.
 
 ## Path glow + casing parity (shipped 2026-06-17)
 
