@@ -293,7 +293,7 @@ Edit `RenderingService.js`. Drawing methods follow the naming pattern `render*()
 - **Autosave can get stuck** — if the app enters a bad state, clear `routePlotter_autosave` in browser DevTools → Application → Local Storage.
 - **Slider feedback loops** — programmatic slider updates must go through `ui:slider:update-speed` to avoid re-triggering input event handlers. Check `isUpdatingSlider` flag in `UIController`.
 - **H.264 even dimensions** — MP4 export requires even width and height. The exporter auto-rounds, but custom resolution inputs can produce odd values.
-- **mediabunny is the only runtime dependency** — it provides the MP4/WebM mux layer. Everything else is vanilla JS.
+- **Two runtime dependencies, both bundled** — mediabunny (MP4/WebM mux) and jszip (project save/load). Nothing loads from a CDN; the app works fully offline. Everything else is vanilla JS.
 
 ---
 

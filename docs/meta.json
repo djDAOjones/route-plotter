@@ -2484,13 +2484,29 @@
       "imports": [],
       "format": "esm"
     },
+    "node_modules/jszip/dist/jszip.min.js": {
+      "bytes": 97630,
+      "imports": [
+        {
+          "path": "<runtime>",
+          "kind": "import-statement",
+          "external": true
+        }
+      ],
+      "format": "cjs"
+    },
     "src/services/ImageAssetService.js": {
-      "bytes": 11212,
+      "bytes": 10260,
       "imports": [
         {
           "path": "src/models/ImageAsset.js",
           "kind": "import-statement",
           "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "node_modules/jszip/dist/jszip.min.js",
+          "kind": "import-statement",
+          "original": "jszip"
         }
       ],
       "format": "esm"
@@ -2668,13 +2684,16 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2196615
+      "bytes": 2422558
     },
     "docs/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
       "inputs": {
+        "node_modules/jszip/dist/jszip.min.js": {
+          "bytesInOutput": 97352
+        },
         "src/utils/CatmullRom.js": {
           "bytesInOutput": 461
         },
@@ -2682,13 +2701,13 @@
           "bytesInOutput": 150
         },
         "src/config/constants.js": {
-          "bytesInOutput": 3731
+          "bytesInOutput": 3735
         },
         "src/services/TextLabelService.js": {
-          "bytesInOutput": 3374
+          "bytesInOutput": 3381
         },
         "src/services/MotionVisibilityService.js": {
-          "bytesInOutput": 15250
+          "bytesInOutput": 15206
         },
         "src/services/StorageService.js": {
           "bytesInOutput": 2143
@@ -2706,16 +2725,16 @@
           "bytesInOutput": 14265
         },
         "src/services/AnimationEngine.js": {
-          "bytesInOutput": 16683
+          "bytesInOutput": 16685
         },
         "src/services/AreaHighlightRenderer.js": {
-          "bytesInOutput": 3812
+          "bytesInOutput": 3825
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 21812
+          "bytesInOutput": 21799
         },
         "node_modules/mediabunny/dist/modules/src/misc.js": {
-          "bytesInOutput": 3397
+          "bytesInOutput": 3399
         },
         "node_modules/mediabunny/dist/modules/src/logging.js": {
           "bytesInOutput": 779
@@ -2736,7 +2755,7 @@
           "bytesInOutput": 46
         },
         "node_modules/mediabunny/dist/modules/src/codec-data.js": {
-          "bytesInOutput": 18318
+          "bytesInOutput": 18394
         },
         "node_modules/mediabunny/dist/modules/src/packet.js": {
           "bytesInOutput": 4199
@@ -2766,7 +2785,7 @@
           "bytesInOutput": 486
         },
         "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-boxes.js": {
-          "bytesInOutput": 19811
+          "bytesInOutput": 20069
         },
         "node_modules/mediabunny/dist/modules/src/writer.js": {
           "bytesInOutput": 1578
@@ -2793,7 +2812,7 @@
           "bytesInOutput": 307
         },
         "src/services/VideoExporter.js": {
-          "bytesInOutput": 10231
+          "bytesInOutput": 10229
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 998
@@ -2802,7 +2821,7 @@
           "bytesInOutput": 5019
         },
         "src/models/Waypoint.js": {
-          "bytesInOutput": 7566
+          "bytesInOutput": 7594
         },
         "src/config/keybindings.js": {
           "bytesInOutput": 6447
@@ -2814,7 +2833,7 @@
           "bytesInOutput": 957
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 38661
+          "bytesInOutput": 38709
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 9759
@@ -2826,7 +2845,7 @@
           "bytesInOutput": 4697
         },
         "src/services/AreaDrawingService.js": {
-          "bytesInOutput": 4915
+          "bytesInOutput": 4920
         },
         "src/services/AreaEditService.js": {
           "bytesInOutput": 3231
@@ -2850,16 +2869,16 @@
           "bytesInOutput": 1662
         },
         "src/services/ImageAssetService.js": {
-          "bytesInOutput": 3892
+          "bytesInOutput": 3473
         },
         "src/services/HTMLExportService.js": {
-          "bytesInOutput": 51432
+          "bytesInOutput": 51440
         },
         "src/main.js": {
-          "bytesInOutput": 105563
+          "bytesInOutput": 105599
         }
       },
-      "bytes": 506439
+      "bytes": 605019
     }
   }
 }

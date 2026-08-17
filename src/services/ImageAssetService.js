@@ -10,6 +10,7 @@
  */
 
 import { ImageAsset } from '../models/ImageAsset.js';
+import JSZip from 'jszip';
 
 // Size limits in bytes
 export const SIZE_LIMITS = {
@@ -17,9 +18,6 @@ export const SIZE_LIMITS = {
   ZIP_MAX: 50 * 1024 * 1024,          // 50MB for ZIP export
   SINGLE_IMAGE_WARN: 2 * 1024 * 1024  // 2MB warning threshold per image
 };
-
-// JSZip CDN URL for dynamic loading
-const JSZIP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
 
 /**
  * ImageAssetService - Centralized image asset management
@@ -31,9 +29,6 @@ export class ImageAssetService {
     
     // Track total size for limit checking
     this._totalSize = 0;
-    
-    // JSZip library reference (loaded on demand)
-    this._JSZip = null;
   }
   
   /**
@@ -237,33 +232,6 @@ export class ImageAssetService {
   }
   
   /**
-   * Load JSZip library dynamically
-   * @private
-   * @returns {Promise<JSZip>}
-   */
-  async _loadJSZip() {
-    if (this._JSZip) return this._JSZip;
-    
-    // Check if already loaded globally
-    if (window.JSZip) {
-      this._JSZip = window.JSZip;
-      return this._JSZip;
-    }
-    
-    // Load from CDN
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = JSZIP_CDN;
-      script.onload = () => {
-        this._JSZip = window.JSZip;
-        resolve(this._JSZip);
-      };
-      script.onerror = () => reject(new Error('Failed to load JSZip library'));
-      document.head.appendChild(script);
-    });
-  }
-  
-  /**
    * Export project as ZIP file
    * Includes: project.json, background image, all custom assets
    * 
@@ -273,7 +241,6 @@ export class ImageAssetService {
    * @returns {Promise<Blob>} ZIP file blob
    */
   async exportZip(projectData, backgroundBase64 = null, projectName = 'route-project') {
-    const JSZip = await this._loadJSZip();
     const zip = new JSZip();
     
     // Create assets folder
@@ -324,7 +291,6 @@ export class ImageAssetService {
    * @returns {Promise<{projectData: Object, backgroundBase64: string|null}>}
    */
   async importZip(zipFile) {
-    const JSZip = await this._loadJSZip();
     const zip = await JSZip.loadAsync(zipFile);
     
     // Read project.json
