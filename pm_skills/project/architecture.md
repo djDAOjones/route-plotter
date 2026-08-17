@@ -15,7 +15,9 @@
 
 ```text
 src/
-  main.js              — RoutePlotter class: app entry point and orchestrator
+  main.js              — RoutePlotter class: app entry point and orchestrator core
+  app/                 — RoutePlotter prototype mixins (wiring, playback, undo/redo, camera,
+                         viewport, path timing, persistence, exporting, editor panel, pointer)
   config/              — constants, keybindings, help content, tooltips
   core/                — EventBus (pub-sub)
   models/              — Waypoint, AnimationState, ImageAsset + GraphNode, GraphEdge, GraphModel (unwired until Phase 2)
@@ -46,7 +48,7 @@ HTMLExportService. Phases and rationale: backlog + decision-log 2026-08-17.
 
 | Module | Path | Responsibility |
 | --- | --- | --- |
-| RoutePlotter | `src/main.js` | Sole orchestrator: owns all services, handles all events, manages state |
+| RoutePlotter | `src/main.js` + `src/app/*` | Sole orchestrator: owns all services, handles all events, manages state. Method groups live as prototype mixins in `src/app/*` (Object.assign; names unique across mixins) |
 | Waypoint | `src/models/Waypoint.js` | Data model for waypoints (position, style, camera, area, etc.) |
 | AnimationEngine | `src/services/AnimationEngine.js` | Playback loop, timing, segment speed, pause markers |
 | PathCalculator | `src/services/PathCalculator.js` | Catmull-Rom spline, reparameterisation, curvature |

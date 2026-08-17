@@ -24,5 +24,4 @@
 
 ## Open
 
-<!-- Append captured deltas below, one checkbox line each. Delete this comment
-     once you add the first real item. -->
+- [ ] 2026-08-17 dev guide (`_Joe/dev notes/…/dev guide.md`) §4/§7/§10 — main.js is no longer one file: method groups live in `src/app/*` prototype mixins, so "expect to touch main.js" rows now often mean a mixin file; §9 also still documents the deleted PathCalculatorWithWorker/worker fallback (source: decision-log 2026-08-17 Phase 1 + 2026-06-18 worker removal)

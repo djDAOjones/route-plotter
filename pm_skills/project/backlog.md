@@ -18,9 +18,7 @@
 
 **Phase 1 — enabling refactor (deterministic core)**
 
-- [ ] `main.js` prototype-mixin split (promoted from icebox — must land BEFORE swarm features; needs supervised interactive testing)
-- [ ] Renderer layer registry — formalise `renderVectorLayerTo()`'s hard-coded order into a LAYERS-driven list
-- [ ] PlayerCore extraction + animation-core teardown: scene = pure fn(timelineMs, projectState, seed); kill `BeaconRenderer` deltaTime accumulation; precompute grow-beacon pause extensions instead of runtime timeline mutation; one evaluation path for play/scrub/export. Add a scrub-vs-play golden-frame regression harness. (Motivated by v2 scrub≠play mismatches — decision-log 2026-08-17.)
+- [ ] PlayerCore extraction + animation-core teardown: scene = pure fn(timelineMs, projectState, seed); kill `BeaconRenderer` deltaTime accumulation; precompute grow-beacon pause extensions instead of runtime timeline mutation; one evaluation path for play/scrub/export. Add a scrub-vs-play golden-frame regression harness. (Motivated by v2 scrub≠play mismatches — decision-log 2026-08-17.) Mixin split + layer registry landed 2026-08-17 (see decision-log); owner feel-check of the split build still worthwhile before this teardown starts.
 
 **Phase 2 — scene model**
 

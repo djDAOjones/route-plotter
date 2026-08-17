@@ -2,6 +2,54 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-17 — Phase 1 enabling refactor: main.js mixin split + renderer layer registry
+
+**Task:** Phase 1 items 1–2 — split the 6,235-line `main.js` and formalise
+the vector draw order — as groundwork for the PlayerCore teardown (item 3).
+
+**Decision — prototype mixins, not class inheritance or delegation.** Twelve
+method groups moved verbatim into `src/app/*` modules, each exporting a plain
+object attached by `Object.assign(RoutePlotter.prototype, …)` at the bottom of
+`main.js`: wiringDom, wiringBus, wiringControllers, undoRedo, playback,
+camera, viewport, pathTiming, persistence, exporting, editorPanel, pointer.
+`main.js` (6,235 → ~1,120 lines) keeps only the app core: constructor, init,
+model bookkeeping, render scheduling, image loading, destroy. `this` semantics
+and the runtime prototype shape are unchanged (bundle grew 214 bytes — module
+wrappers only). Constraint this creates: **method names must stay unique
+across all mixins** (last-write-wins otherwise) — `tests/mixins.test.js`
+fails loudly on a collision.
+
+**Deviations from verbatim (all deliberate):** `static JKL_MAX_SPEED` became
+a module const in `playback.js` (statics cannot ride a prototype mixin);
+`snapToAngle()` moved to `src/utils/snapToAngle.js` (needed by two wiring
+mixins; unit-tested); per-file imports trimmed to what each file uses.
+
+**Decision — vector draw order is data, not code.** The hard-coded sequence
+in `RenderingService.renderVectorLayerTo()` became the static
+`RenderingService.VECTOR_LAYERS` registry (bottom → top: area-highlights,
+path, path-head, beacons, waypoints, area-edit-handles, area-draw-preview).
+Each entry guards its own visibility; shared per-frame derivations ride a
+`frame` object. Phase 2 flow layers (swarms beneath the hero route) insert by
+adding an entry between area-highlights and path. `tests/vectorLayers.test.js`
+pins the order and the ALWAYS_HIDE guards.
+
+**Verification:** build + 142/142 tests (11 new); one-off ESLint no-undef
+sweep over `src/` clean (the two remaining warnings are pre-existing unused
+locals, left verbatim); interactive in-app-browser pass — waypoint add/drag,
+play/scrub, JKL (L×3 → 4x, J reverse, K reset-on-pause), undo/redo exact
+position round-trip, zoom-to-waypoint, Edit/Preview toggle, autosave reload —
+zero console errors. Two environment findings worth keeping: the embedded
+browser throttles rAF when unfocused, freezing the engine clock between
+forced frames (confirms the delta-time accumulation the PlayerCore teardown
+exists to kill), and keyboard shortcuts are correctly swallowed while a
+slider (e.g. `#timeline-slider`) holds focus — test keys with body focus.
+
+**Scope:** `src/main.js`, new `src/app/*` (12 files), `src/utils/snapToAngle.js`,
+`src/services/RenderingService.js`, `tests/mixins.test.js`,
+`tests/vectorLayers.test.js`, README tree/orchestrator note. v3.1.580+.
+
+---
+
 ## 2026-08-17 — Dot-crowd salvage: recovered fork state, GraphModel landed, coordVersion goes to 9
 
 **Task:** Before archiving dot-crowd-navigator, verify the local OneDrive

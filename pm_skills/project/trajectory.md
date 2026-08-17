@@ -17,6 +17,13 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Phase 1 enabling refactor, items 1–2 (shipped 2026-08-17)
+
+- main.js mixin split — 6,235 → ~1,120 lines; twelve method groups moved verbatim to `src/app/*` prototype mixins (Object.assign onto RoutePlotter.prototype); snapToAngle now a tested util; mixin-collision guard test added. See decision-log 2026-08-17 (Phase 1).
+- Renderer layer registry — vector draw order formalised as `RenderingService.VECTOR_LAYERS` (data-driven, bottom → top) so Phase 2 flow layers insert beneath the hero route by adding an entry; order + visibility guards pinned by tests. See the same entry.
+
+Outcome: the orchestrator is navigable and the draw order is data; build + 142 tests green, interactive browser pass clean. Phase 1 now has one item left: PlayerCore extraction + deterministic animation-core teardown with the scrub-vs-play golden-frame harness.
+
 ## Route Plotter v3 founding + dot-crowd salvage (shipped 2026-08-17)
 
 - v3 founding — fresh-history repo `route-plotter` created; router-plotter-02 imported @ v3.1 build 573 and frozen as the v2 line (its Pages URL stays live). See decision-log 2026-08-17 (founding).

@@ -58,7 +58,10 @@ scripts/                          Maintainer convenience wrappers (run from anyw
   README.md                       Usage reference for these scripts
 
 src/
-  main.js                         RoutePlotter class — app entry point and orchestrator
+  main.js                         RoutePlotter class — app entry point and orchestrator core
+  app/                            RoutePlotter prototype mixins (method groups moved out of main.js;
+                                  attached via Object.assign — wiring, playback, undo/redo, camera,
+                                  viewport, path timing, persistence, exporting, editor panel, pointer)
   config/
     constants.js                  All tuneable values (animation, rendering, path, etc.)
     keybindings.js                Mouse + keyboard bindings (customisable via localStorage)
@@ -80,6 +83,9 @@ src/
     Waypoint.js                   Waypoint data model (position, style, camera, area, etc.)
     AnimationState.js             Playback state (progress, timing, pause tracking)
     ImageAsset.js                 Custom image references (marker, path head)
+    GraphNode.js                  Flow-network node — unwired until Phase 2
+    GraphEdge.js                  Weighted directed edge with control points — unwired until Phase 2
+    GraphModel.js                 Node/edge collection (CRUD, adjacency) — unwired until Phase 2
   services/
     AnimationEngine.js            Playback loop, timing, segment speed, pause markers
     PathCalculator.js             Catmull-Rom spline, reparameterisation, curvature
@@ -123,7 +129,7 @@ docs/                             Build output served by GitHub Pages
 
 ### Overview
 
-`RoutePlotter` (in `main.js`) is the single orchestrator. It owns all services, handles EventBus events, manages application state, and drives the render loop.
+`RoutePlotter` (in `main.js`) is the single orchestrator. It owns all services, handles EventBus events, manages application state, and drives the render loop. Since the Phase 1 split its method groups live as prototype mixins in `src/app/*` (attached via `Object.assign(RoutePlotter.prototype, …)` at the bottom of `main.js`); `main.js` itself keeps only the constructor, init, model bookkeeping, and render scheduling. Method names must stay unique across all mixins.
 
 There is no framework. The app is pure JavaScript with Canvas 2D rendering and vanilla DOM for the sidebar UI.
 

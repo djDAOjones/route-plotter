@@ -3,7 +3,22 @@
 ## Entry point
 
 - `index.html` — Single-page app shell (sidebar + canvas + controls)
-- `src/main.js` — RoutePlotter class: app entry, orchestrator, all event handling
+- `src/main.js` — RoutePlotter class: app entry + orchestrator core (constructor, init, model bookkeeping, render scheduling); attaches the `src/app/*` mixins to its prototype
+
+## App mixins (RoutePlotter prototype method groups — `this` = the app instance; names must stay unique across all mixins)
+
+- `src/app/wiringDom.js` — setupEventListeners(): DOM control wiring
+- `src/app/wiringBus.js` — EventBus + AnimationEngine subscription wiring
+- `src/app/wiringControllers.js` — UIController/InteractionHandler event connections
+- `src/app/undoRedo.js` — undo/redo snapshots, restore, global-style UI sync
+- `src/app/playback.js` — keyboard dispatch, transport, JKL, preview mode, render loop, time display
+- `src/app/camera.js` — camera keyframe UI, camera state evaluation, zoom-transition warnings
+- `src/app/viewport.js` — canvas aspect/bounds, coordinate conversion, manual zoom
+- `src/app/pathTiming.js` — path recalc, easing, segment/leg timing, duration updates
+- `src/app/persistence.js` — project save/load, autosave/restore, dirty-title indicator
+- `src/app/exporting.js` — export mode enter/exit, video/HTML export flows, summary UI
+- `src/app/editorPanel.js` — waypoint list + editor panel sync, control-visibility helpers
+- `src/app/pointer.js` — canvas pointer fallbacks and hit-testing
 
 ## Core modules
 
@@ -19,7 +34,7 @@
 
 - `src/services/AnimationEngine.js` — Playback loop, timing, per-major-leg segment speed, pause markers
 - `src/services/PathCalculator.js` — Catmull-Rom spline, corner-slowing reparameterisation, curvature; `legTimingLengths()` gives per-major-leg timing lengths (progress-span basis)
-- `src/services/RenderingService.js` — Canvas drawing: path, markers, labels, overlays; static `glowLayers()` computes the path-glow underlay strokes
+- `src/services/RenderingService.js` — Canvas drawing: path, markers, labels, overlays; static `glowLayers()` computes the path-glow underlay strokes; static `VECTOR_LAYERS` registry drives the vector draw order (Phase 2 flow layers insert here)
 - `src/services/BeaconRenderer.js` — Animated waypoint effects (ripple, glow, pop, grow, pulse)
 - `src/services/TextLabelService.js` — Text label layout, fade, auto-positioning
 - `src/services/MotionVisibilityService.js` — Path/waypoint/background visibility calculations
@@ -64,6 +79,7 @@
 - `src/utils/CatmullRom.js` — Catmull-Rom spline interpolation
 - `src/utils/Easing.js` — Easing functions (linear, quad, cubic, etc.)
 - `src/utils/focusTrap.js` — Modal focus trapping for accessibility
+- `src/utils/snapToAngle.js` — Angle-snap geometry for shift-drag waypoint placement (moved out of main.js in the Phase 1 split)
 
 ## Specs (reference, not live code)
 
@@ -73,6 +89,8 @@
 
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
+- `tests/mixins.test.js` — Mixin split guards: cross-mixin name-collision check, cluster spot-checks, snapToAngle unit tests
+- `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch
 - `tests/setup.js` — Vitest jsdom setup (uses defineProperty for getter-only jsdom globals)
 
 ## Build and tooling
