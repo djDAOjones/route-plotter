@@ -1,0 +1,8 @@
+{
+  "$comment": "Markdown lint baseline for pm-skills projects. This is a scaffold file: copied into your project root once, then yours to own, tune, or delete (it is never force-upgraded). Philosophy — be strict about what breaks rendering or hides mistakes, relaxed about purely stylistic rules. 'default': true keeps every breakage- and structure-catching rule on (reversed links, missing code-fence languages, empty links, bad heading increments, hard tabs, and so on). MD013 (line length) is OFF: prose wrapping, tables, links, and fenced code routinely exceed any fixed width, and the rule is the single largest source of low-value noise. MD024 uses siblings_only so changelog-style docs can repeat headings like '### Added' under each version. Common further relaxations if your project needs them: MD033 (inline HTML, e.g. <details> or badges) and MD041 (first line must be a top-level heading, e.g. when files start with frontmatter). Add a new rule only when it catches a real defect — a noisy rule that gets inline-disabled erodes trust in the whole gate.",
+  "default": true,
+  "MD013": false,
+  "MD024": {
+    "siblings_only": true
+  }
+}
