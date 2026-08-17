@@ -1,0 +1,847 @@
+/**
+ * UIController/InteractionHandler event connections (waypoint add/select/drag, sliders, editor controls).
+ *
+ * RoutePlotter prototype mixin: methods moved verbatim out of main.js
+ * (Phase 1 enabling refactor). Every method runs with `this` bound to the
+ * RoutePlotter instance; main.js attaches the group via
+ * Object.assign(RoutePlotter.prototype, wiringControllersMixin).
+ */
+import { PATH_VISIBILITY } from '../config/constants.js';
+import { Waypoint } from '../models/Waypoint.js';
+import { refreshSwatchPicker } from '../components/SwatchPicker.js';
+import { snapToAngle } from '../utils/snapToAngle.js';
+
+export const wiringControllersMixin = {
+  
+  /**
+   * Set up event connections for UI Controller and Interaction Handler
+   */
+  setupControllerEventConnections() {
+    // Background events from UIController
+    this.eventBus.on('background:upload', (file) => {
+      this.loadImageFile(file).then(img => {
+        this.background.image = img;
+        this.updateImageTransform(img);
+        
+        // Set export resolution to match native image dimensions
+        this.exportSettings.resolutionX = img.naturalWidth;
+        this.exportSettings.resolutionY = img.naturalHeight;
+        if (this.elements.exportResX) {
+          this.elements.exportResX.value = img.naturalWidth;
+        }
+        if (this.elements.exportResY) {
+          this.elements.exportResY.value = img.naturalHeight;
+        }
+        console.debug(`📐 [Resolution] Set to image native size: ${img.naturalWidth}×${img.naturalHeight}`);
+        
+        // Resize canvas to match new aspect ratio
+        this.updateCanvasAspectRatio();
+        
+        if (this.waypoints.length >= 2) {
+          this.calculatePath();
+        }
+        this.autoSave();
+      });
+    });
+    
+    this.eventBus.on('background:overlay-change', (value) => {
+      this.background.overlay = value;
+      this.render();
+      this.autoSave();
+    });
+    
+    this.eventBus.on('background:mode-change', (mode) => {
+      this.background.fit = mode;
+      this.coordinateTransform.fitMode = mode;
+      this.updateImageTransform(this.background.image);
+      this.render();
+      this.autoSave();
+    });
+    
+    // Animation control events from UIController
+    // NOTE: These are command events from UI, NOT the state events emitted by AnimationEngine
+    // AnimationEngine emits 'play', 'pause', etc. internally - we listen to those in setupAnimationEngineListeners()
+    // These listeners are for UI button clicks, keyboard shortcuts, etc.
+    this.eventBus.on('ui:animation:play', () => {
+      // If animation is at 100%, restart from beginning
+      if (this.animationEngine.getProgress() >= 1.0) {
+        this.animationEngine.reset();
+      }
+      this.animationEngine.play();
+    });
+    this.eventBus.on('ui:animation:pause', () => this.animationEngine.pause());
+    this.eventBus.on('ui:animation:skip-start', () => {
+      this.animationEngine.reset();
+    });
+    this.eventBus.on('ui:animation:skip-end', () => this.animationEngine.seekToProgress(1.0));
+    this.eventBus.on('ui:animation:seek', (progress) => this.animationEngine.seekToProgress(progress));
+    this.eventBus.on('animation:speed-change', (speed) => {
+      // Save current path progress before changing speed
+      const currentPathProgress = this.animationEngine.getPathProgress();
+      
+      this.animationEngine.setSpeed(speed);
+      
+      // Use unified duration update (accounts for segment speeds)
+      if (this.pathPoints && this.pathPoints.length > 0) {
+        this.updateAnimationDuration(speed);
+        
+        // Restore path progress by calculating new timeline position
+        // This ensures the animation doesn't jump when speed changes
+        if (currentPathProgress > 0 && currentPathProgress < 1) {
+          this.animationEngine.seekToPathProgress(currentPathProgress);
+        }
+      }
+      
+      // Validate zoom transitions (speed affects segment durations)
+      this.validateZoomTransitions();
+      
+      this.autoSave();
+    });
+    
+    /**
+     * JKL Video Editor Style Playback Controls
+     * 
+     * J: Reverse playback, speed doubles with each press (-1x, -2x, -4x)
+     * K: Play/pause toggle (handled by ui:animation:toggle)
+     * L: Forward playback, speed doubles with each press (1x, 2x, 4x)
+     * 
+     * State tracking: jklDirection tracks current direction (1=forward, -1=reverse, 0=stopped)
+     */
+    this.jklDirection = 0; // Track JKL state: -1=reverse, 0=stopped, 1=forward
+    this.jklSpeed = 1;     // Current JKL speed multiplier (1, 2, 4)
+    
+    this.eventBus.on('animation:jkl-reverse', () => {
+      if (this.jklDirection === -1) {
+        // Already reversing: double speed (max 4x)
+        this.jklSpeed = Math.min(4, this.jklSpeed * 2);
+      } else {
+        // Start reverse at 1x
+        this.jklDirection = -1;
+        this.jklSpeed = 1;
+      }
+      this.animationEngine.setPlaybackSpeed(-this.jklSpeed);
+      if (!this.animationEngine.state.isPlaying) {
+        this.animationEngine.play();
+      }
+      console.debug(`⏪ JKL Reverse: ${-this.jklSpeed}x`);
+    });
+    
+    this.eventBus.on('animation:jkl-forward', () => {
+      if (this.jklDirection === 1) {
+        // Already forward: double speed (max 4x)
+        this.jklSpeed = Math.min(4, this.jklSpeed * 2);
+      } else {
+        // Start forward at 1x
+        this.jklDirection = 1;
+        this.jklSpeed = 1;
+      }
+      this.animationEngine.setPlaybackSpeed(this.jklSpeed);
+      if (!this.animationEngine.state.isPlaying) {
+        this.animationEngine.play();
+      }
+      console.debug(`⏩ JKL Forward: ${this.jklSpeed}x`);
+    });
+    
+    // Reset JKL state when animation is toggled via K or space
+    this.eventBus.on('ui:animation:toggle', () => {
+      if (this.animationEngine.state.isPlaying) {
+        this.animationEngine.pause();
+        this.jklDirection = 0;
+        this.jklSpeed = 1;
+      } else {
+        // Resume at normal speed
+        this.animationEngine.setPlaybackSpeed(1.0);
+        this.jklDirection = 1;
+        this.jklSpeed = 1;
+        this.animationEngine.play();
+      }
+    });
+    
+    /**
+     * waypoint:nudge - Move waypoint by fraction of canvas dimension
+     * More intuitive than pixel-based movement as it scales with canvas size
+     */
+    this.eventBus.on('waypoint:nudge', (data) => {
+      const { waypoint, dxFraction, dyFraction } = data;
+      
+      // Calculate pixel movement based on canvas dimensions
+      const dx = dxFraction * this.displayWidth;
+      const dy = dyFraction * this.displayHeight;
+      
+      // Convert current position to canvas coords, apply offset, convert back
+      const currentCanvas = this.imageToCanvas(waypoint.imgX, waypoint.imgY);
+      const newCanvas = { x: currentCanvas.x + dx, y: currentCanvas.y + dy };
+      const newImg = this.canvasToImage(newCanvas.x, newCanvas.y);
+      
+      // Update waypoint position (clamped to image bounds unless zoomed out)
+      const zoom = this.exportSettings.backgroundZoom / 100;
+      if (zoom < 1) {
+        waypoint.imgX = newImg.x;
+        waypoint.imgY = newImg.y;
+      } else {
+        waypoint.imgX = Math.max(0, Math.min(1, newImg.x));
+        waypoint.imgY = Math.max(0, Math.min(1, newImg.y));
+      }
+      
+      // Trigger updates
+      this.calculatePath();
+      this.render();
+      this.saveUndoStateDebounced(); // Groups rapid key repeats into single undo entry
+      this.autoSave();
+    });
+    
+    /**
+     * waypoint:add - Add a new waypoint from InteractionHandler
+     * 
+     * Major waypoints: Added at end, become selected
+     * Minor waypoints: Inserted after selected waypoint, then after each other
+     * 
+     * Ordering logic:
+     * - Click Major A → selected = A, insert at end
+     * - Shift+click Minor 1 → insert after A (index of A + 1)
+     * - Shift+click Minor 2 → insert after Minor 1 (find last consecutive minor after A)
+     * - Click Major B → selected = B, insert at end
+     * 
+     * This creates: Major A → Minor 1 → Minor 2 → Major B
+     * 
+     * Note: Bounds checking is done in InteractionHandler before emitting this event
+     */
+    this.eventBus.on('waypoint:add', (data) => {
+      let addX = data.imgX;
+      let addY = data.imgY;
+      
+      // Determine insertion index first (needed for angle snap reference)
+      let insertIndex = this.waypoints.length; // Default: append to end
+      
+      if (!data.isMajor && this.selectedWaypoint) {
+        // Minor waypoints: find insertion point after selected waypoint
+        const selectedIndex = this.waypoints.indexOf(this.selectedWaypoint);
+        if (selectedIndex !== -1) {
+          // Find the last consecutive minor waypoint after the selected one
+          // This ensures new minors append to the sequence, not insert at the start
+          insertIndex = selectedIndex + 1;
+          while (insertIndex < this.waypoints.length && !this.waypoints[insertIndex].isMajor) {
+            insertIndex++;
+          }
+        }
+      }
+      
+      // 15° angle snapping when Shift is held
+      if (data.shiftKey && insertIndex > 0) {
+        const ref = this.waypoints[insertIndex - 1];
+        const snapped = snapToAngle(ref.imgX, ref.imgY, addX, addY);
+        addX = snapped.x;
+        addY = snapped.y;
+      }
+      
+      const waypoint = data.isMajor ? 
+        Waypoint.createMajor(addX, addY) : 
+        Waypoint.createMinor(addX, addY);
+      
+      // Copy properties from appropriate source waypoint
+      const sourceWaypoint = insertIndex > 0 
+        ? this.waypoints[insertIndex - 1] 
+        : (this.waypoints.length > 0 ? this.waypoints[0] : null);
+      
+      if (sourceWaypoint) {
+        waypoint.copyPropertiesFrom(sourceWaypoint);
+      }
+      
+      // Insert waypoint at calculated position
+      this.waypoints.splice(insertIndex, 0, waypoint);
+      this._addWaypointToMap(waypoint);
+      
+      // Major waypoints become selected (so subsequent minor waypoints follow them)
+      if (data.isMajor) {
+        this.selectedWaypoint = waypoint;
+      }
+      
+      this.eventBus.emit('waypoint:added', waypoint);
+    });
+    
+    // Note: waypoint:position-changed is handled in _setupEventBusListeners()
+    // which applies position, recalculates path, and manages undo saves.
+    
+    this.eventBus.on('waypoint:selected', (waypoint) => {
+      this.selectedWaypoint = waypoint;
+      this.interactionHandler?.setSelectedWaypoint(waypoint);
+      this.uiController?.updateWaypointEditor(waypoint);
+      this.updateWaypointList();
+      this.updateWaypointEditor(); // Update RoutePlotter's editor (includes camera controls)
+      this._updateCameraControlsVisibility(false); // Single selection mode
+      
+      // Sync swatch picker radios with updated hidden input values
+      // Without this, clicking a swatch already checked from a previous waypoint
+      // won't fire a change event (radio state out of sync with hidden input)
+      refreshSwatchPicker('#dot-color');
+      refreshSwatchPicker('#segment-color');
+      refreshSwatchPicker('#path-head-color');
+      
+      this.queueRender(); // Highlight selection
+    });
+    
+    // waypoint:multi-selected - Multiple waypoints selected via shift-click or cmd/ctrl-click
+    this.eventBus.on('waypoint:multi-selected', ({ waypoints, primary }) => {
+      this.selectedWaypoint = primary;
+      this.interactionHandler?.setSelectedWaypoint(primary);
+      // Show "Multiple Waypoints" mode in editor (similar to "All Waypoints" but for subset)
+      this.uiController?.updateWaypointEditor(primary, false, waypoints);
+      this.updateWaypointList();
+      this._updateCameraControlsVisibility(true); // Multi-select mode
+      this.queueRender();
+    });
+    
+    // waypoint:deselected - All waypoints deselected
+    this.eventBus.on('waypoint:deselected', () => {
+      this.selectedWaypoint = null;
+      this.interactionHandler?.setSelectedWaypoint(null);
+      this.uiController?.updateWaypointEditor(null);
+      this.updateWaypointList();
+    });
+    
+    // waypoint:delete - Request to delete a specific waypoint (from InteractionHandler)
+    this.eventBus.on('waypoint:delete', (waypoint) => {
+      this.deleteWaypoint(waypoint);
+    });
+    
+    this.eventBus.on('waypoint:delete-selected', () => {
+      if (this.selectedWaypoint) {
+        this.deleteWaypoint(this.selectedWaypoint);
+        this.selectedWaypoint = null;
+      }
+    });
+    
+    this.eventBus.on('waypoints:clear-all', () => {
+      this.clearAll();
+    });
+    
+    // Project save/load buttons
+    this.elements.saveProjectBtn?.addEventListener('click', () => this.saveProject());
+    this.elements.loadProjectBtn?.addEventListener('click', () => this.elements.loadProjectInput?.click());
+    this.elements.loadProjectInput?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        this.loadProject(file);
+        e.target.value = ''; // Reset input for re-selection
+      }
+    });
+    
+    // waypoint:all-selected - "All Waypoints" selected in list
+    this.eventBus.on('waypoint:all-selected', () => {
+      this.selectedWaypoint = null;
+      this.interactionHandler?.setSelectedWaypoint(null);
+      this.queueRender();
+    });
+    
+    // waypoint:add-at-center - Add new waypoint at center of visible canvas (AAA keyboard access)
+    this.eventBus.on('waypoint:add-at-center', () => {
+      if (!this.backgroundImage) return;
+      
+      // Calculate center of image in image coordinates
+      const centerX = this.backgroundImage.width / 2;
+      const centerY = this.backgroundImage.height / 2;
+      
+      // Create new waypoint at center
+      const lastMajor = this.waypoints.filter(wp => wp.isMajor).pop();
+      const newWaypoint = Waypoint.createMajor(centerX, centerY);
+      if (lastMajor) {
+        newWaypoint.copyPropertiesFrom(lastMajor);
+      }
+      
+      this.waypoints.push(newWaypoint);
+      this._addWaypointToMap(newWaypoint);
+      
+      // Select the new waypoint
+      this.selectedWaypoint = newWaypoint;
+      this.interactionHandler?.setSelectedWaypoint(newWaypoint);
+      
+      // Update path and UI
+      this.generatePathData();
+      this.queueRender();
+      this.uiController.updateWaypointList(this.waypoints);
+      this.uiController.updateWaypointEditor(newWaypoint);
+      this.autoSave();
+      
+      this.uiController.announce('Waypoint added at center of map');
+    });
+    
+    // waypoint:name-changed - Waypoint renamed in list
+    this.eventBus.on('waypoint:name-changed', ({ waypoint, name }) => {
+      // Name is already set on waypoint, just save
+      this.autoSave();
+    });
+    
+    /**
+     * waypoint:all-change - Apply property change to all major waypoints
+     * 
+     * Performance: O(n) where n = number of waypoints
+     * - Single pass through waypoints array
+     * - Path recalculation only for path-affecting properties
+     * - Batched render via queueRender()
+     */
+    this.eventBus.on('waypoint:all-change', ({ property, value }) => {
+      // Properties that require path recalculation
+      const PATH_PROPERTIES = new Set(['segmentColor', 'segmentWidth', 'segmentStyle', 'pathShape']);
+      // Properties that require animation duration recalculation
+      const DURATION_PROPERTIES = new Set(['pauseTime', 'segmentSpeed']);
+      
+      // Single pass: apply to all major waypoints
+      let needsPathRecalc = PATH_PROPERTIES.has(property);
+      let needsDurationRecalc = DURATION_PROPERTIES.has(property);
+      
+      for (const wp of this.waypoints) {
+        if (wp.isMajor) {
+          wp[property] = value;
+          // Also update pauseMode when pauseTime changes
+          if (property === 'pauseTime') {
+            wp.pauseMode = value > 0 ? 'timed' : 'none';
+          }
+        }
+      }
+      
+      // Recalculate path only if property affects path rendering
+      if (needsPathRecalc) {
+        this.calculatePath();
+      }
+      
+      // Recalculate animation duration if pause time or segment speed changed
+      if (needsDurationRecalc) {
+        this.updateAnimationDuration();
+      }
+      
+      this.autoSave();
+      this.queueRender();
+    });
+    
+    // ========== VIDEO EXPORT EVENTS ==========
+    
+    /**
+     * video:frame-rate-change - Update export frame rate setting
+     */
+    this.eventBus.on('video:frame-rate-change', (frameRate) => {
+      this.exportSettings.frameRate = frameRate;
+      console.debug(`🎬 [VideoExport] Frame rate set to ${frameRate} fps`);
+    });
+    
+    /**
+     * video:layers-change - Toggle between path with image and path only (transparent)
+     */
+    this.eventBus.on('video:layers-change', (pathOnly) => {
+      this.exportSettings.pathOnly = pathOnly;
+      this.autoSave(); // parity with include camera/text — persist the image toggle immediately
+      console.debug(`🎬 [VideoExport] Layers set to ${pathOnly ? 'path only (transparent)' : 'path with image'}`);
+    });
+    
+    /**
+     * video:camera-change - Toggle whether preview/export applies per-waypoint camera zoom/pan.
+     * Reflects live in Preview mode (WYSIWYG); Edit mode is unaffected. Persisted via autoSave.
+     * emits from UIController checkbox → here → _calculateCameraState reads exportSettings.includeCamera
+     */
+    this.eventBus.on('video:camera-change', (includeCamera) => {
+      this.exportSettings.includeCamera = includeCamera;
+      this.autoSave();
+      if (this.previewMode) this.queueRender(); // WYSIWYG: reflect toggle on the live canvas
+    });
+    
+    /**
+     * video:text-change - Toggle whether preview/export shows waypoint text labels.
+     * Reflects live in Preview mode (WYSIWYG); Edit mode is unaffected. Persisted via autoSave.
+     * emits from UIController checkbox → here → renderState.suppressLabels in render()
+     */
+    this.eventBus.on('video:text-change', (includeText) => {
+      this.exportSettings.includeText = includeText;
+      this.autoSave();
+      if (this.previewMode) this.queueRender(); // WYSIWYG: reflect toggle on the live canvas
+    });
+    
+    /**
+     * video:resolution-change - Update export resolution and canvas aspect ratio
+     * @param {Object} resolution - { width, height } - null values are ignored
+     */
+    this.eventBus.on('video:resolution-change', ({ width, height }) => {
+      if (width !== null) {
+        this.exportSettings.resolutionX = width;
+      }
+      if (height !== null) {
+        this.exportSettings.resolutionY = height;
+      }
+      console.debug(`🎬 [VideoExport] Resolution set to ${this.exportSettings.resolutionX}×${this.exportSettings.resolutionY}`);
+      
+      // Update canvas aspect ratio to match export resolution
+      this.updateCanvasAspectRatio();
+    });
+    
+    /**
+     * video:resolution-native - Set resolution to loaded image's native dimensions
+     */
+    this.eventBus.on('video:resolution-native', () => {
+      if (this.background.image) {
+        const width = this.background.image.naturalWidth;
+        const height = this.background.image.naturalHeight;
+        this.exportSettings.resolutionX = width;
+        this.exportSettings.resolutionY = height;
+        if (this.elements.exportResX) {
+          this.elements.exportResX.value = width;
+        }
+        if (this.elements.exportResY) {
+          this.elements.exportResY.value = height;
+        }
+        this.updateCanvasAspectRatio();
+        console.debug(`📐 [Resolution] Set to native: ${width}×${height}`);
+      } else {
+        console.warn('📐 [Resolution] No image loaded for native resolution');
+      }
+    });
+    
+    /**
+     * background:zoom-change - Update background zoom level
+     * Zoom affects how the background is displayed and waypoint positions
+     * @param {number} zoom - Zoom percentage (100 = no zoom, 200 = 2x zoom)
+     */
+    this.eventBus.on('background:zoom-change', (zoom) => {
+      this.exportSettings.backgroundZoom = zoom;
+      // Update coordinate transform with new zoom factor
+      this.coordinateTransform.setBackgroundZoom(zoom / 100);
+      // Clamp waypoints that may now be out of bounds
+      this.clampWaypointsToCanvas();
+      this.render();
+      this.autoSave();
+      console.debug(`🔍 [Zoom] Background zoom set to ${zoom}%`);
+    });
+    
+    /**
+     * video:export-request - Start video export process
+     * Uses frame-by-frame capture for consistent output
+     */
+    this.eventBus.on('video:export-request', (format) => {
+      if (!this.previewMode) {
+        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
+      }
+      this.exportSettings.format = format || 'mp4';
+      this.exportVideo();
+    });
+    
+    /**
+     * html:export-request - Export as interactive HTML file
+     * Creates a self-contained HTML file with embedded player
+     */
+    this.eventBus.on('html:export-request', () => {
+      if (!this.previewMode) {
+        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
+      }
+      this.exportHTML();
+    });
+    
+    // ========== MOTION VISIBILITY EVENTS ==========
+    
+    /**
+     * motion:preview-mode-change - Toggle between edit and preview mode
+     * Edit mode: everything visible for editing
+     * Preview mode: applies motion visibility settings
+     */
+    this.eventBus.on('motion:preview-mode-change', (previewMode) => {
+      this.previewMode = previewMode;
+      console.debug(`👁️ [Motion] ${previewMode ? 'Preview' : 'Edit'} mode`);
+      // Recalculate duration to add/remove end buffer
+      this.updateAnimationDuration();
+      this.render();
+    });
+    
+    /**
+     * motion:path-visibility-change - Update path visibility mode
+     * Also toggles Trail Size control visibility (only shown for comet/instantaneous mode)
+     */
+    this.eventBus.on('motion:path-visibility-change', (mode) => {
+      console.debug('[Motion] pathVisibility changed:', this.motionSettings.pathVisibility, '→', mode);
+      this.motionSettings.pathVisibility = mode;
+      
+      // Show/hide Trail Size control based on mode
+      const trailControl = document.getElementById('path-trail-control');
+      if (trailControl) {
+        trailControl.style.display = (mode === PATH_VISIBILITY.INSTANTANEOUS) ? 'flex' : 'none';
+      }
+      
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
+     * motion:path-trail-change - Update path trail fraction
+     * @param {number} trailFraction - Trail as fraction of sequence (0=off, 0.01-1.0)
+     */
+    this.eventBus.on('motion:path-trail-change', (trailFraction) => {
+      this.motionSettings.pathTrail = trailFraction;
+      // Recalculate duration since tail time depends on trail
+      this.updateAnimationDuration();
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
+     * motion:waypoint-visibility-change - Update waypoint visibility mode
+     */
+    this.eventBus.on('motion:waypoint-visibility-change', (mode) => {
+      this.motionSettings.waypointVisibility = mode;
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
+     * motion:background-visibility-change - Update background visibility mode
+     */
+    this.eventBus.on('motion:background-visibility-change', (mode) => {
+      this.motionSettings.backgroundVisibility = mode;
+      // Reset reveal mask when switching to reveal modes
+      if (mode === 'spotlight-reveal' || mode === 'angle-of-view-reveal') {
+        this.motionVisibilityService.resetRevealMask();
+      }
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
+     * motion:reveal-size-change - Update reveal circle size
+     */
+    this.eventBus.on('motion:reveal-size-change', (sizePercent) => {
+      this.motionSettings.revealSize = sizePercent;
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
+     * motion:reveal-feather-change - Update reveal feather width
+     */
+    this.eventBus.on('motion:reveal-feather-change', (featherPercent) => {
+      this.motionSettings.revealFeather = featherPercent;
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
+     * motion:aov-angle-change - Update angle of view cone angle
+     */
+    this.eventBus.on('motion:aov-angle-change', (angleDegrees) => {
+      this.motionSettings.aovAngle = angleDegrees;
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
+     * motion:aov-distance-change - Update angle of view distance
+     */
+    this.eventBus.on('motion:aov-distance-change', (distancePercent) => {
+      this.motionSettings.aovDistance = distancePercent;
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
+     * motion:aov-dropoff-change - Update angle of view dropoff
+     */
+    this.eventBus.on('motion:aov-dropoff-change', (dropoffPercent) => {
+      this.motionSettings.aovDropoff = dropoffPercent;
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    // Waypoint reordering from UIController drag-and-drop
+    this.eventBus.on('waypoints:reordered', (newOrder) => {
+      // Find all major waypoints and update their order
+      const allWaypoints = [...this.waypoints];
+      const minorWaypoints = allWaypoints.filter(wp => !wp.isMajor);
+      
+      // Rebuild waypoints array with new major order, keeping minors in place
+      this.waypoints = [];
+      let majorIndex = 0;
+      
+      allWaypoints.forEach(wp => {
+        if (wp.isMajor) {
+          this.waypoints.push(newOrder[majorIndex]);
+          majorIndex++;
+        } else {
+          this.waypoints.push(wp);
+        }
+      });
+      
+      // Recalculate path and update
+      if (this.waypoints.length >= 2) {
+        this.calculatePath();
+      }
+      this.updateWaypointList();
+      this.autoSave();
+      this.render();
+    });
+    
+    // Coordinate conversion callbacks
+    // All mouse event coordinates are in SCREEN space (CSS pixels relative to canvas element)
+    // These events handle the full pipeline: Screen ↔ Canvas ↔ Image
+    
+    this.eventBus.on('coordinate:canvas-to-image', (data, callback) => {
+      // Input: screen coords (despite legacy name "canvasX/Y")
+      // Output: normalized image coords (0-1)
+      const result = this.screenToImage(data.canvasX, data.canvasY);
+      if (callback) callback(result);
+    });
+    
+    this.eventBus.on('coordinate:image-to-canvas', (data, callback) => {
+      // Input: normalized image coords (0-1)
+      // Output: screen coords (for comparison with mouse events)
+      // Note: Returns SCREEN coords so drag offsets work correctly when zoomed
+      const result = this.imageToScreen(data.imgX, data.imgY);
+      if (callback) callback(result);
+    });
+    
+    this.eventBus.on('coordinate:check-bounds', (data, callback) => {
+      // Input: screen coords
+      // Output: boolean (is click within allowable area)
+      const zoom = this.exportSettings.backgroundZoom / 100;
+      let isWithin;
+      if (zoom < 1) {
+        // Zoomed out: allow waypoints anywhere on the canvas surface
+        const canvas = this.screenToCanvas(data.canvasX, data.canvasY);
+        isWithin = this.coordinateTransform.isWithinCanvasBounds(canvas.x, canvas.y);
+      } else {
+        // Zoomed in or 100%: restrict to image bounds
+        isWithin = this.isWithinImageBounds(data.canvasX, data.canvasY);
+      }
+      if (callback) callback(isWithin);
+    });
+    
+    this.eventBus.on('waypoint:check-at-position', (pos, callback) => {
+      const waypoint = this.findWaypointAt(pos.x, pos.y);
+      if (callback) callback(waypoint);
+    });
+    
+    // Area highlight handle hit test (for edit dragging)
+    this.eventBus.on('area:check-handle', ({ screenX, screenY }, callback) => {
+      if (!this.selectedWaypoint || !this.areaEditService) {
+        if (callback) callback(null);
+        return;
+      }
+      const imageToCanvas = (x, y) => this.imageToCanvas(x, y);
+      const hit = this.areaEditService.hitTest(
+        this.selectedWaypoint, screenX, screenY,
+        imageToCanvas, this.canvas.width, this.canvas.height
+      );
+      if (hit) {
+        if (callback) callback({ ...hit, waypoint: this.selectedWaypoint, imageToCanvas });
+      } else {
+        if (callback) callback(null);
+      }
+    });
+    
+    // Help events
+    this.eventBus.on('help:toggle', () => {
+      if (this.elements.splash.style.display === 'none' || 
+          this.elements.splash.style.display === '') {
+        this.showSplash();
+      } else {
+        this.hideSplash();
+      }
+    });
+    
+    this.eventBus.on('help:show-shortcuts', () => {
+      this.showSplash(); // Consolidated into splash modal with accordion
+    });
+    
+    // ========== WAYPOINT KEYBOARD EVENTS ==========
+    
+    this.eventBus.on('waypoint:add-at-center', () => {
+      // Add waypoint at canvas center (or end of path if waypoints exist)
+      const centerX = 0.5;
+      const centerY = 0.5;
+      this.eventBus.emit('waypoint:add', {
+        imgX: centerX,
+        imgY: centerY,
+        isMajor: true
+      });
+      this.announce('Waypoint added at center');
+    });
+    
+    this.eventBus.on('waypoint:deselect', () => {
+      this.selectWaypoint(null);
+      this.announce('Selection cleared');
+    });
+    
+    this.eventBus.on('waypoint:duplicate', () => {
+      if (!this.selectedWaypoint) {
+        this.announce('No waypoint selected');
+        return;
+      }
+      // Create duplicate offset slightly from original
+      const offset = 0.02; // 2% offset
+      const newX = Math.min(1, this.selectedWaypoint.imgX + offset);
+      const newY = Math.min(1, this.selectedWaypoint.imgY + offset);
+      
+      this.eventBus.emit('waypoint:add', {
+        imgX: newX,
+        imgY: newY,
+        isMajor: this.selectedWaypoint.isMajor
+      });
+      this.announce('Waypoint duplicated');
+    });
+    
+    this.eventBus.on('waypoint:select-all', () => {
+      // Select "All Waypoints" option in UI
+      this.uiController?.selectAllWaypoints();
+      this.announce('All waypoints selected');
+    });
+    
+    // Path head style events
+    this.eventBus.on('pathhead:style-changed', (style) => {
+      this.styles.pathHead.style = style;
+      this.render();
+      this.saveUndoStateDebounced();
+      this.autoSave();
+    });
+    
+    this.eventBus.on('pathhead:color-changed', (color) => {
+      this.styles.pathHead.color = color;
+      this.render();
+      this.saveUndoStateDebounced();
+      this.autoSave();
+    });
+    
+    this.eventBus.on('pathhead:size-changed', (size) => {
+      this.styles.pathHead.size = size;
+      this.render();
+      this.saveUndoStateDebounced();
+      this.autoSave();
+    });
+    
+    // ========== ZOOM/PAN EVENTS ==========
+    
+    this.eventBus.on('canvas:zoom-in', () => {
+      this.zoomIn();
+    });
+    
+    this.eventBus.on('canvas:zoom-out', () => {
+      this.zoomOut();
+    });
+    
+    this.eventBus.on('canvas:zoom-reset', () => {
+      this.resetZoom();
+    });
+    
+    // ========== UNDO/REDO EVENTS ==========
+    
+    this.eventBus.on('undo:state-change', ({ canUndo, canRedo }) => {
+      if (this.elements.undoBtn) {
+        this.elements.undoBtn.disabled = !canUndo;
+      }
+      if (this.elements.redoBtn) {
+        this.elements.redoBtn.disabled = !canRedo;
+      }
+    });
+    
+    // Undo/Redo button click handlers
+    this.elements.undoBtn?.addEventListener('click', () => this.undo());
+    this.elements.redoBtn?.addEventListener('click', () => this.redo());
+    
+    // ========== KEYBOARD SHORTCUTS ==========
+    // Centralized keyboard handler for global shortcuts
+    // Delegates to specific handlers for modularity
+    
+    document.addEventListener('keydown', (e) => this._handleKeyDown(e));
+  }
+};

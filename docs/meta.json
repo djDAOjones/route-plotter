@@ -1,34 +1,8 @@
 {
   "inputs": {
-    "src/utils/CatmullRom.js": {
-      "bytes": 2459,
-      "imports": [],
-      "format": "esm"
-    },
-    "src/utils/Easing.js": {
-      "bytes": 1205,
-      "imports": [],
-      "format": "esm"
-    },
     "src/config/constants.js": {
       "bytes": 15344,
       "imports": [],
-      "format": "esm"
-    },
-    "src/services/TextLabelService.js": {
-      "bytes": 13490,
-      "imports": [
-        {
-          "path": "src/config/constants.js",
-          "kind": "import-statement",
-          "original": "../config/constants.js"
-        },
-        {
-          "path": "src/utils/Easing.js",
-          "kind": "import-statement",
-          "original": "../utils/Easing.js"
-        }
-      ],
       "format": "esm"
     },
     "src/services/MotionVisibilityService.js": {
@@ -55,6 +29,16 @@
     },
     "src/services/CoordinateTransform.js": {
       "bytes": 10993,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/CatmullRom.js": {
+      "bytes": 2459,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/Easing.js": {
+      "bytes": 1205,
       "imports": [],
       "format": "esm"
     },
@@ -138,6 +122,22 @@
       ],
       "format": "esm"
     },
+    "src/services/TextLabelService.js": {
+      "bytes": 13490,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/Easing.js",
+          "kind": "import-statement",
+          "original": "../utils/Easing.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/services/RenderingService.js": {
       "bytes": 87455,
       "imports": [
@@ -172,6 +172,32 @@
           "original": "./TextLabelService.js"
         }
       ],
+      "format": "esm"
+    },
+    "src/core/EventBus.js": {
+      "bytes": 4428,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/config/keybindings.js": {
+      "bytes": 14815,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/config/helpContent.js": {
+      "bytes": 5279,
+      "imports": [
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "./keybindings.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/focusTrap.js": {
+      "bytes": 3024,
+      "imports": [],
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/misc.js": {
@@ -2322,53 +2348,6 @@
       ],
       "format": "esm"
     },
-    "src/core/EventBus.js": {
-      "bytes": 4428,
-      "imports": [],
-      "format": "esm"
-    },
-    "src/services/CameraService.js": {
-      "bytes": 21039,
-      "imports": [],
-      "format": "esm"
-    },
-    "src/models/Waypoint.js": {
-      "bytes": 18463,
-      "imports": [
-        {
-          "path": "src/config/constants.js",
-          "kind": "import-statement",
-          "original": "../config/constants.js"
-        },
-        {
-          "path": "src/services/CameraService.js",
-          "kind": "import-statement",
-          "original": "../services/CameraService.js"
-        }
-      ],
-      "format": "esm"
-    },
-    "src/config/keybindings.js": {
-      "bytes": 14815,
-      "imports": [],
-      "format": "esm"
-    },
-    "src/config/helpContent.js": {
-      "bytes": 5279,
-      "imports": [
-        {
-          "path": "src/config/keybindings.js",
-          "kind": "import-statement",
-          "original": "./keybindings.js"
-        }
-      ],
-      "format": "esm"
-    },
-    "src/utils/focusTrap.js": {
-      "bytes": 3024,
-      "imports": [],
-      "format": "esm"
-    },
     "src/controllers/UIController.js": {
       "bytes": 88623,
       "imports": [
@@ -2479,6 +2458,11 @@
       "imports": [],
       "format": "esm"
     },
+    "src/services/CameraService.js": {
+      "bytes": 21039,
+      "imports": [],
+      "format": "esm"
+    },
     "src/models/ImageAsset.js": {
       "bytes": 4909,
       "imports": [],
@@ -2527,28 +2511,235 @@
       ],
       "format": "esm"
     },
-    "src/main.js": {
-      "bytes": 247873,
+    "src/app/wiringDom.js": {
+      "bytes": 34560,
       "imports": [
-        {
-          "path": "src/utils/CatmullRom.js",
-          "kind": "import-statement",
-          "original": "./utils/CatmullRom.js"
-        },
-        {
-          "path": "src/utils/Easing.js",
-          "kind": "import-statement",
-          "original": "./utils/Easing.js"
-        },
         {
           "path": "src/config/constants.js",
           "kind": "import-statement",
-          "original": "./config/constants.js"
+          "original": "../config/constants.js"
         },
         {
           "path": "src/services/TextLabelService.js",
           "kind": "import-statement",
-          "original": "./services/TextLabelService.js"
+          "original": "../services/TextLabelService.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/models/Waypoint.js": {
+      "bytes": 18463,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/snapToAngle.js": {
+      "bytes": 1046,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/app/wiringBus.js": {
+      "bytes": 12705,
+      "imports": [
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
+        },
+        {
+          "path": "src/utils/snapToAngle.js",
+          "kind": "import-statement",
+          "original": "../utils/snapToAngle.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/wiringControllers.js": {
+      "bytes": 31801,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
+        },
+        {
+          "path": "src/utils/snapToAngle.js",
+          "kind": "import-statement",
+          "original": "../utils/snapToAngle.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/undoRedo.js": {
+      "bytes": 7339,
+      "imports": [
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/playback.js": {
+      "bytes": 11521,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/camera.js": {
+      "bytes": 10467,
+      "imports": [
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/viewport.js": {
+      "bytes": 16562,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/app/pathTiming.js": {
+      "bytes": 19125,
+      "imports": [
+        {
+          "path": "src/utils/Easing.js",
+          "kind": "import-statement",
+          "original": "../utils/Easing.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/MotionVisibilityService.js",
+          "kind": "import-statement",
+          "original": "../services/MotionVisibilityService.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/persistence.js": {
+      "bytes": 24895,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/MotionVisibilityService.js",
+          "kind": "import-statement",
+          "original": "../services/MotionVisibilityService.js"
+        },
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/exporting.js": {
+      "bytes": 16223,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/VideoExporter.js",
+          "kind": "import-statement",
+          "original": "../services/VideoExporter.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/editorPanel.js": {
+      "bytes": 16476,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/BeaconRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/BeaconRenderer.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/pointer.js": {
+      "bytes": 6077,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/main.js": {
+      "bytes": 46369,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "./config/constants.js"
         },
         {
           "path": "src/services/MotionVisibilityService.js",
@@ -2581,19 +2772,9 @@
           "original": "./services/RenderingService.js"
         },
         {
-          "path": "src/services/VideoExporter.js",
-          "kind": "import-statement",
-          "original": "./services/VideoExporter.js"
-        },
-        {
           "path": "src/core/EventBus.js",
           "kind": "import-statement",
           "original": "./core/EventBus.js"
-        },
-        {
-          "path": "src/models/Waypoint.js",
-          "kind": "import-statement",
-          "original": "./models/Waypoint.js"
         },
         {
           "path": "src/controllers/UIController.js",
@@ -2614,11 +2795,6 @@
           "path": "src/services/UndoService.js",
           "kind": "import-statement",
           "original": "./services/UndoService.js"
-        },
-        {
-          "path": "src/services/BeaconRenderer.js",
-          "kind": "import-statement",
-          "original": "./services/BeaconRenderer.js"
         },
         {
           "path": "src/controllers/SectionController.js",
@@ -2674,6 +2850,66 @@
           "path": "src/services/HTMLExportService.js",
           "kind": "import-statement",
           "original": "./services/HTMLExportService.js"
+        },
+        {
+          "path": "src/app/wiringDom.js",
+          "kind": "import-statement",
+          "original": "./app/wiringDom.js"
+        },
+        {
+          "path": "src/app/wiringBus.js",
+          "kind": "import-statement",
+          "original": "./app/wiringBus.js"
+        },
+        {
+          "path": "src/app/wiringControllers.js",
+          "kind": "import-statement",
+          "original": "./app/wiringControllers.js"
+        },
+        {
+          "path": "src/app/undoRedo.js",
+          "kind": "import-statement",
+          "original": "./app/undoRedo.js"
+        },
+        {
+          "path": "src/app/playback.js",
+          "kind": "import-statement",
+          "original": "./app/playback.js"
+        },
+        {
+          "path": "src/app/camera.js",
+          "kind": "import-statement",
+          "original": "./app/camera.js"
+        },
+        {
+          "path": "src/app/viewport.js",
+          "kind": "import-statement",
+          "original": "./app/viewport.js"
+        },
+        {
+          "path": "src/app/pathTiming.js",
+          "kind": "import-statement",
+          "original": "./app/pathTiming.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./app/persistence.js"
+        },
+        {
+          "path": "src/app/exporting.js",
+          "kind": "import-statement",
+          "original": "./app/exporting.js"
+        },
+        {
+          "path": "src/app/editorPanel.js",
+          "kind": "import-statement",
+          "original": "./app/editorPanel.js"
+        },
+        {
+          "path": "src/app/pointer.js",
+          "kind": "import-statement",
+          "original": "./app/pointer.js"
         }
       ],
       "format": "esm"
@@ -2684,7 +2920,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2422558
+      "bytes": 2432286
     },
     "docs/app.js": {
       "imports": [],
@@ -2694,17 +2930,8 @@
         "node_modules/jszip/dist/jszip.min.js": {
           "bytesInOutput": 97352
         },
-        "src/utils/CatmullRom.js": {
-          "bytesInOutput": 461
-        },
-        "src/utils/Easing.js": {
-          "bytesInOutput": 150
-        },
         "src/config/constants.js": {
           "bytesInOutput": 3735
-        },
-        "src/services/TextLabelService.js": {
-          "bytesInOutput": 3381
         },
         "src/services/MotionVisibilityService.js": {
           "bytesInOutput": 15206
@@ -2714,6 +2941,12 @@
         },
         "src/services/CoordinateTransform.js": {
           "bytesInOutput": 3643
+        },
+        "src/utils/CatmullRom.js": {
+          "bytesInOutput": 461
+        },
+        "src/utils/Easing.js": {
+          "bytesInOutput": 150
         },
         "src/services/PathCalculator.js": {
           "bytesInOutput": 5209
@@ -2730,8 +2963,23 @@
         "src/services/AreaHighlightRenderer.js": {
           "bytesInOutput": 3825
         },
+        "src/services/TextLabelService.js": {
+          "bytesInOutput": 3381
+        },
         "src/services/RenderingService.js": {
           "bytesInOutput": 21799
+        },
+        "src/core/EventBus.js": {
+          "bytesInOutput": 998
+        },
+        "src/config/keybindings.js": {
+          "bytesInOutput": 6447
+        },
+        "src/config/helpContent.js": {
+          "bytesInOutput": 2446
+        },
+        "src/utils/focusTrap.js": {
+          "bytesInOutput": 957
         },
         "node_modules/mediabunny/dist/modules/src/misc.js": {
           "bytesInOutput": 3399
@@ -2814,24 +3062,6 @@
         "src/services/VideoExporter.js": {
           "bytesInOutput": 10229
         },
-        "src/core/EventBus.js": {
-          "bytesInOutput": 998
-        },
-        "src/services/CameraService.js": {
-          "bytesInOutput": 5019
-        },
-        "src/models/Waypoint.js": {
-          "bytesInOutput": 7594
-        },
-        "src/config/keybindings.js": {
-          "bytesInOutput": 6447
-        },
-        "src/config/helpContent.js": {
-          "bytesInOutput": 2446
-        },
-        "src/utils/focusTrap.js": {
-          "bytesInOutput": 957
-        },
         "src/controllers/UIController.js": {
           "bytesInOutput": 38709
         },
@@ -2865,6 +3095,9 @@
         "src/components/Dropdown.js": {
           "bytesInOutput": 2252
         },
+        "src/services/CameraService.js": {
+          "bytesInOutput": 5019
+        },
         "src/models/ImageAsset.js": {
           "bytesInOutput": 1662
         },
@@ -2874,11 +3107,53 @@
         "src/services/HTMLExportService.js": {
           "bytesInOutput": 51440
         },
+        "src/app/wiringDom.js": {
+          "bytesInOutput": 15888
+        },
+        "src/models/Waypoint.js": {
+          "bytesInOutput": 7594
+        },
+        "src/utils/snapToAngle.js": {
+          "bytesInOutput": 191
+        },
+        "src/app/wiringBus.js": {
+          "bytesInOutput": 4144
+        },
+        "src/app/wiringControllers.js": {
+          "bytesInOutput": 13249
+        },
+        "src/app/undoRedo.js": {
+          "bytesInOutput": 3403
+        },
+        "src/app/playback.js": {
+          "bytesInOutput": 4116
+        },
+        "src/app/camera.js": {
+          "bytesInOutput": 3671
+        },
+        "src/app/viewport.js": {
+          "bytesInOutput": 4134
+        },
+        "src/app/pathTiming.js": {
+          "bytesInOutput": 5375
+        },
+        "src/app/persistence.js": {
+          "bytesInOutput": 13055
+        },
+        "src/app/exporting.js": {
+          "bytesInOutput": 6949
+        },
+        "src/app/editorPanel.js": {
+          "bytesInOutput": 8438
+        },
+        "src/app/pointer.js": {
+          "bytesInOutput": 266
+        },
         "src/main.js": {
-          "bytesInOutput": 105599
+          "bytesInOutput": 22934
         }
       },
-      "bytes": 605019
+      "bytes": 605233
     }
   }
 }
