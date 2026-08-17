@@ -163,7 +163,7 @@ breaking change.
   `origin/main`.
 - **Custom message:** `npm run push "custom msg"`
 - **Dry run:** `npm run push --dry-run`
-- **Live URL:** <https://djdaojones.github.io/router-plotter-02/>
+- **Live URL:** <https://djdaojones.github.io/router-plotter-02/> (v2 line; v3 will deploy to <https://djdaojones.github.io/route-plotter/> once Pages is enabled at Phase 5)
 
 ---
 

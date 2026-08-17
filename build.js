@@ -289,7 +289,7 @@ function createBuildOptions(version) {
     sourcemap: true,
     outfile: 'docs/app.js',
     format: 'esm',
-    target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
+    target: ['es2022'],
     loader: {
       '.png': 'file',
       '.jpg': 'file',

@@ -2,7 +2,7 @@
 
 An animated route editor for maps and images. Drop in a background, click to place waypoints, tweak styles and timing, then export as MP4, WebM, or a self-contained HTML file.
 
-**[Live demo](https://djdaojones.github.io/router-plotter-02/)**
+**[Live demo](https://djdaojones.github.io/router-plotter-02/)** *(v2 line — v3 deploys to `/route-plotter/` at Phase 5)*
 
 ---
 
@@ -22,8 +22,8 @@ An animated route editor for maps and images. Drop in a background, click to pla
 ## Quick start
 
 ```bash
-git clone https://github.com/djDAOjones/router-plotter-02.git
-cd router-plotter-02
+git clone https://github.com/djDAOjones/route-plotter.git
+cd route-plotter
 npm install
 npm run dev        # Dev server with watch → http://localhost:3000
 ```
@@ -83,7 +83,6 @@ src/
   services/
     AnimationEngine.js            Playback loop, timing, segment speed, pause markers
     PathCalculator.js             Catmull-Rom spline, reparameterisation, curvature
-    PathCalculatorWithWorker.js   Web Worker wrapper (falls back to main thread)
     RenderingService.js           Canvas drawing — path, markers, labels, overlays
     BeaconRenderer.js             Animated waypoint effects (ripple, glow, pop, grow, pulse)
     TextLabelService.js           Text label layout, fade, auto-positioning
@@ -102,8 +101,6 @@ src/
     CatmullRom.js                 Catmull-Rom spline interpolation
     Easing.js                     Easing functions (linear, quad, cubic, etc.)
     focusTrap.js                  Modal focus trapping for accessibility
-  workers/
-    pathWorker.js                 Web Worker for off-thread path calculation
 
 styles/
   tokens.css                      Design tokens — UoN palette, semantic colours, spacing
@@ -296,7 +293,6 @@ Edit `RenderingService.js`. Drawing methods follow the naming pattern `render*()
 - **Autosave can get stuck** — if the app enters a bad state, clear `routePlotter_autosave` in browser DevTools → Application → Local Storage.
 - **Slider feedback loops** — programmatic slider updates must go through `ui:slider:update-speed` to avoid re-triggering input event handlers. Check `isUpdatingSlider` flag in `UIController`.
 - **H.264 even dimensions** — MP4 export requires even width and height. The exporter auto-rounds, but custom resolution inputs can produce odd values.
-- **Web Worker fallback** — `PathCalculatorWithWorker` initialises a Web Worker for off-thread path calculation. If it fails (e.g. CORS), it falls back to the main-thread `PathCalculator` silently.
 - **mediabunny is the only runtime dependency** — it provides the MP4/WebM mux layer. Everything else is vanilla JS.
 
 ---
@@ -337,6 +333,6 @@ Joe Bell — University of Nottingham
 
 ## Links
 
-- [Repository](https://github.com/djDAOjones/router-plotter-02)
-- [Live demo](https://djdaojones.github.io/router-plotter-02/)
-- [Issues](https://github.com/djDAOjones/router-plotter-02/issues)
+- [Repository](https://github.com/djDAOjones/route-plotter)
+- [Live demo (v2 line)](https://djdaojones.github.io/router-plotter-02/)
+- [Issues](https://github.com/djDAOjones/route-plotter/issues)
