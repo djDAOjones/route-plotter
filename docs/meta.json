@@ -139,7 +139,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 87455,
+      "bytes": 89014,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2920,7 +2920,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2432286
+      "bytes": 2434640
     },
     "docs/app.js": {
       "imports": [],
@@ -2967,7 +2967,7 @@
           "bytesInOutput": 3381
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 21799
+          "bytesInOutput": 22827
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 998
@@ -3153,7 +3153,7 @@
           "bytesInOutput": 22934
         }
       },
-      "bytes": 605233
+      "bytes": 606261
     }
   }
 }

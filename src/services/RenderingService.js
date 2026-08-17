@@ -875,69 +875,112 @@ export class RenderingService {
   }
 
   /**
+   * Vector-layer draw order, bottom → top.
+   *
+   * Formalises the draw sequence that used to be hard-coded in
+   * renderVectorLayerTo(): a new scene layer (e.g. the Phase 2 flow-layer
+   * swarms, which sit beneath the hero route) is added by inserting an
+   * entry here rather than editing the render body. Each entry guards its
+   * own visibility; `frame` carries per-frame derivations shared between
+   * layers so entries stay independent of one another.
+   */
+  static VECTOR_LAYERS = [
+    {
+      // Area highlights (below path, above background/overlay)
+      name: 'area-highlights',
+      draw(svc, ctx, state, frame) {
+        const { waypoints, imageToCanvas, displayWidth, displayHeight } = state;
+        if (state.previewMode) {
+          AreaHighlightRenderer.render(ctx, waypoints, imageToCanvas, state.animationEngine, state.waypointProgressValues, state.motionSettings, displayWidth, displayHeight, state.previewMode);
+        } else {
+          AreaHighlightRenderer.renderEditMode(ctx, waypoints, imageToCanvas, displayWidth, displayHeight, state.selectedWaypoint);
+        }
+      },
+    },
+    {
+      // The hero route
+      name: 'path',
+      draw(svc, ctx, state, frame) {
+        if (!frame.hasPath || !frame.shouldRenderPath) return;
+        svc.renderPath(ctx, state.pathPoints, state.waypoints, state.styles, state.animationEngine, frame.applyMotion ? state.motionSettings : null, state.motionVisibilityService, state.waypointProgressValues, state.imageToCanvas);
+      },
+    },
+    {
+      // Path head follows the same visibility rule as the path.
+      // Waypoint info is passed for proper rotation timing (rotate AFTER pause, not during)
+      name: 'path-head',
+      draw(svc, ctx, state, frame) {
+        if (!frame.hasPath || !frame.shouldRenderPath) return;
+        svc.renderPathHead(ctx, state.pathPoints, state.styles, state.animationEngine, state.imageToCanvas, state.waypointProgressValues, state.waypoints);
+      },
+    },
+    {
+      // Beacons (only in edit mode or if waypoints are visible)
+      name: 'beacons',
+      draw(svc, ctx, state, frame) {
+        const shouldRenderBeacons = !frame.applyMotion ||
+                                     state.motionSettings.waypointVisibility !== WAYPOINT_VISIBILITY.ALWAYS_HIDE;
+        if (!shouldRenderBeacons) return;
+        svc.renderBeacons(ctx, state.waypoints, state.animationEngine, state.beaconAnimation, state.imageToCanvas, state.styles,
+                          frame.applyMotion ? state.motionSettings : null, state.waypointProgressValues);
+      },
+    },
+    {
+      // Waypoint markers (waypointProgressValues gives accurate animation timing)
+      name: 'waypoints',
+      draw(svc, ctx, state, frame) {
+        svc.renderWaypoints(ctx, state.waypoints, state.selectedWaypoint, state.styles, state.imageToCanvas, state.displayWidth, state.displayHeight,
+                            frame.applyMotion ? state.motionSettings : null, state.motionVisibilityService, state.animationEngine,
+                            state.waypointProgressValues, state.suppressLabels);
+      },
+    },
+    {
+      // Area edit handles in edit mode (selected waypoint only)
+      name: 'area-edit-handles',
+      draw(svc, ctx, state, frame) {
+        if (state.previewMode || !state.selectedWaypoint || !state.areaEditService) return;
+        state.areaEditService.renderHandles(ctx, state.selectedWaypoint, state.imageToCanvas, state.displayWidth, state.displayHeight);
+      },
+    },
+    {
+      // Polygon draw preview (on top of everything in the vector layer)
+      name: 'area-draw-preview',
+      draw(svc, ctx, state, frame) {
+        if (!state.areaDrawingService?.isDrawing) return;
+        state.areaDrawingService.renderPreview(ctx, state.imageToCanvas);
+      },
+    },
+  ];
+
+  /**
    * Render complete vector layer (paths, waypoints, labels)
-   * 
+   *
    * The caller applies the viewport or camera transform to the canvas context
    * before invoking this method, so all vector drawing is rasterized at the
    * zoomed resolution.  This keeps vectors crisp at any zoom level without
    * additional memory — the offscreen canvas stays at displayWidth × dpr.
-   * 
+   *
    * In preview mode, applies motion visibility settings for path and waypoints.
+   * Draw order is data-driven: see RenderingService.VECTOR_LAYERS above.
    */
   renderVectorLayerTo(ctx, state) {
-    const { waypoints, pathPoints, styles, animationEngine, selectedWaypoint, imageToCanvas, displayWidth, displayHeight } = state;
-    const { previewMode, motionSettings, motionVisibilityService, waypointProgressValues, suppressLabels } = state;
-    const applyMotion = previewMode && motionSettings;
-    
+    const applyMotion = state.previewMode && state.motionSettings;
+
     // Compute zoom clamp factor once per frame for all vector-layer elements
     const viewportZoom = state.viewport?.zoom || 1;
     this._zoomClampFactor = viewportZoom > 3 ? 3 / viewportZoom : 1;
-    
-    // Render area highlights (below path, above background/overlay)
-    if (previewMode) {
-      AreaHighlightRenderer.render(ctx, waypoints, imageToCanvas, animationEngine, waypointProgressValues, motionSettings, displayWidth, displayHeight, previewMode);
-    } else {
-      AreaHighlightRenderer.renderEditMode(ctx, waypoints, imageToCanvas, displayWidth, displayHeight, selectedWaypoint);
-    }
-    
-    // Render path if we have points
-    if (pathPoints.length > 0 && waypoints.length > 1) {
-      // In preview mode, check path visibility setting
-      const shouldRenderPath = !applyMotion || 
-                               motionSettings.pathVisibility !== PATH_VISIBILITY.ALWAYS_HIDE;
-      
-      if (shouldRenderPath) {
-        this.renderPath(ctx, pathPoints, waypoints, styles, animationEngine, applyMotion ? motionSettings : null, motionVisibilityService, waypointProgressValues, imageToCanvas);
-      }
-      
-      // Always render path head (unless path is always hidden)
-      // Pass waypoint info for proper rotation timing (rotate AFTER pause, not during)
-      if (shouldRenderPath) {
-        this.renderPathHead(ctx, pathPoints, styles, animationEngine, imageToCanvas, waypointProgressValues, waypoints);
-      }
-    }
-    
-    // Render beacons (only in edit mode or if waypoints are visible)
-    const shouldRenderBeacons = !applyMotion || 
-                                 motionSettings.waypointVisibility !== WAYPOINT_VISIBILITY.ALWAYS_HIDE;
-    if (shouldRenderBeacons) {
-      this.renderBeacons(ctx, waypoints, animationEngine, state.beaconAnimation, imageToCanvas, styles,
-                         applyMotion ? motionSettings : null, waypointProgressValues);
-    }
-    
-    // Render waypoint markers (pass waypointProgressValues for accurate animation timing)
-    this.renderWaypoints(ctx, waypoints, selectedWaypoint, styles, imageToCanvas, displayWidth, displayHeight, 
-                         applyMotion ? motionSettings : null, motionVisibilityService, animationEngine,
-                         waypointProgressValues, suppressLabels);
-    
-    // Render area edit handles in edit mode (selected waypoint only)
-    if (!previewMode && selectedWaypoint && state.areaEditService) {
-      state.areaEditService.renderHandles(ctx, selectedWaypoint, imageToCanvas, displayWidth, displayHeight);
-    }
-    
-    // Render polygon draw preview (on top of everything in the vector layer)
-    if (state.areaDrawingService?.isDrawing) {
-      state.areaDrawingService.renderPreview(ctx, imageToCanvas);
+
+    // Per-frame derivations shared across layers
+    const frame = {
+      applyMotion,
+      hasPath: state.pathPoints.length > 0 && state.waypoints.length > 1,
+      // In preview mode, honour the path visibility setting
+      shouldRenderPath: !applyMotion ||
+                        state.motionSettings.pathVisibility !== PATH_VISIBILITY.ALWAYS_HIDE,
+    };
+
+    for (const layer of RenderingService.VECTOR_LAYERS) {
+      layer.draw(this, ctx, state, frame);
     }
   }
   
