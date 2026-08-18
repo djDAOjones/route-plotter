@@ -17,7 +17,7 @@
 - `src/app/pathTiming.js` — path recalc, easing, segment/leg timing, duration updates
 - `src/app/persistence.js` — project save/load, autosave/restore, dirty-title indicator
 - `src/app/exporting.js` — export mode enter/exit, video/HTML export flows, summary UI
-- `src/app/editorPanel.js` — waypoint list + editor panel sync, control-visibility helpers
+- `src/app/editorPanel.js` — waypoint list + editor panel sync, control-visibility helpers, `selectionTargets()` (the write-target rule every card edit loops over; Phase 4 multi-select)
 - `src/app/pointer.js` — canvas pointer fallbacks and hit-testing
 
 ## Core modules
@@ -58,7 +58,7 @@
 
 ## UI
 
-- `src/controllers/UIController.js` — Sidebar controls, waypoint list, slider sync; scope chip (text + prev/next stepping) and Leg-card header naming (Phase 4)
+- `src/controllers/UIController.js` — Sidebar controls, waypoint list, slider sync; scope chip (text + prev/next stepping, multi counts) and Leg-card header naming; multi-select gesture Set + `setSelection()` for app-decided selections; pause/speed/area controls write to the whole selection (Phase 4)
 - `src/controllers/SectionController.js` — Collapsible settings sections + scope switching (waypoint-scope vs route-scope card groups follow selection; Phase 4)
 - `src/components/SwatchPicker.js` — Okabe-Ito colour-blind safe palette picker
 - `src/components/Dropdown.js` — Accessible dropdown menus
@@ -108,6 +108,7 @@
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, call-order-free determinism, release windows/ramps, weighted junctions, four lifecycle modes, route guide, wobble bounds, edge-cache invalidation
 - `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding
+- `tests/multiSelect.test.js` — Multi-select everywhere: selectionTargets rules, Cmd+A incl. minors, toggle-select collapse ladder, one-gesture bulk delete/nudge, snapshot selectedWaypointIds round-trip, headless UIController list gestures + chip counts
 - `tests/setup.js` — Vitest jsdom setup (uses defineProperty for getter-only jsdom globals)
 
 ## Build and tooling

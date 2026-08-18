@@ -2,7 +2,93 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
-## 2026-08-18 — Phase 4 fourth slice: network edit mode — the pen draws where crowds walk
+## 2026-08-18 — Phase 4 fifth slice: multi-select everywhere — the hidden bulk mode dissolves
+
+**Task:** Land the last Phase 4 item: multi-select honoured by every
+card; the hidden "Select All Waypoints" bulk mode dissolves into
+ordinary multi-select; minors included; one undo entry per bulk change.
+
+**What shipped:**
+
+- **Selection is now an app-level set with a primary.** `RoutePlotter`
+  carries `selectedWaypoints` (route order) beside `selectedWaypoint`
+  (the last-interacted primary); single selection is a one-element set.
+  The existing event trio is the only pipeline — `waypoint:selected`,
+  `waypoint:multi-selected` (now normalised to route order), and
+  `waypoint:deselected` — plus new `waypoint:toggle-select` for
+  membership toggles. UIController keeps its gesture Set and gains
+  `setSelection()` so app-decided selections (canvas toggle, Cmd+A,
+  undo restore, deletes) keep list rows, chip, and shift-range anchor
+  coherent without event loops.
+- **The bulk mode is gone.** The "Select All Waypoints" list row, the
+  "Apply to all?" warning modal, `waypoint:all-selected`,
+  `waypoint:all-change`, and UIController's bulk-only control
+  listeners are deleted. The app's DOM wiring is now the single writer
+  for every selection size: each card handler writes to
+  `selectionTargets()` and emits its usual change event once with the
+  primary, so a bulk gesture still runs one path recalc, one debounced
+  undo entry, one autosave — "one undo entry per bulk change" falls
+  out of the existing pipelines rather than a parallel bulk path.
+- **Applicability follows the disabled-control rule.** Leg/path
+  properties (segment colour/width/style, path shape + params) write
+  to minors too — the old `waypoint:all-change` skipped minors, so
+  bulk restyles left minor-owned legs inconsistent. Marker, beacon,
+  label, pause, speed, and camera targets filter to majors, exactly
+  the controls the single-selection UI disables for minors. Label
+  *text* stays single-only (hidden in multi). `_updateRippleWaitTime`
+  re-times every selected ripple major from its own maxScale.
+- **Gestures:** list click/Cmd-click/Shift-click unchanged (the Set
+  machinery already existed, but cards ignored it — edits silently hit
+  only the primary). Canvas Cmd/Ctrl+click on a waypoint now toggles
+  membership (empty-canvas Cmd+click still adds a minor; the mousedown
+  path skips select-and-drag under the modifier so the toggle isn't
+  collapsed before the click lands). Cmd/Ctrl+A selects the whole
+  route **including minors** — the old handler called
+  `uiController.selectAllWaypoints()`, a method that never existed;
+  the bus swallowed the TypeError, so Cmd+A had been dead. Delete
+  removes the whole selection in one pass (one snapshot, one recalc,
+  one "N waypoints deleted" announcement, then Route scope). Arrow
+  nudges move every selected waypoint by the same canvas delta.
+  Right-click on a selection member keeps the selection.
+- **Inspector in multi:** cards populate from the primary (the values
+  a change will write everywhere) instead of clearing to defaults; the
+  chip says "Editing · N waypoints (M minor)" — minors are named in
+  the count because the list doesn't show them yet. Chip stepping
+  stays disabled in multi. Renderer draws selection rings on every
+  member (`renderWaypoints` accepts one waypoint or the set;
+  edit-mode-only for minors since minors never render in preview).
+- **Undo:** snapshots add `selectedWaypointIds`; `_restoreState`
+  re-resolves the set by id and hands it to UIController and
+  InteractionHandler — Cmd+Z mid-multi-select keeps the selection, and
+  the wish-listed "scope chip stale after undo" quirk is fixed for
+  waypoint scopes as a side effect (editor control values after undo
+  remain the open half of that quirk).
+
+**Live-verified** at v3.1.610 dev (1680×1000, real events): bulk
+segment colour/width hit exactly the selected waypoints, +1 undo stack
+entry per gesture, one undo reverted one gesture with selection
+intact; Cmd+A chip "Editing · 4 waypoints (1 minor)"; real canvas
+cmd+click toggled without adding a minor; real ArrowRight moved the
+pair; real Delete removed the pair as one entry and undo brought both
+back selected; autosave round-trip across reload; selection-ring
+pixel-diffs per waypoint (890/831/345/583 changed px = rings on all
+four incl. the minor; unselected neighbours byte-identical — early
+all-four diffs were mode/resize transition races in the probe, not
+the app); zero console errors. Test-suite: 326/326 (25 new in
+tests/multiSelect.test.js — selectionTargets rules, select-all incl.
+minors, toggle collapse ladder, bulk delete/nudge, snapshot id
+round-trip, headless UIController gestures + chip).
+
+**Feel-check flags for the owner:** Cmd+A now works and includes
+minors (invisible in the list until minors-in-list ships); canvas
+Cmd/Ctrl+click on a waypoint toggles selection instead of plain
+selecting; the "Apply to all?" confirm is gone (undo toast philosophy);
+multi cards show the primary's values with no mixed-value indication
+yet; dragging a member still moves only that waypoint (group drag
+wish-listed).
+
+---
+
 
 **Task:** Land Phase 4 item 4: network editing as the app's one true tool
 mode (backlog: "like polygon draw") — pen gestures on shared
