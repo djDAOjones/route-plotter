@@ -48,6 +48,7 @@ describe('RenderingService.VECTOR_LAYERS', () => {
   test('pins the canonical bottom-to-top draw order', () => {
     expect(RenderingService.VECTOR_LAYERS.map(l => l.name)).toEqual([
       'area-highlights',
+      'flow-layers',
       'path',
       'path-head',
       'beacons',

@@ -23,10 +23,10 @@
 - [x] `Scene`/`FlowLayer`/`Emitter` models; coordVersion 7→**9** additive save/load (layer params + seeds only — runtime dot state never persists; 8 is skipped — the fork's local builds used it for graph-only saves, decision-log 2026-08-17) — shipped 2026-08-18: onset-window emitter timing in normalised timeline fractions, full founding vocabulary (incl. onsetVariance/intensityRamp/wobble), guideType 'graph'|'route', scene in clearAll + undo snapshots; 204/204 tests, live autosave round-trip verified
 - [x] `GraphModel` collection — salvaged from the fork with its 25 tests (landed 2026-08-17, wired into FlowLayer 2026-08-18; adjacency + referential integrity + serialisation included)
 
-**Phase 3 — swarm engine**
+**Phase 3 — swarm engine: COMPLETE 2026-08-18** (see decision-log)
 
-- [ ] Deterministic `SwarmEngine.evaluate(timelineMs, layer)` using `hash(seed, dotIndex, hopIndex)` for onset/speed/junction/wobble; per-edge paths via one PathCalculator instance per edge
-- [ ] Batched `DotRenderer` pass (plain arcs/sprites, sizes via `scaleSizeClamped`), drawn beneath the hero route
+- [x] Deterministic `SwarmEngine.evaluate(timelineMs, layer)` using `hash(seed, dotIndex, hopIndex)` for onset/speed/junction/wobble; per-edge paths via one PathCalculator instance per edge — shipped 2026-08-18: weighted walks, four lifecycle modes, route guide, wobble, signature-keyed edge caches; 30-test suite; owner feel-check of the dot motion welcome (needs Phase 4 UI or console authoring)
+- [x] Batched `DotRenderer` pass (plain arcs/sprites, sizes via `scaleSizeClamped`), drawn beneath the hero route — `flow-layers` registry entry between area-highlights and path; one canvas path per (colour, size) group; live-verified at v3.1.591 (pixel-delta + byte-identical scrub-return)
 
 **Phase 4 — authoring UI**
 

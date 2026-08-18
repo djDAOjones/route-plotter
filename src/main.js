@@ -143,6 +143,7 @@ import { CoordinateTransform } from './services/CoordinateTransform.js';
 import { PathCalculator } from './services/PathCalculator.js';
 import { AnimationEngine } from './services/AnimationEngine.js';
 import { RenderingService } from './services/RenderingService.js';
+import { SwarmEngine } from './services/SwarmEngine.js';
 import { EventBus } from './core/EventBus.js';
 import { UIController } from './controllers/UIController.js';
 import { InteractionHandler } from './handlers/InteractionHandler.js';
@@ -249,6 +250,7 @@ class RoutePlotter {
     this.waypoints = []; // Will hold Waypoint model instances
     this.waypointsById = new Map(); // O(1) lookup by waypoint ID
     this.scene = new Scene(); // Flow layers (guide graphs + emitters), drawn beneath the hero route
+    this.swarmEngine = new SwarmEngine(); // Deterministic dot evaluator — pure fn(timelineMs, layer, seed)
     this.pathPoints = [];
     this.selectedWaypoint = null;
     this.isDragging = false;
@@ -935,6 +937,10 @@ class RoutePlotter {
       pathPoints: this.pathPoints,
       styles: this.styles,
       selectedWaypoint: this.selectedWaypoint,
+
+      // Flow layers + their deterministic evaluator (drawn beneath the hero route)
+      scene: this.scene,
+      swarmEngine: this.swarmEngine,
       
       // Animation state
       animationEngine: this.animationEngine,

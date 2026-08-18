@@ -11,6 +11,7 @@ import { RENDERING, INTERACTION, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUN
 import { Easing } from '../utils/Easing.js';
 import { BeaconRenderer } from './BeaconRenderer.js';
 import { AreaHighlightRenderer } from './AreaHighlightRenderer.js';
+import { DotRenderer } from './DotRenderer.js';
 import { MotionVisibilityService } from './MotionVisibilityService.js';
 import { TextLabelService } from './TextLabelService.js';
 
@@ -889,6 +890,27 @@ export class RenderingService {
           AreaHighlightRenderer.render(ctx, waypoints, imageToCanvas, state.animationEngine, state.waypointProgressValues, state.motionSettings, displayWidth, displayHeight, state.previewMode);
         } else {
           AreaHighlightRenderer.renderEditMode(ctx, waypoints, imageToCanvas, displayWidth, displayHeight, state.selectedWaypoint);
+        }
+      },
+    },
+    {
+      // Flow-layer swarms (Phase 3) — beneath the hero route, above area
+      // highlights. Scene order: layer index 0 draws bottom-most.
+      name: 'flow-layers',
+      draw(svc, ctx, state, frame) {
+        if (!state.scene || !state.swarmEngine || !state.animationEngine) return;
+        const layers = state.scene.getFlowLayers();
+        if (layers.length === 0) return;
+        const durationMs = state.animationEngine.state.duration;
+        if (!(durationMs > 0)) return;
+        const timelineMs = state.animationEngine.getTime();
+        for (const layer of layers) {
+          if (!layer.visible) continue;
+          const dots = state.swarmEngine.evaluate(timelineMs, layer, {
+            durationMs,
+            routePathPoints: state.pathPoints,
+          });
+          DotRenderer.render(ctx, dots, state.imageToCanvas, svc);
         }
       },
     },

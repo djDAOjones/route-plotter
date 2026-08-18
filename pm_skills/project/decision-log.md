@@ -2,6 +2,78 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-18 — Phase 3 swarm engine: deterministic SwarmEngine + batched DotRenderer
+
+**Task:** Phase 3 of the v3.0 refactor — dots flow while everything stays a
+pure function of timeline time (backlog Phase 3; behavioural spec carried
+from the salvaged fork suites, tick() API superseded per 2026-08-17).
+
+**Shipped:**
+- `src/services/SwarmEngine.js` — `evaluate(timelineMs, layer, context)`
+  recomputes every dot from scratch each call: no stored dot state, no
+  call-order sensitivity (pinned by test: t₂-after-t₁ == t₂ on a fresh
+  engine). Variation comes from `hash(seed, dotIndex, hopIndex)` — FNV-1a
+  combine + murmur3 fmix32 finaliser, offset-basis-seeded so seed 0 still
+  mixes; exact outputs are test-pinned because changing the hash would
+  silently restyle every authored scene.
+- Onset model: dot i of N takes centred slot (i+0.5)/N across the release
+  window; `onsetVariance` linearly blends slot → uniform draw (0 = even
+  metronome, 1 = fully scattered — dotCount stays an exact promise);
+  `intensityRamp` biases via power curve (u^(1/(1+r)) back-loaded,
+  u^(1-r) front-loaded). Overhanging windows clip at evaluation, as the
+  Phase 2 model promised.
+- Graph walk: hop 0 picks the entry (uniform over `type:'entry'` nodes;
+  a graph with no explicit entries falls back to any node with a way
+  onward, so console/authoring experiments flow immediately); each
+  junction consumes one hop index, choosing among traversable edges
+  (one-way honoured, two-way walkable both directions) proportional to
+  edge weight; the arrival edge is excluded unless it is the only option
+  (anti-ping-pong); a dead end behaves as an exit. Walks are capped at
+  2048 hops per dot per evaluation (beyond it the dot parks) to bound
+  frame cost.
+- Lifecycles at an exit: `disappear` ends the dot; `collect` parks it on
+  the exit node; `respawn` teleports to a freshly hashed entry and keeps
+  walking (the walk is one infinite deterministic edge sequence);
+  `loop` replays the dot's own first journey cyclically (distance modulo
+  journey length). On a route guide, respawn and loop coincide (single
+  path, wrap by length).
+- `wobble`: perpendicular sine displacement, phase a pure function of
+  distance travelled (amplitude ≤ 2% of the image at wobble 1, per-dot
+  frequency/phase hashed); parked dots don't wobble.
+- Per-edge geometry: one PathCalculator instance per edge (backlog), the
+  polyline cached against a signature of node positions + control points,
+  so authoring edits invalidate exactly the edges they touch (test-pinned
+  mid-edge). Corner-slowing spacing is deliberately kept: dots ease
+  through sharp corners with the hero head's motion language.
+- `src/services/DotRenderer.js` + a `flow-layers` entry in
+  `RenderingService.VECTOR_LAYERS` between `area-highlights` and `path` —
+  beneath the hero route per the founding decision, above the area
+  spotlight so dots stay bright like the path does. Dots batch into one
+  canvas path per (colour, size) group; radius =
+  `scaleSizeClamped(dotSize × 10)` reference px. renderState gains
+  `scene` + `swarmEngine`; the engine reads `animationEngine.getTime()`
+  and `state.duration`, so scrub, play, reverse and export all see the
+  same dots by construction.
+
+**Verification:** 234/234 tests (was 204; 30-test swarmEngine suite
+covering the salvaged fork spec re-expressed against evaluate()).
+Live pass at v3.1.591 on the owner's real autosave (backed up first,
+restored byte-for-byte after, reload confirmed 3 waypoints / 0 flow
+layers): console-authored 4-node graph (weighted 3:1 fork, one curved
+edge) + sky-blue respawn stream + orange mid-timeline collect burst;
+toggling the layer changed canvas pixels by +1550 blue / +2011 orange
+(dots demonstrably rasterise beneath nothing-else-changed frames);
+seek 4000 → 7500 → 500 → 4000 reproduced a byte-identical canvas hash;
+playback advanced with the burst visibly travelling; zero console
+errors.
+
+**Scope:** new SwarmEngine.js, DotRenderer.js, swarmEngine.test.js;
+RenderingService.js (import + registry entry), main.js (engine instance +
+renderState), services/index.js barrel, vectorLayers.test.js order pin.
+Phase 4 (authoring UI) is next; Phase 5 wires the HTML-export player.
+
+---
+
 ## 2026-08-18 — Phase 2 scene model: Scene/FlowLayer/Emitter land, saves go to coordVersion 9
 
 **Task:** Phase 2 of the v3.0 refactor — the layered-scene data model and

@@ -8,3 +8,5 @@ export { CoordinateTransform } from './CoordinateTransform.js';
 export { PathCalculator } from './PathCalculator.js';
 export { RenderingService } from './RenderingService.js';
 export { StorageService } from './StorageService.js';
+export { SwarmEngine } from './SwarmEngine.js';
+export { DotRenderer } from './DotRenderer.js';

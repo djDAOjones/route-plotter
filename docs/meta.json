@@ -185,6 +185,11 @@
       ],
       "format": "esm"
     },
+    "src/services/DotRenderer.js": {
+      "bytes": 1907,
+      "imports": [],
+      "format": "esm"
+    },
     "src/services/TextLabelService.js": {
       "bytes": 13490,
       "imports": [
@@ -202,7 +207,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 89004,
+      "bytes": 89931,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -225,6 +230,11 @@
           "original": "./AreaHighlightRenderer.js"
         },
         {
+          "path": "src/services/DotRenderer.js",
+          "kind": "import-statement",
+          "original": "./DotRenderer.js"
+        },
+        {
           "path": "src/services/MotionVisibilityService.js",
           "kind": "import-statement",
           "original": "./MotionVisibilityService.js"
@@ -233,6 +243,17 @@
           "path": "src/services/TextLabelService.js",
           "kind": "import-statement",
           "original": "./TextLabelService.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/SwarmEngine.js": {
+      "bytes": 18339,
+      "imports": [
+        {
+          "path": "src/services/PathCalculator.js",
+          "kind": "import-statement",
+          "original": "./PathCalculator.js"
         }
       ],
       "format": "esm"
@@ -2797,7 +2818,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 46354,
+      "bytes": 46668,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2838,6 +2859,11 @@
           "path": "src/services/RenderingService.js",
           "kind": "import-statement",
           "original": "./services/RenderingService.js"
+        },
+        {
+          "path": "src/services/SwarmEngine.js",
+          "kind": "import-statement",
+          "original": "./services/SwarmEngine.js"
         },
         {
           "path": "src/core/EventBus.js",
@@ -2988,7 +3014,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2459282
+      "bytes": 2492265
     },
     "docs/app.js": {
       "imports": [],
@@ -3052,11 +3078,17 @@
         "src/services/AreaHighlightRenderer.js": {
           "bytesInOutput": 3825
         },
+        "src/services/DotRenderer.js": {
+          "bytesInOutput": 429
+        },
         "src/services/TextLabelService.js": {
           "bytesInOutput": 3381
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 22751
+          "bytesInOutput": 23136
+        },
+        "src/services/SwarmEngine.js": {
+          "bytesInOutput": 5077
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 998
@@ -3239,10 +3271,10 @@
           "bytesInOutput": 266
         },
         "src/main.js": {
-          "bytesInOutput": 22863
+          "bytesInOutput": 22933
         }
       },
-      "bytes": 610415
+      "bytes": 616376
     }
   }
 }
