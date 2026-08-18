@@ -284,6 +284,11 @@
       "imports": [],
       "format": "esm"
     },
+    "src/utils/pathWidthScale.js": {
+      "bytes": 1241,
+      "imports": [],
+      "format": "esm"
+    },
     "node_modules/mediabunny/dist/modules/src/misc.js": {
       "bytes": 33521,
       "imports": [
@@ -2433,7 +2438,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 88623,
+      "bytes": 86717,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2456,6 +2461,11 @@
           "original": "../utils/focusTrap.js"
         },
         {
+          "path": "src/utils/pathWidthScale.js",
+          "kind": "import-statement",
+          "original": "../utils/pathWidthScale.js"
+        },
+        {
           "path": "src/services/VideoExporter.js",
           "kind": "import-statement",
           "original": "../services/VideoExporter.js"
@@ -2464,7 +2474,7 @@
       "format": "esm"
     },
     "src/handlers/InteractionHandler.js": {
-      "bytes": 24841,
+      "bytes": 25320,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2485,7 +2495,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 11734,
+      "bytes": 11716,
       "imports": [],
       "format": "esm"
     },
@@ -2596,7 +2606,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 34560,
+      "bytes": 33214,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2617,7 +2627,7 @@
       "format": "esm"
     },
     "src/models/Waypoint.js": {
-      "bytes": 18463,
+      "bytes": 18233,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2658,8 +2668,13 @@
       ],
       "format": "esm"
     },
+    "src/components/ContextMenu.js": {
+      "bytes": 5769,
+      "imports": [],
+      "format": "esm"
+    },
     "src/app/wiringControllers.js": {
-      "bytes": 31801,
+      "bytes": 39399,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2675,6 +2690,11 @@
           "path": "src/components/SwatchPicker.js",
           "kind": "import-statement",
           "original": "../components/SwatchPicker.js"
+        },
+        {
+          "path": "src/components/ContextMenu.js",
+          "kind": "import-statement",
+          "original": "../components/ContextMenu.js"
         },
         {
           "path": "src/utils/snapToAngle.js",
@@ -2701,7 +2721,7 @@
       "format": "esm"
     },
     "src/app/playback.js": {
-      "bytes": 11718,
+      "bytes": 11867,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2712,7 +2732,7 @@
       "format": "esm"
     },
     "src/app/camera.js": {
-      "bytes": 10467,
+      "bytes": 9919,
       "imports": [
         {
           "path": "src/services/CameraService.js",
@@ -2728,7 +2748,7 @@
       "format": "esm"
     },
     "src/app/pathTiming.js": {
-      "bytes": 19125,
+      "bytes": 19495,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -2791,7 +2811,7 @@
       "format": "esm"
     },
     "src/app/editorPanel.js": {
-      "bytes": 16476,
+      "bytes": 15387,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2802,6 +2822,11 @@
           "path": "src/services/BeaconRenderer.js",
           "kind": "import-statement",
           "original": "../services/BeaconRenderer.js"
+        },
+        {
+          "path": "src/utils/pathWidthScale.js",
+          "kind": "import-statement",
+          "original": "../utils/pathWidthScale.js"
         }
       ],
       "format": "esm"
@@ -2818,7 +2843,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 46668,
+      "bytes": 46205,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3014,7 +3039,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2492265
+      "bytes": 2505805
     },
     "docs/app.js": {
       "imports": [],
@@ -3102,6 +3127,9 @@
         "src/utils/focusTrap.js": {
           "bytesInOutput": 957
         },
+        "src/utils/pathWidthScale.js": {
+          "bytesInOutput": 186
+        },
         "node_modules/mediabunny/dist/modules/src/misc.js": {
           "bytesInOutput": 3399
         },
@@ -3184,16 +3212,16 @@
           "bytesInOutput": 10229
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 38709
+          "bytesInOutput": 37110
         },
         "src/handlers/InteractionHandler.js": {
-          "bytesInOutput": 9759
+          "bytesInOutput": 9934
         },
         "src/services/UndoService.js": {
           "bytesInOutput": 1028
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 4697
+          "bytesInOutput": 4686
         },
         "src/services/AreaDrawingService.js": {
           "bytesInOutput": 4920
@@ -3229,10 +3257,10 @@
           "bytesInOutput": 51440
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 15888
+          "bytesInOutput": 14740
         },
         "src/models/Waypoint.js": {
-          "bytesInOutput": 7594
+          "bytesInOutput": 7092
         },
         "src/utils/snapToAngle.js": {
           "bytesInOutput": 191
@@ -3240,23 +3268,26 @@
         "src/app/wiringBus.js": {
           "bytesInOutput": 4144
         },
+        "src/components/ContextMenu.js": {
+          "bytesInOutput": 3100
+        },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 13249
+          "bytesInOutput": 16262
         },
         "src/app/undoRedo.js": {
           "bytesInOutput": 3467
         },
         "src/app/playback.js": {
-          "bytesInOutput": 4145
+          "bytesInOutput": 4159
         },
         "src/app/camera.js": {
-          "bytesInOutput": 3671
+          "bytesInOutput": 3289
         },
         "src/app/viewport.js": {
           "bytesInOutput": 4134
         },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 5375
+          "bytesInOutput": 5406
         },
         "src/app/persistence.js": {
           "bytesInOutput": 13256
@@ -3265,16 +3296,16 @@
           "bytesInOutput": 6949
         },
         "src/app/editorPanel.js": {
-          "bytesInOutput": 8438
+          "bytesInOutput": 7663
         },
         "src/app/pointer.js": {
           "bytesInOutput": 266
         },
         "src/main.js": {
-          "bytesInOutput": 22933
+          "bytesInOutput": 22568
         }
       },
-      "bytes": 616376
+      "bytes": 618113
     }
   }
 }

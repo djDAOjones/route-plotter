@@ -1,0 +1,67 @@
+/* Context menu — Carbon menu anatomy, UoN tokens, WCAG AAA.
+   Anchored at the pointer by ContextMenu.js (viewport-clamped). */
+
+.context-menu {
+  position: fixed;
+  min-width: 13rem;
+  margin: 0;
+  padding: var(--space-1) 0;
+  list-style: none;
+  background: var(--ui-00);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-2);
+  box-shadow: var(--elev-2);
+  z-index: 1100; /* Above modals' 1000 siblings; below nothing else */
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--touch-target-min); /* 44px AAA */
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: none;
+  font-size: var(--text-sm);
+  color: var(--text-01);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease-out);
+}
+
+.context-menu-item:hover {
+  background: var(--hover-ui);
+}
+
+.context-menu-item:focus-visible {
+  outline: none;
+  background: var(--hover-ui);
+  box-shadow: inset 0 0 0 2px var(--focus-outer);
+}
+
+.context-menu-item[aria-disabled='true'] {
+  color: var(--disabled-03);
+  cursor: not-allowed;
+}
+
+.context-menu-item[aria-disabled='true']:hover {
+  background: transparent;
+}
+
+/* Destructive entry (Delete) — colour is reinforced by list position
+   and label text, never the only carrier of meaning */
+.context-menu-item.is-danger {
+  color: var(--support-error);
+}
+
+.context-menu-separator {
+  height: 1px;
+  margin: var(--space-1) 0;
+  background: var(--border-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .context-menu-item {
+    transition: none;
+  }
+}
