@@ -57,8 +57,8 @@
 
 ## UI
 
-- `src/controllers/UIController.js` — Sidebar controls, waypoint list, slider sync
-- `src/controllers/SectionController.js` — Collapsible settings sections
+- `src/controllers/UIController.js` — Sidebar controls, waypoint list, slider sync; scope chip (text + prev/next stepping) and Leg-card header naming (Phase 4)
+- `src/controllers/SectionController.js` — Collapsible settings sections + scope switching (waypoint-scope vs route-scope card groups follow selection; Phase 4)
 - `src/components/SwatchPicker.js` — Okabe-Ito colour-blind safe palette picker
 - `src/components/Dropdown.js` — Accessible dropdown menus
 - `src/components/ContextMenu.js` — Right-click menu (canvas waypoints + empty canvas): Carbon menu anatomy, arrow-key navigation, aria-disabled reasons, focus restore (Phase 3.5)

@@ -17,6 +17,10 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Phase 4, item 1 — scope-split inspector (shipped 2026-08-18)
+
+Outcome: the sidebar is an inspector that names its subject — scope chip with prev/next stepping, waypoint cards (Marker · On arrival · Label · Leg → next · Area) vs route cards (Head · Pacing · Reveal · Path emphasis · Background · Video settings) swapped on selection, ghost state deleted, right sidebar reduced to the Waypoints list ready for the Layers strip. Markup + wiring only. See decision-log 2026-08-18 "Phase 4 first slice".
+
 ## Phase 3.5 — authoring-UI paper cuts (shipped 2026-08-18; PHASE 3.5 COMPLETE)
 
 Outcome: all 15 review items landed same-day — one data bug (minor-detach on reorder), one data-corruption find (bulk thickness raw ints), the context menu (first right-click UI, revived the dead T-key toggle), single-writer editor controls, path head resolved global, duration discrepancy root-caused (preview tail gated on comet) — see decision-log 2026-08-18 "Phase 3.5 shipped".

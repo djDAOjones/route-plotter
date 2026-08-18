@@ -2,6 +2,72 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-18 — Phase 4 first slice: scope-split inspector — the sidebar says what it edits
+
+**Task:** Land Phase 4 item 1 (adopted direction "one inspector, explicit
+scopes"): markup + wiring only, no model changes.
+
+**What shipped:**
+
+- Scope chip replaces the empty sidebar subtitle: "Editing · Waypoint 2
+  'Library' · major" / "Editing · Route" / "Editing · N waypoints" /
+  "Editing · All waypoints", colour-tinted per scope (new
+  `--scope-waypoint-*` / `--scope-route-*` tokens, ≥7:1), `role=status`
+  so scope changes are announced. Prev/next buttons step the selection
+  Route → Waypoint 1 → … → last: prev from Waypoint 1 backs out to Route
+  scope, ends disable, multi/all modes aren't steppable. Steps emit the
+  ordinary `waypoint:selected`/`waypoint:deselected` events.
+- Two scope groups in the DOM (`#waypoint-scope` / `#route-scope`);
+  SectionController toggles `hidden` on selection change — the
+  `settings-disabled` ghost state is deleted outright. With zero
+  waypoints the help placeholder now sits above Route scope, so
+  Background/Video settings are reachable before the first waypoint
+  (previously all sections were hidden).
+- Waypoint cards: **Marker** (colour/icon/size) · **On arrival** (beacon
+  + ripple/pulse subs, wait time, and the camera zoom block moved in —
+  the Camera section is gone) · **Label** (was Text) · **Leg → next**
+  (segment colour/thickness/shape/style/speed; the header names the
+  ownership rule via UIController — "Leg → Waypoint 3 'Chapel'", or
+  "Leg → route end" on the final waypoint) · **Area**.
+- Route cards: **Head** (head cluster out of the old Path card; "Arrow
+  Style" label → "Style") · **Pacing** (Duration + Scale, moved from the
+  right sidebar) · **Reveal** (was Animation) · **Path emphasis** (moved
+  from the right sidebar) · **Background** · **Video settings** (was
+  Export — the header Export menu keeps the name for actions).
+- Right sidebar is now just the Waypoints list — the slot the Phase 4
+  Layers strip lands in.
+
+**Design points (owner feel-check welcome):**
+
+- Duration/Scale/Path emphasis now require deselecting (Route scope) to
+  reach — deliberate ("the panel edits what's selected"), but it moves
+  three much-used controls; flag it if it fights muscle memory.
+- Defaults: waypoint scope opens on Marker (as before); Route scope
+  opens on Pacing + Background (tune timing / start a project).
+- Minor waypoint chip reads "Editing · minor waypoint" (no index) —
+  minors-in-list presentation is still the open sub-decision.
+- Section state keys renamed (text→label, path→leg, camera→on-arrival,
+  animation→reveal, export→video; + head/pacing/path-emphasis): open/
+  closed states reset once per browser; stale old keys in localStorage
+  are harmless.
+- Kept `animation-speed-right` etc. ids through the move — the
+  unit/naming pass is already a post-Phase-4 backlog item.
+
+**Design gate:** Carbon accordion + tag/chip patterns; the heuristic
+served is recognition-over-recall (scope visible at all times). Chip
+fg/bg pairs ≥7:1; nav buttons 44px targets; no colour-only meaning (the
+text names the scope); `aria-controls`/`aria-expanded` wiring kept on
+all renamed sections.
+
+**Verification:** build + 243/243 tests green; live at v3.1.602 —
+scope switch on select/deselect/Escape, chip stepping incl. both
+boundaries, leg header naming (rename + route end cases), On-arrival
+camera sync, thickness log-scale conversion intact through the moved
+Leg card, all-waypoints and multi-select chips, zero console errors.
+Embedded-profile autosave backed up and restored byte-identical.
+
+---
+
 ## 2026-08-18 — Phase 3.5 shipped: fifteen paper cuts, and the defects hiding under them
 
 **Task:** All 15 items from the authoring-UI review landed (seven
