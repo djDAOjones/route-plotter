@@ -38,6 +38,8 @@ export const RENDERING = {
   MINOR_DOT_SIZE: 4,               // Legacy px value - converted at render time
   MINOR_DOT_COLOR: '#000000',      // Black color for minor waypoints
   MINOR_DOT_OPACITY: 0.5,          // 50% opacity for minor waypoints
+  HOVER_ACCENT_COLOR: '#0f62fe',   // Canvas hover affordances (rings, leg "+") — matches app accent
+  HOVER_ACCENT_GLOW: 'rgba(15, 98, 254, 0.45)', // Hovered-leg glow underlay
   PATH_HEAD_SIZE: 8,               // Legacy px value - converted at render time
   // Reference dimension for relative sizing (used when no image loaded)
   REFERENCE_DIAGONAL: 1414,        // ~1000x1000 image diagonal
@@ -86,6 +88,8 @@ export const PATH = {
 // UI interaction thresholds
 export const INTERACTION = {
   WAYPOINT_HIT_RADIUS: 15,        // Click detection radius for waypoints (pixels)
+  SEGMENT_HIT_RADIUS: 8,          // Hover/click detection radius for route legs (pixels)
+  LEG_PLUS_HIT_RADIUS: 12,        // Click radius for the leg midpoint "+" insert handle (pixels)
   DRAG_THRESHOLD: 3,              // Minimum pixels to consider a drag
   DOUBLE_CLICK_TIME: 300,         // Maximum ms between clicks for double-click
   LONG_PRESS_TIME: 500,           // Time for long press detection

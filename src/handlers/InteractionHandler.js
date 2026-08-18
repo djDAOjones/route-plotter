@@ -60,11 +60,24 @@ export class InteractionHandler {
     
     /** @type {boolean} Whether an area edit drag just completed (suppresses click) */
     this._areaEditJustEnded = false;
-    
+
+    /** @type {string|null} What the pointer is idle-hovering ('waypoint'|'area-handle'|'leg'|'leg-plus') */
+    this._hoverKind = null;
+
+    /** @type {number|null} Pending rAF id for throttled hover hit-testing */
+    this._hoverRaf = null;
+
+    /** @type {{x: number, y: number}|null} Latest pointer position for the pending hover test */
+    this._hoverPos = null;
+
+    /** @type {{alt: boolean, shift: boolean, meta: boolean}} Last known modifier state */
+    this._modifiers = { alt: false, shift: false, meta: false };
+
     // Listen for draw-mode state changes
     this.eventBus.on('area:draw-mode-changed', ({ active }) => {
       this.isDrawingArea = active;
       if (active) {
+        this._clearHover();
         this.canvas.style.cursor = 'crosshair';
       } else {
         this.canvas.style.cursor = '';
@@ -92,6 +105,7 @@ export class InteractionHandler {
     this.canvas.addEventListener('mousemove', this.handleMouseMove);
     this.canvas.addEventListener('mouseup', this.handleMouseUp);
     this.canvas.addEventListener('click', this.handleCanvasClick);
+    this.canvas.addEventListener('mouseleave', () => this._clearHover());
     
     // Touch events (for mobile support)
     this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
@@ -105,7 +119,10 @@ export class InteractionHandler {
     document.addEventListener('keydown', this._updateCursorForModifiers.bind(this));
     document.addEventListener('keyup', this._updateCursorForModifiers.bind(this));
     // Reset cursor when window loses focus (user may release key while away)
-    window.addEventListener('blur', () => this._setCursor('crosshair'));
+    window.addEventListener('blur', () => {
+      this._modifiers = { alt: false, shift: false, meta: false };
+      this._refreshCursor();
+    });
     
     // Drag and drop for images
     this.canvas.addEventListener('dragover', this.handleDragOver);
@@ -155,6 +172,7 @@ export class InteractionHandler {
     this.eventBus.emit('area:check-handle', { screenX: x, screenY: y }, (hit) => {
       if (hit) {
         this.isEditingArea = true;
+        this._clearHover();
         this.canvas.classList.add('dragging');
         // Convert screen coords to image coords for the edit service
         this.eventBus.emit('coordinate:canvas-to-image', { canvasX: x, canvasY: y }, (imgPos) => {
@@ -174,7 +192,8 @@ export class InteractionHandler {
           this.selectedWaypoint = waypoint;
           this.isDragging = true;
           this.hasDragged = false;
-          
+          this._clearHover();
+
           // Calculate drag offset
           this.eventBus.emit('coordinate:image-to-canvas', 
             { imgX: waypoint.imgX, imgY: waypoint.imgY }, 
@@ -222,11 +241,23 @@ export class InteractionHandler {
       return;
     }
     
+    // Idle move (no drag in progress): hover affordance hit-testing
+    if (!this.isDragging) {
+      const rect = this.canvas.getBoundingClientRect();
+      this._modifiers = {
+        alt: !!event.altKey,
+        shift: !!event.shiftKey,
+        meta: isMac ? !!event.metaKey : !!event.ctrlKey
+      };
+      this._queueHoverTest(event.clientX - rect.left, event.clientY - rect.top);
+      return;
+    }
+
     if (this.isDragging && this.selectedWaypoint) {
       const rect = this.canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-      
+
       // Track that we actually moved
       this.hasDragged = true;
       
@@ -354,7 +385,11 @@ export class InteractionHandler {
           // Select existing waypoint
           this.eventBus.emit('waypoint:selected', waypoint);
         }
-      } else {
+        return;
+      }
+
+      // Falls through to add-waypoint when nothing interactive is hit
+      const addWaypointAt = () => {
         // Check if click is within image bounds before adding waypoint
         this.eventBus.emit('coordinate:check-bounds',
           { canvasX: x, canvasY: y },
@@ -362,12 +397,12 @@ export class InteractionHandler {
             if (!isWithinBounds) {
               return;
             }
-            
+
             // Determine waypoint type:
             // - Cmd/Ctrl+click = minor waypoint
             // - Plain click = major waypoint
             const isMajor = !isMetaClick;
-            
+
             // Convert to image coordinates
             this.eventBus.emit('coordinate:canvas-to-image',
               { canvasX: x, canvasY: y },
@@ -382,7 +417,31 @@ export class InteractionHandler {
             );
           }
         );
+      };
+
+      // Plain click on a route leg: the "+" midpoint handle inserts a
+      // minor on that leg; anywhere else on the leg selects the owning
+      // waypoint (and the inspector flashes its Leg card). Modifier
+      // clicks keep their add/delete semantics even over the path.
+      if (isShiftClick || isAltClick || isMetaClick) {
+        addWaypointAt();
+        return;
       }
+      this.eventBus.emit('segment:check-at-position', { x, y }, (segmentHit) => {
+        if (!segmentHit) {
+          addWaypointAt();
+          return;
+        }
+        if (segmentHit.onPlus) {
+          this.eventBus.emit('waypoint:insert-on-leg', {
+            waypointIndex: segmentHit.waypointIndex,
+            imgX: segmentHit.midImg.x,
+            imgY: segmentHit.midImg.y
+          });
+        } else {
+          this.eventBus.emit('segment:clicked', { waypoint: segmentHit.waypoint });
+        }
+      });
     });
   }
   
@@ -417,13 +476,50 @@ export class InteractionHandler {
   }
   
   /**
+   * Queue an idle-hover hit-test for the next animation frame.
+   * Throttles mousemove (fires at input rate) to at most one bus
+   * round-trip per frame; the answering side updates the app's hover
+   * state and re-renders, the callback here drives the cursor.
+   *
+   * @param {number} x - X relative to canvas (CSS pixels)
+   * @param {number} y - Y relative to canvas (CSS pixels)
+   * @private
+   */
+  _queueHoverTest(x, y) {
+    this._hoverPos = { x, y };
+    if (this._hoverRaf !== null) return;
+    this._hoverRaf = requestAnimationFrame(() => {
+      this._hoverRaf = null;
+      if (!this._hoverPos || this.isDragging || this.isEditingArea || this.isDrawingArea) return;
+      this.eventBus.emit('canvas:hover-move', this._hoverPos, (kind) => {
+        this._hoverKind = kind || null;
+        this._refreshCursor();
+      });
+    });
+  }
+
+  /**
+   * Clear hover state (pointer left the canvas, or a drag/mode change
+   * made hover affordances irrelevant).
+   * @private
+   */
+  _clearHover() {
+    this._hoverPos = null;
+    if (this._hoverKind !== null) {
+      this._hoverKind = null;
+      this._refreshCursor();
+    }
+    this.eventBus.emit('canvas:hover-clear');
+  }
+
+  /**
    * Update canvas cursor based on currently held modifier keys.
    * Provides visual feedback for modifier-based actions:
    * - Alt+Cmd/Ctrl: cell cursor (force add minor waypoint)
    * - Alt: copy cursor (force add major waypoint)
    * - Cmd/Ctrl: cell cursor (add minor waypoint)
    * - Shift: not-allowed cursor (delete mode)
-   * 
+   *
    * @param {KeyboardEvent} event
    * @private
    */
@@ -431,20 +527,40 @@ export class InteractionHandler {
     // Only care about modifier keys
     const isModifierKey = ['Alt', 'Control', 'Meta', 'Shift'].includes(event.key);
     if (!isModifierKey) return;
-    
-    const altHeld = event.altKey;
-    const shiftHeld = event.shiftKey;
-    const metaHeld = isMac ? event.metaKey : event.ctrlKey;
-    
-    // Priority: Alt+Meta > Alt > Shift > Meta
-    if (altHeld && metaHeld) {
+
+    this._modifiers = {
+      alt: event.altKey,
+      shift: event.shiftKey,
+      meta: isMac ? event.metaKey : event.ctrlKey
+    };
+    this._refreshCursor();
+  }
+
+  /**
+   * Resolve the canvas cursor from modifier and hover state.
+   * Modifier gestures outrank hover (they change what a click does);
+   * hovering an interactive target shows pointer; crosshair otherwise.
+   * Area draw mode owns the cursor entirely (crosshair pen).
+   * @private
+   */
+  _refreshCursor() {
+    if (this.isDrawingArea) {
+      this._setCursor('crosshair');
+      return;
+    }
+
+    const { alt, shift, meta } = this._modifiers;
+    // Priority: Alt+Meta > Alt > Shift > Meta > hover > default
+    if (alt && meta) {
       this._setCursor('cell'); // Force add minor mode
-    } else if (altHeld) {
+    } else if (alt) {
       this._setCursor('copy'); // Force add major mode
-    } else if (shiftHeld) {
+    } else if (shift) {
       this._setCursor('not-allowed'); // Delete mode
-    } else if (metaHeld) {
+    } else if (meta) {
       this._setCursor('cell'); // Minor waypoint mode
+    } else if (this._hoverKind) {
+      this._setCursor('pointer'); // Waypoint, area handle, leg, or leg "+"
     } else {
       this._setCursor('crosshair'); // Default
     }
@@ -760,6 +876,10 @@ export class InteractionHandler {
    * Clean up all event listeners. Call when removing handler.
    */
   destroy() {
+    if (this._hoverRaf !== null) {
+      cancelAnimationFrame(this._hoverRaf);
+      this._hoverRaf = null;
+    }
     this.canvas.removeEventListener('mousedown', this.handleMouseDown);
     this.canvas.removeEventListener('mousemove', this.handleMouseMove);
     this.canvas.removeEventListener('mouseup', this.handleMouseUp);

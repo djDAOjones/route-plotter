@@ -7,6 +7,12 @@
  * Object.assign(RoutePlotter.prototype, pointerMixin).
  */
 import { INTERACTION } from '../config/constants.js';
+import {
+  waypointPointIndices,
+  nearestOnPolyline,
+  legIndexForPointIndex,
+  legMidpointIndex
+} from '../utils/segmentHitTest.js';
 
 export const pointerMixin = {
   
@@ -148,7 +154,7 @@ export const pointerMixin = {
     // Find the closest waypoint within the threshold (not first-match)
     let closest = null;
     let closestDist = Infinity;
-    
+
     for (const wp of this.waypoints) {
       const wpCanvas = this.imageToCanvas(wp.imgX, wp.imgY);
       const dx = wpCanvas.x - click.x;
@@ -159,7 +165,53 @@ export const pointerMixin = {
         closestDist = dist;
       }
     }
-    
+
     return closest;
+  },
+
+  /**
+   * Find the route leg at screen coordinates (Phase 4 canvas affordances).
+   *
+   * A leg is the path span between consecutive waypoints; waypoint i owns
+   * the leg i → i+1, exactly as the inspector's Leg card names it. Also
+   * reports whether the position is on the leg's midpoint "+" insert
+   * handle. Edit mode only — legs are not clickable during preview.
+   *
+   * @param {number} screenX - X in screen space (CSS pixels)
+   * @param {number} screenY - Y in screen space (CSS pixels)
+   * @returns {{waypoint: Waypoint, waypointIndex: number, onPlus: boolean,
+   *            midImg: {x: number, y: number}}|null}
+   */
+  findSegmentAt(screenX, screenY) {
+    if (this.previewMode) return null;
+    if (!this.pathPoints || this.pathPoints.length < 2 || this.waypoints.length < 2) return null;
+
+    const progressValues = this.getWaypointProgressValues();
+    if (!progressValues || progressValues.length !== this.waypoints.length) return null;
+
+    const click = this.screenToCanvas(screenX, screenY);
+    // Hit radii are constant in screen space (same rule as findWaypointAt)
+    const zoom = this.viewport?.zoom || 1;
+
+    const canvasPath = this.pathPoints.map(p => this.imageToCanvas(p.x, p.y));
+    const nearest = nearestOnPolyline(canvasPath, click.x, click.y);
+    if (!nearest) return null;
+
+    const wpIndices = waypointPointIndices(progressValues, canvasPath.length);
+    const legIndex = legIndexForPointIndex(nearest.index, wpIndices);
+    const midIdx = legMidpointIndex(wpIndices, legIndex);
+    const mid = canvasPath[midIdx];
+    const midDist = Math.hypot(click.x - mid.x, click.y - mid.y);
+
+    // The "+" handle is a fatter target than the line itself
+    const onPlus = midDist <= INTERACTION.LEG_PLUS_HIT_RADIUS / zoom;
+    if (!onPlus && nearest.dist > INTERACTION.SEGMENT_HIT_RADIUS / zoom) return null;
+
+    return {
+      waypoint: this.waypoints[legIndex],
+      waypointIndex: legIndex,
+      onPlus,
+      midImg: { x: this.pathPoints[midIdx].x, y: this.pathPoints[midIdx].y }
+    };
   }
 };

@@ -9,6 +9,7 @@
 
 import { RENDERING, INTERACTION, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUND_VISIBILITY, MOTION, TEXT_LABEL } from '../config/constants.js';
 import { Easing } from '../utils/Easing.js';
+import { waypointPointIndices, legMidpointIndex } from '../utils/segmentHitTest.js';
 import { BeaconRenderer } from './BeaconRenderer.js';
 import { AreaHighlightRenderer } from './AreaHighlightRenderer.js';
 import { DotRenderer } from './DotRenderer.js';
@@ -210,8 +211,171 @@ export class RenderingService {
   }
 
   /**
+   * Draw a solid two-tone hover ring (white under, accent over) —
+   * lighter than the marching-ants selection ring, so hover and
+   * selection stay visually distinct.
+   * @param {CanvasRenderingContext2D} ctx - Canvas context
+   * @param {number} x - Center X coordinate
+   * @param {number} y - Center Y coordinate
+   * @param {number} radius - Circle radius
+   */
+  drawHoverRing(ctx, x, y, radius) {
+    const f = this._zoomClampFactor;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.lineWidth = 4 * f;
+    ctx.stroke();
+    ctx.strokeStyle = RENDERING.HOVER_ACCENT_COLOR;
+    ctx.lineWidth = 2 * f;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /**
+   * Resolve hovered-leg polyline span and validate the hover against
+   * current data (route edits can leave a stale hover until the next
+   * mousemove re-tests). Returns null when the hover no longer applies.
+   * @param {Object} state - Render state
+   * @returns {{a: number, b: number, legIndex: number}|null} Point span
+   * @private
+   */
+  _hoverLegSpan(state) {
+    const { hover, waypoints, pathPoints, waypointProgressValues } = state;
+    const legIndex = hover?.waypointIndex;
+    if (typeof legIndex !== 'number' || legIndex < 0 || legIndex >= waypoints.length - 1) return null;
+    if (waypoints[legIndex] !== hover.waypoint) return null;
+    if (!pathPoints || pathPoints.length < 2) return null;
+
+    const totalPoints = pathPoints.length;
+    const segments = waypoints.length - 1;
+    const wpIndices = (waypointProgressValues && waypointProgressValues.length === waypoints.length)
+      ? waypointPointIndices(waypointProgressValues, totalPoints)
+      : waypoints.map((_, i) => Math.round((i / segments) * (totalPoints - 1)));
+    const a = wpIndices[legIndex];
+    const b = wpIndices[legIndex + 1];
+    if (!(b > a)) return null;
+    return { a, b, legIndex, wpIndices };
+  }
+
+  /**
+   * Glow underlay along the hovered leg (drawn beneath the path so the
+   * route reads as highlighted, not repainted). The leg span matches the
+   * inspector's Leg card: waypoint i → waypoint i+1.
+   * @param {CanvasRenderingContext2D} ctx - Canvas context
+   * @param {Object} state - Render state
+   */
+  renderLegHover(ctx, state) {
+    const span = this._hoverLegSpan(state);
+    if (!span) return;
+    const { waypoints, pathPoints, styles, imageToCanvas } = state;
+
+    // Width follows the leg's rendered thickness: styled by the last
+    // major at or before the leg (same rule as renderPath)
+    let controllerIdx = -1;
+    for (let s = 0; s <= span.legIndex; s++) {
+      if (waypoints[s].isMajor) controllerIdx = s;
+    }
+    const baseWidth = this.scaleSizeClamped(
+      controllerIdx >= 0 ? waypoints[controllerIdx].segmentWidth : styles.pathThickness
+    );
+    const f = this._zoomClampFactor * this._graphicsScale;
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    const start = imageToCanvas(pathPoints[span.a].x, pathPoints[span.a].y);
+    ctx.moveTo(start.x, start.y);
+    for (let i = span.a + 1; i <= span.b; i++) {
+      const p = imageToCanvas(pathPoints[i].x, pathPoints[i].y);
+      ctx.lineTo(p.x, p.y);
+    }
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.lineWidth = baseWidth + 9 * f;
+    ctx.stroke();
+    ctx.strokeStyle = RENDERING.HOVER_ACCENT_GLOW;
+    ctx.lineWidth = baseWidth + 4 * f;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /**
+   * Hover affordances above the markers: hover ring on waypoints and
+   * area handles, and the midpoint "+" insert handle on the hovered leg.
+   * @param {CanvasRenderingContext2D} ctx - Canvas context
+   * @param {Object} state - Render state
+   */
+  renderHoverAffordances(ctx, state) {
+    const { hover, waypoints, styles, imageToCanvas, selectedWaypoint } = state;
+
+    if (hover.type === 'waypoint') {
+      const wp = hover.waypoint;
+      // Selection already draws its own ring; stale hovers are skipped
+      if (!wp || wp === selectedWaypoint || !waypoints.includes(wp)) return;
+      const rawSize = wp.isMajor
+        ? (wp.dotSize || styles.dotSize)
+        : (styles.minorDotSize || RENDERING.MINOR_DOT_SIZE);
+      const size = this.scaleSizeClamped(rawSize);
+      const pos = imageToCanvas(wp.imgX, wp.imgY);
+      this.drawHoverRing(ctx, pos.x, pos.y, size + 6 * this._zoomClampFactor);
+      return;
+    }
+
+    if (hover.type === 'area-handle') {
+      const wp = hover.waypoint;
+      if (!wp || wp !== selectedWaypoint || !wp.hasAreaHighlight?.()) return;
+      const ah = wp.areaHighlight;
+      let imgPos = null;
+      if (hover.handle?.type === 'center') {
+        imgPos = { x: ah.centerX, y: ah.centerY };
+      } else if (hover.handle?.type === 'vertex' && ah.points?.[hover.handle.vertexIndex]) {
+        imgPos = ah.points[hover.handle.vertexIndex];
+      }
+      if (!imgPos) return;
+      const pos = imageToCanvas(imgPos.x, imgPos.y);
+      this.drawHoverRing(ctx, pos.x, pos.y, 10 * this._zoomClampFactor);
+      return;
+    }
+
+    if (hover.type === 'leg' || hover.type === 'leg-plus') {
+      const span = this._hoverLegSpan(state);
+      if (!span) return;
+      const midIdx = legMidpointIndex(span.wpIndices, span.legIndex);
+      const midImg = state.pathPoints[midIdx];
+      if (!midImg) return;
+      const pos = imageToCanvas(midImg.x, midImg.y);
+      const active = hover.type === 'leg-plus';
+      const f = this._zoomClampFactor;
+      const r = (active ? 11 : 9) * f;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = active ? RENDERING.HOVER_ACCENT_COLOR : 'rgba(255, 255, 255, 0.95)';
+      ctx.fill();
+      ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
+      ctx.lineWidth = 1.5 * f;
+      ctx.stroke();
+      // The plus sign
+      const arm = r * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(pos.x - arm, pos.y);
+      ctx.lineTo(pos.x + arm, pos.y);
+      ctx.moveTo(pos.x, pos.y - arm);
+      ctx.lineTo(pos.x, pos.y + arm);
+      ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
+      ctx.lineWidth = 2 * f;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  /**
    * Main render method - orchestrates all rendering layers
-   * 
+   *
    * Applies viewport zoom/pan transform to background and vector layers.
    * In preview mode, applies motion visibility settings.
    */
@@ -915,6 +1079,16 @@ export class RenderingService {
       },
     },
     {
+      // Hovered-leg glow underlay (Phase 4 canvas affordances) — beneath
+      // the path so the route reads as highlighted, not repainted
+      name: 'leg-hover',
+      draw(svc, ctx, state, frame) {
+        if (state.previewMode || !frame.hasPath) return;
+        if (state.hover?.type !== 'leg' && state.hover?.type !== 'leg-plus') return;
+        svc.renderLegHover(ctx, state);
+      },
+    },
+    {
       // The hero route
       name: 'path',
       draw(svc, ctx, state, frame) {
@@ -957,6 +1131,15 @@ export class RenderingService {
       draw(svc, ctx, state, frame) {
         if (state.previewMode || !state.selectedWaypoint || !state.areaEditService) return;
         state.areaEditService.renderHandles(ctx, state.selectedWaypoint, state.imageToCanvas, state.displayWidth, state.displayHeight);
+      },
+    },
+    {
+      // Hover rings (waypoints, area handles) + the leg midpoint "+"
+      // insert handle (Phase 4 canvas affordances, edit mode only)
+      name: 'hover-affordances',
+      draw(svc, ctx, state, frame) {
+        if (state.previewMode || !state.hover) return;
+        svc.renderHoverAffordances(ctx, state);
       },
     },
     {

@@ -253,6 +253,7 @@ class RoutePlotter {
     this.swarmEngine = new SwarmEngine(); // Deterministic dot evaluator — pure fn(timelineMs, layer, seed)
     this.pathPoints = [];
     this.selectedWaypoint = null;
+    this.canvasHover = null; // Idle-hover target for canvas affordances (edit mode)
     this.isDragging = false;
     this.hasDragged = false; // Track if mouse actually moved during drag
     this.dragOffset = { x: 0, y: 0 };
@@ -930,6 +931,7 @@ class RoutePlotter {
       pathPoints: this.pathPoints,
       styles: this.styles,
       selectedWaypoint: this.selectedWaypoint,
+      hover: this.canvasHover,
 
       // Flow layers + their deterministic evaluator (drawn beneath the hero route)
       scene: this.scene,

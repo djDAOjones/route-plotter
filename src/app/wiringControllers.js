@@ -917,7 +917,117 @@ export const wiringControllersMixin = {
         if (callback) callback(null);
       }
     });
-    
+
+    // ========== CANVAS HOVER AFFORDANCES (Phase 4) ==========
+
+    /**
+     * canvas:hover-move - Idle pointer moved (rAF-throttled by
+     * InteractionHandler). Cascades hit-tests in the same priority order
+     * as mousedown — area handle, waypoint, leg midpoint "+", leg — and
+     * stores the result on this.canvasHover for the hover render layers.
+     * Calls back with the hover kind so the cursor can react.
+     */
+    this.eventBus.on('canvas:hover-move', ({ x, y }, callback) => {
+      let hover = null;
+
+      if (!this.previewMode && !this.areaDrawingService?.isDrawing) {
+        // Area handles first (they sit above waypoints when editing)
+        if (this.selectedWaypoint && this.areaEditService) {
+          const handleHit = this.areaEditService.hitTest(
+            this.selectedWaypoint, x, y,
+            (ix, iy) => this.imageToCanvas(ix, iy),
+            this.canvas.width, this.canvas.height
+          );
+          if (handleHit) {
+            hover = { type: 'area-handle', waypoint: this.selectedWaypoint, handle: handleHit };
+          }
+        }
+
+        if (!hover) {
+          const waypoint = this.findWaypointAt(x, y);
+          if (waypoint) {
+            hover = { type: 'waypoint', waypoint };
+          }
+        }
+
+        if (!hover) {
+          const segmentHit = this.findSegmentAt(x, y);
+          if (segmentHit) {
+            hover = {
+              type: segmentHit.onPlus ? 'leg-plus' : 'leg',
+              waypoint: segmentHit.waypoint,
+              waypointIndex: segmentHit.waypointIndex
+            };
+          }
+        }
+      }
+
+      const prev = this.canvasHover;
+      const changed = (prev?.type !== hover?.type) ||
+                      (prev?.waypoint !== hover?.waypoint) ||
+                      (prev?.waypointIndex !== hover?.waypointIndex) ||
+                      (prev?.handle?.type !== hover?.handle?.type) ||
+                      (prev?.handle?.vertexIndex !== hover?.handle?.vertexIndex);
+      if (changed) {
+        this.canvasHover = hover;
+        this.queueRender();
+      }
+      if (callback) callback(hover?.type || null);
+    });
+
+    /**
+     * canvas:hover-clear - Pointer left the canvas or a drag started.
+     */
+    this.eventBus.on('canvas:hover-clear', () => {
+      if (this.canvasHover) {
+        this.canvasHover = null;
+        this.queueRender();
+      }
+    });
+
+    /**
+     * segment:check-at-position - Leg hit test for clicks (edit mode only;
+     * findSegmentAt guards preview itself).
+     */
+    this.eventBus.on('segment:check-at-position', (pos, callback) => {
+      if (callback) callback(this.findSegmentAt(pos.x, pos.y));
+    });
+
+    /**
+     * segment:clicked - A leg was clicked: select the waypoint that owns
+     * it and flash the inspector's Leg card, teaching the ownership rule
+     * the card header names ("Leg → Waypoint 3").
+     */
+    this.eventBus.on('segment:clicked', ({ waypoint }) => {
+      if (!waypoint) return;
+      this.eventBus.emit('waypoint:selected', waypoint);
+      this.eventBus.emit('section:flash', { section: 'leg' });
+    });
+
+    /**
+     * waypoint:insert-on-leg - The leg midpoint "+" handle: insert a
+     * minor waypoint exactly between the leg's endpoints (array index
+     * owner+1), positioned on the path midpoint, so the leg gains a
+     * shaping point without visually moving. waypoint:added handles
+     * undo/path/list/save; the fresh minor becomes the selection (same
+     * rule as insert-adjacent).
+     */
+    this.eventBus.on('waypoint:insert-on-leg', ({ waypointIndex, imgX, imgY }) => {
+      const owner = this.waypoints[waypointIndex];
+      if (!owner || waypointIndex >= this.waypoints.length - 1) return;
+
+      const newWp = Waypoint.createMinor(imgX, imgY);
+      newWp.copyPropertiesFrom(owner);
+      this.waypoints.splice(waypointIndex + 1, 0, newWp);
+
+      // Leg geometry changed under the pointer; next mousemove re-tests
+      this.canvasHover = null;
+
+      this.eventBus.emit('waypoint:added', newWp);
+      this.eventBus.emit('waypoint:selected', newWp);
+      this.announce('Minor waypoint added to leg');
+    });
+
     // Help events
     this.eventBus.on('help:toggle', () => {
       if (this.elements.splash.style.display === 'none' || 

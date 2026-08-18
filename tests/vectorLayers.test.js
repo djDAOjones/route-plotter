@@ -37,10 +37,12 @@ function makeState(overrides = {}) {
 /** Fake service recording which render* methods the registry dispatches. */
 function makeRecordingService(calls) {
   return {
+    renderLegHover: () => calls.push('leg-hover'),
     renderPath: () => calls.push('path'),
     renderPathHead: () => calls.push('path-head'),
     renderBeacons: () => calls.push('beacons'),
     renderWaypoints: () => calls.push('waypoints'),
+    renderHoverAffordances: () => calls.push('hover-affordances'),
   };
 }
 
@@ -49,11 +51,13 @@ describe('RenderingService.VECTOR_LAYERS', () => {
     expect(RenderingService.VECTOR_LAYERS.map(l => l.name)).toEqual([
       'area-highlights',
       'flow-layers',
+      'leg-hover',
       'path',
       'path-head',
       'beacons',
       'waypoints',
       'area-edit-handles',
+      'hover-affordances',
       'area-draw-preview',
     ]);
     for (const layer of RenderingService.VECTOR_LAYERS) {
@@ -99,5 +103,37 @@ describe('RenderingService.VECTOR_LAYERS', () => {
     RenderingService.prototype.renderVectorLayerTo.call(svc, {}, makeState());
 
     expect(calls).toEqual(['beacons', 'waypoints']);
+  });
+
+  test('hover layers draw in edit mode: leg glow under the path, affordances above waypoints', () => {
+    const calls = [];
+    const svc = makeRecordingService(calls);
+    const waypoints = [Waypoint.createMajor(0.1, 0.1), Waypoint.createMajor(0.9, 0.9)];
+    const state = makeState({
+      waypoints,
+      pathPoints: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+      hover: { type: 'leg', waypoint: waypoints[0], waypointIndex: 0 },
+    });
+
+    RenderingService.prototype.renderVectorLayerTo.call(svc, {}, state);
+
+    expect(calls).toEqual(['leg-hover', 'path', 'path-head', 'beacons', 'waypoints', 'hover-affordances']);
+  });
+
+  test('hover layers stay silent in preview mode', () => {
+    const calls = [];
+    const svc = makeRecordingService(calls);
+    const waypoints = [Waypoint.createMajor(0.1, 0.1), Waypoint.createMajor(0.9, 0.9)];
+    const state = makeState({
+      waypoints,
+      pathPoints: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+      previewMode: true,
+      motionSettings: { pathVisibility: 'always-show', waypointVisibility: 'always-show' },
+      hover: { type: 'waypoint', waypoint: waypoints[0] },
+    });
+
+    RenderingService.prototype.renderVectorLayerTo.call(svc, {}, state);
+
+    expect(calls).toEqual(['path', 'path-head', 'beacons', 'waypoints']);
   });
 });

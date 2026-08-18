@@ -299,6 +299,36 @@ export class SectionController {
       this.hasSelection = false;
       this._onAllWaypointsRemoved();
     });
+
+    // Flash a card to direct the eye (e.g. clicking a route leg on the
+    // canvas flashes the Leg card that owns it). Expands the section
+    // first — a flash on a collapsed card teaches nothing.
+    this.eventBus.on('section:flash', ({ section }) => {
+      this.flashSection(section);
+    });
+  }
+
+  /**
+   * Expand a section, scroll it into view, and run its flash animation.
+   * Selection events may rebuild sidebar state in the same tick, so the
+   * scroll/flash is deferred a frame to target the settled DOM.
+   * @param {string} sectionName - Name of section to flash
+   */
+  flashSection(sectionName) {
+    this.expandSection(sectionName);
+    requestAnimationFrame(() => {
+      const section = this._sectionsByName.get(sectionName) ||
+        document.querySelector(`.settings-section[data-section="${sectionName}"]`);
+      if (!section) return;
+      section.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      // Restart the animation if it's already running
+      section.classList.remove('section-flash');
+      void section.offsetWidth;
+      section.classList.add('section-flash');
+      section.addEventListener('animationend', () => {
+        section.classList.remove('section-flash');
+      }, { once: true });
+    });
   }
   
   /**
