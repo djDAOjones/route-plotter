@@ -48,7 +48,7 @@ export const crowdsMixin = {
       this.updateLayersStrip();
     });
 
-    // Selecting any waypoint (single/multi/all) leaves Crowd scope
+    // Selecting any waypoint (single or multi) leaves Crowd scope
     const leaveCrowdScope = () => {
       if (this.selectedCrowd) {
         this.selectedCrowd = null;
@@ -57,7 +57,6 @@ export const crowdsMixin = {
     };
     this.eventBus.on('waypoint:selected', leaveCrowdScope);
     this.eventBus.on('waypoint:multi-selected', leaveCrowdScope);
-    this.eventBus.on('waypoint:all-selected', leaveCrowdScope);
     // Escape backs out of Crowd scope to Route scope
     this.eventBus.on('waypoint:deselect', leaveCrowdScope);
 

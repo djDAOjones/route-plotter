@@ -195,30 +195,38 @@ export const wiringControllersMixin = {
     
     /**
      * waypoint:nudge - Move waypoint by fraction of canvas dimension
-     * More intuitive than pixel-based movement as it scales with canvas size
+     * More intuitive than pixel-based movement as it scales with canvas size.
+     * When the nudged waypoint is part of a multi-selection, the whole
+     * selection moves together by the same canvas-pixel delta.
      */
     this.eventBus.on('waypoint:nudge', (data) => {
       const { waypoint, dxFraction, dyFraction } = data;
-      
+
       // Calculate pixel movement based on canvas dimensions
       const dx = dxFraction * this.displayWidth;
       const dy = dyFraction * this.displayHeight;
-      
-      // Convert current position to canvas coords, apply offset, convert back
-      const currentCanvas = this.imageToCanvas(waypoint.imgX, waypoint.imgY);
-      const newCanvas = { x: currentCanvas.x + dx, y: currentCanvas.y + dy };
-      const newImg = this.canvasToImage(newCanvas.x, newCanvas.y);
-      
-      // Update waypoint position (clamped to image bounds unless zoomed out)
+
+      const movers = this.selectedWaypoints.length > 1 && this.selectedWaypoints.includes(waypoint)
+        ? this.selectedWaypoints
+        : [waypoint];
       const zoom = this.exportSettings.backgroundZoom / 100;
-      if (zoom < 1) {
-        waypoint.imgX = newImg.x;
-        waypoint.imgY = newImg.y;
-      } else {
-        waypoint.imgX = Math.max(0, Math.min(1, newImg.x));
-        waypoint.imgY = Math.max(0, Math.min(1, newImg.y));
+
+      for (const wp of movers) {
+        // Convert current position to canvas coords, apply offset, convert back
+        const currentCanvas = this.imageToCanvas(wp.imgX, wp.imgY);
+        const newCanvas = { x: currentCanvas.x + dx, y: currentCanvas.y + dy };
+        const newImg = this.canvasToImage(newCanvas.x, newCanvas.y);
+
+        // Update waypoint position (clamped to image bounds unless zoomed out)
+        if (zoom < 1) {
+          wp.imgX = newImg.x;
+          wp.imgY = newImg.y;
+        } else {
+          wp.imgX = Math.max(0, Math.min(1, newImg.x));
+          wp.imgY = Math.max(0, Math.min(1, newImg.y));
+        }
       }
-      
+
       // Trigger updates
       this.calculatePath();
       this.render();
@@ -290,8 +298,10 @@ export const wiringControllersMixin = {
       // Major waypoints become selected (so subsequent minor waypoints follow them)
       if (data.isMajor) {
         this.selectedWaypoint = waypoint;
+        this.selectedWaypoints = [waypoint];
+        this.uiController?.setSelection([waypoint], waypoint);
       }
-      
+
       this.eventBus.emit('waypoint:added', waypoint);
     });
     
@@ -300,39 +310,84 @@ export const wiringControllersMixin = {
     
     this.eventBus.on('waypoint:selected', (waypoint) => {
       this.selectedWaypoint = waypoint;
+      this.selectedWaypoints = [waypoint];
       this.interactionHandler?.setSelectedWaypoint(waypoint);
+      this.uiController?.setSelection([waypoint], waypoint);
       this.uiController?.updateWaypointEditor(waypoint);
       this.updateWaypointList();
       this.updateWaypointEditor(); // Update RoutePlotter's editor (includes camera controls)
       this._updateCameraControlsVisibility(false); // Single selection mode
-      
+
       // Sync swatch picker radios with updated hidden input values
       // Without this, clicking a swatch already checked from a previous waypoint
       // won't fire a change event (radio state out of sync with hidden input)
       refreshSwatchPicker('#dot-color');
       refreshSwatchPicker('#segment-color');
       refreshSwatchPicker('#path-head-color');
-      
+
       this.queueRender(); // Highlight selection
     });
-    
-    // waypoint:multi-selected - Multiple waypoints selected via shift-click or cmd/ctrl-click
+
+    // waypoint:multi-selected - Multiple waypoints selected via
+    // shift/cmd-click (list), cmd-click (canvas), or Cmd/Ctrl+A.
+    // The selection is normalised to route order so bulk operations and
+    // the chip's counts are stable regardless of click order.
     this.eventBus.on('waypoint:multi-selected', ({ waypoints, primary }) => {
+      const inSelection = new Set(waypoints);
+      this.selectedWaypoints = this.waypoints.filter(wp => inSelection.has(wp));
       this.selectedWaypoint = primary;
       this.interactionHandler?.setSelectedWaypoint(primary);
-      // Show "Multiple Waypoints" mode in editor (similar to "All Waypoints" but for subset)
-      this.uiController?.updateWaypointEditor(primary, false, waypoints);
+      this.uiController?.setSelection(this.selectedWaypoints, primary);
+      // Inspector shows the primary's values; edits write to the whole selection
+      this.uiController?.updateWaypointEditor(primary, this.selectedWaypoints);
       this.updateWaypointList();
+      this.updateWaypointEditor(); // Sync RoutePlotter's editor (camera controls etc.)
       this._updateCameraControlsVisibility(true); // Multi-select mode
+      refreshSwatchPicker('#dot-color');
+      refreshSwatchPicker('#segment-color');
       this.queueRender();
     });
-    
+
+    // waypoint:toggle-select - Cmd/Ctrl+click on a waypoint (canvas):
+    // grow or shrink the multi-selection one waypoint at a time
+    this.eventBus.on('waypoint:toggle-select', (waypoint) => {
+      const current = this.selectedWaypoints.length
+        ? [...this.selectedWaypoints]
+        : (this.selectedWaypoint ? [this.selectedWaypoint] : []);
+      const index = current.indexOf(waypoint);
+
+      if (index === -1) {
+        const next = [...current, waypoint];
+        if (next.length === 1) {
+          this.eventBus.emit('waypoint:selected', waypoint);
+        } else {
+          this.eventBus.emit('waypoint:multi-selected', { waypoints: next, primary: waypoint });
+        }
+        return;
+      }
+
+      current.splice(index, 1);
+      if (current.length === 0) {
+        this.eventBus.emit('waypoint:deselected');
+      } else if (current.length === 1) {
+        this.eventBus.emit('waypoint:selected', current[0]);
+      } else {
+        const primary = this.selectedWaypoint === waypoint
+          ? current[current.length - 1]
+          : this.selectedWaypoint;
+        this.eventBus.emit('waypoint:multi-selected', { waypoints: current, primary });
+      }
+    });
+
     // waypoint:deselected - All waypoints deselected
     this.eventBus.on('waypoint:deselected', () => {
       this.selectedWaypoint = null;
+      this.selectedWaypoints = [];
       this.interactionHandler?.setSelectedWaypoint(null);
+      this.uiController?.setSelection([], null);
       this.uiController?.updateWaypointEditor(null);
       this.updateWaypointList();
+      this.queueRender(); // Clear selection rings
     });
     
     // waypoint:delete - Request to delete a specific waypoint (from InteractionHandler)
@@ -341,6 +396,32 @@ export const wiringControllersMixin = {
     });
     
     this.eventBus.on('waypoint:delete-selected', () => {
+      // Multi-selection deletes as one gesture: every selected waypoint
+      // goes in a single pass with a single undo entry (the per-waypoint
+      // deleteWaypoint path would snapshot and recalc once per waypoint)
+      if (this.selectedWaypoints.length > 1) {
+        const doomed = [...this.selectedWaypoints];
+        const firstIndex = this.waypoints.indexOf(doomed[0]);
+        for (const wp of doomed) {
+          const index = this.waypoints.indexOf(wp);
+          if (index > -1) {
+            this.waypoints.splice(index, 1);
+            this._removeWaypointFromMap(wp);
+          }
+        }
+        this.selectedWaypoint = null;
+        this.selectedWaypoints = [];
+        this.interactionHandler?.setSelectedWaypoint(null);
+        this.uiController?.setSelection([], null);
+        // One pass through the shared deleted pipeline: one undo
+        // snapshot, one path recalc, one autosave. The deselected event
+        // then walks SectionController back to Route scope.
+        this.eventBus.emit('waypoint:deleted', firstIndex);
+        this.eventBus.emit('waypoint:deselected');
+        this.announce(`${doomed.length} waypoints deleted`);
+        return;
+      }
+
       if (this.selectedWaypoint) {
         this.deleteWaypoint(this.selectedWaypoint);
         this.selectedWaypoint = null;
@@ -360,13 +441,6 @@ export const wiringControllersMixin = {
         this.loadProject(file);
         e.target.value = ''; // Reset input for re-selection
       }
-    });
-    
-    // waypoint:all-selected - "All Waypoints" selected in list
-    this.eventBus.on('waypoint:all-selected', () => {
-      this.selectedWaypoint = null;
-      this.interactionHandler?.setSelectedWaypoint(null);
-      this.queueRender();
     });
     
     // waypoint:add-at-center - Add new waypoint at center of visible canvas (AAA keyboard access)
@@ -389,6 +463,8 @@ export const wiringControllersMixin = {
       
       // Select the new waypoint
       this.selectedWaypoint = newWaypoint;
+      this.selectedWaypoints = [newWaypoint];
+      this.uiController?.setSelection([newWaypoint], newWaypoint);
       this.interactionHandler?.setSelectedWaypoint(newWaypoint);
       
       // Update path and UI
@@ -408,60 +484,19 @@ export const wiringControllersMixin = {
       this.autoSave();
     });
     
-    /**
-     * waypoint:all-change - Apply property change to all major waypoints
-     * 
-     * Performance: O(n) where n = number of waypoints
-     * - Single pass through waypoints array
-     * - Path recalculation only for path-affecting properties
-     * - Batched render via queueRender()
-     */
-    this.eventBus.on('waypoint:all-change', ({ property, value }) => {
-      // Properties that require path recalculation
-      const PATH_PROPERTIES = new Set(['segmentColor', 'segmentWidth', 'segmentStyle', 'pathShape']);
-      // Properties that require animation duration recalculation
-      const DURATION_PROPERTIES = new Set(['pauseTime', 'segmentSpeed']);
-      
-      // Single pass: apply to all major waypoints
-      let needsPathRecalc = PATH_PROPERTIES.has(property);
-      let needsDurationRecalc = DURATION_PROPERTIES.has(property);
-      
-      for (const wp of this.waypoints) {
-        if (wp.isMajor) {
-          wp[property] = value;
-          // Also update pauseMode when pauseTime changes
-          if (property === 'pauseTime') {
-            wp.pauseMode = value > 0 ? 'timed' : 'none';
-          }
-        }
-      }
-      
-      // Recalculate path only if property affects path rendering
-      if (needsPathRecalc) {
-        this.calculatePath();
-      }
-      
-      // Recalculate animation duration if pause time or segment speed changed
-      if (needsDurationRecalc) {
-        this.updateAnimationDuration();
-      }
+    // (waypoint:all-change is gone — the "All Waypoints" bulk mode
+    // dissolved into ordinary multi-select. Cards write to every
+    // selected waypoint through the normal single-change pipelines.)
 
-      // Bulk edits are undoable like any other edit — the "cannot be
-      // undone" modal copy predates this snapshot (review 2026-08-18)
-      this.saveUndoState();
-      this.updateWaypointList(); // Sync sidebar rows (e.g. bulk colour change)
-      this.autoSave();
-      this.queueRender();
-    });
-    
     // ========== CANVAS CONTEXT MENU (review 2026-08-18) ==========
     // InteractionHandler has emitted these since v2 with no listener —
     // right-click was suppressed but dead. One ContextMenu instance
     // serves both menus.
 
     this.eventBus.on('waypoint:show-context-menu', ({ waypoint, x, y }) => {
-      // Select first so the menu visibly acts on this waypoint
-      if (this.selectedWaypoint !== waypoint) {
+      // Select first so the menu visibly acts on this waypoint — unless
+      // it's already part of a multi-selection, which right-click keeps
+      if (this.selectedWaypoint !== waypoint && !this.selectedWaypoints.includes(waypoint)) {
         this.eventBus.emit('waypoint:selected', waypoint);
       }
 
@@ -1085,9 +1120,26 @@ export const wiringControllersMixin = {
       this.announce('Waypoint duplicated');
     });
     
+    /**
+     * waypoint:select-all - Cmd/Ctrl+A selects the whole route as an
+     * ordinary multi-select, minors included. (The old handler called a
+     * UIController method that never existed — the bus swallowed the
+     * TypeError, so Cmd+A was dead until the Phase 4 multi-select work.)
+     */
     this.eventBus.on('waypoint:select-all', () => {
-      // Select "All Waypoints" option in UI
-      this.uiController?.selectAllWaypoints();
+      if (this.waypoints.length === 0) return;
+      if (this.waypoints.length === 1) {
+        this.eventBus.emit('waypoint:selected', this.waypoints[0]);
+      } else {
+        // Keep the current primary when it's part of the route
+        const primary = this.selectedWaypoint && this.waypoints.includes(this.selectedWaypoint)
+          ? this.selectedWaypoint
+          : this.waypoints[0];
+        this.eventBus.emit('waypoint:multi-selected', {
+          waypoints: [...this.waypoints],
+          primary
+        });
+      }
       this.announce('All waypoints selected');
     });
 

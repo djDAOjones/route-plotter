@@ -28,6 +28,7 @@ export const undoRedoMixin = {
     return {
       waypoints: this.waypoints.map(wp => wp.toJSON()),
       selectedWaypointId: this.selectedWaypoint?.id || null,
+      selectedWaypointIds: (this.selectedWaypoints || []).map(wp => wp.id),
       styles: stylesCopy,
       scene: this.scene.toJSON()
     };
@@ -114,10 +115,20 @@ export const undoRedoMixin = {
     this.waypoints = state.waypoints.map(wpData => Waypoint.fromJSON(wpData));
     this.waypoints.forEach(wp => this._addWaypointToMap(wp));
     
-    // Restore selection
+    // Restore selection — the rebuilt waypoints are new objects, so
+    // re-resolve both the primary and the multi-selection by id, and
+    // hand the result to the UI layers that keep their own copies
     this.selectedWaypoint = state.selectedWaypointId
       ? this.waypointsById.get(state.selectedWaypointId) || null
       : null;
+    this.selectedWaypoints = (state.selectedWaypointIds || [])
+      .map(id => this.waypointsById.get(id))
+      .filter(Boolean);
+    if (this.selectedWaypoints.length === 0 && this.selectedWaypoint) {
+      this.selectedWaypoints = [this.selectedWaypoint];
+    }
+    this.uiController?.setSelection(this.selectedWaypoints, this.selectedWaypoint);
+    this.interactionHandler?.setSelectedWaypoint(this.selectedWaypoint);
 
     // Restore flow-layer scene (if present in snapshot); the rebuilt
     // layers are new objects, so re-resolve the crowd selection by id

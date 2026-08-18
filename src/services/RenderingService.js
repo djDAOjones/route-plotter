@@ -1136,7 +1136,12 @@ export class RenderingService {
       // Waypoint markers (waypointProgressValues gives accurate animation timing)
       name: 'waypoints',
       draw(svc, ctx, state, frame) {
-        svc.renderWaypoints(ctx, state.waypoints, state.selectedWaypoint, state.styles, state.imageToCanvas, state.displayWidth, state.displayHeight,
+        // Multi-selection passes the whole set so every member wears a
+        // selection ring; single selection keeps the plain waypoint
+        const selection = state.selectedWaypoints?.length > 1
+          ? state.selectedWaypoints
+          : state.selectedWaypoint;
+        svc.renderWaypoints(ctx, state.waypoints, selection, state.styles, state.imageToCanvas, state.displayWidth, state.displayHeight,
                             frame.applyMotion ? state.motionSettings : null, state.motionVisibilityService, state.animationEngine,
                             state.waypointProgressValues, state.suppressLabels);
       },
@@ -1933,9 +1938,14 @@ export class RenderingService {
    * @param {AnimationEngine|null} animationEngine
    * @param {boolean} suppressLabels - When true, skip text labels (export "Text labels" off)
    */
-  renderWaypoints(ctx, waypoints, selectedWaypoint, styles, imageToCanvas, displayWidth, displayHeight, 
+  renderWaypoints(ctx, waypoints, selectedWaypoint, styles, imageToCanvas, displayWidth, displayHeight,
                   motionSettings = null, motionVisibilityService = null, animationEngine = null,
                   waypointProgressValues = null, suppressLabels = false) {
+    // Selection may arrive as one waypoint or as the whole multi-select
+    // array; normalise to a Set once (never per-waypoint in the loop)
+    const selectedSet = Array.isArray(selectedWaypoint)
+      ? new Set(selectedWaypoint)
+      : (selectedWaypoint ? new Set([selectedWaypoint]) : null);
     const applyMotion = motionSettings !== null;
     // Use pathDuration (excludes pauses) for animation timing calculations
     const pathDuration = animationEngine?.pathDuration || animationEngine?.state?.duration || 1;
@@ -1970,7 +1980,7 @@ export class RenderingService {
     waypoints.forEach((waypoint, index) => {
       // Convert waypoint from image coords to canvas coords
       const wpCanvas = imageToCanvas(waypoint.imgX, waypoint.imgY);
-      const isSelected = waypoint === selectedWaypoint;
+      const isSelected = selectedSet ? selectedSet.has(waypoint) : false;
       
       // Skip rendering if waypoint is outside visible canvas area (with margin for marker size)
       const margin = 50; // Allow some margin for marker visibility at edges

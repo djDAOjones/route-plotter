@@ -215,6 +215,11 @@ export class InteractionHandler {
       // Check if clicking on a waypoint
       this.eventBus.emit('waypoint:check-at-position', { x, y }, (waypoint) => {
         if (waypoint) {
+          // Cmd/Ctrl+click toggles multi-selection membership on click —
+          // selecting (or dragging) here on mousedown would collapse the
+          // multi-selection before the toggle ever fires
+          if (isMac ? event.metaKey : event.ctrlKey) return;
+
           this.selectedWaypoint = waypoint;
           this.isDragging = true;
           this.hasDragged = false;
@@ -458,6 +463,11 @@ export class InteractionHandler {
           this.eventBus.emit('ui:toast', {
             message: `Deleted ${label} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
           });
+        } else if (isMetaClick) {
+          // Cmd/Ctrl+click on a waypoint: toggle it in or out of the
+          // multi-selection (on empty canvas the same modifier still
+          // adds a minor — the waypoint hit wins here)
+          this.eventBus.emit('waypoint:toggle-select', waypoint);
         } else {
           // Select existing waypoint
           this.eventBus.emit('waypoint:selected', waypoint);

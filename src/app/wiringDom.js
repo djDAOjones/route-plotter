@@ -120,74 +120,89 @@ export const wiringDomMixin = {
     // These controls modify per-waypoint style and path properties
     // Style changes: visual only, no path recalculation needed
     // Path property changes: require path recalculation
-    
+    //
+    // Every handler writes to selectionTargets() — the multi-selection
+    // when one exists, else the single selection — then emits its change
+    // event ONCE with the primary, so a bulk edit still runs one path
+    // recalc, one debounced undo entry, and one autosave (Phase 4).
+    // Leg/path properties include minors (minors own legs too); marker,
+    // beacon, and label properties are majors-only, matching the
+    // single-selection UI that disables them for minors.
+
     // Waypoint editor controls
     // Segment color affects path rendering (requires recalculation)
     this.elements.segmentColor.addEventListener('input', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.segmentColor = e.target.value;
+      const targets = this.selectionTargets();
+      if (targets.length > 0) {
+        for (const wp of targets) wp.segmentColor = e.target.value;
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Segment width affects path rendering (requires recalculation)
     // Uses log scale: slider 0-1000 → width 1-40 (4x original range)
     this.elements.segmentWidth.addEventListener('input', (e) => {
-      if (this.selectedWaypoint) {
+      const targets = this.selectionTargets();
+      if (targets.length > 0) {
         const width = this._sliderToPathWidth(parseFloat(e.target.value));
-        this.selectedWaypoint.segmentWidth = width;
+        for (const wp of targets) wp.segmentWidth = width;
         this.elements.segmentWidthValue.textContent = width.toFixed(1);
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Segment style affects path rendering (requires recalculation)
     this.elements.segmentStyle.addEventListener('change', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.segmentStyle = e.target.value;
+      const targets = this.selectionTargets();
+      if (targets.length > 0) {
+        for (const wp of targets) wp.segmentStyle = e.target.value;
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Path shape control (line, squiggle, randomised) - affects path generation
     this.elements.pathShape.addEventListener('change', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.pathShape = e.target.value;
+      const targets = this.selectionTargets();
+      if (targets.length > 0) {
+        for (const wp of targets) wp.pathShape = e.target.value;
         // Show/hide shape parameter controls
         this._updateShapeParamsVisibility(e.target.value);
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Shape amplitude control (for squiggle/randomised)
     this.elements.shapeAmplitude?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.shapeAmplitude = parseInt(e.target.value);
+      const targets = this.selectionTargets();
+      if (targets.length > 0) {
+        for (const wp of targets) wp.shapeAmplitude = parseInt(e.target.value);
         this.elements.shapeAmplitudeValue.textContent = e.target.value;
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Shape frequency control (for squiggle/randomised)
     this.elements.shapeFrequency?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.shapeFrequency = parseInt(e.target.value);
+      const targets = this.selectionTargets();
+      if (targets.length > 0) {
+        for (const wp of targets) wp.shapeFrequency = parseInt(e.target.value);
         this.elements.shapeFrequencyValue.textContent = e.target.value;
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Marker style control (dot, square, flag, custom, none) - visual only
     this.elements.markerStyle.addEventListener('change', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.markerStyle = e.target.value;
-        
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.markerStyle = e.target.value;
+
         // Show/hide custom marker controls
         if (this.elements.customMarkerControls) {
-          this.elements.customMarkerControls.style.display = 
+          this.elements.customMarkerControls.style.display =
             e.target.value === 'custom' ? 'block' : 'none';
         }
-        
+
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -199,29 +214,33 @@ export const wiringDomMixin = {
     
     this.elements.markerUpload?.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
-      if (file && this.selectedWaypoint) {
+      const targets = this.selectionTargets(true);
+      if (file && targets.length > 0) {
         try {
           // Add to asset service (handles deduplication)
           const { asset, isNew, warning } = await this.imageAssetService.addFromFile(file);
-          
+
           if (warning) {
             console.warn(warning);
           }
-          
-          // Store asset ID on waypoint
-          this.selectedWaypoint.customImageAssetId = asset.id;
-          this.selectedWaypoint.customImage = await asset.getImageElement();
-          
+
+          // Store asset ID on every selected waypoint (shared asset)
+          const image = await asset.getImageElement();
+          for (const wp of targets) {
+            wp.customImageAssetId = asset.id;
+            wp.customImage = image;
+          }
+
           // Update preview
           if (this.elements.markerPreview) {
             this.elements.markerPreview.style.display = 'block';
             this.elements.markerFilename.textContent = asset.name;
             this.elements.markerPreviewImg.src = asset.base64;
           }
-          
+
           this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
           this.autoSave();
-          
+
           console.log(`📷 Waypoint marker image ${isNew ? 'added' : 'reused'}: ${asset.name} (${asset.getFormattedSize()})`);
         } catch (err) {
           console.error('Failed to load marker image:', err);
@@ -229,96 +248,99 @@ export const wiringDomMixin = {
         }
       }
     });
-    
+
     // Dot color and size controls - visual only, no path recalculation
     this.elements.dotColor.addEventListener('input', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.dotColor = e.target.value;
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.dotColor = e.target.value;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
     
     // Per-waypoint beacon edits (only apply to major waypoints) - visual only
     this.elements.editorBeaconStyle.addEventListener('change', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
         const newStyle = e.target.value;
-        this.selectedWaypoint.beaconStyle = newStyle;
-        
-        // Show/hide ripple controls
-        this._updateRippleControlsVisibility(newStyle);
-        
-        // Reset beacon renderer for this waypoint
-        this.renderingService.beaconRenderer.resetBeacon(this.selectedWaypoint.id);
-        
-        // When ripple is selected, ensure rippleWait defaults to true and update pause time
-        if (newStyle === 'ripple') {
+        for (const wp of targets) {
+          wp.beaconStyle = newStyle;
+          // Reset beacon renderer for this waypoint
+          this.renderingService.beaconRenderer.resetBeacon(wp.id);
           // Default rippleWait to true for newly selected ripple effects
-          if (this.selectedWaypoint.rippleWait === undefined) {
-            this.selectedWaypoint.rippleWait = true;
-          }
-          // Update the checkbox UI
-          if (this.elements.rippleWait) {
-            this.elements.rippleWait.checked = this.selectedWaypoint.rippleWait;
-          }
-          // Recalculate pause time if ripple wait is enabled
-          if (this.selectedWaypoint.rippleWait) {
-            this._updateRippleWaitTime();
+          if (newStyle === 'ripple' && wp.rippleWait === undefined) {
+            wp.rippleWait = true;
           }
         }
-        
+
+        // Show/hide ripple controls
+        this._updateRippleControlsVisibility(newStyle);
+
+        // When ripple is selected, sync the checkbox to the primary and
+        // recalculate pause time wherever ripple wait is enabled
+        if (newStyle === 'ripple') {
+          if (this.elements.rippleWait && this.selectedWaypoint) {
+            this.elements.rippleWait.checked = this.selectedWaypoint.rippleWait;
+          }
+          this._updateRippleWaitTime();
+        }
+
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Ripple thickness control
     this.elements.rippleThickness?.addEventListener('input', (e) => {
       const value = parseFloat(e.target.value);
       this.elements.rippleThicknessValue.textContent = `${value}px`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.rippleThickness = value;
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.rippleThickness = value;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Ripple max scale control
     this.elements.rippleMaxScale?.addEventListener('input', (e) => {
       const value = parseInt(e.target.value);
       this.elements.rippleMaxScaleValue.textContent = `${value}%`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.rippleMaxScale = value;
-        // Update wait time if ripple wait is enabled
-        if (this.selectedWaypoint.rippleWait) {
-          this._updateRippleWaitTime();
-        }
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.rippleMaxScale = value;
+        // Update wait times wherever ripple wait is enabled
+        this._updateRippleWaitTime();
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Ripple wait checkbox - adds ripple animation time to pause
     this.elements.rippleWait?.addEventListener('change', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
-        this.selectedWaypoint.rippleWait = e.target.checked;
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.rippleWait = e.target.checked;
         this._updateRippleWaitTime();
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Pulse amplitude control
     this.elements.pulseAmplitude?.addEventListener('input', (e) => {
       const value = parseFloat(e.target.value);
       this.elements.pulseAmplitudeValue.textContent = value.toFixed(1);
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.pulseAmplitude = value;
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.pulseAmplitude = value;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Pulse cycle speed control
     this.elements.pulseCycleSpeed?.addEventListener('input', (e) => {
       const value = parseFloat(e.target.value);
       this.elements.pulseCycleSpeedValue.textContent = `${value}s`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.pulseCycleSpeed = value;
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.pulseCycleSpeed = value;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -344,8 +366,9 @@ export const wiringDomMixin = {
     });
     // Label display mode - visual only
     this.elements.labelMode.addEventListener('change', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
-        this.selectedWaypoint.labelMode = e.target.value;
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.labelMode = e.target.value;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -353,77 +376,88 @@ export const wiringDomMixin = {
     // bulk path, so single-selection changes never reached the model
     // (review 2026-08-18)
     this.elements.labelPosition?.addEventListener('change', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
-        this.selectedWaypoint.labelPosition = e.target.value;
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.labelPosition = e.target.value;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
     // Label size with WCAG warning
     this.elements.labelSize?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
         const scale = parseInt(e.target.value);
         // Convert 1-10 scale to 16-48px: size = 16 + (scale - 1) * (48 - 16) / 9
         const sizePx = Math.round(TEXT_LABEL.SIZE_PX_MIN + (scale - 1) * (TEXT_LABEL.SIZE_PX_MAX - TEXT_LABEL.SIZE_PX_MIN) / 9);
-        this.selectedWaypoint.labelSize = sizePx;
+        for (const wp of targets) wp.labelSize = sizePx;
         this.elements.labelSizeValue.textContent = scale;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Label width
     this.elements.labelWidth?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
         const width = parseInt(e.target.value);
-        this.selectedWaypoint.labelWidth = width;
+        for (const wp of targets) wp.labelWidth = width;
         this.elements.labelWidthValue.textContent = `${width}%`;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Label X offset
     this.elements.labelOffsetX?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
         const offset = parseInt(e.target.value);
-        this.selectedWaypoint.labelOffsetX = offset;
+        for (const wp of targets) wp.labelOffsetX = offset;
         this.elements.labelOffsetXValue.textContent = `${offset}%`;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    
+
     // Label Y offset
     this.elements.labelOffsetY?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
         const offset = parseInt(e.target.value);
-        this.selectedWaypoint.labelOffsetY = offset;
+        for (const wp of targets) wp.labelOffsetY = offset;
         this.elements.labelOffsetYValue.textContent = `${offset}%`;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    
-    // Label auto-position button
+
+    // Label auto-position button — each selected label gets its own
+    // computed position (auto-position is inherently per-waypoint)
     this.elements.labelAutoPosition?.addEventListener('click', () => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor && this.selectedWaypoint.label) {
-        const waypointIndex = this.waypoints.indexOf(this.selectedWaypoint);
-        const result = TextLabelService.autoPosition({
-          waypoint: this.selectedWaypoint,
-          waypointIndex,
-          waypoints: this.waypoints,
-          pathPoints: this.pathPoints,
-          canvasWidth: this.canvas.width,
-          canvasHeight: this.canvas.height,
-          imageToCanvas: (x, y) => this.coordinateTransform.imageToCanvas(x, y)
-        });
-        
-        // Update waypoint and UI
-        this.selectedWaypoint.labelOffsetX = Math.round(result.offsetX);
-        this.selectedWaypoint.labelOffsetY = Math.round(result.offsetY);
-        this.elements.labelOffsetX.value = this.selectedWaypoint.labelOffsetX;
-        this.elements.labelOffsetXValue.textContent = `${this.selectedWaypoint.labelOffsetX}%`;
-        this.elements.labelOffsetY.value = this.selectedWaypoint.labelOffsetY;
-        this.elements.labelOffsetYValue.textContent = `${this.selectedWaypoint.labelOffsetY}%`;
-        
+      const targets = this.selectionTargets(true).filter(wp => wp.label);
+      if (targets.length > 0) {
+        for (const wp of targets) {
+          const waypointIndex = this.waypoints.indexOf(wp);
+          const result = TextLabelService.autoPosition({
+            waypoint: wp,
+            waypointIndex,
+            waypoints: this.waypoints,
+            pathPoints: this.pathPoints,
+            canvasWidth: this.canvas.width,
+            canvasHeight: this.canvas.height,
+            imageToCanvas: (x, y) => this.coordinateTransform.imageToCanvas(x, y)
+          });
+          wp.labelOffsetX = Math.round(result.offsetX);
+          wp.labelOffsetY = Math.round(result.offsetY);
+          console.debug(`Auto-positioned label to (${result.offsetX.toFixed(1)}%, ${result.offsetY.toFixed(1)}%)`);
+        }
+
+        // Offset sliders show the primary's result
+        if (this.selectedWaypoint && targets.includes(this.selectedWaypoint)) {
+          this.elements.labelOffsetX.value = this.selectedWaypoint.labelOffsetX;
+          this.elements.labelOffsetXValue.textContent = `${this.selectedWaypoint.labelOffsetX}%`;
+          this.elements.labelOffsetY.value = this.selectedWaypoint.labelOffsetY;
+          this.elements.labelOffsetYValue.textContent = `${this.selectedWaypoint.labelOffsetY}%`;
+        }
+
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
-        console.debug(`Auto-positioned label to (${result.offsetX.toFixed(1)}%, ${result.offsetY.toFixed(1)}%)`);
       }
     });
     
@@ -576,10 +610,11 @@ export const wiringDomMixin = {
       this.elements.pathGlowIntensity.dispatchEvent(new Event('input'));
     });
     
-    // Dot size - visual only
+    // Dot size - visual only (majors only: minors keep their small fixed size)
     this.elements.dotSize.addEventListener('input', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.dotSize = parseInt(e.target.value);
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.dotSize = parseInt(e.target.value);
         this.elements.dotSizeValue.textContent = e.target.value;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
@@ -640,21 +675,24 @@ export const wiringDomMixin = {
     
     // ===== CAMERA CONTROLS =====
     // "This Zoom" slider - updates current waypoint's camera.zoom (log scale: 0-1 → 1x-16x)
+    // Zoom is keyframed on majors only (CameraService drops minors)
     this.elements.cameraZoom?.addEventListener('input', (e) => {
       const sliderValue = parseFloat(e.target.value);
       const zoom = CameraService.sliderToZoom(sliderValue);
-      
+
       // Update display immediately for responsive feel
       if (this.elements.cameraZoomValue) {
         this.elements.cameraZoomValue.textContent = CameraService.formatZoom(zoom);
       }
-      
-      // Update selected waypoint's camera.zoom
-      if (this.selectedWaypoint) {
-        if (!this.selectedWaypoint.camera) {
-          this.selectedWaypoint.camera = { zoom: CAMERA_DEFAULTS.ZOOM, zoomMode: CAMERA_DEFAULTS.ZOOM_MODE };
+
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) {
+          if (!wp.camera) {
+            wp.camera = { zoom: CAMERA_DEFAULTS.ZOOM, zoomMode: CAMERA_DEFAULTS.ZOOM_MODE };
+          }
+          wp.camera.zoom = zoom;
         }
-        this.selectedWaypoint.camera.zoom = zoom;
         this.validateZoomTransitions(); // Check for rate limit warnings
         this.autoSave();
         if (this.previewMode) this.render();
@@ -674,20 +712,20 @@ export const wiringDomMixin = {
     this.elements.cameraSelectedZoom?.addEventListener('input', (e) => {
       const sliderValue = parseFloat(e.target.value);
       const zoom = CameraService.sliderToZoom(sliderValue);
-      
+
       // Update display immediately
       if (this.elements.cameraSelectedZoomValue) {
         this.elements.cameraSelectedZoomValue.textContent = CameraService.formatZoom(zoom);
       }
-      
-      // Get selected waypoints from UIController
-      const selectedWaypoints = this.uiController?.selectedWaypoints;
-      if (selectedWaypoints && selectedWaypoints.size > 0) {
+
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
         // Update zoom on all selected waypoints
-        for (const wp of selectedWaypoints) {
+        for (const wp of targets) {
           if (!wp.camera) wp.camera = {};
           wp.camera.zoom = zoom;
         }
+        this.validateZoomTransitions();
         this.autoSave();
         if (this.previewMode) this.queueRender();
       }

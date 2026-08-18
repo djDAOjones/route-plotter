@@ -255,7 +255,8 @@ class RoutePlotter {
     this.scene = new Scene(); // Flow layers (guide graphs + emitters), drawn beneath the hero route
     this.swarmEngine = new SwarmEngine(); // Deterministic dot evaluator — pure fn(timelineMs, layer, seed)
     this.pathPoints = [];
-    this.selectedWaypoint = null;
+    this.selectedWaypoint = null; // Primary selection (last interacted)
+    this.selectedWaypoints = []; // Full selection in route order — [wp] when single, [] when none
     this.canvasHover = null; // Idle-hover target for canvas affordances (edit mode)
     this.selectedCrowd = null; // Selected crowd layer (FlowLayer) — Crowd scope
     this.isDragging = false;
@@ -839,11 +840,17 @@ class RoutePlotter {
       
       // Remove from ID lookup map
       this._removeWaypointFromMap(waypoint);
-      
-      // Clear selection if this waypoint was selected
+
+      // Drop it from the selection; if it was the primary, promote the
+      // last remaining selected waypoint (multi-select survives deletes)
+      this.selectedWaypoints = this.selectedWaypoints.filter(wp => wp !== waypoint);
       if (this.selectedWaypoint === waypoint) {
-        this.selectedWaypoint = null;
+        this.selectedWaypoint = this.selectedWaypoints.length > 0
+          ? this.selectedWaypoints[this.selectedWaypoints.length - 1]
+          : null;
       }
+      this.uiController?.setSelection(this.selectedWaypoints, this.selectedWaypoint);
+      this.interactionHandler?.setSelectedWaypoint(this.selectedWaypoint);
       
       // Emit waypoint deleted event (triggers path recalc, UI update, save)
       // Event-driven approach ensures consistent update sequence
@@ -863,6 +870,8 @@ class RoutePlotter {
     this.scene.clear(); // Clear flow layers
     this.pathPoints = [];
     this.selectedWaypoint = null;
+    this.selectedWaypoints = [];
+    this.uiController?.setSelection([], null);
     if (this.selectedCrowd) {
       this.selectedCrowd = null;
       this.eventBus.emit('crowd:deselected');
@@ -950,6 +959,7 @@ class RoutePlotter {
       pathPoints: this.pathPoints,
       styles: this.styles,
       selectedWaypoint: this.selectedWaypoint,
+      selectedWaypoints: this.selectedWaypoints,
       hover: this.canvasHover,
 
       // Flow layers + their deterministic evaluator (drawn beneath the hero route)
@@ -1104,6 +1114,7 @@ class RoutePlotter {
     this.waypoints = null;
     this.pathPoints = null;
     this.selectedWaypoint = null;
+    this.selectedWaypoints = null;
     this.waypointsById = null;
     this.background = null;
     this.elements = null;

@@ -7,7 +7,6 @@ import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT } from '../config/constant
 import { getInlineHelpHTML, getSplashHelpHTML } from '../config/helpContent.js';
 import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
-import { sliderToPathWidth } from '../utils/pathWidthScale.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 
 /**
@@ -147,26 +146,6 @@ function updateConditionalVisibility(dependsOnId, currentValue) {
 }
 
 /**
- * Initialize visibility for all registered elements based on current control values
- * Call this on page load and when waypoint selection changes
- */
-function initializeConditionalVisibility() {
-  // Get unique dependsOn IDs
-  const dependsOnIds = new Set();
-  for (const { condition } of visibilityRegistry.values()) {
-    dependsOnIds.add(condition.dependsOn);
-  }
-  
-  // Update visibility for each dependency
-  for (const dependsOnId of dependsOnIds) {
-    const control = document.getElementById(dependsOnId);
-    if (control) {
-      updateConditionalVisibility(dependsOnId, control.value);
-    }
-  }
-}
-
-/**
  * UIController - Manages all UI interactions and state
  * 
  * ## Responsibilities
@@ -175,14 +154,14 @@ function initializeConditionalVisibility() {
  * - Animation transport controls (play, pause, seek)
  * - Tab switching and general settings
  * 
- * ## "All Waypoints" Mode
- * When user selects "All Waypoints" in the list:
- * - `_allWaypointsSelected` = true
- * - Editor shows "All Waypoints Settings" title
- * - Label text control is hidden (labels are per-waypoint)
- * - Property changes emit 'waypoint:all-change' event
- * - First change shows warning modal (once per session)
- * 
+ * ## Multi-select
+ * Selection is a set (`selectedWaypoints`) with a primary waypoint
+ * (`selectedWaypoint`, the last one clicked). List gestures: click =
+ * single, Cmd/Ctrl+click = toggle, Shift+click = range. Cards populate
+ * from the primary; the app's DOM wiring writes changes to every
+ * selected waypoint (the old hidden "All Waypoints" bulk mode dissolved
+ * into this — Phase 4). Label text stays per-waypoint (hidden in multi).
+ *
  * ## Performance Considerations
  * - Waypoint list uses event delegation where possible
  * - Display indices are pre-calculated by main.js (O(n) once, O(1) lookup)
@@ -214,14 +193,6 @@ export class UIController {
     /** @private */
     this._currentPlaybackSpeed = 1;
     
-    // "All Waypoints" mode state
-    /** @private @type {boolean} Whether "All Waypoints" is selected in list */
-    this._allWaypointsSelected = false;
-    /** @private @type {boolean} Whether warning modal has been shown this session */
-    this._allWaypointsWarningShown = false;
-    /** @private @type {Function|null} Pending change callback while modal is shown */
-    this._pendingAllChange = null;
-    
     // Double-click rename detection — survives DOM rebuilds by tracking at instance level.
     // Standard dblclick events break because selectWaypoint rebuilds the DOM between clicks.
     /** @private @type {number} Timestamp of last waypoint row click */
@@ -241,7 +212,6 @@ export class UIController {
     this.syncAnimationControls = this.syncAnimationControls.bind(this);
 
     this.setupEventListeners();
-    this._setupAllWaypointsModal();
     this._setupCodecModal();
     this._registerConditionalVisibility();
     this._setupScopeChip();
@@ -267,23 +237,20 @@ export class UIController {
     // Crowd scope (Phase 4): the chip names the selected crowd layer.
     // Crowds sit outside the Route ↔ waypoints step cycle.
     this._selectedCrowd = null;
+    const chipRefresh = () => this._updateScopeChip(this.selectedWaypoint,
+      this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
     this.eventBus.on('crowd:selected', (layer) => {
       this._selectedCrowd = layer;
-      this._updateScopeChip(this.selectedWaypoint, this._allWaypointsSelected,
-        this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
+      chipRefresh();
     });
     this.eventBus.on('crowd:deselected', () => {
       this._selectedCrowd = null;
-      this._updateScopeChip(this.selectedWaypoint, this._allWaypointsSelected,
-        this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
+      chipRefresh();
     });
 
     // Network node/edge scopes (Phase 4 network editing) — the crowd
     // family's green, with the chip naming what the pen has selected
     this._networkSelection = null;
-    const chipRefresh = () => this._updateScopeChip(
-      this.selectedWaypoint, this._allWaypointsSelected,
-      this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
     this.eventBus.on('network:node-selected', ({ node }) => {
       this._networkSelection = { kind: 'node', node };
       chipRefresh();
@@ -315,8 +282,8 @@ export class UIController {
     const waypoints = this._waypointsCache;
     if (!waypoints.length) return;
 
-    // Multi/all modes have no meaningful order to step through
-    if (this._allWaypointsSelected || this.selectedWaypoints.size > 1) return;
+    // Multi-select has no meaningful order to step through
+    if (this.selectedWaypoints.size > 1) return;
 
     if (!this.selectedWaypoint) {
       // Route scope: next enters the route at Waypoint 1
@@ -360,11 +327,10 @@ export class UIController {
    * current selection. Called from updateWaypointEditor so every
    * selection path updates it.
    * @param {Object|null} waypoint - Selected waypoint (single selection)
-   * @param {boolean} allMode - "All waypoints" bulk mode
    * @param {Array<Object>|null} multiSelect - Multi-select set, if any
    * @private
    */
-  _updateScopeChip(waypoint, allMode, multiSelect) {
+  _updateScopeChip(waypoint, multiSelect) {
     if (!this._scopeChip) return;
 
     const isMultiSelect = multiSelect && multiSelect.length > 1;
@@ -382,12 +348,12 @@ export class UIController {
     } else if (this._selectedCrowd) {
       scope = 'crowd';
       text = `Editing · ${this._selectedCrowd.name} · crowd`;
-    } else if (allMode) {
-      scope = 'all';
-      text = 'Editing · All waypoints';
     } else if (isMultiSelect) {
+      // The list shows majors only, so name any invisible minors in the
+      // count ("5 waypoints (2 minor)") rather than leaving them silent
       scope = 'multi';
-      text = `Editing · ${multiSelect.length} waypoints`;
+      const minors = multiSelect.filter(wp => !wp.isMajor).length;
+      text = `Editing · ${multiSelect.length} waypoints${minors > 0 ? ` (${minors} minor)` : ''}`;
     } else if (waypoint) {
       scope = 'waypoint';
       const kind = waypoint.isMajor ? ' · major' : '';
@@ -404,7 +370,7 @@ export class UIController {
     // scope — crowds sit outside the step cycle
     const waypoints = this._waypointsCache;
     const index = waypoint ? waypoints.indexOf(waypoint) : -1;
-    const steppable = !this._selectedCrowd && !allMode && !isMultiSelect && waypoints.length > 0;
+    const steppable = !this._selectedCrowd && !isMultiSelect && waypoints.length > 0;
     if (this._scopePrevBtn) {
       // From Waypoint 1, prev backs out to Route scope
       this._scopePrevBtn.disabled = !steppable || !waypoint;
@@ -456,58 +422,6 @@ export class UIController {
       dependsOn: 'editor-beacon-style',
       type: 'equals',
       value: 'pulse'
-    });
-  }
-  
-  /**
-   * Setup modal for "All Waypoints" warning.
-   * Caches modal element reference for O(1) access.
-   * @private
-   */
-  _setupAllWaypointsModal() {
-    // Cache modal reference to avoid repeated DOM queries
-    this._allWaypointsModal = document.getElementById('all-waypoints-warning-modal');
-    const confirmBtn = document.getElementById('all-waypoints-confirm');
-    const cancelBtn = document.getElementById('all-waypoints-cancel');
-    
-    if (!this._allWaypointsModal || !confirmBtn || !cancelBtn) return;
-    
-    // MOD-02: Create focus trap for accessibility
-    this._modalFocusTrap = createFocusTrap(this._allWaypointsModal);
-    
-    const closeModal = () => {
-      this._allWaypointsModal.style.display = 'none';
-      this._modalFocusTrap.deactivate();
-    };
-    
-    confirmBtn.addEventListener('click', () => {
-      closeModal();
-      this._allWaypointsWarningShown = true;
-      
-      // Execute the pending change
-      if (this._pendingAllChange) {
-        this._pendingAllChange();
-        this._pendingAllChange = null;
-      }
-    });
-    
-    cancelBtn.addEventListener('click', () => {
-      closeModal();
-      this._pendingAllChange = null;
-    });
-    
-    // Close on backdrop click
-    this._allWaypointsModal.addEventListener('click', (e) => {
-      if (e.target === this._allWaypointsModal) {
-        closeModal();
-        this._pendingAllChange = null;
-      }
-    });
-    
-    // MOD-02: Handle ESC key via focus trap event
-    this._allWaypointsModal.addEventListener('focustrap:escape', () => {
-      closeModal();
-      this._pendingAllChange = null;
     });
   }
   
@@ -601,37 +515,6 @@ export class UIController {
   }
   
   /**
-   * Show warning modal for first "All Waypoints" change.
-   * After first confirmation, subsequent changes execute immediately.
-   * 
-   * @param {Function} changeCallback - Function to execute if confirmed
-   * @returns {boolean} True if change was executed immediately, false if modal shown
-   * @private
-   */
-  _confirmAllWaypointsChange(changeCallback) {
-    // Fast path: warning already shown this session
-    if (this._allWaypointsWarningShown) {
-      changeCallback();
-      return true;
-    }
-    
-    // Show warning modal (uses cached reference)
-    if (this._allWaypointsModal) {
-      this._pendingAllChange = changeCallback;
-      this._allWaypointsModal.style.display = 'flex';
-      // MOD-02: Activate focus trap when modal opens
-      if (this._modalFocusTrap) {
-        this._modalFocusTrap.activate();
-      }
-      return false;
-    }
-    
-    // No modal found, execute anyway (graceful degradation)
-    changeCallback();
-    return true;
-  }
-  
-  /**
    * Get display index for a waypoint (1-based, major waypoints only)
    * @param {Object} waypoint - Waypoint to find index for
    * @returns {number} 1-based display index
@@ -645,13 +528,21 @@ export class UIController {
   }
   
   /**
-   * Check if "All Waypoints" mode is active
-   * @returns {boolean} True if all waypoints mode is selected
+   * Adopt a selection decided outside the list (canvas toggle, Cmd+A,
+   * undo restore). Keeps the gesture bookkeeping — the Set, the primary,
+   * the shift-range anchor — coherent without emitting selection events;
+   * the caller (main.js) already owns the event flow.
+   * @param {Array<Object>} waypoints - Full selection, route order
+   * @param {Object|null} primary - Primary waypoint (last interacted)
    */
-  isAllWaypointsMode() {
-    return this._allWaypointsSelected;
+  setSelection(waypoints, primary) {
+    this.selectedWaypoints = new Set(waypoints);
+    this.selectedWaypoint = primary || null;
+    const anchor = primary && primary.isMajor && this._listedMajors
+      ? this._listedMajors.indexOf(primary) : -1;
+    this._lastSelectedIndex = anchor >= 0 ? anchor : null;
   }
-  
+
   /**
    * Switch to the Waypoint Settings tab in the right sidebar.
    * Called when a waypoint is selected from the list.
@@ -664,24 +555,21 @@ export class UIController {
   }
   
   /**
-   * Emit a bulk waypoint property change in "All Waypoints" mode.
-   * Single-selection edits are owned by the app's DOM wiring
-   * (setupEventListeners), which mutates the waypoint and emits the
-   * style/path event itself — emitting here too double-fired every
-   * render/undo/autosave per input event (review 2026-08-18).
-   * @param {string} property - Property name being changed
-   * @param {*} value - New value (already converted to model units)
+   * Waypoints the pause/speed/area controls below should write to:
+   * the multi-selection when one exists, else the single selection.
+   * Mirrors selectionTargets() on the app side (editorPanel mixin),
+   * which serves the DOM-wired controls.
+   * @param {boolean} [majorsOnly=false] - Filter to major waypoints
+   * @returns {Array<Object>}
    * @private
    */
-  _emitBulkWaypointChange(property, value) {
-    if (this._allWaypointsSelected) {
-      // "All Waypoints" mode - show warning on first change
-      this._confirmAllWaypointsChange(() => {
-        this.eventBus.emit('waypoint:all-change', { property, value });
-      });
-    }
+  _bulkTargets(majorsOnly = false) {
+    const targets = this.selectedWaypoints.size > 0
+      ? [...this.selectedWaypoints]
+      : (this.selectedWaypoint ? [this.selectedWaypoint] : []);
+    return majorsOnly ? targets.filter(wp => wp.isMajor) : targets;
   }
-  
+
   /**
    * Format trail display showing percentage (1-100% UI range).
    * Actual trail fraction is 4x the displayed percentage.
@@ -1181,124 +1069,65 @@ export class UIController {
    * Setup waypoint editor controls
    */
   setupWaypointEditorControls() {
-    // These listeners serve only the "All Waypoints" bulk mode. The
-    // single-selection path — model mutation, unit conversion, value
-    // readouts, per-control side effects — is owned by the app's DOM
-    // wiring (setupEventListeners); duplicating it here double-fired
-    // events and let a raw slider integer clobber the thickness readout
-    // (review 2026-08-18).
+    // Marker/segment/beacon/label controls are owned by the app's DOM
+    // wiring (setupEventListeners), which writes to every selected
+    // waypoint via selectionTargets() — the old bulk-only listeners here
+    // dissolved with the "All Waypoints" mode (Phase 4 multi-select).
+    // Only the controls whose single-selection path already lived here
+    // (pause, segment speed, area highlights) remain, looping the same
+    // way via _bulkTargets().
 
-    // Marker style - supports "all waypoints" mode
-    this.elements.markerStyle?.addEventListener('change', (e) => {
-      this._emitBulkWaypointChange('markerStyle', e.target.value);
-    });
-
-    this.elements.dotColor?.addEventListener('input', (e) => {
-      this._emitBulkWaypointChange('dotColor', e.target.value);
-    });
-
-    this.elements.dotSize?.addEventListener('input', (e) => {
-      this._emitBulkWaypointChange('dotSize', parseInt(e.target.value));
-    });
-
-    // Segment properties - supports "all waypoints" mode
-    this.elements.segmentColor?.addEventListener('input', (e) => {
-      this._emitBulkWaypointChange('segmentColor', e.target.value);
-    });
-
-    this.elements.segmentWidth?.addEventListener('input', (e) => {
-      // Convert to real width — bulk writes previously stored the raw
-      // 0-1000 slider integer on every major waypoint
-      this._emitBulkWaypointChange('segmentWidth', sliderToPathWidth(parseFloat(e.target.value)));
-    });
-
-    this.elements.segmentStyle?.addEventListener('change', (e) => {
-      this._emitBulkWaypointChange('segmentStyle', e.target.value);
-    });
-
-    // Path shape - supports "all waypoints" mode
-    this.elements.pathShape?.addEventListener('change', (e) => {
-      this._emitBulkWaypointChange('pathShape', e.target.value);
-    });
-
-    // Beacon style - supports "all waypoints" mode
-    // Beacon types: none, ripple, glow, pop, grow, pulse
-    // Beacon color is derived from marker color (dotColor)
+    // Beacon sub-control visibility still follows the dropdown even
+    // though the model write happens in the app's DOM wiring
     this.elements.editorBeaconStyle?.addEventListener('change', (e) => {
-      this._emitBulkWaypointChange('beaconStyle', e.target.value);
-      // Update conditional visibility for beacon-specific controls (ripple, pulse)
       updateConditionalVisibility('editor-beacon-style', e.target.value);
     });
 
-    // Label text is single-waypoint only (hidden in "all" mode) and fully
-    // handled by the app's DOM wiring — no bulk listener needed.
-
-    // Label mode and position - supports "all waypoints" mode
-    this.elements.labelMode?.addEventListener('change', (e) => {
-      this._emitBulkWaypointChange('labelMode', e.target.value);
-    });
-
-    this.elements.labelPosition?.addEventListener('change', (e) => {
-      this._emitBulkWaypointChange('labelPosition', e.target.value);
-    });
-    
     // Pause time - power-curve slider (0-30 seconds)
     // Slider value 0-1000 maps via power curve to 0-30 seconds
+    // Pauses live on majors only; one event per gesture keeps the
+    // downstream duration recalc + debounced undo entry singular
     this.elements.waypointPauseTime?.addEventListener('input', (e) => {
       const sliderValue = parseInt(e.target.value);
       const timeSec = this.sliderToPauseTime(sliderValue);
       const timeMs = timeSec * 1000;
-      
+
       // Format display nicely
       this.elements.waypointPauseTimeValue.textContent = MotionVisibilityService.formatUIValue(timeSec, 's');
-      
-      // Handle "All Waypoints" mode
-      if (this._allWaypointsSelected) {
-        this._confirmAllWaypointsChange(() => {
-          this.eventBus.emit('waypoint:all-change', { property: 'pauseTime', value: timeMs });
-        });
-        return;
-      }
-      
-      if (this.selectedWaypoint) {
-        // Update waypoint properties directly
-        this.selectedWaypoint.pauseTime = timeMs;
-        this.selectedWaypoint.pauseMode = timeSec > 0 ? 'timed' : 'none';
-        
-        console.debug(`⏱️ [UIController] Set waypoint pause: ${timeSec}s (${timeMs}ms), mode: ${this.selectedWaypoint.pauseMode}`);
-        
+
+      const targets = this._bulkTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) {
+          wp.pauseTime = timeMs;
+          wp.pauseMode = timeSec > 0 ? 'timed' : 'none';
+        }
+
         // Emit event to trigger pause marker update and save
         this.eventBus.emit('waypoint:pause-changed', {
           waypoint: this.selectedWaypoint,
           pauseTime: timeMs,
-          pauseMode: this.selectedWaypoint.pauseMode
+          pauseMode: timeSec > 0 ? 'timed' : 'none'
         });
       }
     });
-    
+
     // Segment speed - logarithmic slider (0.1x to 10x)
     // Slider value 0-1000 maps logarithmically: 0→0.1x, 500→1.0x, 1000→10x
+    // Speed is keyframed on majors only (minors are geometry)
     this.elements.waypointSegmentSpeed?.addEventListener('input', (e) => {
       const sliderValue = parseInt(e.target.value);
       const speedMultiplier = this.sliderToSegmentSpeed(sliderValue);
-      
+
       // Format display nicely (speed uses 2 decimal places when < 1 for precision)
       const displaySpeed = speedMultiplier < 1 ? speedMultiplier.toFixed(2) : MotionVisibilityService.formatUIValue(speedMultiplier);
       this.elements.waypointSegmentSpeedValue.textContent = `${displaySpeed}x`;
-      
-      // Handle "All Waypoints" mode
-      if (this._allWaypointsSelected) {
-        this._confirmAllWaypointsChange(() => {
-          this.eventBus.emit('waypoint:all-change', { property: 'segmentSpeed', value: speedMultiplier });
-        });
-        return;
-      }
-      
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.segmentSpeed = speedMultiplier;
-        
-        console.debug(`🏃 [UIController] Set segment speed: ${displaySpeed}x`);
-        
+
+      const targets = this._bulkTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) {
+          wp.segmentSpeed = speedMultiplier;
+        }
+
         // Emit event to trigger recalculation
         this.eventBus.emit('waypoint:speed-changed', {
           waypoint: this.selectedWaypoint,
@@ -1311,147 +1140,125 @@ export class UIController {
     // (setupEventListeners) — no listeners here (decision 2026-08-18).
 
     // ========== AREA HIGHLIGHT CONTROLS ==========
-    
+
+    // Every area control writes to the whole selection (minors carry
+    // areas too, same as the single-selection path); one area:changed
+    // per gesture keeps the debounced undo entry and autosave singular
+    const applyAreaChange = (mutate) => {
+      const targets = this._bulkTargets();
+      if (targets.length === 0) return;
+      for (const wp of targets) {
+        mutate(wp.areaHighlight, wp);
+      }
+      this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
+    };
+
     // Shape dropdown — toggles sub-control visibility and updates model
     this.elements.areaShape?.addEventListener('change', (e) => {
       const shape = e.target.value;
       this._updateAreaSubControls(shape);
-      
-      if (this.selectedWaypoint) {
-        const ah = this.selectedWaypoint.areaHighlight;
+
+      applyAreaChange((ah, wp) => {
         ah.shape = shape;
         ah.enabled = shape !== 'none';
         // Default center to waypoint position for new shapes
         if (ah.enabled && ah.centerX === 0.5 && ah.centerY === 0.5) {
-          ah.centerX = this.selectedWaypoint.imgX;
-          ah.centerY = this.selectedWaypoint.imgY;
+          ah.centerX = wp.imgX;
+          ah.centerY = wp.imgY;
         }
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      });
     });
-    
+
     // Circle radius slider (0-1000 → CIRCLE_RADIUS_MIN to CIRCLE_RADIUS_MAX)
     this.elements.areaCircleRadius?.addEventListener('input', (e) => {
       const normalized = parseInt(e.target.value) / 1000;
       const radius = AREA_HIGHLIGHT.CIRCLE_RADIUS_MIN + normalized * (AREA_HIGHLIGHT.CIRCLE_RADIUS_MAX - AREA_HIGHLIGHT.CIRCLE_RADIUS_MIN);
       this.elements.areaCircleRadiusValue.textContent = `${Math.round(radius * 100)}%`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.radius = radius;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.radius = radius; });
     });
-    
+
     // Rectangle width slider (0-1000 → RECT_SIZE_MIN to RECT_SIZE_MAX)
     this.elements.areaRectWidth?.addEventListener('input', (e) => {
       const normalized = parseInt(e.target.value) / 1000;
       const width = AREA_HIGHLIGHT.RECT_SIZE_MIN + normalized * (AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN);
       this.elements.areaRectWidthValue.textContent = `${Math.round(width * 100)}%`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.width = width;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.width = width; });
     });
-    
+
     // Rectangle height slider (0-1000 → RECT_SIZE_MIN to RECT_SIZE_MAX)
     this.elements.areaRectHeight?.addEventListener('input', (e) => {
       const normalized = parseInt(e.target.value) / 1000;
       const height = AREA_HIGHLIGHT.RECT_SIZE_MIN + normalized * (AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN);
       this.elements.areaRectHeightValue.textContent = `${Math.round(height * 100)}%`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.height = height;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.height = height; });
     });
-    
+
     // Fill colour (swatch picker writes to hidden input)
     this.elements.areaFillColor?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.fillColor = e.target.value;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.fillColor = e.target.value; });
     });
-    
+
     // Fill opacity slider (0-100 → 0-1)
     this.elements.areaFillOpacity?.addEventListener('input', (e) => {
       const pct = parseInt(e.target.value);
       this.elements.areaFillOpacityValue.textContent = `${pct}%`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.fillOpacity = pct / 100;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.fillOpacity = pct / 100; });
     });
-    
+
     // Border colour (swatch picker writes to hidden input)
     this.elements.areaBorderColor?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.borderColor = e.target.value;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.borderColor = e.target.value; });
     });
-    
+
     // Border style dropdown
     this.elements.areaBorderStyle?.addEventListener('change', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.borderStyle = e.target.value;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.borderStyle = e.target.value; });
     });
-    
+
     // Border width slider
     this.elements.areaBorderWidth?.addEventListener('input', (e) => {
       const width = parseInt(e.target.value);
       this.elements.areaBorderWidthValue.textContent = `${width}px`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.borderWidth = width;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.borderWidth = width; });
     });
-    
+
     // Visibility dropdown
     this.elements.areaVisibility?.addEventListener('change', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.visibility = e.target.value;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.visibility = e.target.value; });
     });
-    
+
     // Fade in slider (0-10000ms)
     this.elements.areaFadeIn?.addEventListener('input', (e) => {
       const ms = parseInt(e.target.value);
       this.elements.areaFadeInValue.textContent = `${(ms / 1000).toFixed(1)}s`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.fadeInMs = ms;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.fadeInMs = ms; });
     });
-    
+
     // Fade out slider (0-10000ms)
     this.elements.areaFadeOut?.addEventListener('input', (e) => {
       const ms = parseInt(e.target.value);
       this.elements.areaFadeOutValue.textContent = `${(ms / 1000).toFixed(1)}s`;
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.areaHighlight.fadeOutMs = ms;
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
-      }
+      applyAreaChange((ah) => { ah.fadeOutMs = ms; });
     });
-    
-    // Draw Area button (enters polygon draw mode)
+
+    // Draw Area button (enters polygon draw mode) — inherently a
+    // one-waypoint gesture, so it targets the primary selection only
     this.elements.areaDrawBtn?.addEventListener('click', () => {
       if (this.selectedWaypoint) {
         this.eventBus.emit('area:draw-start', { waypoint: this.selectedWaypoint });
       }
     });
-    
+
     // Delete Area button
     this.elements.areaDeleteBtn?.addEventListener('click', () => {
-      if (this.selectedWaypoint) {
-        const ah = this.selectedWaypoint.areaHighlight;
+      applyAreaChange((ah) => {
         ah.enabled = false;
         ah.shape = 'none';
         ah.points = [];
+      });
+      if (this.elements.areaShape) {
         this.elements.areaShape.value = 'none';
         this._updateAreaSubControls('none');
-        this.eventBus.emit('area:changed', { waypoint: this.selectedWaypoint });
       }
     });
   }
@@ -1523,15 +1330,12 @@ export class UIController {
   /**
    * Update waypoint list UI
    *
-   * ## Structure
-   * 1. "All Waypoints" item (distinct styling, always at top)
-   * 2. Individual waypoint items (renamable, draggable, deletable)
-   *
    * ## Features
    * - Double-click waypoint name to rename
    * - Drag handle for reordering
    * - Delete button (×) for removal
-   * - Click to select (updates editor panel)
+   * - Click to select; Cmd/Ctrl+click toggles, Shift+click ranges
+   *   (Cmd/Ctrl+A selects the whole route, minors included)
    *
    * ## Performance
    * - O(n) where n = major waypoints
@@ -1545,24 +1349,24 @@ export class UIController {
     // refresh both — list updates fire on add/delete/reorder, where
     // neighbours and display indices change without a reselection
     this._waypointsCache = waypoints;
-    this._updateScopeChip(this.selectedWaypoint, this._allWaypointsSelected,
+    this._updateScopeChip(this.selectedWaypoint,
       this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
     this._updateLegSectionTitle(this.selectedWaypoint);
 
     if (!this.elements.waypointList) return;
     this._listedMajors = waypoints.filter(wp => wp.isMajor);
-    
+
     // Set ARIA listbox role for proper screen reader semantics
     this.elements.waypointList.setAttribute('role', 'listbox');
     this.elements.waypointList.setAttribute('aria-label', 'Waypoints');
     this.elements.waypointList.setAttribute('aria-multiselectable', 'true');
-    
+
     this.elements.waypointList.innerHTML = '';
-    
+
     // Filter to major waypoints only (O(n) single pass, kept on the
     // instance so startRenameFor can find a row after any rebuild)
     const majorWaypoints = this._listedMajors;
-    
+
     // When no waypoints exist, show empty state message
     if (majorWaypoints.length === 0) {
       this.elements.waypointList.innerHTML = `
@@ -1571,53 +1375,9 @@ export class UIController {
           <p class="hint">Click on the map to add waypoints</p>
         </div>
       `;
-      this._allWaypointsSelected = false;
       return;
     }
-    
-    // Add "Select All Waypoints" item at top
-    // Uses a real <button> inside <li> for proper keyboard semantics
-    const allItem = document.createElement('li');
-    allItem.className = 'waypoint-item waypoint-item-all';
-    if (this._allWaypointsSelected) {
-      allItem.classList.add('selected');
-      allItem.classList.add('is-selected');
-    }
-    
-    // Row button - receives focus and handles selection
-    // (role=option like the waypoint rows — see comment there)
-    const allRowBtn = document.createElement('button');
-    allRowBtn.type = 'button';
-    allRowBtn.className = 'waypoint-row';
-    allRowBtn.setAttribute('role', 'option');
-    allRowBtn.setAttribute('aria-selected', this._allWaypointsSelected ? 'true' : 'false');
-    allItem.setAttribute('role', 'presentation');
-    
-    const allLabel = document.createElement('span');
-    allLabel.className = 'waypoint-title';
-    allLabel.textContent = 'Select All Waypoints';
-    
-    allRowBtn.appendChild(allLabel);
-    allItem.appendChild(allRowBtn);
-    
-    // Click handler for select all
-    const handleSelectAll = (e) => {
-      e.stopPropagation();
-      this._allWaypointsSelected = true;
-      this.selectedWaypoint = null;
-      this.selectedWaypoints.clear(); // Clear multi-select
-      this._lastSelectedIndex = null;
-      this.eventBus.emit('waypoint:all-selected');
-      this.updateWaypointList(waypoints);
-      this.updateWaypointEditor(null, true); // true = all mode
-      this._switchToWaypointTab(); // Switch to waypoint settings tab
-    };
-    
-    // Button click handles both mouse and keyboard (Enter/Space)
-    allRowBtn.addEventListener('click', handleSelectAll);
-    
-    this.elements.waypointList.appendChild(allItem);
-    
+
     // Add Waypoint button - keyboard-accessible way to add waypoints (AAA)
     const addItem = document.createElement('li');
     addItem.className = 'waypoint-item waypoint-item-add';
@@ -1643,9 +1403,7 @@ export class UIController {
       item.className = 'waypoint-item';
       item.draggable = true; // Enable drag and drop
       // Check if waypoint is in multi-select set OR is the primary selection
-      // OR if "All Waypoints" is selected (show tint on all)
-      const isSelected = this._allWaypointsSelected ||
-        this.selectedWaypoints.has(waypoint) || 
+      const isSelected = this.selectedWaypoints.has(waypoint) ||
         (waypoint === this.selectedWaypoint);
       if (isSelected) {
         item.classList.add('selected');
@@ -1723,8 +1481,6 @@ export class UIController {
       
       // Selection handler - supports shift-click and cmd/ctrl-click
       const selectWaypoint = (e) => {
-        this._allWaypointsSelected = false;
-        
         const isShiftClick = e.shiftKey;
         const isMultiClick = e.metaKey || e.ctrlKey;
         
@@ -1885,7 +1641,7 @@ export class UIController {
       
       // Focus the row button if this is the primary selected waypoint (for keyboard navigation).
       // Skip when an input/textarea/select has focus — avoids stealing focus during typing (e.g. label text).
-      if (waypoint === this.selectedWaypoint && !this._allWaypointsSelected && this.selectedWaypoints.size <= 1) {
+      if (waypoint === this.selectedWaypoint && this.selectedWaypoints.size <= 1) {
         const active = document.activeElement;
         const isEditing = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
         if (!isEditing) {
@@ -1897,63 +1653,46 @@ export class UIController {
   
   /**
    * Update waypoint editor panel with selected waypoint data.
-   * 
+   *
    * ## Modes
-   * - **Single waypoint**: Shows waypoint name in title, populates all controls
-   * - **Multiple waypoints**: Shows "N Waypoints Selected", hides label text control
-   * - **All waypoints**: Shows "All Waypoints Settings", hides label text control
-   * - **No selection**: Hides editor, shows placeholder message
-   * 
-   * ## Title Format
-   * - Single: "[Waypoint Name] Settings" or "Waypoint N Settings"
-   * - Multiple: "N Waypoints Selected"
-   * - All: "All Waypoints"
-   * - None: "Waypoint Settings"
-   * 
+   * - **Single waypoint**: populates all controls from the waypoint
+   * - **Multiple waypoints**: populates from the primary waypoint (the
+   *   values a change will write to the whole selection); label text is
+   *   hidden — it stays per-waypoint
+   * - **No selection**: SectionController shows Route scope
+   *
    * @param {Waypoint|null} waypoint - Selected waypoint (primary), or null
-   * @param {boolean} [allMode=false] - If true, show "All Waypoints" mode
-   * @param {Array<Waypoint>} [multiSelect=null] - Array of selected waypoints for multi-select mode
+   * @param {Array<Waypoint>} [multiSelect=null] - Full selection when more than one waypoint is selected
    */
-  updateWaypointEditor(waypoint, allMode = false, multiSelect = null) {
+  updateWaypointEditor(waypoint, multiSelect = null) {
     this.selectedWaypoint = waypoint;
-    this._allWaypointsSelected = allMode;
-    
+
     // Determine if we're in multi-select mode
     const isMultiSelect = multiSelect && multiSelect.length > 1;
 
     // Scope chip announces what the inspector is editing; the Leg card
     // header names the segment the selected waypoint owns
-    this._updateScopeChip(waypoint, allMode, multiSelect);
-    this._updateLegSectionTitle((allMode || isMultiSelect) ? null : waypoint);
+    this._updateScopeChip(waypoint, multiSelect);
+    this._updateLegSectionTitle(isMultiSelect ? null : waypoint);
 
     // Note: Scope-group visibility is handled by SectionController which
     // listens to the same waypoint:selected/deselected events that trigger
     // this method. We don't emit events here to avoid infinite loops.
 
-    if (!waypoint && !allMode && !isMultiSelect) {
+    if (!waypoint) {
       // No waypoint selected — SectionController shows Route scope
       return;
     }
-    
-    // Hide label text control in "all" or multi-select mode (can't edit individual labels)
+
+    // Hide label text control in multi-select mode (label text stays
+    // per-waypoint; every other label control bulk-applies)
     const labelTextControl = this.elements.waypointLabel?.closest('label');
     if (labelTextControl) {
-      labelTextControl.style.display = (allMode || isMultiSelect) ? 'none' : 'block';
+      labelTextControl.style.display = isMultiSelect ? 'none' : 'block';
     }
-    
-    // In "all" or multi-select mode, don't populate with specific values
-    if (allMode || isMultiSelect) {
-      // Clear/reset controls to show they affect multiple waypoints
-      if (this.elements.waypointLabel) {
-        this.elements.waypointLabel.value = '';
-      }
-      // Initialize conditional visibility based on current dropdown values
-      // This ensures ripple/pulse controls show/hide correctly in "All Waypoints" mode
-      initializeConditionalVisibility();
-      return;
-    }
-    
-    // Update controls with waypoint values
+
+    // Update controls with waypoint values (in multi-select: the
+    // primary's values — what a change will write to the selection)
     if (this.elements.markerStyle) {
       this.elements.markerStyle.value = waypoint.markerStyle || 'dot';
     }

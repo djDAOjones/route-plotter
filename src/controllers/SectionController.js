@@ -308,13 +308,7 @@ export class SectionController {
       this._updateUIState();
     });
 
-    // All waypoints selected
-    this.eventBus.on('waypoint:all-selected', () => {
-      this.hasSelection = true;
-      this._updateUIState();
-    });
-
-    // Multiple waypoints selected (shift/cmd-click) — waypoint scope
+    // Multiple waypoints selected (shift/cmd-click, Cmd/Ctrl+A) — waypoint scope
     this.eventBus.on('waypoint:multi-selected', () => {
       this.hasSelection = true;
       this._updateUIState();

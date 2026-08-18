@@ -11,7 +11,26 @@ import { BEACON_TIMING } from '../services/BeaconRenderer.js';
 import { sliderToPathWidth, pathWidthToSlider } from '../utils/pathWidthScale.js';
 
 export const editorPanelMixin = {
-  
+
+  /**
+   * Waypoints an inspector-card edit should write to: the multi-selection
+   * when one exists, else the single selection (Phase 4 multi-select —
+   * every card honours the whole selection). Callers write to each target
+   * and then emit their usual change event once, so the downstream
+   * pipeline still runs one path recalc and one debounced undo entry
+   * per gesture.
+   * @param {boolean} [majorsOnly=false] - Filter to majors, for
+   *   properties that only exist on major waypoints (beacons, labels,
+   *   pauses, camera, marker styling)
+   * @returns {Array<Object>} Waypoints to write to
+   */
+  selectionTargets(majorsOnly = false) {
+    const targets = (this.selectedWaypoints && this.selectedWaypoints.length > 0)
+      ? this.selectedWaypoints
+      : (this.selectedWaypoint ? [this.selectedWaypoint] : []);
+    return majorsOnly ? targets.filter(wp => wp.isMajor) : targets;
+  },
+
   /**
    * Show/hide ripple-specific controls based on beacon style
    * @param {string} beaconStyle - Current beacon style
@@ -81,32 +100,36 @@ export const editorPanelMixin = {
    * @private
    */
   _updateRippleWaitTime() {
-    if (!this.selectedWaypoint) return;
-    
-    const maxScale = this.selectedWaypoint.rippleMaxScale || 1000;
-    
-    if (this.selectedWaypoint.rippleWait && this.selectedWaypoint.beaconStyle === 'ripple') {
+    // Applies to every selected major with ripple wait enabled — a
+    // multi-selection edit re-times each waypoint from its own maxScale
+    const targets = this.selectionTargets(true);
+    if (targets.length === 0) return;
+
+    for (const wp of targets) {
+      if (!(wp.rippleWait && wp.beaconStyle === 'ripple')) continue;
+
       // Calculate total ripple animation time using constants
       // Each ring takes (maxScale / 1000) seconds to complete its growth and fade
       // Rings spawn at intervals equal to their duration
       // Wait until the LAST ring has FINISHED (not just started)
       // Formula: (RIPPLE_COUNT rings × durationPerRing) = time when last ring finishes
+      const maxScale = wp.rippleMaxScale || 1000;
       const durationPerRing = maxScale / 1000; // seconds (1000% = 1s)
       const totalRippleTime = durationPerRing * BEACON_TIMING.RIPPLE_COUNT; // All rings complete
-      
+
       // Set pause time to match ripple animation
-      this.selectedWaypoint.pauseTime = totalRippleTime * 1000; // convert to ms
-      this.selectedWaypoint.pauseMode = 'timed';
-      
-      // Update UI via UIController
-      if (this.uiController && this.elements.waypointPauseTime) {
+      wp.pauseTime = totalRippleTime * 1000; // convert to ms
+      wp.pauseMode = 'timed';
+
+      // Update UI via UIController (pause slider shows the primary's value)
+      if (wp === this.selectedWaypoint && this.uiController && this.elements.waypointPauseTime) {
         this.elements.waypointPauseTime.value = this.uiController.pauseTimeToSlider(totalRippleTime);
         this.elements.waypointPauseTimeValue.textContent = `${totalRippleTime.toFixed(1)}s`;
       }
-      
+
       console.debug(`🔔 [Beacon] Ripple wait enabled - set pause time to ${totalRippleTime.toFixed(1)}s`);
     }
-    
+
     // Trigger animation duration recalculation
     this.updateAnimationDuration();
   },
@@ -159,6 +182,7 @@ export const editorPanelMixin = {
       const selectWaypoint = (e) => {
         e.stopPropagation();
         this.selectedWaypoint = waypoint;
+        this.selectedWaypoints = [waypoint];
         this.updateWaypointList();
         this.updateWaypointEditor();
       };
