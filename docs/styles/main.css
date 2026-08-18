@@ -706,6 +706,30 @@ kbd{
   background:var(--ui-02);      /* Subtle background instead of border */
 }
 
+/* Card flash: directs the eye after a canvas gesture lands here
+   (e.g. clicking a route leg flashes the Leg card that owns it) */
+.settings-section.section-flash{
+  animation:section-flash 1.2s ease-out;
+}
+
+@keyframes section-flash{
+  0%,100%{ box-shadow:none; }
+  15%,60%{ box-shadow:0 0 0 2px var(--interactive-01); }
+  40%{ box-shadow:0 0 0 1px transparent; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .settings-section.section-flash{
+    /* One steady highlight, no pulsing; the animation still ends so
+       animationend fires and the class is cleaned up */
+    animation:section-flash-static 1.2s step-end;
+  }
+  @keyframes section-flash-static{
+    0%{ box-shadow:0 0 0 2px var(--interactive-01); }
+    100%{ box-shadow:none; }
+  }
+}
+
 /* Section header "cap" band - per spec v3.1.241 §5.1 */
 .section-header{
   display:flex;

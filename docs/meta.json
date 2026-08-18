@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 15344,
+      "bytes": 15712,
       "imports": [],
       "format": "esm"
     },
@@ -169,6 +169,11 @@
       ],
       "format": "esm"
     },
+    "src/utils/segmentHitTest.js": {
+      "bytes": 3497,
+      "imports": [],
+      "format": "esm"
+    },
     "src/services/AreaHighlightRenderer.js": {
       "bytes": 12846,
       "imports": [
@@ -207,7 +212,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 89931,
+      "bytes": 97011,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -218,6 +223,11 @@
           "path": "src/utils/Easing.js",
           "kind": "import-statement",
           "original": "../utils/Easing.js"
+        },
+        {
+          "path": "src/utils/segmentHitTest.js",
+          "kind": "import-statement",
+          "original": "../utils/segmentHitTest.js"
         },
         {
           "path": "src/services/BeaconRenderer.js",
@@ -2474,7 +2484,7 @@
       "format": "esm"
     },
     "src/handlers/InteractionHandler.js": {
-      "bytes": 25320,
+      "bytes": 29357,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2495,7 +2505,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 12295,
+      "bytes": 13557,
       "imports": [],
       "format": "esm"
     },
@@ -2674,7 +2684,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 39399,
+      "bytes": 43513,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2832,18 +2842,23 @@
       "format": "esm"
     },
     "src/app/pointer.js": {
-      "bytes": 6077,
+      "bytes": 8248,
       "imports": [
         {
           "path": "src/config/constants.js",
           "kind": "import-statement",
           "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/segmentHitTest.js",
+          "kind": "import-statement",
+          "original": "../utils/segmentHitTest.js"
         }
       ],
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 46205,
+      "bytes": 46321,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3039,7 +3054,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2513907
+      "bytes": 2547486
     },
     "docs/app.js": {
       "imports": [],
@@ -3050,7 +3065,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 3735
+          "bytesInOutput": 3852
         },
         "src/models/GraphNode.js": {
           "bytesInOutput": 607
@@ -3100,6 +3115,9 @@
         "src/services/AnimationEngine.js": {
           "bytesInOutput": 11194
         },
+        "src/utils/segmentHitTest.js": {
+          "bytesInOutput": 565
+        },
         "src/services/AreaHighlightRenderer.js": {
           "bytesInOutput": 3825
         },
@@ -3110,7 +3128,7 @@
           "bytesInOutput": 3381
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 23136
+          "bytesInOutput": 25917
         },
         "src/services/SwarmEngine.js": {
           "bytesInOutput": 5077
@@ -3215,13 +3233,13 @@
           "bytesInOutput": 39124
         },
         "src/handlers/InteractionHandler.js": {
-          "bytesInOutput": 9934
+          "bytesInOutput": 11447
         },
         "src/services/UndoService.js": {
           "bytesInOutput": 1028
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 4843
+          "bytesInOutput": 5311
         },
         "src/services/AreaDrawingService.js": {
           "bytesInOutput": 4920
@@ -3272,7 +3290,7 @@
           "bytesInOutput": 3100
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 16262
+          "bytesInOutput": 17809
         },
         "src/app/undoRedo.js": {
           "bytesInOutput": 3467
@@ -3299,13 +3317,13 @@
           "bytesInOutput": 7663
         },
         "src/app/pointer.js": {
-          "bytesInOutput": 266
+          "bytesInOutput": 887
         },
         "src/main.js": {
-          "bytesInOutput": 22568
+          "bytesInOutput": 22613
         }
       },
-      "bytes": 620284
+      "bytes": 627941
     }
   }
 }
