@@ -9,6 +9,7 @@
 import { PATH_VISIBILITY } from '../config/constants.js';
 import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
+import { ContextMenu } from '../components/ContextMenu.js';
 import { snapToAngle } from '../utils/snapToAngle.js';
 
 /**
@@ -453,6 +454,161 @@ export const wiringControllersMixin = {
       this.queueRender();
     });
     
+    // ========== CANVAS CONTEXT MENU (review 2026-08-18) ==========
+    // InteractionHandler has emitted these since v2 with no listener —
+    // right-click was suppressed but dead. One ContextMenu instance
+    // serves both menus.
+
+    this.eventBus.on('waypoint:show-context-menu', ({ waypoint, x, y }) => {
+      // Select first so the menu visibly acts on this waypoint
+      if (this.selectedWaypoint !== waypoint) {
+        this.eventBus.emit('waypoint:selected', waypoint);
+      }
+
+      const majorsCount = this.waypoints.filter(wp => wp.isMajor).length;
+      const lastMajor = waypoint.isMajor && majorsCount <= 1;
+      const items = [];
+
+      if (waypoint.isMajor) {
+        items.push({
+          label: 'Rename',
+          action: () => this.eventBus.emit('waypoint:request-rename', waypoint)
+        });
+      }
+      items.push({
+        label: waypoint.isMajor ? 'Convert to minor waypoint' : 'Convert to major waypoint',
+        disabled: lastMajor,
+        disabledReason: lastMajor ? 'The route needs at least one major waypoint' : undefined,
+        action: () => this.eventBus.emit('waypoint:toggle-type', waypoint)
+      });
+      items.push({
+        label: 'Insert waypoint before',
+        action: () => this.eventBus.emit('waypoint:insert-adjacent', { waypoint, where: 'before' })
+      });
+      items.push({
+        label: 'Insert waypoint after',
+        action: () => this.eventBus.emit('waypoint:insert-adjacent', { waypoint, where: 'after' })
+      });
+      items.push({
+        label: 'Delete waypoint',
+        danger: true,
+        separatorBefore: true,
+        action: () => this.eventBus.emit('waypoint:delete', waypoint)
+      });
+
+      this._contextMenu ||= new ContextMenu();
+      this._contextMenu.show({ x, y, items, ariaLabel: 'Waypoint actions' });
+    });
+
+    this.eventBus.on('canvas:show-context-menu', ({ x, y, canvasX, canvasY }) => {
+      // Same bounds rule as click-to-add (coordinate:check-bounds above)
+      const zoom = this.exportSettings.backgroundZoom / 100;
+      let within;
+      if (zoom < 1) {
+        const canvas = this.screenToCanvas(canvasX, canvasY);
+        within = this.coordinateTransform.isWithinCanvasBounds(canvas.x, canvas.y);
+      } else {
+        within = this.isWithinImageBounds(canvasX, canvasY);
+      }
+      if (!within || !this.background.image) return;
+
+      const img = this.screenToImage(canvasX, canvasY);
+      const noRoute = this.waypoints.length === 0;
+      const items = [
+        {
+          label: 'Add waypoint here',
+          action: () => this.eventBus.emit('waypoint:add', { imgX: img.x, imgY: img.y, isMajor: true })
+        },
+        {
+          label: 'Add minor waypoint here',
+          disabled: noRoute,
+          disabledReason: noRoute ? 'Minor waypoints shape a leg — add a waypoint first' : undefined,
+          action: () => this.eventBus.emit('waypoint:add', { imgX: img.x, imgY: img.y, isMajor: false })
+        }
+      ];
+
+      this._contextMenu ||= new ContextMenu();
+      this._contextMenu.show({ x, y, items, ariaLabel: 'Canvas actions' });
+    });
+
+    /**
+     * waypoint:toggle-type - Convert major ↔ minor. Emitted by the T key
+     * since v2 but never handled until the 2026-08-18 context menu work.
+     * Type changes move pauses/labels/beacons in or out of the timeline,
+     * so duration must be recalculated alongside the path.
+     */
+    this.eventBus.on('waypoint:toggle-type', (waypoint) => {
+      if (!waypoint) return;
+      const majorsCount = this.waypoints.filter(wp => wp.isMajor).length;
+      if (waypoint.isMajor && majorsCount <= 1) {
+        this.announce('Cannot convert the only major waypoint to minor');
+        return;
+      }
+
+      waypoint.isMajor = !waypoint.isMajor;
+      this._majorWaypointsCache = null;
+      this.saveUndoState();
+
+      if (this.waypoints.length >= 2) {
+        this.calculatePath();
+      }
+      this.updateAnimationDuration();
+      // Re-run the selection pipeline so editor, list, and canvas all
+      // reflect the new type
+      this.eventBus.emit('waypoint:selected', waypoint);
+      this.autoSave();
+      this.queueRender();
+      this.announce(waypoint.isMajor ? 'Converted to major waypoint' : 'Converted to minor waypoint');
+    });
+
+    /**
+     * waypoint:insert-adjacent - Insert a new major waypoint next to an
+     * existing one (context menu). Positioned at the midpoint toward the
+     * neighbour on that side, or extended past the endpoint when there
+     * is none. waypoint:added handles undo/path/list/save.
+     */
+    this.eventBus.on('waypoint:insert-adjacent', ({ waypoint, where }) => {
+      const index = this.waypoints.indexOf(waypoint);
+      if (index === -1) return;
+
+      const neighbour = this.waypoints[where === 'before' ? index - 1 : index + 1];
+      let imgX, imgY;
+      if (neighbour) {
+        imgX = (waypoint.imgX + neighbour.imgX) / 2;
+        imgY = (waypoint.imgY + neighbour.imgY) / 2;
+      } else {
+        // Endpoint: continue the route's direction by ~8% of the image,
+        // clamped inside it; a single-waypoint route offsets rightward
+        const ref = this.waypoints[where === 'before' ? index + 1 : index - 1];
+        const dx = ref ? waypoint.imgX - ref.imgX : 1;
+        const dy = ref ? waypoint.imgY - ref.imgY : 0;
+        const len = Math.hypot(dx, dy) || 1;
+        const step = 0.08;
+        imgX = Math.min(1, Math.max(0, waypoint.imgX + (dx / len) * step));
+        imgY = Math.min(1, Math.max(0, waypoint.imgY + (dy / len) * step));
+      }
+
+      const newWp = Waypoint.createMajor(imgX, imgY);
+      newWp.copyPropertiesFrom(waypoint);
+      this.waypoints.splice(where === 'before' ? index : index + 1, 0, newWp);
+
+      this.eventBus.emit('waypoint:added', newWp);
+      this.eventBus.emit('waypoint:selected', newWp);
+      this.announce(where === 'before' ? 'Waypoint inserted before' : 'Waypoint inserted after');
+    });
+
+    /**
+     * waypoint:request-rename - Focus the waypoint's list row and start
+     * inline rename (context menu). Selection rebuilds the list, so the
+     * rename call is deferred a frame to target the fresh row.
+     */
+    this.eventBus.on('waypoint:request-rename', (waypoint) => {
+      if (this.selectedWaypoint !== waypoint) {
+        this.eventBus.emit('waypoint:selected', waypoint);
+      }
+      requestAnimationFrame(() => this.uiController?.startRenameFor(waypoint));
+    });
+
     // ========== VIDEO EXPORT EVENTS ==========
     
     /**

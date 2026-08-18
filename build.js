@@ -149,6 +149,7 @@ const staticFiles = [
   'styles/swatch-picker.css',
   'styles/tooltip.css',
   'styles/dropdown.css',
+  'styles/context-menu.css',
   'UoN_map.png',
   'UoN_map 24-bit.png'
 ];
