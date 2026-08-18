@@ -402,7 +402,8 @@ export const wiringControllersMixin = {
     
     // waypoint:name-changed - Waypoint renamed in list
     this.eventBus.on('waypoint:name-changed', ({ waypoint, name }) => {
-      // Name is already set on waypoint, just save
+      // Name is already set on waypoint by the rename input
+      this.saveUndoStateDebounced(); // Renames were not undoable before 2026-08-18
       this.autoSave();
     });
     

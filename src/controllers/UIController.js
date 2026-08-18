@@ -1259,27 +1259,92 @@ export class UIController {
   }
   
   /**
+   * Begin inline rename on the list row of a major waypoint.
+   * Looks the row up fresh by index in the current DOM, so it works
+   * after any list rebuild — selection rebuilds the rows, destroying
+   * closures over old elements (which is why the double-click and F2
+   * paths used to carry duplicated copies of this logic).
+   * Shared by double-click, F2, and the canvas context menu's Rename.
+   * @param {Waypoint} waypoint - Major waypoint to rename
+   */
+  startRenameFor(waypoint) {
+    const majors = this._listedMajors || [];
+    const index = majors.indexOf(waypoint);
+    if (index === -1 || !this.elements.waypointList) return;
+
+    const item = this.elements.waypointList.querySelector(
+      `.waypoint-item[data-original-index="${index}"]`
+    );
+    const rowBtn = item?.querySelector('.waypoint-row');
+    const currentTitle = item?.querySelector('.waypoint-title');
+    if (!item || !rowBtn || !currentTitle) return;
+
+    const defaultName = `Waypoint ${index + 1}`;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'waypoint-rename-input';
+    input.value = waypoint.name || '';
+    input.placeholder = defaultName;
+    input.setAttribute('aria-label', `Rename ${waypoint.name || defaultName}`);
+
+    currentTitle.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const finish = (commit) => {
+      const trimmed = input.value.trim();
+      if (commit) {
+        waypoint.name = trimmed; // Empty string = revert to default display
+        waypoint._autoNamed = false; // Manual rename breaks auto-name link to label
+      }
+      const restored = document.createElement('span');
+      restored.className = 'waypoint-title';
+      restored.textContent = waypoint.name || defaultName;
+      input.replaceWith(restored);
+      if (commit) {
+        this.eventBus.emit('waypoint:name-changed', { waypoint, name: trimmed });
+        // The list does not rebuild on rename — refresh the row's labels
+        const newDisplay = waypoint.name || defaultName;
+        const [moveUpBtn, moveDownBtn] = item.querySelectorAll('.waypoint-move-btn');
+        moveUpBtn?.setAttribute('aria-label', `Move ${newDisplay} up`);
+        moveDownBtn?.setAttribute('aria-label', `Move ${newDisplay} down`);
+        item.querySelector('.waypoint-delete')?.setAttribute('aria-label', `Delete ${newDisplay}`);
+      }
+      requestAnimationFrame(() => rowBtn.focus());
+    };
+
+    input.addEventListener('keydown', (ke) => {
+      if (ke.key === 'Enter') { ke.preventDefault(); finish(true); }
+      if (ke.key === 'Escape') { ke.preventDefault(); input.removeEventListener('blur', onBlur); finish(false); }
+      ke.stopPropagation(); // Don't trigger global shortcuts while renaming
+    });
+    const onBlur = () => finish(true);
+    input.addEventListener('blur', onBlur, { once: true });
+  }
+
+  /**
    * Update waypoint list UI
-   * 
+   *
    * ## Structure
    * 1. "All Waypoints" item (distinct styling, always at top)
    * 2. Individual waypoint items (renamable, draggable, deletable)
-   * 
+   *
    * ## Features
    * - Double-click waypoint name to rename
    * - Drag handle for reordering
    * - Delete button (×) for removal
    * - Click to select (updates editor panel)
-   * 
+   *
    * ## Performance
    * - O(n) where n = major waypoints
    * - Uses pre-calculated _displayIndex from main.js
    * - Event listeners attached per-item (not delegation, for drag/drop support)
-   * 
+   *
    * @param {Array<Waypoint>} waypoints - Array of Waypoint objects
    */
   updateWaypointList(waypoints) {
     if (!this.elements.waypointList) return;
+    this._listedMajors = waypoints.filter(wp => wp.isMajor);
     
     // Set ARIA listbox role for proper screen reader semantics
     this.elements.waypointList.setAttribute('role', 'listbox');
@@ -1288,8 +1353,9 @@ export class UIController {
     
     this.elements.waypointList.innerHTML = '';
     
-    // Filter to major waypoints only (O(n) single pass)
-    const majorWaypoints = waypoints.filter(wp => wp.isMajor);
+    // Filter to major waypoints only (O(n) single pass, kept on the
+    // instance so startRenameFor can find a row after any rebuild)
+    const majorWaypoints = this._listedMajors;
     
     // When no waypoints exist, show empty state message
     if (majorWaypoints.length === 0) {
@@ -1313,10 +1379,13 @@ export class UIController {
     }
     
     // Row button - receives focus and handles selection
+    // (role=option like the waypoint rows — see comment there)
     const allRowBtn = document.createElement('button');
     allRowBtn.type = 'button';
     allRowBtn.className = 'waypoint-row';
+    allRowBtn.setAttribute('role', 'option');
     allRowBtn.setAttribute('aria-selected', this._allWaypointsSelected ? 'true' : 'false');
+    allItem.setAttribute('role', 'presentation');
     
     const allLabel = document.createElement('span');
     allLabel.className = 'waypoint-title';
@@ -1377,11 +1446,17 @@ export class UIController {
         item.classList.add('is-selected');
       }
       
-      // Row button - receives focus and handles selection
+      // Row button - receives focus and handles selection.
+      // role=option: the container is role=listbox, and aria-selected is
+      // only valid on option rows (review 2026-08-18); the li wrapper is
+      // presentational so the option is a direct child of the listbox
+      // in the accessibility tree.
       const rowBtn = document.createElement('button');
       rowBtn.type = 'button';
       rowBtn.className = 'waypoint-row';
+      rowBtn.setAttribute('role', 'option');
       rowBtn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+      item.setAttribute('role', 'presentation');
       
       // Colour dot — shows waypoint's marker colour for quick recognition (N6-1)
       const colorDot = document.createElement('span');
@@ -1497,59 +1572,6 @@ export class UIController {
         this.updateWaypointList(majorWaypoints);
       };
       
-      // Inline rename — replaces title span with a text input.
-      // Triggered by F2 (desktop convention) or double-click (Nielsen N7: flexibility).
-      // Enter/blur commits, Escape cancels. Focus returns to row button after.
-      const startInlineRename = () => {
-        // Find the current title span in the DOM (may be a freshly rebuilt element)
-        const currentTitle = item.querySelector('.waypoint-title');
-        if (!currentTitle) return;
-        
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'waypoint-rename-input';
-        input.value = waypoint.name || '';
-        input.placeholder = defaultName;
-        input.setAttribute('aria-label', `Rename ${displayName}`);
-        
-        currentTitle.replaceWith(input);
-        input.focus();
-        input.select();
-        
-        const commit = () => {
-          const trimmed = input.value.trim();
-          waypoint.name = trimmed; // Empty string = revert to default display
-          waypoint._autoNamed = false; // Manual rename breaks auto-name link to label
-          // Restore title span
-          const newTitle = document.createElement('span');
-          newTitle.className = 'waypoint-title';
-          newTitle.textContent = trimmed || defaultName;
-          input.replaceWith(newTitle);
-          this.eventBus.emit('waypoint:name-changed', { waypoint, name: trimmed });
-          // Update aria-labels to reflect new name
-          const newDisplay = trimmed || defaultName;
-          moveUpBtn.setAttribute('aria-label', `Move ${newDisplay} up`);
-          moveDownBtn.setAttribute('aria-label', `Move ${newDisplay} down`);
-          delBtn.setAttribute('aria-label', `Delete ${newDisplay}`);
-          requestAnimationFrame(() => rowBtn.focus());
-        };
-        
-        const cancel = () => {
-          const restoreTitle = document.createElement('span');
-          restoreTitle.className = 'waypoint-title';
-          restoreTitle.textContent = waypoint.name || defaultName;
-          input.replaceWith(restoreTitle);
-          requestAnimationFrame(() => rowBtn.focus());
-        };
-        
-        input.addEventListener('keydown', (ke) => {
-          if (ke.key === 'Enter') { ke.preventDefault(); commit(); }
-          if (ke.key === 'Escape') { ke.preventDefault(); cancel(); }
-          ke.stopPropagation(); // Don't trigger global shortcuts while renaming
-        });
-        input.addEventListener('blur', commit, { once: true });
-      };
-      
       // Row button click — selects waypoint, and detects double-click for rename.
       // Standard dblclick events break because selectWaypoint rebuilds the DOM
       // (innerHTML=''), so the element is destroyed before the browser fires dblclick.
@@ -1565,56 +1587,7 @@ export class UIController {
           this._renameLastClickTime = 0;
           selectWaypoint(e);
           // Defer rename to next frame so the rebuilt DOM is ready
-          requestAnimationFrame(() => {
-            // Find the freshly rebuilt item for this waypoint
-            const items = this.elements.waypointList.querySelectorAll('.waypoint-item');
-            for (const li of items) {
-              const idx = li.dataset.originalIndex;
-              if (idx !== undefined && majorWaypoints[parseInt(idx)] === waypoint) {
-                // Call startInlineRename in the context of the new item
-                const newTitle = li.querySelector('.waypoint-title');
-                const newRowBtn = li.querySelector('.waypoint-row');
-                if (!newTitle || !newRowBtn) break;
-                
-                const renameInput = document.createElement('input');
-                renameInput.type = 'text';
-                renameInput.className = 'waypoint-rename-input';
-                renameInput.value = waypoint.name || '';
-                renameInput.placeholder = defaultName;
-                renameInput.setAttribute('aria-label', `Rename ${waypoint.name || defaultName}`);
-                
-                newTitle.replaceWith(renameInput);
-                renameInput.focus();
-                renameInput.select();
-                
-                const doCommit = () => {
-                  const trimmed = renameInput.value.trim();
-                  waypoint.name = trimmed;
-                  waypoint._autoNamed = false;
-                  const restored = document.createElement('span');
-                  restored.className = 'waypoint-title';
-                  restored.textContent = trimmed || defaultName;
-                  renameInput.replaceWith(restored);
-                  this.eventBus.emit('waypoint:name-changed', { waypoint, name: trimmed });
-                  requestAnimationFrame(() => newRowBtn.focus());
-                };
-                const doCancel = () => {
-                  const restored = document.createElement('span');
-                  restored.className = 'waypoint-title';
-                  restored.textContent = waypoint.name || defaultName;
-                  renameInput.replaceWith(restored);
-                  requestAnimationFrame(() => newRowBtn.focus());
-                };
-                renameInput.addEventListener('keydown', (ke) => {
-                  if (ke.key === 'Enter') { ke.preventDefault(); doCommit(); }
-                  if (ke.key === 'Escape') { ke.preventDefault(); doCancel(); }
-                  ke.stopPropagation();
-                });
-                renameInput.addEventListener('blur', doCommit, { once: true });
-                break;
-              }
-            }
-          });
+          requestAnimationFrame(() => this.startRenameFor(waypoint));
         } else {
           // Single click — normal selection
           this._renameLastClickWaypoint = waypoint;
@@ -1622,13 +1595,14 @@ export class UIController {
           selectWaypoint(e);
         }
       });
-      
-      // F2 to rename (common desktop pattern)
+
+      // F2 to rename (common desktop pattern). Deferred like double-click:
+      // selectWaypoint rebuilds the list, so rename must target the new row
       rowBtn.addEventListener('keydown', (e) => {
         if (e.key === 'F2') {
           e.preventDefault();
           selectWaypoint(e);
-          startInlineRename();
+          requestAnimationFrame(() => this.startRenameFor(waypoint));
         }
       });
       
