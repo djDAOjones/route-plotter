@@ -443,7 +443,11 @@ export const wiringControllersMixin = {
       if (needsDurationRecalc) {
         this.updateAnimationDuration();
       }
-      
+
+      // Bulk edits are undoable like any other edit — the "cannot be
+      // undone" modal copy predates this snapshot (review 2026-08-18)
+      this.saveUndoState();
+      this.updateWaypointList(); // Sync sidebar rows (e.g. bulk colour change)
       this.autoSave();
       this.queueRender();
     });

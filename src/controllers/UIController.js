@@ -7,6 +7,7 @@ import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT } from '../config/constant
 import { getInlineHelpHTML, getSplashHelpHTML } from '../config/helpContent.js';
 import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
+import { sliderToPathWidth } from '../utils/pathWidthScale.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 
 /**
@@ -465,24 +466,20 @@ export class UIController {
   }
   
   /**
-   * Emit a waypoint property change, handling both single and "all" modes
-   * @param {string} eventName - Event name to emit for single waypoint
+   * Emit a bulk waypoint property change in "All Waypoints" mode.
+   * Single-selection edits are owned by the app's DOM wiring
+   * (setupEventListeners), which mutates the waypoint and emits the
+   * style/path event itself — emitting here too double-fired every
+   * render/undo/autosave per input event (review 2026-08-18).
    * @param {string} property - Property name being changed
-   * @param {*} value - New value
+   * @param {*} value - New value (already converted to model units)
    * @private
    */
-  _emitWaypointChange(eventName, property, value) {
+  _emitBulkWaypointChange(property, value) {
     if (this._allWaypointsSelected) {
       // "All Waypoints" mode - show warning on first change
       this._confirmAllWaypointsChange(() => {
         this.eventBus.emit('waypoint:all-change', { property, value });
-      });
-    } else if (this.selectedWaypoint) {
-      // Single waypoint mode
-      this.eventBus.emit(eventName, {
-        waypoint: this.selectedWaypoint,
-        property,
-        value
       });
     }
   }
@@ -986,68 +983,65 @@ export class UIController {
    * Setup waypoint editor controls
    */
   setupWaypointEditorControls() {
+    // These listeners serve only the "All Waypoints" bulk mode. The
+    // single-selection path — model mutation, unit conversion, value
+    // readouts, per-control side effects — is owned by the app's DOM
+    // wiring (setupEventListeners); duplicating it here double-fired
+    // events and let a raw slider integer clobber the thickness readout
+    // (review 2026-08-18).
+
     // Marker style - supports "all waypoints" mode
     this.elements.markerStyle?.addEventListener('change', (e) => {
-      this._emitWaypointChange('waypoint:style-changed', 'markerStyle', e.target.value);
+      this._emitBulkWaypointChange('markerStyle', e.target.value);
     });
-    
+
     this.elements.dotColor?.addEventListener('input', (e) => {
-      this._emitWaypointChange('waypoint:style-changed', 'dotColor', e.target.value);
+      this._emitBulkWaypointChange('dotColor', e.target.value);
     });
-    
+
     this.elements.dotSize?.addEventListener('input', (e) => {
-      const size = parseInt(e.target.value);
-      this.elements.dotSizeValue.textContent = size;
-      this._emitWaypointChange('waypoint:style-changed', 'dotSize', size);
+      this._emitBulkWaypointChange('dotSize', parseInt(e.target.value));
     });
-    
+
     // Segment properties - supports "all waypoints" mode
     this.elements.segmentColor?.addEventListener('input', (e) => {
-      this._emitWaypointChange('waypoint:path-property-changed', 'segmentColor', e.target.value);
+      this._emitBulkWaypointChange('segmentColor', e.target.value);
     });
-    
+
     this.elements.segmentWidth?.addEventListener('input', (e) => {
-      const width = parseInt(e.target.value);
-      this.elements.segmentWidthValue.textContent = width;
-      this._emitWaypointChange('waypoint:path-property-changed', 'segmentWidth', width);
+      // Convert to real width — bulk writes previously stored the raw
+      // 0-1000 slider integer on every major waypoint
+      this._emitBulkWaypointChange('segmentWidth', sliderToPathWidth(parseFloat(e.target.value)));
     });
-    
+
     this.elements.segmentStyle?.addEventListener('change', (e) => {
-      this._emitWaypointChange('waypoint:path-property-changed', 'segmentStyle', e.target.value);
+      this._emitBulkWaypointChange('segmentStyle', e.target.value);
     });
-    
+
     // Path shape - supports "all waypoints" mode
     this.elements.pathShape?.addEventListener('change', (e) => {
-      this._emitWaypointChange('waypoint:path-property-changed', 'pathShape', e.target.value);
+      this._emitBulkWaypointChange('pathShape', e.target.value);
     });
-    
+
     // Beacon style - supports "all waypoints" mode
     // Beacon types: none, ripple, glow, pop, grow, pulse
     // Beacon color is derived from marker color (dotColor)
     this.elements.editorBeaconStyle?.addEventListener('change', (e) => {
-      this._emitWaypointChange('waypoint:style-changed', 'beaconStyle', e.target.value);
+      this._emitBulkWaypointChange('beaconStyle', e.target.value);
       // Update conditional visibility for beacon-specific controls (ripple, pulse)
       updateConditionalVisibility('editor-beacon-style', e.target.value);
     });
-    
-    // Label controls - label text only for single waypoint (hidden in "all" mode)
-    this.elements.waypointLabel?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint) {
-        this.eventBus.emit('waypoint:style-changed', {
-          waypoint: this.selectedWaypoint,
-          property: 'label',
-          value: e.target.value
-        });
-      }
-    });
-    
+
+    // Label text is single-waypoint only (hidden in "all" mode) and fully
+    // handled by the app's DOM wiring — no bulk listener needed.
+
     // Label mode and position - supports "all waypoints" mode
     this.elements.labelMode?.addEventListener('change', (e) => {
-      this._emitWaypointChange('waypoint:style-changed', 'labelMode', e.target.value);
+      this._emitBulkWaypointChange('labelMode', e.target.value);
     });
-    
+
     this.elements.labelPosition?.addEventListener('change', (e) => {
-      this._emitWaypointChange('waypoint:style-changed', 'labelPosition', e.target.value);
+      this._emitBulkWaypointChange('labelPosition', e.target.value);
     });
     
     // Pause time - power-curve slider (0-30 seconds)

@@ -20,6 +20,7 @@ import { exportingMixin } from '../src/app/exporting.js';
 import { editorPanelMixin } from '../src/app/editorPanel.js';
 import { pointerMixin } from '../src/app/pointer.js';
 import { snapToAngle } from '../src/utils/snapToAngle.js';
+import { sliderToPathWidth, pathWidthToSlider } from '../src/utils/pathWidthScale.js';
 
 const MIXINS = {
   wiringDomMixin,
@@ -103,6 +104,32 @@ describe('snapToAngle', () => {
     const target = snapToAngle(0, 0, Math.cos(rad40) * 3, Math.sin(rad40) * 3, 90);
     expect(target.x).toBeCloseTo(3, 10);
     expect(target.y).toBeCloseTo(0, 10);
+  });
+});
+
+describe('pathWidthScale', () => {
+  test('slider endpoints map to the width range', () => {
+    expect(sliderToPathWidth(0)).toBeCloseTo(1, 10);
+    expect(sliderToPathWidth(1000)).toBeCloseTo(40, 10);
+  });
+
+  test('round-trips width → slider → width', () => {
+    for (const width of [1, 3, 7.5, 12, 40]) {
+      expect(sliderToPathWidth(pathWidthToSlider(width))).toBeCloseTo(width, 1);
+    }
+  });
+
+  test('out-of-range values clamp', () => {
+    expect(sliderToPathWidth(-100)).toBe(1);
+    expect(sliderToPathWidth(5000)).toBe(40);
+    expect(pathWidthToSlider(400)).toBe(1000);
+    expect(pathWidthToSlider(0)).toBe(0);
+  });
+
+  test('a raw slider integer is not a width (bulk-write regression pin)', () => {
+    // Review 2026-08-18: bulk "apply to all" stored the raw slider value
+    // (e.g. 333) as segmentWidth instead of converting to 1-40 px.
+    expect(sliderToPathWidth(333)).toBeCloseTo(3.42, 2);
   });
 });
 

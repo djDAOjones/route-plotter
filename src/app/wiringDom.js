@@ -349,6 +349,15 @@ export const wiringDomMixin = {
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
+    // Label position - visual only. Was wired only through UIController's
+    // bulk path, so single-selection changes never reached the model
+    // (review 2026-08-18)
+    this.elements.labelPosition?.addEventListener('change', (e) => {
+      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
+        this.selectedWaypoint.labelPosition = e.target.value;
+        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+      }
+    });
     // Label size with WCAG warning
     this.elements.labelSize?.addEventListener('input', (e) => {
       if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {

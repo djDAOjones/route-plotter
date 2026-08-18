@@ -8,6 +8,7 @@
  */
 import { TEXT_LABEL, TEXT_VISIBILITY } from '../config/constants.js';
 import { BEACON_TIMING } from '../services/BeaconRenderer.js';
+import { sliderToPathWidth, pathWidthToSlider } from '../utils/pathWidthScale.js';
 
 export const editorPanelMixin = {
   
@@ -42,15 +43,9 @@ export const editorPanelMixin = {
    * @private
    */
   _sliderToPathWidth(sliderValue) {
-    const minWidth = 1;
-    const maxWidth = 40;
-    // Log scale: width = minWidth * (maxWidth/minWidth)^(slider/1000)
-    // This gives: 0 -> 1, 1000 -> 40
-    const ratio = sliderValue / 1000;
-    const width = minWidth * Math.pow(maxWidth / minWidth, ratio);
-    return Math.max(minWidth, Math.min(maxWidth, width));
+    return sliderToPathWidth(sliderValue);
   },
-  
+
   /**
    * Convert path width (1-40) to slider value (0-1000)
    * Inverse of _sliderToPathWidth
@@ -59,13 +54,7 @@ export const editorPanelMixin = {
    * @private
    */
   _pathWidthToSlider(width) {
-    const minWidth = 1;
-    const maxWidth = 40;
-    // Clamp width to valid range
-    const clampedWidth = Math.max(minWidth, Math.min(maxWidth, width));
-    // Inverse of log scale: slider = 1000 * log(width/minWidth) / log(maxWidth/minWidth)
-    const ratio = Math.log(clampedWidth / minWidth) / Math.log(maxWidth / minWidth);
-    return Math.round(ratio * 1000);
+    return pathWidthToSlider(width);
   },
   
   /**
