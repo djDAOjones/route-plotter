@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 15712,
+      "bytes": 15956,
       "imports": [],
       "format": "esm"
     },
@@ -212,7 +212,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 97011,
+      "bytes": 98104,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -258,7 +258,7 @@
       "format": "esm"
     },
     "src/services/SwarmEngine.js": {
-      "bytes": 18339,
+      "bytes": 18475,
       "imports": [
         {
           "path": "src/services/PathCalculator.js",
@@ -2448,7 +2448,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 92882,
+      "bytes": 94496,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2484,7 +2484,7 @@
       "format": "esm"
     },
     "src/handlers/InteractionHandler.js": {
-      "bytes": 29357,
+      "bytes": 32910,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2505,7 +2505,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 14582,
+      "bytes": 16439,
       "imports": [],
       "format": "esm"
     },
@@ -2516,6 +2516,22 @@
           "path": "src/config/constants.js",
           "kind": "import-statement",
           "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/snapToAngle.js": {
+      "bytes": 1046,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/services/NetworkEditService.js": {
+      "bytes": 29817,
+      "imports": [
+        {
+          "path": "src/utils/snapToAngle.js",
+          "kind": "import-statement",
+          "original": "../utils/snapToAngle.js"
         }
       ],
       "format": "esm"
@@ -2652,11 +2668,6 @@
       ],
       "format": "esm"
     },
-    "src/utils/snapToAngle.js": {
-      "bytes": 1046,
-      "imports": [],
-      "format": "esm"
-    },
     "src/app/wiringBus.js": {
       "bytes": 12705,
       "imports": [
@@ -2715,7 +2726,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 7625,
+      "bytes": 7664,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2858,7 +2869,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 16296,
+      "bytes": 16582,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -2873,8 +2884,29 @@
       ],
       "format": "esm"
     },
+    "src/app/network.js": {
+      "bytes": 17066,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "../config/keybindings.js"
+        },
+        {
+          "path": "src/utils/segmentHitTest.js",
+          "kind": "import-statement",
+          "original": "../utils/segmentHitTest.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/main.js": {
-      "bytes": 46724,
+      "bytes": 47169,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2955,6 +2987,11 @@
           "path": "src/services/AreaDrawingService.js",
           "kind": "import-statement",
           "original": "./services/AreaDrawingService.js"
+        },
+        {
+          "path": "src/services/NetworkEditService.js",
+          "kind": "import-statement",
+          "original": "./services/NetworkEditService.js"
         },
         {
           "path": "src/services/AreaEditService.js",
@@ -3065,6 +3102,11 @@
           "path": "src/app/crowds.js",
           "kind": "import-statement",
           "original": "./app/crowds.js"
+        },
+        {
+          "path": "src/app/network.js",
+          "kind": "import-statement",
+          "original": "./app/network.js"
         }
       ],
       "format": "esm"
@@ -3075,7 +3117,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2576424
+      "bytes": 2662315
     },
     "docs/app.js": {
       "imports": [],
@@ -3086,7 +3128,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 3852
+          "bytesInOutput": 3927
         },
         "src/models/GraphNode.js": {
           "bytesInOutput": 607
@@ -3149,10 +3191,10 @@
           "bytesInOutput": 3381
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 25917
+          "bytesInOutput": 26281
         },
         "src/services/SwarmEngine.js": {
-          "bytesInOutput": 5077
+          "bytesInOutput": 5074
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 998
@@ -3251,19 +3293,25 @@
           "bytesInOutput": 10229
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 39665
+          "bytesInOutput": 40647
         },
         "src/handlers/InteractionHandler.js": {
-          "bytesInOutput": 11447
+          "bytesInOutput": 12933
         },
         "src/services/UndoService.js": {
           "bytesInOutput": 1028
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 5754
+          "bytesInOutput": 6737
         },
         "src/services/AreaDrawingService.js": {
           "bytesInOutput": 4920
+        },
+        "src/utils/snapToAngle.js": {
+          "bytesInOutput": 191
+        },
+        "src/services/NetworkEditService.js": {
+          "bytesInOutput": 12485
         },
         "src/services/AreaEditService.js": {
           "bytesInOutput": 3231
@@ -3301,9 +3349,6 @@
         "src/models/Waypoint.js": {
           "bytesInOutput": 7092
         },
-        "src/utils/snapToAngle.js": {
-          "bytesInOutput": 191
-        },
         "src/app/wiringBus.js": {
           "bytesInOutput": 4144
         },
@@ -3314,7 +3359,7 @@
           "bytesInOutput": 17850
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 3508
+          "bytesInOutput": 3542
         },
         "src/app/playback.js": {
           "bytesInOutput": 4159
@@ -3341,13 +3386,16 @@
           "bytesInOutput": 887
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 8545
+          "bytesInOutput": 8633
+        },
+        "src/app/network.js": {
+          "bytesInOutput": 7269
         },
         "src/main.js": {
-          "bytesInOutput": 22801
+          "bytesInOutput": 22954
         }
       },
-      "bytes": 637790
+      "bytes": 661706
     }
   }
 }

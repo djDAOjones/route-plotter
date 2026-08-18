@@ -6,7 +6,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Route Plotter v3.1.605</title>
+  <title>Route Plotter v3.1.608</title>
   <link rel="stylesheet" href="styles/tokens.css?v=470">
   <link rel="stylesheet" href="styles/main.css?v=470">
   <link rel="stylesheet" href="styles/swatch-picker.css?v=470">
@@ -858,10 +858,12 @@
                 <span data-tip="What the dots travel along">Guide</span>
                 <select id="crowd-guide-type">
                   <option value="route">Follow route</option>
-                  <option value="graph" disabled>Custom network (coming with network editing)</option>
+                  <option value="graph">Custom network</option>
                 </select>
               </label>
-              <p class="section-hint">Dots follow your route. Drawing a custom network arrives with network editing.</p>
+              <button id="network-edit-btn" class="btn btn-secondary" type="button" hidden
+                      title="Draw the network this crowd walks: nodes joined by edges">Edit network</button>
+              <p class="section-hint" id="crowd-guide-hint">Dots follow your route. Custom network lets you draw paths of their own.</p>
             </div>
           </div>
 
@@ -953,6 +955,67 @@
           </div>
 
           </div><!-- /crowd-scope -->
+
+          <!-- ============================================================
+               NODE SCOPE (Phase 4) - shown while network editing when a
+               network node is selected. One card: what this node does.
+               ============================================================ -->
+          <div id="node-scope" class="scope-group" hidden>
+
+          <div class="settings-section" data-section="node">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-node-content">
+              <h2 class="section-title">Node</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-node-content" class="section-content">
+              <label for="network-node-type">
+                <span data-tip="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward">Type</span>
+                <select id="network-node-type">
+                  <option value="normal">Pass-through</option>
+                  <option value="entry">Entry</option>
+                  <option value="exit">Exit</option>
+                </select>
+              </label>
+              <p class="section-hint">Dots appear at entries and finish at exits. T cycles the type; drag to move; Shift-click deletes.</p>
+              <button id="network-node-delete" class="btn btn-secondary" type="button">Delete node</button>
+            </div>
+          </div>
+
+          </div><!-- /node-scope -->
+
+          <!-- ============================================================
+               EDGE SCOPE (Phase 4) - shown while network editing when a
+               network edge is selected: direction and traffic share.
+               ============================================================ -->
+          <div id="edge-scope" class="scope-group" hidden>
+
+          <div class="settings-section" data-section="edge">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-edge-content">
+              <h2 class="section-title">Edge</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-edge-content" class="section-content">
+              <label for="network-edge-direction">
+                <span data-tip="Two-way edges carry dots in both directions; one-way edges only from their start node">Direction</span>
+                <select id="network-edge-direction">
+                  <option value="two-way">Two-way</option>
+                  <option value="one-way">One-way</option>
+                </select>
+              </label>
+              <button id="network-edge-swap" class="btn btn-secondary" type="button" hidden
+                      title="Reverse which way this one-way edge carries dots">Swap direction</button>
+
+              <label for="network-edge-weight">
+                <span data-tip="How strongly dots prefer this edge at a junction, shown as the share of departures that pick it">Traffic</span>
+                <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1">
+                <span id="network-edge-weight-value">100% of departures</span>
+              </label>
+              <p class="section-hint">Share of dots leaving each end that choose this edge. Drag the edge to bend it; Shift-click deletes.</p>
+              <button id="network-edge-delete" class="btn btn-secondary" type="button">Delete edge</button>
+            </div>
+          </div>
+
+          </div><!-- /edge-scope -->
 
         </div>
       </aside>
@@ -1054,6 +1117,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.1.605"></script>
+  <script src="app.js?v=3.1.608"></script>
 </body>
 </html>

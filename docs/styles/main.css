@@ -2391,6 +2391,11 @@ kbd{
 }
 
 /* Buttons - increased horizontal padding per spec §2.1A (+20-30%) */
+/* display:inline-flex would defeat the hidden attribute (same rule the
+   scope groups need) — Edit network / Swap direction toggle with state */
+.btn[hidden]{
+  display:none;
+}
 .btn{
   display:inline-flex;
   align-items:center;
