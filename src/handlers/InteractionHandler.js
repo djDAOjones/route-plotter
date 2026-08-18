@@ -57,9 +57,18 @@ export class InteractionHandler {
     
     /** @type {boolean} Whether an area edit drag is in progress */
     this.isEditingArea = false;
-    
+
     /** @type {boolean} Whether an area edit drag just completed (suppresses click) */
     this._areaEditJustEnded = false;
+
+    /** @type {boolean} Whether network edit mode is active (Phase 4) */
+    this.isEditingNetwork = false;
+
+    /** @type {{x: number, y: number}|null} Mousedown position during network mode */
+    this._netMouseDown = null;
+
+    /** @type {boolean} Whether the current network press became a drag */
+    this._netDragStarted = false;
 
     /** @type {string|null} What the pointer is idle-hovering ('waypoint'|'area-handle'|'leg'|'leg-plus') */
     this._hoverKind = null;
@@ -82,6 +91,15 @@ export class InteractionHandler {
       } else {
         this.canvas.style.cursor = '';
       }
+    });
+
+    // Network edit mode intercepts the canvas the same way (Phase 4)
+    this.eventBus.on('network:edit-mode-changed', ({ active }) => {
+      this.isEditingNetwork = active;
+      this._netMouseDown = null;
+      this._netDragStarted = false;
+      this._clearHover();
+      this.canvas.style.cursor = active ? 'crosshair' : '';
     });
     
     // Bind methods
@@ -163,10 +181,18 @@ export class InteractionHandler {
   handleMouseDown(event) {
     // Block drag initiation during area draw mode
     if (this.isDrawingArea) return;
-    
+
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
+
+    // Network edit mode: record the press; mousemove promotes it to a
+    // drag past the threshold, click handles it otherwise
+    if (this.isEditingNetwork) {
+      this._netMouseDown = { x, y };
+      this._netDragStarted = false;
+      return;
+    }
     
     // Check if clicking on an area highlight handle (before waypoint check)
     this.eventBus.emit('area:check-handle', { screenX: x, screenY: y }, (hit) => {
@@ -240,7 +266,33 @@ export class InteractionHandler {
       });
       return;
     }
-    
+
+    // Network edit mode: button held = drag pipeline (past the same
+    // threshold rule as everything else), idle = hover pipeline
+    if (this.isEditingNetwork) {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const shiftKey = !!event.shiftKey;
+      if (this._netMouseDown) {
+        if (!this._netDragStarted) {
+          const moved = Math.hypot(x - this._netMouseDown.x, y - this._netMouseDown.y);
+          if (moved > INTERACTION.DRAG_THRESHOLD) {
+            this._netDragStarted = true;
+            this.eventBus.emit('network:drag-start', {
+              x: this._netMouseDown.x, y: this._netMouseDown.y, shiftKey
+            });
+          }
+        }
+        if (this._netDragStarted) {
+          this.eventBus.emit('network:drag-move', { x, y, shiftKey });
+        }
+      } else {
+        this._queueHoverTest(x, y);
+      }
+      return;
+    }
+
     // Idle move (no drag in progress): hover affordance hit-testing
     if (!this.isDragging) {
       const rect = this.canvas.getBoundingClientRect();
@@ -288,6 +340,15 @@ export class InteractionHandler {
    * @param {MouseEvent} event
    */
   handleMouseUp(event) {
+    // End a network drag; a plain press falls through to the click event
+    if (this.isEditingNetwork) {
+      if (this._netDragStarted) {
+        this.eventBus.emit('network:drag-end');
+      }
+      this._netMouseDown = null;
+      return;
+    }
+
     // End area edit drag
     if (this.isEditingArea) {
       this.isEditingArea = false;
@@ -329,6 +390,22 @@ export class InteractionHandler {
       return;
     }
     
+    // Intercept clicks during network edit mode (a completed drag
+    // suppresses its trailing click, same rule as waypoint drags)
+    if (this.isEditingNetwork) {
+      if (this._netDragStarted) {
+        this._netDragStarted = false;
+        return;
+      }
+      const rect = this.canvas.getBoundingClientRect();
+      this.eventBus.emit('network:click', {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+        shiftKey: !!event.shiftKey
+      });
+      return;
+    }
+
     // Intercept clicks during area polygon draw mode
     if (this.isDrawingArea) {
       const rect = this.canvas.getBoundingClientRect();
@@ -491,7 +568,9 @@ export class InteractionHandler {
     this._hoverRaf = requestAnimationFrame(() => {
       this._hoverRaf = null;
       if (!this._hoverPos || this.isDragging || this.isEditingArea || this.isDrawingArea) return;
-      this.eventBus.emit('canvas:hover-move', this._hoverPos, (kind) => {
+      // Network mode answers its own hover cascade; both drive the cursor
+      const hoverEvent = this.isEditingNetwork ? 'network:hover-move' : 'canvas:hover-move';
+      this.eventBus.emit(hoverEvent, this._hoverPos, (kind) => {
         this._hoverKind = kind || null;
         this._refreshCursor();
       });
@@ -510,6 +589,7 @@ export class InteractionHandler {
       this._refreshCursor();
     }
     this.eventBus.emit('canvas:hover-clear');
+    if (this.isEditingNetwork) this.eventBus.emit('network:hover-clear');
   }
 
   /**
@@ -546,6 +626,13 @@ export class InteractionHandler {
   _refreshCursor() {
     if (this.isDrawingArea) {
       this._setCursor('crosshair');
+      return;
+    }
+
+    // Network mode: the pen is the tool — pointer over its targets,
+    // crosshair otherwise; modifier cursors don't apply
+    if (this.isEditingNetwork) {
+      this._setCursor(this._hoverKind ? 'pointer' : 'crosshair');
       return;
     }
 
@@ -602,7 +689,15 @@ export class InteractionHandler {
     const key = event.key.toLowerCase();
     const shift = event.shiftKey;
     const ctrl = event.ctrlKey || event.metaKey;
-    
+
+    // During network edit mode the pen owns waypoint-shaped shortcuts
+    // (its own keys — Esc/Delete/T — are handled by the service on the
+    // capture phase; playback, zoom and undo stay live)
+    if (this.isEditingNetwork &&
+        (key === 'a' || key === 'tab' || (ctrl && key === 'd'))) {
+      return;
+    }
+
     // Animation controls
     if (key === ' ') {
       event.preventDefault();
@@ -830,6 +925,9 @@ export class InteractionHandler {
    * @param {MouseEvent} event
    */
   handleContextMenu(event) {
+    // The network pen owns the canvas; no context menu during the mode
+    if (this.isEditingNetwork) return;
+
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;

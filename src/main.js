@@ -151,6 +151,7 @@ import { getSplashHelpHTML } from './config/helpContent.js';
 import { UndoService } from './services/UndoService.js';
 import { SectionController } from './controllers/SectionController.js';
 import { AreaDrawingService } from './services/AreaDrawingService.js';
+import { NetworkEditService } from './services/NetworkEditService.js';
 import { AreaEditService } from './services/AreaEditService.js';
 import { getInlineHelpHTML } from './config/helpContent.js';
 import { attachSwatchPickers } from './components/SwatchPicker.js';
@@ -175,6 +176,7 @@ import { exportingMixin } from './app/exporting.js';
 import { editorPanelMixin } from './app/editorPanel.js';
 import { pointerMixin } from './app/pointer.js';
 import { crowdsMixin } from './app/crowds.js';
+import { networkMixin } from './app/network.js';
 
 // Main application class for Route Plotter v3
 class RoutePlotter {
@@ -603,6 +605,9 @@ class RoutePlotter {
     
     // Initialize Area Drawing Service for polygon draw mode
     this.areaDrawingService = new AreaDrawingService(this.eventBus);
+
+    // Initialize Network Edit Service for crowd guide-network editing
+    this.networkEditService = new NetworkEditService(this.eventBus);
     
     // Initialize Area Edit Service for repositioning/vertex editing
     this.areaEditService = new AreaEditService(this.eventBus);
@@ -630,6 +635,9 @@ class RoutePlotter {
     // Layers strip + Crowd scope wiring (Phase 4)
     this.setupCrowdControls();
     this.updateLayersStrip();
+
+    // Network edit mode wiring (Phase 4)
+    this.setupNetworkControls();
     
     // Initialize tooltips for all elements with data-tooltip attribute
     attachAllTooltips();
@@ -947,6 +955,8 @@ class RoutePlotter {
       // Flow layers + their deterministic evaluator (drawn beneath the hero route)
       scene: this.scene,
       swarmEngine: this.swarmEngine,
+      selectedCrowd: this.selectedCrowd,
+      networkEditService: this.networkEditService,
       
       // Animation state
       animationEngine: this.animationEngine,
@@ -1121,6 +1131,7 @@ Object.assign(
   editorPanelMixin,
   pointerMixin,
   crowdsMixin,
+  networkMixin,
 );
 
 // Initialize app when DOM is ready

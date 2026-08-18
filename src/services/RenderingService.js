@@ -1058,6 +1058,22 @@ export class RenderingService {
       },
     },
     {
+      // Guide network of the selected graph-guided crowd (Phase 4) —
+      // authoring scaffolding, so edit mode only, and beneath the dots
+      // that ride it. During network edit mode the bound layer draws
+      // even while selection events are still settling.
+      name: 'network-guide',
+      draw(svc, ctx, state, frame) {
+        if (state.previewMode || !state.networkEditService || !state.swarmEngine) return;
+        const net = state.networkEditService;
+        const layer = net.active
+          ? net.layer
+          : (state.selectedCrowd?.guideType === 'graph' ? state.selectedCrowd : null);
+        if (!layer) return;
+        net.renderGuide(svc, ctx, state, layer);
+      },
+    },
+    {
       // Flow-layer swarms (Phase 3) — beneath the hero route, above area
       // highlights. Scene order: layer index 0 draws bottom-most.
       name: 'flow-layers',
@@ -1140,6 +1156,15 @@ export class RenderingService {
       draw(svc, ctx, state, frame) {
         if (state.previewMode || !state.hover) return;
         svc.renderHoverAffordances(ctx, state);
+      },
+    },
+    {
+      // Network edit affordances: pen ring + preview line, hover and
+      // selection rings, control handles (mode only, above hover rings)
+      name: 'network-edit-overlay',
+      draw(svc, ctx, state, frame) {
+        if (state.previewMode || !state.networkEditService?.active) return;
+        state.networkEditService.renderOverlay(svc, ctx, state);
       },
     },
     {

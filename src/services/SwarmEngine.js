@@ -293,7 +293,7 @@ export class SwarmEngine {
       }
 
       const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
-      const edgeGeom = this._edgeGeometry(graph, traversal.edge);
+      const edgeGeom = this.edgeGeometry(graph, traversal.edge);
       if (edgeGeom.length <= 0) {
         node = graph.getNode(traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId);
         cameFromEdgeId = traversal.edge.id;
@@ -339,7 +339,7 @@ export class SwarmEngine {
       if (atExit || candidates.length === 0) break;
 
       const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
-      const edgeGeom = this._edgeGeometry(graph, traversal.edge);
+      const edgeGeom = this.edgeGeometry(graph, traversal.edge);
       if (edgeGeom.length > 0) {
         journey.push({ points: edgeGeom.points, length: edgeGeom.length, reversed: traversal.reversed });
         journeyLength += edgeGeom.length;
@@ -409,11 +409,12 @@ export class SwarmEngine {
   /**
    * Derived polyline for a graph edge — one PathCalculator instance per
    * edge (backlog Phase 3), rebuilt only when the edge's geometry
-   * signature changes.
-   * @private
+   * signature changes. Public since Phase 4: network editing renders and
+   * hit-tests edges through the same cache, so the drawn curve is exactly
+   * the curve dots travel.
    * @returns {{points: Array, length: number}}
    */
-  _edgeGeometry(graph, edge) {
+  edgeGeometry(graph, edge) {
     const source = graph.getNode(edge.sourceId);
     const target = graph.getNode(edge.targetId);
     const sig = [

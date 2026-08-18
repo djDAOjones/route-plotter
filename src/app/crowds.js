@@ -79,6 +79,9 @@ export const crowdsMixin = {
       if (!this.selectedCrowd) return;
       this.selectedCrowd.setGuideType(e.target.value);
       this.eventBus.emit('crowd:param-changed');
+      // The network mixin reacts: empty-network crowds go straight into
+      // network editing; switching back to route closes the mode
+      this.eventBus.emit('network:guide-changed', this.selectedCrowd);
     });
 
     document.getElementById('crowd-dot-color')?.addEventListener('input', (e) => {
@@ -393,6 +396,7 @@ export const crowdsMixin = {
     };
 
     set('crowd-guide-type', layer.guideType);
+    this.updateGuideCard?.(); // Network mixin's Edit-network button + hint
     if (!em) return;
 
     set('crowd-dot-color', em.dotColor);

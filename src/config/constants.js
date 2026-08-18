@@ -90,6 +90,9 @@ export const INTERACTION = {
   WAYPOINT_HIT_RADIUS: 15,        // Click detection radius for waypoints (pixels)
   SEGMENT_HIT_RADIUS: 8,          // Hover/click detection radius for route legs (pixels)
   LEG_PLUS_HIT_RADIUS: 12,        // Click radius for the leg midpoint "+" insert handle (pixels)
+  NODE_HIT_RADIUS: 12,            // Click radius for network nodes (pixels)
+  NETWORK_EDGE_HIT_RADIUS: 8,     // Click radius for network edges (pixels)
+  NETWORK_CONTROL_HIT_RADIUS: 10, // Click radius for edge control-point handles (pixels)
   DRAG_THRESHOLD: 3,              // Minimum pixels to consider a drag
   DOUBLE_CLICK_TIME: 300,         // Maximum ms between clicks for double-click
   LONG_PRESS_TIME: 500,           // Time for long press detection

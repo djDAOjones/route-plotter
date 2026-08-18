@@ -47,7 +47,10 @@ const DEFAULT_SECTION_STATE = {
   guide: false,
   dots: true,
   release: true,
-  motion: false
+  motion: false,
+  // Network scopes (single card each — always open)
+  node: true,
+  edge: true
 };
 
 export class SectionController {
@@ -84,6 +87,15 @@ export class SectionController {
 
     /** @type {boolean} Whether a crowd layer is currently selected */
     this.hasCrowdSelection = false;
+
+    /** @type {HTMLElement|null} Node-scope card group (network editing) */
+    this.nodeScopeGroup = null;
+
+    /** @type {HTMLElement|null} Edge-scope card group (network editing) */
+    this.edgeScopeGroup = null;
+
+    /** @type {string|null} Network selection kind: 'node' | 'edge' | null */
+    this.networkSelection = null;
     
     /** @type {NodeListOf<Element>|null} Cached section elements */
     this._sectionElements = null;
@@ -105,6 +117,8 @@ export class SectionController {
     this.waypointScopeGroup = document.getElementById('waypoint-scope');
     this.routeScopeGroup = document.getElementById('route-scope');
     this.crowdScopeGroup = document.getElementById('crowd-scope');
+    this.nodeScopeGroup = document.getElementById('node-scope');
+    this.edgeScopeGroup = document.getElementById('edge-scope');
 
     if (!this.sectionsContainer) {
       console.warn('[SectionController] Settings sections container not found');
@@ -317,6 +331,29 @@ export class SectionController {
       this._updateUIState();
     });
 
+    // Network node/edge selection (Phase 4 network editing) — one more
+    // scope on the same skeleton, shown only while the mode is active
+    this.eventBus.on('network:node-selected', () => {
+      this.networkSelection = 'node';
+      this._updateUIState();
+    });
+    this.eventBus.on('network:node-deselected', () => {
+      if (this.networkSelection === 'node') this.networkSelection = null;
+      this._updateUIState();
+    });
+    this.eventBus.on('network:edge-selected', () => {
+      this.networkSelection = 'edge';
+      this._updateUIState();
+    });
+    this.eventBus.on('network:edge-deselected', () => {
+      if (this.networkSelection === 'edge') this.networkSelection = null;
+      this._updateUIState();
+    });
+    this.eventBus.on('network:edit-mode-changed', ({ active }) => {
+      if (!active) this.networkSelection = null;
+      this._updateUIState();
+    });
+
     // Clear all
     this.eventBus.on('app:cleared', () => {
       this.hasWaypoints = false;
@@ -450,13 +487,20 @@ export class SectionController {
     // Help placeholder only while the canvas is empty
     this.helpPlaceholder.style.display = this.hasWaypoints ? 'none' : 'block';
 
-    // Scope switch — the panel edits what's selected: a crowd layer, a
-    // waypoint, or (nothing selected) the route
-    const crowdScope = this.hasCrowdSelection;
-    const waypointScope = !crowdScope && this.hasWaypoints && this.hasSelection;
+    // Scope switch — the panel edits what's selected: a network node or
+    // edge (while network editing), a crowd layer, a waypoint, or
+    // (nothing selected) the route
+    const nodeScope = this.networkSelection === 'node';
+    const edgeScope = this.networkSelection === 'edge';
+    const crowdScope = !nodeScope && !edgeScope && this.hasCrowdSelection;
+    const waypointScope = !nodeScope && !edgeScope && !crowdScope &&
+                          this.hasWaypoints && this.hasSelection;
+    if (this.nodeScopeGroup) this.nodeScopeGroup.hidden = !nodeScope;
+    if (this.edgeScopeGroup) this.edgeScopeGroup.hidden = !edgeScope;
     if (this.crowdScopeGroup) this.crowdScopeGroup.hidden = !crowdScope;
     if (this.waypointScopeGroup) this.waypointScopeGroup.hidden = !waypointScope;
-    if (this.routeScopeGroup) this.routeScopeGroup.hidden = crowdScope || waypointScope;
+    if (this.routeScopeGroup) this.routeScopeGroup.hidden =
+      nodeScope || edgeScope || crowdScope || waypointScope;
 
     // Apply section states + last-interacted indicator
     this._applyAllSectionStates();

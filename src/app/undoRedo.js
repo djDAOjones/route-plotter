@@ -125,6 +125,7 @@ export const undoRedoMixin = {
       this.scene.fromJSON(state.scene);
     }
     this.resolveCrowdSelectionAfterRestore();
+    this.resolveNetworkAfterRestore();
 
     // Restore global styles (if present in snapshot)
     if (state.styles) {

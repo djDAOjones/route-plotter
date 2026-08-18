@@ -277,6 +277,33 @@ export class UIController {
       this._updateScopeChip(this.selectedWaypoint, this._allWaypointsSelected,
         this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
     });
+
+    // Network node/edge scopes (Phase 4 network editing) — the crowd
+    // family's green, with the chip naming what the pen has selected
+    this._networkSelection = null;
+    const chipRefresh = () => this._updateScopeChip(
+      this.selectedWaypoint, this._allWaypointsSelected,
+      this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
+    this.eventBus.on('network:node-selected', ({ node }) => {
+      this._networkSelection = { kind: 'node', node };
+      chipRefresh();
+    });
+    this.eventBus.on('network:node-deselected', () => {
+      if (this._networkSelection?.kind === 'node') this._networkSelection = null;
+      chipRefresh();
+    });
+    this.eventBus.on('network:edge-selected', ({ edge }) => {
+      this._networkSelection = { kind: 'edge', edge };
+      chipRefresh();
+    });
+    this.eventBus.on('network:edge-deselected', () => {
+      if (this._networkSelection?.kind === 'edge') this._networkSelection = null;
+      chipRefresh();
+    });
+    this.eventBus.on('network:edit-mode-changed', ({ active }) => {
+      if (!active) this._networkSelection = null;
+      chipRefresh();
+    });
   }
 
   /**
@@ -342,7 +369,17 @@ export class UIController {
 
     const isMultiSelect = multiSelect && multiSelect.length > 1;
     let scope, text;
-    if (this._selectedCrowd) {
+    if (this._networkSelection) {
+      // Network scopes wear the crowd family's tint — the node/edge
+      // belongs to the selected crowd's network
+      scope = 'crowd';
+      if (this._networkSelection.kind === 'node') {
+        const type = this._networkSelection.node?.type;
+        text = `Editing · Node · ${type === 'normal' ? 'pass-through' : type}`;
+      } else {
+        text = `Editing · Edge · ${this._networkSelection.edge?.direction}`;
+      }
+    } else if (this._selectedCrowd) {
       scope = 'crowd';
       text = `Editing · ${this._selectedCrowd.name} · crowd`;
     } else if (allMode) {

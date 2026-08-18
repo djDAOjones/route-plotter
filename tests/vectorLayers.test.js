@@ -50,6 +50,7 @@ describe('RenderingService.VECTOR_LAYERS', () => {
   test('pins the canonical bottom-to-top draw order', () => {
     expect(RenderingService.VECTOR_LAYERS.map(l => l.name)).toEqual([
       'area-highlights',
+      'network-guide',
       'flow-layers',
       'leg-hover',
       'path',
@@ -58,6 +59,7 @@ describe('RenderingService.VECTOR_LAYERS', () => {
       'waypoints',
       'area-edit-handles',
       'hover-affordances',
+      'network-edit-overlay',
       'area-draw-preview',
     ]);
     for (const layer of RenderingService.VECTOR_LAYERS) {
