@@ -143,6 +143,16 @@
   --cap-last-open: rgba(15, 98, 254, 0.12);   /* when expanded - slightly stronger */
   --section-last-ring: rgba(15, 98, 254, 0.15); /* outer glow */
 
+  /* =========================
+     Inspector scope chip (Phase 4) - names what the panel edits.
+     Colour supports the text label, never replaces it (no colour-only
+     meaning); fg/bg pairs hold >=7:1 for WCAG AAA caption text.
+     ========================= */
+  --scope-waypoint-bg: #FBF1E8;   /* warm tint echoing the default path orange */
+  --scope-waypoint-fg: #79380A;   /* 8.2:1 on --scope-waypoint-bg */
+  --scope-route-bg:    #EAF2F8;   /* cool tint echoing UoN interactive blue */
+  --scope-route-fg:    #1D4E75;   /* 7.9:1 on --scope-route-bg */
+
   /* UI interaction surfaces */
   --hover-ui: #E9E9E9;
   --active-ui: #D1D1D1;

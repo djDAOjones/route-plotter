@@ -2438,7 +2438,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 86717,
+      "bytes": 92020,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2495,7 +2495,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 11716,
+      "bytes": 12295,
       "imports": [],
       "format": "esm"
     },
@@ -3039,7 +3039,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2505805
+      "bytes": 2513907
     },
     "docs/app.js": {
       "imports": [],
@@ -3212,7 +3212,7 @@
           "bytesInOutput": 10229
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 37110
+          "bytesInOutput": 39124
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 9934
@@ -3221,7 +3221,7 @@
           "bytesInOutput": 1028
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 4686
+          "bytesInOutput": 4843
         },
         "src/services/AreaDrawingService.js": {
           "bytesInOutput": 4920
@@ -3305,7 +3305,7 @@
           "bytesInOutput": 22568
         }
       },
-      "bytes": 618113
+      "bytes": 620284
     }
   }
 }
