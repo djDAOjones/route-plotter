@@ -37,9 +37,11 @@ export const playbackMixin = {
    * @private
    */
   _handleKeyDown(e) {
-    // Skip if user is typing in an input field
+    // Skip if user is typing in an input field, or a dropdown has focus —
+    // arrows/letters must change the dropdown value, not fire shortcuts
+    // (review 2026-08-18)
     const tag = e.target.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) {
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) {
       return;
     }
     

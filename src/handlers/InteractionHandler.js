@@ -342,9 +342,14 @@ export class InteractionHandler {
     // Check if clicking on existing waypoint
     this.eventBus.emit('waypoint:check-at-position', { x, y }, (waypoint) => {
       if (waypoint) {
-        // Shift+click on waypoint: delete it
+        // Shift+click on waypoint: delete it. Stays instant by decision
+        // 2026-08-18 — the toast advertises undo instead of a confirm
         if (isShiftClick) {
+          const label = waypoint.name || 'waypoint';
           this.eventBus.emit('waypoint:delete', waypoint);
+          this.eventBus.emit('ui:toast', {
+            message: `Deleted ${label} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+          });
         } else {
           // Select existing waypoint
           this.eventBus.emit('waypoint:selected', waypoint);
@@ -470,8 +475,11 @@ export class InteractionHandler {
    * - Del/Backspace: Delete selected waypoint
    */
   handleKeyDown(event) {
-    // Don't interfere with input fields
-    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+    // Don't interfere with input fields or focused dropdowns — arrows/T/a
+    // were firing global shortcuts while a <select> was open (review
+    // 2026-08-18)
+    const tag = event.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target.isContentEditable) {
       return;
     }
     

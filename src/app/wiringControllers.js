@@ -974,6 +974,11 @@ export const wiringControllersMixin = {
       this.uiController?.selectAllWaypoints();
       this.announce('All waypoints selected');
     });
+
+    // Generic toast request from components (e.g. shift-delete undo hint)
+    this.eventBus.on('ui:toast', ({ message, duration }) => {
+      this.showToast(message, duration);
+    });
     
     // Path head (route-global) is wired directly in setupEventListeners;
     // the old pathhead:* event pair duplicated every mutation, undo
