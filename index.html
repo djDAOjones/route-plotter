@@ -98,9 +98,14 @@
     <main class="main" id="main-content" role="main" aria-labelledby="app-title">
       <!-- Left Sidebar - Settings with Collapsible Sections -->
       <aside class="sidebar" role="complementary" aria-label="Settings panel">
-        <!-- Selection context subtitle -->
+        <!-- Scope chip: names what the inspector is editing (waypoint / route),
+             with prev/next stepping through Route → Waypoint 1 → … → last -->
         <div class="sidebar-header sidebar-header-compact">
-          <span id="sidebar-subtitle" class="sidebar-subtitle"></span>
+          <div id="scope-chip" class="scope-chip" data-scope="route">
+            <button id="scope-prev-btn" class="scope-nav-btn" type="button" aria-label="Edit previous waypoint" disabled><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 2L3.5 6L7.5 10"/></svg></button>
+            <span id="scope-chip-text" class="scope-chip-text" role="status" aria-live="polite">Editing · Route</span>
+            <button id="scope-next-btn" class="scope-nav-btn" type="button" aria-label="Edit next waypoint" disabled><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2L8.5 6L4.5 10"/></svg></button>
+          </div>
         </div>
         
         <!-- Settings Sections Container -->
@@ -111,6 +116,12 @@
             <!-- Help content injected here by UIController -->
           </div>
           
+          <!-- ============================================================
+               WAYPOINT SCOPE — inspector cards for the selected waypoint.
+               Shown when a waypoint is selected; hidden in Route scope.
+               ============================================================ -->
+          <div id="waypoint-scope" class="scope-group" hidden>
+
           <!-- ============================================================
                MARKER SECTION
                ============================================================ -->
@@ -160,7 +171,20 @@
                 <span id="dot-size-value">8</span>
               </label>
               
-              <!-- Beacon Effect (moved before Wait Time per spec §5.2) -->
+            </div>
+          </div>
+
+          <!-- ============================================================
+               ON ARRIVAL SECTION — what happens when the path head reaches
+               this waypoint: beacon effect, wait, camera zoom
+               ============================================================ -->
+          <div class="settings-section" data-section="on-arrival">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-on-arrival-content">
+              <h2 class="section-title">On arrival</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-on-arrival-content" class="section-content">
+              <!-- Beacon Effect -->
               <label for="editor-beacon-style">
                 <span data-tip="Animation effect played when the path reaches this waypoint">Beacon</span>
                 <select id="editor-beacon-style">
@@ -172,7 +196,7 @@
                   <option value="pulse">Pulse</option>
                 </select>
               </label>
-              
+
               <!-- Ripple-specific controls (hidden unless ripple selected) -->
               <div id="ripple-controls" style="display: none;">
                 <label for="ripple-thickness">
@@ -190,7 +214,7 @@
                   <span>Wait during ripple</span>
                 </label>
               </div>
-              
+
               <!-- Pulse-specific controls (hidden unless pulse selected) -->
               <div id="pulse-controls" class="beacon-sub-controls" role="group" aria-labelledby="pulse-controls-label" style="display: none;">
                 <span id="pulse-controls-label" class="sub-controls-label">Pulse Settings</span>
@@ -205,25 +229,61 @@
                   <span id="pulse-cycle-speed-value">4s</span>
                 </label>
               </div>
-              
-              <!-- Wait Time (moved to bottom per spec §5.2) -->
+
+              <!-- Wait Time -->
               <label id="pause-time-control" for="waypoint-pause-time">
                 <span data-tip="How long the animation pauses at this waypoint">Wait Time</span>
                 <input type="range" id="waypoint-pause-time" min="0" max="1000" value="500" step="1">
                 <span id="waypoint-pause-time-value">1.5s</span>
               </label>
+
+              <!-- Camera zoom (moved from the former Camera section; ids kept
+                   for camera.js visibility toggling and wiring) -->
+              <div class="sub-controls-group" role="group" aria-labelledby="on-arrival-zoom-label">
+                <span id="on-arrival-zoom-label" class="sub-controls-label">Camera zoom</span>
+                <!-- Single waypoint zoom controls (hidden when multiple selected) -->
+                <div id="camera-single-controls">
+                  <!-- Previous Waypoint Zoom (read-only display) -->
+                  <div class="control-row control-row-inline">
+                    <span class="control-label control-label-short">Prev Zoom</span>
+                    <span id="camera-prev-zoom-value" class="slider-value slider-value-readonly">—</span>
+                  </div>
+
+                  <!-- Current Waypoint Zoom -->
+                  <div class="control-row control-row-inline">
+                    <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Smoothly transitions between waypoints">This Zoom</label>
+                    <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0">
+                    <span id="camera-zoom-value" class="slider-value">1.0x</span>
+                  </div>
+
+                  <!-- Next Waypoint Zoom (read-only display) -->
+                  <div class="control-row control-row-inline">
+                    <span class="control-label control-label-short">Next Zoom</span>
+                    <span id="camera-next-zoom-value" class="slider-value slider-value-readonly">—</span>
+                  </div>
+                </div>
+
+                <!-- Multi-select zoom control (shown when multiple waypoints selected) -->
+                <div id="camera-multi-controls" style="display: none;">
+                  <div class="control-row control-row-inline">
+                    <label class="control-label control-label-short" for="camera-selected-zoom" data-tip="Set zoom level for all selected waypoints at once">Selected Zooms</label>
+                    <input type="range" id="camera-selected-zoom" min="0" max="1" step="0.01" value="0">
+                    <span id="camera-selected-zoom-value" class="slider-value">1.0x</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          
+
           <!-- ============================================================
-               TEXT SECTION
+               LABEL SECTION
                ============================================================ -->
-          <div class="settings-section" data-section="text">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-text-content">
-              <h2 class="section-title">Text</h2>
+          <div class="settings-section" data-section="label">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-label-content">
+              <h2 class="section-title">Label</h2>
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
-            <div id="section-text-content" class="section-content">
+            <div id="section-label-content" class="section-content">
               <!-- Text Input -->
               <label for="waypoint-label">
                 <span data-tip="Label text displayed near this waypoint">Text</span>
@@ -277,69 +337,26 @@
           </div>
           
           <!-- ============================================================
-               PATH SECTION
+               LEG SECTION — styling of the segment leaving this waypoint.
+               Title is set dynamically ("Leg → Waypoint 3") by UIController
+               so the segment-ownership rule is named in the header.
                ============================================================ -->
-          <div class="settings-section" data-section="path">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-path-content">
-              <h2 class="section-title">Path</h2>
+          <div class="settings-section" data-section="leg">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-leg-content">
+              <h2 class="section-title" id="leg-section-title">Leg</h2>
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
-            <div id="section-path-content" class="section-content">
+            <div id="section-leg-content" class="section-content">
               <!-- Colour (Okabe-Ito swatch picker) -->
               <input type="hidden" id="segment-color" value="#D55E00">
-              <div class="swatch-picker" 
-                   data-target-input="#segment-color" 
-                   data-mode="okabe-ito" 
-                   data-label="Colour" 
+              <div class="swatch-picker"
+                   data-target-input="#segment-color"
+                   data-mode="okabe-ito"
+                   data-label="Colour"
                    data-allow-custom="false">
               </div>
-              
-              <!-- Head Colour removed per spec - enforced black head with white stroke -->
-              <input type="hidden" id="path-head-color" value="#111111">
-              
-              <!-- Head Icon dropdown (renamed from Head) -->
-              <label for="path-head-style">
-                <span data-tip="Shape of the animated path head indicator">Arrow Style</span>
-                <select id="path-head-style">
-                  <option value="arrow">Arrow</option>
-                  <option value="dot">Dot</option>
-                  <option value="custom">Custom</option>
-                  <option value="none">None</option>
-                </select>
-              </label>
-              
-              <!-- Custom Head Upload Controls -->
-              <div id="custom-head-controls" style="display:none;">
-                <div class="upload-row">
-                  <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
-                  <input id="head-upload" type="file" accept="image/png,image/jpeg,image/svg+xml" style="display:none" aria-label="Upload custom path head image" />
-                </div>
-                <div id="head-preview" class="preview-box" style="display:none;">
-                  <p id="head-filename">No image selected</p>
-                  <img id="head-preview-img" style="max-width:100%; max-height:100px; margin:0.5rem 0;" alt="Custom path head preview">
-                </div>
-                <label for="head-rotation-mode">
-                  <span data-tip="Whether the custom image rotates to follow the path direction">Rotation</span>
-                  <select id="head-rotation-mode">
-                    <option value="auto">Follow Path</option>
-                    <option value="fixed">Fixed</option>
-                  </select>
-                </label>
-                <label id="head-rotation-offset-control" for="head-rotation-offset">
-                  <span data-tip="Degrees added to the auto-rotation angle">Offset</span>
-                  <input type="range" id="head-rotation-offset" min="-180" max="180" value="0" step="5">
-                  <span id="head-rotation-offset-value">0°</span>
-                </label>
-              </div>
-              
-              <!-- Head Size -->
-              <label for="path-head-size">
-                <span data-tip="Size of the path head indicator">Head Size</span>
-                <input type="range" id="path-head-size" min="4" max="24" value="8" step="1">
-                <span id="path-head-size-value">8</span>
-              </label>
-              
-              <!-- Thickness (was Path Thickness) - increased range to 4x with log scale -->
+
+              <!-- Thickness - increased range to 4x with log scale -->
               <label for="segment-width">
                 <span data-tip="Width of the path line in pixels">Thickness</span>
                 <input type="range" id="segment-width" min="0" max="1000" value="333" step="1">
@@ -520,91 +537,106 @@
             </div>
           </div>
           
+          </div><!-- /waypoint-scope -->
+
           <!-- ============================================================
-               CAMERA SECTION
+               ROUTE SCOPE — inspector cards for the whole route.
+               Shown when nothing is selected (replaces the old
+               settings-disabled ghost state).
                ============================================================ -->
-          <div class="settings-section" data-section="camera">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-camera-content">
-              <h2 class="section-title">Camera</h2>
+          <div id="route-scope" class="scope-group">
+
+          <!-- ============================================================
+               HEAD SECTION — the animated path head (route-global)
+               ============================================================ -->
+          <div class="settings-section" data-section="head">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-head-content">
+              <h2 class="section-title">Head</h2>
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
-            <div id="section-camera-content" class="section-content">
-              <!-- Single waypoint zoom controls (hidden when multiple selected) -->
-              <div id="camera-single-controls">
-                <!-- Previous Waypoint Zoom (read-only display) -->
-                <div class="control-row control-row-inline">
-                  <span class="control-label control-label-short">Prev Zoom</span>
-                  <span id="camera-prev-zoom-value" class="slider-value slider-value-readonly">—</span>
+            <div id="section-head-content" class="section-content">
+              <!-- Head Colour removed per spec - enforced black head with white stroke -->
+              <input type="hidden" id="path-head-color" value="#111111">
+
+              <!-- Head style (was "Arrow Style" — the head can be a dot/image/none) -->
+              <label for="path-head-style">
+                <span data-tip="Shape of the animated path head indicator">Style</span>
+                <select id="path-head-style">
+                  <option value="arrow">Arrow</option>
+                  <option value="dot">Dot</option>
+                  <option value="custom">Custom</option>
+                  <option value="none">None</option>
+                </select>
+              </label>
+
+              <!-- Custom Head Upload Controls -->
+              <div id="custom-head-controls" style="display:none;">
+                <div class="upload-row">
+                  <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
+                  <input id="head-upload" type="file" accept="image/png,image/jpeg,image/svg+xml" style="display:none" aria-label="Upload custom path head image" />
                 </div>
-                
-                <!-- Current Waypoint Zoom -->
-                <div class="control-row control-row-inline">
-                  <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Smoothly transitions between waypoints">This Zoom</label>
-                  <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0">
-                  <span id="camera-zoom-value" class="slider-value">1.0x</span>
+                <div id="head-preview" class="preview-box" style="display:none;">
+                  <p id="head-filename">No image selected</p>
+                  <img id="head-preview-img" style="max-width:100%; max-height:100px; margin:0.5rem 0;" alt="Custom path head preview">
                 </div>
-                
-                <!-- Next Waypoint Zoom (read-only display) -->
-                <div class="control-row control-row-inline">
-                  <span class="control-label control-label-short">Next Zoom</span>
-                  <span id="camera-next-zoom-value" class="slider-value slider-value-readonly">—</span>
-                </div>
+                <label for="head-rotation-mode">
+                  <span data-tip="Whether the custom image rotates to follow the path direction">Rotation</span>
+                  <select id="head-rotation-mode">
+                    <option value="auto">Follow Path</option>
+                    <option value="fixed">Fixed</option>
+                  </select>
+                </label>
+                <label id="head-rotation-offset-control" for="head-rotation-offset">
+                  <span data-tip="Degrees added to the auto-rotation angle">Offset</span>
+                  <input type="range" id="head-rotation-offset" min="-180" max="180" value="0" step="5">
+                  <span id="head-rotation-offset-value">0°</span>
+                </label>
               </div>
-              
-              <!-- Multi-select zoom control (shown when multiple waypoints selected) -->
-              <div id="camera-multi-controls" style="display: none;">
-                <div class="control-row control-row-inline">
-                  <label class="control-label control-label-short" for="camera-selected-zoom" data-tip="Set zoom level for all selected waypoints at once">Selected Zooms</label>
-                  <input type="range" id="camera-selected-zoom" min="0" max="1" step="0.01" value="0">
-                  <span id="camera-selected-zoom-value" class="slider-value">1.0x</span>
-                </div>
-              </div>
-              
+
+              <!-- Head Size -->
+              <label for="path-head-size">
+                <span data-tip="Size of the path head indicator">Size</span>
+                <input type="range" id="path-head-size" min="4" max="24" value="8" step="1">
+                <span id="path-head-size-value">8</span>
+              </label>
             </div>
           </div>
-          
+
           <!-- ============================================================
-               BACKGROUND SECTION (per spec §4.2)
+               PACING SECTION — duration + graphics scale (route-global,
+               moved from the right sidebar's duration block)
                ============================================================ -->
-          <div class="settings-section" data-section="background">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-background-content">
-              <h2 class="section-title">Background</h2>
+          <div class="settings-section" data-section="pacing">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-pacing-content">
+              <h2 class="section-title">Pacing</h2>
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
-            <div id="section-background-content" class="section-content">
-              <!-- Tint (was Background Tint/Overlay) - log2 scaled for fine control near 0 -->
-              <label for="bg-overlay">
-                <span data-tip="Darkens (left) or lightens (right) the background image">Tint</span>
-                <input type="range" id="bg-overlay" min="-1000" max="1000" step="1" value="0">
-                <span id="bg-overlay-value">0</span>
+            <div id="section-pacing-content" class="section-content">
+              <label id="speed-control-right" class="sidebar-control-row" for="animation-speed-right">
+                <span data-tip="Total animation playback time. Adjusts the base speed of all path segments">Duration</span>
+                <input type="range" id="animation-speed-right" min="1" max="4000" step="5">
+                <span id="animation-speed-value-right" class="slider-value">10s</span>
               </label>
-              
-              <!-- Zoom (moved from Export) -->
-              <label class="control-row-inline" for="background-zoom">
-                <span data-tip="Scale of the background image">Zoom</span>
-                <input type="range" id="background-zoom" min="50" max="400" step="1" value="100" style="flex: 1;">
-                <span id="background-zoom-value">100%</span>
-              </label>
-              
-              <!-- Upload -->
-              <div class="upload-row">
-                <span>Upload</span>
-                <button id="bg-upload-btn" class="btn btn-secondary" aria-label="Upload background image">Choose Image</button>
-                <input id="bg-upload" type="file" accept="image/png,image/jpeg" style="display:none" aria-label="Upload background image" />
+              <!-- Graphics Scale — global multiplier for all vector element sizes -->
+              <div id="graphics-scale-control" style="margin-top:0.5rem;">
+                <label class="sidebar-control-row" for="graphics-scale">
+                  <span id="graphics-scale-label" data-tip="Scales all graphics (paths, markers, labels, beacons) uniformly. Adjust individual sizes first, then fine-tune overall scale">Scale</span>
+                  <input type="range" id="graphics-scale" min="-200" max="200" value="0" step="1">
+                  <span id="graphics-scale-value" class="slider-value">1×</span>
+                </label>
               </div>
-              <p class="sr-only" id="bg-drop-hint">Tip: Drag an image onto the canvas to set the background.</p>
             </div>
           </div>
-          
+
           <!-- ============================================================
-               ANIMATION SECTION (renamed from General per spec §4.3)
+               REVEAL SECTION (was Animation) — the three visibility modes
                ============================================================ -->
-          <div class="settings-section" data-section="animation">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-animation-content">
-              <h2 class="section-title">Animation</h2>
+          <div class="settings-section" data-section="reveal">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-reveal-content">
+              <h2 class="section-title">Reveal</h2>
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
-            <div id="section-animation-content" class="section-content">
+            <div id="section-reveal-content" class="section-content">
               <!-- Marker Mode (renamed from Waypoint Mode per spec) -->
               <label for="waypoint-visibility">
                 <span data-tip="When waypoint markers are visible during animation">Marker Mode</span>
@@ -685,14 +717,76 @@
           </div>
           
           <!-- ============================================================
-               EXPORT SECTION
+               PATH EMPHASIS SECTION — casing + glow (route-global,
+               moved from the right sidebar's duration block)
                ============================================================ -->
-          <div class="settings-section" data-section="export">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-export-content">
-              <h2 class="section-title">Export</h2>
+          <div class="settings-section" data-section="path-emphasis">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-path-emphasis-content">
+              <h2 class="section-title">Path emphasis</h2>
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
-            <div id="section-export-content" class="section-content">
+            <div id="section-path-emphasis-content" class="section-content">
+              <fieldset class="path-emphasis" aria-label="Path emphasis">
+                <label class="checkbox-label" for="path-casing-toggle">
+                  <input type="checkbox" id="path-casing-toggle" checked>
+                  <span data-tip="Show white outline behind path for contrast on busy backgrounds">Path casing</span>
+                </label>
+                <label class="checkbox-label" for="path-glow-toggle">
+                  <input type="checkbox" id="path-glow-toggle">
+                  <span data-tip="Show a soft coloured halo around the path (distinct from the beacon glow effect)">Path glow</span>
+                </label>
+                <label class="sidebar-control-row" for="path-glow-intensity">
+                  <span data-tip="How far the path glow spreads outward from the path">Glow intensity</span>
+                  <input type="range" id="path-glow-intensity" min="0" max="100" value="50" step="1" disabled>
+                  <span id="path-glow-value" class="slider-value">50%</span>
+                </label>
+              </fieldset>
+            </div>
+          </div>
+
+          <!-- ============================================================
+               BACKGROUND SECTION (per spec §4.2)
+               ============================================================ -->
+          <div class="settings-section" data-section="background">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-background-content">
+              <h2 class="section-title">Background</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-background-content" class="section-content">
+              <!-- Tint (was Background Tint/Overlay) - log2 scaled for fine control near 0 -->
+              <label for="bg-overlay">
+                <span data-tip="Darkens (left) or lightens (right) the background image">Tint</span>
+                <input type="range" id="bg-overlay" min="-1000" max="1000" step="1" value="0">
+                <span id="bg-overlay-value">0</span>
+              </label>
+
+              <!-- Zoom -->
+              <label class="control-row-inline" for="background-zoom">
+                <span data-tip="Scale of the background image">Zoom</span>
+                <input type="range" id="background-zoom" min="50" max="400" step="1" value="100" style="flex: 1;">
+                <span id="background-zoom-value">100%</span>
+              </label>
+
+              <!-- Upload -->
+              <div class="upload-row">
+                <span>Upload</span>
+                <button id="bg-upload-btn" class="btn btn-secondary" aria-label="Upload background image">Choose Image</button>
+                <input id="bg-upload" type="file" accept="image/png,image/jpeg" style="display:none" aria-label="Upload background image" />
+              </div>
+              <p class="sr-only" id="bg-drop-hint">Tip: Drag an image onto the canvas to set the background.</p>
+            </div>
+          </div>
+
+          <!-- ============================================================
+               VIDEO SETTINGS SECTION (was Export — "Export" stays the
+               header action; this card holds the settings)
+               ============================================================ -->
+          <div class="settings-section" data-section="video">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-video-content">
+              <h2 class="section-title">Video settings</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-video-content" class="section-content">
               <!-- Resolution Controls - vertical block per spec §L -->
               <label for="export-res-x">
                 <span data-tip="Horizontal resolution of exported video in pixels">Width</span>
@@ -741,7 +835,9 @@
               </fieldset>
             </div>
           </div>
-          
+
+          </div><!-- /route-scope -->
+
         </div>
       </aside>
       
@@ -766,42 +862,10 @@
         </div>
       </div>
       
-      <!-- Right Sidebar - Duration + Waypoints (per spec §10) -->
+      <!-- Right Sidebar - Waypoints (Duration/Scale/Path emphasis moved to
+           the left inspector's Route scope, Phase 4) -->
       <aside class="sidebar-right" role="complementary" aria-label="Waypoints panel">
-        <!-- Duration control at top of right sidebar per spec §10.1 -->
-        <div class="duration-block">
-          <label id="speed-control-right" class="sidebar-control-row" for="animation-speed-right">
-            <span data-tip="Total animation playback time. Adjusts the base speed of all path segments">Duration</span>
-            <input type="range" id="animation-speed-right" min="1" max="4000" step="5">
-            <span id="animation-speed-value-right" class="slider-value">10s</span>
-          </label>
-          <!-- Graphics Scale — global multiplier for all vector element sizes -->
-          <div id="graphics-scale-control" style="margin-top:0.5rem;">
-            <label class="sidebar-control-row" for="graphics-scale">
-              <span id="graphics-scale-label" data-tip="Scales all graphics (paths, markers, labels, beacons) uniformly. Adjust individual sizes first, then fine-tune overall scale">Scale</span>
-              <input type="range" id="graphics-scale" min="-200" max="200" value="0" step="1">
-              <span id="graphics-scale-value" class="slider-value">1×</span>
-            </label>
-          </div>
-          <!-- Path emphasis — make the path readable on busy backgrounds (casing + glow) -->
-          <fieldset class="path-emphasis">
-            <legend>Path emphasis</legend>
-            <label class="checkbox-label" for="path-casing-toggle">
-              <input type="checkbox" id="path-casing-toggle" checked>
-              <span data-tip="Show white outline behind path for contrast on busy backgrounds">Path casing</span>
-            </label>
-            <label class="checkbox-label" for="path-glow-toggle">
-              <input type="checkbox" id="path-glow-toggle">
-              <span data-tip="Show a soft coloured halo around the path (distinct from the beacon glow effect)">Path glow</span>
-            </label>
-            <label class="sidebar-control-row" for="path-glow-intensity">
-              <span data-tip="How far the path glow spreads outward from the path">Glow intensity</span>
-              <input type="range" id="path-glow-intensity" min="0" max="100" value="50" step="1" disabled>
-              <span id="path-glow-value" class="slider-value">50%</span>
-            </label>
-          </fieldset>
-        </div>
-        <div class="control-group" style="padding: 0 0.75rem 0.75rem;">
+        <div class="control-group" style="padding: 0.75rem;">
           <h2 style="margin-bottom:0.5rem;">Waypoints</h2>
           <!-- Waypoint list container - instructions shown inside when empty -->
           <div id="waypoint-list" class="waypoint-list"></div>

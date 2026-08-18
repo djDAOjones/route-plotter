@@ -432,6 +432,21 @@ kbd{
   accent-color:var(--control-accent);
 }
 
+/* Labelled sub-group inside a card (e.g. Camera zoom in On arrival) */
+.sub-controls-group{
+  margin-top:var(--space-3);
+  padding-top:var(--space-3);
+  border-top:1px solid var(--border-subtle);
+}
+
+.sub-controls-label{
+  display:block;
+  font-size:var(--type-caption);
+  color:var(--text-02);
+  font-weight:500;
+  margin-bottom:var(--space-1);
+}
+
 /* Main Content - spans all columns in row 2, contains sidebars + canvas */
 .main{
   grid-row: 2;
@@ -485,13 +500,58 @@ kbd{
   min-height:0;
 }
 
-/* N1-1: Subtitle showing selected waypoint name */
-.sidebar-subtitle{
-  display:block;
+/* Scope chip: names what the inspector edits — "Editing · Waypoint 2" /
+   "Editing · Route" — with prev/next stepping (Phase 4 one-inspector).
+   Colour distinguishes scopes but the text always carries the meaning. */
+.scope-chip{
+  display:flex;
+  align-items:center;
+  gap:var(--space-1);
+  min-height:2.75rem; /* 44px WCAG AAA target row */
+  border-radius:var(--radius-2);
+  padding:0 var(--space-1);
+  background:var(--scope-route-bg);
+  color:var(--scope-route-fg);
+}
+
+.scope-chip[data-scope="waypoint"],
+.scope-chip[data-scope="multi"],
+.scope-chip[data-scope="all"]{
+  background:var(--scope-waypoint-bg);
+  color:var(--scope-waypoint-fg);
+}
+
+.scope-chip-text{
+  flex:1;
+  text-align:center;
   font-size:var(--type-caption);
-  color:var(--text-helper);
-  margin-top:0;
-  min-height:1.2em;
+  line-height:var(--lh-caption);
+  font-weight:600;
+  overflow-wrap:anywhere;
+}
+
+.scope-nav-btn{
+  flex:none;
+  min-width:2.75rem;
+  min-height:2.75rem;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:none;
+  border-radius:var(--radius-2);
+  color:inherit;
+  cursor:pointer;
+  padding:0;
+}
+
+.scope-nav-btn:hover:not(:disabled){
+  background:rgba(0,0,0,0.06);
+}
+
+.scope-nav-btn:disabled{
+  opacity:0.35;
+  cursor:not-allowed;
 }
 
 /* Inner sidebar header (for Global Settings) - spacing instead of border per spec §4.3 */
@@ -563,13 +623,8 @@ kbd{
 }
 
 /* Duration block at top of right sidebar per spec §10.1 */
-.duration-block{
-  padding:0.75rem;           /* 12px per spec */
-  border:1px solid var(--border-subtle);
-  border-radius:0.5rem;      /* 8px per spec */
-  margin:0.75rem;
-  background:var(--ui-00);
-}
+/* (.duration-block removed — Duration/Scale/Path emphasis now live in the
+   left inspector's Route scope: Pacing + Path emphasis cards, Phase 4) */
 
 /* ── Parameter Tooltip (Carbon Definition Tooltip pattern) ─────────────
    [data-tip] labels get dotted underline hint; shared .param-tooltip
@@ -725,21 +780,28 @@ kbd{
 
 /* Section tints and cap bands per spec v3.1.241 §5.1 */
 /* Header uses cap color (darker), content uses tint (lighter) */
+/* Waypoint-scope cards */
 .settings-section[data-section="marker"] .section-header{ background: var(--cap-marker); }
 .settings-section[data-section="marker"] .section-content{ background: var(--tint-marker); }
-.settings-section[data-section="text"] .section-header{ background: var(--cap-text); }
-.settings-section[data-section="text"] .section-content{ background: var(--tint-text); }
-.settings-section[data-section="path"] .section-header{ background: var(--cap-path); }
-.settings-section[data-section="path"] .section-content{ background: var(--tint-path); }
-.settings-section[data-section="camera"] .section-header{ background: var(--cap-camera); }
-.settings-section[data-section="camera"] .section-content{ background: var(--tint-camera); }
-/* Global Settings sections: all grey per spec v3.1.241 §5.2 */
+.settings-section[data-section="on-arrival"] .section-header{ background: var(--cap-camera); }
+.settings-section[data-section="on-arrival"] .section-content{ background: var(--tint-camera); }
+.settings-section[data-section="label"] .section-header{ background: var(--cap-text); }
+.settings-section[data-section="label"] .section-content{ background: var(--tint-text); }
+.settings-section[data-section="leg"] .section-header{ background: var(--cap-path); }
+.settings-section[data-section="leg"] .section-content{ background: var(--tint-path); }
+/* Route-scope cards: all grey per spec v3.1.241 §5.2 */
+.settings-section[data-section="head"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="head"] .section-content{ background: var(--tint-system); }
+.settings-section[data-section="pacing"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="pacing"] .section-content{ background: var(--tint-system); }
+.settings-section[data-section="reveal"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="reveal"] .section-content{ background: var(--tint-system); }
+.settings-section[data-section="path-emphasis"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="path-emphasis"] .section-content{ background: var(--tint-system); }
 .settings-section[data-section="background"] .section-header{ background: var(--cap-system); }
 .settings-section[data-section="background"] .section-content{ background: var(--tint-system); }
-.settings-section[data-section="animation"] .section-header{ background: var(--cap-system); }
-.settings-section[data-section="animation"] .section-content{ background: var(--tint-system); }
-.settings-section[data-section="export"] .section-header{ background: var(--cap-system); }
-.settings-section[data-section="export"] .section-content{ background: var(--tint-system); }
+.settings-section[data-section="video"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="video"] .section-content{ background: var(--tint-system); }
 
 /* === Last-interacted section (blue tint emphasis) ===
    Provides "where am I?" orientation without color-coding meaning.
@@ -989,14 +1051,11 @@ kbd{
   overflow-x:hidden;
 }
 
-/* Disabled state for controls */
-.settings-disabled .section-content{
-  opacity:0.5;
-  pointer-events:none;
-}
-
-.settings-disabled .section-header{
-  opacity:0.7;
+/* Scope groups: waypoint-scope vs route-scope card sets. SectionController
+   toggles the hidden attribute with selection — the panel edits what's
+   selected, so only one group is ever visible (no ghosted sections). */
+.scope-group[hidden]{
+  display:none;
 }
 
 /* Compact control groups */

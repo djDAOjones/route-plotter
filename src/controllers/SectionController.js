@@ -1,19 +1,21 @@
 /**
  * SectionController - Manages collapsible settings sections
- * 
+ *
  * ## Features
  * - Expand/collapse sections independently (multiple can be open)
  * - Persist section state to localStorage
  * - Show help when no waypoints exist
- * - Disable waypoint-specific sections when no waypoint selected
- * - Update "Editing: [name]" subheading
- * 
+ * - Scope switching (Phase 4 one-inspector): the sidebar shows the
+ *   waypoint-scope cards when a waypoint is selected and the
+ *   route-scope cards otherwise — the panel edits what's selected,
+ *   so there is no disabled ghost state
+ *
  * ## Section State
- * - On clear/no waypoints: Show help, hide all sections
- * - On first waypoint added: Hide help, show sections, open Marker section only
- * - On waypoint selected: Update editing name, enable controls
- * - On waypoint deselected: Show "Select Waypoint", disable Marker/Path controls
- * 
+ * - On clear/no waypoints: Show help + Route scope (Background etc. stay usable)
+ * - On first waypoint added: Reset card states (Marker open)
+ * - On waypoint selected: Show waypoint scope
+ * - On waypoint deselected: Show route scope
+ *
  * @module SectionController
  */
 
@@ -21,25 +23,26 @@ const STORAGE_KEY = 'routePlotter_sectionState';
 const LAST_KEY = 'routePlotter_lastSection';
 
 /**
- * Default section states when no localStorage exists
+ * Default section states when no localStorage exists.
+ * Waypoint scope opens on Marker; route scope opens on Pacing +
+ * Background (the two entry points: tune timing, or start a project).
  * @type {Object<string, boolean>}
  */
 const DEFAULT_SECTION_STATE = {
-  marker: true,  // Open by default when first waypoint added
-  text: false,
-  path: false,
-  camera: false,
+  // Waypoint scope
+  marker: true,
+  'on-arrival': false,
+  label: false,
+  leg: false,
   'area-highlight': false,
-  background: false,
-  animation: false,
-  export: false
+  // Route scope
+  head: false,
+  pacing: true,
+  reveal: false,
+  'path-emphasis': false,
+  background: true,
+  video: false
 };
-
-/**
- * Sections that require a waypoint to be selected
- * @type {string[]}
- */
-const WAYPOINT_DEPENDENT_SECTIONS = ['marker', 'text', 'path', 'camera', 'area-highlight'];
 
 export class SectionController {
   /**
@@ -60,9 +63,15 @@ export class SectionController {
     
     /** @type {HTMLElement|null} Settings sections container */
     this.sectionsContainer = null;
-    
+
     /** @type {HTMLElement|null} Help placeholder element */
     this.helpPlaceholder = null;
+
+    /** @type {HTMLElement|null} Waypoint-scope card group */
+    this.waypointScopeGroup = null;
+
+    /** @type {HTMLElement|null} Route-scope card group */
+    this.routeScopeGroup = null;
     
     /** @type {NodeListOf<Element>|null} Cached section elements */
     this._sectionElements = null;
@@ -81,7 +90,9 @@ export class SectionController {
   init() {
     this.sectionsContainer = document.getElementById('settings-sections');
     this.helpPlaceholder = document.getElementById('settings-help-placeholder');
-    
+    this.waypointScopeGroup = document.getElementById('waypoint-scope');
+    this.routeScopeGroup = document.getElementById('route-scope');
+
     if (!this.sectionsContainer) {
       console.warn('[SectionController] Settings sections container not found');
       return;
@@ -263,15 +274,21 @@ export class SectionController {
       this.hasSelection = true;
       this._updateUIState();
     });
-    
+
     // Waypoint deselection
     this.eventBus.on('waypoint:deselected', () => {
       this.hasSelection = false;
       this._updateUIState();
     });
-    
+
     // All waypoints selected
     this.eventBus.on('waypoint:all-selected', () => {
+      this.hasSelection = true;
+      this._updateUIState();
+    });
+
+    // Multiple waypoints selected (shift/cmd-click) — waypoint scope
+    this.eventBus.on('waypoint:multi-selected', () => {
       this.hasSelection = true;
       this._updateUIState();
     });
@@ -365,35 +382,27 @@ export class SectionController {
   }
   
   /**
-   * Update UI state based on current waypoint/selection state
+   * Update UI state based on current waypoint/selection state.
+   * Scope rule (Phase 4): a selection shows the waypoint-scope cards;
+   * no selection shows the route-scope cards. With no waypoints at all
+   * the help placeholder sits above the route scope, so Background and
+   * the other route settings stay reachable before the first click.
    * @private
    */
   _updateUIState() {
     if (!this.sectionsContainer || !this.helpPlaceholder || !this._sectionElements) return;
-    
-    if (!this.hasWaypoints) {
-      // No waypoints: show help, hide sections
-      this.helpPlaceholder.style.display = 'block';
-      this._sectionElements.forEach(s => s.style.display = 'none');
-    } else {
-      // Has waypoints: hide help, show sections
-      this.helpPlaceholder.style.display = 'none';
-      this._sectionElements.forEach(s => s.style.display = 'block');
-      
-      // Apply section states
-      this._applyAllSectionStates();
-      
-      // Apply last-interacted indicator
-      this._applyLastInteractedIndicator();
-      
-      // Disable waypoint-dependent sections if no selection
-      WAYPOINT_DEPENDENT_SECTIONS.forEach(sectionName => {
-        const section = this._sectionsByName.get(sectionName);
-        if (section) {
-          section.classList.toggle('settings-disabled', !this.hasSelection);
-        }
-      });
-    }
+
+    // Help placeholder only while the canvas is empty
+    this.helpPlaceholder.style.display = this.hasWaypoints ? 'none' : 'block';
+
+    // Scope switch — the panel edits what's selected
+    const waypointScope = this.hasWaypoints && this.hasSelection;
+    if (this.waypointScopeGroup) this.waypointScopeGroup.hidden = !waypointScope;
+    if (this.routeScopeGroup) this.routeScopeGroup.hidden = waypointScope;
+
+    // Apply section states + last-interacted indicator
+    this._applyAllSectionStates();
+    this._applyLastInteractedIndicator();
   }
   
   /**

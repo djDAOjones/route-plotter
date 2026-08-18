@@ -229,15 +229,158 @@ export class UIController {
     /** @private @type {Object|null} Waypoint from last row click */
     this._renameLastClickWaypoint = null;
     
+    // Waypoints in route order, cached from updateWaypointList so the
+    // scope chip and Leg card header can name neighbours without a
+    // round-trip to main.js
+    /** @private @type {Array<Object>} */
+    this._waypointsCache = [];
+
     // Bind methods that are passed as callbacks
     this.updateWaypointList = this.updateWaypointList.bind(this);
     this.updateWaypointEditor = this.updateWaypointEditor.bind(this);
     this.syncAnimationControls = this.syncAnimationControls.bind(this);
-    
+
     this.setupEventListeners();
     this._setupAllWaypointsModal();
     this._setupCodecModal();
     this._registerConditionalVisibility();
+    this._setupScopeChip();
+  }
+
+  /**
+   * Wire the inspector's scope chip (Phase 4 one-inspector).
+   * Prev/next step the selection through Route → Waypoint 1 → … → last:
+   * prev from the first waypoint deselects back to Route scope, and next
+   * from Route scope selects the first waypoint. Selection changes flow
+   * through the normal waypoint:selected / waypoint:deselected events.
+   * @private
+   */
+  _setupScopeChip() {
+    this._scopeChip = document.getElementById('scope-chip');
+    this._scopeChipText = document.getElementById('scope-chip-text');
+    this._scopePrevBtn = document.getElementById('scope-prev-btn');
+    this._scopeNextBtn = document.getElementById('scope-next-btn');
+
+    this._scopePrevBtn?.addEventListener('click', () => this._navigateScope(-1));
+    this._scopeNextBtn?.addEventListener('click', () => this._navigateScope(1));
+  }
+
+  /**
+   * Step the inspector selection along the route.
+   * @param {number} delta - -1 for previous, +1 for next
+   * @private
+   */
+  _navigateScope(delta) {
+    const waypoints = this._waypointsCache;
+    if (!waypoints.length) return;
+
+    // Multi/all modes have no meaningful order to step through
+    if (this._allWaypointsSelected || this.selectedWaypoints.size > 1) return;
+
+    if (!this.selectedWaypoint) {
+      // Route scope: next enters the route at Waypoint 1
+      if (delta > 0) this.eventBus.emit('waypoint:selected', waypoints[0]);
+      return;
+    }
+
+    const index = waypoints.indexOf(this.selectedWaypoint);
+    if (index === -1) return;
+
+    if (delta < 0) {
+      if (index === 0) {
+        this.eventBus.emit('waypoint:deselected');
+      } else {
+        this.eventBus.emit('waypoint:selected', waypoints[index - 1]);
+      }
+    } else if (index < waypoints.length - 1) {
+      this.eventBus.emit('waypoint:selected', waypoints[index + 1]);
+    }
+  }
+
+  /**
+   * Human-readable name for a waypoint, as used by the scope chip and
+   * the Leg card header ("Waypoint 2 'Library'", "minor waypoint").
+   * @param {Object} waypoint
+   * @returns {string}
+   * @private
+   */
+  _waypointDisplayName(waypoint) {
+    if (!waypoint) return '';
+    if (waypoint.isMajor) {
+      const base = `Waypoint ${waypoint._displayIndex ?? '?'}`;
+      const name = waypoint.name || waypoint.label;
+      return name ? `${base} '${name}'` : base;
+    }
+    return waypoint.name ? `minor '${waypoint.name}'` : 'minor waypoint';
+  }
+
+  /**
+   * Sync the scope chip (text, colour scope, prev/next state) with the
+   * current selection. Called from updateWaypointEditor so every
+   * selection path updates it.
+   * @param {Object|null} waypoint - Selected waypoint (single selection)
+   * @param {boolean} allMode - "All waypoints" bulk mode
+   * @param {Array<Object>|null} multiSelect - Multi-select set, if any
+   * @private
+   */
+  _updateScopeChip(waypoint, allMode, multiSelect) {
+    if (!this._scopeChip) return;
+
+    const isMultiSelect = multiSelect && multiSelect.length > 1;
+    let scope, text;
+    if (allMode) {
+      scope = 'all';
+      text = 'Editing · All waypoints';
+    } else if (isMultiSelect) {
+      scope = 'multi';
+      text = `Editing · ${multiSelect.length} waypoints`;
+    } else if (waypoint) {
+      scope = 'waypoint';
+      const kind = waypoint.isMajor ? ' · major' : '';
+      text = `Editing · ${this._waypointDisplayName(waypoint)}${kind}`;
+    } else {
+      scope = 'route';
+      text = 'Editing · Route';
+    }
+
+    this._scopeChip.dataset.scope = scope;
+    if (this._scopeChipText) this._scopeChipText.textContent = text;
+
+    // Prev/next stepping: only meaningful in single-selection or route scope
+    const waypoints = this._waypointsCache;
+    const index = waypoint ? waypoints.indexOf(waypoint) : -1;
+    const steppable = !allMode && !isMultiSelect && waypoints.length > 0;
+    if (this._scopePrevBtn) {
+      // From Waypoint 1, prev backs out to Route scope
+      this._scopePrevBtn.disabled = !steppable || !waypoint;
+    }
+    if (this._scopeNextBtn) {
+      this._scopeNextBtn.disabled = !steppable || (waypoint ? index >= waypoints.length - 1 : false);
+    }
+  }
+
+  /**
+   * Name the segment-ownership rule in the Leg card header:
+   * "Leg → Waypoint 3 'Chapel'" for the segment leaving the selected
+   * waypoint, or "Leg → route end" on the final waypoint.
+   * @param {Object|null} waypoint - Selected waypoint
+   * @private
+   */
+  _updateLegSectionTitle(waypoint) {
+    const titleEl = document.getElementById('leg-section-title');
+    if (!titleEl) return;
+
+    if (!waypoint) {
+      titleEl.textContent = 'Leg';
+      return;
+    }
+
+    const waypoints = this._waypointsCache;
+    const index = waypoints.indexOf(waypoint);
+    const next = index >= 0 ? waypoints[index + 1] : null;
+    titleEl.textContent = next
+      ? `Leg → ${this._waypointDisplayName(next)}`
+      : 'Leg → route end';
   }
   
   /**
@@ -1343,6 +1486,14 @@ export class UIController {
    * @param {Array<Waypoint>} waypoints - Array of Waypoint objects
    */
   updateWaypointList(waypoints) {
+    // Cache route order for the scope chip and Leg card header, then
+    // refresh both — list updates fire on add/delete/reorder, where
+    // neighbours and display indices change without a reselection
+    this._waypointsCache = waypoints;
+    this._updateScopeChip(this.selectedWaypoint, this._allWaypointsSelected,
+      this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
+    this._updateLegSectionTitle(this.selectedWaypoint);
+
     if (!this.elements.waypointList) return;
     this._listedMajors = waypoints.filter(wp => wp.isMajor);
     
@@ -1714,27 +1865,18 @@ export class UIController {
     
     // Determine if we're in multi-select mode
     const isMultiSelect = multiSelect && multiSelect.length > 1;
-    
-    // N1-1: Update sidebar subtitle with selection context
-    const subtitle = document.getElementById('sidebar-subtitle');
-    if (subtitle) {
-      if (allMode) {
-        subtitle.textContent = 'All waypoints';
-      } else if (isMultiSelect) {
-        subtitle.textContent = `${multiSelect.length} waypoints selected`;
-      } else if (waypoint) {
-        subtitle.textContent = waypoint.name || waypoint.label || '';
-      } else {
-        subtitle.textContent = 'No waypoint selected';
-      }
-    }
-    
-    // Note: Section visibility is handled by SectionController which listens to
-    // the same waypoint:selected/deselected events that trigger this method.
-    // We don't emit events here to avoid infinite loops.
-    
+
+    // Scope chip announces what the inspector is editing; the Leg card
+    // header names the segment the selected waypoint owns
+    this._updateScopeChip(waypoint, allMode, multiSelect);
+    this._updateLegSectionTitle((allMode || isMultiSelect) ? null : waypoint);
+
+    // Note: Scope-group visibility is handled by SectionController which
+    // listens to the same waypoint:selected/deselected events that trigger
+    // this method. We don't emit events here to avoid infinite loops.
+
     if (!waypoint && !allMode && !isMultiSelect) {
-      // No waypoint selected - controls will be disabled by SectionController
+      // No waypoint selected — SectionController shows Route scope
       return;
     }
     
