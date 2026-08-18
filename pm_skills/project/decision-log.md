@@ -2,6 +2,104 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-18 — Phase 4 fourth slice: network edit mode — the pen draws where crowds walk
+
+**Task:** Land Phase 4 item 4: network editing as the app's one true tool
+mode (backlog: "like polygon draw") — pen gestures on shared
+hit-testing, Node card (pass-through/entry/exit), Edge card (direction;
+weight shown as computed junction traffic share). Unlocks the Guide
+card's "Custom network" option that slice 3 shipped disabled.
+
+**What shipped:**
+
+- New `src/services/NetworkEditService.js` owns tool state (bound
+  layer, pen anchor, selection, hover, drag) + the mode banner, on the
+  AreaDrawingService pattern: `network:edit-mode-changed` flips
+  interception in InteractionHandler; capture-phase keys (Esc /
+  Delete / T) keep global shortcuts out. New `src/app/network.js`
+  mixin owns transforms, hit-testing, the cards, and the
+  undo/autosave/render answer to `network:changed` — the same seams
+  the crowds mixin uses.
+- **Pen chaining:** click places a node already linked from the pen
+  node (successive clicks draw a connected chain, exactly the route-
+  drawing feel); click an existing node links pen→node once (loops
+  close, duplicates never) and continues from it; click an edge
+  selects it and lifts the pen (inspecting is not drawing); Shift
+  while placing snaps 15° from the pen node (shared snapToAngle).
+  Drag moves a node (Shift snaps vs its first neighbour), bends an
+  edge (control point inserted in chain order under the pointer), or
+  moves a control handle; drags commit one undo entry at release,
+  Esc mid-drag cancels (an inserted bend point is removed).
+  Shift-click deletes node/edge/control with the standard undo toast.
+  Esc ladder: cancel drag → lift pen → clear selection → exit.
+- **Entry/exit:** the Guide select's Custom network option is enabled;
+  switching an empty-network crowd auto-enters the mode ("two clicks
+  to a pen"), an "Edit network" button re-enters later. Entering
+  forces Edit mode through the canonical `_setPreviewMode(false)` —
+  found live: the app idles in Preview, where the mode's scaffolding
+  layers are gated off. Mode exits on: Done button, Esc, crowd
+  deselected (incl. deletion — any waypoint selection deselects the
+  crowd), a different crowd selected, guide switched back to route,
+  or Preview re-entered.
+- **Inspector:** node-scope and edge-scope groups join the one-
+  inspector; SectionController's priority is now network > crowd >
+  waypoint > route; chip wears the crowd green — "Editing · Node ·
+  entry" / "Editing · Edge · one-way" — and re-announces on type/
+  direction changes. Node card: Type select + Delete. Edge card:
+  Direction, Swap (one-way only; reverses endpoints + control order),
+  and Traffic — the weight slider's readout is the computed share of
+  departures at each end ("100% · 25% of departures"), never the bare
+  weight; the approximation ignores the walk's came-from exclusion.
+- **Rendering:** SwarmEngine's per-edge geometry cache went public
+  (`edgeGeometry`, was `_edgeGeometry`) so drawing and hit-testing use
+  exactly the curve dots travel. Two VECTOR_LAYERS entries:
+  `network-guide` beneath flow-layers (edges in the crowd's dot colour,
+  one-way midpoint arrows, glyphs entry=triangle / exit=square /
+  pass-through=circle, white-outlined) — drawn for any selected
+  graph-guided crowd, edit mode only, even with the dots' eye off
+  (the eye hides dots, not scaffolding); `network-edit-overlay` above
+  hover-affordances (pen ring + dashed preview line, hover/selection
+  rings, control handles), ids validated against the live graph so
+  stale targets draw nothing.
+- **Persistence:** graph edits ride the scene machinery unchanged
+  (autosave + undo snapshots since Phase 2). Restores re-bind the mode
+  by layer id (`resolveNetworkAfterRestore` beside the crowd resolve in
+  `_restoreState`): fresh layer adopted, selection/pen re-resolved by
+  id, mode closes only if the layer is gone. CSS note: `.btn`'s
+  display rule was defeating the `hidden` attribute (same fix the
+  scope groups already carry) — `.btn[hidden]` now wins.
+
+**Verification:** 301/301 tests (28 new in tests/networkEdit.test.js —
+service against real models, mixin glue on the crowds-style jsdom
+harness). Live at v3.1.607 dev, 1680×1000, real events end-to-end:
+guide switch auto-entered (Preview forced to Edit — fix found by pixel
+count returning 0 for scaffolding, then verified 3,991 exact-ink px
+network-only), pen chained 3 nodes/2 edges by real clicks and closed
+the triangle on the first node, banner counts tracked, chip followed
+every scope, drag-bend inserted a control point through the real
+pointer pipeline, node drag moved and re-anchored, hover gave pointer
+cursor + hover state (embedded-browser rAF freeze delays it until a
+frame composites — known harness artifact), direction/swap wrote
+through with chip re-announce, Cmd+Z mid-mode rebound the fresh layer
+with the edge still selected and the swap reversed, Esc ladder walked
+pen → selection → exit, passive network stayed rendered after exit,
+button re-entered and Done exited, engine walked the custom network
+(23 dots mid-timeline; 1,645 exact-colour dot px, byte-identical
+across eye toggle), autosave round-tripped the graph across reload
+(nodes/edges/types intact), zero console errors, embedded profile
+restored to its as-found empty state.
+
+**Design points (owner feel-check welcome):** Node/Edge as the
+user-facing nouns (banner, cards, chip alike); auto-enter only when
+the switched crowd's network is empty; edge selection lifts the pen;
+entry=triangle/exit=square glyph language; chip reuses the crowd
+green for network scopes; T cycles node type (waypoint habit);
+right-click suppressed inside the mode; Add crowd still requires a
+route (network-only scenes wish-listed); Motion card's "At route end"
+label reads odd for networks (wish-listed).
+
+---
+
 ## 2026-08-18 — Phase 4 third slice: layers strip + Crowd scope — dots flowing in two clicks
 
 **Task:** Land Phase 4 item 3: layers strip above the waypoint list

@@ -28,3 +28,7 @@
 - Scope chip (and editor sync) goes stale after undo/redo — `_restoreState` restores selection without re-emitting selection events. — (from: 2026-08-18 Phase 4 canvas affordances)
 - Area handle hit-testing misses at viewport zoom > 1 — `area:check-handle` compares screen coords against imageToCanvas (canvas) coords; drag and hover share the miss consistently. — (from: 2026-08-18 Phase 4 canvas affordances)
 - Crowd extras for a later tier: re-roll seed button, onsetVariance/intensityRamp under More…, multi-emitter authoring (cards edit emitters[0] only), strip drag-reorder via Scene.moveFlowLayer. — (from: 2026-08-18 Phase 4 layers strip)
+- Network extras: click-on-edge splits it with a node (leg "+" sibling), node labels/rename, arrow-key nudge for the selected node, network context menu (right-click is suppressed in the mode), edge thickness by weight. — (from: 2026-08-18 Phase 4 network edit)
+- Add crowd is still gated on a route ≥ 2 waypoints — a network-only scene (no hero route) can't be authored; decide whether Add crowd should default to Custom network when no route exists. — (from: 2026-08-18 Phase 4 network edit)
+- Crowd Motion card's lifecycle label says "At route end" — on a custom network the ends are exits; reword per guide ("At an exit"?). — (from: 2026-08-18 Phase 4 network edit)
+- Mode banners are near-duplicates (area draw + network edit both inline-style their own) — extract a shared ModeBanner component. — (from: 2026-08-18 Phase 4 network edit)

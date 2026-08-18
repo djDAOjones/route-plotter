@@ -54,6 +54,7 @@
 - `src/services/AreaDrawingService.js` — Polygon area drawing mode
 - `src/services/AreaEditService.js` — Area highlight repositioning and vertex editing
 - `src/services/AreaHighlightRenderer.js` — Per-waypoint area highlight rendering
+- `src/services/NetworkEditService.js` — Network edit mode (Phase 4): pen state machine (chaining, drags, bends, Esc ladder, mode keys), banner, node/edge selection events, and the guide/overlay canvas rendering (edge geometry via SwarmEngine's cache)
 
 ## UI
 
@@ -91,6 +92,7 @@
 - `src/utils/pathWidthScale.js` — Log-scale thickness slider ↔ width (1–40px) mapping; single source shared by the DOM wiring and UIController bulk edits (Phase 3.5)
 - `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers)
 - `src/app/crowds.js` — Crowd layers mixin (Phase 4): layers strip (Route + crowds), Crowd scope selection events, card syncing, and the single-writer wiring for Guide/Dots/Release/Motion controls editing FlowLayer + first Emitter
+- `src/app/network.js` — Network editing mixin (Phase 4): Guide-card entry point (Edit network + auto-enter), pointer routing into NetworkEditService, node/edge/control hit-testing on the engine's edge polylines, Node/Edge card wiring, traffic-share readout, restore re-binding
 
 ## Specs (reference, not live code)
 
@@ -105,6 +107,7 @@
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, call-order-free determinism, release windows/ramps, weighted junctions, four lifecycle modes, route guide, wobble bounds, edge-cache invalidation
+- `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding
 - `tests/setup.js` — Vitest jsdom setup (uses defineProperty for getter-only jsdom globals)
 
 ## Build and tooling
