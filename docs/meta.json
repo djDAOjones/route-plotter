@@ -2448,7 +2448,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 92020,
+      "bytes": 92882,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2505,7 +2505,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 13557,
+      "bytes": 14582,
       "imports": [],
       "format": "esm"
     },
@@ -2684,7 +2684,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 43513,
+      "bytes": 43860,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2715,7 +2715,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 7499,
+      "bytes": 7625,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2784,7 +2784,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 25761,
+      "bytes": 25819,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2857,8 +2857,24 @@
       ],
       "format": "esm"
     },
+    "src/app/crowds.js": {
+      "bytes": 16296,
+      "imports": [
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "../config/keybindings.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/main.js": {
-      "bytes": 46321,
+      "bytes": 46724,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3044,6 +3060,11 @@
           "path": "src/app/pointer.js",
           "kind": "import-statement",
           "original": "./app/pointer.js"
+        },
+        {
+          "path": "src/app/crowds.js",
+          "kind": "import-statement",
+          "original": "./app/crowds.js"
         }
       ],
       "format": "esm"
@@ -3054,7 +3075,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2547486
+      "bytes": 2576424
     },
     "docs/app.js": {
       "imports": [],
@@ -3230,7 +3251,7 @@
           "bytesInOutput": 10229
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 39124
+          "bytesInOutput": 39665
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 11447
@@ -3239,7 +3260,7 @@
           "bytesInOutput": 1028
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 5311
+          "bytesInOutput": 5754
         },
         "src/services/AreaDrawingService.js": {
           "bytesInOutput": 4920
@@ -3290,10 +3311,10 @@
           "bytesInOutput": 3100
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 17809
+          "bytesInOutput": 17850
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 3467
+          "bytesInOutput": 3508
         },
         "src/app/playback.js": {
           "bytesInOutput": 4159
@@ -3308,7 +3329,7 @@
           "bytesInOutput": 5406
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 13256
+          "bytesInOutput": 13306
         },
         "src/app/exporting.js": {
           "bytesInOutput": 6949
@@ -3319,11 +3340,14 @@
         "src/app/pointer.js": {
           "bytesInOutput": 887
         },
+        "src/app/crowds.js": {
+          "bytesInOutput": 8545
+        },
         "src/main.js": {
-          "bytesInOutput": 22613
+          "bytesInOutput": 22801
         }
       },
-      "bytes": 627941
+      "bytes": 637790
     }
   }
 }
