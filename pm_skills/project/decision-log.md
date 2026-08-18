@@ -2,6 +2,31 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-18 — Phase 3.5 kickoff: the review's open sub-decisions resolved
+
+Four of the five open sub-decisions from the authoring-UI review entry
+(below) resolved by the owner at Phase 3.5 kickoff; the fifth (how
+minors present in the waypoint list) stays open — it gates a
+next-milestone item, not this phase.
+
+- **Sequencing: Phase 3.5 fully precedes Phase 4.** All 15 paper cuts
+  land now — they are small, independent and individually verifiable,
+  and the inspector rewrite then starts from a clean base. Most are
+  logic-level (listeners, bus handlers, model fields) and survive the
+  Phase 4 markup regroup.
+- **Path head is global.** Matches what users already see (UI and
+  renderer are global) and the adopted Phase 4 layout, which puts Head
+  at Route scope. The dead per-waypoint fields stop being written;
+  loads tolerate them. Rejected per-waypoint: more work, contradicts
+  the adopted direction.
+- **Shift+click delete keeps no confirm — undo toast.** Delete stays
+  instant; a toast advertises Cmd+Z. The undo service already covers
+  deletion; a dialog would punish every intentional delete.
+- **"Crowd" is the user-facing noun** for dot layers ("Editing ·
+  Crowd", Crowd scope). Internal names (`FlowLayer`, `flow-layers`
+  registry entry, `scene` block) are unchanged — code vocabulary is
+  not user vocabulary.
+
 ## 2026-08-18 — Authoring-UI review: "one inspector, explicit scopes" adopted for Phase 4
 
 **Task:** Pre-Phase-4 deep review of the authoring UI (path/waypoint styling

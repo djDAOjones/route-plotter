@@ -30,14 +30,14 @@
 
 **Phase 3.5 — paper cuts from the 2026-08-18 authoring-UI review (pre-Phase 4)**
 
-Provenance: decision-log 2026-08-18 (review artifact linked there). Items are small and independent; the data bug leads.
+Provenance: decision-log 2026-08-18 (review artifact linked there). Items are small and independent; the data bug leads. Sequencing decided 2026-08-18: 3.5 fully precedes Phase 4.
 
 - [ ] FIX DATA BUG: reordering majors leaves minors at their original array indices — minors silently detach from the leg they shape (`wiringControllers.js:648-673`); reorder must carry each major's trailing minors with it
 - [ ] Thickness readout shows the raw slider integer ("333" not "3.0") — two listeners fight over one span (`wiringDom.js:135` vs `UIController.js:1009`); keep one writer
 - [ ] Kill the inert double-fire on single-selection edits — `_emitWaypointChange` emits `{waypoint, property, value}` but the `waypoint:style-changed`/`waypoint:path-property-changed` handlers take a bare waypoint and re-render regardless (`wiringBus.js:152,218`); costs an extra render + undo-debounce + autosave per input event
-- [ ] Path head: resolve the three-way mismatch — per-waypoint in the model (`Waypoint.js:94-97`, serialised + copied), global in the UI (`wiringDom.js:448-473`) and renderer (`RenderingService.js:1531`). Decide global (strip dead per-waypoint fields at next coordVersion) or per-waypoint (render them); the halfway state blocks both
+- [ ] Path head: resolve the three-way mismatch — per-waypoint in the model (`Waypoint.js:94-97`, serialised + copied), global in the UI (`wiringDom.js:448-473`) and renderer (`RenderingService.js:1531`). Decided global (owner, 2026-08-18, decision-log): stop writing the dead per-waypoint fields, tolerate them on read
 - [ ] Right-click context menu — `waypoint:show-context-menu`/`canvas:show-context-menu` are already emitted with no listener (`InteractionHandler.js:708-732`); menu = delete / toggle major-minor / insert before-after / rename. Cheapest discoverability win in the app
-- [ ] Shift+click delete gets an undo toast (delete stays instant; toast advertises Cmd+Z) — Shift currently means snap while adding, delete on a waypoint, and shows a `not-allowed` cursor
+- [ ] Shift+click delete gets an undo toast (delete stays instant; toast advertises Cmd+Z; decided over a confirm dialog, owner 2026-08-18) — Shift currently means snap while adding, delete on a waypoint, and shows a `not-allowed` cursor
 - [ ] Keyboard guard: exclude `<select>` focus from global shortcuts — arrows/T/`a` fire while a dropdown is open (`InteractionHandler.js:472+`)
 - [ ] Label colour/bg/opacity: handlers + sync exist, DOM controls don't (`wiringDom.js:422-445`, `editorPanel.js:323-335`) — expose under Label → More or delete the wiring
 - [ ] Camera zoom-mode: hidden select + handler for a toggle that isn't in the DOM (`index.html:563`, `wiringDom.js:687`) — surface "immediate" mode or remove it
