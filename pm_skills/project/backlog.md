@@ -28,10 +28,33 @@
 - [x] Deterministic `SwarmEngine.evaluate(timelineMs, layer)` using `hash(seed, dotIndex, hopIndex)` for onset/speed/junction/wobble; per-edge paths via one PathCalculator instance per edge — shipped 2026-08-18: weighted walks, four lifecycle modes, route guide, wobble, signature-keyed edge caches; 30-test suite; owner feel-check of the dot motion welcome (needs Phase 4 UI or console authoring)
 - [x] Batched `DotRenderer` pass (plain arcs/sprites, sizes via `scaleSizeClamped`), drawn beneath the hero route — `flow-layers` registry entry between area-highlights and path; one canvas path per (colour, size) group; live-verified at v3.1.591 (pixel-delta + byte-identical scrub-return)
 
-**Phase 4 — authoring UI**
+**Phase 3.5 — paper cuts from the 2026-08-18 authoring-UI review (pre-Phase 4)**
 
-- [ ] First canvas tool-mode system (Route edit | Flow edit) in InteractionHandler
-- [ ] "Crowd" sidebar section via SectionController; graph editing gestures (place/drag nodes, draw edges, control points, weights, entry/exit marking)
+Provenance: decision-log 2026-08-18 (review artifact linked there). Items are small and independent; the data bug leads.
+
+- [ ] FIX DATA BUG: reordering majors leaves minors at their original array indices — minors silently detach from the leg they shape (`wiringControllers.js:648-673`); reorder must carry each major's trailing minors with it
+- [ ] Thickness readout shows the raw slider integer ("333" not "3.0") — two listeners fight over one span (`wiringDom.js:135` vs `UIController.js:1009`); keep one writer
+- [ ] Kill the inert double-fire on single-selection edits — `_emitWaypointChange` emits `{waypoint, property, value}` but the `waypoint:style-changed`/`waypoint:path-property-changed` handlers take a bare waypoint and re-render regardless (`wiringBus.js:152,218`); costs an extra render + undo-debounce + autosave per input event
+- [ ] Path head: resolve the three-way mismatch — per-waypoint in the model (`Waypoint.js:94-97`, serialised + copied), global in the UI (`wiringDom.js:448-473`) and renderer (`RenderingService.js:1531`). Decide global (strip dead per-waypoint fields at next coordVersion) or per-waypoint (render them); the halfway state blocks both
+- [ ] Right-click context menu — `waypoint:show-context-menu`/`canvas:show-context-menu` are already emitted with no listener (`InteractionHandler.js:708-732`); menu = delete / toggle major-minor / insert before-after / rename. Cheapest discoverability win in the app
+- [ ] Shift+click delete gets an undo toast (delete stays instant; toast advertises Cmd+Z) — Shift currently means snap while adding, delete on a waypoint, and shows a `not-allowed` cursor
+- [ ] Keyboard guard: exclude `<select>` focus from global shortcuts — arrows/T/`a` fire while a dropdown is open (`InteractionHandler.js:472+`)
+- [ ] Label colour/bg/opacity: handlers + sync exist, DOM controls don't (`wiringDom.js:422-445`, `editorPanel.js:323-335`) — expose under Label → More or delete the wiring
+- [ ] Camera zoom-mode: hidden select + handler for a toggle that isn't in the DOM (`index.html:563`, `wiringDom.js:687`) — surface "immediate" mode or remove it
+- [ ] `segmentTension`: serialised, copied, used by path maths, no control anywhere (`Waypoint.js:24` → `pathTiming.js:44`) — expose under Leg → More or retire
+- [ ] "Apply to All" modal claims "cannot be undone" (`index.html:855`) in an app with a full undo service — verify bulk writes reach undo; fix the copy or fix undo
+- [ ] De-duplicate inline-rename logic — dbl-click timer branch repeats `startInlineRename` verbatim (`UIController.js:1597-1631` vs `:1521-1569`)
+- [ ] Waypoint list a11y: container is `role=listbox` but rows aren't `role=option` (`UIController.js:1303-1305`)
+- [ ] Drop stale `general` key from section-state defaults (`SectionController.js:27-37`)
+- [ ] VERIFY: duration readout showed 8.6s → 7.7s across unrelated navigation with byte-identical project data (seen live 2026-08-18) — two readouts of one scene must never differ under the deterministic mandate
+
+**Phase 4 — authoring UI (direction adopted 2026-08-18 — one inspector, explicit scopes; see decision-log)**
+
+- [ ] Scope-split inspector (lands first; markup + wiring only, no model changes): sidebar header becomes a scope chip wired to selection ("Editing · Waypoint 2 'Library' · major" / "Editing · Route"); Route scope replaces the settings-disabled ghost state (Head, Pacing = duration + scale, Reveal = the three visibility modes, Path emphasis, Background, Video settings — renamed from Export); Path card splits into "Leg → next waypoint" (segment colour/thickness/shape/style/speed) + route-level Head; beacon + wait + zoom gather into "On arrival"
+- [ ] Canvas affordances to match: hover cursor + ring on waypoints and area handles; first segment hit-testing — segment hover glow, click selects the owning waypoint and flashes the Leg card; midpoint "+" handle inserts a minor on that leg (modifier gestures stay as shortcuts)
+- [ ] Layers strip above the waypoint list (Route + flow layers: add/rename/visibility); selecting a crowd layer switches the inspector to Crowd scope — Guide (Follow route default | Custom network → Edit), Dots (colour/size/wobble), Release (count/window), Motion (speed/variance/lifecycle). Dots flowing in two clicks, zero graph UI until Custom network is chosen
+- [ ] Network edit mode (the one true tool mode, like polygon draw): same pen gestures on shared snapping/hit-testing services (click places node, drag curves edge); node/edge selection reuses the inspector pattern — Node card (pass-through/entry/exit), Edge card (direction toggle; weight displayed as computed junction traffic share, not a bare number)
+- [ ] Multi-select honoured by every card — the hidden "Select All Waypoints" bulk mode dissolves into ordinary multi-select; minors included; one undo entry per bulk change
 
 **Phase 5 — parity & release**
 
@@ -43,6 +66,17 @@
   - Blocked / needs scoping (2026-06-17): conflicts with the `<1440px` min-width gate (`#screen-warning`); reconcile zoom-driven reflow with the hard min-width in its own scoping task.
 
 ### Next milestone — features
+
+**From the 2026-08-18 UI review (post-Phase 4)**
+
+- [ ] Anchors as drops: `GraphNode.anchorWaypointId` (spatial — bound node mirrors its waypoint) + `Emitter.releaseAnchor` (temporal — at head-arrival of waypoint N / during N's pause / at route completion, resolved through PlayerCore's pure mappings so windows track route edits instead of drifting). Additive coordVersion bump; anchors strictly graph→route, never route→graph
+- [ ] "Fit wait to crowd" button — compute last dot arrival once, write it into `pauseTime` as an ordinary authored value (bake, don't bind: route timing never becomes a live function of swarm state)
+- [ ] Branch gesture: "+" handle on a waypoint starts drawing network edges from a bound entry node — "the path grew a branch" as a feeling, layered scene as the data model
+- [ ] Trace route into network: import route legs as chained edges (route untouched) so dots can run the visible route and branch off it
+- [ ] Two-tier disclosure pass: 2–4 primary controls per card + "More…" for the rest (offsets, rotation offset, ripple thickness, tension) — roughly 20 controls at rest instead of ~45
+- [ ] Minors in the waypoint list as indented rows under their major — selectable, renameable, reorder-visible
+- [ ] Per-card "Reset to route style" / "Apply onward" — makes copy-at-creation inheritance visible and reversible
+- [ ] Unit/naming pass: every readout in renderer units (px/s/%/×/°); Arrow Style → Head; Text Size abstract 1–10 scale → px
 
 - [ ] Group arrow-key nudges into one undo entry — a burst of nudge taps saves one undo state per debounced tap; snapshot once per nudge gesture instead. — (from: 2026-06-17 diagnosis)
 - [ ] Comet mode for spotlight reveal modes

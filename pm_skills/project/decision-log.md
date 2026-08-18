@@ -2,6 +2,70 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-18 — Authoring-UI review: "one inspector, explicit scopes" adopted for Phase 4
+
+**Task:** Pre-Phase-4 deep review of the authoring UI (path/waypoint styling
+focus) and how crowd authoring folds in. Full write-up — findings, verified
+bug table with file:line refs, before/after sidebar mockups, method — at
+<https://claude.ai/code/artifact/9553ea85-5c61-4d69-b98c-19f74437f480>
+(reviewed at v3.1.593: hands-on live pass at 1680×1000 against the owner's
+real autosave, backed up and verified byte-identical after, plus a full
+wiring trace of index.html, SectionController, UIController, editorPanel,
+wiringDom/wiringControllers/wiringBus, InteractionHandler, and the
+rendering/area services).
+
+**Headline finding:** scope is invisible. The left sidebar edits three
+different things — the selected waypoint (Marker/Text/most-of-Path/Area/
+Camera), the whole route (head cluster, Background, Animation, Export), and
+a hidden all-majors bulk mode — with no labelling anywhere. The Path card is
+the worst case: per-segment controls sit beside route-global head controls,
+and the head disagrees three ways (per-waypoint in the model, global in UI
+and renderer). Segments have no hit-testing, so "which waypoint owns this
+line" is learnable only by experiment; the subtitle element that could
+announce scope renders an empty string in single selection. Secondary
+findings: the good copy-at-creation inheritance model is invisible,
+irreversible and non-retroactive; modifier-only gestures with a dead
+right-click; unit/naming drift ("Arrow Style" configures a head that can be
+a dot; readouts mix real units, abstract scales and one raw slider int).
+Verified paper-cut bugs — including one DATA bug (major reorder detaches
+minors) — are itemised as backlog Phase 3.5.
+
+**Direction adopted (backlog Phase 4 rewritten):** the sidebar becomes an
+inspector for the current selection, opening with a scope header that always
+names its subject — "Editing · Waypoint 2 'Library' · major" / "Editing ·
+Route" (replacing the settings-disabled ghost state) / "Editing · Crowd".
+One rule the user learns once: the panel edits what's selected — waypoint,
+route, crowd layer, node or edge. Key moves: cards regroup by subject
+(Marker / On arrival / Label / "Leg → next waypoint" / Area for waypoints;
+Head / Pacing / Reveal / Background / Video settings for the route); the Leg
+card names the segment-ownership rule in its own header (the Camera
+prev/this/next idea, generalised); inheritance stays copy-at-creation but
+gains per-card "Reset to route style" / "Apply onward"; bulk mode dissolves
+into ordinary multi-select. Crowd authoring lands as one more scope on the
+same skeleton: Layers strip above the waypoint list, Follow-route as the
+two-click default guide, network editing as the app's one true tool mode on
+shared pen services, edge weights displayed as computed junction traffic
+shares. Anchors (node↔waypoint drops, emitter windows resolved through
+PlayerCore's pure mappings) and "fit wait to crowd" (bake, don't bind —
+route timing never becomes a live function of swarm state) are post-Phase-4
+backlog items.
+
+**Deliberately kept:** the section system and persisted open/closed state,
+the existing contextual-disclosure patterns, the Okabe-Ito-only constraint,
+copy-at-creation inheritance (made visible, not replaced), the keyboard map,
+the waypoint list's reorder/rename mechanics.
+
+**Open sub-decisions (owner's call):** "Crowd" vs "Flow" as the
+user-facing noun; shift-delete = undo-toast vs confirm; how minors present
+in the list; whether Phase 3.5 fully precedes Phase 4 or interleaves;
+path-head resolution (global vs per-waypoint — Phase 3.5 item forces the
+choice).
+
+**Session hygiene note:** the review's dev-server run regenerated docs/ and
+bumped version.json; those side effects were reverted, not committed.
+
+---
+
 ## 2026-08-18 — Phase 3 swarm engine: deterministic SwarmEngine + batched DotRenderer
 
 **Task:** Phase 3 of the v3.0 refactor — dots flow while everything stays a
