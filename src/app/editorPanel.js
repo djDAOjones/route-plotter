@@ -311,21 +311,9 @@ export const editorPanelMixin = {
           this.elements.labelOffsetYValue.textContent = `${offsetY}%`;
         }
         
-        // Label colors
-        if (this.elements.labelColor) {
-          this.elements.labelColor.value = this.selectedWaypoint.labelColor || TEXT_LABEL.COLOR_DEFAULT;
-        }
-        if (this.elements.labelBgColor) {
-          this.elements.labelBgColor.value = this.selectedWaypoint.labelBgColor || TEXT_LABEL.BG_COLOR_DEFAULT;
-        }
-        
-        // Label background opacity
-        if (this.elements.labelBgOpacity) {
-          const opacity = this.selectedWaypoint.labelBgOpacity !== undefined ? this.selectedWaypoint.labelBgOpacity : TEXT_LABEL.BG_OPACITY_DEFAULT;
-          this.elements.labelBgOpacity.value = Math.round(opacity * 100);
-          this.elements.labelBgOpacityValue.textContent = `${Math.round(opacity * 100)}%`;
-        }
-        
+        // (Label colour/bg/opacity controls don't exist — dead sync
+        // removed 2026-08-18; the model properties still render.)
+
         // Enable pause controls for major waypoints
         this.elements.waypointPauseTime.disabled = false;
         const pauseTimeSec = (this.selectedWaypoint.pauseTime || 0) / 1000;

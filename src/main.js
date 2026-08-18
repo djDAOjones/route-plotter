@@ -346,8 +346,6 @@ class RoutePlotter {
       // Right sidebar Duration control (synced with left sidebar)
       animationSpeedRight: document.getElementById('animation-speed-right'),
       animationSpeedValueRight: document.getElementById('animation-speed-value-right'),
-      // Camera zoom mode toggle (switch version)
-      cameraZoomModeToggle: document.getElementById('camera-zoom-mode-toggle'),
       speedControl: document.getElementById('speed-control'),
       // durationControl: document.getElementById('duration-control'), // Removed from UI
       // Note: waypointEditor and waypointEditorPlaceholder removed - now using collapsible sections
@@ -388,10 +386,6 @@ class RoutePlotter {
       labelOffsetY: document.getElementById('label-offset-y'),
       labelOffsetYValue: document.getElementById('label-offset-y-value'),
       labelAutoPosition: document.getElementById('label-auto-position'),
-      labelColor: document.getElementById('label-color'),
-      labelBgColor: document.getElementById('label-bg-color'),
-      labelBgOpacity: document.getElementById('label-bg-opacity'),
-      labelBgOpacityValue: document.getElementById('label-bg-opacity-value'),
       helpBtn: document.getElementById('help-btn'),
       clearBtn: document.getElementById('clear-btn'),
       exportMp4Btn: document.getElementById('export-mp4-btn'),
@@ -416,7 +410,6 @@ class RoutePlotter {
       cameraZoomValue: document.getElementById('camera-zoom-value'),
       cameraPrevZoomValue: document.getElementById('camera-prev-zoom-value'),
       cameraNextZoomValue: document.getElementById('camera-next-zoom-value'),
-      cameraZoomMode: document.getElementById('camera-zoom-mode'),
       // Camera multi-select controls
       cameraSingleControls: document.getElementById('camera-single-controls'),
       cameraMultiControls: document.getElementById('camera-multi-controls'),

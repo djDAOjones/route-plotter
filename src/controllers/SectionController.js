@@ -25,7 +25,6 @@ const LAST_KEY = 'routePlotter_lastSection';
  * @type {Object<string, boolean>}
  */
 const DEFAULT_SECTION_STATE = {
-  general: false,
   marker: true,  // Open by default when first waypoint added
   text: false,
   path: false,

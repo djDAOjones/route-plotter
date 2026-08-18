@@ -40,8 +40,7 @@ export const pathTimingMixin = {
       isMajor: wp.isMajor,
       pathShape: wp.pathShape,
       shapeAmplitude: wp.shapeAmplitude,
-      shapeFrequency: wp.shapeFrequency,
-      segmentTension: wp.segmentTension
+      shapeFrequency: wp.shapeFrequency
     }));
     
     this.pathPoints = this.pathCalculator.calculatePath(normalizedWaypoints);

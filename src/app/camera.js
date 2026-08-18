@@ -52,21 +52,10 @@ export const cameraMixin = {
       this.elements.cameraZoomValue.textContent = CameraService.formatZoom(zoom);
     }
     
-    // Update zoom mode dropdown and toggle switch
-    const zoomMode = waypoint.camera?.zoomMode ?? CAMERA_DEFAULTS.ZOOM_MODE;
-    if (this.elements.cameraZoomMode) {
-      this.elements.cameraZoomMode.value = zoomMode;
-    }
-    // Sync toggle switch state
-    if (this.elements.cameraZoomModeToggle) {
-      const isContinuous = zoomMode === 'continuous';
-      this.elements.cameraZoomModeToggle.setAttribute('aria-checked', isContinuous);
-      const labels = this.elements.cameraZoomModeToggle.parentElement?.querySelectorAll('.mode-label');
-      labels?.forEach(label => {
-        label.classList.toggle('active', label.dataset.value === zoomMode);
-      });
-    }
-    
+    // (Zoom-mode UI removed 2026-08-18 — camera.zoomMode remains model-only
+    // until the Phase 4 inspector surfaces it.)
+
+
     // Update "Next Zoom" display (read-only)
     const nextMajorWp = (majorIndex >= 0 && majorIndex < majorWps.length - 1)
       ? majorWps[majorIndex + 1]

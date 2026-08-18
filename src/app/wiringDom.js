@@ -427,32 +427,10 @@ export const wiringDomMixin = {
       }
     });
     
-    // Label text color
-    this.elements.labelColor?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
-        this.selectedWaypoint.labelColor = e.target.value;
-        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
-      }
-    });
-    
-    // Label background color
-    this.elements.labelBgColor?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
-        this.selectedWaypoint.labelBgColor = e.target.value;
-        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
-      }
-    });
-    
-    // Label background opacity
-    this.elements.labelBgOpacity?.addEventListener('input', (e) => {
-      if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
-        const opacity = parseInt(e.target.value) / 100;
-        this.selectedWaypoint.labelBgOpacity = opacity;
-        this.elements.labelBgOpacityValue.textContent = `${e.target.value}%`;
-        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
-      }
-    });
-    
+    // Label colour/background/opacity have model + rendering support but
+    // no DOM controls — the dead listeners here were removed 2026-08-18
+    // (wish-list: expose under Label → More in the Phase 4 inspector).
+
     // Path Head Style Controls - global settings (not per-waypoint)
     this.elements.pathHeadStyle.addEventListener('change', (e) => {
       this.styles.pathHead.style = e.target.value;
@@ -683,38 +661,12 @@ export const wiringDomMixin = {
       }
     });
     
-    // Camera zoom mode selector (hidden select for backward compatibility)
-    this.elements.cameraZoomMode?.addEventListener('change', (e) => {
-      if (this.selectedWaypoint) {
-        this.selectedWaypoint.camera.zoomMode = e.target.value;
-        this.autoSave();
-        if (this.previewMode) this.render();
-      }
-    });
-    
-    // Camera zoom mode toggle switch (syncs with hidden select)
-    this.elements.cameraZoomModeToggle?.addEventListener('click', () => {
-      const toggle = this.elements.cameraZoomModeToggle;
-      const select = this.elements.cameraZoomMode;
-      const isCurrentlyContinuous = toggle.getAttribute('aria-checked') === 'true';
-      
-      // Toggle state
-      const newValue = isCurrentlyContinuous ? 'immediate' : 'continuous';
-      toggle.setAttribute('aria-checked', !isCurrentlyContinuous);
-      
-      // Update labels
-      const labels = toggle.parentElement.querySelectorAll('.mode-label');
-      labels.forEach(label => {
-        label.classList.toggle('active', label.dataset.value === newValue);
-      });
-      
-      // Sync hidden select and trigger change
-      if (select) {
-        select.value = newValue;
-        select.dispatchEvent(new Event('change'));
-      }
-    });
-    
+    // Camera zoom-mode UI (hidden select + a toggle that never existed in
+    // the DOM) was removed 2026-08-18. camera.zoomMode stays in the model
+    // and CameraService — old saves with 'immediate' still play correctly
+    // (wish-list: surface zoom mode in the Phase 4 "On arrival" card).
+
+
     /**
      * Multi-select zoom slider - updates camera.zoom on all selected waypoints
      * Uses same log scale as single-select: 0-1 → 1x-16x

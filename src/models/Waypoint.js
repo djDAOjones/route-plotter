@@ -1,4 +1,4 @@
-import { RENDERING, ANIMATION, PATH, TEXT_LABEL, TEXT_VISIBILITY, AREA_HIGHLIGHT, AREA_VISIBILITY } from '../config/constants.js';
+import { RENDERING, ANIMATION, TEXT_LABEL, TEXT_VISIBILITY, AREA_HIGHLIGHT, AREA_VISIBILITY } from '../config/constants.js';
 import { CAMERA_DEFAULTS, ZOOM_MODE } from '../services/CameraService.js';
 
 /**
@@ -21,7 +21,9 @@ export class Waypoint {
     this.segmentColor = options.segmentColor || RENDERING.DEFAULT_PATH_COLOR;
     this.segmentWidth = options.segmentWidth || RENDERING.DEFAULT_PATH_THICKNESS;
     this.segmentStyle = options.segmentStyle || 'solid'; // solid, dashed, dotted
-    this.segmentTension = options.segmentTension || PATH.DEFAULT_TENSION;
+    // (segmentTension retired 2026-08-18: serialised and copied since v2
+    // but no control ever existed and PathCalculator never read it — the
+    // spline uses PATH.DEFAULT_TENSION. Old saves carrying it load fine.)
     
     // Path shape for segments starting from this waypoint
     this.pathShape = options.pathShape || 'line'; // line, squiggle, randomised
@@ -268,7 +270,7 @@ export class Waypoint {
     // Properties to copy (style and path properties)
     // Note: pauseMode and pauseTime are excluded by default so each waypoint gets its own default pause
     const copyProps = [
-      'segmentColor', 'segmentWidth', 'segmentStyle', 'segmentTension',
+      'segmentColor', 'segmentWidth', 'segmentStyle',
       'segmentSpeed',
       'pathShape', 'markerStyle', 'dotColor', 'dotSize',
       'beaconStyle', 'labelMode',
@@ -326,7 +328,7 @@ export class Waypoint {
    * @returns {boolean} True if path properties changed
    */
   isPathChange() {
-    const pathProps = ['segmentColor', 'segmentWidth', 'segmentStyle', 'pathShape', 'segmentTension'];
+    const pathProps = ['segmentColor', 'segmentWidth', 'segmentStyle', 'pathShape'];
     return Array.from(this._dirtyProps).some(p => pathProps.includes(p));
   }
   
@@ -359,7 +361,6 @@ export class Waypoint {
       segmentColor: this.segmentColor,
       segmentWidth: this.segmentWidth,
       segmentStyle: this.segmentStyle,
-      segmentTension: this.segmentTension,
       segmentSpeed: this.segmentSpeed,
       pathShape: this.pathShape,
       shapeAmplitude: this.shapeAmplitude,
