@@ -818,28 +818,11 @@ export const wiringControllersMixin = {
       this.announce('All waypoints selected');
     });
     
-    // Path head style events
-    this.eventBus.on('pathhead:style-changed', (style) => {
-      this.styles.pathHead.style = style;
-      this.render();
-      this.saveUndoStateDebounced();
-      this.autoSave();
-    });
-    
-    this.eventBus.on('pathhead:color-changed', (color) => {
-      this.styles.pathHead.color = color;
-      this.render();
-      this.saveUndoStateDebounced();
-      this.autoSave();
-    });
-    
-    this.eventBus.on('pathhead:size-changed', (size) => {
-      this.styles.pathHead.size = size;
-      this.render();
-      this.saveUndoStateDebounced();
-      this.autoSave();
-    });
-    
+    // Path head (route-global) is wired directly in setupEventListeners;
+    // the old pathhead:* event pair duplicated every mutation, undo
+    // snapshot, and autosave, and forced a second synchronous render
+    // per input event (removed 2026-08-18).
+
     // ========== ZOOM/PAN EVENTS ==========
     
     this.eventBus.on('canvas:zoom-in', () => {

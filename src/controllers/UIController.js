@@ -1109,21 +1109,9 @@ export class UIController {
       }
     });
     
-    // Path head controls
-    this.elements.pathHeadStyle?.addEventListener('change', (e) => {
-      this.eventBus.emit('pathhead:style-changed', e.target.value);
-    });
-    
-    this.elements.pathHeadColor?.addEventListener('input', (e) => {
-      this.eventBus.emit('pathhead:color-changed', e.target.value);
-    });
-    
-    this.elements.pathHeadSize?.addEventListener('input', (e) => {
-      const size = parseInt(e.target.value);
-      this.elements.pathHeadSizeValue.textContent = size;
-      this.eventBus.emit('pathhead:size-changed', size);
-    });
-    
+    // Path head is route-global and fully wired in the app's DOM layer
+    // (setupEventListeners) — no listeners here (decision 2026-08-18).
+
     // ========== AREA HIGHLIGHT CONTROLS ==========
     
     // Shape dropdown — toggles sub-control visibility and updates model

@@ -90,12 +90,11 @@ export class Waypoint {
     // are geometry only (see decision-log: major-leg keyframing).
     this.segmentSpeed = options.segmentSpeed !== undefined ? options.segmentSpeed : 1.0;
     
-    // Path head style for when animation reaches this waypoint
-    this.pathHeadStyle = options.pathHeadStyle || 'arrow'; // dot, arrow, custom, none
-    this.pathHeadColor = options.pathHeadColor || '#111111';
-    this.pathHeadSize = options.pathHeadSize || RENDERING.PATH_HEAD_SIZE;
-    this.pathHeadImage = options.pathHeadImage || null;
-    
+    // Path head is a route-global setting (styles.pathHead) — decided
+    // 2026-08-18 (decision-log). The per-waypoint pathHead* fields that
+    // used to live here were never rendered or editable; old saves that
+    // still carry them are silently ignored by this constructor.
+
     // Custom image (for custom marker)
     this.customImage = options.customImage || null;
     this.customImageAssetId = options.customImageAssetId || null;
@@ -275,8 +274,7 @@ export class Waypoint {
       'beaconStyle', 'labelMode',
       'labelOffsetX', 'labelOffsetY', 'labelWidth', 'labelSize',
       'labelColor', 'labelBgColor', 'labelBgOpacity',
-      'pathHeadStyle', 'pathHeadColor',
-      'pathHeadSize', 'pathHeadImage', 'customImage'
+      'customImage'
     ];
     
     copyProps.forEach(prop => {
@@ -387,10 +385,6 @@ export class Waypoint {
       labelBgOpacity: this.labelBgOpacity,
       pauseMode: this.pauseMode,
       pauseTime: this.pauseTime,
-      pathHeadStyle: this.pathHeadStyle,
-      pathHeadColor: this.pathHeadColor,
-      pathHeadSize: this.pathHeadSize,
-      pathHeadImage: this.pathHeadImage,
       customImage: null, // Don't serialize HTMLImageElement
       customImageAssetId: this.customImageAssetId,
       customImageRotation: this.customImageRotation,

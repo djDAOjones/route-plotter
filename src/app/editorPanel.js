@@ -226,13 +226,16 @@ export const editorPanelMixin = {
         this.elements.markerPreview.style.display = 'none';
       }
       
-      // Path head properties
-      this.elements.pathHeadStyle.value = this.selectedWaypoint.pathHeadStyle || this.styles.pathHead.style;
-      this.elements.pathHeadColor.value = this.selectedWaypoint.pathHeadColor || this.styles.pathHead.color;
-      this.elements.pathHeadSize.value = this.selectedWaypoint.pathHeadSize || this.styles.pathHead.size;
+      // Path head is route-global (decision 2026-08-18). Reading the
+      // waypoint's dead pathHead* fields first meant selecting any
+      // waypoint reset these controls to defaults while the renderer
+      // kept using the real global values.
+      this.elements.pathHeadStyle.value = this.styles.pathHead.style;
+      this.elements.pathHeadColor.value = this.styles.pathHead.color;
+      this.elements.pathHeadSize.value = this.styles.pathHead.size;
       this.elements.pathHeadSizeValue.textContent = this.elements.pathHeadSize.value;
-      this.elements.customHeadControls.style.display = 
-        (this.selectedWaypoint.pathHeadStyle || this.styles.pathHead.style) === 'custom' ? 'block' : 'none';
+      this.elements.customHeadControls.style.display =
+        this.styles.pathHead.style === 'custom' ? 'block' : 'none';
       // Beacon editor fields
       if (this.selectedWaypoint.isMajor) {
         // Enable dot & beacon controls for major
