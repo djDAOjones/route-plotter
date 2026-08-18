@@ -2,6 +2,67 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-18 — Phase 2 scene model: Scene/FlowLayer/Emitter land, saves go to coordVersion 9
+
+**Task:** Phase 2 of the v3.0 refactor — the layered-scene data model and
+additive save/load (backlog Phase 2; founding + salvage entries 2026-08-17).
+
+**Shipped:**
+- `src/models/Emitter.js` — one dot stream's authored parameters plus its
+  per-emitter seed. Full founding vocabulary: dotCount, speed,
+  speedVariance, dotSize, dotColor, lifecycleMode
+  (disappear/respawn/loop/collect), releaseStart/releaseDuration,
+  onsetVariance, intensityRamp, wobble. Zero transient state — dots are
+  computed by the Phase 3 engine as a pure function of
+  (timelineMs, layer, seed) and never stored.
+- `src/models/FlowLayer.js` — guide network + emitters. `guideType`
+  'graph' | 'route' (hero route reused as a guide, per the founding
+  decision); a layer always owns its GraphModel so switching guide type
+  never loses data. This is the salvaged GraphModel's first wiring.
+- `src/models/Scene.js` — ordered flow layers (index 0 bottom; all flow
+  layers draw beneath the hero route); CRUD, reorder, clear. The hero
+  route stays `RoutePlotter.waypoints` — the Scene model carries flow
+  layers only.
+- Persistence: coordVersion 7→**9** (8 skipped — the fork's graph-only
+  saves used it). v9 = the v7 shape + an additive `scene` block; pre-v9
+  saves load unchanged with an empty scene (MIN_COORD_VERSION stays 6).
+  Scene is cleared by `clearAll()` and included in undo snapshots, so
+  Phase 4 editing gets undo by construction.
+
+**Decision — emitter timing is an onset window on the master timeline**
+(owner's call, 2026-08-18, over fork-style free-running releasePeriod and
+over "whole timeline only"). Each emitter's dots onset within
+releaseStart/releaseDuration; default window = the whole timeline. All
+candidate parameterisations were determinism-safe — the mandate constrains
+evaluation, not vocabulary — so the window won on expressiveness
+(mid-animation crowd arrival) and on dotCount being an exact promise
+rather than a rate-dependent cap.
+
+**Decision — the release window is normalised (0–1 fractions of the
+timeline), not milliseconds.** Timeline duration is derived (route length
+÷ speed, plus pauses) and shifts constantly during authoring; absolute
+windows would drift out of range. Both fields clamp independently; an
+overhanging window (start + duration > 1) is kept as authored and clipped
+by the engine at evaluation time.
+
+**Decision — full founding vocabulary in v9 from day one** (owner's call
+over a fork-proven-fields-only format). onsetVariance/intensityRamp/wobble
+are persisted now with defaults; Phase 3 may refine ranges but not names.
+Adding defaulted fields later stays legal within v9 if the engine needs
+more (e.g. a wobble frequency).
+
+**Verification:** 204/204 tests (was 158) — four new suites: Emitter,
+FlowLayer, Scene, and a scenePersistence contract suite that binds the
+persistence/undo mixins to a fake app and pins the additive-format rules.
+Live browser pass at v3.1.589: the owner's real v7 autosave upgraded to
+v9 in place (3 waypoints intact, empty scene block added); a
+programmatically authored scene (graph + seeded emitter, mid-timeline
+window) survived autosave → reload as real model instances with exact
+params; no console errors; the owner's autosave was backed up first and
+byte-for-byte restored after the test.
+
+---
+
 ## 2026-08-17 — PlayerCore teardown: the scene is now a pure function of timeline time (Phase 1 complete)
 
 **Task:** Phase 1 item 3 — PlayerCore extraction + deterministic

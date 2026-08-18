@@ -5,6 +5,64 @@
       "imports": [],
       "format": "esm"
     },
+    "src/models/GraphNode.js": {
+      "bytes": 2370,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/models/GraphEdge.js": {
+      "bytes": 4126,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/models/GraphModel.js": {
+      "bytes": 5157,
+      "imports": [
+        {
+          "path": "src/models/GraphNode.js",
+          "kind": "import-statement",
+          "original": "./GraphNode.js"
+        },
+        {
+          "path": "src/models/GraphEdge.js",
+          "kind": "import-statement",
+          "original": "./GraphEdge.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/models/Emitter.js": {
+      "bytes": 7956,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/models/FlowLayer.js": {
+      "bytes": 4306,
+      "imports": [
+        {
+          "path": "src/models/GraphModel.js",
+          "kind": "import-statement",
+          "original": "./GraphModel.js"
+        },
+        {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "./Emitter.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/models/Scene.js": {
+      "bytes": 3632,
+      "imports": [
+        {
+          "path": "src/models/FlowLayer.js",
+          "kind": "import-statement",
+          "original": "./FlowLayer.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/services/MotionVisibilityService.js": {
       "bytes": 79004,
       "imports": [
@@ -2606,7 +2664,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 7339,
+      "bytes": 7499,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2675,7 +2733,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 24895,
+      "bytes": 25761,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2739,12 +2797,17 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 46165,
+      "bytes": 46354,
       "imports": [
         {
           "path": "src/config/constants.js",
           "kind": "import-statement",
           "original": "./config/constants.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "./models/Scene.js"
         },
         {
           "path": "src/services/MotionVisibilityService.js",
@@ -2925,7 +2988,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2417443
+      "bytes": 2459282
     },
     "docs/app.js": {
       "imports": [],
@@ -2937,6 +3000,24 @@
         },
         "src/config/constants.js": {
           "bytesInOutput": 3735
+        },
+        "src/models/GraphNode.js": {
+          "bytesInOutput": 607
+        },
+        "src/models/GraphEdge.js": {
+          "bytesInOutput": 1321
+        },
+        "src/models/GraphModel.js": {
+          "bytesInOutput": 1399
+        },
+        "src/models/Emitter.js": {
+          "bytesInOutput": 2572
+        },
+        "src/models/FlowLayer.js": {
+          "bytesInOutput": 1041
+        },
+        "src/models/Scene.js": {
+          "bytesInOutput": 870
         },
         "src/services/MotionVisibilityService.js": {
           "bytesInOutput": 15206
@@ -3131,7 +3212,7 @@
           "bytesInOutput": 13249
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 3403
+          "bytesInOutput": 3467
         },
         "src/app/playback.js": {
           "bytesInOutput": 4145
@@ -3146,7 +3227,7 @@
           "bytesInOutput": 5375
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 13055
+          "bytesInOutput": 13256
         },
         "src/app/exporting.js": {
           "bytesInOutput": 6949
@@ -3158,10 +3239,10 @@
           "bytesInOutput": 266
         },
         "src/main.js": {
-          "bytesInOutput": 22826
+          "bytesInOutput": 22863
         }
       },
-      "bytes": 602303
+      "bytes": 610415
     }
   }
 }

@@ -20,7 +20,7 @@ src/
                          viewport, path timing, persistence, exporting, editor panel, pointer)
   config/              — constants, keybindings, help content, tooltips
   core/                — EventBus (pub-sub), PlayerCore (pure timeline math)
-  models/              — Waypoint, AnimationState, ImageAsset + GraphNode, GraphEdge, GraphModel (unwired until Phase 2)
+  models/              — Waypoint, AnimationState, ImageAsset + scene model (Scene → FlowLayer → GraphModel/GraphNode/GraphEdge + Emitter)
   services/            — single-responsibility services (18 modules)
   controllers/         — UIController, SectionController
   components/          — SwatchPicker, Dropdown, Tooltip, ParamTooltip
@@ -48,7 +48,11 @@ is transport + events; beacons are closed-form in timeline time; play,
 scrub, and export share the one evaluation path (golden harness:
 `tests/goldenFrames.test.js`). The HTML export player still replays
 serialised markers with its own mapping copy — unified in Phase 5.
-Phases and rationale: backlog + decision-log 2026-08-17.
+The scene data model landed in Phase 2 (2026-08-18): `Scene` →
+`FlowLayer` (guide graph or hero route + `Emitter`s with per-emitter
+seeds and normalised release windows), persisted additively as the
+coordVersion 9 `scene` block. Phases and rationale: backlog +
+decision-log 2026-08-17/18.
 
 ## Key modules
 

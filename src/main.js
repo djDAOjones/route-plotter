@@ -136,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Import modular utilities
 import { RENDERING, ANIMATION, VIDEO_EXPORT, MOTION, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUND_VISIBILITY } from './config/constants.js';
+import { Scene } from './models/Scene.js';
 import { MotionVisibilityService } from './services/MotionVisibilityService.js';
 import { StorageService } from './services/StorageService.js';
 import { CoordinateTransform } from './services/CoordinateTransform.js';
@@ -247,6 +248,7 @@ class RoutePlotter {
     // Waypoints and path data
     this.waypoints = []; // Will hold Waypoint model instances
     this.waypointsById = new Map(); // O(1) lookup by waypoint ID
+    this.scene = new Scene(); // Flow layers (guide graphs + emitters), drawn beneath the hero route
     this.pathPoints = [];
     this.selectedWaypoint = null;
     this.isDragging = false;
@@ -848,6 +850,7 @@ class RoutePlotter {
   clearAll() {
     this.waypoints = []; // Clear Waypoint instances
     this.waypointsById.clear(); // Clear ID lookup map
+    this.scene.clear(); // Clear flow layers
     this.pathPoints = [];
     this.selectedWaypoint = null;
     

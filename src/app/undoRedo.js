@@ -28,7 +28,8 @@ export const undoRedoMixin = {
     return {
       waypoints: this.waypoints.map(wp => wp.toJSON()),
       selectedWaypointId: this.selectedWaypoint?.id || null,
-      styles: stylesCopy
+      styles: stylesCopy,
+      scene: this.scene.toJSON()
     };
   },
   
@@ -114,9 +115,14 @@ export const undoRedoMixin = {
     this.waypoints.forEach(wp => this._addWaypointToMap(wp));
     
     // Restore selection
-    this.selectedWaypoint = state.selectedWaypointId 
+    this.selectedWaypoint = state.selectedWaypointId
       ? this.waypointsById.get(state.selectedWaypointId) || null
       : null;
+
+    // Restore flow-layer scene (if present in snapshot)
+    if (state.scene) {
+      this.scene.fromJSON(state.scene);
+    }
     
     // Restore global styles (if present in snapshot)
     if (state.styles) {

@@ -27,9 +27,12 @@
 - `src/models/Waypoint.js` — Waypoint data model (normalised coords, style, camera, area)
 - `src/models/AnimationState.js` — Playback state (progress, timing, pause tracking)
 - `src/models/ImageAsset.js` — Custom image references (marker, path head)
-- `src/models/GraphNode.js` — Flow-network node (normalised pos, entry/exit type) — unwired until Phase 2
-- `src/models/GraphEdge.js` — Weighted directed edge with control points — unwired until Phase 2
-- `src/models/GraphModel.js` — Node/edge collection: CRUD, referential integrity, adjacency — unwired until Phase 2
+- `src/models/GraphNode.js` — Flow-network node (normalised pos, entry/exit type)
+- `src/models/GraphEdge.js` — Weighted directed edge with control points
+- `src/models/GraphModel.js` — Node/edge collection: CRUD, referential integrity, adjacency (owned by FlowLayer)
+- `src/models/Emitter.js` — Dot-stream params + per-emitter seed (release window, lifecycle, wobble…) — no runtime state
+- `src/models/FlowLayer.js` — Guide network (own graph or hero route) + emitters; visible, guideType
+- `src/models/Scene.js` — Ordered flow layers (drawn beneath the hero route); serialises as the coordVersion 9 `scene` block
 
 ## Services
 

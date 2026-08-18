@@ -27,8 +27,11 @@ export const persistenceMixin = {
       
       // Build project data (same structure as autosave)
       const projectData = {
-        coordVersion: 7,
+        // v9: layered scene (v7 + additive `scene` block; 8 skipped — the
+        // fork's local builds used it for graph-only saves)
+        coordVersion: 9,
         waypoints: this.waypoints.map(wp => wp.toJSON()),
+        scene: this.scene.toJSON(),
         styles: stylesCopy,
         animationState: {
           mode: this.animationEngine.state.mode,
@@ -118,6 +121,12 @@ export const persistenceMixin = {
           .filter(wp => wp !== null);
         this.waypoints.forEach(wp => this._addWaypointToMap(wp));
         this.endBatch();
+      }
+
+      // Load flow-layer scene (v9+; pre-v9 projects have none and clearAll
+      // above already left the scene empty)
+      if (projectData.scene) {
+        this.scene.fromJSON(projectData.scene);
       }
       
       // Load styles
@@ -244,8 +253,11 @@ export const persistenceMixin = {
       }
       
       const data = {
-        coordVersion: 7, // v7: Added image asset support
+        // v9: layered scene (v7 + additive `scene` block; 8 skipped — the
+        // fork's local builds used it for graph-only saves)
+        coordVersion: 9,
         waypoints: this.waypoints.map(wp => wp.toJSON()), // Serialize Waypoint instances
+        scene: this.scene.toJSON(), // Flow-layer params + seeds only — runtime dot state never persists
         styles: stylesCopy,
         animationState: {
           mode: this.animationEngine.state.mode,
@@ -331,11 +343,18 @@ export const persistenceMixin = {
         
         // End batch mode - triggers single path calculation
         this.endBatch();
-        
+
         // Restore custom images for waypoints from asset service
         this._restoreWaypointCustomImages();
-        
+
         console.debug('Loaded waypoints:', this.waypoints.length);
+      }
+
+      // Load flow-layer scene (v9+; pre-v9 autosaves have none — the fresh
+      // Scene from the constructor is already empty)
+      if (data.scene) {
+        this.scene.fromJSON(data.scene);
+        console.debug('Loaded flow layers:', this.scene.getFlowLayers().length);
       }
       if (data.styles) {
         this.styles = { ...this.styles, ...data.styles };

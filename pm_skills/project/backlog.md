@@ -18,10 +18,10 @@
 
 **Phase 1 — enabling refactor: COMPLETE 2026-08-17** (mixin split, layer registry, PlayerCore teardown + golden harness — see decision-log; owner feel-check of the deterministic build welcome)
 
-**Phase 2 — scene model**
+**Phase 2 — scene model: COMPLETE 2026-08-18** (see decision-log)
 
-- [ ] `Scene`/`FlowLayer`/`Emitter` models; coordVersion 7→**9** additive save/load (layer params + seeds only — runtime dot state never persists; 8 is skipped — the fork's local builds used it for graph-only saves, decision-log 2026-08-17)
-- [x] `GraphModel` collection — salvaged from the fork with its 25 tests (landed 2026-08-17, unwired until FlowLayer integration; adjacency + referential integrity + serialisation included)
+- [x] `Scene`/`FlowLayer`/`Emitter` models; coordVersion 7→**9** additive save/load (layer params + seeds only — runtime dot state never persists; 8 is skipped — the fork's local builds used it for graph-only saves, decision-log 2026-08-17) — shipped 2026-08-18: onset-window emitter timing in normalised timeline fractions, full founding vocabulary (incl. onsetVariance/intensityRamp/wobble), guideType 'graph'|'route', scene in clearAll + undo snapshots; 204/204 tests, live autosave round-trip verified
+- [x] `GraphModel` collection — salvaged from the fork with its 25 tests (landed 2026-08-17, wired into FlowLayer 2026-08-18; adjacency + referential integrity + serialisation included)
 
 **Phase 3 — swarm engine**
 
