@@ -9,7 +9,7 @@
 
 import { wiringDomMixin } from '../src/app/wiringDom.js';
 import { wiringBusMixin } from '../src/app/wiringBus.js';
-import { wiringControllersMixin } from '../src/app/wiringControllers.js';
+import { wiringControllersMixin, reorderWaypointBlocks } from '../src/app/wiringControllers.js';
 import { undoRedoMixin } from '../src/app/undoRedo.js';
 import { playbackMixin } from '../src/app/playback.js';
 import { cameraMixin } from '../src/app/camera.js';
@@ -103,5 +103,49 @@ describe('snapToAngle', () => {
     const target = snapToAngle(0, 0, Math.cos(rad40) * 3, Math.sin(rad40) * 3, 90);
     expect(target.x).toBeCloseTo(3, 10);
     expect(target.y).toBeCloseTo(0, 10);
+  });
+});
+
+describe('reorderWaypointBlocks', () => {
+  // Only isMajor is read; names make failure output readable.
+  const major = (name) => ({ name, isMajor: true });
+  const minor = (name) => ({ name, isMajor: false });
+  const names = (wps) => wps.map(wp => wp.name);
+
+  test('a major carries its trailing minors to its new position', () => {
+    const A = major('A'), m1 = minor('m1'), B = major('B'), C = major('C');
+    const result = reorderWaypointBlocks([A, m1, B, C], [B, A, C]);
+    // Regression pin (review 2026-08-18): the old rebuild kept minors at
+    // their original array indices, producing [B, m1, A, C] — m1 silently
+    // detached from A's leg and started shaping B's instead.
+    expect(names(result)).toEqual(['B', 'A', 'm1', 'C']);
+  });
+
+  test('minors before the first major stay at the front', () => {
+    const m0 = minor('m0'), A = major('A'), B = major('B');
+    const result = reorderWaypointBlocks([m0, A, B], [B, A]);
+    expect(names(result)).toEqual(['m0', 'B', 'A']);
+  });
+
+  test('a major omitted from the payload is appended, never dropped', () => {
+    const A = major('A'), m1 = minor('m1'), B = major('B');
+    const result = reorderWaypointBlocks([A, m1, B], [B]);
+    expect(names(result)).toEqual(['B', 'A', 'm1']);
+  });
+
+  test('preserves object identity and count, and does not mutate the input', () => {
+    const A = major('A'), m1 = minor('m1'), m2 = minor('m2'), B = major('B');
+    const input = [A, m1, m2, B];
+    const result = reorderWaypointBlocks(input, [B, A]);
+    expect(result).toHaveLength(4);
+    expect(new Set(result)).toEqual(new Set(input));
+    expect(result).toEqual([B, A, m1, m2]);
+    expect(input).toEqual([A, m1, m2, B]);
+  });
+
+  test('unchanged order round-trips to an identical array', () => {
+    const A = major('A'), m1 = minor('m1'), B = major('B'), m2 = minor('m2');
+    const input = [A, m1, B, m2];
+    expect(reorderWaypointBlocks(input, [A, B])).toEqual(input);
   });
 });

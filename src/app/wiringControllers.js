@@ -11,6 +11,41 @@ import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { snapToAngle } from '../utils/snapToAngle.js';
 
+/**
+ * Reorder waypoints to a new major order, each major carrying its
+ * trailing minors — a minor shapes the leg from the major before it, so
+ * the pair must move together. Minors before the first major keep their
+ * place at the front. Majors missing from newMajorOrder (e.g. a filtered
+ * drag-and-drop payload) are appended in their original order rather
+ * than dropped. Pure: returns a new array, mutates nothing.
+ */
+export function reorderWaypointBlocks(waypoints, newMajorOrder) {
+  const blocks = new Map(); // major → [major, ...its trailing minors]
+  const prefix = [];
+  let block = null;
+  waypoints.forEach(wp => {
+    if (wp.isMajor) {
+      block = [wp];
+      blocks.set(wp, block);
+    } else if (block) {
+      block.push(wp);
+    } else {
+      prefix.push(wp);
+    }
+  });
+
+  const reordered = [...prefix];
+  newMajorOrder.forEach(major => {
+    const b = blocks.get(major);
+    if (b) {
+      reordered.push(...b);
+      blocks.delete(major);
+    }
+  });
+  blocks.forEach(b => reordered.push(...b));
+  return reordered;
+}
+
 export const wiringControllersMixin = {
   
   /**
@@ -646,30 +681,22 @@ export const wiringControllersMixin = {
     
     // Waypoint reordering from UIController drag-and-drop
     this.eventBus.on('waypoints:reordered', (newOrder) => {
-      // Find all major waypoints and update their order
-      const allWaypoints = [...this.waypoints];
-      const minorWaypoints = allWaypoints.filter(wp => !wp.isMajor);
-      
-      // Rebuild waypoints array with new major order, keeping minors in place
-      this.waypoints = [];
-      let majorIndex = 0;
-      
-      allWaypoints.forEach(wp => {
-        if (wp.isMajor) {
-          this.waypoints.push(newOrder[majorIndex]);
-          majorIndex++;
-        } else {
-          this.waypoints.push(wp);
-        }
-      });
-      
+      // Each major moves as a block with its trailing minors. Rebuilding
+      // majors in place while minors kept their array slots silently
+      // reattached minors to different legs (data bug, review 2026-08-18).
+      this.waypoints = reorderWaypointBlocks(this.waypoints, newOrder);
+
+      // Cached major positions are index-derived — stale after reorder
+      this._majorWaypointsCache = null;
+      this.saveUndoState();
+
       // Recalculate path and update
       if (this.waypoints.length >= 2) {
         this.calculatePath();
       }
       this.updateWaypointList();
       this.autoSave();
-      this.render();
+      this.queueRender();
     });
     
     // Coordinate conversion callbacks
