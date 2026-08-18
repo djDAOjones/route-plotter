@@ -2,6 +2,41 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-18 — Phase 3.5 shipped: fifteen paper cuts, and the defects hiding under them
+
+**Task:** All 15 items from the authoring-UI review landed (seven
+commits, edaa4e1..441d43b + close-out). The notable finds beyond the
+review's own list, discovered while fixing its items:
+
+- **Bulk "apply to all" thickness corrupted data** — UIController sent
+  the raw 0–1000 slider integer as `segmentWidth`, so bulk writes stored
+  e.g. 333 on every major. The log-scale conversion now lives once in
+  `src/utils/pathWidthScale.js` (tested), used by both wiring layers,
+  which may not call each other (EventBus rule).
+- **Bulk edits took no undo snapshot** — the modal's "cannot be undone"
+  was literally true. Snapshot added; copy now advertises Cmd+Z.
+  (clearAll still doesn't snapshot — wish-listed, copy there is honest.)
+- **labelPosition had no single-selection wiring at all**; the select
+  did nothing. Wired in the DOM layer like its label siblings.
+- **F2 rename targeted a detached row** (selection rebuilds the list);
+  the extracted `startRenameFor` defers a frame and re-finds the row.
+- **The T key was dead** — `waypoint:toggle-type` had no handler. Real
+  handler written for the context menu (guards the last major,
+  recalculates duration); renames now undo-snapshot too.
+- **Reorder never invalidated `_majorWaypointsCache`** (index-derived
+  positions went stale) and took no undo snapshot — fixed with the
+  minor-carry data bug.
+- **Duration readout mechanism found** (the 8.6s vs 7.7s VERIFY item):
+  preview-only tail time (trail fade + 500 ms handle) was counted for
+  every scene with `pathTrail > 0`, but trails render only in comet
+  mode. Tail is now gated on comet; edit == preview for non-comet
+  scenes (verified live 7080 == 7080 ms on identical data). Comet keeps
+  its genuine preview extension (7080 → 8396 ms) — open design point
+  for the Phase 4 Pacing card: label that extension rather than hide it.
+
+Verified live at v3.1.599, 1680×1000, owner autosave backed up and
+restored byte-identical. 243/243 tests.
+
 ## 2026-08-18 — Phase 3.5 kickoff: the review's open sub-decisions resolved
 
 Four of the five open sub-decisions from the authoring-UI review entry

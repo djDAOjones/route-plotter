@@ -19,3 +19,8 @@
 ## Open
 
 - `getSegmentLengths()` (main.js) + `PathCalculator.calculateSegmentLengths()` are unused since major-leg timing landed — remove in a cleanup pass. — (from: 2026-06-18 segment-speed refinement)
+- Label colour / bg colour / bg opacity controls under Label → More — model + rendering already support them; the dead wiring was removed. — (from: 2026-08-18 Phase 3.5)
+- Surface camera zoom mode (continuous vs immediate) in the Phase 4 "On arrival" card — model + CameraService support it; hidden select removed. — (from: 2026-08-18 Phase 3.5)
+- Clear All should save an undo snapshot like Apply-to-All now does; its modal's "cannot be undone" copy is currently accurate. — (from: 2026-08-18 Phase 3.5)
+- Pacing card should label comet mode's preview-only trail-fade extension (edit 7.1s vs preview 8.4s is real there, but unexplained). — (from: 2026-08-18 duration investigation)
+- Per-leg spline tension under Leg → More if ever wanted — per-waypoint segmentTension was retired unread; PathCalculator would need to consume it. — (from: 2026-08-18 Phase 3.5)

@@ -61,6 +61,7 @@
 - `src/controllers/SectionController.js` — Collapsible settings sections
 - `src/components/SwatchPicker.js` — Okabe-Ito colour-blind safe palette picker
 - `src/components/Dropdown.js` — Accessible dropdown menus
+- `src/components/ContextMenu.js` — Right-click menu (canvas waypoints + empty canvas): Carbon menu anatomy, arrow-key navigation, aria-disabled reasons, focus restore (Phase 3.5)
 - `src/components/Tooltip.js` — Tooltip attachment
 - `src/components/ParamTooltip.js` — Click-label parameter tooltips (Carbon pattern)
 - `src/handlers/InteractionHandler.js` — Mouse, keyboard, touch, drag-and-drop input
@@ -71,6 +72,7 @@
 - `styles/main.css` — Core layout, sidebar, canvas, controls, modals
 - `styles/swatch-picker.css` — Swatch picker grid (5×2, 44px AAA touch targets)
 - `styles/dropdown.css` — Dropdown component styles
+- `styles/context-menu.css` — Context menu styles (UoN tokens, 44px AAA targets)
 - `styles/tooltip.css` — Tooltip styles
 
 ## Config and constants
@@ -86,6 +88,7 @@
 - `src/utils/Easing.js` — Easing functions (linear, quad, cubic, etc.)
 - `src/utils/focusTrap.js` — Modal focus trapping for accessibility
 - `src/utils/snapToAngle.js` — Angle-snap geometry for shift-drag waypoint placement (moved out of main.js in the Phase 1 split)
+- `src/utils/pathWidthScale.js` — Log-scale thickness slider ↔ width (1–40px) mapping; single source shared by the DOM wiring and UIController bulk edits (Phase 3.5)
 
 ## Specs (reference, not live code)
 
