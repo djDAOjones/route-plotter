@@ -838,6 +838,119 @@
 
           </div><!-- /route-scope -->
 
+          <!-- ============================================================
+               CROWD SCOPE (Phase 4) - shown when a crowd layer is selected
+               in the layers strip. Cards edit the crowd's dot stream.
+               ============================================================ -->
+          <div id="crowd-scope" class="scope-group" hidden>
+
+          <!-- GUIDE: what the dots follow -->
+          <div class="settings-section" data-section="guide">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-guide-content">
+              <h2 class="section-title">Guide</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-guide-content" class="section-content">
+              <label for="crowd-guide-type">
+                <span data-tip="What the dots travel along">Guide</span>
+                <select id="crowd-guide-type">
+                  <option value="route">Follow route</option>
+                  <option value="graph" disabled>Custom network (coming with network editing)</option>
+                </select>
+              </label>
+              <p class="section-hint">Dots follow your route. Drawing a custom network arrives with network editing.</p>
+            </div>
+          </div>
+
+          <!-- DOTS: what each dot looks like -->
+          <div class="settings-section" data-section="dots">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-dots-content">
+              <h2 class="section-title">Dots</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-dots-content" class="section-content">
+              <input type="hidden" id="crowd-dot-color" value="#56B4E9">
+              <div class="swatch-picker"
+                   data-target-input="#crowd-dot-color"
+                   data-mode="okabe-ito"
+                   data-label="Colour"
+                   data-allow-custom="false">
+              </div>
+
+              <label for="crowd-dot-size">
+                <span data-tip="Dot size factor, scaled with the image like other elements">Size</span>
+                <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5">
+                <span id="crowd-dot-size-value">0.40×</span>
+              </label>
+
+              <label for="crowd-wobble">
+                <span data-tip="Sideways wander as dots travel — 0% walks the line exactly">Wobble</span>
+                <input type="range" id="crowd-wobble" min="0" max="100" value="0" step="1">
+                <span id="crowd-wobble-value">0%</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- RELEASE: how many dots, and when they set off -->
+          <div class="settings-section" data-section="release">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-release-content">
+              <h2 class="section-title">Release</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-release-content" class="section-content">
+              <label for="crowd-count">
+                <span data-tip="Total dots released across the window">Count</span>
+                <input type="range" id="crowd-count" min="1" max="500" value="50" step="1">
+                <span id="crowd-count-value">50</span>
+              </label>
+
+              <label for="crowd-release-start">
+                <span data-tip="When the first dots set off, as a position in the timeline">Window start</span>
+                <input type="range" id="crowd-release-start" min="0" max="100" value="0" step="1">
+                <span id="crowd-release-start-value">0%</span>
+              </label>
+
+              <label for="crowd-release-duration">
+                <span data-tip="How much of the timeline the release is spread across">Window length</span>
+                <input type="range" id="crowd-release-duration" min="0" max="100" value="100" step="1">
+                <span id="crowd-release-duration-value">100%</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- MOTION: how the dots travel -->
+          <div class="settings-section" data-section="motion">
+            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-motion-content">
+              <h2 class="section-title">Motion</h2>
+              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
+            </div>
+            <div id="section-motion-content" class="section-content">
+              <label for="crowd-speed">
+                <span data-tip="Dot travel speed in image-widths per second">Speed</span>
+                <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1">
+                <span id="crowd-speed-value">0.15 img/s</span>
+              </label>
+
+              <label for="crowd-speed-variance">
+                <span data-tip="Per-dot speed jitter — 0% moves every dot at the same speed">Variance</span>
+                <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1">
+                <span id="crowd-speed-variance-value">20%</span>
+              </label>
+
+              <label for="crowd-lifecycle">
+                <span data-tip="What a dot does when it reaches the end of the route">At route end</span>
+                <select id="crowd-lifecycle">
+                  <option value="respawn">Respawn at start</option>
+                  <option value="loop">Loop around</option>
+                  <option value="disappear">Disappear</option>
+                  <option value="collect">Collect at end</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          </div><!-- /crowd-scope -->
+
         </div>
       </aside>
       
@@ -862,9 +975,15 @@
         </div>
       </div>
       
-      <!-- Right Sidebar - Waypoints (Duration/Scale/Path emphasis moved to
-           the left inspector's Route scope, Phase 4) -->
-      <aside class="sidebar-right" role="complementary" aria-label="Waypoints panel">
+      <!-- Right Sidebar - Layers strip + Waypoints (Duration/Scale/Path
+           emphasis moved to the left inspector's Route scope, Phase 4) -->
+      <aside class="sidebar-right" role="complementary" aria-label="Layers and waypoints panel">
+        <div class="control-group" style="padding: 0.75rem 0.75rem 0;">
+          <h2 style="margin-bottom:0.5rem;">Layers</h2>
+          <!-- Layers strip: Route + crowd layers; rows built by crowds.js -->
+          <ul id="layers-strip" class="layers-strip"></ul>
+          <button id="add-crowd-btn" class="btn btn-secondary add-crowd-btn" type="button">+ Add crowd</button>
+        </div>
         <div class="control-group" style="padding: 0.75rem;">
           <h2 style="margin-bottom:0.5rem;">Waypoints</h2>
           <!-- Waypoint list container - instructions shown inside when empty -->

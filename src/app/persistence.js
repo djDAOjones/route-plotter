@@ -128,7 +128,8 @@ export const persistenceMixin = {
       if (projectData.scene) {
         this.scene.fromJSON(projectData.scene);
       }
-      
+      this.updateLayersStrip();
+
       // Load styles
       if (projectData.styles) {
         this.styles = { ...this.styles, ...projectData.styles };
@@ -356,6 +357,7 @@ export const persistenceMixin = {
         this.scene.fromJSON(data.scene);
         console.debug('Loaded flow layers:', this.scene.getFlowLayers().length);
       }
+      this.updateLayersStrip();
       if (data.styles) {
         this.styles = { ...this.styles, ...data.styles };
         

@@ -119,11 +119,13 @@ export const undoRedoMixin = {
       ? this.waypointsById.get(state.selectedWaypointId) || null
       : null;
 
-    // Restore flow-layer scene (if present in snapshot)
+    // Restore flow-layer scene (if present in snapshot); the rebuilt
+    // layers are new objects, so re-resolve the crowd selection by id
     if (state.scene) {
       this.scene.fromJSON(state.scene);
     }
-    
+    this.resolveCrowdSelectionAfterRestore();
+
     // Restore global styles (if present in snapshot)
     if (state.styles) {
       // Preserve non-serializable Image reference

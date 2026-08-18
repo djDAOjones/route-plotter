@@ -1057,8 +1057,14 @@ export const wiringControllersMixin = {
     });
     
     this.eventBus.on('waypoint:deselect', () => {
-      this.selectWaypoint(null);
-      this.announce('Selection cleared');
+      // `this.selectWaypoint(null)` here threw since the mixin split (no
+      // such method survives on the prototype; the bus swallowed the
+      // error), so Escape never cleared waypoint selection through this
+      // handler. Route through the canonical deselected pipeline.
+      if (this.selectedWaypoint) {
+        this.eventBus.emit('waypoint:deselected');
+        this.announce('Selection cleared');
+      }
     });
     
     this.eventBus.on('waypoint:duplicate', () => {

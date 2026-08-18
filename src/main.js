@@ -174,6 +174,7 @@ import { persistenceMixin } from './app/persistence.js';
 import { exportingMixin } from './app/exporting.js';
 import { editorPanelMixin } from './app/editorPanel.js';
 import { pointerMixin } from './app/pointer.js';
+import { crowdsMixin } from './app/crowds.js';
 
 // Main application class for Route Plotter v3
 class RoutePlotter {
@@ -254,6 +255,7 @@ class RoutePlotter {
     this.pathPoints = [];
     this.selectedWaypoint = null;
     this.canvasHover = null; // Idle-hover target for canvas affordances (edit mode)
+    this.selectedCrowd = null; // Selected crowd layer (FlowLayer) — Crowd scope
     this.isDragging = false;
     this.hasDragged = false; // Track if mouse actually moved during drag
     this.dragOffset = { x: 0, y: 0 };
@@ -624,6 +626,10 @@ class RoutePlotter {
     
     // Initialize Swatch Pickers for colour controls (Okabe-Ito palette)
     attachSwatchPickers();
+
+    // Layers strip + Crowd scope wiring (Phase 4)
+    this.setupCrowdControls();
+    this.updateLayersStrip();
     
     // Initialize tooltips for all elements with data-tooltip attribute
     attachAllTooltips();
@@ -849,6 +855,11 @@ class RoutePlotter {
     this.scene.clear(); // Clear flow layers
     this.pathPoints = [];
     this.selectedWaypoint = null;
+    if (this.selectedCrowd) {
+      this.selectedCrowd = null;
+      this.eventBus.emit('crowd:deselected');
+    }
+    this.updateLayersStrip();
     
     // Reset animation state via AnimationEngine
     this.animationEngine.reset();
@@ -1109,6 +1120,7 @@ Object.assign(
   exportingMixin,
   editorPanelMixin,
   pointerMixin,
+  crowdsMixin,
 );
 
 // Initialize app when DOM is ready

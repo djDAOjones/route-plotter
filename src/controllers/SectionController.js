@@ -41,7 +41,13 @@ const DEFAULT_SECTION_STATE = {
   reveal: false,
   'path-emphasis': false,
   background: true,
-  video: false
+  video: false,
+  // Crowd scope (Dots + Release open: the look and the flow are what a
+  // fresh crowd gets tuned first; Follow-route guide is already on)
+  guide: false,
+  dots: true,
+  release: true,
+  motion: false
 };
 
 export class SectionController {
@@ -72,6 +78,12 @@ export class SectionController {
 
     /** @type {HTMLElement|null} Route-scope card group */
     this.routeScopeGroup = null;
+
+    /** @type {HTMLElement|null} Crowd-scope card group */
+    this.crowdScopeGroup = null;
+
+    /** @type {boolean} Whether a crowd layer is currently selected */
+    this.hasCrowdSelection = false;
     
     /** @type {NodeListOf<Element>|null} Cached section elements */
     this._sectionElements = null;
@@ -92,6 +104,7 @@ export class SectionController {
     this.helpPlaceholder = document.getElementById('settings-help-placeholder');
     this.waypointScopeGroup = document.getElementById('waypoint-scope');
     this.routeScopeGroup = document.getElementById('route-scope');
+    this.crowdScopeGroup = document.getElementById('crowd-scope');
 
     if (!this.sectionsContainer) {
       console.warn('[SectionController] Settings sections container not found');
@@ -293,10 +306,22 @@ export class SectionController {
       this._updateUIState();
     });
     
+    // Crowd layer selection (Phase 4 Crowd scope)
+    this.eventBus.on('crowd:selected', () => {
+      this.hasCrowdSelection = true;
+      this._updateUIState();
+    });
+
+    this.eventBus.on('crowd:deselected', () => {
+      this.hasCrowdSelection = false;
+      this._updateUIState();
+    });
+
     // Clear all
     this.eventBus.on('app:cleared', () => {
       this.hasWaypoints = false;
       this.hasSelection = false;
+      this.hasCrowdSelection = false;
       this._onAllWaypointsRemoved();
     });
 
@@ -425,10 +450,13 @@ export class SectionController {
     // Help placeholder only while the canvas is empty
     this.helpPlaceholder.style.display = this.hasWaypoints ? 'none' : 'block';
 
-    // Scope switch — the panel edits what's selected
-    const waypointScope = this.hasWaypoints && this.hasSelection;
+    // Scope switch — the panel edits what's selected: a crowd layer, a
+    // waypoint, or (nothing selected) the route
+    const crowdScope = this.hasCrowdSelection;
+    const waypointScope = !crowdScope && this.hasWaypoints && this.hasSelection;
+    if (this.crowdScopeGroup) this.crowdScopeGroup.hidden = !crowdScope;
     if (this.waypointScopeGroup) this.waypointScopeGroup.hidden = !waypointScope;
-    if (this.routeScopeGroup) this.routeScopeGroup.hidden = waypointScope;
+    if (this.routeScopeGroup) this.routeScopeGroup.hidden = crowdScope || waypointScope;
 
     // Apply section states + last-interacted indicator
     this._applyAllSectionStates();

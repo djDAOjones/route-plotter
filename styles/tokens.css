@@ -152,6 +152,8 @@
   --scope-waypoint-fg: #79380A;   /* 8.2:1 on --scope-waypoint-bg */
   --scope-route-bg:    #EAF2F8;   /* cool tint echoing UoN interactive blue */
   --scope-route-fg:    #1D4E75;   /* 7.9:1 on --scope-route-bg */
+  --scope-crowd-bg:    #E7F2EE;   /* green tint echoing Okabe-Ito bluish green */
+  --scope-crowd-fg:    #0E4A38;   /* ≥8:1 on --scope-crowd-bg */
 
   /* UI interaction surfaces */
   --hover-ui: #E9E9E9;

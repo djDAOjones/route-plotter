@@ -19,6 +19,7 @@ import { persistenceMixin } from '../src/app/persistence.js';
 import { exportingMixin } from '../src/app/exporting.js';
 import { editorPanelMixin } from '../src/app/editorPanel.js';
 import { pointerMixin } from '../src/app/pointer.js';
+import { crowdsMixin } from '../src/app/crowds.js';
 import { snapToAngle } from '../src/utils/snapToAngle.js';
 import { sliderToPathWidth, pathWidthToSlider } from '../src/utils/pathWidthScale.js';
 
@@ -35,6 +36,7 @@ const MIXINS = {
   exportingMixin,
   editorPanelMixin,
   pointerMixin,
+  crowdsMixin,
 };
 
 describe('RoutePlotter prototype mixins', () => {
@@ -73,6 +75,7 @@ describe('RoutePlotter prototype mixins', () => {
     expect(typeof exportingMixin.exportVideo).toBe('function');
     expect(typeof editorPanelMixin.updateWaypointEditor).toBe('function');
     expect(typeof pointerMixin.findWaypointAt).toBe('function');
+    expect(typeof crowdsMixin.addCrowd).toBe('function');
   });
 });
 

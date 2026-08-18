@@ -263,6 +263,20 @@ export class UIController {
 
     this._scopePrevBtn?.addEventListener('click', () => this._navigateScope(-1));
     this._scopeNextBtn?.addEventListener('click', () => this._navigateScope(1));
+
+    // Crowd scope (Phase 4): the chip names the selected crowd layer.
+    // Crowds sit outside the Route ↔ waypoints step cycle.
+    this._selectedCrowd = null;
+    this.eventBus.on('crowd:selected', (layer) => {
+      this._selectedCrowd = layer;
+      this._updateScopeChip(this.selectedWaypoint, this._allWaypointsSelected,
+        this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
+    });
+    this.eventBus.on('crowd:deselected', () => {
+      this._selectedCrowd = null;
+      this._updateScopeChip(this.selectedWaypoint, this._allWaypointsSelected,
+        this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
+    });
   }
 
   /**
@@ -328,7 +342,10 @@ export class UIController {
 
     const isMultiSelect = multiSelect && multiSelect.length > 1;
     let scope, text;
-    if (allMode) {
+    if (this._selectedCrowd) {
+      scope = 'crowd';
+      text = `Editing · ${this._selectedCrowd.name} · crowd`;
+    } else if (allMode) {
       scope = 'all';
       text = 'Editing · All waypoints';
     } else if (isMultiSelect) {
@@ -346,10 +363,11 @@ export class UIController {
     this._scopeChip.dataset.scope = scope;
     if (this._scopeChipText) this._scopeChipText.textContent = text;
 
-    // Prev/next stepping: only meaningful in single-selection or route scope
+    // Prev/next stepping: only meaningful in single-selection or route
+    // scope — crowds sit outside the step cycle
     const waypoints = this._waypointsCache;
     const index = waypoint ? waypoints.indexOf(waypoint) : -1;
-    const steppable = !allMode && !isMultiSelect && waypoints.length > 0;
+    const steppable = !this._selectedCrowd && !allMode && !isMultiSelect && waypoints.length > 0;
     if (this._scopePrevBtn) {
       // From Waypoint 1, prev backs out to Route scope
       this._scopePrevBtn.disabled = !steppable || !waypoint;
