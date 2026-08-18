@@ -2,6 +2,78 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-18 — Phase 4 third slice: layers strip + Crowd scope — dots flowing in two clicks
+
+**Task:** Land Phase 4 item 3: layers strip above the waypoint list
+(Route + crowds: add/rename/visibility), and selecting a crowd switches
+the inspector to Crowd scope — Guide / Dots / Release / Motion. Zero
+graph UI until Custom network is chosen (network editing is the next
+slice, so that option is present but disabled).
+
+**What shipped:**
+
+- New `src/app/crowds.js` mixin owns the whole feature: the strip
+  (Route row + one row per crowd — colour swatch, name, visibility eye,
+  delete ×, double-click-to-rename), "+ Add crowd", the crowd selection
+  events, card syncing, and the single-writer control wiring.
+- "Add crowd" creates a route-guided FlowLayer with one Emitter
+  (model defaults, but dot colour Okabe-Ito sky blue #56B4E9 so the
+  crowd reads instantly against the vermillion route) and selects it —
+  dots are flowing on the next play/scrub: click 1 Add crowd, click 2
+  play. The button gates on a route existing ("Crowds follow the
+  route — draw a route first") because route is the only guide until
+  network editing lands.
+- Crowd scope joins the one-inspector: `#crowd-scope` group with
+  **Guide** (Follow route | Custom network disabled with reason) ·
+  **Dots** (colour swatch grid, size, wobble) · **Release** (count,
+  window start/length as % of the timeline) · **Motion** (speed in
+  img/s, variance, "At route end" lifecycle select). Dots + Release
+  open by default. Cards edit the layer's FIRST emitter — the model
+  keeps its emitters array; multi-stream authoring is a later tier.
+- Scope chip: "Editing · Crowd 1 · crowd", new green tint tokens
+  (`--scope-crowd-*`, ≥8:1); crowds sit outside the Route ↔ waypoints
+  prev/next step cycle (steppers disable — design point, revisit if
+  stepping into crowds feels missing).
+- Selection exclusivity through ordinary events: crowd:selected emits
+  waypoint:deselected; any waypoint selection emits crowd:deselected;
+  Escape backs out of Crowd scope to Route scope. SectionController's
+  scope switch is now three-way (crowd > waypoint > route).
+- Persistence/undo ride the existing machinery (scene has been in
+  autosave + undo snapshots since Phase 2): param edits go through a
+  central `crowd:param-changed` (debounced undo + autosave + render,
+  mirroring waypoint:path-property-changed); restores re-resolve the
+  selected crowd by id (`resolveCrowdSelectionAfterRestore` in
+  _restoreState and both load paths); crowd delete is instant with an
+  undo toast (same contract as shift-click waypoint delete).
+- **Bug found live and fixed:** the `waypoint:deselect` bus handler
+  has thrown `this.selectWaypoint is not a function` since the Phase 1
+  mixin split (no such method survived; the EventBus swallowed the
+  error, so Escape never cleared waypoint selection through this
+  path). Now routes through the canonical `waypoint:deselected`
+  pipeline — Escape deselection genuinely works.
+
+**Verification:** 274/274 tests (15 new: add/name/gate, strip render +
+selection + visibility + delete/toast, scope exclusivity incl. Escape,
+restore re-resolution by id, rename commit/cancel + chip re-announce).
+Live at v3.1.605 dev, 1680×1000, empty embedded profile restored empty:
+add-crowd one-click flow (chip, scope groups, strip), dots at
+mid-timeline (59 exact-colour px → eye toggle 0 → 59 byte-deterministic),
+all nine controls written through with correct conversions (size 59 →
+11,053 px, count → 16,206 px, colour swap 46k green px + row swatch),
+rename → chip follows (regression found live, fixed, tested),
+delete → toast → undo returns the same layer id, full autosave
+round-trip across reload (name/guide/colour/count/size/lifecycle/
+window/speed all intact), Escape fix verified in the served bundle.
+
+**Design points (owner feel-check welcome):** new-crowd dot colour sky
+blue vs the model's founding orange default (deliberate contrast
+choice); crowd rename is double-click-only (no F2/context menu yet);
+crowds excluded from chip stepping; Dots + Release open as the crowd
+defaults; strip lists crowds in scene order under Route (drag-reorder
+and z-order presentation are later work alongside `Scene.moveFlowLayer`).
+
+---
+
 ## 2026-08-18 — Phase 4 second slice: canvas affordances — the map answers back
 
 **Task:** Land Phase 4 item 2: hover cursor + ring on waypoints and area

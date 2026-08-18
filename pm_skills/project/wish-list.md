@@ -27,3 +27,4 @@
 - Dead `history:undo`/`history:redo` emits in InteractionHandler — no bus listener; real Cmd+Z is playback.js's own keydown handler. Either wire the events or drop one of the two parallel handlers. — (from: 2026-08-18 Phase 4 canvas affordances)
 - Scope chip (and editor sync) goes stale after undo/redo — `_restoreState` restores selection without re-emitting selection events. — (from: 2026-08-18 Phase 4 canvas affordances)
 - Area handle hit-testing misses at viewport zoom > 1 — `area:check-handle` compares screen coords against imageToCanvas (canvas) coords; drag and hover share the miss consistently. — (from: 2026-08-18 Phase 4 canvas affordances)
+- Crowd extras for a later tier: re-roll seed button, onsetVariance/intensityRamp under More…, multi-emitter authoring (cards edit emitters[0] only), strip drag-reorder via Scene.moveFlowLayer. — (from: 2026-08-18 Phase 4 layers strip)
