@@ -2,6 +2,72 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-18 — Phase 4 second slice: canvas affordances — the map answers back
+
+**Task:** Land Phase 4 item 2: hover cursor + ring on waypoints and area
+handles; segment hit-testing (hover glow, click selects the owning
+waypoint and flashes its Leg card); midpoint "+" handle inserting a minor
+on the leg. Modifier gestures unchanged.
+
+**What shipped:**
+
+- New pure-geometry util `src/utils/segmentHitTest.js` (nearest-point
+  projection onto the path polyline, waypoint→point-index mapping, leg
+  ownership, leg midpoint), unit-tested in isolation. A leg is the span
+  between consecutive waypoints of any type — exactly what the
+  inspector's Leg card header names, so canvas and inspector teach the
+  same rule. `findSegmentAt` on the pointer mixin wraps it with the
+  screen→canvas transform and zoom-scaled radii (INTERACTION:
+  SEGMENT_HIT_RADIUS 8, LEG_PLUS_HIT_RADIUS 12).
+- InteractionHandler grew an idle-hover path: rAF-throttled
+  `canvas:hover-move` (+ `canvas:hover-clear` on mouseleave, drag start,
+  draw mode), answered in wiringControllers by the same hit-test cascade
+  clicks use — area handle → waypoint → leg "+" → leg. Cursor logic
+  unified in `_refreshCursor`: modifiers outrank hover (they change what
+  a click does), hover shows pointer, else crosshair.
+- Render side: `hover` rides renderState; two VECTOR_LAYERS entries —
+  `leg-hover` (glow underlay beneath the path: white halo + accent, width
+  follows the leg's rendered thickness via the last-major styling rule)
+  and `hover-affordances` (two-tone hover ring on waypoints/handles —
+  solid, lighter than the marching-ants selection ring; the "+" chip at
+  the leg midpoint, enlarged/filled when its own radius is hovered).
+  All hover layers gate on edit mode and validate hover against current
+  data, so stale hovers after route edits draw nothing.
+- Click cascade: plain click that misses waypoints now checks legs
+  before falling through to add-waypoint. Leg body → `segment:clicked`
+  (select owner + `section:flash` on the Leg card — SectionController
+  expands, scrolls, and pulses it; reduced-motion gets a single static
+  highlight). Midpoint "+" → `waypoint:insert-on-leg`: minor spliced at
+  exactly owner+1 with the midpoint's path coords, so the route shape
+  doesn't move; inherits the owner's styling (copy-at-creation), becomes
+  the selection (same rule as insert-adjacent); one undo entry via
+  waypoint:added. A click within ~8px of the path no longer drops an
+  accidental major on top of it — that's the point of hit-testing.
+- Modifier clicks (add minor/major, shift-delete, snap) behave exactly
+  as before, even over the path.
+
+**Verification:** 259/259 tests (16 new: geometry util + hover layer
+dispatch/order). Live at v3.1.604 dev, 1680×1000, embedded profile
+(autosave was empty; restored to empty + reload): all three hover types
++ callbacks verified through real mousemove/click events end-to-end —
+ring pixels appear/clear byte-identically, leg glow 7.3k px, "+" insert
+turned MMmM into MmMmM at index 1 on the exact midpoint with chip
+"Editing · minor waypoint", undo/redo exact, leg click selected the
+owner + expanded/flashed the Leg card without adding a waypoint, cursor
+pointer/crosshair/not-allowed precedence correct, preview mode refuses
+hover, hit radii scale at 2.25× zoom. Zero console errors.
+
+**Pre-existing quirks spotted, not touched (wish-listed):** the
+`history:undo`/`history:redo` bus emits from InteractionHandler have no
+listener (real Cmd+Z lives in playback.js's own keydown handler — two
+parallel handlers, one dead emit); the scope chip goes stale after
+undo/redo because `_restoreState` re-emits no selection events; area
+handle hit-testing (drag, and now hover, consistently) misses at
+viewport zoom > 1 — `area:check-handle` compares screen coords against
+imageToCanvas outputs.
+
+---
+
 ## 2026-08-18 — Phase 4 first slice: scope-split inspector — the sidebar says what it edits
 
 **Task:** Land Phase 4 item 1 (adopted direction "one inspector, explicit
