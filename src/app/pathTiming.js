@@ -7,7 +7,7 @@
  * Object.assign(RoutePlotter.prototype, pathTimingMixin).
  */
 import { Easing } from '../utils/Easing.js';
-import { ANIMATION } from '../config/constants.js';
+import { ANIMATION, PATH_VISIBILITY } from '../config/constants.js';
 import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
 import { CameraService } from '../services/CameraService.js';
 
@@ -388,12 +388,17 @@ export const pathTimingMixin = {
     
     // Set tail time for trail fade-out (preview mode only)
     // pathTrail is now a fraction (0-1) of the sequence
-    // Tail time = trail duration (as fraction of path) + small handle
-    if (this.previewMode) {
+    // Tail time = trail duration (as fraction of path) + small handle.
+    // The trail only renders in comet mode ('instantaneous'); gating on
+    // pathTrail alone counted tail for every scene, so the duration
+    // readout changed between edit and preview with identical data
+    // (review 2026-08-18: the 8.6s vs 7.7s discrepancy).
+    const isCometMode = this.motionSettings.pathVisibility === PATH_VISIBILITY.INSTANTANEOUS;
+    if (this.previewMode && isCometMode) {
       // Convert trail fraction to duration in ms
       const trailDurationMs = this.motionSettings.pathTrail * pathDuration;
       const handleMs = 500; // 0.5 second handle for clean ending
-      
+
       // Only add tail time if trail is enabled (pathTrail > 0)
       if (trailDurationMs > 0) {
         this.animationEngine.setTailTime(trailDurationMs, handleMs);
@@ -403,7 +408,7 @@ export const pathTimingMixin = {
         this.animationEngine.clearTailTime();
       }
     } else {
-      // Edit mode: no tail time needed
+      // Edit mode or no trail rendering: no tail time needed
       this.animationEngine.clearTailTime();
     }
     
