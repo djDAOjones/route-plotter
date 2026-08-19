@@ -2606,19 +2606,8 @@
       "format": "esm"
     },
     "src/services/HTMLExportService.js": {
-      "bytes": 58507,
-      "imports": [
-        {
-          "path": "src/utils/CatmullRom.js",
-          "kind": "import-statement",
-          "original": "../utils/CatmullRom.js"
-        },
-        {
-          "path": "src/config/constants.js",
-          "kind": "import-statement",
-          "original": "../config/constants.js"
-        }
-      ],
+      "bytes": 10482,
+      "imports": [],
       "format": "esm"
     },
     "src/app/wiringDom.js": {
@@ -2785,7 +2774,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 25819,
+      "bytes": 26927,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2806,7 +2795,7 @@
       "format": "esm"
     },
     "src/app/exporting.js": {
-      "bytes": 16219,
+      "bytes": 14632,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3112,7 +3101,7 @@
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2660022
+      "bytes": 2602319
     },
     "docs/app.js": {
       "imports": [],
@@ -3144,7 +3133,7 @@
           "bytesInOutput": 870
         },
         "src/services/MotionVisibilityService.js": {
-          "bytesInOutput": 15211
+          "bytesInOutput": 15209
         },
         "src/services/StorageService.js": {
           "bytesInOutput": 2143
@@ -3333,7 +3322,7 @@
           "bytesInOutput": 3473
         },
         "src/services/HTMLExportService.js": {
-          "bytesInOutput": 51440
+          "bytesInOutput": 5885
         },
         "src/app/wiringDom.js": {
           "bytesInOutput": 14728
@@ -3366,10 +3355,10 @@
           "bytesInOutput": 5406
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 13306
+          "bytesInOutput": 13467
         },
         "src/app/exporting.js": {
-          "bytesInOutput": 6949
+          "bytesInOutput": 5784
         },
         "src/utils/pathWidthScale.js": {
           "bytesInOutput": 186
@@ -3390,7 +3379,7 @@
           "bytesInOutput": 23413
         }
       },
-      "bytes": 658505
+      "bytes": 611944
     }
   }
 }
