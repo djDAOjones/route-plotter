@@ -24,4 +24,4 @@
 
 ## Open
 
-- [ ] 2026-08-17 dev guide (`_Joe/dev notes/…/dev guide.md`) §4/§7/§10 — main.js is no longer one file: method groups live in `src/app/*` prototype mixins, so "expect to touch main.js" rows now often mean a mixin file; §9 also still documents the deleted PathCalculatorWithWorker/worker fallback (source: decision-log 2026-08-17 Phase 1 + 2026-06-18 worker removal)
+- [x] 2026-08-17 dev guide (`_Joe/dev notes/…/dev guide.md`) §4/§7/§10 — main.js is no longer one file: method groups live in `src/app/*` prototype mixins, so "expect to touch main.js" rows now often mean a mixin file; §9 also still documents the deleted PathCalculatorWithWorker/worker fallback (source: decision-log 2026-08-17 Phase 1 + 2026-06-18 worker removal) — applied 2026-08-19 with owner sign-off (Phase 5 docs pass; also fixed the stale `build:deploy` dist/ description in §3 and pruned the two resolved Uncertainties)

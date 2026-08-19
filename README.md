@@ -2,7 +2,7 @@
 
 An animated route editor for maps and images. Drop in a background, click to place waypoints, tweak styles and timing, then export as MP4, WebM, or a self-contained HTML file.
 
-**[Live demo](https://djdaojones.github.io/router-plotter-02/)** *(v2 line — v3 deploys to `/route-plotter/` at Phase 5)*
+**[Live demo](https://djdaojones.github.io/route-plotter/)** *(the frozen v2 line remains at [router-plotter-02](https://djdaojones.github.io/router-plotter-02/))*
 
 ---
 
@@ -79,6 +79,10 @@ src/
     EventBus.js                   Pub-sub event system
     PlayerCore.js                 Pure timeline math — segments, pause budgets, beacon schedules,
                                   timeline↔path mapping; play/scrub/export share this one evaluation path
+  player/
+    PlayerApp.js                  Headless app core for exported HTML files (real render stack,
+                                  adopts the app's own timing mixins)
+    playerEntry.js                Exported-page boot + transport controls (bundled → docs/player.js)
   handlers/
     InteractionHandler.js         Mouse, keyboard, touch, and drag-and-drop input
   models/
@@ -203,7 +207,7 @@ Save Project packages all state (including the background image) into a `.zip` f
 
 ### HTML export
 
-Self-contained HTML file with embedded base64 background image and a full JavaScript player. Supports all visibility modes, beacons, camera, labels, and interactive scrubbing. 80–95% smaller than equivalent video.
+Self-contained HTML file with embedded base64 background image, the full project data, and the app's own player runtime (`docs/player.js`, inlined at export time). The exported player runs the same PlayerCore/SwarmEngine/RenderingService stack as the app, so crowds, beacons, pauses, camera, labels, and area highlights replay exactly as previewed — including the authored timeline, which is preserved verbatim regardless of the viewer's window size. Interactive transport: play/pause, scrubbing, keyboard, playback speed. 80–95% smaller than equivalent video.
 
 ---
 
@@ -342,5 +346,6 @@ Joe Bell — University of Nottingham
 ## Links
 
 - [Repository](https://github.com/djDAOjones/route-plotter)
-- [Live demo (v2 line)](https://djdaojones.github.io/router-plotter-02/)
+- [Live demo](https://djdaojones.github.io/route-plotter/)
+- [Live demo (frozen v2 line)](https://djdaojones.github.io/router-plotter-02/)
 - [Issues](https://github.com/djDAOjones/route-plotter/issues)

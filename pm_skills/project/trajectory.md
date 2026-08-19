@@ -17,6 +17,22 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Phase 5 — parity & release (shipped 2026-08-19; PHASE 5 COMPLETE — v3.0 refactor milestone CLOSED)
+
+Outcome: HTML exports run the app's real render stack — `src/player/PlayerApp.js` (bundled to `docs/player.js`, inlined into every export) replaces the 1,270-line template player; exports gain swarm layers and area highlights, preserve the authored timeline via the snapshot's `timingReference`, and render at export resolution. v3.2.618 released: GitHub Pages enabled — **https://djdaojones.github.io/route-plotter/ live** (v2 line stays up). Docs refreshed incl. the owner-approved dev-guide reconciliation; decision-log archived by month. See decision-log 2026-08-19 "Phase 5".
+
+## Phase 4, items 2–5 — canvas affordances, layers strip + Crowd scope, network edit mode, multi-select everywhere (shipped 2026-08-18; PHASE 4 COMPLETE)
+
+Outcome: the canvas answers back (hover rings, leg hit-testing + midpoint insert), crowds are authorable in two clicks (layers strip + Crowd scope cards), custom guide networks get the one true tool mode (pen chaining, node/edge cards, Esc ladder), and selection became an app-level set honoured by every card (Cmd+A works, canvas toggle, group delete/nudge, one undo entry per bulk change). See decision-log 2026-08-18 second/third/fourth/fifth slices.
+
+## Phase 3 — deterministic swarm engine (shipped 2026-08-18; PHASE 3 COMPLETE)
+
+Outcome: `SwarmEngine.evaluate(timelineMs, layer, context)` — pure hash(seed, dotIndex, hopIndex) dots with weighted graph walks, four lifecycle modes, route guide, wobble; batched DotRenderer drawing beneath the hero route via the `flow-layers` registry entry. See decision-log 2026-08-18 "Phase 3 swarm engine".
+
+## Phase 2 — layered scene model (shipped 2026-08-18; PHASE 2 COMPLETE)
+
+Outcome: `Scene` → `FlowLayer` (guide graph or hero route) → `Emitter` models with per-emitter seeds and normalised release windows; coordVersion 7→9 additive `scene` block (8 skipped); scene included in clearAll + undo snapshots. See decision-log 2026-08-18 "Phase 2 scene model".
+
 ## Phase 4, item 1 — scope-split inspector (shipped 2026-08-18)
 
 Outcome: the sidebar is an inspector that names its subject — scope chip with prev/next stepping, waypoint cards (Marker · On arrival · Label · Leg → next · Area) vs route cards (Head · Pacing · Reveal · Path emphasis · Background · Video settings) swapped on selection, ghost state deleted, right sidebar reduced to the Waypoints list ready for the Layers strip. Markup + wiring only. See decision-log 2026-08-18 "Phase 4 first slice".

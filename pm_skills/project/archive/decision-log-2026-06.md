@@ -1,0 +1,638 @@
+# Decision Log — 2026-06 (archived)
+
+<!-- Archived from decision-log.md on 2026-08-19 (Phase 5 docs pass, owner-approved
+     budget split). Entries verbatim, newest first. Never auto-read; grep +
+     line-range only. See archive/INDEX.md. -->
+
+
+## 2026-06-18 — Segment-speed refinement: major-leg keyframing + Web Worker removal
+
+**Task:** Backlog "Segment-speed model — audience-coherent leg timing" and its
+dependent "Wider segment-speed range", preceded by the backlog-mandated
+diagnosis spike.
+
+**Latent bug fixed — Web Worker layer removed.** The spike found that
+`PathCalculatorWithWorker` never initialised: esbuild downlevels
+`new Worker(new URL(…, import.meta.url))` against the `chrome58/firefox57`
+target (which predate `import.meta`), so the URL was invalid and the code
+*always* silently fell back to the synchronous main-thread `PathCalculator`.
+Decision: delete the worker layer (`PathCalculatorWithWorker.js`,
+`src/workers/pathWorker.js`) and use `PathCalculator` directly. This makes
+main-thread **corner-slowing** reparameterisation the single canonical path
+behaviour (no hidden even-spacing fork) and drops dead async code.
+
+**Decision — majors are the only timing keyframes.** One speed per
+major-to-major leg; minors shape geometry but never split a leg or act as a
+timing keyframe, and their `segmentSpeed` (incl. legacy saved values) is ignored
+in playback. Mirrors the camera half shipped via `CameraService.toMajorKeyframes`
+(2026-06-16). New `RoutePlotter.getMajorLegData()` aggregates majors + progress +
+per-leg lengths and feeds `AnimationEngine.setSegmentMarkers()` one marker/leg.
+
+**Decision — progress-span timing basis (kills the regime split).**
+`PathCalculator.legTimingLengths(majorProgress, totalLength)` weights each leg by
+its progress span × full path length, not summed pixel lengths. Payoffs: (1)
+corner-slowing preserved (progress maps to corner-dense point index); (2) at
+all-1.0x the legs sum to the full path length, so total duration equals
+`calculatePathLength / baseSpeed` — playback is identical with or without a
+custom leg speed (the old all-1.0x-vs-variable discontinuity is gone).
+`getSegmentDurations()` (zoom rate-limit input) rewritten to the same basis so
+its major→major aggregation stays correct.
+
+**Folded in.** Range widened 0.2x–5.0x → **0.1x–10x** (symmetric log slider,
+centred on 1.0x; only the `SEGMENT_SPEED` constant changed — mapping fns read it
+dynamically). Segment-speed control now hidden for minors (mirrors the pause
+control). HTML export needs no change: markers are serialised verbatim, so the
+player replays the new leg timing automatically.
+
+**Deferred (wish-list):** `getSegmentLengths()` / `calculateSegmentLengths()` are
+now unused by timing; left in place to keep the change minimal.
+
+**Scope:** `PathCalculator.js`, `main.js`, `UIController.js`,
+`AnimationEngine.js`/`Waypoint.js` (doc comments). v3.1.569, build + 69 tests
+green (3 new). In-browser feel-check pending user sign-off.
+
+---
+
+## 2026-06-17 — Path glow (Option B layered underlay) + HTML-export casing parity
+
+**Task:** Next-milestone "Path glow effect" — an optional soft glow around the
+path, named distinctly from the beacon "glow" style.
+
+**Decision — Option B (layered additive underlay).** Glow is drawn as N
+widening, translucent strokes beneath the casing using
+`globalCompositeOperation = 'lighter'`, brightening toward the path centre.
+Chosen over `ctx.shadowBlur` (B over A): shadowBlur is unreliable per-segment,
+scales poorly across zoom, and is costly per frame. The maths live in a pure
+static `RenderingService.glowLayers(baseWidthPx, intensity, extraScale)` →
+`{width, alpha}[]` (widest first), so it is unit-testable without a canvas and
+reused verbatim by preview, the partial head segment, and the HTML player.
+Per-segment colour (not one global colour) so multi-colour routes glow in kind.
+Defaults: 4 layers, +28px max extra width, 0.16 per-layer alpha, 0.5 intensity
+(`RENDERING.PATH_GLOW_*`); halo width scales by zoom×graphics like the casing.
+
+**Bonus fix — HTML-export casing parity.** The export `styles` payload
+(`HTMLExportService.js:108`) is hand-picked and never included `showPathCasing`,
+so the player's `styles.showPathCasing !== false` was always true — the casing
+toggle was silently ignored in HTML exports. Since glow had to be added to that
+same payload, `showPathCasing` was added too; HTML export now matches preview
+(default-on, so the only behaviour change is that a casing-off export now omits
+casing).
+
+**Folded in.** (A) UI: Path casing moved into a new "Path emphasis" Carbon
+fieldset with the glow toggle + intensity slider. (B) the white casing colour +
+`+2px` extra-width literals are now `RENDERING.PATH_CASING_COLOR` /
+`PATH_CASING_EXTRA_WIDTH` (no value change).
+
+**Scope:** `constants.js`, `RenderingService.js`, `main.js`, `index.html`,
+`styles/main.css`, `HTMLExportService.js`, `tests/units.test.js`. `pathGlow`
+persists via `_syncGlobalStyleUI()` (undo/redo, autosave, project-open).
+v3.1.563, build + 66 tests green (6 new `glowLayers` tests).
+
+---
+
+## 2026-06-17 — Console spam gated to console.debug (AnimationEngine)
+
+**Task:** Next-milestone "Console spam gate" — the throttled per-frame
+`console.log` in `AnimationEngine.pathTimeToPathProgress` (plus the related
+segment-speed diagnostics) flooded the 500-entry console ring buffer and
+polluted the Download/Copy Debug Log export during variable-speed playback.
+
+**Finding:** the file already reserved `console.log` for exactly 7 verbose
+segment-speed diagnostics while using `console.debug` for ~15 routine ones.
+The ring-buffer interceptor (`main.js:28`) captures only
+`['log', 'warn', 'error']` — not `debug`.
+
+**Decision:** downgrade all 7 `console.log` sites to `console.debug`
+(`pathTimeToPathProgress` transition + throttled per-frame; `setSegmentMarkers`
+header + per-segment loop; `play()` header; `dumpSegmentState`;
+`timelineToPathProgress` trace). This keeps them out of the ring buffer / Debug
+Log export *and* hidden at the default console level (verbose is suppressed by
+default), while preserving the diagnostics for opt-in DevTools debugging —
+matching the file's dominant `console.debug` pattern. Chosen over deleting them
+(reversible, keeps tooling) and over a new DEBUG flag (no such pattern exists);
+the throttle guards (`_debugFrameCount`/`_debugLogInterval`/`_debugLastSegIdx`)
+are left intact.
+
+**Scope:** `src/services/AnimationEngine.js` only (7 lines, `console.log` →
+`console.debug`). No behavioural change. v3.1.562, 60/60 tests green.
+
+---
+
+## 2026-06-17 — Undo granularity verified (no change); Edit/Preview header reflow fixed
+
+**Task:** Diagnosis (verify-don't-trust) on two Current-milestone items —
+"undo snaps at too-fine increments" and "Edit/Preview warning rejigs the
+header". Both task-brief leads were wrong on specifics.
+
+**Undo — no change.** The mouse-drag path already collapses one drag into one
+undo entry: `InteractionHandler` emits `position-changed {isDragging:true}`
+during the drag (`InteractionHandler.js:243`), the `main.js` handler skips the
+save while dragging (`main.js:1848`) and saves once on `drag-ended`
+(`main.js:1860`); `calculatePath()` emits no cascading events. Verified working
+with the user. The only fine-grained path is arrow-key nudge (one debounced
+save per tap, by design — `main.js:2227`). Backlog item closed, no code change.
+
+**Header reflow — fixed.** The warning is a red herring:
+`.export-warning` (absolute), `.highlight-warning` (box-shadow) and the export
+tip (fixed toast) are all out of flow. The cause is `.mode-label.active`
+switching `font-weight` 500→600 (`styles/main.css:226`, toggled by
+`_updateModeSwitch` `main.js:3243`) — the bolder active label is wider, so each
+Edit↔Preview toggle resizes `.mode-switch` and shifts the flex
+`.header-controls`. Fixed by dropping the `font-weight:600` (active state is
+already multi-signal: pill bg + darker text + box-shadow), CSS-only — v3.1.561,
+60/60 tests green.
+
+**Aside:** `showExportModeWarning()` (`main.js:5350`) is dead — queries a
+non-existent `#export-mode-warning` (CSS class is `.export-warning`); the toast
+already covers it. Parked on the wish-list.
+
+**Scope:** Header fix in `styles/main.css` (one declaration removed); plus memory (backlog, trajectory, wish-list, this log).
+
+---
+
+## 2026-06-17 — Sidebar calmness: waypoint list + swatch picker (UI polish)
+
+**Task:** Two Current-milestone "UI polish and UX" items — calm the waypoint
+list (item 4) and reduce the swatch picker's visual weight (item 3). User chose
+the low-risk "inline tidy" direction over a swatch popover redesign. CSS-only.
+
+**Waypoint list (item 4):**
+
+- **Progressive disclosure:** at rest a row shows only its colour dot + name;
+  the drag handle, ▲/▼ reorder buttons, and delete `×` reveal on
+  `:hover`/`:focus-within`. Hidden controls use `opacity:0` (layout stays
+  stable — space reserved) plus `pointer-events:none` so the invisible delete
+  can't be mis-clicked; both restore on reveal. Keyboard users get the controls
+  via `:focus-within`, so nothing becomes unreachable.
+- **Reorder button size:** grew from 24×16 to **24×22 px** so the two stacked
+  buttons total exactly the 44 px row height — larger than before with *no*
+  hover row-growth jank. **AAA exception (documented):** WCAG 2.5.5's 44 px
+  per button is infeasible for a stacked dual reorder control in a dense list
+  (would need 88 px / doubled rows); 24×24 (the AA 2.5.8 square) would regrow
+  the row 4 px on every hover — itself a calmness regression. 24×22 is the
+  chosen balance; reorder is also keyboard- and drag-operable.
+
+**Swatch picker (item 3):** the inline 5×2 grid can't shrink below ~88 px
+because each `.swatch-option` cell is `min-height:2.75rem` (44 px) for WCAG
+2.5.5 — a hard floor. So visual weight was reduced by shrinking the colour
+*chip* from filling the cell to `height:2rem` (32 px), centred; the 44 px
+clickable cell is untouched. The larger popover redesign (single current-colour
+swatch → grid on click) is parked in the backlog Icebox.
+
+**Scope:** `styles/main.css`, `styles/swatch-picker.css` only. No JS/HTML.
+
+**Verified:** `npm run build` (v3.1.557) + 60/60 tests green. Visual
+confirmation of the lighter/calmer sidebar pending user review (canvas/CSS not
+unit-tested).
+
+---
+
+## 2026-06-17 — Export "Include in export" group + reduced-motion beacons (glow)
+
+**Task:** Two Current-milestone "UI polish and UX" items — consolidate the
+Export inclusion controls into one checkbox group (item 8) and close the
+reduced-motion beacon gap (item 7). Also verified the keyboard-reorder item
+(item 5) was already shipped.
+
+**Export include group (item 8):**
+
+- **Decision:** Replaced the `Included` `<select>` (with-image / path-only)
+  with a Carbon `<fieldset>` "Include in export" of three checkboxes —
+  Background image, Camera movement, Text labels. The camera/text checkboxes
+  (shipped 2026-06-16) moved into the group unchanged; the image toggle is new.
+- **Minimal churn:** kept the `video:layers-change(pathOnly)` event and its
+  `main.js` handler; only the *source control* changed (checkbox →
+  `pathOnly = !checked`). New id `export-include-image`; element ref renamed
+  `exportLayers` → `exportIncludeImage`. `UIController` shares `main.js`'s
+  `elements`, so the ref changed in one place.
+- **Correctness fixes folded in:** the `video:layers-change` handler now calls
+  `autoSave()` (previously it didn't — the image preference could fail to
+  persist), matching the camera/text handlers; and `openProject` now syncs the
+  image checkbox (it previously synced only camera/text, leaving the inclusion
+  control stale after a project load).
+- **AAA:** native fieldset/legend grouping (semantic, no ARIA); each row given
+  `min-height:2.75rem` (44px target, WCAG 2.5.5). Sentence-case labels.
+
+**Reduced-motion beacons (item 7):** the guard suppressed only `pulse`/`ripple`;
+`glow` (a ~3s animated radial bloom) still played under
+`prefers-reduced-motion`. Added `glow` to the skip set (effect held static,
+marker at normal scale). `pop`/`grow` remain — brief one-shot reveal
+transitions, not continuous motion (WCAG 2.3.3).
+
+**Keyboard reorder (item 5):** confirmed already complete — ▲/▼ buttons with
+aria-labels, boundary `disabled`, and `announce()`. Residual nit: the buttons
+are 24×16px (below the 44px AAA target) and `opacity:0` until hover/focus-within;
+migrated to the "waypoint list calmness" backlog item to keep that row-chrome
+rework in one place, rather than fixed here.
+
+**Scope:** `index.html`, `src/controllers/UIController.js`, `src/main.js`,
+`src/services/BeaconRenderer.js`, `styles/main.css`. Event contract unchanged.
+
+**Verified:** `npm run build` + 60/60 tests green. Manual canvas / checkbox /
+persistence / reduced-motion verification pending user confirmation.
+
+---
+
+## 2026-06-17 — restart.sh stops the whole dev tree, not just the port (orphan fix)
+
+**Symptom:** After a `restart.sh` shutdown — and on the next restart — a
+`node build.js --watch` process (plus its npm / `restart.sh` wrappers) was left
+running; repeated restarts accreted orphaned watchers.
+
+**Root cause:** esbuild's `ctx.serve()` binds the port from a child "service"
+process, so `lsof -ti :3000` returns the **esbuild child**, not its
+`node build.js --watch` parent. The original `free_port()` killed only the port
+listener, orphaning the node parent (which keeps the esbuild service and file
+watchers alive). This corrects the kill-scope claim in the entry below
+("only PIDs on port 3000").
+
+**Fix:** replaced `free_port()` with `dev_pids()` + `stop_dev()`. `dev_pids()`
+unions the port listener (`lsof -ti :3000`) with the parent
+(`pgrep -f 'build.js --watch'`); `stop_dev()` sends TERM to the set, then KILL
+to survivors only. Still scoped to this project's dev server — never a broad
+`pkill node`. Called both pre-boot and from the Ctrl-C / TERM `cleanup` trap.
+
+**Verified:** fresh boot → 1 watcher, HTTP 200; restart while already running →
+exactly 1 watcher (old script exits); close-out (TERM, the same `cleanup`
+handler as Ctrl-C) → 0 watchers, 0 port listeners, script exited. Docs
+(DEV-INFRASTRUCTURE recovery playbook, `scripts/README.md`) updated to match.
+
+---
+
+## 2026-06-17 — Maintainer run/build scripts (scripts/)
+
+**Task:** Add ergonomic, tracked entry points for running and rebuilding —
+`scripts/restart.sh` (clean restart/boot) and `scripts/build.sh` (rebuild).
+
+**Decisions:**
+
+- **Codify, don't reinvent.** `restart.sh` is the scripted form of the
+  DEV-INFRASTRUCTURE Recovery playbook (free port 3000 → `npm run dev` →
+  hard-refresh), not new behaviour; `build.sh` wraps `npm run build`. Both
+  resolve the repo root so they run from any CWD.
+- **Honour the one-command-runtime-recovery invariant (AGENTS.md).** Kill
+  scope is *only* PIDs on port 3000 (graceful TERM, then KILL survivors) —
+  never a broad `pkill node`. Readiness is a `curl` poll for HTTP 200, not
+  "process launched" (we had a print-Serving-then-crash incident, see entry
+  below). Destructive actions are gated: default restart deletes nothing;
+  only `--hard-reset` removes `docs/` (documented generated output);
+  `version.json`/`src/`/`_Joe/` are never touched.
+- **Tracked, not personal.** Lives in `scripts/` (version-controlled) with a
+  short `scripts/README.md`, superseding the untracked `_Joe/` helper. Made
+  executable; also runnable via `bash` since OneDrive can drop the +x bit.
+- **No npm aliases** added (kept to the shell-script request); easy to add
+  `npm run restart` later if wanted.
+
+**Verified:** `build.sh` builds clean (v3.1.548); `restart.sh` freed the port,
+booted, and reported HTTP 200 (v3.1.549) with a single listener; `--help`
+works on both.
+
+---
+
+## 2026-06-16 — Dev server survives OneDrive watch churn (build.js)
+
+**Symptom:** `npm run dev` exited 1 mid-session and `localhost:3000` stopped
+loading; log showed `Serving at http://undefined:3000` and a rapid loop of
+`Static file changed: index.html`.
+
+**Root cause:** this workspace is OneDrive-synced; sync repeatedly touches and
+swaps file inodes. The static-file `fs.watch` calls in `build.js` had no
+`error` handler, so an inode swap surfaced as an unhandled FSWatcher error →
+uncaught exception → process exit 1. (The `undefined` host was a separate
+cosmetic bug: current esbuild `ctx.serve()` returns `{ hosts: [...] }`, not
+`{ host }`.)
+
+**Fix:** added a `watcher.on('error', …)` handler and wrapped the copy in
+try/catch so transient sync failures are logged and ignored, not fatal; the
+serve log now prints `http://localhost:${port}` directly. No change to the
+recovery procedure — `npm run dev` remains the one command.
+
+**Verified:** clean restart serves HTTP 200 (v3.1.547); host log fixed.
+
+---
+
+## 2026-06-16 — Interactive control colour + contrast (UoN blue, 3:1 borders)
+
+**Task:** Two Current-milestone UI items — sliders/switches should read UoN
+dark blue not black; interactive elements need a ≥3:1 non-text boundary
+(WCAG 2.2 SC 1.4.11). CSS/token-only.
+
+**Key finding:** control fills already referenced `--interactive-01`
+(= `--uon-blue` `#003A65`, ~11.7:1 on white) — it *passes* contrast but reads
+near-black at small sizes, and a couple of sliders (`.sidebar-control-row`,
+`.control-row-inline`) set no accent, so they fell back to the UA default. So
+"not black" was a perception + consistency gap, not a contrast bug.
+
+**Decisions:**
+
+- **Colour (A1):** added a semantic `--control-accent` / `--control-accent-hover`
+  seam (= `--uon-blue` / `--uon-nottingham-blue`) and pointed every control
+  fill at it (section + timeline thumbs, `.mode-toggle` on-state,
+  `.segment.active`, checkboxes). Added `accent-color` on `body` so *all*
+  native controls inherit UoN blue — kills UA-default/black fallbacks in one
+  line. Kept `#003A65` as the value; the seam allows a one-place retune later.
+  Normal text colour untouched.
+- **Borders (B1):** interactive boundary = `--border-interactive` `#767676`
+  (4.53:1). Added a 1px rail border to the two custom sliders
+  (`.section-content`, `.timeline-slider`; rails were `--ui-03` ≈1.2:1), gave
+  the `.mode-toggle` OFF state a visible border (ON sets it transparent — navy
+  fill is already 11.7:1), and flipped the interactive containers
+  (`.segmented-control`, `.mode-switch`) from passive `--border-subtle` to
+  `--border-interactive`. Repaired `--border-control` (was `#BDBDBD` ≈1.9:1,
+  failed 3:1 → now aliases `--border-interactive`).
+- **Adjacent fix:** `.segment.active` used an undefined `--text-on-color`,
+  rendering the selected Edit/Preview tab as near-black text on the navy fill
+  (~1.3:1). Repointed to `--text-04` (white inverse, 11.7:1) — a one-line fix
+  on a line already being edited.
+
+**Kept separate:** UoN UI tokens vs Okabe-Ito map palette — no map colours
+touched. No colour-only meaning: switch state is carried by fill + thumb
+position, selection by border + contrast.
+
+**Scope:** `styles/tokens.css` + `styles/main.css` only. No JS/HTML.
+
+**Verified:** `npm run build` (v3.1.544) + 60/60 tests green. Visual smoke-load
+pending user confirmation (canvas/CSS not unit-tested).
+
+---
+
+## 2026-06-16 — Camera zoom: keyframe over major waypoints only (bug fix)
+
+**Bug:** With two 4x majors and a minor between them, the follow-cam zoom
+dipped toward 1x at the minor (preview + MP4/WebM + HTML export).
+
+**Root cause:** Zoom was keyframed over *every* waypoint.
+`CameraService._findWaypointSegment()` walked the full waypoint list and
+each `Waypoint.camera.zoom` defaults to 1, so a minor injected a 1x
+keyframe → interpolation ran 4x→1x→4x. The camera UI was already
+major-only ("This/Next Zoom" read the next *major*,
+`main.js:_updateCameraControls`), so the engine was the part out of step.
+
+**Decision:** Make minors transparent to the camera by feeding the
+keyframer a *majors-only* waypoint+progress set. Chosen over filtering
+inside `CameraService` so the interpolation/smoothing/rate-limiter maths
+stay untouched and the service stays generic ("keyframe over whatever
+you're given"). New invariant: **camera zoom keyframes over major
+waypoints only; minors shape path geometry, never zoom.**
+
+**Mechanism:**
+
+- New pure `CameraService.toMajorKeyframes(waypoints, progressValues)` →
+  index-aligned majors-only arrays (unit-tested).
+- `main.js:_calculateCameraState()` passes the filtered arrays. Head
+  position still derives from full `pathPoints`, so panning is unaffected.
+- **HTML export mirror:** the embedded player's `findWaypointSegment` /
+  `calculateTargetZoom` / `hasZoom` filter on `isMajor !== false` (already
+  embedded). Same predicate in both so indices align.
+- **Rate-limit warning:** `main.js:validateZoomTransitions()` now builds
+  major→major pairs with durations aggregated across spanned minors —
+  otherwise short minor sub-segments would raise false warnings.
+
+**Not touched:** `AnimationEngine.setSegmentMarkers()` (timing still
+keyframes every waypoint). That is the same minors-as-keyframes shape and
+the *shared* half of the Next-milestone "segment-speed model" item — but
+that item has separate contributors (`MIN_CORNER_SPEED`, the all-1.0x vs
+variable-speed regime split) and needs its own spike. Mirror this
+majors-only approach there when it lands.
+
+**Verified:** `npm run build` (v3.1.542) + 60/60 tests (added a
+regression test proving full-list dips to ~1x and majors-only holds 4x).
+Manual smoke confirmed by user: preview holds 4x across the minor.
+
+---
+
+## 2026-06-16 — Export toggles: without-camera / without-text
+
+**Decision:** Added `exportSettings.includeCamera` / `includeText`
+(default true), surfaced as two Carbon checkboxes in the Export section.
+Chosen design = Option A: gate the raster/preview render; shape the HTML
+export data. Never mutate the live waypoint model.
+
+**Mechanism:**
+
+- **Camera:** `_calculateCameraState()` returns identity when
+  `!includeCamera` (alongside the existing `!previewMode` guard) — flat
+  view in preview + export.
+- **Text:** render state carries
+  `suppressLabels = !includeText && (previewMode || _isExportMode)`;
+  `RenderingService.renderVectorLayerTo` skips `renderLabel`. WYSIWYG in
+  Preview, full suppression during export, labels always shown in plain
+  Edit mode.
+- **HTML:** `HTMLExportService` shapes `PROJECT_DATA` (per-waypoint
+  `camera.zoom = 1` so the player's `hasZoom` check is false; `label =
+  ''`) — no embedded-player JS changed.
+
+**Persistence:** both keys added to autoSave + project-save; explicit
+`!== undefined` restore + checkbox sync in `loadAutosave`; checkbox sync
+after the project-load `Object.assign` (`!== false` so old saves default
+to included).
+
+**Naming:** positive `includeX` (checkbox checked = included), inverse
+to the legacy `pathOnly`. Events `video:camera-change` /
+`video:text-change` mirror `video:layers-change`.
+
+**Deferred:** consolidating the Export "Included" select + these toggles
+into one checkbox group → `wish-list.md`.
+
+**Verified:** `npm run build` + 57 tests green. Manual canvas/HTML
+verification pending.
+
+---
+
+## 2026-06-16 — Roadmap: six incoming requests triaged + batched
+
+**Context:** Six requests (segment-speed range; first-leg speed
+coherence; path glow; zoom-returns-to-1x; export-without-camera;
+export-without-text) scoped against source before any code.
+
+**Key finding — shared root cause:** Minor waypoints act as full
+*timing and camera keyframes*, contradicting the documented "minors
+shape geometry only" model. `CameraService._findWaypointSegment()`
+keyframes over every waypoint and each `Waypoint.camera.zoom` defaults
+to 1, so a minor between two zoomed majors interpolates 4x→1x→4x — the
+"zoom returns to 1x" report. The camera UI already implies
+major-to-major ("This/Next Zoom" read the next *major*), so the engine
+is the part out of step. Timing has the same per-leg-incl-minors
+structure in `AnimationEngine.setSegmentMarkers()`.
+
+**Decisions:**
+
+- **Camera 1x dip = bug, lands in Current.** Fix by keyframing zoom over
+  major waypoints only (minors pass through). Aligns the engine to the
+  existing UI contract; low ambiguity.
+- **Segment-speed model rethink needs a diagnosis spike first.** Lean:
+  minors = geometry only, majors = timing keyframes. But corner-slowing
+  reparameterisation (`MIN_CORNER_SPEED`) and the all-1.0x vs
+  variable-speed regime split are separate contributors to "first leg
+  feels different" — confirm before committing. Goes to Next (rework,
+  not a clear-cut bug); shares the camera diagnosis.
+- **Wider range sequenced after the model** to avoid tuning twice;
+  proposed 0.1x–10x, slider stays log-centred on 1.0x.
+- **Export-without-camera / -without-text batched together** — same
+  pattern as existing `pathOnly` (temp state swap during export) plus
+  4-place persistence; ship as one low-risk batch, first.
+- **Path glow: global toggle**, distinct name from beacon "glow"; new
+  render pass modelled on the casing pass.
+- **HTML-export parity included** for glow + both export toggles
+  (`HTMLExportService` has its own renderer — extra work accepted for
+  consistency).
+
+**Recommended order:** export toggles → camera fix → segment-speed
+model + range → glow.
+
+**Scope:** Memory only (`backlog.md` + this entry). No app code.
+
+---
+
+## 2026-06-16 — Pruned project memory
+
+**Decision:** Migrated the lone shipped `[x]` item out of `backlog.md`
+(shipped work has a budget of 0 there). Moved *Path casing toggle* to
+`trajectory.md` as the first real phase entry (one line); its WHY was
+already logged (2026-04-16). Removed the `## Completed` section and its
+stale "read Active only" comment from `backlog.md`.
+
+**Scope:** No `archive/` files created — content moved to the live
+`trajectory.md`, not cold storage. All other memory files are within
+budget. This clears the follow-up noted in the 2026-06-14 upgrade entry.
+
+---
+
+## 2026-06-16 — Fixed broken deploy path (`build:deploy` / `push.js`)
+
+**Decision:** `build:deploy` was `npm run build && rm -rf docs && cp -r
+dist docs`, but `build.js` writes straight to `docs/` and never creates
+`dist/`. So `npm run push` built fresh `docs/`, deleted it, then copied
+a stale, gitignored `dist/` (months old, 280 KB vs 479 KB) over it —
+i.e. it would deploy old code. Simplified `build:deploy` to
+`npm run build`; dropped `dist` from `push.js` `STAGE_TARGETS` /
+`git add` / log messages; repointed `serve:dist` at `docs/`. Updated
+`DEV-INFRASTRUCTURE.md` + `README.md` to match.
+
+**Verified:** `node push.js --dry-run` shows build → stage `docs
+version.json` → commit → push, with no `dist`. The bug was caught
+during the code-review-phase2 deploy (done manually to avoid it). The
+stale local `dist/` is harmless now that nothing references it.
+
+---
+
+## 2026-06-16 — `npm test` uses the threads pool (OneDrive workspace fix)
+
+**Decision:** Changed `npm test` from `vitest run` to
+`vitest run --pool=threads --no-file-parallelism` (and `test:watch`
+to match) in `package.json`.
+
+**Why:** Vitest's default `forks` pool times out starting its worker
+in this OneDrive-synced workspace path, exiting 0 with "no tests" — a
+silent false green. The 2026-06-14 entries noted forks "succeeds once
+hydrated", but the timeout has proven consistent enough to need a
+permanent fix rather than relying on warm `node_modules`. The
+`threads` pool with `--no-file-parallelism` was verified green
+(57/57, ~1s) and is now the canonical invocation.
+
+**Scope:** `package.json` scripts + `DEV-INFRASTRUCTURE.md` canonical
+scripts table (command + a "why" note). No source or test changes;
+generated `docs/*`/`version.json` left untouched.
+
+---
+
+## 2026-06-14 — Code review phase 2: cleanups + coverage (branch code-review-phase2)
+
+**Decision:** Continued the review ("go whole hog on the parked items").
+Shipped the safe, verifiable improvements; deliberately deferred the two
+high-surface, interaction-unverifiable items to a supervised session.
+
+**Shipped (branch `code-review-phase2`, build + 57 tests green):**
+
+- Canonicalised labelMode — normalise legacy `'none'` → `'off'` on load;
+  `hasLabel()` now tests `!== OFF`; UIController editor fallback `'off'`.
+- PathCalculator coordinate access uses `??` (a valid `0` coordinate is
+  no longer discarded by falsy `||`).
+- Removed unused `A11Y` constants and 4 dead `@deprecated` methods
+  (reveal-mask ×2, tab no-ops ×2) — all verified zero callers.
+- +13 unit tests (labelMode/hasLabel, getTextVisibility branches, log2
+  slider round-trip, ImageAsset). Suite 44 → 57.
+
+**Deferred, with reasoning:** a blind `main.js` split is organisational
+only (no runtime benefit) and a ~40-site `render()`→`queueRender()`
+migration both carry subtle interaction-regression risk I cannot verify
+without a browser (no Playwright/interaction harness). Both are planned
+concretely in `wish-list.md` for a supervised session. A few
+`@deprecated` methods were left in place (internal whitespace makes
+tool-based excision fragile).
+
+---
+
+## 2026-06-14 — Code review: restored test suite, fixed latent bugs
+
+**Decision:** Ran a full code-review pass (auto-jazz, unsupervised) on
+branch `code-review-autojazz`. Prioritised safe, high-value fixes over
+risky refactors.
+
+**What changed:**
+
+- **Test suite restored (0 → 44 passing).** `npm test` was a silent
+  false-green ("no tests", exit 0). Causes: (1) `tests/setup.js`
+  assigned getter-only jsdom 27 globals (`performance`, `localStorage`,
+  `Image`, URL helpers) via `global.x =`, throwing during setup;
+  (2) `example.test.js` used `jest.fn()` in a Vitest project; (3) stale
+  assertions (labelMode `'none'`, pixel-space PathCalculator input,
+  removed Easing methods). Also discovered: the default forks pool times
+  out on a cold OneDrive `node_modules` ("files on demand") and reports
+  no tests; it succeeds once hydrated — a real false-green trap.
+- **fix(waypoint):** `toggleType()` set `labelMode` to legacy sentinel
+  `'none'` (invalid TEXT_VISIBILITY mode); aligned to `'off'` like
+  `createMinor`/`copyPropertiesFrom`.
+- **fix(app):** `destroy()` called non-existent methods
+  (`pathCalculator.destroy`, `eventBus.removeAll`) and cancelled a
+  boolean instead of a RAF id; corrected, and `queueRender()` now stores
+  the frame id.
+- **+18 unit tests** for pure model/service logic (`tests/units.test.js`).
+
+**Deferred (wish-list — too risky unsupervised):** split 6057-line
+`main.js`; direct `render()` → `queueRender()`; remove `@deprecated`
+shims and unused `A11Y` constants; dead `Waypoint.hasLabel()`.
+
+**Status:** committed to branch, not pushed/merged — awaiting review.
+
+---
+
+## 2026-06-14 — Upgraded pm-skills framework (pre-1.0.0 → 2.3.0)
+
+**Decision:** Upgraded pm-skills from its pre-versioning state to
+v2.3.0 via the framework's Legacy upgrade path (full-tree diff against
+source, classified by `MANIFEST.md`).
+
+**Version:** pre-1.0.0 (no `VERSION` file) → 2.3.0.
+**Source:** <https://github.com/djDAOjones/PM-Skills> (shallow clone).
+
+**What changed:**
+
+- Added metadata `VERSION`, `CHANGELOG.md`, `MANIFEST.md` — the project
+  is now versioned and future upgrades skip the legacy path.
+- Overwrote 12 existing framework files (GUIDE, init, integrations
+  bugfix/feature, 8 prompts) with their v2.3.0 versions.
+- Added 15 new framework files (7 integrations incl. init-mvp,
+  init-project, spec-to-prod, prune-memory, auto-jazz(-lite), upgrade;
+  8 prompts incl. deploy, end-of-task, doctor-memory, next-batch,
+  prune-memory, release, roadmap-refactor, upgrade).
+- Created two new project-memory files from template: `trajectory.md`
+  (warm — shipped-work narrative) and `wish-list.md` (cold — idea inbox).
+- Merged root templates: `AGENTS.md` gained the Memory size budgets
+  table, the Capturing deferred ideas section, the One-command runtime
+  recovery hard rule, an updated Document-ownership table, and new
+  anti-patterns; `DEV-INFRASTRUCTURE.md` gained a populated Runtime
+  lifecycle section. `UI-STANDARDS.md` unchanged (already current).
+
+**Local customisations:** none — existing framework files were vanilla
+older versions (no project-specific edits found), so all were
+overwritten cleanly. All populated content in the root templates was
+preserved verbatim.
+
+**Follow-up:** `backlog.md` still has a `## Completed` section; newer
+pm-skills relocates shipped work into `trajectory.md` (one line) +
+`decision-log.md` (the why). Migrate via `roadmap-refactor.md` /
+`prune-memory.md` when convenient — deferred to keep this upgrade
+lossless.
+
+---

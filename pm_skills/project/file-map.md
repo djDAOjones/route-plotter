@@ -15,10 +15,15 @@
 - `src/app/camera.js` — camera keyframe UI, camera state evaluation, zoom-transition warnings
 - `src/app/viewport.js` — canvas aspect/bounds, coordinate conversion, manual zoom
 - `src/app/pathTiming.js` — path recalc, easing, segment/leg timing, duration updates
-- `src/app/persistence.js` — project save/load, autosave/restore, dirty-title indicator
+- `src/app/persistence.js` — project save/load, autosave/restore, dirty-title indicator; `_buildProjectSnapshot()` = the single coordVersion-9 shape shared by autosave and HTML export (incl. timingReference; Phase 5)
 - `src/app/exporting.js` — export mode enter/exit, video/HTML export flows, summary UI
 - `src/app/editorPanel.js` — waypoint list + editor panel sync, control-visibility helpers, `selectionTargets()` (the write-target rule every card edit loops over; Phase 4 multi-select)
 - `src/app/pointer.js` — canvas pointer fallbacks and hit-testing
+
+## Exported player (Phase 5 — bundled to docs/player.js, inlined into HTML exports)
+
+- `src/player/PlayerApp.js` — Headless app core for exported files: real service instances + adopted app mixins (pathTiming wholesale; viewport/camera cherry-picks); computes timing in the snapshot's timingReference space, renders at export resolution; never imports ImageAssetService (jszip) or the exporting mixin (mediabunny)
+- `src/player/playerEntry.js` — Exported-page boot: background decode, transport controls, keyboard, resize; exposes `window.__routePlotterPlayer` debug handle
 
 ## Core modules
 
@@ -47,7 +52,7 @@
 - `src/services/CameraService.js` — Per-major-waypoint zoom with continuous interpolation; `toMajorKeyframes()` drops minors (minors shape geometry, not zoom)
 - `src/services/CoordinateTransform.js` — Image ↔ canvas coordinate conversion
 - `src/services/VideoExporter.js` — MP4/WebM export (WebCodecs + mediabunny)
-- `src/services/HTMLExportService.js` — Self-contained HTML export with embedded player
+- `src/services/HTMLExportService.js` — Self-contained HTML export: embeds the project snapshot + background + the pre-built player bundle (fetched same-origin from docs/player.js, inlined); the shell markup/CSS lives here (Phase 5)
 - `src/services/ImageAssetService.js` — Custom image management and deduplication
 - `src/services/StorageService.js` — localStorage with debounce and change detection
 - `src/services/UndoService.js` — 150-step undo/redo history

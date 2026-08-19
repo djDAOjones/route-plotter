@@ -117,7 +117,11 @@ npm run dev                      # reboot to a ready state
 ## Build system
 
 - **Bundler:** esbuild (via custom `build.js`)
-- **Entry point:** `src/main.js`
+- **Entry points:** `src/main.js` → `docs/app.js` (the app) and
+  `src/player/playerEntry.js` → `docs/player.js` (the exported-HTML
+  player bundle, IIFE; HTMLExportService fetches and inlines it into
+  every export, so it must ship alongside the app). Both build in
+  watch and production modes.
 - **Output directory:** `docs/` (also serves as GitHub Pages root)
 - **Format:** ESM
 - **Source maps:** Enabled in both dev and production
@@ -163,7 +167,7 @@ breaking change.
   `origin/main`.
 - **Custom message:** `npm run push "custom msg"`
 - **Dry run:** `npm run push --dry-run`
-- **Live URL:** <https://djdaojones.github.io/router-plotter-02/> (v2 line; v3 will deploy to <https://djdaojones.github.io/route-plotter/> once Pages is enabled at Phase 5)
+- **Live URL:** <https://djdaojones.github.io/route-plotter/> (Pages enabled 2026-08-19, Phase 5; the frozen v2 line stays at <https://djdaojones.github.io/router-plotter-02/>)
 
 ---
 

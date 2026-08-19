@@ -73,7 +73,7 @@ and rebuilds from scratch.
 |------------------------|-------------------------------------------------------------|
 | `npm run dev`          | Watch + serve from `docs/` (dev mode, no minify)            |
 | `npm run build`        | One-shot production build → `docs/` (minified, sourcemap)   |
-| `npm run build:deploy` | `npm run build` then copies `dist/` → `docs/`              |
+| `npm run build:deploy` | Alias of `build` — output goes straight to `docs/`          |
 | `npm run push`         | Build, stage `docs/ version.json`, commit, push to `main`   |
 | `npm test`             | Vitest (jsdom) — runs `tests/**/*.test.js`                  |
 | `npm run test:watch`   | Vitest in watch mode                                        |
@@ -134,6 +134,13 @@ User input
 - **main.js** (`RoutePlotter` class) is the sole orchestrator. It owns
   every service, handles every EventBus subscription, and manages all
   application state. Nothing talks to anything else directly.
+  Since the Phase 1 split (2026-08-17) its method groups live as
+  prototype mixins in `src/app/*` (wiring, playback, undo/redo, camera,
+  viewport, path timing, persistence, exporting, editor panel, pointer,
+  crowds, network), attached via `Object.assign` at the bottom of
+  `main.js`. "Touch main.js" in older notes usually now means the
+  matching mixin file; method names must stay unique across all mixins
+  (`tests/mixins.test.js` guards this).
 - **UIController** translates DOM events into EventBus events. It never
   mutates waypoints or application state.
 - **InteractionHandler** does the same for canvas mouse/touch/keyboard.
@@ -272,20 +279,21 @@ Use this table to estimate which files a change will touch.
 
 | If you are changing…  | Expect to touch                                                           |
 |-----------------------|---------------------------------------------------------------------------|
-| Waypoint visual style | `Waypoint.js`, `main.js`, `index.html`, `RenderingService.js`            |
-| Waypoint data/model   | `Waypoint.js`, `main.js` (autoSave, loadAutosave, editor sync)           |
-| Animation timing      | `AnimationEngine.js`, `main.js` (duration calc, UI sync)                 |
-| Path calculation      | `PathCalculator.js` or `PathCalculatorWithWorker.js`, `main.js`          |
+| Waypoint visual style | `Waypoint.js`, `src/app/wiringDom.js`, `index.html`, `RenderingService.js`|
+| Waypoint data/model   | `Waypoint.js`, `src/app/persistence.js` (autoSave/loadAutosave), `src/app/editorPanel.js` (editor sync) |
+| Animation timing      | `AnimationEngine.js`, `src/core/PlayerCore.js`, `src/app/pathTiming.js` (duration calc) |
+| Path calculation      | `PathCalculator.js`, `src/app/pathTiming.js`                             |
 | Sidebar UI layout     | `index.html`, `styles/main.css`                                          |
 | Colour palette        | `SwatchPicker.js`, `styles/swatch-picker.css`, `tokens.css`              |
 | Beacon effect         | `BeaconRenderer.js`, `RenderingService.js`                               |
-| Video/HTML export     | `VideoExporter.js` or `HTMLExportService.js`, `main.js`                  |
-| Camera/zoom           | `CameraService.js`, `RenderingService.js`, `main.js`                     |
+| Video export          | `VideoExporter.js`, `src/app/exporting.js`                               |
+| HTML export           | `HTMLExportService.js`, `src/app/exporting.js`, `src/player/*` (exported player), `build.js` (player bundle) |
+| Camera/zoom           | `CameraService.js`, `RenderingService.js`, `src/app/camera.js`           |
 | Area highlights       | `AreaDrawingService.js`, `AreaEditService.js`, `AreaHighlightRenderer.js`|
 | Text labels           | `TextLabelService.js`, `RenderingService.js`                             |
 | Coordinate transforms | `CoordinateTransform.js` — **high-risk, test thoroughly**                |
-| Undo/redo             | `UndoService.js`, `main.js` (snapshot shape)                             |
-| Persistence format    | `main.js` (autoSave/loadAutosave), `Waypoint.js` (toJSON/fromJSON)       |
+| Undo/redo             | `UndoService.js`, `src/app/undoRedo.js` (snapshot shape)                 |
+| Persistence format    | `src/app/persistence.js` (`_buildProjectSnapshot`/loadAutosave), `Waypoint.js` (toJSON/fromJSON) |
 
 ---
 
@@ -362,9 +370,11 @@ protects against this.
 ### Animation duration after reset
 
 `AnimationState.reset()` preserves speed but resets duration to the
-default. The `animation:reset` handler in `main.js` must recalculate
-duration from path length and speed, then update AnimationEngine. If
-this step is skipped, the animation plays at the wrong speed.
+default. The `animation:reset` handler in `src/app/wiringBus.js` must
+recalculate duration from path length and speed, then update
+AnimationEngine. If this step is skipped, the animation plays at the
+wrong speed. (The exported player restores the authored duration
+instead of recomputing — see `src/player/PlayerApp.js`.)
 
 ### H.264 even dimensions
 
@@ -384,12 +394,14 @@ Video export uses the encoder's `'dequeue'` event for backpressure
 yielding. Using `setTimeout` polling instead will starve the hardware
 encoder output callback and hang the export.
 
-### Web Worker fallback
+### Path calculation is main-thread by design
 
-`PathCalculatorWithWorker` starts a Web Worker for off-thread path
-calculation. If it fails (e.g. due to `file://` origin or CORS), it
-falls back silently to main-thread `PathCalculator`. This means path
-calculation will block the UI but still work.
+The former `PathCalculatorWithWorker` layer was deleted (2026-06-18):
+it never initialised under the old esbuild browser targets, so the
+synchronous main-thread `PathCalculator` was always the real code
+path. Corner-slowing reparameterisation on the main thread is the
+single canonical behaviour; the es2022 targets re-legalise workers if
+one is ever genuinely needed again.
 
 ### Coordinate transform
 
@@ -436,7 +448,9 @@ absent in test environments.
 - **Check the impact table** (§7) to know which files will be touched.
 - **Prefer single-file changes** when possible. Most visual tweaks
   need only `RenderingService.js`. Most UI wiring changes need only
-  `main.js`.
+  the matching `src/app/*` mixin (DOM wiring in `wiringDom.js`, bus
+  handlers in `wiringBus.js`, controller events in
+  `wiringControllers.js`).
 
 ### Making minimal changes
 
@@ -456,8 +470,9 @@ When adding any new property that should persist:
 1. Default in `Waypoint.js` constructor (or relevant state object).
 2. `toJSON()` includes it.
 3. `fromJSON()` reads it with a fallback default.
-4. `autoSave()` in `main.js` serialises it.
-5. `loadAutosave()` in `main.js` restores it.
+4. `_buildProjectSnapshot()` in `src/app/persistence.js` serialises it
+   (one shape shared by autosave and HTML export).
+5. `loadAutosave()` in `src/app/persistence.js` restores it.
 6. Verify round-trip: save → reload → value preserved.
 
 ### Testing expectations
@@ -491,12 +506,7 @@ These items were inferred from the codebase but may need confirmation:
    This relies on Vitest's `globals: true` providing Jest-compatible
    APIs. If tests fail on `jest is not defined`, replace with
    `vi.fn()` from Vitest.
-2. **Web Worker in dev mode** — `PathCalculatorWithWorker` may fail
-   silently on `file://` origins. The fallback is main-thread
-   calculation. If path calculations feel slow during dev, this may
-   be why.
-3. **`build:deploy` vs `build`** — the `build:deploy` script runs
-   `build` then copies `dist/` → `docs/`, but the build itself
-   already outputs to `docs/`. The `dist/` intermediate may be
-   vestigial. Verify whether `build:deploy` is actually needed or
-   whether `build` alone suffices for deploy.
+
+(Resolved and removed: the Web Worker fallback — the worker layer was
+deleted 2026-06-18; and `build:deploy` — it is a plain alias of
+`build`, with no `dist/` intermediate. See §3 and §9.)

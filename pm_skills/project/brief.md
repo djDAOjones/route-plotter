@@ -25,9 +25,10 @@ Gary Priestnall, University of Nottingham (geography/cartography).
 
 Web app. Single-page, client-side only. No server. Repo:
 `djDAOjones/route-plotter` (fresh-history v3 line, founded 2026-08-17).
-Deploys via GitHub Pages from `docs/` on `main` — Pages goes live for v3
-at Phase 5; until then the v2 line stays served from
-`djdaojones.github.io/router-plotter-02/`.
+Deploys via GitHub Pages from `docs/` on `main` — live at
+`djdaojones.github.io/route-plotter/` since Phase 5 (2026-08-19). The
+frozen v2 line remains served from
+`djdaojones.github.io/router-plotter-02/` for existing users.
 
 ## Core features (v1)
 

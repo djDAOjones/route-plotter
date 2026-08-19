@@ -46,8 +46,12 @@ builds the timeline (segments, exact pause budgets, beacon schedules) and
 evaluates any instant with no wall-clock reads or mutation. AnimationEngine
 is transport + events; beacons are closed-form in timeline time; play,
 scrub, and export share the one evaluation path (golden harness:
-`tests/goldenFrames.test.js`). The HTML export player still replays
-serialised markers with its own mapping copy — unified in Phase 5.
+`tests/goldenFrames.test.js`). Since Phase 5 (2026-08-19) the HTML
+export runs the same stack: `src/player/PlayerApp.js` (bundled to
+`docs/player.js`, inlined into exports) hydrates the coordVersion-9
+snapshot, recomputes timing in the snapshot's `timingReference` space
+to preserve the authored timeline, and renders at export resolution
+with the app's own services (cross-check: `tests/playerApp.test.js`).
 The scene data model landed in Phase 2 (2026-08-18): `Scene` →
 `FlowLayer` (guide graph or hero route + `Emitter`s with per-emitter
 seeds and normalised release windows), persisted additively as the
