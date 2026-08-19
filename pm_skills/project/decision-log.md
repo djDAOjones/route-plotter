@@ -2,6 +2,56 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-19 — Backlog triage: next milestone resequenced into waves; quarantine created
+
+**Task:** Owner-requested assessment of every backlog item (useful? fits
+the design? viable?) with verdicts stated, the backlog reorganised into a
+development sequence, and rejected/questionable items quarantined visibly
+for owner approval rather than deleted.
+
+**Verified in code (2026-08-19):** the icebox main.js split is DONE
+(Phase 1: 6,057 → 1,150 lines + src/app mixins, all five candidate
+clusters extracted); the three dead-code icebox lines and the wish-list
+`getSegmentLengths` pair remain genuinely dead (no callers;
+`#export-mode-warning` element absent so the call null-guard no-ops);
+keybinding customisation has no UI (`saveCustomBindings` uncalled);
+`TextLabelService.autoPosition` already collision-scores; comet + reveal
+already combine (Phase 5 golden variant); waypoint `customImage` with
+auto-rotation exists as the base for a custom head icon; an example
+project ZIP already ships in images/.
+
+**Decision — wave sequence (proposal; owner disposes):** W0 close-out
+(one consolidated feel-check clears both June [~] segment-speed items
+plus the Phase 4/5 checks); W1 hygiene & launch-window quick wins
+(dead-code sweep, nudge-undo coalescing, unit/naming pass, bug report
+button, and three defect fixes promoted from the wish-list — area-handle
+hit-test at zoom > 1, stale controls after undo/redo, Clear All undo
+snapshot); W2 inspector completion (two-tier disclosure FIRST since it
+defines the card slots, then minors-in-list, per-card reset/apply-onward);
+W3 route⇄crowd composition (anchors before the branch gesture, which
+depends on them; fit-wait and trace-route alongside); W4 showcase
+(example projects authored after W3 so they demo the full story; custom
+head icon). Ordering rationale: defects and the feedback channel first
+while v3 is newly live; structural UI before the features that land on
+it; the anchors→branch dependency chain; examples authored once.
+
+**Decision — merged and reframed:** "Relative sizing across canvas
+sizes" + "Export resolution preservation in zoom modes" merged into one
+blocked design ticket (same root: absolute-px sizing tied to canvas
+resolution; touches the timingReference rules — highest blast radius in
+the app). Reflow breakpoint reframed as the brief's WCAG 2.2 reflow
+commitment (1.4.10); its scoping/posture decision is the schedulable
+unit, not the implementation.
+
+**Quarantine (nothing deleted; owner approval pending):** propose CUT
+import/export keybindings (feature on an unbuilt foundation); propose
+RESTATE-OR-CUT comet-for-reveal, label auto-position improvement, and
+path randomised-frequency (none names a current gap); propose DELETE the
+verified-done main.js-split line. Wish-list triage: 4 lines moved out
+(1 folded into the sweep, 3 promoted as W1 fixes), 14 remain.
+
+---
+
 ## 2026-08-19 — Phase 5: HTML export runs the real stack; v3 goes live on GitHub Pages
 
 **Task:** Phase 5 of the v3.0 refactor — HTML-export parity via PlayerCore,

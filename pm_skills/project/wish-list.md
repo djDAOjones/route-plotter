@@ -18,15 +18,11 @@
 
 ## Open
 
-- `getSegmentLengths()` (main.js) + `PathCalculator.calculateSegmentLengths()` are unused since major-leg timing landed — remove in a cleanup pass. — (from: 2026-06-18 segment-speed refinement)
 - Label colour / bg colour / bg opacity controls under Label → More — model + rendering already support them; the dead wiring was removed. — (from: 2026-08-18 Phase 3.5)
 - Surface camera zoom mode (continuous vs immediate) in the Phase 4 "On arrival" card — model + CameraService support it; hidden select removed. — (from: 2026-08-18 Phase 3.5)
-- Clear All should save an undo snapshot like Apply-to-All now does; its modal's "cannot be undone" copy is currently accurate. — (from: 2026-08-18 Phase 3.5)
 - Pacing card should label comet mode's preview-only trail-fade extension (edit 7.1s vs preview 8.4s is real there, but unexplained). — (from: 2026-08-18 duration investigation)
 - Per-leg spline tension under Leg → More if ever wanted — per-waypoint segmentTension was retired unread; PathCalculator would need to consume it. — (from: 2026-08-18 Phase 3.5)
 - Dead `history:undo`/`history:redo` emits in InteractionHandler — no bus listener; real Cmd+Z is playback.js's own keydown handler. Either wire the events or drop one of the two parallel handlers. — (from: 2026-08-18 Phase 4 canvas affordances)
-- Editor control values go stale after undo/redo — `_restoreState` restores selection without re-emitting selection events (the chip half of this was fixed by the Phase 4 multi-select restore sync). — (from: 2026-08-18 Phase 4 canvas affordances; narrowed by fifth slice)
-- Area handle hit-testing misses at viewport zoom > 1 — `area:check-handle` compares screen coords against imageToCanvas (canvas) coords; drag and hover share the miss consistently. — (from: 2026-08-18 Phase 4 canvas affordances)
 - Crowd extras for a later tier: re-roll seed button, onsetVariance/intensityRamp under More…, multi-emitter authoring (cards edit emitters[0] only), strip drag-reorder via Scene.moveFlowLayer. — (from: 2026-08-18 Phase 4 layers strip)
 - Network extras: click-on-edge splits it with a node (leg "+" sibling), node labels/rename, arrow-key nudge for the selected node, network context menu (right-click is suppressed in the mode), edge thickness by weight. — (from: 2026-08-18 Phase 4 network edit)
 - Add crowd is still gated on a route ≥ 2 waypoints — a network-only scene (no hero route) can't be authored; decide whether Add crowd should default to Custom network when no route exists. — (from: 2026-08-18 Phase 4 network edit)
