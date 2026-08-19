@@ -305,6 +305,31 @@ function createBuildOptions(version) {
   };
 }
 
+/**
+ * Create build options for the exported-HTML player bundle (Phase 5).
+ * Same source tree and defines as the app, but a self-executing IIFE:
+ * HTMLExportService inlines docs/player.js into every exported file, so it
+ * must run without module loading. Sourcemaps stay out of production — the
+ * bundle is embedded verbatim in user-downloaded exports.
+ * @param {string} version - Version string to inject
+ * @returns {Object} esbuild build options
+ */
+function createPlayerBuildOptions(version) {
+  return {
+    entryPoints: ['src/player/playerEntry.js'],
+    bundle: true,
+    minify: process.env.NODE_ENV === 'production',
+    sourcemap: process.env.NODE_ENV !== 'production',
+    outfile: 'docs/player.js',
+    format: 'iife',
+    target: ['es2022'],
+    define: {
+      'process.env.NODE_ENV': `"${process.env.NODE_ENV || 'development'}"`,
+      'APP_VERSION': `"${version}"`
+    }
+  };
+}
+
 // Development mode with watch
 if (process.argv.includes('--watch')) {
   console.log('Starting development build with watch mode...');
@@ -324,6 +349,13 @@ if (process.argv.includes('--watch')) {
   
   // Watch for changes (JS/source files handled by esbuild)
   await ctx.watch();
+
+  // Player bundle (exported-HTML player) rebuilds alongside the app
+  const playerCtx = await esbuild.context({
+    ...createPlayerBuildOptions(version),
+    minify: false
+  });
+  await playerCtx.watch();
   console.log('Watching for JS changes...');
   
   // Watch static files for changes (HTML, CSS, images)
@@ -402,13 +434,22 @@ else {
       JSON.stringify(result.metafile, null, 2)
     );
     
-    // Calculate bundle size
+    // Player bundle for exported HTML files (inlined by HTMLExportService)
+    await esbuild.build({
+      ...createPlayerBuildOptions(version),
+      minify: true
+    });
+
+    // Calculate bundle sizes
     const stats = fs.statSync('docs/app.js');
     const sizeKB = (stats.size / 1024).toFixed(2);
-    
+    const playerStats = fs.statSync('docs/player.js');
+    const playerSizeKB = (playerStats.size / 1024).toFixed(2);
+
     console.log(`✅ Build complete!`);
     console.log(`   Bundle size: ${sizeKB} KB`);
     console.log(`   Output: docs/app.js`);
+    console.log(`   Player bundle: ${playerSizeKB} KB → docs/player.js`);
     
     // Analyze bundle if --analyze flag is present
     if (process.argv.includes('--analyze')) {

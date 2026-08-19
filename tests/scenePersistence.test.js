@@ -66,6 +66,9 @@ function makeFakeApp() {
     queueRender() {}, beginBatch() {}, endBatch() {},
     _addWaypointToMap() {}, _restoreWaypointCustomImages() {},
     _syncGlobalStyleUI() {},
+    // Real mixin method, not a stub: autoSave/export both build the snapshot
+    // through it (Phase 5), so the contract keeps pinning the real shape
+    _buildProjectSnapshot: persistenceMixin._buildProjectSnapshot,
     clearAll() { app.waypoints = []; app.scene.clear(); },
     _captured: captured,
   };

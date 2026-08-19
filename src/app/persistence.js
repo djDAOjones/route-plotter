@@ -236,67 +236,89 @@ export const persistenceMixin = {
     titleEl.title = this._isDirty ? `Version ${APP_VERSION} · Unsaved changes` : `Version ${APP_VERSION}`;
   },
 
+  /**
+   * Build the canonical coordVersion-9 project snapshot.
+   *
+   * Single source of the save shape: autoSave() persists it to localStorage
+   * and exportHTML() embeds it verbatim in exported files (Phase 5), so the
+   * exported player always reads exactly what the app would reload.
+   *
+   * @param {Object} [options]
+   * @param {boolean} [options.includeAssets=true] - Include custom image
+   *   assets. Autosave drops them past the localStorage limit; exports and
+   *   project files always keep them.
+   * @returns {Object} Serialisable project data (coordVersion 9)
+   */
+  _buildProjectSnapshot({ includeAssets = true } = {}) {
+    // Create a clean copy of styles without the pathHead image object (but keep imageAssetId)
+    const stylesCopy = { ...this.styles };
+    if (stylesCopy.pathHead) {
+      stylesCopy.pathHead = { ...stylesCopy.pathHead, image: null };
+    }
+
+    return {
+      // v9: layered scene (v7 + additive `scene` block; 8 skipped — the
+      // fork's local builds used it for graph-only saves)
+      coordVersion: 9,
+      waypoints: this.waypoints.map(wp => wp.toJSON()), // Serialize Waypoint instances
+      scene: this.scene.toJSON(), // Flow-layer params + seeds only — runtime dot state never persists
+      styles: stylesCopy,
+      animationState: {
+        mode: this.animationEngine.state.mode,
+        speed: this.animationEngine.state.speed,
+        duration: this.animationEngine.state.duration
+        // Note: playbackSpeed intentionally NOT saved - resets to 1x on each session
+      },
+      background: {
+        overlay: this.background.overlay,
+        fit: this.background.fit
+      },
+      exportSettings: {
+        frameRate: this.exportSettings.frameRate,
+        pathOnly: this.exportSettings.pathOnly,
+        resolutionX: this.exportSettings.resolutionX,
+        resolutionY: this.exportSettings.resolutionY,
+        backgroundZoom: this.exportSettings.backgroundZoom,
+        includeCamera: this.exportSettings.includeCamera,
+        includeText: this.exportSettings.includeText
+      },
+      motionSettings: {
+        pathVisibility: this.motionSettings.pathVisibility,
+        pathTrail: this.motionSettings.pathTrail,
+        waypointVisibility: this.motionSettings.waypointVisibility,
+        backgroundVisibility: this.motionSettings.backgroundVisibility,
+        revealSize: this.motionSettings.revealSize,
+        revealFeather: this.motionSettings.revealFeather,
+        aovAngle: this.motionSettings.aovAngle,
+        aovDistance: this.motionSettings.aovDistance,
+        aovDropoff: this.motionSettings.aovDropoff
+      },
+      // Include image assets if under size limit
+      imageAssets: includeAssets ? this.imageAssetService.toJSON() : [],
+      // Canvas dimensions the current timeline was derived from. Speed is
+      // px/s against the on-screen path, so duration/markers depend on the
+      // display size; the exported player recomputes timing in THIS space to
+      // reproduce the authored timeline exactly, then renders at the export
+      // resolution — the same rule as video export (_enterExportMode never
+      // recalculates timing at the export canvas). Additive v9 field.
+      timingReference: { width: this.displayWidth, height: this.displayHeight }
+      // Note: Camera settings are per-waypoint, saved in waypoint.camera
+    };
+  },
+
   autoSave() {
     // Mark as dirty when changes are made
     this.markDirty();
-    
+
     try {
-      // Create a clean copy of styles without the pathHead image object (but keep imageAssetId)
-      const stylesCopy = { ...this.styles };
-      if (stylesCopy.pathHead) {
-        stylesCopy.pathHead = { ...stylesCopy.pathHead, image: null };
-      }
-      
       // Check if image assets exceed autosave limit (5MB)
       const includeAssets = !this.imageAssetService.exceedsAutosaveLimit();
       if (!includeAssets && this.imageAssetService.getAssetCount() > 0) {
         console.warn(`⚠️ Image assets (${this.imageAssetService.getFormattedTotalSize()}) exceed autosave limit. Use Export Project to save with images.`);
       }
-      
-      const data = {
-        // v9: layered scene (v7 + additive `scene` block; 8 skipped — the
-        // fork's local builds used it for graph-only saves)
-        coordVersion: 9,
-        waypoints: this.waypoints.map(wp => wp.toJSON()), // Serialize Waypoint instances
-        scene: this.scene.toJSON(), // Flow-layer params + seeds only — runtime dot state never persists
-        styles: stylesCopy,
-        animationState: {
-          mode: this.animationEngine.state.mode,
-          speed: this.animationEngine.state.speed,
-          duration: this.animationEngine.state.duration
-          // Note: playbackSpeed intentionally NOT saved - resets to 1x on each session
-        },
-        background: {
-          overlay: this.background.overlay,
-          fit: this.background.fit
-        },
-        exportSettings: {
-          frameRate: this.exportSettings.frameRate,
-          pathOnly: this.exportSettings.pathOnly,
-          resolutionX: this.exportSettings.resolutionX,
-          resolutionY: this.exportSettings.resolutionY,
-          backgroundZoom: this.exportSettings.backgroundZoom,
-          includeCamera: this.exportSettings.includeCamera,
-          includeText: this.exportSettings.includeText
-        },
-        motionSettings: {
-          pathVisibility: this.motionSettings.pathVisibility,
-          pathTrail: this.motionSettings.pathTrail,
-          waypointVisibility: this.motionSettings.waypointVisibility,
-          backgroundVisibility: this.motionSettings.backgroundVisibility,
-          revealSize: this.motionSettings.revealSize,
-          revealFeather: this.motionSettings.revealFeather,
-          aovAngle: this.motionSettings.aovAngle,
-          aovDistance: this.motionSettings.aovDistance,
-          aovDropoff: this.motionSettings.aovDropoff
-        },
-        // Include image assets if under size limit
-        imageAssets: includeAssets ? this.imageAssetService.toJSON() : []
-        // Note: Camera settings are per-waypoint, saved in waypoint.camera
-      };
-      
+
       // Use StorageService with debounced auto-save
-      this.storageService.autoSave(data);
+      this.storageService.autoSave(this._buildProjectSnapshot({ includeAssets }));
     } catch (e) {
       console.error('Error saving state:', e);
     }

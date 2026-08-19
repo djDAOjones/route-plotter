@@ -285,55 +285,15 @@ export const exportingMixin = {
       // Estimate file size first
       const sizeEstimate = await this.htmlExportService.estimateSize(this.background.image);
       console.log(`📦 Estimated HTML export size: ${sizeEstimate.formatted}`);
-      
-      // Build timeline data from AnimationEngine for accurate pause/speed playback
-      const ae = this.animationEngine;
-      const timelineData = {
-        pathDuration: ae.pathDuration || 0,
-        totalPauseTime: ae.totalPauseTime || 0,
-        totalDuration: ae.state?.duration || 0,
-        introTime: ae.introTime || 0,
-        totalTailTime: ae.totalTailTime || 0,
-        hasVariableSpeed: ae.hasVariableSpeed || false,
-        pauseMarkers: (ae.pauseMarkers || []).map(m => ({
-          pathProgress: m.pathProgress,
-          timelineStartMs: m.timelineStartMs,
-          timelineEndMs: m.timelineEndMs,
-          duration: m.duration,
-          waypointIndex: m.waypointIndex
-        })),
-        segmentMarkers: (ae.segmentMarkers || []).map(m => ({
-          startPathProgress: m.startPathProgress,
-          endPathProgress: m.endPathProgress,
-          startPathTime: m.startPathTime,
-          endPathTime: m.endPathTime,
-          segmentSpeed: m.segmentSpeed
-        }))
-      };
 
-      // Export HTML with full feature parity data
+      // Phase 5: embed the canonical project snapshot (persistence mixin's
+      // single save shape) — the exported PlayerApp rebuilds path, timeline,
+      // camera, labels, areas and swarm layers from it with the app's own
+      // modules. includeCamera/includeText travel inside exportSettings.
       const blob = await this.htmlExportService.exportHTML({
-        waypoints: this.waypoints.map(wp => wp.toJSON()),
-        styles: this.styles,
-        background: this.background,
+        projectData: this._buildProjectSnapshot(),
         backgroundImage: this.background.image,
-        motionSettings: this.motionSettings,
-        animationState: {
-          speed: this.animationEngine.state.speed,
-          duration: this.animationEngine.state.duration
-        },
-        pathLength: this.pathCalculator.calculatePathLength(this.pathPoints),
-        pathPoints: this.pathPoints,
-        waypointProgressValues: this.waypointProgressValues,
-        cameraSettings: this.cameraSettings || null,
-        includeCamera: this.exportSettings.includeCamera, // false → flat view in exported HTML
-        includeText: this.exportSettings.includeText,     // false → no labels in exported HTML
-        displayDimensions: {
-          width: this.displayWidth,
-          height: this.displayHeight
-        },
-        timeline: timelineData,
-        title: 'Route Animation'
+        title: 'Route animation'
       });
       
       // Download the HTML file
