@@ -147,6 +147,10 @@ The canonical model is:
 - **`AnimationState`** — progress (0–1), timing, speed, pause
   tracking. Managed by `AnimationEngine`.
 - **`ImageAsset`** — custom image references (marker, path head).
+- **`Emitter`** — persisted seeded dot-stream parameters, including a
+  normalised two-to-eight-handle busyness envelope. Each handle owns the
+  gradual/step transition to the next handle; the engine compiles it as a
+  deterministic release density and stores no transient dots.
 
 Do **not** store pixel coordinates on Waypoint. Do **not** mutate
 waypoints from services — only `main.js` mutates model state in

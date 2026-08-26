@@ -2,6 +2,38 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — CROWD-02 compiles authored busyness into deterministic release time
+
+**Decision:** Persist `Emitter.busynessEnvelope` as two-to-eight ordered
+normalised time/value handles, with `gradual` or `step` on each outgoing span.
+The flat two-handle default is neutral. Existing `intensityRamp` behaviour is
+unchanged and runs before the envelope, so projects without the additive field
+retain their exact historical schedules. The pure SwarmEngine compiles segment
+areas once per emitter evaluation and maps each seeded dot quantile through the
+envelope's inverse cumulative density; no runtime crowd state is stored and the
+full authored count still releases by the window end.
+
+**Authoring contract:** Release's native More tier owns one compact SVG graph.
+Its 44 px pointer targets move handles directly; labelled Time, Busy and Change
+controls provide equivalent keyboard authoring, with Enter as an explicit
+numeric commit. Endpoints stay at zero and 100 percent, adding a handle splits
+the widest span without changing the curve, Reset restores even busyness, and
+an all-quiet profile is rejected. V1 continues to edit only the first emitter,
+matching the established crowd-card boundary; additional emitters remain
+inspectable rather than silently rewritten.
+
+**Evidence and sequence:** Pure density tests cover neutral, triangular and
+sudden profiles plus strict persistence validation. Model, UI, scene, engine
+and exported-player tests cover migration, pointer and exact-control
+transactions, seeded replay, Undo and editor/reload/export parity. The
+canonical gate passes 51 files / 721 tests, restart safety and clean production
+build validation. Production Chromium authored a quiet to sudden-busy to
+gradual-quiet profile, proved reload persistence and one-step Reset/Undo, and
+showed readable single-column controls at 320 px. CROWD-02 leaves the backlog;
+REV-05 is now gated only by REV-03. No Icebox evidence was triggered, and the
+owner-requested full trajectory remains preserved despite its known soft-size
+warning.
+
 ## 2026-08-26 — CROWD-03 exposes one reproducible pattern, not runtime randomness
 
 **Decision:** Keep the founding Emitter model and make its deterministic

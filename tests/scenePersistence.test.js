@@ -24,6 +24,11 @@ function buildSceneData() {
     speedVariance: 0.75,
     onsetVariance: 0.8,
     intensityRamp: -0.4,
+    busynessEnvelope: [
+      { time: 0, value: 0.1, transition: 'step' },
+      { time: 0.5, value: 1, transition: 'gradual' },
+      { time: 1, value: 0.2, transition: 'gradual' },
+    ],
     wobble: 0.6,
   });
   return scene.toJSON();
@@ -99,6 +104,11 @@ describe('coordVersion 9 scene persistence', () => {
         speedVariance: 0.75,
         onsetVariance: 0.8,
         intensityRamp: -0.4,
+        busynessEnvelope: [
+          { time: 0, value: 0.1, transition: 'step' },
+          { time: 0.5, value: 1, transition: 'gradual' },
+          { time: 1, value: 0.2, transition: 'gradual' },
+        ],
         wobble: 0.6,
       });
       // Additive: every v7 top-level key survives
@@ -152,6 +162,11 @@ describe('coordVersion 9 scene persistence', () => {
         speedVariance: 0.75,
         onsetVariance: 0.8,
         intensityRamp: -0.4,
+        busynessEnvelope: [
+          { time: 0, value: 0.1, transition: 'step' },
+          { time: 0.5, value: 1, transition: 'gradual' },
+          { time: 1, value: 0.2, transition: 'gradual' },
+        ],
         wobble: 0.6,
       });
     });

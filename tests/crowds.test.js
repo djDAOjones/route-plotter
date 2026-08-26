@@ -30,6 +30,11 @@ function makeApp({ hasRoute = true } = {}) {
     <output id="crowd-seed-value"></output>
     <p id="crowd-pattern-hint"></p>
     <button id="crowd-reroll-btn" type="button">Re-roll pattern</button>
+    <output id="crowd-busyness-summary"></output>
+    <svg id="crowd-busyness-graph" viewBox="0 0 300 140"></svg>
+    <div id="crowd-busyness-handles"></div>
+    <button id="crowd-busyness-add" type="button">Add handle</button>
+    <button id="crowd-busyness-reset" type="button">Reset to even</button>
   `;
   const app = {
     eventBus: new EventBus(),
@@ -294,6 +299,91 @@ describe('seeded variation controls', () => {
     app.addCrowd({ enterNetworkEditor: false });
     expect(document.getElementById('crowd-pattern-hint').textContent)
       .toMatch(/Junction shares set route proportions.*which dots take them/);
+  });
+});
+
+describe('busyness envelope controls', () => {
+  test('adds, edits and removes handles through one transaction per action', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const emitter = app.selectedCrowd.emitters[0];
+    const savesBefore = app.undoSaves;
+
+    document.getElementById('crowd-busyness-add').click();
+    expect(emitter.busynessEnvelope).toHaveLength(3);
+    expect(emitter.busynessEnvelope[1].time).toBe(0.5);
+    expect(app.undoSaves).toBe(savesBefore + 1);
+    expect(document.querySelectorAll('.crowd-busyness-handle-row')).toHaveLength(3);
+
+    const middleBusy = document.querySelector('[data-busyness-index="1"][data-busyness-field="value"]');
+    middleBusy.value = '20';
+    middleBusy.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Enter', bubbles: true, cancelable: true,
+    }));
+    expect(emitter.busynessEnvelope[1].value).toBe(0.2);
+    expect(app.undoSaves).toBe(savesBefore + 2);
+
+    const firstTransition = document.querySelector('[data-busyness-index="0"][data-busyness-field="transition"]');
+    firstTransition.value = 'step';
+    firstTransition.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(emitter.busynessEnvelope[0].transition).toBe('step');
+
+    document.querySelector('[data-busyness-field="remove"]').click();
+    expect(emitter.busynessEnvelope).toHaveLength(2);
+    expect(app.announced.at(-1)).toMatch(/Undo is available/);
+  });
+
+  test('exact controls have endpoint locking and prevent an all-quiet envelope', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const emitter = app.selectedCrowd.emitters[0];
+    const times = document.querySelectorAll('[data-busyness-field="time"]');
+    expect(times[0].readOnly).toBe(true);
+    expect(times[1].readOnly).toBe(true);
+
+    const values = document.querySelectorAll('[data-busyness-field="value"]');
+    values[0].value = '0';
+    values[0].dispatchEvent(new Event('change', { bubbles: true }));
+    const refreshedLast = document.querySelectorAll('[data-busyness-field="value"]')[1];
+    refreshedLast.value = '0';
+    refreshedLast.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(emitter.busynessEnvelope[1].value).toBe(1);
+    expect(app.announced.at(-1)).toMatch(/at least one busyness span/);
+  });
+
+  test('reset restores the neutral profile and graph summary', () => {
+    const app = makeApp();
+    app.addCrowd();
+    document.getElementById('crowd-busyness-add').click();
+    document.getElementById('crowd-busyness-reset').click();
+    expect(app.selectedCrowd.emitters[0].busynessEnvelope).toEqual([
+      { time: 0, value: 1, transition: 'gradual' },
+      { time: 1, value: 1, transition: 'gradual' },
+    ]);
+    expect(document.getElementById('crowd-busyness-summary').textContent).toBe('Even');
+    expect(document.getElementById('crowd-busyness-reset').disabled).toBe(true);
+  });
+
+  test('pointer dragging moves a handle and commits one undo state on release', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const emitter = app.selectedCrowd.emitters[0];
+    const graph = document.getElementById('crowd-busyness-graph');
+    graph.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 140 });
+    const target = graph.querySelector('[data-busyness-handle="0"]');
+    const savesBefore = app.undoSaves;
+    const base = { pointerId: 7, currentTarget: graph, preventDefault() {} };
+
+    app._startCrowdBusynessDrag({ ...base, target });
+    app._moveCrowdBusynessDrag({ ...base, clientX: 18, clientY: 70 });
+    expect(emitter.busynessEnvelope[0].value).toBeCloseTo(0.5, 2);
+    expect(app.undoSaves).toBe(savesBefore);
+    app._finishCrowdBusynessDrag(base, true);
+
+    expect(app.undoSaves).toBe(savesBefore + 1);
+    expect(app.autoSaves).toBeGreaterThan(1);
+    expect(app.announced.at(-1)).toMatch(/handle moved.*Undo is available/);
   });
 });
 

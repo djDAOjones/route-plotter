@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 247 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 249 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 13 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -10,9 +10,9 @@
 - `images` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
-- `src` — 85 file(s)
+- `src` — 86 file(s)
 - `styles` — 6 file(s)
-- `tests` — 52 file(s)
+- `tests` — 53 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -147,7 +147,7 @@
 
 - `src/app/backgroundLoading.js` — Detached user/example background decoding with compressed-byte retention and latest-request commit guards
 - `src/app/camera.js` — camera keyframe UI, actual-major mixed-state sync, camera state evaluation and zoom-transition warnings
-- `src/app/crowds.js` — Crowd layers mixin: layers strip and selection plus single-writer first-emitter controls, plain variation readouts and one-step seed Re-roll
+- `src/app/crowds.js` — Crowd layers mixin: layers strip and selection plus single-writer first-emitter controls, seeded variation, one-step Re-roll and the accessible busyness-envelope graph
 - `src/app/editorPanel.js` — Waypoint list/editor sync, actual write-target resolution, transient mixed-state overlays and card-action state/transactions
 - `src/app/exporting.js` — Video/HTML export flows, summary UI and exact pre-export transport/timing restoration
 - `src/app/network.js` — Network editing mixin (Phase 4): Guide-card entry point (Edit network + auto-enter), pointer routing into NetworkEditService, node/edge/control hit-testing on the engine's edge polylines, Node/Edge card wiring, traffic-share readout, restore re-binding
@@ -182,7 +182,7 @@
 - `src/handlers/InteractionHandler.js` — One captured Pointer Events transaction for mouse/touch/pen waypoint, area and network taps/drags; keyboard, drop, context-menu and wheel paths stay native
 - `src/main.js` — RoutePlotter class: app entry + orchestrator core (constructor, init, model bookkeeping, render scheduling); attaches the `src/app/*` mixins to its prototype
 - `src/models/AnimationState.js` — Playback state, canonical seek-derived timing/pause state and exact transport snapshots
-- `src/models/Emitter.js` — Persisted dot-stream parameters and guaranteed-changing authoring seed; no transient runtime state
+- `src/models/Emitter.js` — Persisted dot-stream parameters, two-to-eight-handle busyness envelope and guaranteed-changing authoring seed; no transient runtime state
 - `src/models/FlowLayer.js` — Bounded graph/hero-route guide plus emitters, with strict endpoint and persisted-data validation
 - `src/models/GraphEdge.js` — Weighted directed edge with control points
 - `src/models/GraphModel.js` — Node/edge collection: CRUD, referential integrity, adjacency (owned by FlowLayer)
@@ -210,7 +210,7 @@
 - `src/services/PathCalculator.js` — Catmull-Rom spline, corner-slowing reparameterisation, curvature; `legTimingLengths()` gives per-major-leg timing lengths (progress-span basis)
 - `src/services/RenderingService.js` — Canvas drawing: path, markers, labels, overlays; static `glowLayers()` computes the path-glow underlay strokes; static `VECTOR_LAYERS` registry drives the vector draw order (the `flow-layers` entry draws swarms beneath the hero route)
 - `src/services/StorageService.js` — Honest bounded localStorage writes with debounce, change detection, deterministic flush/cancel and clear
-- `src/services/SwarmEngine.js` — Deterministic flow-layer dot evaluator: pure `evaluate(timelineMs, layer, context)`, `hash(seed, dotIndex, hopIndex)` variation, weighted graph walks, four lifecycle modes, per-edge PathCalculator caches (Phase 3)
+- `src/services/SwarmEngine.js` — Deterministic flow-layer dot evaluator: pure `evaluate(timelineMs, layer, context)`, seeded release-density inversion, weighted graph walks, four lifecycle modes and per-edge PathCalculator caches
 - `src/services/TextLabelService.js` — Text label layout, fade, auto-positioning
 - `src/services/UndoService.js` — 150-state undo/redo history with non-mutating save previews and validated additional oldest-prefix discard
 - `src/services/VideoExporter.js` — Runtime-probed MP4/WebM export with one frame plan, visibility-safe MediaRecorder pacing and rollback-safe WebCodecs cleanup
@@ -218,6 +218,7 @@
 - `src/utils/CatmullRom.js` — Catmull-Rom spline interpolation
 - `src/utils/Easing.js` — Easing functions (linear, quad, cubic, etc.)
 - `src/utils/assetReferences.js` — Image-ID reachability collector and pure minimum-oldest-history admission planner for count/byte/pixel limits
+- `src/utils/busynessEnvelope.js` — Pure busyness-handle normalisation/validation, segment-area compilation and inverse-density sampling for seeded release times
 - `src/utils/entityId.js` — Shared persisted structural-ID length boundary that leaves authored display text untouched
 - `src/utils/focusTrap.js` — Modal inerting, focus containment/wrap, Escape handling and origin-focus restoration
 - `src/utils/graphRouting.js` — Shared directed departures, overflow-safe weight normalisation and stable whole-percentage traffic shares
@@ -251,7 +252,8 @@
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
-- `tests/crowds.test.js` — Crowd creation/layers/selection plus variation readouts, bounds, seed-only Re-roll and custom-network guidance contracts
+- `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
+- `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
@@ -276,7 +278,7 @@
 - `tests/publicationBoundary.test.js` — Approved-image hashes, CSP/same-origin shell, exact Pages inventory and manifest-tamper rejection
 - `tests/releaseSafety.test.js` — Clean-build rollback, versioned CSS references and dry-run deployment safety contracts
 - `tests/restartSafety.test.sh` — Shell contract for exact owned-process restart, readiness and foreign-listener refusal
-- `tests/reviewAccessibility.test.js` — Keyboard semantics, modal focus, paused render, responsive/support/privacy shell, stale uploads, disclosure, card-action and seeded-variation UI contracts
+- `tests/reviewAccessibility.test.js` — Keyboard semantics, modal focus, responsive/support/privacy shell, disclosure, card-action and accessible crowd-variation/busyness UI contracts
 - `tests/reviewPersistence.test.js` — Autosave honesty, transactional load/rollback, save revisions and undo-image restoration regressions
 - `tests/reviewTimeline.test.js` — Stateless comet, canonical transport/export and timing-invalidation review regressions
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
@@ -286,7 +288,7 @@
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts
 - `tests/setup.js` — Vitest jsdom setup (uses defineProperty for getter-only jsdom globals)
 - `tests/startup.test.js` — Recovery-before-default-image startup ordering contracts
-- `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation
+- `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
 - `tests/undoService.test.js` — Prospective-save parity, natural rollover, extra oldest discard, redo preservation/invalidation and rejected-input immutability
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)

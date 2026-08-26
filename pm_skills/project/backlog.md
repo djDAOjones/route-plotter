@@ -18,9 +18,6 @@
   [verify: physical iOS Safari + Android Chrome] — Unified Pointer Events,
   captured group drag and cancel/no-op transactions are implemented and green
   in automation plus production Chromium. Record the physical mobile pass.
-- [~] CROWD-02 [[detail]](tickets/CROWD-02.md) — Add the whole-route
-  busyness line graph with handles and gradual/step transitions, identical in
-  editor, reload and export.
 - [ ] REV-06 [ready] — Measure idle/paused CPU and a representative
   500-dot/4K scene, then sleep unnecessary animation work; assess
   direct-render coalescing only where profiling supports it and preserve
@@ -33,7 +30,7 @@
 - [ ] UI-02 [ready] [sign-off] — Show minor waypoints as
   indented, selectable, renameable and reorder-visible rows using the approved
   semantic outline.
-- [ ] REV-05 [gated: REV-03, CROWD-02] — Complete accessibility
+- [ ] REV-05 [gated: REV-03] — Complete accessibility
   assurance with axe, NVDA/VoiceOver, forced colours, reduced motion and
   200–400% zoom after the new authoring UI stabilises.
 - [ ] SCALE-01 [[detail]](tickets/SCALE-01.md) [gated: REV-06] — Implement

@@ -15,9 +15,18 @@
  */
 import { isMac } from '../config/keybindings.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
+import {
+  busynessAt,
+  compileBusynessEnvelope,
+  defaultBusynessEnvelope,
+  MAX_BUSYNESS_HANDLES,
+  normalizeBusynessEnvelope,
+} from '../utils/busynessEnvelope.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
+const BUSYNESS_GRAPH = Object.freeze({ width: 300, height: 140, padX: 18, padY: 16 });
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 export function formatCrowdReleaseTiming(percent) {
   const rounded = Math.round(percent);
@@ -158,6 +167,22 @@ export const crowdsMixin = {
     document.getElementById('crowd-reroll-btn')?.addEventListener('click', () => {
       this._rerollCrowdPattern();
     });
+
+    document.getElementById('crowd-busyness-add')?.addEventListener('click', () => {
+      this._addCrowdBusynessHandle();
+    });
+    document.getElementById('crowd-busyness-reset')?.addEventListener('click', () => {
+      this._commitCrowdBusynessEnvelope(defaultBusynessEnvelope(), 'Busyness reset to even.');
+    });
+    document.getElementById('crowd-busyness-handles')?.addEventListener('change', (event) => {
+      this._changeCrowdBusynessControl(event.target);
+    });
+
+    const busynessGraph = document.getElementById('crowd-busyness-graph');
+    busynessGraph?.addEventListener('pointerdown', event => this._startCrowdBusynessDrag(event));
+    busynessGraph?.addEventListener('pointermove', event => this._moveCrowdBusynessDrag(event));
+    busynessGraph?.addEventListener('pointerup', event => this._finishCrowdBusynessDrag(event, true));
+    busynessGraph?.addEventListener('pointercancel', event => this._finishCrowdBusynessDrag(event, false));
   },
 
   /**
@@ -202,6 +227,152 @@ export const crowdsMixin = {
     });
     this.announce(`${layer.name || 'Crowd'} pattern re-rolled. Undo is available.`);
     return seed;
+  },
+
+  /**
+   * Add one handle at the midpoint of the widest span, preserving the current
+   * curve at that point so adding alone does not change playback.
+   * @private
+   */
+  _addCrowdBusynessHandle() {
+    const emitter = this.selectedCrowd?.emitters[0];
+    if (!emitter || emitter.busynessEnvelope.length >= MAX_BUSYNESS_HANDLES) return;
+    const next = emitter.busynessEnvelope.map(handle => ({ ...handle }));
+    let widestIndex = 0;
+    for (let index = 1; index < next.length - 1; index++) {
+      if (next[index + 1].time - next[index].time >
+          next[widestIndex + 1].time - next[widestIndex].time) widestIndex = index;
+    }
+    const left = next[widestIndex];
+    const right = next[widestIndex + 1];
+    const time = Math.round(((left.time + right.time) / 2) * 100) / 100;
+    next.splice(widestIndex + 1, 0, {
+      time,
+      value: busynessAt(next, time),
+      transition: left.transition,
+    });
+    this._commitCrowdBusynessEnvelope(next, `Busyness handle added at ${Math.round(time * 100)}%.`);
+  },
+
+  /** @private */
+  _changeCrowdBusynessControl(control) {
+    const emitter = this.selectedCrowd?.emitters[0];
+    const index = Number(control?.dataset?.busynessIndex);
+    const field = control?.dataset?.busynessField;
+    if (!emitter || !Number.isInteger(index) || !field || !emitter.busynessEnvelope[index]) return;
+
+    const next = emitter.busynessEnvelope.map(handle => ({ ...handle }));
+    if (field === 'time' && index > 0 && index < next.length - 1) {
+      const lower = next[index - 1].time + 0.01;
+      const upper = next[index + 1].time - 0.01;
+      next[index].time = Math.max(lower, Math.min(upper, Number(control.value) / 100));
+    } else if (field === 'value') {
+      next[index].value = Math.max(0, Math.min(1, Number(control.value) / 100));
+    } else if (field === 'transition' && index < next.length - 1) {
+      next[index].transition = control.value === 'step' ? 'step' : 'gradual';
+    } else if (field === 'remove' && index > 0 && index < next.length - 1) {
+      next.splice(index, 1);
+    } else {
+      return;
+    }
+    this._commitCrowdBusynessEnvelope(next, 'Busyness pattern updated.');
+  },
+
+  /**
+   * Commit one accessible/discrete envelope edit as one undoable transaction.
+   * @private
+   */
+  _commitCrowdBusynessEnvelope(next, announcement) {
+    const layer = this.selectedCrowd;
+    const emitter = layer?.emitters[0];
+    if (!layer || !emitter || compileBusynessEnvelope(next).totalArea <= 0) {
+      this.announce?.('Keep at least one busyness span above 0%.');
+      this.syncCrowdEditor();
+      return false;
+    }
+    const normalized = normalizeBusynessEnvelope(next);
+    if (JSON.stringify(normalized) === JSON.stringify(emitter.busynessEnvelope)) return false;
+
+    this._flushPendingUndo?.();
+    emitter.update({ busynessEnvelope: normalized });
+    this.syncCrowdEditor();
+    this.saveUndoState();
+    this.autoSave();
+    this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', {
+      kind: 'crowd-busyness-envelope', layerId: layer.id, emitterId: emitter.id,
+    });
+    if (announcement) this.announce?.(`${announcement} Undo is available.`);
+    return true;
+  },
+
+  /** @private */
+  _startCrowdBusynessDrag(event) {
+    const target = event.target?.closest?.('[data-busyness-handle]');
+    const emitter = this.selectedCrowd?.emitters[0];
+    if (!target || !emitter) return;
+    event.preventDefault();
+    this._flushPendingUndo?.();
+    this._crowdBusynessDrag = {
+      pointerId: event.pointerId,
+      index: Number(target.dataset.busynessHandle),
+      original: emitter.busynessEnvelope.map(handle => ({ ...handle })),
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  },
+
+  /** @private */
+  _moveCrowdBusynessDrag(event) {
+    const drag = this._crowdBusynessDrag;
+    const emitter = this.selectedCrowd?.emitters[0];
+    if (!drag || drag.pointerId !== event.pointerId || !emitter) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const { width, height, padX, padY } = BUSYNESS_GRAPH;
+    const x = (event.clientX - rect.left) / rect.width * width;
+    const y = (event.clientY - rect.top) / rect.height * height;
+    const next = emitter.busynessEnvelope.map(handle => ({ ...handle }));
+    const handle = next[drag.index];
+    if (!handle) return;
+
+    handle.value = Math.max(0, Math.min(1, (height - padY - y) / (height - 2 * padY)));
+    if (drag.index > 0 && drag.index < next.length - 1) {
+      const candidate = (x - padX) / (width - 2 * padX);
+      handle.time = Math.max(
+        next[drag.index - 1].time + 0.01,
+        Math.min(next[drag.index + 1].time - 0.01, candidate)
+      );
+    }
+    if (compileBusynessEnvelope(next).totalArea <= 0) return;
+    emitter.update({ busynessEnvelope: next });
+    drag.moved = true;
+    this._syncCrowdBusynessEditor(emitter);
+    this.queueRender();
+  },
+
+  /** @private */
+  _finishCrowdBusynessDrag(event, commit) {
+    const drag = this._crowdBusynessDrag;
+    const layer = this.selectedCrowd;
+    const emitter = layer?.emitters[0];
+    if (!drag || drag.pointerId !== event.pointerId || !emitter) return;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    this._crowdBusynessDrag = null;
+    if (!commit) {
+      emitter.update({ busynessEnvelope: drag.original });
+      this.syncCrowdEditor();
+      this.queueRender();
+      return;
+    }
+    if (!drag.moved) return;
+    this.saveUndoState();
+    this.autoSave();
+    this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', {
+      kind: 'crowd-busyness-envelope', layerId: layer.id, emitterId: emitter.id,
+    });
+    this.announce?.('Busyness handle moved. Undo is available.');
   },
 
   /**
@@ -489,6 +660,7 @@ export const crowdsMixin = {
     setText('crowd-speed-variance-value', `${Math.round(em.speedVariance * 100)}%`);
     set('crowd-lifecycle', em.lifecycleMode);
     setText('crowd-seed-value', String(em.seed));
+    this._syncCrowdBusynessEditor(em);
 
     const hint = document.getElementById('crowd-pattern-hint');
     if (hint) {
@@ -499,6 +671,145 @@ export const crowdsMixin = {
 
     // Chip text follows crowd selection/name via the UIController's own
     // crowd listeners; nothing to do here beyond the controls.
+  },
+
+  /**
+   * Redraw the busyness graph and its equivalent exact controls from model
+   * state. Rebuilding from authored data also keeps undo/project restores
+   * from leaving stale control rows behind.
+   * @private
+   */
+  _syncCrowdBusynessEditor(emitter) {
+    const graph = document.getElementById('crowd-busyness-graph');
+    const controls = document.getElementById('crowd-busyness-handles');
+    if (!graph || !controls) return;
+    const handles = emitter.busynessEnvelope;
+    const { width, height, padX, padY } = BUSYNESS_GRAPH;
+    const x = time => padX + time * (width - 2 * padX);
+    const y = value => height - padY - value * (height - 2 * padY);
+
+    graph.replaceChildren();
+    const baseline = document.createElementNS(SVG_NS, 'path');
+    baseline.setAttribute('class', 'crowd-busyness-axis');
+    baseline.setAttribute('d', `M ${padX} ${height - padY} H ${width - padX} M ${padX} ${padY} V ${height - padY}`);
+    graph.appendChild(baseline);
+
+    const pieces = [`M ${x(handles[0].time)} ${y(handles[0].value)}`];
+    for (let index = 0; index < handles.length - 1; index++) {
+      const current = handles[index];
+      const next = handles[index + 1];
+      if (current.transition === 'step') pieces.push(`H ${x(next.time)} V ${y(next.value)}`);
+      else pieces.push(`L ${x(next.time)} ${y(next.value)}`);
+    }
+    const curve = document.createElementNS(SVG_NS, 'path');
+    curve.setAttribute('class', 'crowd-busyness-line');
+    curve.setAttribute('d', pieces.join(' '));
+    graph.appendChild(curve);
+
+    handles.forEach((handle, index) => {
+      const target = document.createElementNS(SVG_NS, 'circle');
+      target.setAttribute('class', 'crowd-busyness-handle-target');
+      target.setAttribute('cx', String(x(handle.time)));
+      target.setAttribute('cy', String(y(handle.value)));
+      target.setAttribute('r', '22');
+      target.setAttribute('data-busyness-handle', String(index));
+      target.setAttribute('aria-hidden', 'true');
+      graph.appendChild(target);
+      const circle = document.createElementNS(SVG_NS, 'circle');
+      circle.setAttribute('class', 'crowd-busyness-handle');
+      circle.setAttribute('cx', String(x(handle.time)));
+      circle.setAttribute('cy', String(y(handle.value)));
+      circle.setAttribute('r', '8');
+      circle.setAttribute('aria-hidden', 'true');
+      graph.appendChild(circle);
+    });
+
+    const description = handles.length === 2 && handles.every(handle => handle.value === 1)
+      ? 'Even busyness across the release window'
+      : `${handles.length} busyness handles across the release window`;
+    graph.setAttribute('aria-label', description);
+    const summary = document.getElementById('crowd-busyness-summary');
+    if (summary) summary.textContent = description.startsWith('Even') ? 'Even' : `${handles.length} handles`;
+
+    controls.replaceChildren();
+    handles.forEach((handle, index) => {
+      const row = document.createElement('div');
+      row.className = 'crowd-busyness-handle-row';
+      const title = document.createElement('span');
+      title.className = 'crowd-busyness-handle-title';
+      title.textContent = `Handle ${index + 1}`;
+      row.appendChild(title);
+      row.appendChild(this._crowdBusynessNumberControl('Time', index, 'time', handle.time * 100, {
+        readOnly: index === 0 || index === handles.length - 1,
+      }));
+      row.appendChild(this._crowdBusynessNumberControl('Busy', index, 'value', handle.value * 100));
+
+      if (index < handles.length - 1) {
+        const label = document.createElement('label');
+        label.textContent = 'Change';
+        const select = document.createElement('select');
+        select.dataset.busynessIndex = String(index);
+        select.dataset.busynessField = 'transition';
+        for (const [value, text] of [['gradual', 'Gradual'], ['step', 'Sudden']]) {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = text;
+          option.selected = handle.transition === value;
+          select.appendChild(option);
+        }
+        label.appendChild(select);
+        row.appendChild(label);
+      }
+      if (index > 0 && index < handles.length - 1) {
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'btn btn-ghost crowd-busyness-remove';
+        remove.textContent = 'Remove';
+        remove.setAttribute('aria-label', `Remove busyness handle ${index + 1}`);
+        remove.dataset.busynessIndex = String(index);
+        remove.dataset.busynessField = 'remove';
+        remove.addEventListener('click', event => this._changeCrowdBusynessControl(event.currentTarget));
+        row.appendChild(remove);
+      }
+      controls.appendChild(row);
+    });
+
+    const add = document.getElementById('crowd-busyness-add');
+    if (add) {
+      add.disabled = handles.length >= MAX_BUSYNESS_HANDLES;
+      add.title = add.disabled ? `Maximum ${MAX_BUSYNESS_HANDLES} handles` : 'Add a handle in the widest span';
+    }
+    const reset = document.getElementById('crowd-busyness-reset');
+    if (reset) {
+      reset.disabled = JSON.stringify(handles) === JSON.stringify(defaultBusynessEnvelope());
+    }
+  },
+
+  /** @private */
+  _crowdBusynessNumberControl(labelText, index, field, value, { readOnly = false } = {}) {
+    const label = document.createElement('label');
+    label.textContent = labelText;
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.max = '100';
+    input.step = '0.1';
+    input.value = String(Math.round(value * 10) / 10);
+    input.readOnly = readOnly;
+    input.inputMode = 'decimal';
+    input.dataset.busynessIndex = String(index);
+    input.dataset.busynessField = field;
+    input.setAttribute('aria-label', `${labelText} for busyness handle ${index + 1}, percent`);
+    input.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' || input.readOnly) return;
+      event.preventDefault();
+      this._changeCrowdBusynessControl(input);
+    });
+    const unit = document.createElement('span');
+    unit.textContent = '%';
+    label.appendChild(input);
+    label.appendChild(unit);
+    return label;
   },
 
   /**

@@ -89,6 +89,13 @@ function emitterDescriptor(emitter, index, layerId) {
     onsetVarianceCanonical: emitter.onsetVariance,
     intensityRamp: percent(emitter.intensityRamp),
     intensityRampCanonical: emitter.intensityRamp,
+    busynessEnvelope: emitter.busynessEnvelope.map(handle => ({
+      time: percent(handle.time),
+      timeCanonical: handle.time,
+      value: percent(handle.value),
+      valueCanonical: handle.value,
+      transition: handle.transition,
+    })),
     wobble: percent(emitter.wobble),
     wobbleCanonical: emitter.wobble,
     seed: emitter.seed,

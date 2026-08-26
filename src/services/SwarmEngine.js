@@ -1,5 +1,9 @@
 import { PathCalculator } from './PathCalculator.js';
 import { getGraphDepartures, normalizeGraphWeights } from '../utils/graphRouting.js';
+import {
+  compileBusynessEnvelope,
+  sampleBusynessEnvelope,
+} from '../utils/busynessEnvelope.js';
 
 /**
  * Deterministic swarm evaluator for flow layers (Phase 3).
@@ -135,17 +139,21 @@ export class SwarmEngine {
     const windowStart = Math.min(emitter.releaseStart, 1);
     const windowEnd = Math.min(emitter.releaseStart + emitter.releaseDuration, 1);
     const windowSpan = Math.max(0, windowEnd - windowStart);
+    const busynessEnvelope = compileBusynessEnvelope(emitter.busynessEnvelope);
 
     for (let i = 0; i < dotCount; i++) {
       // Onset: blend the dot's even-spread slot with a uniform draw by
       // onsetVariance (0 = metronome-even, 1 = fully random), then bias
-      // the result by intensityRamp (-1 front-loaded … 1 back-loaded).
+      // the result by intensityRamp (-1 front-loaded … 1 back-loaded), then
+      // invert the authored busyness density. A flat envelope is neutral, so
+      // historical projects retain the exact founding release schedule.
       const slot = (i + 0.5) / dotCount;
       const uniform = SwarmEngine.hash(seed, i, CHANNEL_ONSET);
       let u = slot + (uniform - slot) * emitter.onsetVariance;
       const ramp = emitter.intensityRamp;
       if (ramp > 0) u = Math.pow(u, 1 / (1 + ramp));
       else if (ramp < 0) u = Math.pow(u, 1 - ramp);
+      u = sampleBusynessEnvelope(busynessEnvelope, u);
       const onsetMs = (windowStart + u * windowSpan) * durationMs;
 
       const elapsedSec = (timelineMs - onsetMs) / 1000;

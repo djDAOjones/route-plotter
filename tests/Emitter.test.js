@@ -16,6 +16,10 @@ describe('Emitter', () => {
       expect(e.releaseDuration).toBe(1);
       expect(e.onsetVariance).toBe(0.2);
       expect(e.intensityRamp).toBe(0);
+      expect(e.busynessEnvelope).toEqual([
+        { time: 0, value: 1, transition: 'gradual' },
+        { time: 1, value: 1, transition: 'gradual' },
+      ]);
       expect(e.wobble).toBe(0);
     });
 
@@ -151,6 +155,11 @@ describe('Emitter', () => {
         releaseDuration: 0.4,
         onsetVariance: 0.7,
         intensityRamp: -0.5,
+        busynessEnvelope: [
+          { time: 0, value: 0.1, transition: 'step' },
+          { time: 0.5, value: 1, transition: 'gradual' },
+          { time: 1, value: 0.2, transition: 'gradual' },
+        ],
         wobble: 0.9,
       });
       const restored = Emitter.fromJSON(original.toJSON());
@@ -158,15 +167,28 @@ describe('Emitter', () => {
       expect(restored.seed).toBe(987654);
       expect(restored.lifecycleMode).toBe('collect');
       expect(restored.intensityRamp).toBe(-0.5);
+      expect(restored.busynessEnvelope).toEqual(original.busynessEnvelope);
     });
 
     test('toJSON should carry no transient runtime state', () => {
       const json = new Emitter().toJSON();
       expect(Object.keys(json).sort()).toEqual([
-        'dotColor', 'dotCount', 'dotSize', 'id', 'intensityRamp',
+        'busynessEnvelope', 'dotColor', 'dotCount', 'dotSize', 'id', 'intensityRamp',
         'lifecycleMode', 'onsetVariance', 'releaseDuration', 'releaseStart',
         'seed', 'speed', 'speedVariance', 'wobble',
       ]);
+    });
+
+    test('strictly rejects malformed persisted envelopes while old projects get the neutral default', () => {
+      const oldProjectEmitter = Emitter.fromJSON({ seed: 1 });
+      expect(oldProjectEmitter.busynessEnvelope).toEqual(new Emitter({ seed: 1 }).busynessEnvelope);
+
+      expect(() => Emitter.fromJSON({ busynessEnvelope: [
+        { time: 0, value: 1, transition: 'gradual' },
+        { time: 0.5, value: 1, transition: 'gradual' },
+        { time: 0.4, value: 1, transition: 'gradual' },
+        { time: 1, value: 1, transition: 'gradual' },
+      ] })).toThrow(/times must increase/);
     });
   });
 });

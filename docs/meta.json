@@ -36,13 +36,23 @@
       "imports": [],
       "format": "esm"
     },
+    "src/utils/busynessEnvelope.js": {
+      "bytes": 6548,
+      "imports": [],
+      "format": "esm"
+    },
     "src/models/Emitter.js": {
-      "bytes": 11293,
+      "bytes": 12017,
       "imports": [
         {
           "path": "src/utils/safeColor.js",
           "kind": "import-statement",
           "original": "../utils/safeColor.js"
+        },
+        {
+          "path": "src/utils/busynessEnvelope.js",
+          "kind": "import-statement",
+          "original": "../utils/busynessEnvelope.js"
         }
       ],
       "format": "esm"
@@ -295,7 +305,7 @@
       "format": "esm"
     },
     "src/services/SwarmEngine.js": {
-      "bytes": 18305,
+      "bytes": 18697,
       "imports": [
         {
           "path": "src/services/PathCalculator.js",
@@ -306,6 +316,11 @@
           "path": "src/utils/graphRouting.js",
           "kind": "import-statement",
           "original": "../utils/graphRouting.js"
+        },
+        {
+          "path": "src/utils/busynessEnvelope.js",
+          "kind": "import-statement",
+          "original": "../utils/busynessEnvelope.js"
         }
       ],
       "format": "esm"
@@ -3083,7 +3098,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 20045,
+      "bytes": 33331,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3094,6 +3109,11 @@
           "path": "src/components/SwatchPicker.js",
           "kind": "import-statement",
           "original": "../components/SwatchPicker.js"
+        },
+        {
+          "path": "src/utils/busynessEnvelope.js",
+          "kind": "import-statement",
+          "original": "../utils/busynessEnvelope.js"
         }
       ],
       "format": "esm"
@@ -3125,12 +3145,12 @@
       "format": "esm"
     },
     "src/utils/sceneSemantics.js": {
-      "bytes": 8975,
+      "bytes": 9225,
       "imports": [],
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
-      "bytes": 44849,
+      "bytes": 45142,
       "imports": [
         {
           "path": "src/utils/sceneSemantics.js",
@@ -3461,13 +3481,13 @@
     }
   },
   "outputs": {
-    ".docs-build-Am3uaJ/app.js.map": {
+    ".docs-build-9bYnPp/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3091443
+      "bytes": 3127005
     },
-    ".docs-build-Am3uaJ/app.js": {
+    ".docs-build-9bYnPp/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3490,8 +3510,11 @@
         "src/utils/safeColor.js": {
           "bytesInOutput": 384
         },
+        "src/utils/busynessEnvelope.js": {
+          "bytesInOutput": 2763
+        },
         "src/models/Emitter.js": {
-          "bytesInOutput": 4387
+          "bytesInOutput": 4606
         },
         "src/utils/entityId.js": {
           "bytesInOutput": 245
@@ -3554,7 +3577,7 @@
           "bytesInOutput": 797
         },
         "src/services/SwarmEngine.js": {
-          "bytesInOutput": 4906
+          "bytesInOutput": 4941
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 998
@@ -3761,16 +3784,16 @@
           "bytesInOutput": 887
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 10512
+          "bytesInOutput": 18358
         },
         "src/app/network.js": {
           "bytesInOutput": 10711
         },
         "src/utils/sceneSemantics.js": {
-          "bytesInOutput": 3955
+          "bytesInOutput": 4105
         },
         "src/controllers/SceneOutlineController.js": {
-          "bytesInOutput": 26759
+          "bytesInOutput": 26979
         },
         "src/app/sceneOutline.js": {
           "bytesInOutput": 27072
@@ -3791,7 +3814,7 @@
           "bytesInOutput": 21785
         }
       },
-      "bytes": 777143
+      "bytes": 788376
     }
   }
 }

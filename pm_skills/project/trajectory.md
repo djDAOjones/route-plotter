@@ -19,6 +19,11 @@
 
 ## Crowd controls (shipped 2026-08-26)
 
+CROWD-02 — Crowds now author whole-release busyness with a direct line graph,
+two-to-eight handles, gradual or sudden spans and equivalent exact controls;
+the seeded profile is undoable and identical after reload and in export.
+(2026-08-26) — see decision-log.
+
 CROWD-03 — Crowds now expose plain-language seeded walking, pace, release and
 route-choice variation, the exact reproducible seed and a one-step Re-roll
 that changes the pattern without changing authored controls. (2026-08-26) —

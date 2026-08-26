@@ -56,7 +56,8 @@ to preserve the authored timeline, and renders at export resolution
 with the app's own services (cross-check: `tests/playerApp.test.js`).
 The scene data model landed in Phase 2 (2026-08-18): `Scene` →
 `FlowLayer` (guide graph or hero route + `Emitter`s with per-emitter
-seeds and normalised release windows), persisted additively as the
+seeds, normalised release windows and two-to-eight-handle busyness envelopes),
+persisted additively as the
 coordVersion 9 `scene` block. Phases and rationale: backlog +
 decision-log 2026-08-17/18.
 

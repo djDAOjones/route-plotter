@@ -941,6 +941,132 @@ kbd{
   min-height:var(--touch-target-min);
 }
 
+.crowd-busyness-editor{
+  display:grid;
+  gap:var(--space-2);
+  margin-top:var(--space-3);
+  padding-top:var(--space-3);
+  border-top:1px solid var(--border-interactive);
+}
+
+.crowd-busyness-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-2);
+  font-size:var(--type-body);
+  font-weight:600;
+}
+
+#crowd-busyness-summary{
+  color:var(--text-02);
+  font-size:var(--type-caption);
+  font-weight:400;
+}
+
+.crowd-busyness-graph{
+  display:block;
+  width:100%;
+  min-height:8.75rem;
+  border:1px solid var(--border-interactive);
+  border-radius:var(--radius-1);
+  background:var(--ui-01);
+  touch-action:none;
+}
+
+.crowd-busyness-axis{
+  fill:none;
+  stroke:var(--border-strong);
+  stroke-width:1.5;
+}
+
+.crowd-busyness-line{
+  fill:none;
+  stroke:var(--interactive-01);
+  stroke-width:4;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.crowd-busyness-handle{
+  fill:var(--ui-01);
+  stroke:var(--interactive-01);
+  stroke-width:4;
+  cursor:grab;
+  pointer-events:none;
+}
+
+.crowd-busyness-handle-target{
+  fill:transparent;
+  stroke:transparent;
+  cursor:grab;
+}
+
+.crowd-busyness-handle-target:active{
+  cursor:grabbing;
+}
+
+.crowd-busyness-handles{
+  display:grid;
+  gap:var(--space-2);
+}
+
+.crowd-busyness-handle-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-2);
+  padding:var(--space-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  background:var(--ui-01);
+}
+
+.crowd-busyness-handle-title{
+  grid-column:1 / -1;
+  color:var(--text-01);
+  font-size:var(--type-caption);
+  font-weight:600;
+}
+
+.section-content .crowd-busyness-handle-row label{
+  display:grid;
+  grid-template-columns:1fr auto;
+  margin:0;
+  gap:var(--space-1);
+  color:var(--text-02);
+  font-size:var(--type-caption);
+}
+
+.crowd-busyness-handle-row input,
+.crowd-busyness-handle-row select{
+  grid-column:1 / -1;
+  width:100%;
+  min-width:0;
+  min-height:var(--touch-target-min);
+}
+
+.crowd-busyness-handle-row input[readonly]{
+  color:var(--text-02);
+  background:var(--ui-02);
+}
+
+.crowd-busyness-remove{
+  grid-column:1 / -1;
+  min-height:var(--touch-target-min);
+}
+
+.crowd-busyness-actions{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:var(--space-2);
+}
+
+.crowd-busyness-actions .btn{
+  min-width:0;
+  min-height:var(--touch-target-min);
+  padding-inline:var(--space-2);
+}
+
 /* Section tints and cap bands per spec v3.1.241 §5.1 */
 /* Header uses cap color (darker), content uses tint (lighter) */
 /* Waypoint-scope cards */
@@ -3402,6 +3528,16 @@ a.btn-primary:visited{
   .section-content .crowd-variation-control span:last-child{
     min-width:0;
     white-space:nowrap;
+  }
+
+  .crowd-busyness-handle-row,
+  .crowd-busyness-actions{
+    grid-template-columns:1fr;
+  }
+
+  .crowd-busyness-handle-title,
+  .crowd-busyness-remove{
+    grid-column:1;
   }
 }
 

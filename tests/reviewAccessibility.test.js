@@ -579,6 +579,22 @@ describe('render and static UI regressions', () => {
     expect(mainCss).toMatch(/#crowd-reroll-btn\{[^}]*min-height:var\(--touch-target-min\);/s);
   });
 
+  test('CROWD-02 provides a labelled busyness graph plus equivalent exact controls', () => {
+    document.body.innerHTML = indexHtml;
+    const editor = document.querySelector('.crowd-busyness-editor');
+    const graph = document.getElementById('crowd-busyness-graph');
+
+    expect(editor.getAttribute('role')).toBe('group');
+    expect(editor.getAttribute('aria-labelledby')).toBe('crowd-busyness-label');
+    expect(graph.getAttribute('role')).toBe('img');
+    expect(document.getElementById('crowd-busyness-add').type).toBe('button');
+    expect(document.getElementById('crowd-busyness-reset').type).toBe('button');
+    expect(document.getElementById('crowd-busyness-hint').textContent)
+      .toMatch(/exact controls.*gradually or suddenly/);
+    expect(mainCss).toMatch(/\.crowd-busyness-handle-target\{[^}]*cursor:grab;/s);
+    expect(mainCss).toMatch(/\.crowd-busyness-actions \.btn\{[^}]*min-height:var\(--touch-target-min\);/s);
+  });
+
   test('Pacing explains the duration extension only for Comet mode', () => {
     document.body.innerHTML = indexHtml;
     const controller = Object.create(UIController.prototype);

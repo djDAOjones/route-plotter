@@ -1027,10 +1027,24 @@
                   </label>
 
                   <label class="crowd-variation-control" for="crowd-intensity-ramp">
-                    <span data-tip="Bias set-offs toward the start or end of the release window">Release bias</span>
+                    <span data-tip="Bias all set-offs toward the start or end before applying the busyness graph">Release bias</span>
                     <input type="range" id="crowd-intensity-ramp" min="-100" max="100" value="0" step="1" aria-describedby="crowd-intensity-ramp-value" aria-valuetext="Even">
                     <span id="crowd-intensity-ramp-value">Even</span>
                   </label>
+
+                  <div class="crowd-busyness-editor" role="group" aria-labelledby="crowd-busyness-label" aria-describedby="crowd-busyness-hint">
+                    <div class="crowd-busyness-heading">
+                      <span id="crowd-busyness-label">Busyness over time</span>
+                      <output id="crowd-busyness-summary" aria-labelledby="crowd-busyness-label">Even</output>
+                    </div>
+                    <p id="crowd-busyness-hint" class="section-hint">Higher handles release more dots. Drag a handle, or use the exact controls below. Each span can change gradually or suddenly.</p>
+                    <svg id="crowd-busyness-graph" class="crowd-busyness-graph" viewBox="0 0 300 140" role="img" aria-label="Even busyness across the release window"></svg>
+                    <div id="crowd-busyness-handles" class="crowd-busyness-handles" aria-label="Busyness handles"></div>
+                    <div class="crowd-busyness-actions">
+                      <button id="crowd-busyness-add" class="btn btn-secondary" type="button">Add handle</button>
+                      <button id="crowd-busyness-reset" class="btn btn-ghost" type="button">Reset to even</button>
+                    </div>
+                  </div>
 
                   <div class="crowd-pattern-controls" role="group" aria-labelledby="crowd-seed-label" aria-describedby="crowd-pattern-hint">
                     <div class="crowd-seed-row">

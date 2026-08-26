@@ -781,6 +781,7 @@ export class SceneOutlineController {
         ['Pace variation', `${emitter.speedVariance}%`],
         ['Release timing', `${emitter.onsetVariance}%`],
         ['Release bias', `${emitter.intensityRamp}%`],
+        ['Busyness', `${emitter.busynessEnvelope.length} handles`],
         ['Walking variation', `${emitter.wobble}%`],
         ['Lifecycle', emitter.lifecycleMode],
         ['Seed', emitter.seed],
@@ -832,6 +833,10 @@ export class SceneOutlineController {
           { value: 'collect', label: 'Collect' },
         ], { key: `${emitter.key}:lifecycle` }),
       ], 'Apply primary emitter', `${emitter.key}:apply`));
+      content.appendChild(description(
+        `Busyness over time has ${emitter.busynessEnvelope.length} handles. ` +
+        'Select this crowd in the main editor to move handles or set gradual and sudden spans.'
+      ));
       content.appendChild(readOnlyList([['Deterministic seed', emitter.seed]]));
     }
     details.appendChild(content);

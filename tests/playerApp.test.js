@@ -47,7 +47,17 @@ function buildAuthoredWaypoints() {
 function buildAuthoredScene() {
   const scene = new Scene();
   const routeLayer = scene.addFlowLayer({ name: 'Crowd 1', guideType: 'route' });
-  routeLayer.addEmitter({ seed: 42, dotCount: 24, releaseStart: 0.2, releaseDuration: 0.5 });
+  routeLayer.addEmitter({
+    seed: 42,
+    dotCount: 24,
+    releaseStart: 0.2,
+    releaseDuration: 0.5,
+    busynessEnvelope: [
+      { time: 0, value: 0.1, transition: 'step' },
+      { time: 0.5, value: 1, transition: 'gradual' },
+      { time: 1, value: 0.2, transition: 'gradual' },
+    ],
+  });
   const graphLayer = scene.addFlowLayer({ name: 'Crowd 2', guideType: 'graph' });
   const entry = graphLayer.graph.addNode({ x: 0.2, y: 0.3, type: 'entry' });
   const exit = graphLayer.graph.addNode({ x: 0.8, y: 0.7, type: 'exit' });
@@ -215,6 +225,7 @@ describe('PlayerApp export parity (golden cross-check)', () => {
     const layers1 = player1.scene.getFlowLayers();
     expect(layers1).toHaveLength(2);
     expect(layers1[0].emitters[0].seed).toBe(42);
+    expect(layers1[0].emitters[0].busynessEnvelope).toHaveLength(3);
     expect(layers1[1].emitters[0].seed).toBe(7);
 
     const context1 = {

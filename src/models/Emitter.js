@@ -4,7 +4,8 @@
  *
  * Carries the full founding swarm vocabulary (decision-log 2026-08-17):
  * count, release window, onset variance, speed variance, intensity ramp,
- * wobble, lifecycle — plus the per-emitter seed. Holds NO transient state:
+ * wobble, lifecycle — plus the per-emitter seed and additive busyness
+ * envelope. Holds NO transient state:
  * dot positions are computed by the Phase 3 engine as a pure function of
  * (timelineMs, layer, seed) and are never stored or persisted.
  *
@@ -17,6 +18,10 @@
  */
 
 import { assertSafeStoredColor } from '../utils/safeColor.js';
+import {
+  assertValidBusynessEnvelope,
+  normalizeBusynessEnvelope,
+} from '../utils/busynessEnvelope.js';
 
 const VALID_LIFECYCLE_MODES = ['disappear', 'respawn', 'loop', 'collect'];
 const MIN_SPEED = 0.001;
@@ -47,6 +52,7 @@ export class Emitter {
    * @param {number}  [options.releaseDuration=1]   — Onset window length as a fraction of the timeline, 0–1.
    * @param {number}  [options.onsetVariance=0.2]   — Jitter of each dot's onset around its even-spread slot, 0–1.
    * @param {number}  [options.intensityRamp=0]     — Release-density bias across the window, -1 (front-loaded) to 1 (back-loaded), 0 = uniform.
+   * @param {Array}   [options.busynessEnvelope]    — Ordered time/value handles controlling relative release density.
    * @param {number}  [options.wobble=0]            — Path-wobble amplitude, 0–1.
    */
   constructor(options = {}) {
@@ -62,6 +68,7 @@ export class Emitter {
     this.releaseDuration = Emitter._clamp01(options.releaseDuration ?? 1);
     this.onsetVariance = Emitter._clamp01(options.onsetVariance ?? 0.2);
     this.intensityRamp = Emitter._clampSigned(options.intensityRamp ?? 0);
+    this.busynessEnvelope = normalizeBusynessEnvelope(options.busynessEnvelope);
     this.wobble = Emitter._clamp01(options.wobble ?? 0);
   }
 
@@ -82,6 +89,9 @@ export class Emitter {
     if ('releaseDuration' in partial) this.releaseDuration = Emitter._clamp01(partial.releaseDuration);
     if ('onsetVariance' in partial) this.onsetVariance = Emitter._clamp01(partial.onsetVariance);
     if ('intensityRamp' in partial) this.intensityRamp = Emitter._clampSigned(partial.intensityRamp);
+    if ('busynessEnvelope' in partial) {
+      this.busynessEnvelope = normalizeBusynessEnvelope(partial.busynessEnvelope);
+    }
     if ('wobble' in partial) this.wobble = Emitter._clamp01(partial.wobble);
   }
 
@@ -117,6 +127,8 @@ export class Emitter {
       releaseDuration: this.releaseDuration,
       onsetVariance: this.onsetVariance,
       intensityRamp: this.intensityRamp,
+      // Handles are cloned so exported/project JSON cannot mutate live model data.
+      busynessEnvelope: this.busynessEnvelope.map(handle => ({ ...handle })),
       wobble: this.wobble,
     };
   }
@@ -180,6 +192,7 @@ export class Emitter {
     if ('intensityRamp' in data && (Number(data.intensityRamp) < -1 || Number(data.intensityRamp) > 1)) {
       throw new Error('Invalid emitter intensityRamp: expected a value from -1 to 1');
     }
+    if ('busynessEnvelope' in data) assertValidBusynessEnvelope(data.busynessEnvelope);
   }
 
   // ── private helpers ──────────────────────────────────
