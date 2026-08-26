@@ -26,7 +26,8 @@ safety and a clean production check build. Local Chromium shows the
 native selection, rotation-only preset controls, clean canvas rendering and
 reload persistence with no warning/error console entries. HEAD-01 leaves the
 backlog; UI-02 moves to Current as the next runnable item but keeps its explicit
-owner sign-off gate. No Icebox evidence was triggered.
+owner sign-off gate. The shipped CROWD-03 dependency is removed from the
+COMPOSE-01 and COMPOSE-03 gate labels; no Icebox evidence was triggered.
 
 ## 2026-08-26 — MAINT-01 removes only the pre-verified dead paths
 

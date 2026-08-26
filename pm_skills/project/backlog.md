@@ -31,10 +31,10 @@
   Implement simultaneous split hero-route branches on one master timeline,
   with deterministic fork, reconvergence and completion semantics.
 - [ ] COMPOSE-01 [[detail]](tickets/COMPOSE-01.md)
-  [gated: ROUTE-01, REV-03, CROWD-03] — Bind graph nodes and emitter release
+  [gated: ROUTE-01, REV-03] — Bind graph nodes and emitter release
   timing to route waypoints while preserving deterministic hashes and one-way
   graph→route ownership.
-- [ ] COMPOSE-03 [gated: ROUTE-01, CROWD-03] — Trace the compatible hero route
+- [ ] COMPOSE-03 [gated: ROUTE-01] — Trace the compatible hero route
   into a one-way copied guide network so crowds can follow it and branch.
 - [ ] COMPOSE-02 [gated: COMPOSE-01] — Fit a route wait to the analytically
   computed last crowd arrival as a baked authored value, never a live timing

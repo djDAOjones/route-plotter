@@ -1,6 +1,6 @@
 # COMPOSE-01 — Route-bound crowd anchors
 
-> **Status:** Phase 5 — gated by ROUTE-01, REV-03 and CROWD-03.
+> **Status:** Phase 5 — gated by ROUTE-01 and REV-03; CROWD-03 shipped.
 
 ## Intent
 
