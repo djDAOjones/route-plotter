@@ -3023,7 +3023,7 @@
       "format": "esm"
     },
     "src/app/privacy.js": {
-      "bytes": 9259,
+      "bytes": 13844,
       "imports": [
         {
           "path": "src/services/DiagnosticsService.js",
@@ -3287,13 +3287,13 @@
     }
   },
   "outputs": {
-    ".docs-build-AZHTQD/app.js.map": {
+    ".docs-build-MJqRut/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2805665
+      "bytes": 2811875
     },
-    ".docs-build-AZHTQD/app.js": {
+    ".docs-build-MJqRut/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3584,7 +3584,7 @@
           "bytesInOutput": 2176
         },
         "src/app/privacy.js": {
-          "bytesInOutput": 6164
+          "bytesInOutput": 9595
         },
         "src/app/startup.js": {
           "bytesInOutput": 110
@@ -3596,7 +3596,7 @@
           "bytesInOutput": 21188
         }
       },
-      "bytes": 676346
+      "bytes": 679777
     }
   }
 }

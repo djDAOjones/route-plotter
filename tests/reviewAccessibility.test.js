@@ -18,6 +18,7 @@ const wiringDomSource = readFileSync(resolve(process.cwd(), 'src/app/wiringDom.j
 const uiControllerSource = readFileSync(resolve(process.cwd(), 'src/controllers/UIController.js'), 'utf8');
 const mainSource = readFileSync(resolve(process.cwd(), 'src/main.js'), 'utf8');
 const projectResetSource = readFileSync(resolve(process.cwd(), 'src/app/projectReset.js'), 'utf8');
+const privacySource = readFileSync(resolve(process.cwd(), 'src/app/privacy.js'), 'utf8');
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -361,6 +362,28 @@ describe('render and static UI regressions', () => {
     expect(indexHtml.match(/accept="image\/png,image\/jpeg,image\/webp"/g)).toHaveLength(3);
   });
 
+  test('support hand-off is visible, preview-first and fixed to the governed Issues route', () => {
+    expect(indexHtml).toMatch(/<button id="report-bug-btn"[^>]*>Report a bug<\/button>/);
+    expect(indexHtml).not.toMatch(/id="report-bug-btn"[^>]*aria-label=/);
+    expect(indexHtml).toContain('GitHub Issues are public.');
+    expect(indexHtml).toContain('Support is best effort, with no guaranteed response time.');
+    expect(indexHtml).toContain('Report suspected vulnerabilities through');
+    expect(indexHtml).toMatch(/<a id="diagnostics-open-issues"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*hidden>Open GitHub Issues in new tab<\/a>/);
+    expect(indexHtml).toMatch(/<a id="diagnostics-open-security"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*hidden>/);
+    expect(indexHtml).toContain('id="diagnostics-copy-issues-address"');
+    expect(indexHtml).not.toContain('GitHub Issues in this tab');
+    expect(indexHtml).not.toContain('href="https://github.com/djDAOjones/route-plotter/issues"');
+    expect(privacySource).toContain(
+      "GITHUB_ISSUES_URL = 'https://github.com/djDAOjones/route-plotter/issues'"
+    );
+    expect(privacySource).toContain(
+      "'https://github.com/djDAOjones/route-plotter/security/advisories/new'"
+    );
+    expect(privacySource).not.toMatch(/GITHUB_ISSUES_URL\s*[+`]/);
+    expect(mainCss).toMatch(/a\.btn-primary:visited\{\s*color:var\(--text-04\);/);
+    expect(mainCss).toMatch(/\.diagnostics-modal-content\{[^}]*max-height:[^;]+;[^}]*overflow-y:auto;/s);
+  });
+
   test('responsive rules target the real panels and retain a 320px layout', () => {
     expect(mainCss).toContain('@media (max-width: 80rem)');
     expect(mainCss).toContain('@media (max-width: 64rem)');
@@ -369,6 +392,9 @@ describe('render and static UI regressions', () => {
     expect(mainCss).not.toContain('.sidebar.right');
     expect(mainCss).not.toContain('.main-content');
     expect(mainCss).not.toContain('.playbar-container');
+    expect(mainCss).toMatch(/#report-bug-btn,\s*\.header-controls > #help-btn/);
+    expect(mainCss).toMatch(/\.diagnostics-actions\{\s*flex-wrap:wrap;/);
+    expect(mainCss).toMatch(/\.diagnostics-actions \.btn\{\s*flex:1 1 10rem;/);
   });
 
   test('background DOM controls have one owner', () => {

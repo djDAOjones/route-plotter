@@ -1955,6 +1955,16 @@ kbd{
 
 .diagnostics-modal-content{
   max-width:48rem;
+  max-height:calc(100vh - (2 * var(--space-4)));
+  overflow-y:auto;
+}
+
+.modal-content .diagnostics-public-warning{
+  margin-top:calc(-1 * var(--space-2));
+  padding:var(--space-3);
+  border-left:3px solid var(--support-warning);
+  background:var(--support-warning-bg);
+  color:var(--text-01);
 }
 
 .diagnostics-preview-label{
@@ -1994,6 +2004,51 @@ kbd{
   min-height:1.5rem;
   margin:var(--space-2) 0 var(--space-3);
   color:var(--text-02);
+}
+
+.modal-content .diagnostics-issues-note{
+  margin:calc(-1 * var(--space-2)) 0 var(--space-3);
+}
+
+.modal-content .diagnostics-issues-note[hidden]{
+  display:none;
+}
+
+.diagnostics-inline-action{
+  display:inline-flex;
+  align-items:center;
+  min-height:var(--control-min-h);
+  padding:0 var(--space-2);
+  border:0;
+  background:transparent;
+  color:var(--link-01);
+  font:inherit;
+  font-weight:var(--w-label);
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+.diagnostics-inline-action[hidden]{
+  display:none;
+}
+
+.diagnostics-inline-action:hover{
+  background:var(--hover-ui);
+}
+
+.diagnostics-inline-action:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.diagnostics-issues-note code{
+  overflow-wrap:anywhere;
+}
+
+.diagnostics-actions{
+  flex-wrap:wrap;
 }
 
 /* ========== Keyboard Shortcuts Modal ========== */
@@ -2575,6 +2630,10 @@ kbd{
   color:var(--text-04);
 }
 
+a.btn-primary:visited{
+  color:var(--text-04);
+}
+
 .btn-primary:hover{
   background:var(--hover-primary);
 }
@@ -2949,8 +3008,18 @@ kbd{
   }
 
   .header-controls > .dropdown .dropdown-toggle,
+  .header-controls > #report-bug-btn,
   .header-controls > #help-btn{
     width:100%;
+  }
+
+  .header-controls > #report-bug-btn,
+  .header-controls > #help-btn{
+    flex:1 1 8rem;
+  }
+
+  .diagnostics-actions .btn{
+    flex:1 1 10rem;
   }
 
   .canvas-area{

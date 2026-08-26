@@ -8,6 +8,10 @@
 import { DiagnosticsService } from '../services/DiagnosticsService.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
 
+export const GITHUB_ISSUES_URL = 'https://github.com/djDAOjones/route-plotter/issues';
+export const GITHUB_SECURITY_URL =
+  'https://github.com/djDAOjones/route-plotter/security/advisories/new';
+
 const SHARE_DISCLOSURES = Object.freeze({
   project: Object.freeze({
     title: 'Save project file?',
@@ -142,12 +146,31 @@ export const privacyMixin = {
     if (!modal) return;
 
     this._diagnosticsModal = modal;
+    this._diagnosticsTitle = document.getElementById('diagnostics-title');
+    this._diagnosticsDescription = document.getElementById('diagnostics-description');
     this._diagnosticsPreview = document.getElementById('diagnostics-preview');
     this._diagnosticsStatus = document.getElementById('diagnostics-status');
     this._diagnosticsCopy = document.getElementById('diagnostics-copy');
     this._diagnosticsDownload = document.getElementById('diagnostics-download');
+    this._diagnosticsOpenIssues = document.getElementById('diagnostics-open-issues');
+    this._diagnosticsReportWarning = document.getElementById('diagnostics-public-warning');
+    this._diagnosticsIssuesNote = document.getElementById('diagnostics-issues-note');
+    this._diagnosticsIssuesAddress = document.getElementById('diagnostics-issues-address');
+    this._diagnosticsCopyIssuesAddress = document.getElementById('diagnostics-copy-issues-address');
+    this._diagnosticsOpenSecurity = document.getElementById('diagnostics-open-security');
     this._diagnosticsCancel = document.getElementById('diagnostics-cancel');
+    this._reportBugButton = document.getElementById('report-bug-btn');
     this._diagnosticsTrap = createFocusTrap(modal);
+
+    if (this._diagnosticsOpenIssues) {
+      this._diagnosticsOpenIssues.href = GITHUB_ISSUES_URL;
+    }
+    if (this._diagnosticsIssuesAddress) {
+      this._diagnosticsIssuesAddress.textContent = GITHUB_ISSUES_URL;
+    }
+    if (this._diagnosticsOpenSecurity) {
+      this._diagnosticsOpenSecurity.href = GITHUB_SECURITY_URL;
+    }
 
     const close = () => this._closeDiagnosticsPreview();
     this._diagnosticsCancel?.addEventListener('click', close);
@@ -159,12 +182,38 @@ export const privacyMixin = {
 
     this._diagnosticsCopy?.addEventListener('click', () => void this._copyDiagnostics());
     this._diagnosticsDownload?.addEventListener('click', () => this._downloadDiagnostics());
+    this._diagnosticsOpenIssues?.addEventListener('click', () => {
+      this._diagnosticsStatus.textContent =
+        'GitHub Issues was requested in a new tab. Diagnostics were not sent.';
+    });
+    this._diagnosticsOpenSecurity?.addEventListener('click', () => {
+      this._diagnosticsStatus.textContent =
+        'Private vulnerability reporting was requested in a new tab. Diagnostics were not sent.';
+    });
+    this._diagnosticsCopyIssuesAddress?.addEventListener('click', () => {
+      void this._copyGitHubIssuesAddress();
+    });
 
     document.getElementById('copy-debug-btn')?.addEventListener('click', () => {
-      this._openDiagnosticsPreview(this._diagnosticsCopy);
+      this._openDiagnosticsPreview(
+        this._diagnosticsCopy,
+        document.getElementById('export-dropdown-btn'),
+        'diagnostics'
+      );
     });
     document.getElementById('download-debug-btn')?.addEventListener('click', () => {
-      this._openDiagnosticsPreview(this._diagnosticsDownload);
+      this._openDiagnosticsPreview(
+        this._diagnosticsDownload,
+        document.getElementById('export-dropdown-btn'),
+        'diagnostics'
+      );
+    });
+    this._reportBugButton?.addEventListener('click', () => {
+      this._openDiagnosticsPreview(
+        null,
+        this._reportBugButton,
+        'bug-report'
+      );
     });
   },
 
@@ -187,18 +236,16 @@ export const privacyMixin = {
   },
 
   /** @private */
-  _openDiagnosticsPreview(initialFocus) {
+  _openDiagnosticsPreview(initialFocus, returnFocus = null, purpose = 'diagnostics') {
     if (!this._diagnosticsModal || this._diagnosticsTrap.isActive) return;
     this._diagnosticsBundle = this.createDiagnosticsBundle();
     this._diagnosticsPreview.value = this._diagnosticsBundle.previewText;
     this._diagnosticsStatus.textContent = '';
+    this._setDiagnosticsPurpose(purpose);
     this._diagnosticsModal.style.display = 'flex';
     queueMicrotask(() => {
       if (this._diagnosticsModal.style.display === 'none') return;
-      this._diagnosticsTrap.activate(
-        initialFocus,
-        document.getElementById('export-dropdown-btn')
-      );
+      this._diagnosticsTrap.activate(initialFocus, returnFocus);
     });
   },
 
@@ -210,6 +257,56 @@ export const privacyMixin = {
     this._diagnosticsBundle = null;
     this._diagnosticsPreview.value = '';
     this._diagnosticsStatus.textContent = '';
+    this._setDiagnosticsPurpose('diagnostics');
+  },
+
+  /** Keep report-only disclosure and hand-off controls out of utility mode. */
+  _setDiagnosticsPurpose(purpose) {
+    const isBugReport = purpose === 'bug-report';
+    this._diagnosticsPurpose = purpose;
+    this._diagnosticsModal?.setAttribute(
+      'aria-describedby',
+      isBugReport
+        ? 'diagnostics-description diagnostics-public-warning'
+        : 'diagnostics-description'
+    );
+    if (this._diagnosticsTitle) {
+      this._diagnosticsTitle.textContent = isBugReport ? 'Report a bug' : 'Preview diagnostics';
+    }
+    if (this._diagnosticsDescription) {
+      this._diagnosticsDescription.textContent = isBugReport
+        ? 'Review the exact technical information below. Copy or download it only if you want to include it in your report. Nothing is copied, downloaded or sent automatically.'
+        : 'Review the exact technical information below. It excludes project content, images, filenames, browser storage, console logs, URLs and paths. Nothing is sent automatically.';
+    }
+    if (this._diagnosticsReportWarning) {
+      this._diagnosticsReportWarning.hidden = !isBugReport;
+    }
+    if (this._diagnosticsOpenIssues) {
+      this._diagnosticsOpenIssues.hidden = !isBugReport;
+    }
+    if (this._diagnosticsIssuesNote) {
+      this._diagnosticsIssuesNote.hidden = !isBugReport;
+    }
+    if (this._diagnosticsCopyIssuesAddress) {
+      this._diagnosticsCopyIssuesAddress.hidden = !isBugReport;
+    }
+    if (this._diagnosticsOpenSecurity) {
+      this._diagnosticsOpenSecurity.hidden = !isBugReport;
+    }
+  },
+
+  /** Copy only the fixed support address after a separate explicit action. */
+  async _copyGitHubIssuesAddress() {
+    if (!this._diagnosticsBundle) return false;
+    try {
+      await navigator.clipboard.writeText(GITHUB_ISSUES_URL);
+      this._diagnosticsStatus.textContent = 'GitHub Issues address copied. Diagnostics were not copied or sent.';
+      return true;
+    } catch {
+      this._diagnosticsStatus.textContent =
+        'Address copy failed. Select the GitHub Issues address shown above; diagnostics were not copied or sent.';
+      return false;
+    }
   },
 
   /** @private */
@@ -234,7 +331,11 @@ export const privacyMixin = {
       this._diagnosticsBundle.mimeType,
       `route-plotter-diagnostics-${timestamp}.json`
     );
-    this.announce('Diagnostics downloaded');
-    this._closeDiagnosticsPreview();
+    if (this._diagnosticsPurpose === 'bug-report') {
+      this._diagnosticsStatus.textContent = 'Diagnostics downloaded. Nothing was sent.';
+    } else {
+      this.announce('Diagnostics downloaded');
+      this._closeDiagnosticsPreview();
+    }
   },
 };

@@ -2,6 +2,30 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — SUPPORT-01 separates preview, sharing and support navigation
+
+**Decision:** The permanent Report a bug header action creates one fresh,
+fixed-schema diagnostic bundle and shows its exact bytes before any other
+action. Public-Issues guidance names the public and best-effort/no-SLA boundary;
+suspected vulnerabilities receive a separate private-reporting link. Copy,
+download and navigation remain independent user gestures, and neither support
+URL contains diagnostics or project data.
+
+**Recovery and accessibility:** Both governed destinations are real links whose
+fixed runtime `href`, new-tab label, `noopener` and `noreferrer` preserve browser
+semantics without weakening the same-origin resource inventory. Because secure
+new-tab success cannot be detected reliably, the modal always shows the exact
+Issues address plus an explicit address-copy fallback. It never offers a
+same-tab escape that could discard live image bytes. Report mode alone exposes
+the support controls and warning in its accessible description; utility
+diagnostics remain unchanged. Heading focus keeps the scrollable disclosure at
+the top, and closing returns to the originating Report or Export control.
+
+**Sequence:** SUPPORT-01 leaves the live backlog after canonical and production
+browser verification. REV-02 remains the next product tranche, followed by the
+UI-01 layout substrate; REV-04 stays open only for its named real-engine and
+genuinely offline evidence.
+
 ## 2026-08-26 — REV-10 uses minimum-loss transactional image admission
 
 **Decision:** Interactive custom marker and route-head uploads preview the

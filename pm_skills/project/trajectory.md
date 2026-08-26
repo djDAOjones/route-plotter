@@ -17,6 +17,13 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Support hand-off (shipped 2026-08-26)
+
+SUPPORT-01 — Report a bug now previews one redacted diagnostic bundle before
+any explicit copy, download or public-Issues hand-off, supplies a safe address
+fallback and routes suspected vulnerabilities to private reporting.
+(2026-08-26) — see decision-log.
+
 ## Phase 1 — live-app health and public boundary (shipped 2026-08-26)
 
 KEY-01 — Undo, redo and Save now have one authoritative keyboard/button event

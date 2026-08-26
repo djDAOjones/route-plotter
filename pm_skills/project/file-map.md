@@ -156,7 +156,7 @@
 - `src/app/persistence.js` — Transactional bounded project/ZIP staging, commit and rollback; honest autosave recovery, save revisions and the shared coordVersion-9 snapshot
 - `src/app/playback.js` — Single keyboard-command path, canonical transport/JKL, preview mode, paused render gating and time display
 - `src/app/pointer.js` — canvas pointer fallbacks and hit-testing
-- `src/app/privacy.js` — Explicit project/HTML sharing disclosures plus preview-before-copy/download, fixed-schema diagnostics UI
+- `src/app/privacy.js` — Explicit export disclosures plus fixed-schema diagnostics preview, public/private support hand-off, exact-address fallback and modal recovery
 - `src/app/projectReset.js` — Testable Clear All transaction: invalidate async work, clear bytes/model/UI, cancel writers and reset one empty baseline
 - `src/app/startup.js` — Testable startup sequence: await autosave recovery before selecting a default background
 - `src/app/undoRedo.js` — Undo/redo restoration, reference-aware asset sweeping and rollback-safe interactive image admission with minimum history loss
@@ -258,7 +258,7 @@
 - `tests/operationGeneration.test.js` — Latest-request/project-generation guards and original background-byte retention
 - `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings
-- `tests/privacy.test.js` — Export disclosures and byte-identical diagnostics preview/copy/download with modal focus and no automatic sharing
+- `tests/privacy.test.js` — Export disclosures, byte-identical diagnostics, support navigation/address fallback, mode isolation, focus recovery and no automatic sharing
 - `tests/projectLimits.test.js` — Adversarial image, model, ZIP/ZIP64 and detached-import resource-limit contracts
 - `tests/projectReset.test.js` — Behavioral Clear All proof for stale writers/tokens, asset/reference removal and one empty non-undoable baseline
 - `tests/publicationBoundary.test.js` — Approved-image hashes, CSP/same-origin shell, exact Pages inventory and manifest-tamper rejection

@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.621</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.621">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.621">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.621">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.621">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.621">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.621">
+  <title>Route Plotter v3.2.624</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.624">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.624">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.624">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.624">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.624">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.624">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -81,6 +81,7 @@
           </div>
         </div>
         <!-- Support (ghost style per spec) -->
+        <button id="report-bug-btn" class="btn btn-ghost" type="button" title="Preview diagnostics and report a bug">Report a bug</button>
         <button id="help-btn" class="btn btn-ghost" title="Show help and keyboard shortcuts">Help</button>
       </div>
     </header>
@@ -1131,17 +1132,28 @@
         Review the exact technical information below. It excludes project content, images, filenames, browser storage,
         console logs, URLs and paths. Nothing is sent automatically.
       </p>
+      <p id="diagnostics-public-warning" class="diagnostics-public-warning" hidden>
+        GitHub Issues are public. Do not include confidential projects, personal data, credentials or other sensitive
+        information. Support is best effort, with no guaranteed response time. Report suspected vulnerabilities through
+        <a id="diagnostics-open-security" class="diagnostics-inline-action" target="_blank" rel="noopener noreferrer" hidden>private vulnerability reporting (new tab)</a>, not public Issues.
+      </p>
       <label class="diagnostics-preview-label" for="diagnostics-preview">Technical information</label>
       <textarea id="diagnostics-preview" class="diagnostics-preview" rows="15" readonly spellcheck="false"></textarea>
       <p id="diagnostics-status" class="diagnostics-status" role="status" aria-live="polite"></p>
-      <div class="modal-buttons">
+      <p id="diagnostics-issues-note" class="diagnostics-issues-note" hidden>
+        The Issues link opens a new tab without sending the preview. If it does not open, copy this address:
+        <code id="diagnostics-issues-address"></code>
+        <button id="diagnostics-copy-issues-address" class="diagnostics-inline-action" type="button" hidden>Copy Issues address</button>
+      </p>
+      <div class="modal-buttons diagnostics-actions">
         <button id="diagnostics-cancel" class="btn btn-secondary" type="button">Cancel</button>
         <button id="diagnostics-copy" class="btn btn-secondary" type="button">Copy</button>
-        <button id="diagnostics-download" class="btn btn-primary" type="button">Download</button>
+        <button id="diagnostics-download" class="btn btn-secondary" type="button">Download</button>
+        <a id="diagnostics-open-issues" class="btn btn-primary" target="_blank" rel="noopener noreferrer" hidden>Open GitHub Issues in new tab</a>
       </div>
     </div>
   </div>
 
-  <script src="app.js?v=3.2.621"></script>
+  <script src="app.js?v=3.2.624"></script>
 </body>
 </html>

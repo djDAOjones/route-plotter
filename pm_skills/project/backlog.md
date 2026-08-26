@@ -13,10 +13,6 @@
   format-locked strategy selection, cached player loading and one
   endpoint-inclusive frame plan are implemented. Publish real-browser
   codec/container and genuinely offline standalone-export evidence.
-- [ ] SUPPORT-01 [ready] — Add an in-app Report a bug hand-off that reuses
-  REV-08's previewed/redacted copy/download diagnostics and routes users to
-  REV-09's best-effort GitHub Issues. Sharing stays explicit and nothing
-  uploads automatically.
 - [ ] REV-02 [[detail]](tickets/REV-02.md) [ready] — Implement the approved
   synchronized semantic scene outline plus explicit keyboard and coordinate
   authoring for route, crowd, network and polygon structures.
