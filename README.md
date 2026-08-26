@@ -137,6 +137,15 @@ tests/
   releaseSafety.test.js           Build/deployment argument and dry-run safety
   setup.js                        Vitest jsdom setup
 
+reviews/                          Historical review evidence and continuation dossier
+  README.md                       Index, provenance and cross-project filename guard
+  route-plotter-v3-comprehensive-repository-review-2026-08-26.md
+                                  Full pre-remediation review at commit cec0191
+  route-plotter-review-finding-crosswalk-2026-08-26.md
+                                  RP-01–RP-18 remediation and residual-ticket map
+  route-plotter-review-remediation-continuation-prompt-2026-08-26.md
+                                  Paste-ready next-chat development handover
+
 docs/                             Build output served by GitHub Pages
 ```
 

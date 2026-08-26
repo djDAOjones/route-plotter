@@ -1,13 +1,14 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 256 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 262 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 13 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
 - `_Joe` — 45 file(s)
 - `docs` — 17 file(s)
 - `images` — 6 file(s)
+- `reviews` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
 - `src` — 90 file(s)
@@ -118,6 +119,22 @@
 - `images/PARM_Aerial.jpg` — Built-in PARM aerial example background
 - `images/Rocketry.jpg` — Built-in Rocketry example background
 - `images/UoN_map.png` — Built-in UoN map example background
+
+## reviews
+
+- `reviews/README.md` — Public-safe review dossier index, provenance and
+  cross-project filename guard
+- `reviews/read-only-comprehensive-repository-review-prompt.md` — Original
+  read-only review brief retained as historical provenance, not active policy
+- `reviews/route-plotter-review-finding-crosswalk-2026-08-26.md` — Original
+  RP-01–RP-18 findings mapped to shipped work and residual assurance tickets
+- `reviews/route-plotter-review-headlines-for-novices-2026-08-26.md` —
+  Plain-language pre-remediation health snapshot with an explicit stale-state
+  warning
+- `reviews/route-plotter-review-remediation-continuation-prompt-2026-08-26.md`
+  — Paste-ready, path-based continuation contract for the next development chat
+- `reviews/route-plotter-v3-comprehensive-repository-review-2026-08-26.md` —
+  Full historical Route Plotter review at commit cec0191, public-path sanitised
 
 ## scripts
 
