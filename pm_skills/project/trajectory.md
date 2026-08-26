@@ -17,6 +17,17 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Phase 0 — owner decisions and acceptance (closed 2026-08-26)
+
+QA-01 — Owner accepted selection behaviour, standalone-player feel, major-leg
+timing and the shipped 0.1×–10× segment-speed range. (2026-08-26) — see
+decision-log 2026-08-26.
+
+REV-02, REV-08, REV-09, ROUTE-01, SCALE-01 — Owner signed off the
+semantic-authoring, publication/privacy, governance, simultaneous split-route
+and project-reference sizing contracts; each implementation moved to its
+dependency phase. (2026-08-26) — see decision-log 2026-08-26.
+
 ## REV-01 — comprehensive repository-review remediation (shipped 2026-08-26)
 
 REV-01 — Project recovery/import is transactional and bounded; autosave is honest and Clear All cannot revive stale work; timeline/export behaviour is deterministic; keyboard, modal and responsive reflow defects are repaired; and CI, clean Pages builds, deployment and restart scripts fail safely. The larger product, assurance and governance questions remain as REV-02–REV-10. (2026-08-26) — see decision-log 2026-08-26.

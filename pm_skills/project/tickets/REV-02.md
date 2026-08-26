@@ -1,6 +1,6 @@
 # REV-02 — Non-visual scene and keyboard authoring design
 
-> **Status:** Phase 0 — owner sign-off; gates REV-03 and REV-05.
+> **Status:** Phase 2 — approved and ready; gates REV-03 and REV-05.
 
 ## Intent
 
@@ -8,12 +8,20 @@ Define how keyboard-only and non-visual users can inspect and author the full
 route, crowd, network and polygon scene without inventing disconnected canvas
 semantics.
 
+## Approved contract
+
+- A synchronized DOM scene outline is another view of the canonical project:
+  route (major and minor waypoints), crowds, emitters, graph nodes/edges and
+  polygon vertices are all inspectable and selectable without the canvas.
+- V1 includes explicit add/delete/connect commands and labelled numeric
+  coordinate/time fields; pointer gestures remain an equivalent visual route.
+- The standalone player exposes a concise static scene summary and announces
+  transport milestones, not a noisy description of every rendered frame.
+
 ## Done when
 
-- The owner approves a semantic scene-outline model and keyboard/coordinate
-  authoring interaction.
-- The design covers major/minor waypoints, nodes, edges, emitters, polygons,
-  timing and exported-player meaning.
+- The approved model covers major/minor waypoints, nodes, edges, emitters,
+  polygons, timing and exported-player meaning in working UI.
 - Focus, announcement, undo, pointer parity and mobile implications have
   explicit acceptance criteria before implementation begins.
 
@@ -37,6 +45,5 @@ coordinates and deterministic playback. No implementation before sign-off.
 
 ## Open questions
 
-Whether the first release must support full graph/polygon creation or may ship
-inspection plus coordinate editing first; how much authored animation meaning
-the standalone player should narrate dynamically.
+None at the design gate. Detailed control placement may use existing card and
+outline patterns during implementation without changing the contract above.

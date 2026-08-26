@@ -1,11 +1,22 @@
 # SCALE-01 — Authored size and export-resolution model
 
-> **Status:** Phase 0 — design/sign-off required.
+> **Status:** Phase 6 implementation — approved; gated by REV-06 profiling.
 
 ## Intent
 
 Make marker, path, label and effect sizes predictable across background sizes,
 viewport zoom and export resolutions without changing authored timing.
+
+## Approved contract
+
+- A project owns one reference render size, seeded additively from its existing
+  `timingReference` or the current authored canvas for older projects.
+- Normalised geometry stays normalised. Path/marker/beacon/area graphics are
+  authored in reference pixels and scale uniformly from the reference short
+  edge; labels remain authored in reference pixels with documented legibility
+  clamps in the interactive editor.
+- Editor labels report reference pixels. HTML/video rendering scales appearance
+  without mutating saved values or recomputing the authored timeline.
 
 ## Done when
 
@@ -31,5 +42,5 @@ normalised coordinates and avoid resolution-dependent saved-state mutation.
 
 ## Open questions
 
-Whether a project owns one reference resolution; which text/effect sizes must
-remain screen-legible rather than map-relative.
+None at the model gate. Exact legibility clamp values are tuneable constants to
+be validated against representative low- and high-resolution fixtures.

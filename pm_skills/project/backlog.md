@@ -4,18 +4,9 @@
 
 ## Active
 
-<!-- Phases are dependency-ordered. Owner decisions in Phase 0 can run in
-     parallel with Phase 1 development. Status tags name the next gate;
-     Quarantine is not schedulable work. See decision-log 2026-08-26. -->
-
-### Phase 0 — Owner decisions and acceptance
-
-- [~] QA-01 [owner-check] — Run one consolidated browser feel-check covering Phase 4 selection behaviour, the Phase 5 standalone player, major-leg timing and the built 0.1×–10× segment-speed range; then close the two pending speed outcomes to trajectory.
-- [ ] REV-02 [[detail]](tickets/REV-02.md) [sign-off] — Approve the semantic scene outline and non-visual/keyboard authoring model. This gates new gesture work, full accessibility assurance and accessible split-route authoring.
-- [ ] REV-08 [[detail]](tickets/REV-08.md) [sign-off] — Approve the publication/privacy boundary for samples, asset metadata, CSP, logs and support bundles before more public examples or diagnostics ship.
-- [ ] REV-09 [[detail]](tickets/REV-09.md) [sign-off] — Select the repository licence, notices, security route and support posture; the public repository makes this an immediate governance lane.
-- [ ] ROUTE-01 [[detail]](tickets/ROUTE-01.md) [sign-off] — Decide split-route playback, timing and reconvergence now. Implementation remains a Phase 5 model change behind REV-02/REV-03.
-- [ ] SCALE-01 [[detail]](tickets/SCALE-01.md) [sign-off] — Decide whether authored sizes are image-relative, canvas-relative or physical-pixel based, and how export resolution preserves them, before implementing scaling changes.
+<!-- Phases are dependency-ordered. Phase 0 owner decisions were signed off on
+     2026-08-26; their implementation work now sits in the phase it unlocks.
+     Status tags name the next gate; Quarantine is not schedulable work. -->
 
 ### Phase 1 — Live-app health and immediate user value
 
@@ -27,9 +18,12 @@
 - [ ] CROWD-01 [[detail]](tickets/CROWD-01.md) [ready, partly-built] — Edit all competing outgoing route shares together, normalise predictably, and preview allocation with a non-colour-only weight treatment.
 - [ ] REV-04 [ready] — Prove portable, honest export strategy selection: preload/cache the player, probe required APIs, emit the announced frame count, and publish Chromium/Firefox/Safari codec and offline evidence.
 - [ ] REV-10 [[detail]](tickets/REV-10.md) [ready] — Prune unreferenced custom-image assets without breaking live waypoints, the route head, undo/redo or save/load.
+- [ ] REV-08 [[detail]](tickets/REV-08.md) [ready] — Enforce the approved public/share/support boundary with CSP, reviewed build assets, documented original-byte handling and previewable redacted diagnostics.
+- [ ] REV-09 [[detail]](tickets/REV-09.md) [ready] — Ship the approved MIT licence, third-party notices, private security-reporting route and best-effort GitHub Issues support posture.
 
 ### Phase 2 — Authoring and inspector foundation
 
+- [ ] REV-02 [[detail]](tickets/REV-02.md) [ready] — Implement the approved synchronized semantic scene outline plus explicit keyboard and coordinate authoring for route, crowd, network and polygon structures.
 - [ ] REV-03 [gated: REV-02] — Replace separate mouse/touch paths with one Pointer Events + capture state machine. Include exactly-once contracts, physical mobile evidence and multi-selection group drag.
 - [ ] UI-01 [ready] — Introduce two-tier cards with 2–4 primary controls and a More disclosure; this is the layout substrate for advanced and crowd controls.
 - [ ] UX-02 [gated: UI-01] — Make names/readouts honest in renderer units, migrate Text Size to pixels, and explain comet mode's intentional preview-tail duration in Pacing.
@@ -57,6 +51,7 @@
      before composition features that assume a linear route. REV-03 gates all
      new gestures. -->
 
+- [ ] ROUTE-01 [[detail]](tickets/ROUTE-01.md) [gated: REV-02, REV-03] — Implement simultaneous split hero-route branches on one master timeline, with deterministic fork, reconvergence and completion semantics.
 - [ ] COMPOSE-01 [[detail]](tickets/COMPOSE-01.md) [gated: ROUTE-01, REV-03, CROWD-03] — Bind graph nodes and emitter release timing to route waypoints while preserving deterministic hashes and one-way graph→route ownership.
 - [ ] COMPOSE-02 [gated: COMPOSE-01] — Fit a route wait to the analytically computed last crowd arrival as a baked authored value, never a live timing dependency.
 - [ ] COMPOSE-03 [gated: ROUTE-01, CROWD-03] — Trace the compatible hero route into a one-way copied guide network so crowds can follow it and branch.
@@ -64,6 +59,7 @@
 
 ### Phase 6 — Showcase and scale
 
+- [ ] SCALE-01 [[detail]](tickets/SCALE-01.md) [gated: REV-06] — Implement project-reference sizing so map-bound graphics preserve their authored proportions across editor, HTML and video resolutions without changing timing.
 - [ ] DEMO-01 [gated: Phase 5, REV-04, REV-08] — Replace bare example backgrounds with approved example projects that demonstrate route, crowd and anchors and double as living fixtures.
 - [ ] HEAD-01 [gated: REV-10, SCALE-01] [low] — Ship a reviewed drone head preset; custom head upload, rotation, persistence, undo and player hydration are already implemented.
 

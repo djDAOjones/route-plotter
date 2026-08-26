@@ -1,17 +1,25 @@
 # ROUTE-01 — Split hero routes
 
-> **Status:** Phase 0 discovery/sign-off; Phase 5 implementation remains blocked.
+> **Status:** Phase 5 implementation — approved; gated by REV-02 and REV-03.
 
 ## Intent
 
 Allow the main animated route itself to fork while keeping authoring,
 playback, timing and export behaviour understandable.
 
+## Approved contract
+
+- Every enabled branch starts when the head reaches its fork and animates
+  simultaneously; this is route storytelling, not weighted crowd choice.
+- Branches own deterministic durations and waits inside the one master
+  timeline. A reconverged continuation starts after the latest incoming branch
+  arrives; a shared join's label/beacon/wait fires once.
+- Completion means every terminal branch is complete. Linear projects retain
+  their exact serialized shape and timeline until explicitly split.
+
 ## Done when
 
-- The owner has approved the branch playback model: choose one branch, animate
-  every branch, or run simultaneous heads.
-- A signed-off interaction defines how a split is created, selected, reordered,
+- The approved interaction defines how a split is created, selected, reordered,
   rejoined and deleted without confusing hero-route branches with crowd guide
   networks.
 - Timing, waits, labels, style inheritance, head state and route completion
@@ -43,7 +51,5 @@ infer playback semantics from the existing crowd weighting model.
 
 ## Open questions
 
-When a route splits, should the head choose one branch, animate all branches
-in sequence, or create multiple simultaneous heads? Do branches share one
-master time or own independent durations? May branches reconverge, and how do
-waits, labels and completion behave at the join?
+The implementation may choose the smallest clear split/rejoin gesture after
+REV-03, but may not change the simultaneous-head or latest-arrival semantics.

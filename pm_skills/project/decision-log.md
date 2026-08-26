@@ -2,6 +2,44 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — Phase 0 signed off; decisions become implementation contracts
+
+**Decision:** Accept QA-01 and convert every Phase 0 decision ticket into
+dependency-placed implementation work rather than treating sign-off as shipped
+functionality. REV-02 will make the canonical scene available as a synchronized
+DOM outline: all route, crowd, emitter, graph and polygon entities are
+inspectable/selectable, with labelled coordinate/time inputs and explicit
+keyboard commands for creation and editing. The standalone player will expose a
+concise scene summary and meaningful transport announcements, not per-frame
+narration.
+
+**Publication and governance:** The six built-in backgrounds already allowlisted
+on the owner-approved public branch may ship; legacy project ZIPs still require
+individual provenance review. Explicit project/HTML exports retain original
+bitmap bytes for fidelity, while diagnostics default to a previewed, redacted
+technical report with no project content, raw storage, image bytes or original
+filenames. Nothing uploads automatically. First-party source uses MIT; bundled
+dependencies receive a checked third-party notice and source links. Security
+uses GitHub private vulnerability reporting; general support uses GitHub Issues
+on a best-effort/no-SLA basis. V1 uses the lockfile and release inventory rather
+than a per-release SBOM. These are owner choices, not legal advice.
+
+**Product models:** A split hero route runs every enabled branch simultaneously
+on the one deterministic master timeline. Reconverged continuation waits for the
+latest incoming branch; shared join effects and waits fire once; completion
+waits for every terminal branch. Linear projects remain byte-compatible until
+split. A project also owns a reference render size: map-bound graphics scale
+uniformly from its short edge, labels use reference pixels with editor
+legibility clamps, and export never mutates saved size values or authored
+timing. These conservative auto-jazz choices preserve the existing deterministic
+and additive-migration rules while making later implementation testable.
+
+**Roadmap refactor:** Phase 0 leaves the active queue. REV-08/REV-09 join live
+health and release assurance; REV-02 leads authoring foundation; ROUTE-01 leads
+route composition; SCALE-01 leads showcase/scale. QA-01 alone is fully closed.
+
+---
+
 ## 2026-08-26 — Roadmap refactor: health and decisions before new gestures
 
 **Decision:** Replace the flat review list plus feature waves with six

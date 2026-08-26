@@ -1,11 +1,21 @@
 # REV-09 — Licence, security, and support governance
 
-> **Status:** Phase 0 — owner/legal sign-off; gates SUPPORT-01.
+> **Status:** Phase 1 — approved and ready; gates SUPPORT-01.
 
 ## Intent
 
 Give contributors and downstream users an owner-approved statement of reuse,
 third-party source/notice obligations, vulnerability reporting, and support.
+
+## Approved contract
+
+- First-party source is MIT licensed. A third-party notice names bundled
+  dependencies, their licences and upstream source locations; generated
+  bundles keep required licence comments.
+- Security reports use GitHub private vulnerability reporting. General support
+  uses GitHub Issues on a best-effort basis with no response-time commitment.
+- V1 does not publish a per-release SBOM; the lockfile plus checked notice and
+  release inventory are the reproducible dependency record.
 
 ## Done when
 
@@ -35,5 +45,4 @@ publish an email or response commitment the maintainer has not approved.
 
 ## Open questions
 
-Desired reuse licence, responsible contact, supported response window, and
-whether a generated SBOM is needed for each Pages release.
+None at the governance gate. This records an owner decision, not legal advice.

@@ -1,11 +1,22 @@
 # REV-08 — Publication and privacy boundary
 
-> **Status:** Phase 0 — owner sign-off; gates SUPPORT-01 and DEMO-01.
+> **Status:** Phase 1 — approved and ready; gates SUPPORT-01 and DEMO-01.
 
 ## Intent
 
 Make it explicit which local project data may enter a public Pages artifact,
 shared export, or support bundle, then enforce that boundary mechanically.
+
+## Approved contract
+
+- The six allowlisted built-in backgrounds in the approved public branch may
+  ship; legacy project ZIPs remain excluded until separately reviewed.
+- Manual project/HTML exports preserve original bitmap bytes for fidelity and
+  disclose that filenames/metadata may travel with an explicitly shared file;
+  no destructive re-encoding happens silently.
+- Diagnostics are previewed before copy/download and redact project content,
+  raw storage, image bytes and user filenames by default. The app remains
+  client-only with no telemetry or automatic upload.
 
 ## Done when
 
@@ -39,6 +50,5 @@ fidelity without sign-off. Preserve the client-only/no-telemetry posture.
 
 ## Open questions
 
-Whether existing samples are approved public teaching material; whether shared
-exports should preserve original image bytes; which diagnostic fields Joe
-needs to reproduce a report.
+None at the policy gate. New sample projects still require an individual
+provenance record before entering the public build allowlist.

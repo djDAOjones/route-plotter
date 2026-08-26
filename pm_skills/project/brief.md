@@ -64,11 +64,12 @@ frozen v2 line remains served from
 - GIS integration or georeferencing
 - Mobile-native apps
 
-## Open questions
+## Decided foundations awaiting implementation
 
-- Split hero-route semantics: one chosen branch, sequential branches or
-  simultaneous heads; shared timing and reconvergence rules (ROUTE-01).
-- The authored-size and export-resolution model for markers, text and effects
-  (SCALE-01).
-- Publication/privacy and repository licence/support decisions for the public
-  release (REV-08/REV-09).
+- Split hero routes animate simultaneous branches on one master timeline;
+  reconvergence waits for the latest branch and shared join effects fire once.
+- Projects own a reference render size: map-bound graphics scale from that
+  reference while normalised geometry and authored timing remain unchanged.
+- Public/share/support boundaries retain original project image bytes only in
+  explicit saves/exports, use previewable redacted diagnostics, and publish
+  under MIT with third-party notices and best-effort GitHub support.
