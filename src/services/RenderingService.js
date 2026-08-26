@@ -1815,8 +1815,9 @@ export class RenderingService {
         ctx.fill();
         break;
         
+      case 'drone':
       case 'custom':
-        // Custom image
+        // Bundled presets and uploaded custom heads share the same transform.
         if (pathHead.image) {
           const imgSize = size * 2; // Make image slightly larger for better visibility
           // Draw the image centered and rotated

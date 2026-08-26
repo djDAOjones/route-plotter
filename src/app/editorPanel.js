@@ -32,6 +32,7 @@ import {
   getWaypointCardActionState,
   resetWaypointCard,
 } from '../utils/waypointCardActions.js';
+import { pathHeadStyleUsesImageControls } from '../utils/pathHeadPresets.js';
 
 const WAYPOINT_CARD_LABELS = Object.freeze({
   [WAYPOINT_CARD.MARKER]: 'Marker',
@@ -647,7 +648,11 @@ export const editorPanelMixin = {
         formatRendererPixels(this.elements.pathHeadSize.value)
       );
       this.elements.customHeadControls.style.display =
-        this.styles.pathHead.style === 'custom' ? 'block' : 'none';
+        pathHeadStyleUsesImageControls(this.styles.pathHead.style) ? 'block' : 'none';
+      if (this.elements.customHeadUploadControls) {
+        this.elements.customHeadUploadControls.style.display =
+          this.styles.pathHead.style === 'custom' ? 'block' : 'none';
+      }
       // Beacon editor fields
       if (this.selectedWaypoint.isMajor) {
         // Enable dot & beacon controls for major

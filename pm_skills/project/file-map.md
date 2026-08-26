@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 252 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 256 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 13 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -10,9 +10,9 @@
 - `images` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
-- `src` — 87 file(s)
+- `src` — 90 file(s)
 - `styles` — 6 file(s)
-- `tests` — 55 file(s)
+- `tests` — 56 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -165,6 +165,8 @@
 - `src/app/wiringBus.js` — EventBus + AnimationEngine subscriptions, including card-action availability refresh and compatible already-saved image-edit signalling
 - `src/app/wiringControllers.js` — UIController/InteractionHandler event connections
 - `src/app/wiringDom.js` — DOM control and delegated card-action wiring, transient mixed-state reset, and detached transactional custom marker/route-head image uploads
+- `src/assets/README.md` — Provenance and bundling boundary for reviewed first-party visual assets
+- `src/assets/drone-head.png` — Reviewed 512 px RGBA quadcopter route-head preset, inlined into both runtime bundles
 - `src/components/ContextMenu.js` — Right-click menu (canvas waypoints + empty canvas): Carbon menu anatomy, arrow-key navigation, aria-disabled reasons, focus restore (Phase 3.5)
 - `src/components/Dropdown.js` — Accessible dropdown menus
 - `src/components/ParamTooltip.js` — Click-label parameter tooltips (Carbon pattern)
@@ -224,6 +226,7 @@
 - `src/utils/graphRouting.js` — Shared directed departures, overflow-safe weight normalisation and stable whole-percentage traffic shares
 - `src/utils/index.js` — Barrel exports for Catmull-Rom and easing utilities
 - `src/utils/mixedControlState.js` — DOM-only mixed-value comparison, select/range/checkbox presentation and concrete-input reset helpers
+- `src/utils/pathHeadPresets.js` — Built-in route-head registry, shared image decoding and custom/preset hydration boundary
 - `src/utils/pathWidthScale.js` — Log-scale thickness slider ↔ width (1–40px) mapping; single source shared by the DOM wiring and UIController bulk edits (Phase 3.5)
 - `src/utils/renderReference.js` — Pure visual-reference migration and current-to-authored short-edge scale calculation
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
@@ -269,6 +272,7 @@
 - `tests/multiSelect.test.js` — Multi-select write-target rules, gestures/bulk actions/persistence, undo scope restoration, stable headings and honest per-control mixed-state integration
 - `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding
 - `tests/operationGeneration.test.js` — Latest-request/project-generation guards and original background-byte retention
+- `tests/pathHeadPresets.test.js` — Drone preset metadata, native control, loader ownership and renderer-transform contracts
 - `tests/performanceScheduling.test.js` — Manual-rAF scheduler contract: idle sleep, transport wake/coalescing, camera keepalive and export suspension/restore
 - `tests/playerAccessibility.test.js` — Aggregate-summary privacy/counting and discrete/coalesced transport-announcement contracts
 - `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts

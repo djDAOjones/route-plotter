@@ -11,6 +11,10 @@ import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { PROJECT_ARCHIVE_LIMITS, SIZE_LIMITS } from '../services/ImageAssetService.js';
 import { collectImageAssetReferences, planImageAssetAdmission } from '../utils/assetReferences.js';
 import { formatRendererPixels, setRangeReadout } from '../utils/uiReadouts.js';
+import {
+  pathHeadStyleUsesImageControls,
+  resolvePathHeadImage,
+} from '../utils/pathHeadPresets.js';
 
 function updatePathHeadPreview(app, asset = null) {
   if (app.elements?.headPreview) app.elements.headPreview.style.display = asset ? 'block' : 'none';
@@ -347,20 +351,27 @@ export const undoRedoMixin = {
         };
         updatePathHeadPreview(this);
 
-        if (restoredAssetId && this.imageAssetService?.getImageElement) {
+        const restoredStyle = this.styles.pathHead.style;
+        if (pathHeadStyleUsesImageControls(restoredStyle)) {
           Promise.resolve()
-            .then(() => this.imageAssetService.getImageElement(restoredAssetId))
+            .then(() => resolvePathHeadImage(
+              this.styles.pathHead,
+              assetId => this.imageAssetService?.getImageElement?.(assetId) ?? null
+            ))
             .then(image => {
               if (this._undoImageRestoreGeneration !== imageRestoreGeneration) return;
-              if (this.styles.pathHead?.imageAssetId !== restoredAssetId) return;
+              if (this.styles.pathHead?.style !== restoredStyle) return;
+              if (restoredStyle === 'custom' && this.styles.pathHead?.imageAssetId !== restoredAssetId) return;
               this.styles.pathHead.image = image || null;
-              const asset = image ? this.imageAssetService.getAsset?.(restoredAssetId) : null;
+              const asset = restoredStyle === 'custom' && image
+                ? this.imageAssetService?.getAsset?.(restoredAssetId)
+                : null;
               updatePathHeadPreview(this, asset || null);
               this.queueRender?.();
             })
             .catch(error => {
               if (this._undoImageRestoreGeneration === imageRestoreGeneration) {
-                console.warn('Could not restore the custom path-head image:', error);
+                console.warn('Could not restore the path-head image:', error);
               }
             });
         }
@@ -415,7 +426,11 @@ export const undoRedoMixin = {
       );
     }
     if (this.elements.customHeadControls) {
-      this.elements.customHeadControls.style.display = ph.style === 'custom' ? 'block' : 'none';
+      this.elements.customHeadControls.style.display =
+        pathHeadStyleUsesImageControls(ph.style) ? 'block' : 'none';
+    }
+    if (this.elements.customHeadUploadControls) {
+      this.elements.customHeadUploadControls.style.display = ph.style === 'custom' ? 'block' : 'none';
     }
     if (this.elements.headRotationMode) this.elements.headRotationMode.value = ph.rotationMode || 'auto';
     if (this.elements.headRotationOffset) {

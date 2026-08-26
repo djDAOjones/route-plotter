@@ -18,15 +18,12 @@
   [verify: physical iOS Safari + Android Chrome] — Unified Pointer Events,
   captured group drag and cancel/no-op transactions are implemented and green
   in automation plus production Chromium. Record the physical mobile pass.
-- [ ] HEAD-01 [ready, low] — Ship a reviewed drone head preset; custom head
-  upload, rotation, persistence, undo and player hydration are already
-  implemented. Promoted after SCALE-01 removed its visual-parity gate.
-
-### Next
-
 - [ ] UI-02 [ready] [sign-off] — Show minor waypoints as
   indented, selectable, renameable and reorder-visible rows using the approved
   semantic outline.
+
+### Next
+
 - [ ] REV-05 [gated: REV-03] — Complete accessibility
   assurance with axe, NVDA/VoiceOver, forced colours, reduced motion and
   200–400% zoom after the new authoring UI stabilises.

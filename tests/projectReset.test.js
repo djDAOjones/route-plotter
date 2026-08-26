@@ -151,4 +151,20 @@ describe('Clear All project reset', () => {
     expect(app.announce).toHaveBeenCalledWith('Project cleared');
     expect(log).toHaveBeenCalledWith('Cleared all waypoints and path');
   });
+
+  test('keeps a bundled path-head image while clearing custom asset ownership', () => {
+    const app = makeApp();
+    const presetImage = { id: 'bundled-drone' };
+    app.styles.pathHead = {
+      ...app.styles.pathHead,
+      style: 'drone',
+      image: presetImage,
+    };
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    clearProject(app);
+
+    expect(app.styles.pathHead.image).toBe(presetImage);
+    expect(app.styles.pathHead.imageAssetId).toBeNull();
+  });
 });

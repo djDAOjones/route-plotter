@@ -31,6 +31,7 @@ import { assertSafeStoredColor } from '../utils/safeColor.js';
 import { assertPersistedEntityId, ENTITY_ID_LIMITS } from '../utils/entityId.js';
 import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
+import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -450,11 +451,15 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
   if (stylesData.pathGlow && 'intensity' in stylesData.pathGlow) {
     styles.pathGlow = { ...styles.pathGlow, intensity: Number(stylesData.pathGlow.intensity) };
   }
-  if (styles.pathHead.imageAssetId) {
-    const asset = assetsById.get(styles.pathHead.imageAssetId);
-    if (!asset) throw new Error('Missing custom path-head image');
-    styles.pathHead.image = await asset.getImageElement();
+  const headAssetId = styles.pathHead.imageAssetId;
+  if (headAssetId && !assetsById.has(headAssetId)) {
+    throw new Error('Missing custom path-head image');
   }
+  styles.pathHead.image = await resolvePathHeadImage(styles.pathHead, assetId => {
+    const asset = assetsById.get(assetId);
+    if (!asset) throw new Error('Missing custom path-head image');
+    return asset.getImageElement();
+  });
 
   let backgroundImage = null;
   const backgroundDataURL = backgroundBase64 || projectData.backgroundImage || null;

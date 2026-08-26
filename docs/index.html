@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.654</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.654">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.654">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.654">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.654">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.654">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.654">
+  <title>Route Plotter v3.2.656</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.656">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.656">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.656">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.656">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.656">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.656">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -646,23 +646,26 @@
                 <select id="path-head-style">
                   <option value="arrow">Arrow</option>
                   <option value="dot">Dot</option>
+                  <option value="drone">Drone</option>
                   <option value="custom">Custom</option>
                   <option value="none">None</option>
                 </select>
               </label>
 
-              <!-- Custom Head Upload Controls -->
+              <!-- Image Head Controls -->
               <div id="custom-head-controls" style="display:none;">
-                <div class="upload-row">
-                  <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
-                  <input id="head-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom path head image" />
-                </div>
-                <div id="head-preview" class="preview-box" style="display:none;">
-                  <p id="head-filename">No image selected</p>
-                  <img id="head-preview-img" style="max-width:100%; max-height:100px; margin:0.5rem 0;" alt="Custom path head preview">
+                <div id="custom-head-upload-controls">
+                  <div class="upload-row">
+                    <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
+                    <input id="head-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom path head image" />
+                  </div>
+                  <div id="head-preview" class="preview-box" style="display:none;">
+                    <p id="head-filename">No image selected</p>
+                    <img id="head-preview-img" style="max-width:100%; max-height:100px; margin:0.5rem 0;" alt="Custom path head preview">
+                  </div>
                 </div>
                 <label for="head-rotation-mode">
-                  <span data-tip="Whether the custom image rotates to follow the path direction">Rotation</span>
+                  <span data-tip="Whether the image rotates to follow the path direction">Rotation</span>
                   <select id="head-rotation-mode">
                     <option value="auto">Follow Path</option>
                     <option value="fixed">Fixed</option>
@@ -1310,6 +1313,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.654"></script>
+  <script src="app.js?v=3.2.656"></script>
 </body>
 </html>

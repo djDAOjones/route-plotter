@@ -259,7 +259,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 99476,
+      "bytes": 99551,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2713,8 +2713,23 @@
       "imports": [],
       "format": "esm"
     },
+    "src/assets/drone-head.png": {
+      "bytes": 183623,
+      "imports": []
+    },
+    "src/utils/pathHeadPresets.js": {
+      "bytes": 2175,
+      "imports": [
+        {
+          "path": "src/assets/drone-head.png",
+          "kind": "import-statement",
+          "original": "../assets/drone-head.png"
+        }
+      ],
+      "format": "esm"
+    },
     "src/app/wiringDom.js": {
-      "bytes": 39066,
+      "bytes": 40265,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2755,6 +2770,11 @@
           "path": "src/utils/mixedControlState.js",
           "kind": "import-statement",
           "original": "../utils/mixedControlState.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
         }
       ],
       "format": "esm"
@@ -2859,7 +2879,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 17833,
+      "bytes": 18428,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2885,6 +2905,11 @@
           "path": "src/utils/uiReadouts.js",
           "kind": "import-statement",
           "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
         }
       ],
       "format": "esm"
@@ -2954,7 +2979,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 50393,
+      "bytes": 50628,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3015,6 +3040,11 @@
           "path": "src/utils/renderReference.js",
           "kind": "import-statement",
           "original": "../utils/renderReference.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
         }
       ],
       "format": "esm"
@@ -3057,7 +3087,7 @@
       "format": "esm"
     },
     "src/app/editorPanel.js": {
-      "bytes": 35206,
+      "bytes": 35496,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3098,6 +3128,11 @@
           "path": "src/utils/waypointCardActions.js",
           "kind": "import-statement",
           "original": "../utils/waypointCardActions.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
         }
       ],
       "format": "esm"
@@ -3249,7 +3284,7 @@
       "format": "esm"
     },
     "src/app/projectReset.js": {
-      "bytes": 3022,
+      "bytes": 3304,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
@@ -3260,12 +3295,17 @@
           "path": "src/utils/renderReference.js",
           "kind": "import-statement",
           "original": "../utils/renderReference.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
         }
       ],
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 45261,
+      "bytes": 45599,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3501,19 +3541,24 @@
           "path": "src/app/projectReset.js",
           "kind": "import-statement",
           "original": "./app/projectReset.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "./utils/pathHeadPresets.js"
         }
       ],
       "format": "esm"
     }
   },
   "outputs": {
-    ".docs-build-4Z59YD/app.js.map": {
+    ".docs-build-06G8kK/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3129016
+      "bytes": 3136801
     },
-    ".docs-build-4Z59YD/app.js": {
+    ".docs-build-06G8kK/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3600,7 +3645,7 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 26690
+          "bytesInOutput": 26702
         },
         "src/utils/graphRouting.js": {
           "bytesInOutput": 797
@@ -3761,8 +3806,14 @@
         "src/utils/mixedControlState.js": {
           "bytesInOutput": 1326
         },
+        "src/assets/drone-head.png": {
+          "bytesInOutput": 244864
+        },
+        "src/utils/pathHeadPresets.js": {
+          "bytesInOutput": 595
+        },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 16554
+          "bytesInOutput": 17028
         },
         "src/models/Waypoint.js": {
           "bytesInOutput": 7163
@@ -3783,7 +3834,7 @@
           "bytesInOutput": 2653
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 8003
+          "bytesInOutput": 8213
         },
         "src/app/playback.js": {
           "bytesInOutput": 3633
@@ -3798,7 +3849,7 @@
           "bytesInOutput": 5194
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 27600
+          "bytesInOutput": 27673
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5071
@@ -3807,7 +3858,7 @@
           "bytesInOutput": 4621
         },
         "src/app/editorPanel.js": {
-          "bytesInOutput": 18998
+          "bytesInOutput": 19139
         },
         "src/app/pointer.js": {
           "bytesInOutput": 887
@@ -3837,13 +3888,13 @@
           "bytesInOutput": 110
         },
         "src/app/projectReset.js": {
-          "bytesInOutput": 1739
+          "bytesInOutput": 1770
         },
         "src/main.js": {
-          "bytesInOutput": 21886
+          "bytesInOutput": 22065
         }
       },
-      "bytes": 789348
+      "bytes": 1035927
     }
   }
 }

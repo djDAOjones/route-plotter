@@ -39,6 +39,7 @@ import { pathTimingMixin } from '../app/pathTiming.js';
 import { cameraMixin } from '../app/camera.js';
 import { viewportMixin } from '../app/viewport.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
+import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
 
 export class PlayerApp {
   /**
@@ -406,13 +407,13 @@ export class PlayerApp {
         }
       }
     }
-    const headAssetId = this.styles.pathHead?.imageAssetId;
-    if (headAssetId && this._assets.has(headAssetId)) {
-      try {
-        this.styles.pathHead.image = await this._assets.get(headAssetId).getImageElement();
-      } catch (err) {
-        console.warn('Failed to restore path head image:', err);
-      }
+    try {
+      this.styles.pathHead.image = await resolvePathHeadImage(
+        this.styles.pathHead,
+        assetId => this._assets.get(assetId)?.getImageElement() ?? null
+      );
+    } catch (err) {
+      console.warn('Failed to restore path head image:', err);
     }
   }
 }

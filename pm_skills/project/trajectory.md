@@ -17,6 +17,12 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Route-head presets (shipped 2026-08-26)
+
+HEAD-01 — A reviewed right-facing quadcopter is now a built-in route head with
+shared size, rotation, persistence, undo and standalone-export behaviour, while
+custom image ownership stays unchanged. (2026-08-26) — see decision-log.
+
 ## Maintenance (shipped 2026-08-26)
 
 MAINT-01 — Superseded timing/visibility helpers, a permanently inert export

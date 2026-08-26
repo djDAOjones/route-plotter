@@ -1,5 +1,6 @@
 import { invalidateProjectOperations } from './operationGeneration.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
+import { isBuiltInPathHeadStyle } from '../utils/pathHeadPresets.js';
 
 /**
  * Establish a new, empty, non-undoable project baseline.
@@ -31,7 +32,9 @@ export function clearProject(app) {
   app._autosaveBackgroundWarningShown = false;
   app._autosaveFailureWarningShown = false;
   if (app.styles.pathHead) {
-    app.styles.pathHead.image = null;
+    // Bundled presets are not part of the asset service being cleared. Keep
+    // their decoded image available when the user's route-wide style remains.
+    if (!isBuiltInPathHeadStyle(app.styles.pathHead.style)) app.styles.pathHead.image = null;
     app.styles.pathHead.imageAssetId = null;
   }
   if (app.elements.headPreview) app.elements.headPreview.style.display = 'none';

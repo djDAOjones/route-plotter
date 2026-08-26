@@ -643,23 +643,26 @@
                 <select id="path-head-style">
                   <option value="arrow">Arrow</option>
                   <option value="dot">Dot</option>
+                  <option value="drone">Drone</option>
                   <option value="custom">Custom</option>
                   <option value="none">None</option>
                 </select>
               </label>
 
-              <!-- Custom Head Upload Controls -->
+              <!-- Image Head Controls -->
               <div id="custom-head-controls" style="display:none;">
-                <div class="upload-row">
-                  <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
-                  <input id="head-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom path head image" />
-                </div>
-                <div id="head-preview" class="preview-box" style="display:none;">
-                  <p id="head-filename">No image selected</p>
-                  <img id="head-preview-img" style="max-width:100%; max-height:100px; margin:0.5rem 0;" alt="Custom path head preview">
+                <div id="custom-head-upload-controls">
+                  <div class="upload-row">
+                    <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
+                    <input id="head-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom path head image" />
+                  </div>
+                  <div id="head-preview" class="preview-box" style="display:none;">
+                    <p id="head-filename">No image selected</p>
+                    <img id="head-preview-img" style="max-width:100%; max-height:100px; margin:0.5rem 0;" alt="Custom path head preview">
+                  </div>
                 </div>
                 <label for="head-rotation-mode">
-                  <span data-tip="Whether the custom image rotates to follow the path direction">Rotation</span>
+                  <span data-tip="Whether the image rotates to follow the path direction">Rotation</span>
                   <select id="head-rotation-mode">
                     <option value="auto">Follow Path</option>
                     <option value="fixed">Fixed</option>

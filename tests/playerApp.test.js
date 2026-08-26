@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { afterEach, describe, test, expect, vi } from 'vitest';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { pathTimingMixin } from '../src/app/pathTiming.js';
 import { viewportMixin } from '../src/app/viewport.js';
@@ -29,6 +29,10 @@ import { Scene } from '../src/models/Scene.js';
 
 const CANVAS_W = 1000;
 const CANVAS_H = 800;
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 /** Authored fixture: pauses, a minor, variable leg speed, beacons, a crowd. */
 function buildAuthoredWaypoints() {
@@ -253,6 +257,26 @@ describe('PlayerApp export parity (golden cross-check)', () => {
     app.exportSettings.includeText = false;
     const player = await makePlayerFromSnapshot(app._buildProjectSnapshot());
     expect(player.exportSettings.includeText).toBe(false);
+  });
+
+  test('bundled drone heads hydrate in the standalone player without a project asset', async () => {
+    class LoadedImage {
+      set src(value) {
+        this.source = value;
+        queueMicrotask(() => this.onload());
+      }
+    }
+    vi.stubGlobal('Image', LoadedImage);
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    app.styles.pathHead.style = 'drone';
+    const snapshot = app._buildProjectSnapshot();
+
+    expect(snapshot.imageAssets).toEqual([]);
+    const player = await makePlayerFromSnapshot(snapshot);
+
+    expect(player.styles.pathHead.style).toBe('drone');
+    expect(player.styles.pathHead.image).toBeInstanceOf(LoadedImage);
+    expect(player.styles.pathHead.image.source).toBeTruthy();
   });
 
   test('legacy HTML snapshots seed visual sizing from timingReference without changing timing', async () => {

@@ -79,6 +79,7 @@ import { privacyMixin } from './app/privacy.js';
 import { restoreStartupProject } from './app/startup.js';
 import { loadExampleBackground } from './app/backgroundLoading.js';
 import { clearProject } from './app/projectReset.js';
+import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
 
 // Main application class for Route Plotter v3
 class RoutePlotter {
@@ -190,10 +191,10 @@ class RoutePlotter {
       // Note: beaconColor removed - beacons now use marker color (dotColor)
       labelMode: 'fade-up', // off, on, fade-up, fade-up-down
       pathHead: {
-        style: 'arrow', // dot, arrow, custom, none
+        style: 'arrow', // dot, arrow, drone, custom, none
         color: '#111111',
         size: 8,
-        image: null, // For custom image
+        image: null, // Decoded built-in preset or custom image
         imageAssetId: null, // Asset ID for deduplication
         rotationMode: 'auto', // 'auto' follows path direction, 'fixed' stays upright
         rotationOffset: 0 // Degrees offset added to rotation
@@ -380,6 +381,7 @@ class RoutePlotter {
       pathHeadSize: document.getElementById('path-head-size'),
       pathHeadSizeValue: document.getElementById('path-head-size-value'),
       customHeadControls: document.getElementById('custom-head-controls'),
+      customHeadUploadControls: document.getElementById('custom-head-upload-controls'),
       headUploadBtn: document.getElementById('head-upload-btn'),
       headUpload: document.getElementById('head-upload'),
       headPreview: document.getElementById('head-preview'),
@@ -513,7 +515,9 @@ class RoutePlotter {
     );
     
     // Show/hide custom image controls based on initial style
-    this.elements.customHeadControls.style.display = 
+    this.elements.customHeadControls.style.display =
+      pathHeadStyleUsesImageControls(this.styles.pathHead.style) ? 'block' : 'none';
+    this.elements.customHeadUploadControls.style.display =
       this.styles.pathHead.style === 'custom' ? 'block' : 'none';
     
     // Initialize animation speed display (right sidebar only - left sidebar Duration removed)

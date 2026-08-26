@@ -2,6 +2,32 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — HEAD-01 bundles one reviewed preset across both runtimes
+
+**Decision:** Ship the approved right-facing, top-down quadcopter as a 512 px
+RGBA source asset and a native `Drone` head style. The style reuses the
+existing route-wide size, follow/fixed rotation and offset controls; it hides
+the custom upload affordance because a built-in preset is selectable, not an
+editable asset. Arrow remains the default, and the custom-image path retains
+its existing asset ID, preview, persistence and undo ownership.
+
+**Runtime/publication boundary:** Import the PNG through one preset resolver
+and inline it as a data URL in both `app.js` and the standalone `player.js`.
+Projects therefore persist only the `drone` style string, exported HTML remains
+self-contained, and Clear All cannot discard the bundled image. The source PNG
+is public on the approved review branch, but it does not enter
+`public-assets.json`: that manifest and the exact 17-file Pages inventory still
+govern only the six separately copied example backgrounds.
+
+**Evidence and sequence:** Asset metadata/tests pin a square RGBA source,
+preset/custom loader separation, renderer transform, Clear All and standalone
+player hydration. The canonical gate passes 54 files / 745 tests, restart
+safety and a clean production check build. Local Chromium shows the
+native selection, rotation-only preset controls, clean canvas rendering and
+reload persistence with no warning/error console entries. HEAD-01 leaves the
+backlog; UI-02 moves to Current as the next runnable item but keeps its explicit
+owner sign-off gate. No Icebox evidence was triggered.
+
 ## 2026-08-26 — MAINT-01 removes only the pre-verified dead paths
 
 **Decision:** Keep the maintenance sweep at the exact boundary recovered from

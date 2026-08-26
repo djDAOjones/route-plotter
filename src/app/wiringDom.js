@@ -21,6 +21,10 @@ import {
   setRangeReadout,
 } from '../utils/uiReadouts.js';
 import { bindMixedControlReset } from '../utils/mixedControlState.js';
+import {
+  pathHeadStyleUsesImageControls,
+  resolvePathHeadImage,
+} from '../utils/pathHeadPresets.js';
 
 export const wiringDomMixin = {
   
@@ -588,15 +592,38 @@ export const wiringDomMixin = {
 
     // Path Head Style Controls - global settings (not per-waypoint)
     this.elements.pathHeadStyle.addEventListener('change', (e) => {
-      this.styles.pathHead.style = e.target.value;
+      const pathHead = this.styles.pathHead;
+      const selectedStyle = e.target.value;
+      const selectedAssetId = pathHead.imageAssetId;
+      pathHead.style = selectedStyle;
+      pathHead.image = null;
       
-      // Show/hide custom image controls based on style selection
-      this.elements.customHeadControls.style.display = 
-        e.target.value === 'custom' ? 'block' : 'none';
+      // Presets share rotation controls with custom images, but do not expose
+      // an upload affordance that would imply the preset itself is editable.
+      this.elements.customHeadControls.style.display =
+        pathHeadStyleUsesImageControls(selectedStyle) ? 'block' : 'none';
+      if (this.elements.customHeadUploadControls) {
+        this.elements.customHeadUploadControls.style.display =
+          selectedStyle === 'custom' ? 'block' : 'none';
+      }
       
       this.queueRender();
       this.saveUndoStateDebounced();
       this.autoSave();
+
+      resolvePathHeadImage(
+        pathHead,
+        assetId => this.imageAssetService.getImageElement(assetId)
+      ).then(image => {
+        if (this.styles.pathHead !== pathHead || pathHead.style !== selectedStyle) return;
+        if (selectedStyle === 'custom' && pathHead.imageAssetId !== selectedAssetId) return;
+        pathHead.image = image;
+        this.queueRender();
+      }).catch(error => {
+        if (this.styles.pathHead !== pathHead || pathHead.style !== selectedStyle) return;
+        console.error('Failed to load path head image:', error);
+        this.announce(error.message || 'Failed to load path head image');
+      });
     });
     
     this.elements.pathHeadColor.addEventListener('input', (e) => {

@@ -480,7 +480,9 @@ function createBuildOptions(version) {
     format: 'esm',
     target: ['es2022'],
     loader: {
-      '.png': 'file',
+      // Built-in path heads must survive self-contained HTML export. Large
+      // example backgrounds remain explicit copied files rather than imports.
+      '.png': 'dataurl',
       '.jpg': 'file',
       '.jpeg': 'file',
       '.svg': 'file'
@@ -511,6 +513,9 @@ function createPlayerBuildOptions(version) {
     outfile: path.join(distDir, 'player.js'),
     format: 'iife',
     target: ['es2022'],
+    loader: {
+      '.png': 'dataurl'
+    },
     define: {
       'process.env.NODE_ENV': `"${process.env.NODE_ENV || 'development'}"`,
       'APP_VERSION': `"${version}"`
