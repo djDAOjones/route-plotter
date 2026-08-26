@@ -104,6 +104,13 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 
 - Keep key controls visible. Show current selection, mode, and state
   explicitly. Surface context near the point of action.
+- Slider readouts show the value the renderer or timeline consumes, never an
+  internal slider coordinate. Name the unit or direction in the visible
+  readout, connect that readout with `aria-describedby`, and keep
+  `aria-valuetext` synchronized when the control uses a translated scale.
+- Renderer-scaled size controls use pixel readouts and say in contextual help
+  that the value is calibrated at the renderer's reference size. SCALE-01 owns
+  any future change to that sizing model.
 
 ### Flexibility and efficiency
 

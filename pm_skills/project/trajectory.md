@@ -19,6 +19,12 @@
 
 ## Inspector foundation (shipped 2026-08-26)
 
+UX-02 — Label Size now edits its persisted 16–48 renderer-pixel value directly;
+size, amplitude and background-overlay readouts expose their effective units
+and accessible values; ambiguous names use plain language; and Pacing explains
+Comet's intentional preview-tail extension. Stored project values, scaling and
+timeline semantics are unchanged. (2026-08-26) — see decision-log.
+
 UI-01 — Crowded inspector cards now keep their shortest complete task visible
 and place refinements in one accessible native More disclosure, providing the
 layout slot for advanced and crowd controls. (2026-08-26) — see decision-log.

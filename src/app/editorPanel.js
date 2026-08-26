@@ -9,6 +9,11 @@
 import { TEXT_LABEL, TEXT_VISIBILITY } from '../config/constants.js';
 import { BEACON_TIMING } from '../services/BeaconRenderer.js';
 import { sliderToPathWidth, pathWidthToSlider } from '../utils/pathWidthScale.js';
+import {
+  formatRendererPixels,
+  formatShapeAmplitude,
+  setRangeReadout,
+} from '../utils/uiReadouts.js';
 
 export const editorPanelMixin = {
 
@@ -206,7 +211,11 @@ export const editorPanelMixin = {
       // Use log scale conversion for segment width
       const width = this.selectedWaypoint.segmentWidth || 3;
       this.elements.segmentWidth.value = this._pathWidthToSlider(width);
-      this.elements.segmentWidthValue.textContent = width.toFixed(1);
+      setRangeReadout(
+        this.elements.segmentWidth,
+        this.elements.segmentWidthValue,
+        formatRendererPixels(width, 1)
+      );
       this.elements.segmentStyle.value = this.selectedWaypoint.segmentStyle || 'solid';
       this.elements.pathShape.value = this.selectedWaypoint.pathShape || 'line';
       
@@ -215,7 +224,11 @@ export const editorPanelMixin = {
       const shapeFrequency = this.selectedWaypoint.shapeFrequency !== undefined ? this.selectedWaypoint.shapeFrequency : 5;
       if (this.elements.shapeAmplitude) {
         this.elements.shapeAmplitude.value = shapeAmplitude;
-        this.elements.shapeAmplitudeValue.textContent = shapeAmplitude;
+        setRangeReadout(
+          this.elements.shapeAmplitude,
+          this.elements.shapeAmplitudeValue,
+          formatShapeAmplitude(shapeAmplitude)
+        );
       }
       if (this.elements.shapeFrequency) {
         this.elements.shapeFrequency.value = shapeFrequency;
@@ -227,7 +240,11 @@ export const editorPanelMixin = {
       this.elements.markerStyle.value = this.selectedWaypoint.markerStyle || 'dot';
       this.elements.dotColor.value = this.selectedWaypoint.dotColor || this.selectedWaypoint.segmentColor || this.styles.dotColor;
       this.elements.dotSize.value = this.selectedWaypoint.dotSize || this.styles.dotSize;
-      this.elements.dotSizeValue.textContent = this.elements.dotSize.value;
+      setRangeReadout(
+        this.elements.dotSize,
+        this.elements.dotSizeValue,
+        formatRendererPixels(this.elements.dotSize.value)
+      );
       
       // Custom marker controls visibility
       const markerStyle = this.selectedWaypoint.markerStyle || 'dot';
@@ -254,7 +271,11 @@ export const editorPanelMixin = {
       this.elements.pathHeadStyle.value = this.styles.pathHead.style;
       this.elements.pathHeadColor.value = this.styles.pathHead.color;
       this.elements.pathHeadSize.value = this.styles.pathHead.size;
-      this.elements.pathHeadSizeValue.textContent = this.elements.pathHeadSize.value;
+      setRangeReadout(
+        this.elements.pathHeadSize,
+        this.elements.pathHeadSizeValue,
+        formatRendererPixels(this.elements.pathHeadSize.value)
+      );
       this.elements.customHeadControls.style.display =
         this.styles.pathHead.style === 'custom' ? 'block' : 'none';
       // Beacon editor fields
@@ -304,13 +325,19 @@ export const editorPanelMixin = {
         this.elements.waypointLabel.value = this.selectedWaypoint.label || '';
         this.elements.labelMode.value = this.selectedWaypoint.labelMode || TEXT_VISIBILITY.FADE_UP;
         
-        // Label size (convert px to 1-10 scale)
+        // Label size: model, control and readout all use renderer pixels.
         if (this.elements.labelSize) {
           const sizePx = this.selectedWaypoint.labelSize || TEXT_LABEL.SIZE_DEFAULT;
-          // Convert 16-48px to 1-10 scale: scale = 1 + (sizePx - 16) * 9 / (48 - 16)
-          const scale = Math.round(1 + (sizePx - TEXT_LABEL.SIZE_PX_MIN) * 9 / (TEXT_LABEL.SIZE_PX_MAX - TEXT_LABEL.SIZE_PX_MIN));
-          this.elements.labelSize.value = Math.max(1, Math.min(10, scale));
-          this.elements.labelSizeValue.textContent = scale;
+          const clampedSizePx = Math.max(
+            TEXT_LABEL.SIZE_PX_MIN,
+            Math.min(TEXT_LABEL.SIZE_PX_MAX, Math.round(sizePx))
+          );
+          this.elements.labelSize.value = clampedSizePx;
+          setRangeReadout(
+            this.elements.labelSize,
+            this.elements.labelSizeValue,
+            formatRendererPixels(clampedSizePx)
+          );
         }
         
         // Label width

@@ -12,6 +12,12 @@ import { getSplashHelpHTML } from '../src/config/helpContent.js';
 import { getDefaultBindings } from '../src/config/keybindings.js';
 import { EventBus } from '../src/core/EventBus.js';
 import { createFocusTrap } from '../src/utils/focusTrap.js';
+import {
+  formatBackgroundOverlay,
+  formatRendererPixels,
+  formatShapeAmplitude,
+  setRangeReadout,
+} from '../src/utils/uiReadouts.js';
 
 const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
 const mainCss = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
@@ -459,6 +465,58 @@ describe('render and static UI regressions', () => {
     expect(mainCss).toMatch(/\.section-more > summary\{[^}]*min-height:var\(--touch-target-min\);/s);
     expect(mainCss).toMatch(/\.section-more > summary:focus-visible\{[^}]*box-shadow:/s);
     expect(mainCss).toMatch(/\.section-more\[open\] > summary::after/);
+  });
+
+  test('UX-02 controls expose renderer values and plain-language units', () => {
+    document.body.innerHTML = indexHtml;
+
+    const labelSize = document.getElementById('label-size');
+    expect(labelSize.min).toBe('16');
+    expect(labelSize.max).toBe('48');
+    expect(labelSize.value).toBe('16');
+    expect(document.getElementById('label-size-value').textContent).toBe('16 px');
+    expect(labelSize.getAttribute('aria-valuetext')).toBe('16 px');
+
+    expect(document.getElementById('dot-size-value').textContent).toBe('8 px');
+    expect(document.getElementById('segment-width-value').textContent).toBe('3.0 px');
+    expect(document.getElementById('path-head-size-value').textContent).toBe('8 px');
+    expect(document.getElementById('shape-amplitude-value').textContent).toBe('2%');
+    expect(document.querySelector('label[for="pulse-cycle-speed"] span').textContent)
+      .toBe('Cycle duration');
+    expect(document.querySelector('label[for="bg-overlay"] span').textContent)
+      .toBe('Darken / lighten');
+
+    const translated = document.getElementById('segment-width');
+    setRangeReadout(translated, document.getElementById('segment-width-value'), '12.5 px');
+    expect(translated.getAttribute('aria-valuetext')).toBe('12.5 px');
+    expect(document.getElementById('segment-width-value').textContent).toBe('12.5 px');
+
+    expect(formatRendererPixels(24)).toBe('24 px');
+    expect(formatRendererPixels(3, 1)).toBe('3.0 px');
+    expect(formatShapeAmplitude(1)).toBe('0.2%');
+    expect(formatShapeAmplitude(10)).toBe('2%');
+    expect(formatBackgroundOverlay(0)).toBe('None');
+    expect(formatBackgroundOverlay(-25)).toBe('25% darker');
+    expect(formatBackgroundOverlay(80)).toBe('60% lighter');
+  });
+
+  test('Pacing explains the duration extension only for Comet mode', () => {
+    document.body.innerHTML = indexHtml;
+    const controller = Object.create(UIController.prototype);
+    const hint = document.getElementById('pacing-comet-hint');
+    const trail = document.getElementById('path-trail-control');
+    const input = document.getElementById('path-trail');
+
+    controller.updateTrailControlVisibility('show-on-progression');
+    expect(hint.hidden).toBe(true);
+    expect(trail.style.display).toBe('none');
+    expect(input.disabled).toBe(true);
+
+    controller.updateTrailControlVisibility('instantaneous');
+    expect(hint.hidden).toBe(false);
+    expect(hint.textContent).toMatch(/extends Duration.*tail clears/s);
+    expect(trail.style.display).toBe('flex');
+    expect(input.disabled).toBe(false);
   });
 
   test('More toggles its native open state with Enter and Space', () => {

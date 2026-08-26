@@ -29,6 +29,7 @@ import {
 } from './operationGeneration.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
 import { assertPersistedEntityId, ENTITY_ID_LIMITS } from '../utils/entityId.js';
+import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -792,9 +793,11 @@ function syncLoadedProjectControls(app, staged) {
       staged.background.overlay, MOTION.TINT_MIN, MOTION.TINT_MAX
     );
     app.elements.bgOverlay.value = String(sliderValue);
-    if (app.elements.bgOverlayValue) {
-      app.elements.bgOverlayValue.textContent = MotionVisibilityService.formatUIValue(staged.background.overlay);
-    }
+    setRangeReadout(
+      app.elements.bgOverlay,
+      app.elements.bgOverlayValue,
+      formatBackgroundOverlay(staged.background.overlay)
+    );
   }
 
   if (app.elements?.pathVisibility) app.elements.pathVisibility.value = staged.motionSettings.pathVisibility;

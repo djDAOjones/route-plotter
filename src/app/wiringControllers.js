@@ -832,12 +832,7 @@ export const wiringControllersMixin = {
     this.eventBus.on('motion:path-visibility-change', (mode) => {
       console.debug('[Motion] pathVisibility changed:', this.motionSettings.pathVisibility, '→', mode);
       this.motionSettings.pathVisibility = mode;
-      
-      // Show/hide Trail Size control based on mode
-      const trailControl = document.getElementById('path-trail-control');
-      if (trailControl) {
-        trailControl.style.display = (mode === PATH_VISIBILITY.INSTANTANEOUS) ? 'flex' : 'none';
-      }
+      this.uiController?.updateTrailControlVisibility?.(mode);
 
       this.invalidateAnimationTiming();
       this.autoSave();

@@ -15,6 +15,11 @@ import {
   beginAsyncProjectOperation,
   isAsyncProjectOperationCurrent,
 } from './operationGeneration.js';
+import {
+  formatRendererPixels,
+  formatShapeAmplitude,
+  setRangeReadout,
+} from '../utils/uiReadouts.js';
 
 export const wiringDomMixin = {
   
@@ -177,7 +182,11 @@ export const wiringDomMixin = {
       if (targets.length > 0) {
         const width = this._sliderToPathWidth(parseFloat(e.target.value));
         for (const wp of targets) wp.segmentWidth = width;
-        this.elements.segmentWidthValue.textContent = width.toFixed(1);
+        setRangeReadout(
+          this.elements.segmentWidth,
+          this.elements.segmentWidthValue,
+          formatRendererPixels(width, 1)
+        );
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
@@ -207,7 +216,11 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets();
       if (targets.length > 0) {
         for (const wp of targets) wp.shapeAmplitude = parseInt(e.target.value);
-        this.elements.shapeAmplitudeValue.textContent = e.target.value;
+        setRangeReadout(
+          this.elements.shapeAmplitude,
+          this.elements.shapeAmplitudeValue,
+          formatShapeAmplitude(e.target.value)
+        );
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
@@ -443,15 +456,20 @@ export const wiringDomMixin = {
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    // Label size with WCAG warning
+    // Label size: the control edits the model's renderer-pixel value directly.
     this.elements.labelSize?.addEventListener('input', (e) => {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
-        const scale = parseInt(e.target.value);
-        // Convert 1-10 scale to 16-48px: size = 16 + (scale - 1) * (48 - 16) / 9
-        const sizePx = Math.round(TEXT_LABEL.SIZE_PX_MIN + (scale - 1) * (TEXT_LABEL.SIZE_PX_MAX - TEXT_LABEL.SIZE_PX_MIN) / 9);
+        const sizePx = Math.max(
+          TEXT_LABEL.SIZE_PX_MIN,
+          Math.min(TEXT_LABEL.SIZE_PX_MAX, parseInt(e.target.value))
+        );
         for (const wp of targets) wp.labelSize = sizePx;
-        this.elements.labelSizeValue.textContent = scale;
+        setRangeReadout(
+          this.elements.labelSize,
+          this.elements.labelSizeValue,
+          formatRendererPixels(sizePx)
+        );
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -548,7 +566,11 @@ export const wiringDomMixin = {
     
     this.elements.pathHeadSize.addEventListener('input', (e) => {
       this.styles.pathHead.size = parseInt(e.target.value);
-      this.elements.pathHeadSizeValue.textContent = e.target.value;
+      setRangeReadout(
+        this.elements.pathHeadSize,
+        this.elements.pathHeadSizeValue,
+        formatRendererPixels(e.target.value)
+      );
       this.queueRender();
       this.saveUndoStateDebounced();
       this.autoSave();
@@ -690,7 +712,11 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         for (const wp of targets) wp.dotSize = parseInt(e.target.value);
-        this.elements.dotSizeValue.textContent = e.target.value;
+        setRangeReadout(
+          this.elements.dotSize,
+          this.elements.dotSizeValue,
+          formatRendererPixels(e.target.value)
+        );
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });

@@ -220,6 +220,7 @@ export const MOTION = {
   // Background tint settings (log2 scaled for fine control near 0)
   TINT_MIN: 1,                     // Minimum tint magnitude (log2 scale starts here)
   TINT_MAX: 100,                   // Maximum tint magnitude (-100 to +100)
+  TINT_OPACITY_MAX: 60,            // Renderer alpha cap, as a percentage
   
   // Angle of View settings (triangle cone from path head)
   // Angle is vertex angle in degrees, scaled with tan-based curve for perceptual smoothness
@@ -305,10 +306,7 @@ export const TEXT_VISIBILITY = {
  * WCAG 2.2 AAA requires minimum 14px for body text (16px recommended)
  */
 export const TEXT_LABEL = {
-  // Font size constraints - UI uses 1-10 scale, maps to 16-48px
-  SIZE_SCALE_MIN: 1,                    // Minimum UI scale value
-  SIZE_SCALE_MAX: 10,                   // Maximum UI scale value
-  SIZE_SCALE_DEFAULT: 1,                // Default UI scale value
+  // Font size constraints - UI and model both use renderer pixels
   SIZE_PX_MIN: 16,                      // Minimum font size in pixels
   SIZE_PX_MAX: 48,                      // Maximum font size in pixels
   SIZE_DEFAULT: 16,                     // Default font size (maps to scale 1)

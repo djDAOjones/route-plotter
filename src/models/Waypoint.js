@@ -29,7 +29,8 @@ export class Waypoint {
     this.pathShape = options.pathShape || 'line'; // line, squiggle, randomised
     
     // Squiggle/Random shape parameters
-    // Amplitude: perpendicular displacement as percentage of segment length (0-100)
+    // Amplitude: legacy stored units; renderer divides by 500, so 5 = 1%
+    // of the normalized source-image coordinate scale.
     this.shapeAmplitude = options.shapeAmplitude !== undefined ? options.shapeAmplitude : 10;
     // Frequency: number of wave cycles per 100 path points (1-20)
     this.shapeFrequency = options.shapeFrequency !== undefined ? options.shapeFrequency : 5;

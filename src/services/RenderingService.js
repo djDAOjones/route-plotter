@@ -1028,7 +1028,10 @@ export class RenderingService {
     // Fill mode: image covers entire canvas, no change needed
     
     ctx.save();
-    ctx.globalAlpha = Math.min(Math.abs(overlayValue) / 100, 0.6);
+    ctx.globalAlpha = Math.min(
+      Math.abs(overlayValue),
+      MOTION.TINT_OPACITY_MAX
+    ) / 100;
     ctx.fillStyle = overlayValue < 0 ? '#000' : '#fff';
     ctx.fillRect(dx, dy, dw, dh);
     ctx.restore();

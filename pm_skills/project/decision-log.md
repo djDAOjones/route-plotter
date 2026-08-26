@@ -2,6 +2,33 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — UX-02 exposes authored values instead of slider coordinates
+
+**Decision:** Inspector range controls must name the value consumed by the
+renderer or timeline, not the implementation coordinate used to shape the
+slider curve. Label Size now edits the model's existing 16–48 pixel value
+directly; marker, leg and head sizes add pixel units; shape amplitude translates
+its legacy five-units-per-effective-percent storage; and the background overlay
+states its effective opacity plus darker/lighter direction. Translated sliders
+keep their visible readout and `aria-valuetext` synchronized. Pulse “Cycle
+speed” becomes “Cycle duration.”
+
+**Compatibility and timing:** This is a UI migration, not a project migration.
+No persisted field, existing numeric value, renderer scaling rule or export
+result is rewritten. Pacing shows a short explanation only when Comet is
+selected: with a non-zero trail, Preview intentionally continues after the
+route head finishes so the tail can clear. Timeline calculation remains the
+canonical existing implementation.
+
+**Evidence and sequence:** Focused persistence/inspector tests and the canonical
+47-file / 673-test gate are green. Production Chromium v3.2.636 proved live
+pixel, effective-amplitude and directional-overlay readouts, Comet duration
+switching, a clean warning/error console and a usable 320 px layout; the browser
+fixture was restored and reloaded to a fresh baseline. UX-02 leaves the backlog
+and its temporary detail ticket is removed. UI-03 moves to Current because
+UI-01's More slot and UX-02's readout convention are now stable; UI-04 remains
+behind it and no Icebox item is promoted.
+
 ## 2026-08-26 — UI-01 makes progressive disclosure a card contract
 
 **Decision:** Use native `details`/`summary` as the inspector's one secondary

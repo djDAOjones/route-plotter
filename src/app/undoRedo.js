@@ -10,6 +10,7 @@ import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { PROJECT_ARCHIVE_LIMITS, SIZE_LIMITS } from '../services/ImageAssetService.js';
 import { collectImageAssetReferences, planImageAssetAdmission } from '../utils/assetReferences.js';
+import { formatRendererPixels, setRangeReadout } from '../utils/uiReadouts.js';
 
 function updatePathHeadPreview(app, asset = null) {
   if (app.elements?.headPreview) app.elements.headPreview.style.display = asset ? 'block' : 'none';
@@ -402,7 +403,11 @@ export const undoRedoMixin = {
     if (this.elements.pathHeadColor) this.elements.pathHeadColor.value = ph.color;
     if (this.elements.pathHeadSize) {
       this.elements.pathHeadSize.value = ph.size;
-      if (this.elements.pathHeadSizeValue) this.elements.pathHeadSizeValue.textContent = ph.size;
+      setRangeReadout(
+        this.elements.pathHeadSize,
+        this.elements.pathHeadSizeValue,
+        formatRendererPixels(ph.size)
+      );
     }
     if (this.elements.customHeadControls) {
       this.elements.customHeadControls.style.display = ph.style === 'custom' ? 'block' : 'none';

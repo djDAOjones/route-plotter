@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 import { RENDERING, ANIMATION, VIDEO_EXPORT, MOTION, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUND_VISIBILITY } from './config/constants.js';
 import { Scene } from './models/Scene.js';
 import { MotionVisibilityService } from './services/MotionVisibilityService.js';
+import { formatRendererPixels, setRangeReadout } from './utils/uiReadouts.js';
 import { StorageService } from './services/StorageService.js';
 import { CoordinateTransform } from './services/CoordinateTransform.js';
 import { PathCalculator } from './services/PathCalculator.js';
@@ -497,7 +498,11 @@ class RoutePlotter {
     this.elements.pathHeadStyle.value = this.styles.pathHead.style;
     this.elements.pathHeadColor.value = this.styles.pathHead.color;
     this.elements.pathHeadSize.value = this.styles.pathHead.size;
-    this.elements.pathHeadSizeValue.textContent = this.styles.pathHead.size;
+    setRangeReadout(
+      this.elements.pathHeadSize,
+      this.elements.pathHeadSizeValue,
+      formatRendererPixels(this.styles.pathHead.size)
+    );
     
     // Show/hide custom image controls based on initial style
     this.elements.customHeadControls.style.display = 
@@ -653,11 +658,8 @@ class RoutePlotter {
       this.elements.backgroundVisibility.value = this.motionSettings.backgroundVisibility;
     }
     
-    // Sync Trail Size visibility (only shown for comet/instantaneous mode)
-    const trailControl = document.getElementById('path-trail-control');
-    if (trailControl) {
-      trailControl.style.display = (this.motionSettings.pathVisibility === PATH_VISIBILITY.INSTANTANEOUS) ? 'flex' : 'none';
-    }
+    // Sync the comet-only trail control and its Pacing explanation.
+    this.uiController?.updateTrailControlVisibility?.(this.motionSettings.pathVisibility);
     
     console.debug(`🎛️ [Init] UI synced: previewMode=${this.previewMode}, pathVisibility=${this.motionSettings.pathVisibility}`);
   }

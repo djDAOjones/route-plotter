@@ -160,9 +160,9 @@
               
               <!-- Size (was Marker Size) -->
               <label for="dot-size">
-                <span data-tip="Diameter of the waypoint marker in pixels">Size</span>
-                <input type="range" id="dot-size" min="4" max="16" value="8" step="1">
-                <span id="dot-size-value">8</span>
+                <span data-tip="Waypoint marker diameter at the renderer's reference size">Size</span>
+                <input type="range" id="dot-size" min="4" max="16" value="8" step="1" aria-describedby="dot-size-value" aria-valuetext="8 px">
+                <span id="dot-size-value">8 px</span>
               </label>
               
             </div>
@@ -266,7 +266,7 @@
                       <span id="pulse-amplitude-value">1.0</span>
                     </label>
                     <label for="pulse-cycle-speed">
-                      <span data-tip="Duration of one complete pulse cycle">Cycle speed</span>
+                      <span data-tip="Duration of one complete pulse cycle">Cycle duration</span>
                       <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value">
                       <span id="pulse-cycle-speed-value">4s</span>
                     </label>
@@ -303,11 +303,11 @@
                 </select>
               </label>
               
-              <!-- Text Size (1-10 scale, maps to 16-48px) -->
+              <!-- Text size is stored and rendered in reference pixels -->
               <label for="label-size">
-                <span data-tip="Font size of the label text">Size</span>
-                <input type="range" id="label-size" min="1" max="10" value="1" step="1">
-                <span id="label-size-value">1</span>
+                <span data-tip="Label font size at the renderer's reference size">Size</span>
+                <input type="range" id="label-size" min="16" max="48" value="16" step="1" aria-describedby="label-size-value" aria-valuetext="16 px">
+                <span id="label-size-value">16 px</span>
               </label>
               </div>
 
@@ -368,9 +368,9 @@
 
               <!-- Thickness - increased range to 4x with log scale -->
               <label for="segment-width">
-                <span data-tip="Width of the path line in pixels">Thickness</span>
-                <input type="range" id="segment-width" min="0" max="1000" value="333" step="1">
-                <span id="segment-width-value">3</span>
+                <span data-tip="Path-line width at the renderer's reference size">Thickness</span>
+                <input type="range" id="segment-width" min="0" max="1000" value="333" step="1" aria-describedby="segment-width-value" aria-valuetext="3.0 px">
+                <span id="segment-width-value">3.0 px</span>
               </label>
               
               <!-- Shape (was Path Shape) -->
@@ -398,9 +398,9 @@
               <!-- Shape Parameters (shown for squiggle/randomised) -->
               <div id="shape-params-controls" style="display: none;">
                 <label for="shape-amplitude">
-                  <span data-tip="Height of squiggle waves">Amplitude</span>
-                  <input type="range" id="shape-amplitude" min="1" max="50" value="10" step="1">
-                  <span id="shape-amplitude-value">10</span>
+                  <span data-tip="Peak sideways displacement as a percentage of the source-image coordinate scale">Amplitude</span>
+                  <input type="range" id="shape-amplitude" min="1" max="50" value="10" step="1" aria-describedby="shape-amplitude-value" aria-valuetext="2%">
+                  <span id="shape-amplitude-value">2%</span>
                 </label>
                 <label for="shape-frequency">
                   <span data-tip="Number of squiggle waves per path segment">Frequency</span>
@@ -621,9 +621,9 @@
 
               <!-- Head Size -->
               <label for="path-head-size">
-                <span data-tip="Size of the path head indicator">Size</span>
-                <input type="range" id="path-head-size" min="4" max="24" value="8" step="1">
-                <span id="path-head-size-value">8</span>
+                <span data-tip="Path-head size at the renderer's reference size">Size</span>
+                <input type="range" id="path-head-size" min="4" max="24" value="8" step="1" aria-describedby="path-head-size-value" aria-valuetext="8 px">
+                <span id="path-head-size-value">8 px</span>
               </label>
             </div>
           </div>
@@ -643,6 +643,9 @@
                 <input type="range" id="animation-speed-right" min="1" max="4000" step="5">
                 <span id="animation-speed-value-right" class="slider-value">10s</span>
               </label>
+              <p id="pacing-comet-hint" class="section-hint" hidden>
+                In Preview, a non-zero Comet trail extends Duration while the tail clears after the route head reaches the end.
+              </p>
               <!-- Graphics Scale — global multiplier for all vector element sizes -->
               <div id="graphics-scale-control" style="margin-top:0.5rem;">
                 <label class="sidebar-control-row" for="graphics-scale">
@@ -786,11 +789,11 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-background-content" class="section-content">
-              <!-- Tint (was Background Tint/Overlay) - log2 scaled for fine control near 0 -->
+              <!-- Darken/lighten overlay - log2 scaled for fine control near 0 -->
               <label for="bg-overlay">
-                <span data-tip="Darkens (left) or lightens (right) the background image">Tint</span>
-                <input type="range" id="bg-overlay" min="-1000" max="1000" step="1" value="0">
-                <span id="bg-overlay-value">0</span>
+                <span data-tip="Adds a black (left) or white (right) overlay; rendered opacity is capped at 60%">Darken / lighten</span>
+                <input type="range" id="bg-overlay" min="-1000" max="1000" step="1" value="0" aria-describedby="bg-overlay-value" aria-valuetext="None">
+                <span id="bg-overlay-value">None</span>
               </label>
 
               <!-- Zoom -->

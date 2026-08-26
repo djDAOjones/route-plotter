@@ -3,11 +3,17 @@
  * Handles waypoint list, editor controls, tabs, and animation controls
  */
 
-import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT } from '../config/constants.js';
+import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT, PATH_VISIBILITY } from '../config/constants.js';
 import { getInlineHelpHTML, getSplashHelpHTML } from '../config/helpContent.js';
 import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
 import { VideoExporter } from '../services/VideoExporter.js';
+import { pathWidthToSlider } from '../utils/pathWidthScale.js';
+import {
+  formatBackgroundOverlay,
+  formatRendererPixels,
+  setRangeReadout,
+} from '../utils/uiReadouts.js';
 
 /**
  * Logarithmic speed curve for perceptually uniform slider control
@@ -702,7 +708,11 @@ export class UIController {
         MOTION.TINT_MIN,
         MOTION.TINT_MAX
       );
-      this.elements.bgOverlayValue.textContent = MotionVisibilityService.formatUIValue(tintValue);
+      setRangeReadout(
+        this.elements.bgOverlay,
+        this.elements.bgOverlayValue,
+        formatBackgroundOverlay(tintValue)
+      );
       this.eventBus.emit('background:overlay-change', tintValue);
     });
     
@@ -983,8 +993,6 @@ export class UIController {
     // Path visibility
     this.elements.pathVisibility?.addEventListener('change', (e) => {
       this.eventBus.emit('motion:path-visibility-change', e.target.value);
-      // Show/hide trail control based on mode
-      this.updateTrailControlVisibility(e.target.value);
       // Blur to prevent keyboard shortcuts from changing the dropdown
       e.target.blur();
     });
@@ -1092,15 +1100,17 @@ export class UIController {
    */
   updateTrailControlVisibility(pathVisibility) {
     const trailControl = document.getElementById('path-trail-control');
+    const pacingHint = document.getElementById('pacing-comet-hint');
+    const showTrail = pathVisibility === PATH_VISIBILITY.INSTANTANEOUS;
     if (trailControl) {
-      // Trail only applies to instantaneous mode (comet effect)
-      const showTrail = pathVisibility === 'instantaneous';
+      trailControl.style.display = showTrail ? 'flex' : 'none';
       trailControl.style.opacity = showTrail ? '1' : '0.5';
       const input = trailControl.querySelector('input');
       if (input) {
         input.disabled = !showTrail;
       }
     }
+    if (pacingHint) pacingHint.hidden = !showTrail;
   }
   
   /**
@@ -1749,7 +1759,11 @@ export class UIController {
     
     if (this.elements.dotSize) {
       this.elements.dotSize.value = waypoint.dotSize || 8;
-      this.elements.dotSizeValue.textContent = waypoint.dotSize || 8;
+      setRangeReadout(
+        this.elements.dotSize,
+        this.elements.dotSizeValue,
+        formatRendererPixels(waypoint.dotSize || 8)
+      );
     }
     
     if (this.elements.segmentColor) {
@@ -1757,8 +1771,13 @@ export class UIController {
     }
     
     if (this.elements.segmentWidth) {
-      this.elements.segmentWidth.value = waypoint.segmentWidth || 3;
-      this.elements.segmentWidthValue.textContent = waypoint.segmentWidth || 3;
+      const width = waypoint.segmentWidth || 3;
+      this.elements.segmentWidth.value = pathWidthToSlider(width);
+      setRangeReadout(
+        this.elements.segmentWidth,
+        this.elements.segmentWidthValue,
+        formatRendererPixels(width, 1)
+      );
     }
     
     if (this.elements.segmentStyle) {
