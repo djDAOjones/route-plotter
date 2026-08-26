@@ -439,6 +439,22 @@ describe('CameraService — major-only zoom keyframes', () => {
     });
     expect(held.zoom).toBeCloseTo(4, 5);
   });
+
+  test('destination zoom mode keeps gradual and quick transition semantics distinct', () => {
+    const continuous = [zoomed(1), zoomed(4)];
+    const immediate = [
+      zoomed(1),
+      { isMajor: true, camera: { zoom: 4, zoomMode: 'immediate' } },
+    ];
+    const service = new CameraService();
+
+    const gradualZoom = service._calculateTargetZoom(0.5, continuous, [0, 1], 10000);
+    const quickZoom = service._calculateTargetZoom(0.5, immediate, [0, 1], 10000);
+
+    expect(gradualZoom).toBeGreaterThan(1);
+    expect(gradualZoom).toBeLessThan(4);
+    expect(quickZoom).toBeCloseTo(4, 5);
+  });
 });
 
 describe('RenderingService.glowLayers (path glow math)', () => {

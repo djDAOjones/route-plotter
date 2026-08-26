@@ -18,9 +18,8 @@
   [verify: physical iOS Safari + Android Chrome] — Unified Pointer Events,
   captured group drag and cancel/no-op transactions are implemented and green
   in automation plus production Chromium. Record the physical mobile pass.
-- [~] UI-03 — Surface existing Label colour/background/opacity and camera
-  zoom-transition controls behind More; model, rendering and persistence
-  already exist.
+- [~] UI-04 — Show an honest mixed state when a multi-selection disagrees
+  instead of silently displaying the primary waypoint's values.
 - [ ] REV-06 [ready] — Measure idle/paused CPU and a representative
   500-dot/4K scene, then sleep unnecessary animation work; assess
   direct-render coalescing only where profiling supports it and preserve
@@ -30,8 +29,6 @@
 
 ### Next
 
-- [ ] UI-04 [gated: UI-03] — Show an honest mixed state when a multi-selection
-  disagrees instead of silently displaying the primary waypoint's values.
 - [ ] UI-05 [gated: UI-04] — Add per-card Reset to route style and Apply onward
   after the card layout and mixed-value rules are stable.
 - [ ] UI-02 [ready] [sign-off] — Show minor waypoints as

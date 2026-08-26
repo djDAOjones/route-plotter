@@ -2,6 +2,35 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — UI-03 exposes latent appearance and camera choices without a migration
+
+**Decision:** Surface the Waypoint model's existing label foreground,
+background, background opacity and destination zoom mode inside the established
+Label and On arrival More disclosures. Label colours reuse map-neutral presets
+plus the component's custom-colour escape; the picker now names the exact
+current hex value and leaves every preset unselected when none matches. This
+preserves imported values instead of falsely presenting the first swatch.
+Background opacity is an explicit percentage. Zoom-transition copy states the
+ownership that CameraService already implements: gradual over the incoming leg
+or quick on arrival at this waypoint.
+
+**Architecture and compatibility:** The auto-jazz gates chose the smallest
+existing-pattern option over standalone native colour fields or any new model
+abstraction. No Waypoint field, default, serialised shape, rendering rule,
+timeline rule or export path changed. UI edits write to selected majors and emit
+the existing `waypoint:style-changed` event, retaining one render, debounced undo
+and autosave path. Minor-only selections disable the controls. UI-04 still owns
+truthful mixed-value presentation; UI-05 remains behind it.
+
+**Evidence and sequence:** The canonical gate passed 48 files / 678 tests,
+including exact custom-swatch state and distinct camera-mode semantics.
+Production Chromium v3.2.638 proved preset/custom changes, one-step Undo,
+autosave/reload, accessible custom disclosure, a usable 320 px layout and an
+empty warning/error console; the fixture was restored and reloaded to a fresh
+disabled-Undo baseline. UI-03 leaves the backlog and UI-04 becomes Current. No
+Icebox trigger was met, so none is promoted; the full trajectory is preserved
+under the owner's standing direction.
+
 ## 2026-08-26 — UX-02 exposes authored values instead of slider coordinates
 
 **Decision:** Inspector range controls must name the value consumed by the

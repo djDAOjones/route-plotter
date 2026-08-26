@@ -19,6 +19,11 @@
 
 ## Inspector foundation (shipped 2026-08-26)
 
+UI-03 — Label text/background colour and opacity plus incoming camera zoom
+transition are now editable under More, with exact custom-colour state,
+multi-major writes, undo, reload and export-compatible persistence.
+(2026-08-26) — see decision-log.
+
 UX-02 — Label Size now edits its persisted 16–48 renderer-pixel value directly;
 size, amplitude and background-overlay readouts expose their effective units
 and accessible values; ambiguous names use plain language; and Pacing explains

@@ -409,11 +409,17 @@ describe('render and static UI regressions', () => {
     const tiers = {
       'on-arrival': {
         primary: ['editor-beacon-style', 'waypoint-pause-time', 'camera-zoom'],
-        more: ['ripple-thickness', 'ripple-max-scale', 'ripple-wait', 'pulse-amplitude', 'pulse-cycle-speed'],
+        more: [
+          'camera-zoom-mode', 'ripple-thickness', 'ripple-max-scale',
+          'ripple-wait', 'pulse-amplitude', 'pulse-cycle-speed',
+        ],
       },
       label: {
         primary: ['waypoint-label', 'label-mode', 'label-size'],
-        more: ['label-width', 'label-offset-x', 'label-offset-y', 'label-auto-position'],
+        more: [
+          'label-color', 'label-bg-color', 'label-bg-opacity',
+          'label-width', 'label-offset-x', 'label-offset-y', 'label-auto-position',
+        ],
       },
       leg: {
         primary: ['segment-color', 'segment-width', 'path-shape', 'waypoint-segment-speed'],
@@ -498,6 +504,32 @@ describe('render and static UI regressions', () => {
     expect(formatBackgroundOverlay(0)).toBe('None');
     expect(formatBackgroundOverlay(-25)).toBe('25% darker');
     expect(formatBackgroundOverlay(80)).toBe('60% lighter');
+  });
+
+  test('UI-03 exposes exact label appearance and incoming zoom-transition controls', () => {
+    document.body.innerHTML = indexHtml;
+
+    const textPicker = document.querySelector('.swatch-picker[data-target-input="#label-color"]');
+    const backgroundPicker = document.querySelector(
+      '.swatch-picker[data-target-input="#label-bg-color"]'
+    );
+    expect(textPicker?.dataset.mode).toBe('neutral-ink');
+    expect(textPicker?.dataset.allowCustom).toBe('true');
+    expect(backgroundPicker?.dataset.mode).toBe('neutral-ink');
+    expect(backgroundPicker?.dataset.allowCustom).toBe('true');
+
+    const opacity = document.getElementById('label-bg-opacity');
+    expect(opacity.min).toBe('0');
+    expect(opacity.max).toBe('100');
+    expect(opacity.value).toBe('85');
+    expect(opacity.getAttribute('aria-valuetext')).toBe('85%');
+    expect(document.getElementById('label-bg-opacity-value').textContent).toBe('85%');
+
+    const zoomMode = document.getElementById('camera-zoom-mode');
+    expect([...zoomMode.options].map(option => [option.value, option.textContent])).toEqual([
+      ['continuous', 'Gradual — over the leg'],
+      ['immediate', 'Quick — on arrival'],
+    ]);
   });
 
   test('Pacing explains the duration extension only for Comet mode', () => {

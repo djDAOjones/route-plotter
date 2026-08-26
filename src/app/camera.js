@@ -6,7 +6,7 @@
  * RoutePlotter instance; main.js attaches the group via
  * Object.assign(RoutePlotter.prototype, cameraMixin).
  */
-import { CameraService, CAMERA_DEFAULTS } from '../services/CameraService.js';
+import { CameraService, CAMERA_DEFAULTS, ZOOM_MODE } from '../services/CameraService.js';
 
 export const cameraMixin = {
   
@@ -52,9 +52,19 @@ export const cameraMixin = {
       this.elements.cameraZoomValue.textContent = CameraService.formatZoom(zoom);
     }
     
-    // (Zoom-mode UI removed 2026-08-18 — camera.zoomMode remains model-only
-    // until the Phase 4 inspector surfaces it.)
-
+    if (this.elements.cameraZoomMode) {
+      const selectedMajor = waypoint.isMajor !== false
+        ? waypoint
+        : this.selectionTargets?.(true)?.[0];
+      const zoomMode = Object.values(ZOOM_MODE).includes(selectedMajor?.camera?.zoomMode)
+        ? selectedMajor.camera.zoomMode
+        : CAMERA_DEFAULTS.ZOOM_MODE;
+      this.elements.cameraZoomMode.value = zoomMode;
+      const hasMajorTarget = typeof this.selectionTargets === 'function'
+        ? this.selectionTargets(true).length > 0
+        : waypoint.isMajor !== false;
+      this.elements.cameraZoomMode.disabled = !hasMajorTarget;
+    }
 
     // Update "Next Zoom" display (read-only)
     const nextMajorWp = (majorIndex >= 0 && majorIndex < majorWps.length - 1)

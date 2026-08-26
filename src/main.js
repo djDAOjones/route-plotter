@@ -293,6 +293,10 @@ class RoutePlotter {
       labelSize: document.getElementById('label-size'),
       labelSizeValue: document.getElementById('label-size-value'),
       labelSizeWarning: document.getElementById('label-size-warning'),
+      labelColor: document.getElementById('label-color'),
+      labelBgColor: document.getElementById('label-bg-color'),
+      labelBgOpacity: document.getElementById('label-bg-opacity'),
+      labelBgOpacityValue: document.getElementById('label-bg-opacity-value'),
       labelWidth: document.getElementById('label-width'),
       labelWidthValue: document.getElementById('label-width-value'),
       labelOffsetX: document.getElementById('label-offset-x'),
@@ -322,6 +326,7 @@ class RoutePlotter {
       // Camera controls
       cameraZoom: document.getElementById('camera-zoom'),
       cameraZoomValue: document.getElementById('camera-zoom-value'),
+      cameraZoomMode: document.getElementById('camera-zoom-mode'),
       cameraPrevZoomValue: document.getElementById('camera-prev-zoom-value'),
       cameraNextZoomValue: document.getElementById('camera-next-zoom-value'),
       // Camera multi-select controls

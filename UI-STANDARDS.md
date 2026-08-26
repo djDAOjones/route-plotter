@@ -111,6 +111,9 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 - Renderer-scaled size controls use pixel readouts and say in contextual help
   that the value is calibrated at the renderer's reference size. SCALE-01 owns
   any future change to that sizing model.
+- Palette controls identify the exact current colour in text. A custom or
+  imported value that does not match a preset leaves every preset unselected;
+  the UI must never imply that a different colour is active.
 
 ### Flexibility and efficiency
 

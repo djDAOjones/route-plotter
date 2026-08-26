@@ -8,6 +8,7 @@
  */
 import { TEXT_LABEL, TEXT_VISIBILITY } from '../config/constants.js';
 import { BEACON_TIMING } from '../services/BeaconRenderer.js';
+import { setSwatchPickerEnabled } from '../components/SwatchPicker.js';
 import { sliderToPathWidth, pathWidthToSlider } from '../utils/pathWidthScale.js';
 import {
   formatRendererPixels,
@@ -339,7 +340,7 @@ export const editorPanelMixin = {
             formatRendererPixels(clampedSizePx)
           );
         }
-        
+
         // Label width
         if (this.elements.labelWidth) {
           const width = this.selectedWaypoint.labelWidth || TEXT_LABEL.WIDTH_DEFAULT;
@@ -359,9 +360,6 @@ export const editorPanelMixin = {
           this.elements.labelOffsetYValue.textContent = `${offsetY}%`;
         }
         
-        // (Label colour/bg/opacity controls don't exist — dead sync
-        // removed 2026-08-18; the model properties still render.)
-
         // Enable pause controls for major waypoints
         this.elements.waypointPauseTime.disabled = false;
         const pauseTimeSec = (this.selectedWaypoint.pauseTime || 0) / 1000;
@@ -387,6 +385,41 @@ export const editorPanelMixin = {
         this.elements.waypointPauseTime.value = 0;
         this.elements.waypointPauseTimeValue.textContent = '0s';
         this.elements.pauseTimeControl.style.display = 'none';
+      }
+
+      // A mixed major/minor selection still has editable major targets. Until
+      // UI-04 adds mixed-value presentation, show the primary major's exact
+      // appearance (or the first selected major when the primary is minor).
+      const labelAppearanceSource = this.selectedWaypoint.isMajor
+        ? this.selectedWaypoint
+        : this.selectionTargets(true)[0];
+      const canEditLabelAppearance = Boolean(labelAppearanceSource);
+      if (this.elements.labelColor) {
+        this.elements.labelColor.disabled = !canEditLabelAppearance;
+        if (labelAppearanceSource) {
+          this.elements.labelColor.value = labelAppearanceSource.labelColor || TEXT_LABEL.COLOR_DEFAULT;
+        }
+        setSwatchPickerEnabled('#label-color', canEditLabelAppearance);
+      }
+      if (this.elements.labelBgColor) {
+        this.elements.labelBgColor.disabled = !canEditLabelAppearance;
+        if (labelAppearanceSource) {
+          this.elements.labelBgColor.value = labelAppearanceSource.labelBgColor || TEXT_LABEL.BG_COLOR_DEFAULT;
+        }
+        setSwatchPickerEnabled('#label-bg-color', canEditLabelAppearance);
+      }
+      if (this.elements.labelBgOpacity) {
+        this.elements.labelBgOpacity.disabled = !canEditLabelAppearance;
+        if (labelAppearanceSource) {
+          const opacity = labelAppearanceSource.labelBgOpacity ?? TEXT_LABEL.BG_OPACITY_DEFAULT;
+          const opacityPct = Math.round(opacity * 100);
+          this.elements.labelBgOpacity.value = opacityPct;
+          setRangeReadout(
+            this.elements.labelBgOpacity,
+            this.elements.labelBgOpacityValue,
+            `${opacityPct}%`
+          );
+        }
       }
       
       // Camera controls (apply to all waypoints)

@@ -2600,7 +2600,7 @@
       "format": "esm"
     },
     "src/components/SwatchPicker.js": {
-      "bytes": 9671,
+      "bytes": 11074,
       "imports": [],
       "format": "esm"
     },
@@ -2684,7 +2684,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 36522,
+      "bytes": 38268,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2783,7 +2783,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 47507,
+      "bytes": 47685,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2824,7 +2824,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 17616,
+      "bytes": 17701,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2866,7 +2866,7 @@
       "format": "esm"
     },
     "src/app/camera.js": {
-      "bytes": 9919,
+      "bytes": 10410,
       "imports": [
         {
           "path": "src/services/CameraService.js",
@@ -2990,7 +2990,7 @@
       "format": "esm"
     },
     "src/app/editorPanel.js": {
-      "bytes": 16929,
+      "bytes": 18529,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3001,6 +3001,11 @@
           "path": "src/services/BeaconRenderer.js",
           "kind": "import-statement",
           "original": "../services/BeaconRenderer.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
         },
         {
           "path": "src/utils/pathWidthScale.js",
@@ -3168,7 +3173,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 44576,
+      "bytes": 44909,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3410,13 +3415,13 @@
     }
   },
   "outputs": {
-    ".docs-build-flR4Uj/app.js.map": {
+    ".docs-build-pyO7Mm/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3025063
+      "bytes": 3034457
     },
-    ".docs-build-flR4Uj/app.js": {
+    ".docs-build-pyO7Mm/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3626,7 +3631,7 @@
           "bytesInOutput": 4565
         },
         "src/components/SwatchPicker.js": {
-          "bytesInOutput": 4016
+          "bytesInOutput": 4976
         },
         "src/config/tooltips.js": {
           "bytesInOutput": 2144
@@ -3656,7 +3661,7 @@
           "bytesInOutput": 702
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 15037
+          "bytesInOutput": 16185
         },
         "src/models/Waypoint.js": {
           "bytesInOutput": 7163
@@ -3671,19 +3676,19 @@
           "bytesInOutput": 1721
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 19565
+          "bytesInOutput": 19647
         },
         "src/utils/assetReferences.js": {
           "bytesInOutput": 2653
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 7854
+          "bytesInOutput": 7895
         },
         "src/app/playback.js": {
           "bytesInOutput": 3545
         },
         "src/app/camera.js": {
-          "bytesInOutput": 3289
+          "bytesInOutput": 3634
         },
         "src/app/viewport.js": {
           "bytesInOutput": 4239
@@ -3698,7 +3703,7 @@
           "bytesInOutput": 5564
         },
         "src/app/editorPanel.js": {
-          "bytesInOutput": 7856
+          "bytesInOutput": 8526
         },
         "src/app/pointer.js": {
           "bytesInOutput": 887
@@ -3731,10 +3736,10 @@
           "bytesInOutput": 1596
         },
         "src/main.js": {
-          "bytesInOutput": 21492
+          "bytesInOutput": 21785
         }
       },
-      "bytes": 754012
+      "bytes": 757551
     }
   }
 }

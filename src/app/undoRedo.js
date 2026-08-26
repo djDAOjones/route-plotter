@@ -386,6 +386,8 @@ export const undoRedoMixin = {
     refreshSwatchPicker('#dot-color');
     refreshSwatchPicker('#segment-color');
     refreshSwatchPicker('#path-head-color');
+    refreshSwatchPicker('#label-color');
+    refreshSwatchPicker('#label-bg-color');
     
     this.render();
     pruneUnreferencedImageAssets(this);

@@ -8,7 +8,7 @@
  */
 import { TEXT_LABEL } from '../config/constants.js';
 import { TextLabelService } from '../services/TextLabelService.js';
-import { CameraService, CAMERA_DEFAULTS } from '../services/CameraService.js';
+import { CameraService, CAMERA_DEFAULTS, ZOOM_MODE } from '../services/CameraService.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
 import { ImageAsset } from '../models/ImageAsset.js';
 import {
@@ -446,6 +446,35 @@ export const wiringDomMixin = {
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
+    // Label appearance is persisted already; the inspector now exposes the
+    // exact model values without introducing a parallel UI state.
+    this.elements.labelColor?.addEventListener('input', (e) => {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.labelColor = e.target.value;
+        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+      }
+    });
+    this.elements.labelBgColor?.addEventListener('input', (e) => {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.labelBgColor = e.target.value;
+        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+      }
+    });
+    this.elements.labelBgOpacity?.addEventListener('input', (e) => {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        const opacityPct = Math.max(0, Math.min(100, parseInt(e.target.value)));
+        for (const wp of targets) wp.labelBgOpacity = opacityPct / 100;
+        setRangeReadout(
+          this.elements.labelBgOpacity,
+          this.elements.labelBgOpacityValue,
+          `${opacityPct}%`
+        );
+        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+      }
+    });
     // Label position - visual only. Was wired only through UIController's
     // bulk path, so single-selection changes never reached the model
     // (review 2026-08-18)
@@ -754,11 +783,23 @@ export const wiringDomMixin = {
         if (this.previewMode) this.render();
       }
     });
-    
-    // Camera zoom-mode UI (hidden select + a toggle that never existed in
-    // the DOM) was removed 2026-08-18. camera.zoomMode stays in the model
-    // and CameraService — old saves with 'immediate' still play correctly
-    // (wish-list: surface zoom mode in the Phase 4 "On arrival" card).
+
+    // The transition belongs to the destination waypoint: it describes how
+    // CameraService reaches this waypoint's zoom over the incoming leg.
+    this.elements.cameraZoomMode?.addEventListener('change', (e) => {
+      if (!Object.values(ZOOM_MODE).includes(e.target.value)) return;
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) {
+          if (!wp.camera) {
+            wp.camera = { zoom: CAMERA_DEFAULTS.ZOOM, zoomMode: CAMERA_DEFAULTS.ZOOM_MODE };
+          }
+          wp.camera.zoomMode = e.target.value;
+        }
+        this.validateZoomTransitions();
+        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+      }
+    });
 
 
     /**

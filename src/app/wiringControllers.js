@@ -356,6 +356,8 @@ export const wiringControllersMixin = {
       refreshSwatchPicker('#dot-color');
       refreshSwatchPicker('#segment-color');
       refreshSwatchPicker('#path-head-color');
+      refreshSwatchPicker('#label-color');
+      refreshSwatchPicker('#label-bg-color');
 
       this.queueRender(); // Highlight selection
     });
@@ -381,6 +383,8 @@ export const wiringControllersMixin = {
       this._updateCameraControlsVisibility(true); // Multi-select mode
       refreshSwatchPicker('#dot-color');
       refreshSwatchPicker('#segment-color');
+      refreshSwatchPicker('#label-color');
+      refreshSwatchPicker('#label-bg-color');
       this.queueRender();
     });
 
