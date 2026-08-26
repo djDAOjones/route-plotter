@@ -6,26 +6,16 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Route Plotter v3.2.618</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=470">
-  <link rel="stylesheet" href="styles/main.css?v=470">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=470">
-  <link rel="stylesheet" href="styles/tooltip.css?v=470">
-  <link rel="stylesheet" href="styles/dropdown.css?v=470">
-  <link rel="stylesheet" href="styles/context-menu.css?v=470">
+  <title>Route Plotter v3.2.619</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.619">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.619">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.619">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.619">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.619">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.619">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
-  <!-- Min-width warning for small screens (R-3) -->
-  <div id="screen-warning" class="screen-warning" role="alert">
-    <div class="screen-warning-content">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="14"/><line x1="16" y1="10" x2="16" y2="18"/><circle cx="16" cy="22" r="1" fill="currentColor" stroke="none"/></svg>
-      <h2>Screen too narrow</h2>
-      <p>Route Plotter requires a screen width of at least 1440px for the full editing experience.</p>
-      <p class="screen-warning-hint">Current width: <span id="screen-width-display"></span>px</p>
-      <button id="screen-warning-dismiss" class="btn btn-secondary">Continue anyway</button>
-    </div>
-  </div>
   <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <!-- Application Container -->
   <div id="app">
@@ -36,7 +26,7 @@
         <!-- Mode Switch (Edit/Preview toggle) -->
         <div class="mode-switch" id="mode-switch">
           <span class="mode-label mode-label-edit active">Edit</span>
-          <button class="mode-toggle" id="mode-toggle-btn" role="switch" aria-checked="false" aria-label="Toggle preview mode">
+          <button class="mode-toggle" id="mode-toggle-btn" type="button" role="switch" aria-checked="false" aria-label="Toggle preview mode">
             <span class="mode-toggle-thumb"></span>
           </button>
           <span class="mode-label mode-label-preview">Preview</span>
@@ -64,7 +54,7 @@
             <div class="dropdown-separator" role="separator"></div>
             <div class="dropdown-submenu-label" aria-hidden="true">Example Backgrounds</div>
             <div id="example-backgrounds-menu" role="group" aria-label="Example backgrounds">
-              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Courts.jpg">Courts</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Court.png">Courts</button>
               <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Garlic.jpg">Garlic</button>
               <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Nervous_System.jpg">Nervous System</button>
               <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/PARM_Aerial.jpg">PARM Aerial</button>
@@ -159,7 +149,7 @@
               <div id="custom-marker-controls" style="display:none;">
                 <div class="upload-row">
                   <button id="marker-upload-btn" class="btn btn-secondary" aria-label="Upload custom marker image">Upload Image</button>
-                  <input id="marker-upload" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style="display:none" aria-label="Upload custom marker image" />
+                  <input id="marker-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom marker image" />
                 </div>
                 <div id="marker-preview" style="display:none; margin-bottom:0.5rem;">
                   <span id="marker-filename" style="font-size:0.75rem; opacity:0.7;"></span>
@@ -576,7 +566,7 @@
               <div id="custom-head-controls" style="display:none;">
                 <div class="upload-row">
                   <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
-                  <input id="head-upload" type="file" accept="image/png,image/jpeg,image/svg+xml" style="display:none" aria-label="Upload custom path head image" />
+                  <input id="head-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom path head image" />
                 </div>
                 <div id="head-preview" class="preview-box" style="display:none;">
                   <p id="head-filename">No image selected</p>
@@ -774,7 +764,7 @@
               <div class="upload-row">
                 <span>Upload</span>
                 <button id="bg-upload-btn" class="btn btn-secondary" aria-label="Upload background image">Choose Image</button>
-                <input id="bg-upload" type="file" accept="image/png,image/jpeg" style="display:none" aria-label="Upload background image" />
+                <input id="bg-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload background image" />
               </div>
               <p class="sr-only" id="bg-drop-hint">Tip: Drag an image onto the canvas to set the background.</p>
             </div>
@@ -1027,10 +1017,10 @@
         <!-- Controls Panel -->
         <div class="controls">
           <div class="transport-controls">
-            <button id="skip-start-btn" class="btn btn-icon" title="Skip to Start">⏮</button>
-            <button id="play-btn" class="btn btn-icon btn-primary" title="Play">▶</button>
-            <button id="pause-btn" class="btn btn-icon btn-primary" style="display:none" title="Pause">⏸</button>
-            <button id="skip-end-btn" class="btn btn-icon" title="Skip to End">⏭</button>
+            <button id="skip-start-btn" class="btn btn-icon" type="button" title="Skip to start" aria-label="Skip to start">⏮</button>
+            <button id="play-btn" class="btn btn-icon btn-primary" type="button" title="Play" aria-label="Play">▶</button>
+            <button id="pause-btn" class="btn btn-icon btn-primary" type="button" style="display:none" title="Pause" aria-label="Pause">⏸</button>
+            <button id="skip-end-btn" class="btn btn-icon" type="button" title="Skip to end" aria-label="Skip to end">⏭</button>
           </div>
           
           <div class="timeline">
@@ -1053,7 +1043,7 @@
         <div class="control-group" style="padding: 0.75rem;">
           <h2 style="margin-bottom:0.5rem;">Waypoints</h2>
           <!-- Waypoint list container - instructions shown inside when empty -->
-          <div id="waypoint-list" class="waypoint-list"></div>
+          <ul id="waypoint-list" class="waypoint-list" aria-label="Waypoints"></ul>
         </div>
       </aside>
     </main>
@@ -1064,13 +1054,13 @@
   <div id="splash" class="splash-screen" role="dialog" aria-modal="true" aria-labelledby="splash-title" style="display: none;">
     <div class="splash-content">
       <!-- MOD-01: Close button in top-right corner -->
-      <button id="splash-close-x" class="modal-close-x" aria-label="Close" title="Close">×</button>
+      <button id="splash-close-x" class="modal-close-x" type="button" aria-label="Close" title="Close">×</button>
       <h2 id="splash-title">Welcome to Route Plotter v3</h2>
       
       <!-- Help content injected here by main.js -->
       <div id="splash-help"></div>
 
-      <button id="splash-close" class="btn btn-primary">Get Started</button>
+      <button id="splash-close" class="btn btn-primary" type="button">Get Started</button>
       
       <label class="checkbox-label" for="splash-dont-show">
         <input type="checkbox" id="splash-dont-show">
@@ -1099,12 +1089,12 @@
       <h3 id="modal-title-clear">Clear all waypoints?</h3>
       <p>This will remove all waypoints and reset the canvas. This action cannot be undone.</p>
       <div class="modal-buttons">
-        <button id="clear-cancel" class="btn btn-secondary">Cancel</button>
-        <button id="clear-confirm" class="btn btn-danger">Clear</button>
+        <button id="clear-cancel" class="btn btn-secondary" type="button">Cancel</button>
+        <button id="clear-confirm" class="btn btn-danger" type="button">Clear</button>
       </div>
     </div>
   </div>
 
-  <script src="app.js?v=3.2.618"></script>
+  <script src="app.js?v=3.2.619"></script>
 </body>
 </html>

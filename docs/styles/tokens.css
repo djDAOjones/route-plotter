@@ -273,7 +273,7 @@
   --control-font: 0.875rem;   /* 14px */
   --control-line: var(--line-tight);
   --control-h: 2.25rem;       /* 36px - compact control height (spec §0) */
-  --control-minh: 2.5rem;     /* 40px - standard button/input height */
+  --control-minh: 2.75rem;    /* 44px - standard button/input target */
   --control-min-h: var(--control-minh); /* alias for compatibility */
   --control-pad-x: 0.9em;
   --control-pad-y: 0.35em;
