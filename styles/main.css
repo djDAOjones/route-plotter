@@ -850,6 +850,55 @@ kbd{
   display:block;
 }
 
+/* Carbon-style progressive disclosure inside complex inspector cards. Native
+   details/summary keeps keyboard and assistive-technology state semantics; the
+   project styling supplies a full-size productive target and visible focus. */
+.section-more{
+  margin-top:var(--space-2);
+  border-top:1px solid var(--border-interactive);
+}
+
+.section-more > summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:var(--touch-target-min);
+  padding:0 var(--space-1);
+  color:var(--text-01);
+  font-size:var(--type-body);
+  font-weight:600;
+  cursor:pointer;
+  list-style:none;
+}
+
+.section-more > summary::-webkit-details-marker{
+  display:none;
+}
+
+.section-more > summary::after{
+  content:"";
+  width:0.5rem;
+  height:0.5rem;
+  margin-right:var(--space-1);
+  border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;
+  transform:rotate(45deg);
+  transition:transform var(--motion-med) var(--ease-out);
+}
+
+.section-more[open] > summary::after{
+  transform:rotate(225deg);
+}
+
+.section-more > summary:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 2px var(--focus-inner), 0 0 0 5px var(--focus-outer);
+}
+
+.section-more-content{
+  padding-top:var(--space-2);
+}
+
 /* Section tints and cap bands per spec v3.1.241 §5.1 */
 /* Header uses cap color (darker), content uses tint (lighter) */
 /* Waypoint-scope cards */

@@ -6,6 +6,7 @@ import { setupDocumentCommands } from '../src/app/wiringControllers.js';
 import { playbackMixin } from '../src/app/playback.js';
 import { viewportMixin } from '../src/app/viewport.js';
 import { UIController } from '../src/controllers/UIController.js';
+import { SectionController } from '../src/controllers/SectionController.js';
 import { initDropdown } from '../src/components/Dropdown.js';
 import { getSplashHelpHTML } from '../src/config/helpContent.js';
 import { getDefaultBindings } from '../src/config/keybindings.js';
@@ -395,6 +396,103 @@ describe('render and static UI regressions', () => {
     expect(mainCss).toMatch(/#report-bug-btn,\s*\.header-controls > #help-btn/);
     expect(mainCss).toMatch(/\.diagnostics-actions\{\s*flex-wrap:wrap;/);
     expect(mainCss).toMatch(/\.diagnostics-actions \.btn\{\s*flex:1 1 10rem;/);
+  });
+
+  test('complex inspector cards use one native primary/More tier without moving control IDs', () => {
+    document.body.innerHTML = indexHtml;
+    const tiers = {
+      'on-arrival': {
+        primary: ['editor-beacon-style', 'waypoint-pause-time', 'camera-zoom'],
+        more: ['ripple-thickness', 'ripple-max-scale', 'ripple-wait', 'pulse-amplitude', 'pulse-cycle-speed'],
+      },
+      label: {
+        primary: ['waypoint-label', 'label-mode', 'label-size'],
+        more: ['label-width', 'label-offset-x', 'label-offset-y', 'label-auto-position'],
+      },
+      leg: {
+        primary: ['segment-color', 'segment-width', 'path-shape', 'waypoint-segment-speed'],
+        more: ['shape-amplitude', 'shape-frequency', 'segment-style'],
+      },
+      'area-highlight': {
+        primary: ['area-shape', 'area-draw-btn', 'area-circle-radius', 'area-rect-width', 'area-rect-height', 'area-delete-btn'],
+        more: ['area-fill-color', 'area-fill-opacity', 'area-border-color', 'area-border-style', 'area-border-width', 'area-visibility', 'area-fade-in', 'area-fade-out'],
+      },
+      reveal: {
+        primary: ['waypoint-visibility', 'path-visibility', 'background-visibility'],
+        more: ['path-trail', 'reveal-size', 'reveal-feather', 'aov-angle', 'aov-distance', 'aov-dropoff'],
+      },
+      video: {
+        primary: ['export-res-x', 'export-res-y', 'preset-native', 'preset-16-9', 'preset-1-1', 'preset-9-16', 'export-frame-rate'],
+        more: ['export-include-image', 'export-include-camera', 'export-include-text'],
+      },
+    };
+
+    for (const [sectionName, expected] of Object.entries(tiers)) {
+      const content = document.querySelector(
+        `.settings-section[data-section="${sectionName}"] > .section-content`
+      );
+      const primary = content?.querySelector(':scope > .section-primary');
+      const disclosure = content?.querySelector(':scope > details.section-more');
+      expect(primary, `${sectionName} primary tier`).not.toBeNull();
+      expect(disclosure, `${sectionName} More tier`).not.toBeNull();
+      expect(disclosure.open).toBe(false);
+      expect(disclosure.querySelector(':scope > summary')?.textContent.trim()).toBe('More');
+      for (const id of expected.primary) {
+        expect(primary.querySelector(`#${id}`), `${id} remains primary`).not.toBeNull();
+        expect(disclosure.querySelector(`#${id}`), `${id} is not duplicated`).toBeNull();
+      }
+      for (const id of expected.more) {
+        expect(disclosure.querySelector(`#${id}`), `${id} moves under More`).not.toBeNull();
+        expect(primary.querySelector(`#${id}`), `${id} is not duplicated`).toBeNull();
+      }
+    }
+
+    for (const sectionName of [
+      'marker', 'head', 'pacing', 'path-emphasis', 'background', 'guide',
+      'dots', 'release', 'motion', 'node', 'edge',
+    ]) {
+      expect(document.querySelector(
+        `.settings-section[data-section="${sectionName}"] .section-more`
+      ), `${sectionName} stays compact`).toBeNull();
+    }
+
+    expect(mainCss).toMatch(/\.section-more > summary\{[^}]*min-height:var\(--touch-target-min\);/s);
+    expect(mainCss).toMatch(/\.section-more > summary:focus-visible\{[^}]*box-shadow:/s);
+    expect(mainCss).toMatch(/\.section-more\[open\] > summary::after/);
+  });
+
+  test('More toggles its native open state with Enter and Space', () => {
+    document.body.innerHTML = `
+      <div id="settings-sections">
+        <div id="settings-help-placeholder"></div>
+        <div id="waypoint-scope"></div>
+        <div id="route-scope">
+          <div class="settings-section" data-section="reveal">
+            <div class="section-header"></div>
+            <div class="section-content">
+              <details class="section-more"><summary>More</summary><p>Advanced</p></details>
+            </div>
+          </div>
+        </div>
+        <div id="crowd-scope"></div>
+        <div id="node-scope"></div>
+        <div id="edge-scope"></div>
+      </div>
+    `;
+    new SectionController(new EventBus()).init();
+    const disclosure = document.querySelector('details');
+    const summary = disclosure.querySelector('summary');
+    const press = (key) => summary.dispatchEvent(new KeyboardEvent('keydown', {
+      key,
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    expect(disclosure.open).toBe(false);
+    expect(press('Enter')).toBe(false);
+    expect(disclosure.open).toBe(true);
+    expect(press(' ')).toBe(false);
+    expect(disclosure.open).toBe(false);
   });
 
   test('background DOM controls have one owner', () => {

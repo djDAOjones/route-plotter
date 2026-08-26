@@ -2526,7 +2526,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 16755,
+      "bytes": 17576,
       "imports": [],
       "format": "esm"
     },
@@ -3364,13 +3364,13 @@
     }
   },
   "outputs": {
-    ".docs-build-57e4gl/app.js.map": {
+    ".docs-build-vyhnkf/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3019374
+      "bytes": 3020512
     },
-    ".docs-build-57e4gl/app.js": {
+    ".docs-build-vyhnkf/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3559,7 +3559,7 @@
           "bytesInOutput": 2379
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 6743
+          "bytesInOutput": 7040
         },
         "src/services/AreaDrawingService.js": {
           "bytesInOutput": 5039
@@ -3685,7 +3685,7 @@
           "bytesInOutput": 21524
         }
       },
-      "bytes": 753218
+      "bytes": 753515
     }
   }
 }

@@ -2,6 +2,33 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — UI-01 makes progressive disclosure a card contract
+
+**Decision:** Use native `details`/`summary` as the inspector's one secondary
+tier. A crowded card keeps the shortest complete task in a `.section-primary`
+region and labels its refinements `More`; cards already at four or fewer
+conceptual controls receive no empty disclosure. On arrival, Label, Leg, Area,
+Reveal and Video use the new slot without changing any control identity, event,
+model or persistence path. The native open state and non-colour chevron expose
+state; a small SectionController keyboard adapter guarantees Enter and Space in
+embedded Chromium surfaces where default summary activation is inconsistent.
+
+**Usability boundary:** Primary means required to complete the card's common
+task, not merely frequently used. Shape-specific area geometry and Delete stay
+visible; appearance and timing refinements can be disclosed. Compact and
+contextual cards remain one tier. More is a 44 px target with the established
+AAA focus ring and no nested-card border. Production Chromium v3.2.633 proved
+pointer, Enter and Space activation, retained control/readout wiring, no
+duplicate IDs, a clean console and a 320 px open-card layout with no overflow.
+The canonical gate passed 47 files / 671 tests.
+
+**Roadmap refactor:** UI-01 leaves the backlog and its detail ticket is removed.
+UX-02 becomes active; UI-03, UI-02 and CROWD-03 are ready. UI-04 follows UI-03
+so mixed states cover the surfaced controls, and UI-05 follows those mixed-state
+rules. CROWD-02 now waits only on CROWD-03. ICE-01 remains deferred: keeping the
+Marker palette visible supports recognition for novices, while UI-01 already
+contains secondary Area palettes. No other Icebox item is promoted.
+
 ## 2026-08-26 — REV-03 uses one restoring pointer transaction
 
 **Decision:** Mouse, touch and pen canvas authoring share one primary Pointer

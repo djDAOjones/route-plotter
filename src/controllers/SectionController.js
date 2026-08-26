@@ -135,6 +135,7 @@ export class SectionController {
     });
     
     this._bindSectionHeaders();
+    this._bindMoreDisclosures();
     this._bindLastInteractedListeners();
     this._subscribeToEvents();
     
@@ -248,6 +249,27 @@ export class SectionController {
           e.preventDefault();
           this._setLastInteracted(sectionName);
           this.toggleSection(sectionName);
+        }
+      });
+    });
+  }
+
+  /**
+   * Give the native details element a deterministic keyboard path. Chromium's
+   * default summary activation varies across embedded/automation surfaces, so
+   * Enter and Space explicitly toggle the native `open` state while pointer
+   * activation remains browser-owned.
+   * @private
+   */
+  _bindMoreDisclosures() {
+    const summaries = this.sectionsContainer.querySelectorAll('.section-more > summary');
+    summaries.forEach(summary => {
+      summary.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        const disclosure = summary.parentElement;
+        if (disclosure instanceof HTMLDetailsElement) {
+          disclosure.open = !disclosure.open;
         }
       });
     });

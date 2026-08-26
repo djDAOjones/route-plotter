@@ -175,7 +175,7 @@
 - `src/config/keybindings.js` — Mouse + keyboard bindings (customisable via localStorage)
 - `src/config/tooltips.js` — Tooltip definitions
 - `src/controllers/SceneOutlineController.js` — Native-details/list/form renderer owning transient disclosure, focus and dirty-draft state while emitting model-free commands
-- `src/controllers/SectionController.js` — Collapsible settings sections + scope switching (waypoint-scope vs route-scope card groups follow selection; Phase 4)
+- `src/controllers/SectionController.js` — Collapsible settings sections, waypoint/route/crowd/network scope switching and deterministic native More keyboard activation
 - `src/controllers/UIController.js` — Sidebar controls, waypoint list, slider sync; scope chip (text + prev/next stepping, multi counts) and Leg-card header naming; multi-select gesture Set + `setSelection()` for app-decided selections; pause/speed/area controls write to the whole selection (Phase 4)
 - `src/core/EventBus.js` — Pub-sub event system
 - `src/core/PlayerCore.js` — Pure timeline math (deterministic-timeline mandate): segment/pause/beacon-schedule builders + timeline↔path mappings; one evaluation path shared by play, scrub, and export
@@ -272,7 +272,7 @@
 - `tests/publicationBoundary.test.js` — Approved-image hashes, CSP/same-origin shell, exact Pages inventory and manifest-tamper rejection
 - `tests/releaseSafety.test.js` — Clean-build rollback, versioned CSS references and dry-run deployment safety contracts
 - `tests/restartSafety.test.sh` — Shell contract for exact owned-process restart, readiness and foreign-listener refusal
-- `tests/reviewAccessibility.test.js` — Keyboard, modal focus, paused render, responsive shell and stale-upload review regressions
+- `tests/reviewAccessibility.test.js` — Keyboard semantics, modal focus, paused render, responsive/support/privacy shell, stale uploads and primary/More disclosure contracts
 - `tests/reviewPersistence.test.js` — Autosave honesty, transactional load/rollback, save revisions and undo-image restoration regressions
 - `tests/reviewTimeline.test.js` — Stateless comet, canonical transport/export and timing-invalidation review regressions
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in

@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.631</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.631">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.631">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.631">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.631">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.631">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.631">
+  <title>Route Plotter v3.2.635</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.635">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.635">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.635">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.635">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.635">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.635">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -181,6 +181,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-on-arrival-content" class="section-content">
+              <div class="section-primary">
               <!-- Beacon Effect -->
               <label for="editor-beacon-style">
                 <span data-tip="Animation effect played when the path reaches this waypoint">Beacon</span>
@@ -193,39 +194,6 @@
                   <option value="pulse">Pulse</option>
                 </select>
               </label>
-
-              <!-- Ripple-specific controls (hidden unless ripple selected) -->
-              <div id="ripple-controls" style="display: none;">
-                <label for="ripple-thickness">
-                  <span data-tip="Line thickness of the ripple rings">Thickness</span>
-                  <input type="range" id="ripple-thickness" min="1" max="10" value="2" step="0.5" aria-describedby="ripple-thickness-value">
-                  <span id="ripple-thickness-value">2px</span>
-                </label>
-                <label for="ripple-max-scale">
-                  <span data-tip="Maximum expansion radius of the ripple effect">Size</span>
-                  <input type="range" id="ripple-max-scale" min="500" max="4000" value="1000" step="100" aria-describedby="ripple-max-scale-value">
-                  <span id="ripple-max-scale-value">1000%</span>
-                </label>
-                <label class="checkbox-label" for="ripple-wait">
-                  <input type="checkbox" id="ripple-wait" checked>
-                  <span>Wait during ripple</span>
-                </label>
-              </div>
-
-              <!-- Pulse-specific controls (hidden unless pulse selected) -->
-              <div id="pulse-controls" class="beacon-sub-controls" role="group" aria-labelledby="pulse-controls-label" style="display: none;">
-                <span id="pulse-controls-label" class="sub-controls-label">Pulse Settings</span>
-                <label for="pulse-amplitude">
-                  <span data-tip="How much the marker grows and shrinks during pulse">Amplitude</span>
-                  <input type="range" id="pulse-amplitude" min="0" max="3" value="1" step="0.1" aria-describedby="pulse-amplitude-value">
-                  <span id="pulse-amplitude-value">1.0</span>
-                </label>
-                <label for="pulse-cycle-speed">
-                  <span data-tip="Duration of one complete pulse cycle">Cycle Speed</span>
-                  <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value">
-                  <span id="pulse-cycle-speed-value">4s</span>
-                </label>
-              </div>
 
               <!-- Wait Time -->
               <label id="pause-time-control" for="waypoint-pause-time">
@@ -269,6 +237,45 @@
                   </div>
                 </div>
               </div>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
+                  <!-- Ripple-specific controls (hidden unless ripple selected) -->
+                  <div id="ripple-controls" style="display: none;">
+                    <label for="ripple-thickness">
+                      <span data-tip="Line thickness of the ripple rings">Thickness</span>
+                      <input type="range" id="ripple-thickness" min="1" max="10" value="2" step="0.5" aria-describedby="ripple-thickness-value">
+                      <span id="ripple-thickness-value">2px</span>
+                    </label>
+                    <label for="ripple-max-scale">
+                      <span data-tip="Maximum expansion radius of the ripple effect">Size</span>
+                      <input type="range" id="ripple-max-scale" min="500" max="4000" value="1000" step="100" aria-describedby="ripple-max-scale-value">
+                      <span id="ripple-max-scale-value">1000%</span>
+                    </label>
+                    <label class="checkbox-label" for="ripple-wait">
+                      <input type="checkbox" id="ripple-wait" checked>
+                      <span>Wait during ripple</span>
+                    </label>
+                  </div>
+
+                  <!-- Pulse-specific controls (hidden unless pulse selected) -->
+                  <div id="pulse-controls" class="beacon-sub-controls" role="group" aria-labelledby="pulse-controls-label" style="display: none;">
+                    <span id="pulse-controls-label" class="sub-controls-label">Pulse settings</span>
+                    <label for="pulse-amplitude">
+                      <span data-tip="How much the marker grows and shrinks during pulse">Amplitude</span>
+                      <input type="range" id="pulse-amplitude" min="0" max="3" value="1" step="0.1" aria-describedby="pulse-amplitude-value">
+                      <span id="pulse-amplitude-value">1.0</span>
+                    </label>
+                    <label for="pulse-cycle-speed">
+                      <span data-tip="Duration of one complete pulse cycle">Cycle speed</span>
+                      <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value">
+                      <span id="pulse-cycle-speed-value">4s</span>
+                    </label>
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -281,6 +288,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-label-content" class="section-content">
+              <div class="section-primary">
               <!-- Text Input -->
               <label for="waypoint-label">
                 <span data-tip="Label text displayed near this waypoint">Text</span>
@@ -304,6 +312,11 @@
                 <input type="range" id="label-size" min="1" max="10" value="1" step="1">
                 <span id="label-size-value">1</span>
               </label>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
               
               <!-- Text Width (for wrapping) -->
               <label for="label-width">
@@ -328,8 +341,10 @@
               
               <!-- Auto-Position Button (moved to bottom per spec §6.2) -->
               <div class="control-row">
-                <button id="label-auto-position" class="btn btn-secondary" style="width:100%;" title="Auto-position text to avoid collisions">Auto-Position</button>
+                <button id="label-auto-position" class="btn btn-secondary" style="width:100%;" title="Auto-position text to avoid collisions">Auto-position</button>
               </div>
+                </div>
+              </details>
             </div>
           </div>
           
@@ -344,6 +359,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-leg-content" class="section-content">
+              <div class="section-primary">
               <!-- Colour (Okabe-Ito swatch picker) -->
               <input type="hidden" id="segment-color" value="#D55E00">
               <div class="swatch-picker"
@@ -369,6 +385,18 @@
                   <option value="randomised">Randomised</option>
                 </select>
               </label>
+
+              <!-- Segment Speed -->
+              <label id="segment-speed-control" for="waypoint-segment-speed">
+                <span data-tip="Speed multiplier for this path segment relative to base duration">Segment speed</span>
+                <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1">
+                <span id="waypoint-segment-speed-value">1.0x</span>
+              </label>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
               
               <!-- Shape Parameters (shown for squiggle/randomised) -->
               <div id="shape-params-controls" style="display: none;">
@@ -393,13 +421,8 @@
                   <option value="dotted">Dotted</option>
                 </select>
               </label>
-              
-              <!-- Segment Speed -->
-              <label id="segment-speed-control" for="waypoint-segment-speed">
-                <span data-tip="Speed multiplier for this path segment relative to base duration">Segment Speed</span>
-                <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1">
-                <span id="waypoint-segment-speed-value">1.0x</span>
-              </label>
+                </div>
+              </details>
             </div>
           </div>
           
@@ -412,6 +435,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-area-highlight-content" class="section-content">
+              <div class="section-primary">
               <!-- Shape type -->
               <label for="area-shape">
                 <span data-tip="Shape of the highlighted area attached to this waypoint">Shape</span>
@@ -450,6 +474,16 @@
                   <span id="area-rect-height-value">10%</span>
                 </label>
               </div>
+
+              <!-- Delete Area button -->
+              <div id="area-delete-controls" style="display: none;">
+                <button id="area-delete-btn" class="btn btn-secondary btn-danger" style="width:100%;" aria-label="Delete area">Delete area</button>
+              </div>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
               
               <!-- Fill Colour (Okabe-Ito swatch picker with None/transparent) -->
               <div id="area-fill-controls" style="display: none;">
@@ -527,10 +561,8 @@
                 </label>
               </div>
               
-              <!-- Delete Area button -->
-              <div id="area-delete-controls" style="display: none;">
-                <button id="area-delete-btn" class="btn btn-secondary btn-danger" style="width:100%;" aria-label="Remove area highlight from this waypoint">Delete Area</button>
-              </div>
+                </div>
+              </details>
             </div>
           </div>
           
@@ -634,6 +666,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-reveal-content" class="section-content">
+              <div class="section-primary">
               <!-- Marker Mode (renamed from Waypoint Mode per spec) -->
               <label for="waypoint-visibility">
                 <span data-tip="When waypoint markers are visible during animation">Marker Mode</span>
@@ -658,13 +691,6 @@
                 </select>
               </label>
               
-              <!-- Trail Size (for instantaneous/comet mode) - hidden unless comet selected -->
-              <label id="path-trail-control" for="path-trail" style="display: none;">
-                <span data-tip="Length of the visible path trail in comet mode">Trail Size</span>
-                <input type="range" id="path-trail" min="0" max="1000" value="590" step="1">
-                <span id="path-trail-value">15%</span>
-              </label>
-              
               <!-- Background Mode -->
               <label for="background-visibility">
                 <span data-tip="Visibility effect applied to the background during animation">Background Mode</span>
@@ -676,6 +702,17 @@
                   <option value="angle-of-view-reveal">Angle of View Reveal</option>
                   <option value="always-hide">Hide</option>
                 </select>
+              </label>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
+              <!-- Trail Size (for instantaneous/comet mode) - hidden unless comet selected -->
+              <label id="path-trail-control" for="path-trail" style="display: none;">
+                <span data-tip="Length of the visible path trail in comet mode">Trail size</span>
+                <input type="range" id="path-trail" min="0" max="1000" value="590" step="1">
+                <span id="path-trail-value">15%</span>
               </label>
               
               <!-- Spotlight Settings (only shown when background = spotlight or spotlight-reveal) -->
@@ -710,6 +747,8 @@
                   <span id="aov-dropoff-value">25%</span>
                 </label>
               </div>
+                </div>
+              </details>
             </div>
           </div>
           
@@ -784,6 +823,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-video-content" class="section-content">
+              <div class="section-primary">
               <!-- Resolution Controls - vertical block per spec §L -->
               <label for="export-res-x">
                 <span data-tip="Horizontal resolution of exported video in pixels">Width</span>
@@ -813,6 +853,11 @@
                 <input type="number" id="export-frame-rate" min="10" max="60" step="1" value="25">
                 <span>fps</span>
               </label>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
               
               <!-- Include in export - consolidated checkbox group (image / camera / text) -->
               <fieldset class="export-include-group">
@@ -830,6 +875,8 @@
                   <span data-tip="Include waypoint text labels in the export. Uncheck to hide all labels.">Text labels</span>
                 </label>
               </fieldset>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -1165,6 +1212,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.631"></script>
+  <script src="app.js?v=3.2.635"></script>
 </body>
 </html>

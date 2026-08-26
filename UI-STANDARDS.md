@@ -115,6 +115,10 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 
 - Keep interfaces lean and task-relevant. No decorative chrome,
   redundant copy, or competing calls to action.
+- Complex inspector cards keep 2–4 conceptual controls for the shortest
+  complete task visible in `.section-primary`. Secondary refinements use one
+  native `details.section-more` disclosure labelled `More`; compact cards do
+  not render an empty tier, and prerequisites never move behind it.
 
 ### Motion discipline
 

@@ -4,8 +4,9 @@
 
 ## Active
 
-<!-- Current is dependency-ready or has a named residual gate. Next is ordered
-     by dependency chain rather than deadline. Quarantine is not schedulable. -->
+<!-- Current is the active lane or has a named residual gate. Next is ordered
+     by dependency chain rather than deadline; [ready] marks runnable
+     successors. Quarantine is not schedulable. -->
 
 ### Current
 
@@ -17,9 +18,9 @@
   [verify: physical iOS Safari + Android Chrome] — Unified Pointer Events,
   captured group drag and cancel/no-op transactions are implemented and green
   in automation plus production Chromium. Record the physical mobile pass.
-- [ ] UI-01 [ready] — Introduce two-tier cards with 2–4 primary controls and a
-  More disclosure; this is the layout substrate for advanced and crowd
-  controls.
+- [~] UX-02 — Make names/readouts honest in renderer units, migrate Text Size
+  to pixels, and explain comet mode's intentional preview-tail duration in
+  Pacing.
 - [ ] REV-06 [ready] — Measure idle/paused CPU and a representative
   500-dot/4K scene, then sleep unnecessary animation work; assess
   direct-render coalescing only where profiling supports it and preserve
@@ -29,24 +30,21 @@
 
 ### Next
 
-- [ ] UX-02 [gated: UI-01] — Make names/readouts honest in renderer units,
-  migrate Text Size to pixels, and explain comet mode's intentional
-  preview-tail duration in Pacing.
-- [ ] UI-03 [gated: UI-01] — Surface existing Label
+- [ ] UI-03 [ready] — Surface existing Label
   colour/background/opacity and camera zoom-transition controls behind More;
   model, rendering and persistence already exist.
-- [ ] UI-04 [gated: UI-01] — Show an honest mixed state when a multi-selection
+- [ ] UI-04 [gated: UI-03] — Show an honest mixed state when a multi-selection
   disagrees instead of silently displaying the primary waypoint's values.
-- [ ] UI-05 [gated: UI-01] — Add per-card Reset to route style and Apply onward
+- [ ] UI-05 [gated: UI-04] — Add per-card Reset to route style and Apply onward
   after the card layout and mixed-value rules are stable.
-- [ ] UI-02 [gated: UI-01] [sign-off] — Show minor waypoints as
+- [ ] UI-02 [ready] [sign-off] — Show minor waypoints as
   indented, selectable, renameable and reorder-visible rows using the approved
   semantic outline.
-- [ ] CROWD-03 [[detail]](tickets/CROWD-03.md) [gated: UI-01] — Expose seeded
+- [ ] CROWD-03 [[detail]](tickets/CROWD-03.md) [ready] — Expose seeded
   walking/release/route-choice variation and re-roll using the deterministic
   model already present.
 - [ ] CROWD-02 [[detail]](tickets/CROWD-02.md)
-  [gated: UI-01, CROWD-03] — Add the whole-route busyness line graph with
+  [gated: CROWD-03] — Add the whole-route busyness line graph with
   handles and gradual/step transitions, identical in editor, reload and
   export.
 - [ ] REV-05 [gated: REV-03, CROWD-02] — Complete accessibility
@@ -82,8 +80,9 @@
 - [ ] REV-07 [deferred] — Mature the already-green CI gate with risk-based
   coverage thresholds, a supported-Node matrix and dependency-update
   automation.
-- [ ] ICE-01 — Swatch-picker popover. Re-evaluate after UI-01; More disclosures
-  may make it redundant.
+- [ ] ICE-01 [deferred] — Swatch-picker popover. UI-01 now contains secondary
+  area palettes under More while keeping Marker colour visible for novices;
+  promote only if observed palette height becomes a real navigation problem.
 - [ ] ICE-02 — Import-time Okabe-Ito/UoN palette conversion. Promote only on
   user demand; photo posterisation/dithering needs separate quality work.
 

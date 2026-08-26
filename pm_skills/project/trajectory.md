@@ -17,6 +17,12 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Inspector foundation (shipped 2026-08-26)
+
+UI-01 — Crowded inspector cards now keep their shortest complete task visible
+and place refinements in one accessible native More disclosure, providing the
+layout slot for advanced and crowd controls. (2026-08-26) — see decision-log.
+
 ## Review Phase 2 — semantic scene authoring (shipped 2026-08-26)
 
 REV-02 — Route, crowd, emitter, custom-network and polygon structure is now
