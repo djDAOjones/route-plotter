@@ -371,7 +371,11 @@ export const wiringDomMixin = {
     // Ripple thickness control
     this.elements.rippleThickness?.addEventListener('input', (e) => {
       const value = parseFloat(e.target.value);
-      this.elements.rippleThicknessValue.textContent = `${value}px`;
+      setRangeReadout(
+        this.elements.rippleThickness,
+        this.elements.rippleThicknessValue,
+        formatRendererPixels(value, Number.isInteger(value) ? 0 : 1)
+      );
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         for (const wp of targets) wp.rippleThickness = value;

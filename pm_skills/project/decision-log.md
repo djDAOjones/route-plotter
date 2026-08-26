@@ -2,6 +2,34 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — SCALE-01 separates authored appearance from output resolution
+
+**Decision:** Each project now persists one additive `renderReference`, seeded
+for legacy data from `timingReference`, the current authored canvas or export
+dimensions in that order. Map-bound path, marker, route-head, beacon and area
+border values are authored as reference pixels and convert through the ratio
+between current and reference short edges. Normalised coordinates and area
+geometry remain canvas-relative, while `timingReference` remains the sole
+exported-player timing space. Camera zoom continues to transform the composed
+scene rather than rewriting either reference.
+
+**Editor/export boundary:** Visible controls report `reference px`. Label type
+uses a 14–72 screen-pixel clamp only in the interactive editor so extreme
+viewport sizes stay legible; HTML and video render the exact reference scale.
+The label padding and radius follow the effective type size. All authored
+values and both references remain unchanged by preset, portrait, landscape,
+custom-resolution and video rendering.
+
+**Migration, evidence and sequence:** ZIP save, recovery and HTML export now
+share the canonical snapshot builder, preventing additive metadata from
+drifting between persistence paths. Invalid references fail transactional
+import, while old snapshots migrate without a schema rewrite. The canonical
+gate passes 53 files / 739 tests, restart safety and a clean production check
+build. Production Chromium confirms coherent canvas output, stable readouts
+across 1:1, 9:16 and 16:9 presets, and no warning/error logs. Phase 6 is
+complete. Backlog refactoring promotes HEAD-01 from its SCALE-01 gate but keeps
+it low priority behind product and assurance work; no Icebox trigger fired.
+
 ## 2026-08-26 — REV-06 makes preview scheduling demand-driven
 
 **Decision:** `AnimationEngine` now requests one coalesced update for startup,

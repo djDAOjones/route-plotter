@@ -204,7 +204,7 @@ describe('waypoint inspector mixed presentation', () => {
     expect(app.elements.segmentWidthValue.textContent).toBe('Mixed');
     expect(app.elements.markerStyle.value).toBe('flag');
     expect(app.elements.markerStyle.dataset.mixed).toBeUndefined();
-    expect(app.elements.labelSizeValue.textContent).toBe('20 px');
+    expect(app.elements.labelSizeValue.textContent).toBe('20 reference px');
   });
 
   test('presents select, range, checkbox and swatch disagreement without changing models', () => {

@@ -114,6 +114,7 @@ function makeApp() {
     pathPoints: [{ x: 1, y: 1 }],
     displayWidth: 1000,
     displayHeight: 600,
+    renderReference: { width: 1000, height: 600 },
     _isDirty: true,
     announce: vi.fn(),
     clearAll: vi.fn(),
@@ -371,6 +372,48 @@ describe('transactional project loading', () => {
     expect(app.storageService.saveAutoSave).not.toHaveBeenCalled();
     expect(app.clearAll).not.toHaveBeenCalled();
     expect(prune).not.toHaveBeenCalled();
+  });
+
+  test('legacy projects seed visual sizing from timingReference, while an explicit render reference wins', async () => {
+    const app = makeApp();
+    vi.spyOn(app.imageAssetService, 'importZip')
+      .mockResolvedValueOnce({
+        projectData: validProject({ timingReference: { width: 900, height: 500 } }),
+        backgroundBase64: null,
+        imageAssets: [],
+      })
+      .mockResolvedValueOnce({
+        projectData: validProject({
+          timingReference: { width: 900, height: 500 },
+          renderReference: { width: 1200, height: 700 },
+        }),
+        backgroundBase64: null,
+        imageAssets: [],
+      });
+
+    await expect(persistenceMixin.loadProject.call(app, { name: 'legacy.zip' })).resolves.toBe(true);
+    expect(app.renderReference).toEqual({ width: 900, height: 500 });
+
+    await expect(persistenceMixin.loadProject.call(app, { name: 'current.zip' })).resolves.toBe(true);
+    expect(app.renderReference).toEqual({ width: 1200, height: 700 });
+  });
+
+  test('invalid visual references are rejected before the current project can change', async () => {
+    const app = makeApp();
+    const beforeReference = app.renderReference;
+    const beforeWaypoint = app.waypoints[0];
+    vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
+      projectData: validProject({ renderReference: { width: 0, height: 600 } }),
+      backgroundBase64: null,
+      imageAssets: [],
+    });
+
+    await expect(persistenceMixin.loadProject.call(app, { name: 'bad-reference.zip' }))
+      .resolves.toBe(false);
+
+    expect(app.renderReference).toBe(beforeReference);
+    expect(app.waypoints[0]).toBe(beforeWaypoint);
+    expect(app.storageService.saveAutoSave).not.toHaveBeenCalled();
   });
 
   test.each([

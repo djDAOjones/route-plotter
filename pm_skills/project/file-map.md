@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 250 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 252 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 13 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -10,9 +10,9 @@
 - `images` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
-- `src` — 86 file(s)
+- `src` — 87 file(s)
 - `styles` — 6 file(s)
-- `tests` — 54 file(s)
+- `tests` — 55 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -153,15 +153,15 @@
 - `src/app/network.js` — Network editing mixin (Phase 4): Guide-card entry point (Edit network + auto-enter), pointer routing into NetworkEditService, node/edge/control hit-testing on the engine's edge polylines, Node/Edge card wiring, traffic-share readout, restore re-binding
 - `src/app/operationGeneration.js` — Project-generation, per-channel request-token and edit-revision helpers for stale async-work rejection
 - `src/app/pathTiming.js` — path recalc, easing, segment/leg timing, duration updates
-- `src/app/persistence.js` — Transactional bounded project/ZIP staging, commit and rollback; honest autosave recovery, save revisions and the shared coordVersion-9 snapshot
+- `src/app/persistence.js` — Transactional bounded project/ZIP staging, commit and rollback; honest autosave recovery, save revisions and the shared coordVersion-9 snapshot including timing and visual references
 - `src/app/playback.js` — Single keyboard-command path, canonical transport/JKL, preview mode, demand-driven render keepalive and time display
 - `src/app/pointer.js` — canvas pointer fallbacks and hit-testing
 - `src/app/privacy.js` — Explicit export disclosures plus fixed-schema diagnostics preview, public/private support hand-off, exact-address fallback and modal recovery
-- `src/app/projectReset.js` — Testable Clear All transaction: invalidate async work, clear bytes/model/UI, cancel writers and reset one empty baseline
+- `src/app/projectReset.js` — Testable Clear All transaction: invalidate async work, clear bytes/model/UI, reset the visual reference, cancel writers and establish one empty baseline
 - `src/app/sceneOutline.js` — EventBus integration and sole mutation/undo/autosave owner for stable-ID semantic scene-outline commands, with shared plain crowd-field vocabulary
 - `src/app/startup.js` — Testable startup sequence: await autosave recovery before selecting a default background
 - `src/app/undoRedo.js` — Undo/redo model, selection and inspector-scope restoration; reference-aware asset sweeping and rollback-safe interactive image admission with minimum history loss
-- `src/app/viewport.js` — Responsive canvas/panel bounds, coordinate conversion, aspect handling and manual zoom
+- `src/app/viewport.js` — Responsive canvas/panel bounds, first-authored-canvas visual-reference seeding, coordinate conversion, aspect handling and manual zoom
 - `src/app/wiringBus.js` — EventBus + AnimationEngine subscriptions, including card-action availability refresh and compatible already-saved image-edit signalling
 - `src/app/wiringControllers.js` — UIController/InteractionHandler event connections
 - `src/app/wiringDom.js` — DOM control and delegated card-action wiring, transient mixed-state reset, and detached transactional custom marker/route-head image uploads
@@ -191,13 +191,13 @@
 - `src/models/Scene.js` — Ordered flow layers (drawn beneath the hero route); serialises as the coordVersion 9 `scene` block
 - `src/models/Waypoint.js` — Waypoint data model (normalised coords, style, camera, area)
 - `src/models/index.js` — Barrel exports for canonical project and flow-scene models
-- `src/player/PlayerApp.js` — Headless app core for exported files: real service instances + adopted app mixins, authored-reference timing and demand-driven camera keepalive; renders at export resolution and never imports ImageAssetService (jszip) or the exporting mixin (mediabunny)
+- `src/player/PlayerApp.js` — Headless app core for exported files: real service instances + adopted app mixins, separate authored timing/visual references and demand-driven camera keepalive; renders at export resolution and never imports ImageAssetService (jszip) or the exporting mixin (mediabunny)
 - `src/player/playerAccessibility.js` — Privacy-safe aggregate exported-scene summary and action-driven transport announcements
 - `src/player/playerEntry.js` — Exported-page boot: background decode, transport controls, keyboard, resize; exposes `window.__routePlotterPlayer` debug handle
 - `src/services/AnimationEngine.js` — Demand-driven preview scheduler plus transport (play/pause/seek/reverse) and wait-event edge-detection; all timeline mapping delegates to PlayerCore and export can suspend preview frames
 - `src/services/AreaDrawingService.js` — Polygon area drawing mode
 - `src/services/AreaEditService.js` — Area highlight repositioning and vertex editing
-- `src/services/AreaHighlightRenderer.js` — Per-waypoint area highlight rendering
+- `src/services/AreaHighlightRenderer.js` — Per-waypoint area geometry with project-reference-scaled border rendering
 - `src/services/BeaconRenderer.js` — Animated waypoint effects (ripple, glow, pop, grow, pulse); closed-form: each animator's `sync(localSec, win, options)` derives state from a timeline-local clock (schedules from PlayerCore via `engine.beaconSchedules`)
 - `src/services/CameraService.js` — Per-major-waypoint zoom with target-aware continuous interpolation and settling; `toMajorKeyframes()` drops minors (minors shape geometry, not zoom)
 - `src/services/CoordinateTransform.js` — Image ↔ canvas coordinate conversion
@@ -208,7 +208,7 @@
 - `src/services/MotionVisibilityService.js` — Stateless timeline-derived path, waypoint and background visibility, including comet trails
 - `src/services/NetworkEditService.js` — Network edit mode (Phase 4): pen state machine (chaining, drags, bends, Esc ladder, mode keys), banner, node/edge selection events, and the guide/overlay canvas rendering (edge geometry via SwarmEngine's cache)
 - `src/services/PathCalculator.js` — Catmull-Rom spline, corner-slowing reparameterisation, curvature; `legTimingLengths()` gives per-major-leg timing lengths (progress-span basis)
-- `src/services/RenderingService.js` — Canvas drawing: path, markers, labels, overlays; static `glowLayers()` computes the path-glow underlay strokes; static `VECTOR_LAYERS` registry drives the vector draw order (the `flow-layers` entry draws swarms beneath the hero route)
+- `src/services/RenderingService.js` — Canvas drawing and stable short-edge reference scaling for path, markers, labels, effects and overlays; static `VECTOR_LAYERS` drives draw order
 - `src/services/StorageService.js` — Honest bounded localStorage writes with debounce, change detection, deterministic flush/cancel and clear
 - `src/services/SwarmEngine.js` — Deterministic flow-layer dot evaluator: pure `evaluate(timelineMs, layer, context)`, seeded release-density inversion, weighted graph walks, four lifecycle modes and per-edge PathCalculator caches
 - `src/services/TextLabelService.js` — Text label layout, fade, auto-positioning
@@ -225,11 +225,12 @@
 - `src/utils/index.js` — Barrel exports for Catmull-Rom and easing utilities
 - `src/utils/mixedControlState.js` — DOM-only mixed-value comparison, select/range/checkbox presentation and concrete-input reset helpers
 - `src/utils/pathWidthScale.js` — Log-scale thickness slider ↔ width (1–40px) mapping; single source shared by the DOM wiring and UIController bulk edits (Phase 3.5)
+- `src/utils/renderReference.js` — Pure visual-reference migration and current-to-authored short-edge scale calculation
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
 - `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers)
 - `src/utils/snapToAngle.js` — Angle-snap geometry for shift-drag waypoint placement (moved out of main.js in the Phase 1 split)
-- `src/utils/uiReadouts.js` — Shared renderer-pixel, effective-amplitude and background-overlay readout formatting with accessible range-value synchronisation
+- `src/utils/uiReadouts.js` — Shared reference-pixel, effective-amplitude and background-overlay readout formatting with accessible range-value synchronisation
 - `src/utils/waypointCardActions.js` — Pure Reset/Apply-onward field ownership, target filtering, semantic no-op comparison and effect metadata for waypoint cards
 
 ## styles
@@ -278,6 +279,7 @@
 - `tests/projectReset.test.js` — Behavioral Clear All proof for stale writers/tokens, asset/reference removal and one empty non-undoable baseline
 - `tests/publicationBoundary.test.js` — Approved-image hashes, CSP/same-origin shell, exact Pages inventory and manifest-tamper rejection
 - `tests/releaseSafety.test.js` — Clean-build rollback, versioned CSS references and dry-run deployment safety contracts
+- `tests/renderReference.test.js` — Reference migration, aspect/export scaling, label clamp, camera, area-border and no-timeline-mutation contracts
 - `tests/restartSafety.test.sh` — Shell contract for exact owned-process restart, readiness and foreign-listener refusal
 - `tests/reviewAccessibility.test.js` — Keyboard semantics, modal focus, responsive/support/privacy shell, disclosure, card-action and accessible crowd-variation/busyness UI contracts
 - `tests/reviewPersistence.test.js` — Autosave honesty, transactional load/rollback, save revisions and undo-image restoration regressions

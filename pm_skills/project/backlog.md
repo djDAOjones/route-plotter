@@ -18,12 +18,11 @@
   [verify: physical iOS Safari + Android Chrome] — Unified Pointer Events,
   captured group drag and cancel/no-op transactions are implemented and green
   in automation plus production Chromium. Record the physical mobile pass.
-- [ ] SCALE-01 [[detail]](tickets/SCALE-01.md) [ready] — Implement
-  project-reference sizing so map-bound graphics preserve their authored
-  proportions across editor, HTML and video resolutions without changing
-  timing.
 - [ ] MAINT-01 [ready, low] — Remove verified-unused timing, visibility and
   export helpers without mixing user-visible behaviour into the sweep.
+- [ ] HEAD-01 [ready, low] — Ship a reviewed drone head preset; custom head
+  upload, rotation, persistence, undo and player hydration are already
+  implemented. Promoted after SCALE-01 removed its visual-parity gate.
 
 ### Next
 
@@ -50,9 +49,6 @@
 - [ ] DEMO-01 [gated: COMPOSE-02, COMPOSE-04, REV-04] — Replace bare example
   backgrounds with approved example projects that demonstrate route, crowd
   and anchors and double as living fixtures.
-- [ ] HEAD-01 [gated: SCALE-01] [low] — Ship a reviewed drone head
-  preset; custom head upload, rotation, persistence, undo and player hydration
-  are already implemented.
 
 ### Icebox
 

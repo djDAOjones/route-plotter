@@ -108,9 +108,11 @@ Nielsen's heuristics are **hard rules**, not aspirations.
   internal slider coordinate. Name the unit or direction in the visible
   readout, connect that readout with `aria-describedby`, and keep
   `aria-valuetext` synchronized when the control uses a translated scale.
-- Renderer-scaled size controls use pixel readouts and say in contextual help
-  that the value is calibrated at the renderer's reference size. SCALE-01 owns
-  any future change to that sizing model.
+- Map-bound size controls use `reference px` readouts and say in contextual
+  help that exports scale them from the project's stable reference short edge.
+  Normalised geometry and timeline values do not use this scale. Label type is
+  clamped to 14–72 physical pixels only in the interactive editor for
+  legibility; HTML and video output use the exact reference scale.
 - Palette controls identify the exact current colour in text. A custom or
   imported value that does not match a preset leaves every preset unselected;
   the UI must never imply that a different colour is active.

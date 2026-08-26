@@ -1266,7 +1266,11 @@ export class UIController {
     // Border width slider
     this.elements.areaBorderWidth?.addEventListener('input', (e) => {
       const width = parseInt(e.target.value);
-      this.elements.areaBorderWidthValue.textContent = `${width}px`;
+      setRangeReadout(
+        this.elements.areaBorderWidth,
+        this.elements.areaBorderWidthValue,
+        formatRendererPixels(width)
+      );
       applyAreaChange((ah) => { ah.borderWidth = width; });
     });
 
@@ -1801,7 +1805,11 @@ export class UIController {
       const thickness = waypoint.rippleThickness || 2;
       this.elements.rippleThickness.value = thickness;
       if (this.elements.rippleThicknessValue) {
-        this.elements.rippleThicknessValue.textContent = `${thickness}px`;
+        setRangeReadout(
+          this.elements.rippleThickness,
+          this.elements.rippleThicknessValue,
+          formatRendererPixels(thickness, Number.isInteger(thickness) ? 0 : 1)
+        );
       }
     }
     
@@ -1928,7 +1936,11 @@ export class UIController {
     if (this.elements.areaBorderWidth) {
       this.elements.areaBorderWidth.value = ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT;
       if (this.elements.areaBorderWidthValue) {
-        this.elements.areaBorderWidthValue.textContent = `${ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT}px`;
+        setRangeReadout(
+          this.elements.areaBorderWidth,
+          this.elements.areaBorderWidthValue,
+          formatRendererPixels(ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT)
+        );
       }
     }
     

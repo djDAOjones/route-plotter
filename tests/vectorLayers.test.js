@@ -37,6 +37,7 @@ function makeState(overrides = {}) {
 /** Fake service recording which render* methods the registry dispatches. */
 function makeRecordingService(calls) {
   return {
+    scaleSizeClamped: value => value,
     renderLegHover: () => calls.push('leg-hover'),
     renderPath: () => calls.push('path'),
     renderPathHead: () => calls.push('path-head'),

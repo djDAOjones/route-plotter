@@ -30,6 +30,7 @@ import {
 import { assertSafeStoredColor } from '../utils/safeColor.js';
 import { assertPersistedEntityId, ENTITY_ID_LIMITS } from '../utils/entityId.js';
 import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js';
+import { resolveRenderReference } from '../utils/renderReference.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -361,6 +362,22 @@ function assertProjectSettings(data) {
   assertFiniteFields(data.motionSettings, [
     'pathTrail', 'revealSize', 'revealFeather', 'aovAngle', 'aovDistance', 'aovDropoff'
   ], 'motion setting');
+
+  for (const [value, label] of [
+    [data.renderReference, 'render reference'],
+    [data.timingReference, 'timing reference'],
+  ]) {
+    if (value == null) continue;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error(`Invalid ${label}`);
+    }
+    const width = Number(value.width);
+    const height = Number(value.height);
+    if (!Number.isFinite(width) || width <= 0 || width > PROJECT_MODEL_LIMITS.MAX_EXPORT_DIMENSION ||
+        !Number.isFinite(height) || height <= 0 || height > PROJECT_MODEL_LIMITS.MAX_EXPORT_DIMENSION) {
+      throw new Error(`Invalid ${label}`);
+    }
+  }
 }
 
 async function stageProject(app, projectData, { backgroundBase64 = null, imageAssets = null } = {}) {
@@ -454,6 +471,14 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
     if (field in motionSettingsData) motionSettingsData[field] = Number(motionSettingsData[field]);
   }
 
+  const exportSettings = { ...CANONICAL_PROJECT_DEFAULTS.exportSettings, ...exportSettingsData };
+  const renderReference = resolveRenderReference(
+    projectData.renderReference,
+    projectData.timingReference,
+    { width: app.displayWidth, height: app.displayHeight },
+    { width: exportSettings.resolutionX, height: exportSettings.resolutionY }
+  );
+
   return {
     waypoints,
     scene,
@@ -464,7 +489,8 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
       overlay: Number(projectData.background?.overlay ?? 0),
       fit: projectData.background?.fit === 'fill' ? 'fill' : 'fit',
     },
-    exportSettings: { ...CANONICAL_PROJECT_DEFAULTS.exportSettings, ...exportSettingsData },
+    exportSettings,
+    renderReference,
     motionSettings: { ...CANONICAL_PROJECT_DEFAULTS.motionSettings, ...motionSettingsData },
     animationState: {
       mode: projectData.animationState?.mode || 'constant-speed',
@@ -641,6 +667,7 @@ function captureLiveState(app) {
     background: { ...app.background },
     exportSettings: { ...app.exportSettings },
     motionSettings: { ...app.motionSettings },
+    renderReference: app.renderReference ? { ...app.renderReference } : null,
     selectedWaypoint: app.selectedWaypoint,
     selectedWaypoints: app.selectedWaypoints,
     selectedCrowd: app.selectedCrowd,
@@ -702,6 +729,7 @@ function restoreLiveState(app, previous) {
   app.selectedWaypoints = previous.selectedWaypoints;
   app.selectedCrowd = previous.selectedCrowd;
   app.pathPoints = previous.pathPoints;
+  app.renderReference = previous.renderReference;
   app._isDirty = previous.isDirty;
   app._autosaveBackgroundCache = previous.backgroundCache;
   app._majorWaypointsCache = previous.majorWaypointsCache;
@@ -842,6 +870,7 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     app.selectedWaypoints = [];
     app.selectedCrowd = null;
     app.pathPoints = [];
+    app.renderReference = staged.renderReference;
     app._majorWaypointsCache = null;
     app._autosaveBackgroundCache = staged.background.image && staged.backgroundSourceDataURL
       ? { image: staged.background.image, dataURL: staged.backgroundSourceDataURL }
@@ -904,40 +933,10 @@ export const persistenceMixin = {
     try {
       this.announce('Saving project...');
       
-      // Create a clean copy of styles without the pathHead image object
-      const stylesCopy = { ...this.styles };
-      if (stylesCopy.pathHead) {
-        stylesCopy.pathHead = { ...stylesCopy.pathHead, image: null };
-      }
-      
-      // Build project data (same structure as autosave)
-      const projectData = {
-        // v9: layered scene (v7 + additive `scene` block; 8 skipped — the
-        // fork's local builds used it for graph-only saves)
-        coordVersion: 9,
-        waypoints: this.waypoints.map(wp => wp.toJSON()),
-        scene: this.scene.toJSON(),
-        styles: stylesCopy,
-        animationState: {
-          mode: this.animationEngine.state.mode,
-          speed: this.animationEngine.state.speed,
-          duration: this.animationEngine.state.duration
-        },
-        background: {
-          overlay: this.background.overlay,
-          fit: this.background.fit
-        },
-        exportSettings: {
-          frameRate: this.exportSettings.frameRate,
-          pathOnly: this.exportSettings.pathOnly,
-          resolutionX: this.exportSettings.resolutionX,
-          resolutionY: this.exportSettings.resolutionY,
-          backgroundZoom: this.exportSettings.backgroundZoom,
-          includeCamera: this.exportSettings.includeCamera,
-          includeText: this.exportSettings.includeText
-        },
-        motionSettings: { ...this.motionSettings }
-      };
+      // ZIP assets are archived separately; the canonical model builder owns
+      // every other field so explicit save, recovery and HTML export cannot
+      // drift on additive project metadata such as the render reference.
+      const projectData = this._buildProjectSnapshot({ includeAssets: false });
       
       // Preserve the original validated PNG/JPEG/WebP bytes exactly. Export
       // must fail rather than silently substituting a canvas re-encoding.
@@ -1065,6 +1064,16 @@ export const persistenceMixin = {
       stylesCopy.pathHead = { ...stylesCopy.pathHead, image: null };
     }
 
+    const timingReference = resolveRenderReference(
+      { width: this.displayWidth, height: this.displayHeight },
+      { width: this.exportSettings.resolutionX, height: this.exportSettings.resolutionY }
+    );
+    const renderReference = resolveRenderReference(
+      this.renderReference,
+      timingReference,
+      { width: this.exportSettings.resolutionX, height: this.exportSettings.resolutionY }
+    );
+
     const snapshot = {
       // v9: layered scene (v7 + additive `scene` block; 8 skipped — the
       // fork's local builds used it for graph-only saves)
@@ -1104,13 +1113,16 @@ export const persistenceMixin = {
       },
       // Include image assets if under size limit
       imageAssets: includeAssets ? this.imageAssetService.toJSON() : [],
+      // Stable visual sizing space. Map-bound reference pixels scale from its
+      // short edge; loading/rendering never mutates the authored values.
+      renderReference,
       // Canvas dimensions the current timeline was derived from. Speed is
       // px/s against the on-screen path, so duration/markers depend on the
       // display size; the exported player recomputes timing in THIS space to
       // reproduce the authored timeline exactly, then renders at the export
       // resolution — the same rule as video export (_enterExportMode never
       // recalculates timing at the export canvas). Additive v9 field.
-      timingReference: { width: this.displayWidth, height: this.displayHeight }
+      timingReference
       // Note: Camera settings are per-waypoint, saved in waypoint.camera
     };
     return snapshot;

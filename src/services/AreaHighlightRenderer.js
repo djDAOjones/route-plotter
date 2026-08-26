@@ -30,7 +30,7 @@ export class AreaHighlightRenderer {
    * @param {number} displayHeight - Canvas height in CSS pixels
    * @param {boolean} previewMode - Whether in preview/animation mode
    */
-  static render(ctx, waypoints, imageToCanvas, animationEngine, waypointProgressValues, motionSettings, displayWidth, displayHeight, previewMode) {
+  static render(ctx, waypoints, imageToCanvas, animationEngine, waypointProgressValues, motionSettings, displayWidth, displayHeight, previewMode, sizeScale = 1) {
     if (!waypoints || waypoints.length === 0) return;
 
     const currentPathProgress = animationEngine?.getPathProgress() || 0;
@@ -57,7 +57,7 @@ export class AreaHighlightRenderer {
       // Draw the shape
       ctx.save();
       ctx.globalAlpha = opacity;
-      AreaHighlightRenderer._drawShape(ctx, ah, imageToCanvas, displayWidth, displayHeight);
+      AreaHighlightRenderer._drawShape(ctx, ah, imageToCanvas, displayWidth, displayHeight, sizeScale);
       ctx.restore();
     }
   }
@@ -73,7 +73,7 @@ export class AreaHighlightRenderer {
    * @param {number} displayHeight - Canvas height
    * @param {Object|null} selectedWaypoint - Currently selected waypoint (for highlight)
    */
-  static renderEditMode(ctx, waypoints, imageToCanvas, displayWidth, displayHeight, selectedWaypoint) {
+  static renderEditMode(ctx, waypoints, imageToCanvas, displayWidth, displayHeight, selectedWaypoint, sizeScale = 1) {
     if (!waypoints || waypoints.length === 0) return;
 
     for (let i = 0; i < waypoints.length; i++) {
@@ -84,7 +84,7 @@ export class AreaHighlightRenderer {
       const isSelected = wp === selectedWaypoint;
 
       ctx.save();
-      AreaHighlightRenderer._drawShape(ctx, ah, imageToCanvas, displayWidth, displayHeight);
+      AreaHighlightRenderer._drawShape(ctx, ah, imageToCanvas, displayWidth, displayHeight, sizeScale);
 
       // Draw selection indicator for the selected waypoint's area
       if (isSelected) {
@@ -186,18 +186,18 @@ export class AreaHighlightRenderer {
    * @param {number} displayWidth - Canvas width
    * @param {number} displayHeight - Canvas height
    */
-  static _drawShape(ctx, ah, imageToCanvas, displayWidth, displayHeight) {
+  static _drawShape(ctx, ah, imageToCanvas, displayWidth, displayHeight, sizeScale = 1) {
     const shape = ah.shape;
 
     switch (shape) {
       case AREA_HIGHLIGHT.SHAPE_CIRCLE:
-        AreaHighlightRenderer._drawCircle(ctx, ah, imageToCanvas, displayWidth, displayHeight);
+        AreaHighlightRenderer._drawCircle(ctx, ah, imageToCanvas, displayWidth, displayHeight, sizeScale);
         break;
       case AREA_HIGHLIGHT.SHAPE_RECTANGLE:
-        AreaHighlightRenderer._drawRectangle(ctx, ah, imageToCanvas, displayWidth, displayHeight);
+        AreaHighlightRenderer._drawRectangle(ctx, ah, imageToCanvas, displayWidth, displayHeight, sizeScale);
         break;
       case AREA_HIGHLIGHT.SHAPE_POLYGON:
-        AreaHighlightRenderer._drawPolygon(ctx, ah, imageToCanvas);
+        AreaHighlightRenderer._drawPolygon(ctx, ah, imageToCanvas, sizeScale);
         break;
     }
   }
@@ -206,7 +206,7 @@ export class AreaHighlightRenderer {
    * Draw circle area highlight
    * @private
    */
-  static _drawCircle(ctx, ah, imageToCanvas, displayWidth, displayHeight) {
+  static _drawCircle(ctx, ah, imageToCanvas, displayWidth, displayHeight, sizeScale = 1) {
     const center = imageToCanvas(ah.centerX, ah.centerY);
     // Radius is fraction of image diagonal — approximate diagonal from display dims
     const diagonal = Math.sqrt(displayWidth * displayWidth + displayHeight * displayHeight);
@@ -227,7 +227,7 @@ export class AreaHighlightRenderer {
     if (ah.borderStyle !== 'none' && ah.borderWidth > 0) {
       ctx.beginPath();
       ctx.arc(center.x, center.y, radiusPx, 0, Math.PI * 2);
-      AreaHighlightRenderer._applyBorderStyle(ctx, ah);
+      AreaHighlightRenderer._applyBorderStyle(ctx, ah, sizeScale);
       ctx.stroke();
     }
   }
@@ -236,7 +236,7 @@ export class AreaHighlightRenderer {
    * Draw rectangle area highlight
    * @private
    */
-  static _drawRectangle(ctx, ah, imageToCanvas, displayWidth, displayHeight) {
+  static _drawRectangle(ctx, ah, imageToCanvas, displayWidth, displayHeight, sizeScale = 1) {
     const center = imageToCanvas(ah.centerX, ah.centerY);
     const w = ah.width * displayWidth;
     const h = ah.height * displayHeight;
@@ -253,7 +253,7 @@ export class AreaHighlightRenderer {
 
     // Border
     if (ah.borderStyle !== 'none' && ah.borderWidth > 0) {
-      AreaHighlightRenderer._applyBorderStyle(ctx, ah);
+      AreaHighlightRenderer._applyBorderStyle(ctx, ah, sizeScale);
       ctx.strokeRect(x, y, w, h);
     }
   }
@@ -262,7 +262,7 @@ export class AreaHighlightRenderer {
    * Draw polygon area highlight
    * @private
    */
-  static _drawPolygon(ctx, ah, imageToCanvas) {
+  static _drawPolygon(ctx, ah, imageToCanvas, sizeScale = 1) {
     const points = ah.points;
     if (!points || points.length < AREA_HIGHLIGHT.DRAW_MIN_VERTICES) return;
 
@@ -286,7 +286,7 @@ export class AreaHighlightRenderer {
 
     // Border
     if (ah.borderStyle !== 'none' && ah.borderWidth > 0) {
-      AreaHighlightRenderer._applyBorderStyle(ctx, ah);
+      AreaHighlightRenderer._applyBorderStyle(ctx, ah, sizeScale);
       ctx.stroke();
     }
   }
@@ -295,16 +295,17 @@ export class AreaHighlightRenderer {
    * Apply border style (stroke color, width, dash pattern) to context
    * @private
    */
-  static _applyBorderStyle(ctx, ah) {
+  static _applyBorderStyle(ctx, ah, sizeScale = 1) {
     ctx.strokeStyle = ah.borderColor || AREA_HIGHLIGHT.BORDER_COLOR_DEFAULT;
-    ctx.lineWidth = ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT;
+    const borderWidth = (ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT) * sizeScale;
+    ctx.lineWidth = borderWidth;
 
     switch (ah.borderStyle) {
       case 'dashed':
-        ctx.setLineDash([ah.borderWidth * 4, ah.borderWidth * 2]);
+        ctx.setLineDash([borderWidth * 4, borderWidth * 2]);
         break;
       case 'dotted':
-        ctx.setLineDash([ah.borderWidth, ah.borderWidth * 2]);
+        ctx.setLineDash([borderWidth, borderWidth * 2]);
         break;
       default:
         ctx.setLineDash([]);

@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 15834,
+      "bytes": 15763,
       "imports": [],
       "format": "esm"
     },
@@ -106,7 +106,7 @@
       "format": "esm"
     },
     "src/utils/uiReadouts.js": {
-      "bytes": 1371,
+      "bytes": 1316,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -217,7 +217,7 @@
       "format": "esm"
     },
     "src/services/AreaHighlightRenderer.js": {
-      "bytes": 12846,
+      "bytes": 13078,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -253,8 +253,13 @@
       ],
       "format": "esm"
     },
+    "src/utils/renderReference.js": {
+      "bytes": 1544,
+      "imports": [],
+      "format": "esm"
+    },
     "src/services/RenderingService.js": {
-      "bytes": 99023,
+      "bytes": 99476,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -295,6 +300,11 @@
           "path": "src/services/TextLabelService.js",
           "kind": "import-statement",
           "original": "./TextLabelService.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "../utils/renderReference.js"
         }
       ],
       "format": "esm"
@@ -2505,7 +2515,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 87063,
+      "bytes": 87362,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2620,7 +2630,7 @@
       "format": "esm"
     },
     "src/config/tooltips.js": {
-      "bytes": 2774,
+      "bytes": 2788,
       "imports": [],
       "format": "esm"
     },
@@ -2704,7 +2714,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 38951,
+      "bytes": 39066,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2907,8 +2917,14 @@
       "format": "esm"
     },
     "src/app/viewport.js": {
-      "bytes": 16942,
-      "imports": [],
+      "bytes": 17355,
+      "imports": [
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "../utils/renderReference.js"
+        }
+      ],
       "format": "esm"
     },
     "src/app/pathTiming.js": {
@@ -2938,7 +2954,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 49878,
+      "bytes": 50503,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2994,6 +3010,11 @@
           "path": "src/utils/uiReadouts.js",
           "kind": "import-statement",
           "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "../utils/renderReference.js"
         }
       ],
       "format": "esm"
@@ -3036,7 +3057,7 @@
       "format": "esm"
     },
     "src/app/editorPanel.js": {
-      "bytes": 34921,
+      "bytes": 35206,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3228,18 +3249,23 @@
       "format": "esm"
     },
     "src/app/projectReset.js": {
-      "bytes": 2751,
+      "bytes": 3022,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
           "kind": "import-statement",
           "original": "./operationGeneration.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "../utils/renderReference.js"
         }
       ],
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 44909,
+      "bytes": 45261,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3481,13 +3507,13 @@
     }
   },
   "outputs": {
-    ".docs-build-Xfz38r/app.js.map": {
+    ".docs-build-1BDS1P/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3131092
+      "bytes": 3138213
     },
-    ".docs-build-Xfz38r/app.js": {
+    ".docs-build-1BDS1P/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3496,7 +3522,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 3891
+          "bytesInOutput": 3915
         },
         "src/models/GraphNode.js": {
           "bytesInOutput": 607
@@ -3529,7 +3555,7 @@
           "bytesInOutput": 13749
         },
         "src/utils/uiReadouts.js": {
-          "bytesInOutput": 408
+          "bytesInOutput": 418
         },
         "src/services/StorageService.js": {
           "bytesInOutput": 4183
@@ -3562,7 +3588,7 @@
           "bytesInOutput": 565
         },
         "src/services/AreaHighlightRenderer.js": {
-          "bytesInOutput": 3825
+          "bytesInOutput": 3833
         },
         "src/services/DotRenderer.js": {
           "bytesInOutput": 429
@@ -3570,8 +3596,11 @@
         "src/services/TextLabelService.js": {
           "bytesInOutput": 3381
         },
+        "src/utils/renderReference.js": {
+          "bytesInOutput": 342
+        },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 26485
+          "bytesInOutput": 26690
         },
         "src/utils/graphRouting.js": {
           "bytesInOutput": 797
@@ -3676,7 +3705,7 @@
           "bytesInOutput": 186
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 35702
+          "bytesInOutput": 35779
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 17118
@@ -3703,7 +3732,7 @@
           "bytesInOutput": 5340
         },
         "src/config/tooltips.js": {
-          "bytesInOutput": 2144
+          "bytesInOutput": 2158
         },
         "src/components/Tooltip.js": {
           "bytesInOutput": 2154
@@ -3733,7 +3762,7 @@
           "bytesInOutput": 1326
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 16511
+          "bytesInOutput": 16554
         },
         "src/models/Waypoint.js": {
           "bytesInOutput": 7163
@@ -3763,13 +3792,13 @@
           "bytesInOutput": 4199
         },
         "src/app/viewport.js": {
-          "bytesInOutput": 4239
+          "bytesInOutput": 4344
         },
         "src/app/pathTiming.js": {
           "bytesInOutput": 5631
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 27502
+          "bytesInOutput": 27688
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5564
@@ -3778,7 +3807,7 @@
           "bytesInOutput": 4621
         },
         "src/app/editorPanel.js": {
-          "bytesInOutput": 18895
+          "bytesInOutput": 18998
         },
         "src/app/pointer.js": {
           "bytesInOutput": 887
@@ -3808,13 +3837,13 @@
           "bytesInOutput": 110
         },
         "src/app/projectReset.js": {
-          "bytesInOutput": 1596
+          "bytesInOutput": 1739
         },
         "src/main.js": {
-          "bytesInOutput": 21785
+          "bytesInOutput": 21886
         }
       },
-      "bytes": 789848
+      "bytes": 791209
     }
   }
 }

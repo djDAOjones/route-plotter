@@ -63,6 +63,10 @@ function makeApp() {
     undoService,
     eventBus,
     background: { image: { width: 1, height: 1 } },
+    displayWidth: 1000,
+    displayHeight: 600,
+    renderReference: { width: 400, height: 300 },
+    exportSettings: { resolutionX: 1920, resolutionY: 1080 },
     styles: {
       pathHead: {
         style: 'custom',
@@ -132,6 +136,7 @@ describe('Clear All project reset', () => {
     expect(app.waypointsById.size).toBe(0);
     expect(app.scene.getFlowLayers()).toEqual([]);
     expect(app.pathPoints).toEqual([]);
+    expect(app.renderReference).toEqual({ width: 1000, height: 600 });
     expect(app.selectedWaypoint).toBeNull();
     expect(app.selectedWaypoints).toEqual([]);
     expect(app.selectedCrowd).toBeNull();

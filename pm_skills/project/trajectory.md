@@ -17,6 +17,13 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Phase 6 — resolution-independent rendering (shipped 2026-08-26)
+
+SCALE-01 — Projects now preserve map-bound authored sizes through a stable
+reference render space across editor, HTML and video resolutions, independently
+of normalised geometry and the authored timeline. (2026-08-26) — see
+decision-log.
+
 ## Performance (shipped 2026-08-26)
 
 REV-06 — Stable paused editor and standalone-player views now leave no animation

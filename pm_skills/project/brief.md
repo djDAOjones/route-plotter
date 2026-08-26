@@ -64,12 +64,14 @@ frozen v2 line remains served from
 - GIS integration or georeferencing
 - Mobile-native apps
 
-## Decided foundations awaiting implementation
+## Decided foundations
 
 - Split hero routes animate simultaneous branches on one master timeline;
   reconvergence waits for the latest branch and shared join effects fire once.
-- Projects own a reference render size: map-bound graphics scale from that
-  reference while normalised geometry and authored timing remain unchanged.
+- Projects own a shipped reference render size: map-bound graphics scale from
+  its short edge while normalised geometry and authored timing remain
+  unchanged. Interactive label clamps protect editor legibility; exports use
+  the exact reference scale.
 - Public/share/support boundaries retain original project image bytes only in
   explicit saves/exports, use previewable redacted diagnostics, and publish
   under MIT with third-party notices and best-effort GitHub support.

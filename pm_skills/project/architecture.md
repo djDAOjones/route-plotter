@@ -54,8 +54,12 @@ time; play, scrub, and export share the one evaluation path (golden harness:
 export runs the same stack: `src/player/PlayerApp.js` (bundled to
 `docs/player.js`, inlined into exports) hydrates the coordVersion-9
 snapshot, recomputes timing in the snapshot's `timingReference` space
-to preserve the authored timeline, and renders at export resolution
-with the app's own services (cross-check: `tests/playerApp.test.js`).
+to preserve the authored timeline, and renders at export resolution with the
+app's own services. A separate stable `renderReference` supplies the visual
+short-edge scale for map-bound reference-pixel values; it never participates
+in coordinate or timeline calculations. Older snapshots migrate additively
+from `timingReference` or the authored canvas (cross-check:
+`tests/playerApp.test.js` and `tests/renderReference.test.js`).
 The scene data model landed in Phase 2 (2026-08-18): `Scene` →
 `FlowLayer` (guide graph or hero route + `Emitter`s with per-emitter
 seeds, normalised release windows and two-to-eight-handle busyness envelopes),
@@ -79,7 +83,7 @@ scene description and discrete transport announcements.
 | Waypoint | `src/models/Waypoint.js` | Data model for waypoints (position, style, camera, area, etc.) |
 | AnimationEngine | `src/services/AnimationEngine.js` | Demand-driven preview scheduler, transport, timing, segment speed and pause markers |
 | PathCalculator | `src/services/PathCalculator.js` | Catmull-Rom spline, reparameterisation, curvature |
-| RenderingService | `src/services/RenderingService.js` | Canvas drawing: path, markers, labels, overlays |
+| RenderingService | `src/services/RenderingService.js` | Canvas drawing plus project-reference scaling for path, markers, labels, effects and area borders |
 | UIController | `src/controllers/UIController.js` | Sidebar controls, waypoint list, slider sync |
 | SceneOutlineController | `src/controllers/SceneOutlineController.js` | Lazy native semantic outline, authoring forms, focus and draft state |
 | InteractionHandler | `src/handlers/InteractionHandler.js` | Captured mouse/touch/pen transactions, keyboard and drag-and-drop input |

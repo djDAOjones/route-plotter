@@ -1,3 +1,5 @@
+import { resolveRenderReference } from '../utils/renderReference.js';
+
 /**
  * Canvas viewport: aspect ratio, visible bounds, screen/canvas/image coordinate conversion, manual zoom.
  *
@@ -69,6 +71,15 @@ export const viewportMixin = {
     // Update display dimensions
     this.displayWidth = canvasWidth;
     this.displayHeight = canvasHeight;
+
+    // A new project adopts its first authored canvas as a stable visual
+    // reference. Later viewport/export changes must never rewrite it.
+    if (!resolveRenderReference(this.renderReference)) {
+      this.renderReference = resolveRenderReference({
+        width: this.displayWidth,
+        height: this.displayHeight,
+      });
+    }
     
     // Update coordinate transform service
     this.coordinateTransform.setCanvasDimensions(this.displayWidth, this.displayHeight);

@@ -484,12 +484,12 @@ describe('render and static UI regressions', () => {
     expect(labelSize.min).toBe('16');
     expect(labelSize.max).toBe('48');
     expect(labelSize.value).toBe('16');
-    expect(document.getElementById('label-size-value').textContent).toBe('16 px');
-    expect(labelSize.getAttribute('aria-valuetext')).toBe('16 px');
+    expect(document.getElementById('label-size-value').textContent).toBe('16 reference px');
+    expect(labelSize.getAttribute('aria-valuetext')).toBe('16 reference px');
 
-    expect(document.getElementById('dot-size-value').textContent).toBe('8 px');
-    expect(document.getElementById('segment-width-value').textContent).toBe('3.0 px');
-    expect(document.getElementById('path-head-size-value').textContent).toBe('8 px');
+    expect(document.getElementById('dot-size-value').textContent).toBe('8 reference px');
+    expect(document.getElementById('segment-width-value').textContent).toBe('3.0 reference px');
+    expect(document.getElementById('path-head-size-value').textContent).toBe('8 reference px');
     expect(document.getElementById('shape-amplitude-value').textContent).toBe('2%');
     expect(document.querySelector('label[for="pulse-cycle-speed"] span').textContent)
       .toBe('Cycle duration');
@@ -501,8 +501,8 @@ describe('render and static UI regressions', () => {
     expect(translated.getAttribute('aria-valuetext')).toBe('12.5 px');
     expect(document.getElementById('segment-width-value').textContent).toBe('12.5 px');
 
-    expect(formatRendererPixels(24)).toBe('24 px');
-    expect(formatRendererPixels(3, 1)).toBe('3.0 px');
+    expect(formatRendererPixels(24)).toBe('24 reference px');
+    expect(formatRendererPixels(3, 1)).toBe('3.0 reference px');
     expect(formatShapeAmplitude(1)).toBe('0.2%');
     expect(formatShapeAmplitude(10)).toBe('2%');
     expect(formatBackgroundOverlay(0)).toBe('None');

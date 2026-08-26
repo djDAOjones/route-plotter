@@ -28,21 +28,18 @@ export const VIDEO_EXPORT = {
   ENCODER_QUEUE_LIMIT: 5         // Max queued frames before backpressure yield — WebCodecs path
 };
 
-// Rendering and visual styles
-// Size values are stored as percentages of image diagonal for consistency across image sizes
-// Reference: 1000px diagonal → 1% = 10px, 500px diagonal → 1% = 5px
+// Rendering and visual styles. Persisted map-bound sizes are reference pixels;
+// RenderingService converts them from the project's reference short edge.
 export const RENDERING = {
   DEFAULT_PATH_COLOR: '#D55E00', // Okabe-Ito Vermillion (palette color)
-  DEFAULT_PATH_THICKNESS: 3,       // Legacy px value - converted at render time
-  DEFAULT_DOT_SIZE: 8,             // Legacy px value - converted at render time
-  MINOR_DOT_SIZE: 4,               // Legacy px value - converted at render time
+  DEFAULT_PATH_THICKNESS: 3,       // Reference pixels
+  DEFAULT_DOT_SIZE: 8,             // Reference pixels
+  MINOR_DOT_SIZE: 4,               // Reference pixels
   MINOR_DOT_COLOR: '#000000',      // Black color for minor waypoints
   MINOR_DOT_OPACITY: 0.5,          // 50% opacity for minor waypoints
   HOVER_ACCENT_COLOR: '#0f62fe',   // Canvas hover affordances (rings, leg "+") — matches app accent
   HOVER_ACCENT_GLOW: 'rgba(15, 98, 254, 0.45)', // Hovered-leg glow underlay
-  PATH_HEAD_SIZE: 8,               // Legacy px value - converted at render time
-  // Reference dimension for relative sizing (used when no image loaded)
-  REFERENCE_DIAGONAL: 1414,        // ~1000x1000 image diagonal
+  PATH_HEAD_SIZE: 8,               // Reference pixels
   BEACON_PULSE_DURATION: 2000,   // Beacon animation cycle
   BEACON_MAX_RADIUS: 30,
   BEACON_PULSE_SIZE: 10,         // Base size for pulse effect
@@ -61,14 +58,14 @@ export const RENDERING = {
   // Path casing (white contrast outline drawn beneath the coloured path).
   // Named here so RenderingService shares the intent; values unchanged (fold-in B).
   PATH_CASING_COLOR: '#FFFFFF',
-  PATH_CASING_EXTRA_WIDTH: 2,    // Extra width (base px) per casing stroke, before zoom/graphics scaling
+  PATH_CASING_EXTRA_WIDTH: 2,    // Extra width in reference pixels per casing stroke
 
   // Path glow — optional soft halo drawn beneath the casing. Built from layered
   // translucent underlay strokes (widest→narrowest, stacked additively); colour
   // is derived per-segment from the path colour, and intensity (0–1) scales the
   // halo's extra width. Distinct from the beacon "glow" effect (BeaconRenderer).
   PATH_GLOW_LAYERS: 4,           // Concentric underlay strokes per segment
-  PATH_GLOW_MAX_EXTRA_WIDTH: 28, // Extra width (base px) beyond the path at intensity 1, before scaling
+  PATH_GLOW_MAX_EXTRA_WIDTH: 28, // Extra width in reference pixels beyond the path at intensity 1
   PATH_GLOW_LAYER_ALPHA: 0.16,   // Per-layer opacity; additive stacking brightens toward the centre
   PATH_GLOW_DEFAULT_INTENSITY: 0.5
 };
@@ -306,10 +303,13 @@ export const TEXT_VISIBILITY = {
  * WCAG 2.2 AAA requires minimum 14px for body text (16px recommended)
  */
 export const TEXT_LABEL = {
-  // Font size constraints - UI and model both use renderer pixels
-  SIZE_PX_MIN: 16,                      // Minimum font size in pixels
-  SIZE_PX_MAX: 48,                      // Maximum font size in pixels
+  // UI/model values are reference pixels. The editor clamps the rendered
+  // result for legibility; HTML/video output always uses the exact scale.
+  SIZE_PX_MIN: 16,                      // Minimum authored font size
+  SIZE_PX_MAX: 48,                      // Maximum authored font size
   SIZE_DEFAULT: 16,                     // Default font size (maps to scale 1)
+  EDITOR_RENDER_PX_MIN: 14,             // Interactive legibility floor
+  EDITOR_RENDER_PX_MAX: 72,             // Interactive obstruction ceiling
   
   // Text area width (percentage of canvas width)
   WIDTH_MIN: 5,                         // Minimum width (5%)
@@ -327,8 +327,8 @@ export const TEXT_LABEL = {
   BG_OPACITY_DEFAULT: 0.85,             // Default background opacity
   BG_OPACITY_MIN: 0,                    // Minimum opacity (transparent)
   BG_OPACITY_MAX: 1,                    // Maximum opacity (opaque)
-  BG_PADDING: 6,                        // Padding around text in pixels
-  BG_BORDER_RADIUS: 4,                  // Border radius in pixels
+  BG_PADDING: 6,                        // Reference-pixel padding around text
+  BG_BORDER_RADIUS: 4,                  // Reference-pixel border radius
   
   // Text color
   COLOR_DEFAULT: '#1a1a1a',             // Default text color (dark gray)

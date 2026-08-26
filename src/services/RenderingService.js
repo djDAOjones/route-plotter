@@ -15,6 +15,7 @@ import { AreaHighlightRenderer } from './AreaHighlightRenderer.js';
 import { DotRenderer } from './DotRenderer.js';
 import { MotionVisibilityService } from './MotionVisibilityService.js';
 import { TextLabelService } from './TextLabelService.js';
+import { renderReferenceScale, resolveRenderReference } from '../utils/renderReference.js';
 
 export class RenderingService {
   constructor() {
@@ -37,12 +38,11 @@ export class RenderingService {
      */
     this.INTRO_DURATION_MS = 1000;
     
-    /**
-     * Current coordinate transform for relative sizing
-     * Set during render() for use by helper methods
-     * @type {Object|null}
-     */
-    this._coordinateTransform = null;
+    /** Current reference-pixel to render-pixel ratio. */
+    this._renderReferenceScale = 1;
+
+    /** Whether label output should use editor-only legibility clamps. */
+    this._interactiveLabels = false;
     
     /**
      * Zoom clamp factor for vector-layer elements.
@@ -77,20 +77,9 @@ export class RenderingService {
     return 1 - Math.pow(1 - t, 3);
   }
   
-  /**
-   * Scale a size value based on the current image dimensions
-   * Sizes are scaled relative to a reference diagonal (1414px = ~1000x1000 image)
-   * This ensures consistent visual appearance across different image sizes
-   * 
-   * @param {number} size - Size in "reference pixels" (calibrated for 1414px diagonal)
-   * @returns {number} Scaled size in canvas pixels
-   */
+  /** Scale an authored reference-pixel value into the current render space. */
   scaleSize(size) {
-    if (!this._coordinateTransform) return size; // Fallback to raw value
-    const refDiagonal = RENDERING.REFERENCE_DIAGONAL || 1414;
-    const currentDiagonal = this._coordinateTransform.getReferenceDimension();
-    if (currentDiagonal <= 0) return size;
-    return size * (currentDiagonal / refDiagonal);
+    return size * this._renderReferenceScale;
   }
 
   /**
@@ -103,6 +92,26 @@ export class RenderingService {
    */
   scaleSizeClamped(size) {
     return this.scaleSize(size) * this._zoomClampFactor * this._graphicsScale;
+  }
+
+  /**
+   * Configure visual scaling without changing coordinate or timeline state.
+   * Public for deterministic fixtures and non-canvas layout helpers.
+   */
+  configureRenderReference(reference, width, height, { interactiveLabels = false } = {}) {
+    const resolved = resolveRenderReference(reference, { width, height });
+    this._renderReferenceScale = renderReferenceScale(resolved, width, height);
+    this._interactiveLabels = interactiveLabels === true;
+  }
+
+  /** Scale label type, with editor-only physical-pixel legibility clamps. */
+  scaleLabelSize(size) {
+    const scaled = this.scaleSizeClamped(size);
+    if (!this._interactiveLabels) return scaled;
+    return Math.max(
+      TEXT_LABEL.EDITOR_RENDER_PX_MIN,
+      Math.min(TEXT_LABEL.EDITOR_RENDER_PX_MAX, scaled)
+    );
   }
   
   /**
@@ -389,8 +398,11 @@ export class RenderingService {
       return; // Skip rendering
     }
     
-    // Store coordinate transform for relative sizing (used by scaleSize helper)
-    this._coordinateTransform = state.coordinateTransform || null;
+    // Visual scale is project-owned and intentionally separate from the
+    // coordinate transform and authored-timeline reference.
+    this.configureRenderReference(state.renderReference, cw, ch, {
+      interactiveLabels: state.interactiveLabels,
+    });
     
     // Extract motion visibility state
     const { previewMode, motionSettings, motionVisibilityService } = state;
@@ -1054,9 +1066,9 @@ export class RenderingService {
       draw(svc, ctx, state, frame) {
         const { waypoints, imageToCanvas, displayWidth, displayHeight } = state;
         if (state.previewMode) {
-          AreaHighlightRenderer.render(ctx, waypoints, imageToCanvas, state.animationEngine, state.waypointProgressValues, state.motionSettings, displayWidth, displayHeight, state.previewMode);
+          AreaHighlightRenderer.render(ctx, waypoints, imageToCanvas, state.animationEngine, state.waypointProgressValues, state.motionSettings, displayWidth, displayHeight, state.previewMode, svc.scaleSizeClamped(1));
         } else {
-          AreaHighlightRenderer.renderEditMode(ctx, waypoints, imageToCanvas, displayWidth, displayHeight, state.selectedWaypoint);
+          AreaHighlightRenderer.renderEditMode(ctx, waypoints, imageToCanvas, displayWidth, displayHeight, state.selectedWaypoint, svc.scaleSizeClamped(1));
         }
       },
     },
@@ -1366,7 +1378,7 @@ export class RenderingService {
       const scaledWidth = this.scaleSizeClamped(controller.segmentWidth);
       if (isCasing) {
         ctx.strokeStyle = RENDERING.PATH_CASING_COLOR;
-        ctx.lineWidth = scaledWidth + RENDERING.PATH_CASING_EXTRA_WIDTH * this._zoomClampFactor * this._graphicsScale; // scaled casing each side
+        ctx.lineWidth = scaledWidth + this.scaleSizeClamped(RENDERING.PATH_CASING_EXTRA_WIDTH);
         ctx.setLineDash([]); // Casing is always solid
       } else {
         ctx.strokeStyle = controller.segmentColor;
@@ -1439,7 +1451,7 @@ export class RenderingService {
           const scaledControllerWidth = this.scaleSizeClamped(currentController.segmentWidth);
           if (isCasing) {
             ctx.strokeStyle = RENDERING.PATH_CASING_COLOR;
-            ctx.lineWidth = scaledControllerWidth + RENDERING.PATH_CASING_EXTRA_WIDTH * this._zoomClampFactor * this._graphicsScale;
+            ctx.lineWidth = scaledControllerWidth + this.scaleSizeClamped(RENDERING.PATH_CASING_EXTRA_WIDTH);
             ctx.setLineDash([]);
           } else {
             ctx.strokeStyle = currentController.segmentColor;
@@ -1480,7 +1492,7 @@ export class RenderingService {
     // several widening, translucent layers (additive) → a soft bloom. Solid + dash-free.
     const drawContinuousGlow = () => {
       const intensity = styles.pathGlow?.intensity ?? RENDERING.PATH_GLOW_DEFAULT_INTENSITY;
-      const extraScale = this._zoomClampFactor * this._graphicsScale;
+      const extraScale = this.scaleSizeClamped(1);
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
       ctx.lineCap = 'round';
@@ -1601,7 +1613,7 @@ export class RenderingService {
       const drawPartialSegment = (isCasing) => {
         if (isCasing) {
           ctx.strokeStyle = RENDERING.PATH_CASING_COLOR;
-          ctx.lineWidth = scaledPartialWidth + RENDERING.PATH_CASING_EXTRA_WIDTH * this._zoomClampFactor * this._graphicsScale;
+          ctx.lineWidth = scaledPartialWidth + this.scaleSizeClamped(RENDERING.PATH_CASING_EXTRA_WIDTH);
           ctx.setLineDash([]);
         } else {
           ctx.strokeStyle = controller.segmentColor;
@@ -1630,7 +1642,7 @@ export class RenderingService {
       // Glow pass for the partial (animated head) segment — beneath casing.
       const drawPartialGlow = () => {
         const intensity = styles.pathGlow?.intensity ?? RENDERING.PATH_GLOW_DEFAULT_INTENSITY;
-        const extraScale = this._zoomClampFactor * this._graphicsScale;
+        const extraScale = this.scaleSizeClamped(1);
         const layers = RenderingService.glowLayers(scaledPartialWidth, intensity, extraScale);
         if (layers.length === 0) return;
         ctx.save();
@@ -1879,9 +1891,7 @@ export class RenderingService {
       const markerSize = this.scaleSizeClamped(rawMarkerSize);
       
       // Calculate size scale factor for beacon thickness (clamped at high zoom, scaled)
-      const sizeScale = (this._coordinateTransform 
-        ? this._coordinateTransform.getReferenceDimension() / (RENDERING.REFERENCE_DIAGONAL || 1414)
-        : 1) * this._zoomClampFactor * this._graphicsScale;
+      const sizeScale = this.scaleSizeClamped(1);
       
       // Render beacon effect (may return scale override)
       const scaleOverride = this.beaconRenderer.renderBeacon(
@@ -2084,7 +2094,7 @@ export class RenderingService {
         
         ctx.fillStyle = markerColor;
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2 * this._zoomClampFactor * this._graphicsScale;
+        ctx.lineWidth = this.scaleSizeClamped(2);
         
         // Draw different marker types
         if (markerStyle === 'custom' && waypoint.customImage) {
@@ -2184,7 +2194,7 @@ export class RenderingService {
         ctx.globalAlpha = RENDERING.MINOR_DOT_OPACITY;
         ctx.fillStyle = RENDERING.MINOR_DOT_COLOR;
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1 * this._zoomClampFactor * this._graphicsScale;
+        ctx.lineWidth = this.scaleSizeClamped(1);
         
         ctx.beginPath();
         ctx.arc(wpCanvas.x, wpCanvas.y, size, 0, Math.PI * 2);
@@ -2237,9 +2247,10 @@ export class RenderingService {
     
     if (!visible || opacity <= 0) return;
     
-    // Get label properties with defaults - scale font size based on image dimensions (clamped at high zoom)
+    // Label type is authored in reference pixels. Only the interactive editor
+    // applies physical-pixel legibility clamps; HTML/video output is exact.
     const rawFontSize = waypoint.labelSize || TEXT_LABEL.SIZE_DEFAULT;
-    const fontSize = this.scaleSizeClamped(rawFontSize);
+    const fontSize = this.scaleLabelSize(rawFontSize);
     const textColor = waypoint.labelColor || TEXT_LABEL.COLOR_DEFAULT;
     const bgColor = waypoint.labelBgColor || TEXT_LABEL.BG_COLOR_DEFAULT;
     const bgOpacity = waypoint.labelBgOpacity !== undefined ? waypoint.labelBgOpacity : TEXT_LABEL.BG_OPACITY_DEFAULT;
@@ -2281,7 +2292,8 @@ export class RenderingService {
     // Calculate text box dimensions
     const lineHeight = fontSize * 1.3;
     const textHeight = lines.length * lineHeight;
-    const padding = TEXT_LABEL.BG_PADDING;
+    const labelChromeScale = rawFontSize > 0 ? fontSize / rawFontSize : 1;
+    const padding = TEXT_LABEL.BG_PADDING * labelChromeScale;
     
     // Find max line width for background - background must cover all text
     let maxLineWidth = 0;
@@ -2302,7 +2314,7 @@ export class RenderingService {
       ctx.globalAlpha = opacity * bgOpacity;
       ctx.fillStyle = bgColor;
       ctx.beginPath();
-      const r = TEXT_LABEL.BG_BORDER_RADIUS;
+      const r = TEXT_LABEL.BG_BORDER_RADIUS * labelChromeScale;
       ctx.moveTo(boxX + r, boxY);
       ctx.lineTo(boxX + boxWidth - r, boxY);
       ctx.quadraticCurveTo(boxX + boxWidth, boxY, boxX + boxWidth, boxY + r);
@@ -2334,14 +2346,14 @@ export class RenderingService {
   applyLineStyle(ctx, style) {
     switch (style) {
       case 'dotted':
-        ctx.setLineDash([2, 6]);
+        ctx.setLineDash([this.scaleSizeClamped(2), this.scaleSizeClamped(6)]);
         break;
       case 'dashed':
-        ctx.setLineDash([10, 5]);
+        ctx.setLineDash([this.scaleSizeClamped(10), this.scaleSizeClamped(5)]);
         break;
       case 'squiggle':
         // Approximated with dashed pattern - true squiggle would need complex path manipulation
-        ctx.setLineDash([5, 3, 2, 3]);
+        ctx.setLineDash([5, 3, 2, 3].map(value => this.scaleSizeClamped(value)));
         break;
       case 'solid':
       default:

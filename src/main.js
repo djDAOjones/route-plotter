@@ -163,6 +163,9 @@ class RoutePlotter {
     this.scene = new Scene(); // Flow layers (guide graphs + emitters), drawn beneath the hero route
     this.swarmEngine = new SwarmEngine(); // Deterministic dot evaluator — pure fn(timelineMs, layer, seed)
     this.pathPoints = [];
+    // Stable project-owned visual sizing space. Seeded from the first authored
+    // canvas, or replaced transactionally when an existing project loads.
+    this.renderReference = null;
     this.selectedWaypoint = null; // Primary selection (last interacted)
     this.selectedWaypoints = []; // Full selection in route order — [wp] when single, [] when none
     this.canvasHover = null; // Idle-hover target for canvas affordances (edit mode)
@@ -890,6 +893,10 @@ class RoutePlotter {
       
       // Coordinate transform service for relative sizing
       coordinateTransform: this.coordinateTransform,
+
+      // Stable visual sizing reference, separate from timingReference.
+      renderReference: this.renderReference,
+      interactiveLabels: !this._isExportMode,
       
       // Visible bounds for clipping (normalized 0-1 coordinates)
       visibleBounds: this.getVisibleBounds(),

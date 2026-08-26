@@ -392,7 +392,11 @@ export const editorPanelMixin = {
     if (this.elements.rippleThickness) {
       const value = source.rippleThickness || 2;
       this.elements.rippleThickness.value = value;
-      this.elements.rippleThicknessValue.textContent = `${value}px`;
+      setRangeReadout(
+        this.elements.rippleThickness,
+        this.elements.rippleThicknessValue,
+        formatRendererPixels(value, Number.isInteger(value) ? 0 : 1)
+      );
     }
     if (this.elements.rippleMaxScale) {
       const value = source.rippleMaxScale || 1000;
@@ -657,7 +661,12 @@ export const editorPanelMixin = {
         this._updateRippleControlsVisibility(beaconStyle);
         if (this.elements.rippleThickness) {
           this.elements.rippleThickness.value = this.selectedWaypoint.rippleThickness || 2;
-          this.elements.rippleThicknessValue.textContent = `${this.elements.rippleThickness.value}px`;
+          const value = Number(this.elements.rippleThickness.value);
+          setRangeReadout(
+            this.elements.rippleThickness,
+            this.elements.rippleThicknessValue,
+            formatRendererPixels(value, Number.isInteger(value) ? 0 : 1)
+          );
         }
         if (this.elements.rippleMaxScale) {
           this.elements.rippleMaxScale.value = this.selectedWaypoint.rippleMaxScale || 1000;

@@ -87,6 +87,7 @@ function makeAuthoredApp({ motionSettings }) {
     elements: {},
     displayWidth: CANVAS_W,
     displayHeight: CANVAS_H,
+    renderReference: { width: CANVAS_W, height: CANVAS_H },
     _waypointProgressCache: null,
     _segmentLengthsCache: null,
     _majorWaypointsCache: null,
@@ -170,6 +171,7 @@ describe('PlayerApp export parity (golden cross-check)', () => {
     const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
     const snapshot = app._buildProjectSnapshot();
     expect(snapshot.timingReference).toEqual({ width: CANVAS_W, height: CANVAS_H });
+    expect(snapshot.renderReference).toEqual({ width: CANVAS_W, height: CANVAS_H });
 
     const player = await makePlayerFromSnapshot(snapshot);
 
@@ -185,6 +187,7 @@ describe('PlayerApp export parity (golden cross-check)', () => {
 
     // Timing derived in the authored space; rendering lives in export-resolution space
     expect(player._timingRef).toEqual({ width: CANVAS_W, height: CANVAS_H });
+    expect(player.renderReference).toEqual({ width: CANVAS_W, height: CANVAS_H });
     expect(player.displayWidth).toBe(snapshot.exportSettings.resolutionX);
     expect(player.displayHeight).toBe(snapshot.exportSettings.resolutionY);
   });
@@ -251,5 +254,16 @@ describe('PlayerApp export parity (golden cross-check)', () => {
     app.exportSettings.includeText = false;
     const player = await makePlayerFromSnapshot(app._buildProjectSnapshot());
     expect(player.exportSettings.includeText).toBe(false);
+  });
+
+  test('legacy HTML snapshots seed visual sizing from timingReference without changing timing', async () => {
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    const snapshot = app._buildProjectSnapshot();
+    delete snapshot.renderReference;
+
+    const player = await makePlayerFromSnapshot(snapshot);
+
+    expect(player.renderReference).toEqual(snapshot.timingReference);
+    expect(timelineFingerprint(player.animationEngine)).toEqual(timelineFingerprint(app.animationEngine));
   });
 });

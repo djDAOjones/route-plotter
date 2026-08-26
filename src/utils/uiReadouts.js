@@ -1,12 +1,11 @@
 import { MOTION } from '../config/constants.js';
 
 /**
- * Format the reference-pixel values consumed by RenderingService. They are
- * scaled at render time with the source image, viewport and global graphics
- * scale; SCALE-01 owns any future change to that sizing model.
+ * Format the project reference-pixel values consumed by RenderingService.
+ * They scale at render time from the project's stable reference short edge.
  */
 export function formatRendererPixels(value, fractionDigits = 0) {
-  return `${Number(value).toFixed(fractionDigits)} px`;
+  return `${Number(value).toFixed(fractionDigits)} reference px`;
 }
 
 /** Legacy shapeAmplitude stores five units for each effective image percent. */

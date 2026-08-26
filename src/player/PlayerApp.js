@@ -38,6 +38,7 @@ import { VIDEO_EXPORT, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUND_VISIBILI
 import { pathTimingMixin } from '../app/pathTiming.js';
 import { cameraMixin } from '../app/camera.js';
 import { viewportMixin } from '../app/viewport.js';
+import { resolveRenderReference } from '../utils/renderReference.js';
 
 export class PlayerApp {
   /**
@@ -61,6 +62,7 @@ export class PlayerApp {
     this.waypoints = [];
     this.scene = new Scene();
     this.pathPoints = [];
+    this.renderReference = null;
     this.styles = {};              // fully provided by the embedded project data
     this.background = { image: null, overlay: 0, fit: 'fit' };
     this.motionSettings = {
@@ -155,6 +157,15 @@ export class PlayerApp {
       fit: data.background?.fit ?? 'fit'
     };
     this.coordinateTransform.setBackgroundZoom(this.exportSettings.backgroundZoom / 100);
+
+    // Legacy snapshots inherit the authored timing canvas. Current snapshots
+    // carry an independent visual reference so appearance and timing can evolve
+    // without coupling either model to the export resolution.
+    this.renderReference = resolveRenderReference(
+      data.renderReference,
+      data.timingReference,
+      { width: this.exportSettings.resolutionX, height: this.exportSettings.resolutionY }
+    );
 
     // Custom images must finish decoding before the first frame — the exported
     // page has no later user interaction to trigger a corrective render.
@@ -345,6 +356,8 @@ export class PlayerApp {
       viewport: this.viewport,
       imageToCanvas: (x, y, clamp) => this.imageToCanvas(x, y, clamp),
       coordinateTransform: this.coordinateTransform,
+      renderReference: this.renderReference,
+      interactiveLabels: false,
       visibleBounds: this.getVisibleBounds(),
       displayWidth: cw,
       displayHeight: ch,

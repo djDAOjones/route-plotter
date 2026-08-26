@@ -48,6 +48,9 @@ function makeFakeApp() {
       backgroundZoom: 100, includeCamera: true, includeText: true,
     },
     motionSettings: {},
+    displayWidth: 1000,
+    displayHeight: 600,
+    renderReference: { width: 1000, height: 600 },
     elements: {},
     selectedWaypoint: null,
     animationEngine: {
@@ -113,7 +116,7 @@ describe('coordVersion 9 scene persistence', () => {
       });
       // Additive: every v7 top-level key survives
       for (const key of ['waypoints', 'styles', 'animationState', 'background',
-        'exportSettings', 'motionSettings', 'imageAssets']) {
+        'exportSettings', 'motionSettings', 'imageAssets', 'renderReference', 'timingReference']) {
         expect(data).toHaveProperty(key);
       }
     });
@@ -134,6 +137,8 @@ describe('coordVersion 9 scene persistence', () => {
 
       expect(app._captured.zipped.coordVersion).toBe(9);
       expect(app._captured.zipped.scene.flowLayers[0].name).toBe('Crowd');
+      expect(app._captured.zipped.renderReference).toEqual({ width: 1000, height: 600 });
+      expect(app._captured.zipped.timingReference).toEqual({ width: 1000, height: 600 });
     });
   });
 

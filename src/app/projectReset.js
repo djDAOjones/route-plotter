@@ -1,4 +1,5 @@
 import { invalidateProjectOperations } from './operationGeneration.js';
+import { resolveRenderReference } from '../utils/renderReference.js';
 
 /**
  * Establish a new, empty, non-undoable project baseline.
@@ -16,6 +17,10 @@ export function clearProject(app) {
   app.waypointsById.clear();
   app.scene.clear();
   app.pathPoints = [];
+  app.renderReference = resolveRenderReference(
+    { width: app.displayWidth, height: app.displayHeight },
+    { width: app.exportSettings?.resolutionX, height: app.exportSettings?.resolutionY }
+  );
   app.selectedWaypoint = null;
   app.selectedWaypoints = [];
   app.imageAssetService.clear();
