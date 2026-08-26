@@ -1,6 +1,6 @@
 # SCALE-01 — Authored size and export-resolution model
 
-> **Status:** Phase 6 implementation — approved; gated by REV-06 profiling.
+> **Status:** Phase 6 implementation — approved and ready after REV-06 profiling.
 
 ## Intent
 
