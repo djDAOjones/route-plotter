@@ -789,34 +789,6 @@ export class AnimationEngine {
   }
   
   /**
-   * Calculate total path duration accounting for per-segment speed multipliers
-   * 
-   * @param {Array} segmentLengths - Length of each segment in pixels (from PathCalculator)
-   * @param {Array} waypoints - Waypoints with segmentSpeed property
-   * @param {number} baseSpeed - Base animation speed in pixels/second
-   * @returns {number} Total path duration in milliseconds
-   * @deprecated Use setSegmentMarkers() instead - this method doesn't set up timing markers
-   */
-  calculateDurationWithSegmentSpeeds(segmentLengths, waypoints, baseSpeed) {
-    if (!segmentLengths || segmentLengths.length === 0 || !waypoints || waypoints.length < 2) {
-      return 0;
-    }
-    
-    let totalDuration = 0;
-    
-    for (let i = 0; i < segmentLengths.length; i++) {
-      const segmentLength = segmentLengths[i];
-      const segmentSpeed = waypoints[i]?.segmentSpeed || 1.0;
-      
-      // Duration = length / (baseSpeed * segmentSpeed)
-      const segmentDuration = (segmentLength / (baseSpeed * segmentSpeed)) * 1000;
-      totalDuration += segmentDuration;
-    }
-    
-    return totalDuration;
-  }
-  
-  /**
    * Convert path time (ms) to path progress (0-1) using segment markers
    * 
    * This handles the non-linear mapping when segments have different speeds.

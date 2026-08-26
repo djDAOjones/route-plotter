@@ -692,7 +692,6 @@ function captureLiveState(app) {
     backgroundCache: app._autosaveBackgroundCache,
     majorWaypointsCache: app._majorWaypointsCache,
     waypointProgressCache: app._waypointProgressCache,
-    segmentLengthsCache: app._segmentLengthsCache,
   };
 }
 
@@ -734,7 +733,6 @@ function restoreLiveState(app, previous) {
   app._autosaveBackgroundCache = previous.backgroundCache;
   app._majorWaypointsCache = previous.majorWaypointsCache;
   app._waypointProgressCache = previous.waypointProgressCache;
-  app._segmentLengthsCache = previous.segmentLengthsCache;
   if (previous.undo && app.undoService?.restoreSnapshot) {
     app.undoService.restoreSnapshot(previous.undo);
   }

@@ -149,12 +149,10 @@ describe('PathCalculator (extended)', () => {
     expect(calc.getPointAtProgress(pts, 0.5).x).toBeCloseTo(5);
   });
 
-  test('calculateSegmentLengths sums per-segment distances', () => {
+  test('calculatePathLength sums successive point distances', () => {
     const calc = new PathCalculator();
     const pts = [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }, { x: 4, y: 0 }];
-    const lengths = calc.calculateSegmentLengths(pts, [0, 1]);
-    expect(lengths.length).toBe(1);
-    expect(lengths[0]).toBeCloseTo(4);
+    expect(calc.calculatePathLength(pts)).toBeCloseTo(4);
   });
 
   test('legTimingLengths weights legs by progress span and sums to total length', () => {

@@ -17,6 +17,12 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Maintenance (shipped 2026-08-26)
+
+MAINT-01 — Superseded timing/visibility helpers, a permanently inert export
+warning and their orphaned cache state are removed without changing route,
+playback, persistence or export behaviour. (2026-08-26) — see decision-log.
+
 ## Phase 6 — resolution-independent rendering (shipped 2026-08-26)
 
 SCALE-01 — Projects now preserve map-bound authored sizes through a stable

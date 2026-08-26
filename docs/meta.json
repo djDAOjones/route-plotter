@@ -95,7 +95,7 @@
       "format": "esm"
     },
     "src/services/MotionVisibilityService.js": {
-      "bytes": 72170,
+      "bytes": 70482,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -143,7 +143,7 @@
       "format": "esm"
     },
     "src/services/PathCalculator.js": {
-      "bytes": 23094,
+      "bytes": 21786,
       "imports": [
         {
           "path": "src/utils/CatmullRom.js",
@@ -191,7 +191,7 @@
       "format": "esm"
     },
     "src/services/AnimationEngine.js": {
-      "bytes": 39139,
+      "bytes": 38032,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2928,7 +2928,7 @@
       "format": "esm"
     },
     "src/app/pathTiming.js": {
-      "bytes": 20270,
+      "bytes": 19246,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -2954,7 +2954,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 50503,
+      "bytes": 50393,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3020,7 +3020,7 @@
       "format": "esm"
     },
     "src/app/exporting.js": {
-      "bytes": 14838,
+      "bytes": 13659,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3507,13 +3507,13 @@
     }
   },
   "outputs": {
-    ".docs-build-1BDS1P/app.js.map": {
+    ".docs-build-4Z59YD/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3138213
+      "bytes": 3129016
     },
-    ".docs-build-1BDS1P/app.js": {
+    ".docs-build-4Z59YD/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3552,7 +3552,7 @@
           "bytesInOutput": 2238
         },
         "src/services/MotionVisibilityService.js": {
-          "bytesInOutput": 13749
+          "bytesInOutput": 13391
         },
         "src/utils/uiReadouts.js": {
           "bytesInOutput": 418
@@ -3570,7 +3570,7 @@
           "bytesInOutput": 150
         },
         "src/services/PathCalculator.js": {
-          "bytesInOutput": 5209
+          "bytesInOutput": 4910
         },
         "src/models/AnimationState.js": {
           "bytesInOutput": 2218
@@ -3582,7 +3582,7 @@
           "bytesInOutput": 5682
         },
         "src/services/AnimationEngine.js": {
-          "bytesInOutput": 13000
+          "bytesInOutput": 12814
         },
         "src/utils/segmentHitTest.js": {
           "bytesInOutput": 565
@@ -3795,13 +3795,13 @@
           "bytesInOutput": 4344
         },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 5631
+          "bytesInOutput": 5194
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 27688
+          "bytesInOutput": 27600
         },
         "src/app/exporting.js": {
-          "bytesInOutput": 5564
+          "bytesInOutput": 5071
         },
         "src/utils/waypointCardActions.js": {
           "bytesInOutput": 4621
@@ -3843,7 +3843,7 @@
           "bytesInOutput": 21886
         }
       },
-      "bytes": 791209
+      "bytes": 789348
     }
   }
 }

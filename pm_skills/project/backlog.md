@@ -18,8 +18,6 @@
   [verify: physical iOS Safari + Android Chrome] — Unified Pointer Events,
   captured group drag and cancel/no-op transactions are implemented and green
   in automation plus production Chromium. Record the physical mobile pass.
-- [ ] MAINT-01 [ready, low] — Remove verified-unused timing, visibility and
-  export helpers without mixing user-visible behaviour into the sweep.
 - [ ] HEAD-01 [ready, low] — Ship a reviewed drone head preset; custom head
   upload, rotation, persistence, undo and player hydration are already
   implemented. Promoted after SCALE-01 removed its visual-parity gate.

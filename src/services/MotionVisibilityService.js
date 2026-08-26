@@ -1589,54 +1589,6 @@ export class MotionVisibilityService {
   }
 
   /**
-   * Convert linear slider value (0-100) to logarithmic scale
-   * Used for trail and reveal size sliders
-   * @deprecated Use sliderToLog2Value instead
-   * 
-   * @param {number} sliderValue - Linear slider position (0-100)
-   * @param {number} min - Minimum output value
-   * @param {number} max - Maximum output value
-   * @returns {number} Logarithmically scaled value
-   */
-  static sliderToLogValue(sliderValue, min, max) {
-    if (sliderValue === 0) return min;
-    if (min === 0) {
-      // Special case: if min is 0, use linear scale for first 10% then log
-      if (sliderValue <= 10) {
-        return (sliderValue / 10) * (max * 0.01);
-      }
-      const adjustedSlider = (sliderValue - 10) / 90;
-      return (max * 0.01) * Math.pow(max / (max * 0.01), adjustedSlider);
-    }
-    const normalized = sliderValue / 100;
-    return min * Math.pow(max / min, normalized);
-  }
-
-  /**
-   * Convert logarithmic value back to linear slider position
-   * @deprecated Use log2ValueToSlider instead
-   * 
-   * @param {number} value - Logarithmic value
-   * @param {number} min - Minimum value
-   * @param {number} max - Maximum value
-   * @returns {number} Linear slider position (0-100)
-   */
-  static logValueToSlider(value, min, max) {
-    if (value <= min) return 0;
-    if (min === 0) {
-      // Special case for min = 0
-      const threshold = max * 0.01;
-      if (value <= threshold) {
-        return (value / threshold) * 10;
-      }
-      const normalized = Math.log(value / threshold) / Math.log(max / threshold);
-      return 10 + normalized * 90;
-    }
-    const normalized = Math.log(value / min) / Math.log(max / min);
-    return Math.round(normalized * 100);
-  }
-
-  /**
    * Clean up resources
    */
   dispose() {

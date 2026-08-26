@@ -98,11 +98,6 @@ export const exportingMixin = {
       return;
     }
     
-    // Show warning if exporting in Edit mode (non-blocking)
-    if (!this.previewMode) {
-      this.showExportModeWarning();
-    }
-    
     // Initialize exporter if needed
     if (!this.videoExporter) {
       this.videoExporter = new VideoExporter(this.canvas, this.eventBus);
@@ -313,34 +308,6 @@ export const exportingMixin = {
       exportBtn.disabled = false;
       exportBtn.textContent = originalText;
     }
-  },
-  
-  /**
-   * Show export mode warning tooltip when exporting in Edit mode
-   * Warning appears near the Edit/Preview toggle and can be dismissed by clicking anywhere
-   */
-  showExportModeWarning() {
-    const warning = document.getElementById('export-mode-warning');
-    const modeSwitch = document.getElementById('mode-switch');
-    if (!warning || !modeSwitch) return;
-    
-    // Show warning and highlight mode switch
-    warning.classList.add('visible');
-    modeSwitch.classList.add('highlight-warning');
-    
-    // Dismiss handler - click anywhere to dismiss
-    const dismissWarning = () => {
-      warning.classList.remove('visible');
-      modeSwitch.classList.remove('highlight-warning');
-      document.removeEventListener('click', dismissWarning);
-    };
-    
-    // Add dismiss listener after a brief delay (so the export click doesn't immediately dismiss)
-    setTimeout(() => {
-      document.addEventListener('click', dismissWarning);
-    }, 100);
-    
-    console.debug('⚠️ [Export] Showing Edit mode warning');
   },
   
   /**

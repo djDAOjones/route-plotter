@@ -89,7 +89,6 @@ function makeAuthoredApp({ motionSettings }) {
     displayHeight: CANVAS_H,
     renderReference: { width: CANVAS_W, height: CANVAS_H },
     _waypointProgressCache: null,
-    _segmentLengthsCache: null,
     _majorWaypointsCache: null,
     _durationUpdateTimeout: null,
     queueRender() {},

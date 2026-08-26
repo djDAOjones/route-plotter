@@ -2,6 +2,25 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — MAINT-01 removes only the pre-verified dead paths
+
+**Decision:** Keep the maintenance sweep at the exact boundary recovered from
+the roadmap evidence: delete the superseded per-waypoint segment-length path,
+the deprecated duration calculator, the unused legacy logarithmic converters,
+and the export warning whose target DOM never existed. The orphaned segment
+length cache leaves the editor, standalone player and transactional rollback
+state with its dead producer. No other apparently unused public method is
+included; a broader dead-code search would mix uncertain compatibility choices
+into a behaviour-preserving ticket.
+
+**Evidence:** Repository-wide symbol searches show no runtime callers for the
+removed paths. Existing path-length coverage now names the canonical total-path
+calculation, while major-leg timing, golden playback/export parity and video
+transport restoration retain their existing tests. The canonical gate passes
+53 files / 739 tests, restart safety and a clean production check build. The
+production app bundle falls from 772.67 KB to 770.85 KB and the player bundle
+from 160.37 KB to 159.09 KB. No roadmap dependency or Icebox trigger changed.
+
 ## 2026-08-26 — SCALE-01 separates authored appearance from output resolution
 
 **Decision:** Each project now persists one additive `renderReference`, seeded

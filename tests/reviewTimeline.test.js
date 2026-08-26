@@ -75,7 +75,6 @@ function makeExportApp(transport, previewMode = false) {
     background: { image: {} },
     motionVisibilityService: { resetRevealMask: vi.fn() },
     announce: vi.fn(),
-    showExportModeWarning: vi.fn(),
     render: vi.fn(),
     queueRender: vi.fn(),
     _enterExportMode: vi.fn(),

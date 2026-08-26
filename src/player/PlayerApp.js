@@ -103,7 +103,6 @@ export class PlayerApp {
     this.elements = {};
     this.renderQueued = false;
     this._waypointProgressCache = null;
-    this._segmentLengthsCache = null;
     this._majorWaypointsCache = null;
     this._durationUpdateTimeout = null;
     this._lastDisplayedSecond = -1;

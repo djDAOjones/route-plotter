@@ -21,9 +21,8 @@ export const pathTimingMixin = {
     // pathPoints is reassigned atomically below, so we never expose an empty
     // array mid-update.
     
-    // Invalidate caches - will be recalculated on next access
+    // Invalidate cached waypoint progress; it is recalculated on next access.
     this._waypointProgressCache = null;
-    this._segmentLengthsCache = null;
     
     if (this.waypoints.length < 2) {
       this.pathPoints = [];
@@ -171,33 +170,6 @@ export const pathTimingMixin = {
     // Calculate and cache the result
     this._waypointProgressCache = this.pathCalculator.calculateWaypointProgress(this.pathPoints, normalizedWaypoints);
     return this._waypointProgressCache;
-  },
-  
-  /**
-   * Get cached segment lengths, calculating if needed
-   * Cache is invalidated when path changes (in calculatePath)
-   * 
-   * @returns {Array} Array of segment lengths in pixels, or null if invalid
-   */
-  getSegmentLengths() {
-    if (!this.pathPoints || this.pathPoints.length < 2 || !this.waypoints || this.waypoints.length < 2) {
-      return null;
-    }
-    
-    // Return cached values if available
-    if (this._segmentLengthsCache) {
-      return this._segmentLengthsCache;
-    }
-    
-    const waypointProgress = this.getWaypointProgressValues();
-    if (!waypointProgress) return null;
-    
-    // Convert normalized path points to canvas coords for length calculation
-    const canvasPathPoints = this.pathPoints.map(p => this.imageToCanvas(p.x, p.y));
-    
-    // Delegate to PathCalculator for segment length calculation
-    this._segmentLengthsCache = this.pathCalculator.calculateSegmentLengths(canvasPathPoints, waypointProgress);
-    return this._segmentLengthsCache;
   },
   
   /**
