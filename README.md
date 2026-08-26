@@ -65,7 +65,8 @@ src/
   main.js                         RoutePlotter class — app entry point and orchestrator core
   app/                            RoutePlotter prototype mixins (method groups moved out of main.js;
                                   attached via Object.assign — wiring, playback, undo/redo, camera,
-                                  viewport, path timing, persistence, exporting, editor panel, pointer)
+                                  viewport, path timing, persistence, exporting, editor panel, pointer,
+                                  semantic scene-outline integration)
   config/
     constants.js                  All tuneable values (animation, rendering, path, etc.)
     keybindings.js                Mouse + keyboard bindings (customisable via localStorage)
@@ -79,6 +80,7 @@ src/
   controllers/
     UIController.js               Sidebar controls, waypoint list, slider sync
     SectionController.js          Collapsible settings sections
+    SceneOutlineController.js     Native lazy scene outline, authoring forms, focus and draft state
   core/
     EventBus.js                   Pub-sub event system
     PlayerCore.js                 Pure timeline math — segments, pause budgets, beacon schedules,
@@ -87,6 +89,7 @@ src/
     PlayerApp.js                  Headless app core for exported HTML files (real render stack,
                                   adopts the app's own timing mixins)
     playerEntry.js                Exported-page boot + transport controls (bundled → docs/player.js)
+    playerAccessibility.js        Static scene summary and discrete transport announcements
   handlers/
     InteractionHandler.js         Mouse, keyboard, touch, and drag-and-drop input
   models/
@@ -116,7 +119,9 @@ src/
   utils/
     CatmullRom.js                 Catmull-Rom spline interpolation
     Easing.js                     Easing functions (linear, quad, cubic, etc.)
+    entityId.js                   Persisted structural-ID boundary
     focusTrap.js                  Modal focus trapping for accessibility
+    sceneSemantics.js             Pure canonical-project projection for the scene outline
 
 styles/
   tokens.css                      Design tokens — UoN palette, semantic colours, spacing
@@ -173,6 +178,7 @@ User moves slider → UIController emits event
 | `video:*` | VideoExporter | Export lifecycle (started, progress, complete, error) |
 | `area:*` | AreaDrawingService, AreaEditService | Area highlight draw/edit |
 | `undo:*` | UndoService | State snapshot/restore |
+| `scene-outline:*` | SceneOutlineController, RoutePlotter | Semantic snapshots, stable-ID authoring commands, validation feedback |
 
 ### Rendering pipeline
 
@@ -226,7 +232,10 @@ compressed, 256 entries, 64 MiB decompressed, 2 MiB of project JSON, 128 image
 assets, 40 MiB of asset bytes, and 48 megapixels across those assets. Model
 ceilings include 2,000 waypoints, 32 flow layers, 256 emitters, 20,000 dots,
 10,000 graph nodes, 20,000 graph edges, and 10,000 polygon points. Files above
-these ceilings are rejected before live state changes.
+these ceilings are rejected before live state changes. Persisted waypoint,
+flow-layer, emitter, graph-node and graph-edge IDs are limited to 256
+characters so high-cardinality projects cannot amplify one structural value;
+display names and labels retain their separate text budget.
 
 ### Video export
 

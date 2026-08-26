@@ -97,6 +97,26 @@ describe('HTML export player cache correctness', () => {
     expect(html).toContain(
       `Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'`
     );
+
+    const exportedDocument = new DOMParser().parseFromString(html, 'text/html');
+    const canvas = exportedDocument.getElementById('canvas');
+    const summary = exportedDocument.getElementById('scene-summary');
+    const summaryContent = exportedDocument.getElementById('scene-summary-content');
+    const announcer = exportedDocument.getElementById('player-announcer');
+    const timeline = exportedDocument.getElementById('timeline');
+    const timelineLabel = exportedDocument.querySelector('label[for="timeline"]');
+
+    expect(canvas.getAttribute('aria-describedby')).toBe('scene-summary-content');
+    expect(summary.getAttribute('aria-labelledby')).toBe('scene-summary-heading');
+    expect(summary.hasAttribute('aria-live')).toBe(false);
+    expect(summaryContent.textContent).toBe('Loading scene summary.');
+    expect(announcer.getAttribute('role')).toBe('status');
+    expect(announcer.getAttribute('aria-live')).toBe('polite');
+    expect(announcer.getAttribute('aria-atomic')).toBe('true');
+    expect(announcer.classList.contains('sr-only')).toBe(true);
+    expect(timelineLabel.textContent).toContain('Timeline');
+    expect(timelineLabel.contains(timeline)).toBe(true);
+    expect(html).toContain('.sr-only {');
   });
 
   test('fails clearly when original HTML background source bytes are missing or invalid', async () => {

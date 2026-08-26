@@ -73,6 +73,7 @@ import { editorPanelMixin } from './app/editorPanel.js';
 import { pointerMixin } from './app/pointer.js';
 import { crowdsMixin } from './app/crowds.js';
 import { networkMixin } from './app/network.js';
+import { sceneOutlineMixin } from './app/sceneOutline.js';
 import { privacyMixin } from './app/privacy.js';
 import { restoreStartupProject } from './app/startup.js';
 import { loadExampleBackground } from './app/backgroundLoading.js';
@@ -560,6 +561,9 @@ class RoutePlotter {
 
     // Network edit mode wiring (Phase 4)
     this.setupNetworkControls();
+
+    // Complete keyboard/non-visual view of the canonical route + scene.
+    this.setupSceneOutline();
     
     // Initialize tooltips for all elements with data-tooltip attribute
     attachAllTooltips();
@@ -948,6 +952,11 @@ class RoutePlotter {
     
     // Clean up controllers
     this.interactionHandler?.destroy();
+    this.sceneOutlineController?.destroy();
+    if (this._sceneOutlineDeferredRefreshTimer !== null) {
+      clearTimeout(this._sceneOutlineDeferredRefreshTimer);
+      this._sceneOutlineDeferredRefreshTimer = null;
+    }
     this.pathCalculator?.clearCache(); // PathCalculator exposes clearCache(), not destroy()
     
     // Remove all event listeners
@@ -1004,6 +1013,7 @@ Object.assign(
   pointerMixin,
   crowdsMixin,
   networkMixin,
+  sceneOutlineMixin,
   privacyMixin,
 );
 

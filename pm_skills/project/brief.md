@@ -50,9 +50,9 @@ frozen v2 line remains served from
   evaluation path. See decision-log 2026-08-17.
 - npm + esbuild for bundling (target es2022; lockfile committed),
   Vitest for testing.
-- WCAG 2.2 AAA is the product target; REV-02/REV-03/REV-05 track the
-  remaining authoring model, pointer-parity and assurance evidence before it
-  can be claimed as verified support.
+- WCAG 2.2 AAA is the product target; the semantic authoring model now ships,
+  while REV-03/REV-05 track the remaining pointer-parity and assurance evidence
+  before it can be claimed as verified support.
 - IBM Carbon Design System for UI patterns (implemented, not installed).
 - Okabe-Ito colour-blind safe palette for map data.
 - UoN semantic design tokens for UI chrome.

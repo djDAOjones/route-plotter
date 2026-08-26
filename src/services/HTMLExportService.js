@@ -196,6 +196,28 @@ export class HTMLExportService {
       background: var(--surface);
     }
     .player-error[hidden] { display: none; }
+    .scene-summary {
+      padding: 8px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .scene-summary h2,
+    .scene-summary p { display: inline; font-size: inherit; }
+    .scene-summary h2 { color: var(--text-primary); margin-right: 4px; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .controls {
       display: flex;
       align-items: center;
@@ -232,10 +254,19 @@ export class HTMLExportService {
     }
     .timeline {
       flex: 1;
-      min-width: 160px;
+      min-width: 100px;
       height: 44px;           /* full-height hit area; the track stays slim */
       accent-color: var(--uon-blue);
       cursor: pointer;
+    }
+    .timeline-control {
+      flex: 1;
+      min-width: 180px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-primary);
     }
     .time-display {
       font-size: 13px;
@@ -266,17 +297,23 @@ export class HTMLExportService {
 </head>
 <body>
   <div class="canvas-wrapper">
-    <canvas id="canvas" role="img" aria-label="Animated route map: ${safeTitle}"></canvas>
+    <canvas id="canvas" role="img" aria-label="Animated route map: ${safeTitle}"
+            aria-describedby="scene-summary-content"></canvas>
     <div id="player-error" class="player-error" hidden role="alert">
       <strong>This export could not start.</strong>
       <span id="player-error-detail"></span>
     </div>
   </div>
+  <section id="scene-summary" class="scene-summary" aria-labelledby="scene-summary-heading">
+    <h2 id="scene-summary-heading">Scene summary</h2>
+    <p id="scene-summary-content">Loading scene summary.</p>
+  </section>
   <div class="controls">
     <button id="play-btn" class="btn btn-primary" type="button">Play</button>
     <button id="reset-btn" class="btn btn-secondary" type="button">Reset</button>
-    <input id="timeline" class="timeline" type="range" min="0" max="10000" step="1" value="0"
-           aria-label="Timeline">
+    <label class="timeline-control" for="timeline">Timeline
+      <input id="timeline" class="timeline" type="range" min="0" max="10000" step="1" value="0">
+    </label>
     <span class="time-display"><span id="current-time">0:00</span> / <span id="total-time">0:00</span></span>
     <label class="speed-control" for="speed-select">Speed
       <select id="speed-select">
@@ -288,6 +325,7 @@ export class HTMLExportService {
       </select>
     </label>
   </div>
+  <div id="player-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <script>
     window.__ROUTE_PLOTTER_PROJECT__ = ${this._embedJSON(projectData)};
     window.__ROUTE_PLOTTER_BG__ = ${this._embedJSON(backgroundDataURL)};

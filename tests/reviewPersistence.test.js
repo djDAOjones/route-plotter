@@ -374,6 +374,55 @@ describe('transactional project loading', () => {
   });
 
   test.each([
+    ['waypoint', oversizedId => validProject({
+      waypoints: [{ id: oversizedId, imgX: 0.2, imgY: 0.3 }],
+    })],
+    ['flow layer', oversizedId => validProject({
+      scene: { flowLayers: [{ id: oversizedId, graph: { nodes: [], edges: [] } }] },
+    })],
+    ['emitter', oversizedId => validProject({
+      scene: { flowLayers: [{
+        id: 'layer', graph: { nodes: [], edges: [] }, emitters: [{ id: oversizedId }],
+      }] },
+    })],
+    ['graph node', oversizedId => validProject({
+      scene: { flowLayers: [{
+        id: 'layer', graph: { nodes: [{ id: oversizedId, x: 0.5, y: 0.5 }], edges: [] },
+      }] },
+    })],
+    ['graph edge', oversizedId => validProject({
+      scene: { flowLayers: [{
+        id: 'layer',
+        graph: {
+          nodes: [
+            { id: 'source', x: 0.25, y: 0.5 },
+            { id: 'target', x: 0.75, y: 0.5 },
+          ],
+          edges: [{ id: oversizedId, sourceId: 'source', targetId: 'target' }],
+        },
+      }] },
+    })],
+  ])('rejects an oversized %s id before replacing live project state', async (_label, makeProject) => {
+    const app = makeApp();
+    const beforeWaypoint = app.waypoints[0];
+    const beforeScene = app.scene.toJSON();
+    const oversizedId = 'x'.repeat(PROJECT_MODEL_LIMITS.MAX_ENTITY_ID_LENGTH + 1);
+    vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
+      projectData: makeProject(oversizedId),
+      backgroundBase64: null,
+      imageAssets: [],
+    });
+
+    await expect(persistenceMixin.loadProject.call(app, { name: 'oversized-id.zip' }))
+      .resolves.toBe(false);
+
+    expect(app.waypoints[0]).toBe(beforeWaypoint);
+    expect(app.scene.toJSON()).toEqual(beforeScene);
+    expect(app.storageService.cancelAutoSave).not.toHaveBeenCalled();
+    expect(app.storageService.saveAutoSave).not.toHaveBeenCalled();
+  });
+
+  test.each([
     {
       label: 'waypoint',
       project: validProject({

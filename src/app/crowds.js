@@ -265,6 +265,7 @@ export const crowdsMixin = {
       this.autoSave();
       this.updateLayersStrip();
       this.queueRender();
+      this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-visibility', layerId: layer.id });
       this.announce(layer.visible ? `${layer.name} shown` : `${layer.name} hidden`);
     });
 
@@ -311,6 +312,7 @@ export const crowdsMixin = {
         layer.name = name;
         this.saveUndoState();
         this.autoSave();
+        this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-name', layerId: layer.id });
         // Re-announce the selection so the scope chip picks up the new
         // name (renames fire no crowd event of their own)
         if (this.selectedCrowd === layer) {
@@ -338,7 +340,7 @@ export const crowdsMixin = {
    * the guide; otherwise the crowd starts with an empty custom network and
    * the ordinary network event hands authoring to network edit mode.
    */
-  addCrowd() {
+  addCrowd({ enterNetworkEditor = true } = {}) {
     const hasRoute = this.waypoints.length >= 2;
     const layer = this.scene.addFlowLayer({
       name: this._nextCrowdName(),
@@ -347,12 +349,13 @@ export const crowdsMixin = {
     });
     this.saveUndoState();
     this.autoSave();
+    this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-added', layerId: layer.id });
     this.eventBus.emit('crowd:selected', layer);
     this.queueRender();
     this.announce(hasRoute
       ? `${layer.name} added — dots follow the route`
       : `${layer.name} added — draw the network its dots will follow`);
-    if (!hasRoute) {
+    if (!hasRoute && enterNetworkEditor) {
       // crowd:selected must land first so the network mixin edits this layer.
       this.eventBus.emit('network:guide-changed', layer);
     }
@@ -374,6 +377,7 @@ export const crowdsMixin = {
     this.autoSave();
     this.updateLayersStrip();
     this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-deleted', layerId: layer.id });
     this.eventBus.emit('ui:toast', {
       message: `Deleted ${layer.name} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
     });

@@ -305,6 +305,10 @@ export const undoRedoMixin = {
     }
     this.uiController?.setSelection(this.selectedWaypoints, this.selectedWaypoint);
     this.interactionHandler?.setSelectedWaypoint(this.selectedWaypoint);
+    if (this.selectedWaypoint && this.selectedCrowd) {
+      this.selectedCrowd = null;
+      this.eventBus?.emit('crowd:deselected');
+    }
 
     // Restore flow-layer scene (if present in snapshot); the rebuilt
     // layers are new objects, so re-resolve the crowd selection by id
@@ -313,6 +317,7 @@ export const undoRedoMixin = {
     }
     this.resolveCrowdSelectionAfterRestore();
     this.resolveNetworkAfterRestore();
+    this._syncSceneOutlineSelectionAfterRestore?.();
 
     // Restore global styles (if present in snapshot)
     if (state.styles) {

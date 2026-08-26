@@ -25,6 +25,17 @@ const NODE_TYPE_LABELS = {
   exit: 'exit',
 };
 
+const NETWORK_CARD_HINTS = {
+  passive: {
+    node: 'Dots appear at entries and finish at exits. Use Type to change this node, or Delete node to remove it. Choose Edit network to move nodes.',
+    edge: 'Configured share among paths leaving each end. Use Direction and Traffic to edit this edge, or Delete edge to remove it. Choose Edit network to bend paths.',
+  },
+  active: {
+    node: 'Dots appear at entries and finish at exits. T cycles the type; drag to move; Shift-click deletes.',
+    edge: 'Configured share among paths leaving each end. Arriving dots avoid an immediate U-turn when another path is available. Drag the edge to bend it; Shift-click deletes.',
+  },
+};
+
 /** Compact author-facing weight text without losing useful decimals. */
 function formatWeight(weight) {
   return Number(weight.toFixed(2)).toString();
@@ -49,27 +60,40 @@ export const networkMixin = {
     this.eventBus.on('network:guide-changed', (layer) => {
       if (layer.guideType === 'graph' && layer.graph.getNodes().length === 0) {
         this.enterNetworkEditMode();
-      } else if (layer.guideType === 'route' && this.networkEditService.active) {
-        this.networkEditService.exit();
+      } else if (layer.guideType === 'route') {
+        const svc = this.networkEditService;
+        if (svc.active) svc.exit();
+        else if (svc.layer === layer) svc.clearInspection();
       }
       this.updateGuideCard();
     });
 
-    // ── Mode exits on scope/context changes ─────────────────
-    // The mode edits the selected crowd's network; when that stops being
-    // true (deselect, other crowd, preview, crowd deleted) it closes.
+    // ── Bound-network cleanup on scope/context changes ──────
+    // Active authoring closes fully; passive inspection simply unbinds.
     this.eventBus.on('crowd:deselected', () => {
-      if (this.networkEditService.active) this.networkEditService.exit();
+      const svc = this.networkEditService;
+      if (svc.active) svc.exit();
+      else svc.clearInspection();
     });
     this.eventBus.on('crowd:selected', (layer) => {
-      if (this.networkEditService.active && this.networkEditService.layer !== layer) {
-        this.networkEditService.exit();
+      const svc = this.networkEditService;
+      if (svc.layer && svc.layer !== layer) {
+        if (svc.active) svc.exit();
+        else svc.clearInspection();
       }
       this.updateGuideCard();
     });
     this.eventBus.on('motion:preview-mode-change', (previewMode) => {
       if (previewMode && this.networkEditService.active) this.networkEditService.exit();
     });
+    const clearProjectNetworkScope = () => {
+      const service = this.networkEditService;
+      if (service.active) service.exit();
+      else service.clearInspection();
+      this.updateGuideCard();
+    };
+    this.eventBus.on('project:replaced', clearProjectNetworkScope);
+    this.eventBus.on('app:cleared', clearProjectNetworkScope);
     // Keep the Guide card's button state in step with the mode itself
     // (Done button and Esc exit without passing through this mixin)
     this.eventBus.on('network:edit-mode-changed', () => this.updateGuideCard());
@@ -373,6 +397,11 @@ export const networkMixin = {
    */
   syncNetworkCards() {
     const svc = this.networkEditService;
+    const hints = svc.active ? NETWORK_CARD_HINTS.active : NETWORK_CARD_HINTS.passive;
+    const nodeHint = document.getElementById('network-node-hint');
+    const edgeHint = document.getElementById('network-edge-hint');
+    if (nodeHint) nodeHint.textContent = hints.node;
+    if (edgeHint) edgeHint.textContent = hints.edge;
 
     const node = svc.selectedNode();
     if (node) {
@@ -407,7 +436,7 @@ export const networkMixin = {
 
     rowsEl.replaceChildren();
     const svc = this.networkEditService;
-    if (!node || !svc.active) {
+    if (!node || !svc.layer) {
       fieldset.hidden = true;
       return;
     }
@@ -512,7 +541,7 @@ export const networkMixin = {
   _updateEdgeShareReadout(edge) {
     const valueEl = document.getElementById('network-edge-weight-value');
     const svc = this.networkEditService;
-    if (!valueEl || !svc.active) return;
+    if (!valueEl || !svc.layer) return;
     const graph = svc.layer.graph;
 
     const shareFrom = (nodeId) =>
@@ -525,16 +554,17 @@ export const networkMixin = {
   },
 
   /**
-   * After a restore (undo/redo) rebuilt the scene, the mode's layer and
-   * selection references are stale. Re-bind by id; if the layer is gone
-   * or no longer the selected crowd, the mode closes.
+   * After a restore (undo/redo) rebuilt the scene, the bound layer and
+   * selection references are stale. Re-bind active or passive state by id;
+   * if the layer is gone or no longer selected, clear the matching state.
    */
   resolveNetworkAfterRestore() {
     const svc = this.networkEditService;
-    if (!svc.active) return;
+    if (!svc.layer) return;
     const fresh = this.scene.getFlowLayer(svc.layer.id);
     if (!fresh || this.selectedCrowd !== fresh) {
-      svc.exit();
+      if (svc.active) svc.exit();
+      else svc.clearInspection();
     } else {
       svc.rebind(fresh);
       this.syncNetworkCards();

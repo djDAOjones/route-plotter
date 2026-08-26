@@ -68,9 +68,11 @@ export class AreaEditService {
     });
     
     this.eventBus.on('waypoint:deselected', () => {
-      this.activeWaypoint = null;
-      this.isDragging = false;
+      this._resetTransientState();
     });
+
+    this.eventBus.on('project:replaced', () => this._resetTransientState());
+    this.eventBus.on('app:cleared', () => this._resetTransientState());
     
     // Area edit drag events (emitted by InteractionHandler)
     this.eventBus.on('area:edit-start', ({ waypoint, imgX, imgY, imageToScreen }) => {
@@ -84,6 +86,16 @@ export class AreaEditService {
     this.eventBus.on('area:edit-end', () => {
       this._endDrag();
     });
+  }
+
+  _resetTransientState() {
+    this.isDragging = false;
+    this.dragTarget = null;
+    this.dragVertexIndex = -1;
+    this.activeWaypoint = null;
+    this._dragStartImg = null;
+    this._origCenter = null;
+    this._origVertex = null;
   }
   
   /**
@@ -155,6 +167,10 @@ export class AreaEditService {
         this.dragTarget = 'vertex';
         this.dragVertexIndex = hit.vertexIndex;
         this._origVertex = { ...ah.points[hit.vertexIndex] };
+        this.eventBus.emit('area:vertex-selected', {
+          waypoint,
+          index: hit.vertexIndex,
+        });
       }
     }
   }

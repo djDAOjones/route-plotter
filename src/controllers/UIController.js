@@ -254,8 +254,8 @@ export class UIController {
       chipRefresh();
     });
 
-    // Network node/edge scopes (Phase 4 network editing) — the crowd
-    // family's green, with the chip naming what the pen has selected
+    // Network node/edge scopes — the crowd family's green, with the chip
+    // naming either a passively inspected item or what the pen selected.
     this._networkSelection = null;
     this.eventBus.on('network:node-selected', ({ node }) => {
       this._networkSelection = { kind: 'node', node };
@@ -273,8 +273,17 @@ export class UIController {
       if (this._networkSelection?.kind === 'edge') this._networkSelection = null;
       chipRefresh();
     });
-    this.eventBus.on('network:edit-mode-changed', ({ active }) => {
-      if (!active) this._networkSelection = null;
+    this.eventBus.on('network:edit-mode-changed', () => {
+      // exit() publishes a node/edge deselection first; passive inspection
+      // must not otherwise be coupled to the drawing mode flag.
+      chipRefresh();
+    });
+    this.eventBus.on('project:replaced', () => {
+      // A successful load replaces every canonical object. Discard transient
+      // references from the previous project only after that commit boundary.
+      this._selectedCrowd = null;
+      this._networkSelection = null;
+      this.setSelection([], null);
       chipRefresh();
     });
   }
@@ -1391,6 +1400,14 @@ export class UIController {
     this.elements.waypointList.setAttribute('aria-label', 'Waypoints');
     this.elements.waypointList.removeAttribute('aria-multiselectable');
 
+    // Rebuilding removes the focused row from the DOM. Only restore focus
+    // to its replacement when focus belonged to this list beforehand;
+    // semantic-outline and inspector interactions must retain their focus.
+    const focusedBeforeRebuild = document.activeElement;
+    const focusWasInWaypointList = this.elements.waypointList.contains(focusedBeforeRebuild);
+    const focusedControlWasEditing = focusWasInWaypointList &&
+      ['INPUT', 'TEXTAREA', 'SELECT'].includes(focusedBeforeRebuild?.tagName);
+
     this.elements.waypointList.innerHTML = '';
 
     // Filter to major waypoints only (O(n) single pass, kept on the
@@ -1664,14 +1681,18 @@ export class UIController {
       
       this.elements.waypointList.appendChild(item);
       
-      // Focus the row button if this is the primary selected waypoint (for keyboard navigation).
-      // Skip when an input/textarea/select has focus — avoids stealing focus during typing (e.g. label text).
-      if (waypoint === this.selectedWaypoint && this.selectedWaypoints.size <= 1) {
-        const active = document.activeElement;
-        const isEditing = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
-        if (!isEditing) {
-          requestAnimationFrame(() => rowBtn.focus());
-        }
+      // Restore keyboard position only for a rerender initiated from this
+      // list. If focus moved elsewhere before the frame runs, leave it there.
+      if (waypoint === this.selectedWaypoint && this.selectedWaypoints.size <= 1 &&
+          focusWasInWaypointList && !focusedControlWasEditing) {
+        requestAnimationFrame(() => {
+          const active = document.activeElement;
+          const rebuildDroppedFocus = !active || active === document.body || active === document.documentElement;
+          if (rowBtn.isConnected &&
+              (rebuildDroppedFocus || this.elements.waypointList.contains(active))) {
+            rowBtn.focus();
+          }
+        });
       }
     });
   }

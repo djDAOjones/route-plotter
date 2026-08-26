@@ -49,6 +49,26 @@ export function reorderWaypointBlocks(waypoints, newMajorOrder) {
 }
 
 /**
+ * Resolve the insertion boundary for pointer and semantic waypoint authoring.
+ * Semantic commands carry `insertAfterId` (`null` means route start); pointer
+ * commands omit it and keep the historical selected-minor-run behavior.
+ */
+export function resolveWaypointInsertIndex(waypoints, data, selectedWaypoint = null) {
+  if (Object.prototype.hasOwnProperty.call(data, 'insertAfterId')) {
+    if (data.insertAfterId === null) return 0;
+    const explicitIndex = waypoints.findIndex(waypoint => waypoint.id === data.insertAfterId);
+    return explicitIndex === -1 ? waypoints.length : explicitIndex + 1;
+  }
+
+  if (data.isMajor || !selectedWaypoint) return waypoints.length;
+  const selectedIndex = waypoints.indexOf(selectedWaypoint);
+  if (selectedIndex === -1) return waypoints.length;
+  let insertIndex = selectedIndex + 1;
+  while (insertIndex < waypoints.length && !waypoints[insertIndex].isMajor) insertIndex += 1;
+  return insertIndex;
+}
+
+/**
  * Resolve an area handle against a pointer in screen CSS pixels. Keeping this
  * boundary explicit prevents viewport zoom/pan from mixing canvas and screen
  * coordinate spaces.
@@ -271,20 +291,7 @@ export const wiringControllersMixin = {
       let addY = data.imgY;
       
       // Determine insertion index first (needed for angle snap reference)
-      let insertIndex = this.waypoints.length; // Default: append to end
-      
-      if (!data.isMajor && this.selectedWaypoint) {
-        // Minor waypoints: find insertion point after selected waypoint
-        const selectedIndex = this.waypoints.indexOf(this.selectedWaypoint);
-        if (selectedIndex !== -1) {
-          // Find the last consecutive minor waypoint after the selected one
-          // This ensures new minors append to the sequence, not insert at the start
-          insertIndex = selectedIndex + 1;
-          while (insertIndex < this.waypoints.length && !this.waypoints[insertIndex].isMajor) {
-            insertIndex++;
-          }
-        }
-      }
+      const insertIndex = resolveWaypointInsertIndex(this.waypoints, data, this.selectedWaypoint);
       
       // 15° angle snapping when Shift is held
       if (data.shiftKey && insertIndex > 0) {

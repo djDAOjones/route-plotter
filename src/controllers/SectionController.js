@@ -325,8 +325,8 @@ export class SectionController {
       this._updateUIState();
     });
 
-    // Network node/edge selection (Phase 4 network editing) — one more
-    // scope on the same skeleton, shown only while the mode is active
+    // Network node/edge selection — one more scope on the same skeleton,
+    // available from either passive scene inspection or drawing mode.
     this.eventBus.on('network:node-selected', () => {
       this.networkSelection = 'node';
       this._updateUIState();
@@ -343,8 +343,18 @@ export class SectionController {
       if (this.networkSelection === 'edge') this.networkSelection = null;
       this._updateUIState();
     });
-    this.eventBus.on('network:edit-mode-changed', ({ active }) => {
-      if (!active) this.networkSelection = null;
+    this.eventBus.on('network:edit-mode-changed', () => {
+      // exit() emits the matching node/edge deselection itself. Keeping
+      // selection ownership on those events also supports passive inspection.
+      this._updateUIState();
+    });
+
+    this.eventBus.on('project:replaced', () => {
+      // The commit replaced every selectable object. Failed project loads do
+      // not emit this event, so their still-live inspector state is preserved.
+      this.hasSelection = false;
+      this.hasCrowdSelection = false;
+      this.networkSelection = null;
       this._updateUIState();
     });
 
@@ -482,7 +492,7 @@ export class SectionController {
     this.helpPlaceholder.style.display = this.hasWaypoints ? 'none' : 'block';
 
     // Scope switch — the panel edits what's selected: a network node or
-    // edge (while network editing), a crowd layer, a waypoint, or
+    // edge (passively inspected or in drawing mode), a crowd, a waypoint, or
     // (nothing selected) the route
     const nodeScope = this.networkSelection === 'node';
     const edgeScope = this.networkSelection === 'edge';

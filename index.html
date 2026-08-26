@@ -14,6 +14,7 @@
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a class="skip-link skip-link-outline" href="#scene-outline-title">Skip to scene outline</a>
   <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <!-- Application Container -->
   <div id="app">
@@ -947,8 +948,8 @@
           </div><!-- /crowd-scope -->
 
           <!-- ============================================================
-               NODE SCOPE (Phase 4) - shown while network editing when a
-               network node is selected. One card: what this node does.
+               NODE SCOPE - shown when a network node is selected through
+               passive inspection or active network editing.
                ============================================================ -->
           <div id="node-scope" class="scope-group" hidden>
 
@@ -966,7 +967,7 @@
                   <option value="exit">Exit</option>
                 </select>
               </label>
-              <p class="section-hint">Dots appear at entries and finish at exits. T cycles the type; drag to move; Shift-click deletes.</p>
+              <p id="network-node-hint" class="section-hint">Dots appear at entries and finish at exits. Use Type to change this node, or Delete node to remove it. Choose Edit network to move nodes.</p>
               <fieldset id="network-path-weights" class="network-path-weights" hidden>
                 <legend>Path weights</legend>
                 <p id="network-path-weights-help" class="section-hint">
@@ -982,8 +983,8 @@
           </div><!-- /node-scope -->
 
           <!-- ============================================================
-               EDGE SCOPE (Phase 4) - shown while network editing when a
-               network edge is selected: direction and traffic share.
+               EDGE SCOPE - shown when a network edge or bend point is
+               selected through passive inspection or active editing.
                ============================================================ -->
           <div id="edge-scope" class="scope-group" hidden>
 
@@ -1008,10 +1009,9 @@
                 <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1">
                 <span id="network-edge-weight-value">100% configured share</span>
               </label>
-              <p class="section-hint">
-                Configured share among paths leaving each end. Arriving dots avoid an immediate U-turn when another
-                path is available.
-                Drag the edge to bend it; Shift-click deletes.
+              <p id="network-edge-hint" class="section-hint">
+                Configured share among paths leaving each end. Use Direction and Traffic to edit this edge, or Delete
+                edge to remove it. Choose Edit network to bend paths.
               </p>
               <button id="network-edge-delete" class="btn btn-secondary" type="button">Delete edge</button>
             </div>
@@ -1056,6 +1056,17 @@
           <h2 style="margin-bottom:0.5rem;">Waypoints</h2>
           <!-- Waypoint list container - instructions shown inside when empty -->
           <ul id="waypoint-list" class="waypoint-list" aria-label="Waypoints"></ul>
+        </div>
+        <div class="control-group scene-outline-shell">
+          <details id="scene-outline-panel" open>
+            <summary id="scene-outline-title" class="scene-outline-title">Full scene outline</summary>
+            <p id="scene-outline-help" class="section-hint">
+              Inspect and author route geometry, every crowd and emitter, custom networks,
+              edge bends, and polygon vertices without using the canvas.
+            </p>
+            <div id="scene-outline" class="scene-outline" role="region"
+                 aria-labelledby="scene-outline-title" aria-describedby="scene-outline-help"></div>
+          </details>
         </div>
       </aside>
     </main>

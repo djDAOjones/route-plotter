@@ -165,6 +165,7 @@ Use colon-separated namespaces. Emitting the wrong category causes bugs:
 | `video:*` | VideoExporter | Export lifecycle |
 | `area:*` | AreaDrawingService, AreaEditService | Area highlight operations |
 | `undo:*` | UndoService | State snapshot / restore |
+| `scene-outline:*` | SceneOutlineController, RoutePlotter | Semantic snapshots, stable-ID commands and validation feedback |
 
 Do not create synonyms for existing event names.
 

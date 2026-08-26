@@ -60,6 +60,10 @@ body{
     0 0 0 5px var(--focus-outer);
 }
 
+.skip-link-outline{
+  left:var(--space-4);
+}
+
 /* Links: always underlined */
 a{
   color:var(--link-01);
@@ -1559,6 +1563,235 @@ kbd{
   line-height:var(--lh-caption);
   color:var(--text-02);
   margin:var(--space-1) 0 0;
+}
+
+/* Complete semantic scene outline (REV-02).
+   The canvas remains the visual renderer; this native details/list/form view
+   keeps every persisted route, crowd, graph and polygon entity operable with
+   ordinary browser keyboard behaviour. Indentation is deliberately shallow
+   so deep graph/polygon structures still reflow in the narrow sidebar. */
+.scene-outline-shell{
+  min-width:0;
+  margin:0;
+  padding:0.75rem;
+  border-top:1px solid var(--border-subtle);
+}
+
+.scene-outline-shell > details,
+.scene-outline,
+.scene-outline-details,
+.scene-outline-content,
+.scene-outline-subgroup,
+.scene-outline-form{
+  min-width:0;
+  max-width:100%;
+}
+
+.scene-outline-title,
+.scene-outline-summary{
+  min-height:var(--touch-target-min);
+  padding:var(--space-2);
+  color:var(--text-01);
+  font-weight:600;
+  line-height:var(--lh-body);
+  cursor:pointer;
+  overflow-wrap:anywhere;
+}
+
+.scene-outline-title{
+  font-size:var(--type-h2);
+}
+
+.scene-outline-summary{
+  border-radius:var(--radius-2);
+  font-size:var(--type-body);
+}
+
+.scene-outline-title:hover,
+.scene-outline-summary:hover{
+  background:var(--hover-ui);
+}
+
+.scene-outline-title:focus-visible,
+.scene-outline-summary:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.scene-outline{
+  margin-top:var(--space-3);
+  font-size:var(--type-caption);
+}
+
+.scene-outline > .scene-outline-details{
+  margin-bottom:var(--space-3);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-2);
+  background:var(--ui-02);
+}
+
+.scene-outline-content{
+  display:grid;
+  gap:var(--space-2);
+  padding:var(--space-2);
+}
+
+.scene-outline-list{
+  display:grid;
+  gap:var(--space-2);
+  min-width:0;
+  margin:0;
+  padding:0 0 0 var(--space-2);
+  border-left:2px solid var(--border-subtle);
+  list-style:none;
+}
+
+.scene-outline-item{
+  min-width:0;
+}
+
+.scene-outline-item > .scene-outline-details,
+.scene-outline-subgroup.scene-outline-details,
+.scene-outline-content > .scene-outline-network{
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+  background:var(--ui-01);
+}
+
+.scene-outline-hint,
+.scene-outline-empty{
+  margin:0;
+  color:var(--text-02);
+  line-height:var(--lh-caption);
+  overflow-wrap:anywhere;
+}
+
+.scene-outline-empty{
+  padding:var(--space-2);
+  font-style:italic;
+}
+
+.scene-outline-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:var(--space-2);
+}
+
+.scene-outline-action,
+.scene-outline-submit{
+  min-height:var(--touch-target-min);
+  white-space:normal;
+}
+
+.scene-outline-action{
+  flex:1 1 8rem;
+}
+
+.scene-outline-action.is-selected{
+  border-color:var(--interactive-01);
+  background:var(--selected-ui);
+  box-shadow:inset var(--border-width-focus) 0 0 var(--interactive-01);
+  font-weight:600;
+}
+
+.scene-outline-danger{
+  border-color:var(--support-01);
+}
+
+.scene-outline-form{
+  display:grid;
+  gap:var(--space-2);
+  padding:var(--space-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+  background:var(--ui-02);
+}
+
+.scene-outline-field-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(8.5rem,100%),1fr));
+  gap:var(--space-2);
+  min-width:0;
+}
+
+.control-group .scene-outline-field{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:var(--space-1);
+  min-width:0;
+  margin:0;
+}
+
+.control-group .scene-outline-field > span:first-child{
+  flex:none;
+  color:var(--text-02);
+  font-size:var(--type-caption);
+  font-weight:600;
+}
+
+.scene-outline-field input,
+.scene-outline-field select{
+  width:100%;
+  min-width:0;
+  min-height:var(--touch-target-min);
+  padding:var(--space-2);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-2);
+  background:var(--ui-01);
+  color:var(--text-01);
+  font:inherit;
+  font-size:max(1rem,var(--type-body));
+}
+
+.control-group .scene-outline-field input[type="color"]{
+  width:100%;
+  height:var(--touch-target-min);
+  padding:var(--space-1);
+}
+
+.scene-outline-submit{
+  justify-self:stretch;
+  width:100%;
+}
+
+.scene-outline-error{
+  margin:0;
+  padding:var(--space-2);
+  border-left:var(--border-width-focus) solid var(--support-01);
+  background:var(--ui-01);
+  color:var(--text-01);
+  font-weight:600;
+  line-height:var(--lh-caption);
+}
+
+.scene-outline-field [aria-invalid="true"]{
+  border-color:var(--support-01);
+  box-shadow:0 0 0 1px var(--support-01);
+}
+
+.scene-outline-readonly{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:var(--space-1) var(--space-2);
+  min-width:0;
+  margin:0;
+  padding:var(--space-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+}
+
+.scene-outline-readonly dt{
+  color:var(--text-02);
+  font-weight:600;
+}
+
+.scene-outline-readonly dd{
+  min-width:0;
+  margin:0;
+  overflow-wrap:anywhere;
 }
 
 /* Junction path-choice fieldset: native number inputs keep exact weights

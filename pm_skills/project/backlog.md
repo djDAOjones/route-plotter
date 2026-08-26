@@ -13,9 +13,9 @@
   format-locked strategy selection, cached player loading and one
   endpoint-inclusive frame plan are implemented. Publish real-browser
   codec/container and genuinely offline standalone-export evidence.
-- [ ] REV-02 [[detail]](tickets/REV-02.md) [ready] — Implement the approved
-  synchronized semantic scene outline plus explicit keyboard and coordinate
-  authoring for route, crowd, network and polygon structures.
+- [ ] REV-03 [ready] — Replace separate mouse/touch paths with one Pointer
+  Events + capture state machine. Include exactly-once contracts, physical
+  mobile evidence and multi-selection group drag.
 - [ ] UI-01 [ready] — Introduce two-tier cards with 2–4 primary controls and a
   More disclosure; this is the layout substrate for advanced and crowd
   controls.
@@ -28,9 +28,6 @@
 
 ### Next
 
-- [ ] REV-03 [gated: REV-02] — Replace separate mouse/touch paths with one
-  Pointer Events + capture state machine. Include exactly-once contracts,
-  physical mobile evidence and multi-selection group drag.
 - [ ] UX-02 [gated: UI-01] — Make names/readouts honest in renderer units,
   migrate Text Size to pixels, and explain comet mode's intentional
   preview-tail duration in Pacing.
@@ -41,7 +38,7 @@
   disagrees instead of silently displaying the primary waypoint's values.
 - [ ] UI-05 [gated: UI-01] — Add per-card Reset to route style and Apply onward
   after the card layout and mixed-value rules are stable.
-- [ ] UI-02 [gated: REV-02, UI-01] [sign-off] — Show minor waypoints as
+- [ ] UI-02 [gated: UI-01] [sign-off] — Show minor waypoints as
   indented, selectable, renameable and reorder-visible rows using the approved
   semantic outline.
 - [ ] CROWD-03 [[detail]](tickets/CROWD-03.md) [gated: UI-01] — Expose seeded
@@ -51,14 +48,14 @@
   [gated: UI-01, CROWD-03] — Add the whole-route busyness line graph with
   handles and gradual/step transitions, identical in editor, reload and
   export.
-- [ ] REV-05 [gated: REV-02, REV-03, CROWD-02] — Complete accessibility
+- [ ] REV-05 [gated: REV-03, CROWD-02] — Complete accessibility
   assurance with axe, NVDA/VoiceOver, forced colours, reduced motion and
   200–400% zoom after the new authoring UI stabilises.
 - [ ] SCALE-01 [[detail]](tickets/SCALE-01.md) [gated: REV-06] — Implement
   project-reference sizing so map-bound graphics preserve their authored
   proportions across editor, HTML and video resolutions without changing
   timing.
-- [ ] ROUTE-01 [[detail]](tickets/ROUTE-01.md) [gated: REV-02, REV-03] —
+- [ ] ROUTE-01 [[detail]](tickets/ROUTE-01.md) [gated: REV-03] —
   Implement simultaneous split hero-route branches on one master timeline,
   with deterministic fork, reconvergence and completion semantics.
 - [ ] COMPOSE-01 [[detail]](tickets/COMPOSE-01.md)

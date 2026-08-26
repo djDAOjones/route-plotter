@@ -51,6 +51,8 @@ function makeApp({ hasRoute = true } = {}) {
 describe('addCrowd', () => {
   test('creates a route-guided layer with one dot stream and selects it', () => {
     const app = makeApp();
+    const semantic = [];
+    app.eventBus.on('scene:semantic-changed', event => semantic.push(event));
     app.addCrowd();
 
     const layers = app.scene.getFlowLayers();
@@ -62,6 +64,7 @@ describe('addCrowd', () => {
     expect(app.events).toContainEqual(['selected', layers[0].id]);
     expect(app.undoSaves).toBe(1);
     expect(app.autoSaves).toBe(1);
+    expect(semantic).toEqual([{ kind: 'crowd-added', layerId: layers[0].id }]);
   });
 
   test('names crowds Crowd 1, Crowd 2, … skipping taken names', () => {
@@ -151,6 +154,8 @@ describe('layers strip', () => {
     app.addCrowd();
     const layer = app.scene.getFlowLayers()[0];
     const savesBefore = app.undoSaves;
+    const semantic = [];
+    app.eventBus.on('scene:semantic-changed', event => semantic.push(event));
 
     document.querySelector('#layers-strip .layer-visibility').click();
     expect(layer.visible).toBe(false);
@@ -158,9 +163,31 @@ describe('layers strip', () => {
     expect(
       document.querySelectorAll('#layers-strip .layer-item')[1].classList.contains('layer-hidden')
     ).toBe(true);
+    expect(semantic).toEqual([{ kind: 'crowd-visibility', layerId: layer.id }]);
 
     document.querySelector('#layers-strip .layer-visibility').click();
     expect(layer.visible).toBe(true);
+    expect(semantic).toHaveLength(2);
+  });
+
+  test('renaming an unselected crowd publishes a semantic refresh event', () => {
+    const app = makeApp();
+    app.addCrowd();
+    app.addCrowd();
+    const layer = app.scene.getFlowLayers()[0];
+    const semantic = [];
+    app.eventBus.on('scene:semantic-changed', event => semantic.push(event));
+    const title = [...document.querySelectorAll('.layer-title')]
+      .find(element => element.textContent === layer.name);
+
+    app._startCrowdRename(layer, title);
+    const input = document.querySelector('.layer-rename-input');
+    input.value = 'Arrivals';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    expect(layer.name).toBe('Arrivals');
+    expect(app.selectedCrowd).not.toBe(layer);
+    expect(semantic).toEqual([{ kind: 'crowd-name', layerId: layer.id }]);
   });
 
   test('the Add crowd button remains available and describes the guide it will create', () => {
@@ -192,11 +219,14 @@ describe('deleteCrowd', () => {
     const app = makeApp();
     app.addCrowd();
     const layer = app.scene.getFlowLayers()[0];
+    const semantic = [];
+    app.eventBus.on('scene:semantic-changed', event => semantic.push(event));
 
     app.deleteCrowd(layer);
     expect(app.scene.isEmpty()).toBe(true);
     expect(app.selectedCrowd).toBeNull();
     expect(app.events).toContainEqual(['deselected']);
+    expect(semantic).toEqual([{ kind: 'crowd-deleted', layerId: layer.id }]);
     const toast = app.events.find(e => e[0] === 'toast');
     expect(toast[1]).toMatch(/Deleted Crowd 1 — press (Cmd|Ctrl)\+Z to undo/);
   });

@@ -18,12 +18,13 @@
 src/
   main.js              — RoutePlotter class: app entry point and orchestrator core
   app/                 — RoutePlotter prototype mixins (wiring, playback, undo/redo, camera,
-                         viewport, path timing, persistence, exporting, editor panel, pointer)
+                         viewport, path timing, persistence, exporting, editor panel, pointer,
+                         synchronized scene-outline integration)
   config/              — constants, keybindings, help content, tooltips
   core/                — EventBus (pub-sub), PlayerCore (pure timeline math)
   models/              — Waypoint, AnimationState, ImageAsset + scene model (Scene → FlowLayer → GraphModel/GraphNode/GraphEdge + Emitter)
   services/            — single-responsibility services (18 modules)
-  controllers/         — UIController, SectionController
+  controllers/         — UIController, SectionController, SceneOutlineController
   components/          — SwatchPicker, Dropdown, Tooltip, ParamTooltip
   handlers/            — InteractionHandler (mouse, keyboard, touch, DnD)
   utils/               — CatmullRom, Easing, focusTrap
@@ -59,6 +60,14 @@ seeds and normalised release windows), persisted additively as the
 coordVersion 9 `scene` block. Phases and rationale: backlog +
 decision-log 2026-08-17/18.
 
+REV-02 adds an equivalent non-canvas authoring path without changing that
+ownership: `src/utils/sceneSemantics.js` projects the canonical model into a
+plain semantic snapshot, `src/controllers/SceneOutlineController.js` renders
+lazy native DOM and emits stable-ID commands, and `src/app/sceneOutline.js`
+resolves those commands back into the existing mutation/undo/autosave paths.
+The exported player uses `src/player/playerAccessibility.js` for an aggregate
+scene description and discrete transport announcements.
+
 ## Key modules
 
 | Module | Path | Responsibility |
@@ -69,6 +78,7 @@ decision-log 2026-08-17/18.
 | PathCalculator | `src/services/PathCalculator.js` | Catmull-Rom spline, reparameterisation, curvature |
 | RenderingService | `src/services/RenderingService.js` | Canvas drawing: path, markers, labels, overlays |
 | UIController | `src/controllers/UIController.js` | Sidebar controls, waypoint list, slider sync |
+| SceneOutlineController | `src/controllers/SceneOutlineController.js` | Lazy native semantic outline, authoring forms, focus and draft state |
 | InteractionHandler | `src/handlers/InteractionHandler.js` | Mouse, keyboard, touch, drag-and-drop input |
 | CoordinateTransform | `src/services/CoordinateTransform.js` | Image ↔ canvas coordinate conversion |
 | VideoExporter | `src/services/VideoExporter.js` | MP4/WebM export via WebCodecs |
@@ -76,8 +86,8 @@ decision-log 2026-08-17/18.
 ## Communication patterns
 
 **EventBus (pub-sub)** is the only communication channel between
-components. UIController and InteractionHandler emit events; `main.js`
-handles them. No direct method calls between components.
+components. UIController, SceneOutlineController and InteractionHandler emit
+events; `main.js` handles them. No direct method calls between components.
 
 Exceptions: none. This is a hard rule.
 

@@ -2,6 +2,34 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — REV-02 makes the canonical scene operable without the canvas
+
+**Decision:** Ship one synchronized semantic scene outline as an equivalent
+authoring view, not a second project model. Native disclosures, lists, forms
+and buttons expose every major/minor waypoint, crowd, primary emitter, stored
+network node/edge/control point and polygon vertex. Commands carry stable
+entity identities back to the RoutePlotter orchestrator, which alone validates,
+mutates, records undo and autosaves. The canvas remains the visual renderer;
+selection and focus synchronize in both directions without making passive
+inspection enter a drawing mode.
+
+**Robustness and accessibility:** Numeric forms preserve exact stored values
+until an author changes them, rejected submissions retain their drafts and
+successful project replacement is the only load boundary that clears transient
+outline/inspector state. Persisted entity IDs are structural rather than display
+text and are limited to 256 UTF-16 code units, bounding high-cardinality key
+fan-out while leaving the separate 100,000-character authored-text budget
+unchanged. The outline mounts closed branches lazily and coalesces high-frequency
+semantic refreshes. Standalone exports expose one concise privacy-safe aggregate
+scene summary and announce discrete transport changes, waits and completion;
+they never disclose authored names or coordinates or narrate animation frames.
+
+**Sequence:** REV-02 leaves the live backlog and its detail ticket is removed.
+REV-03 is now dependency-ready in Current. Only the resolved REV-02 gates are
+removed from UI-02, REV-05 and ROUTE-01; UI-01 and crowd-envelope dependencies
+remain. No Icebox or wish-list item is promoted because its trigger is still
+unmet, and the complete prior trajectory is preserved as requested.
+
 ## 2026-08-26 — SUPPORT-01 separates preview, sharing and support navigation
 
 **Decision:** The permanent Report a bug header action creates one fresh,

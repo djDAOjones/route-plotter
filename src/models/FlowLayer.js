@@ -1,5 +1,6 @@
 import { GraphModel } from './GraphModel.js';
 import { Emitter } from './Emitter.js';
+import { assertPersistedEntityId } from '../utils/entityId.js';
 
 /**
  * Model representing one flow layer in the scene: a guide network plus the
@@ -143,6 +144,7 @@ export class FlowLayer {
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
       throw new Error('Invalid flow layer: expected an object');
     }
+    assertPersistedEntityId(data.id, 'flow layer id');
 
     const emitters = data.emitters ?? [];
     if (!Array.isArray(emitters)) {
@@ -155,9 +157,8 @@ export class FlowLayer {
     emitters.forEach(emitter => {
       Emitter.assertValidJSON(emitter);
       if (emitter.id != null) {
-        if (typeof emitter.id !== 'string' || emitter.id.length === 0 || emitterIds.has(emitter.id)) {
-          throw new Error('Invalid emitter id: expected a unique non-empty string');
-        }
+        assertPersistedEntityId(emitter.id, 'emitter id');
+        if (emitterIds.has(emitter.id)) throw new Error('Invalid emitter id: expected a unique string');
         emitterIds.add(emitter.id);
       }
     });
@@ -190,9 +191,8 @@ export class FlowLayer {
         throw new Error('Invalid graph node position: expected coordinates from 0 to 1');
       }
       if (node.id != null) {
-        if (typeof node.id !== 'string' || node.id.length === 0 || nodeIds.has(node.id)) {
-          throw new Error('Invalid graph node id: expected a unique non-empty string');
-        }
+        assertPersistedEntityId(node.id, 'graph node id');
+        if (nodeIds.has(node.id)) throw new Error('Invalid graph node id: expected a unique string');
         nodeIds.add(node.id);
       }
     }
@@ -213,9 +213,8 @@ export class FlowLayer {
         throw new Error('Invalid graph edge weight: expected a finite positive number');
       }
       if (edge.id != null) {
-        if (typeof edge.id !== 'string' || edge.id.length === 0 || edgeIds.has(edge.id)) {
-          throw new Error('Invalid graph edge id: expected a unique non-empty string');
-        }
+        assertPersistedEntityId(edge.id, 'graph edge id');
+        if (edgeIds.has(edge.id)) throw new Error('Invalid graph edge id: expected a unique string');
         edgeIds.add(edge.id);
       }
       const points = edge.controlPoints ?? [];

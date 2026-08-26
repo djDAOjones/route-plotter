@@ -28,8 +28,10 @@ import {
   isAsyncProjectOperationCurrent,
 } from './operationGeneration.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
+import { assertPersistedEntityId, ENTITY_ID_LIMITS } from '../utils/entityId.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
+  MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
   MAX_WAYPOINTS: 2000,
   MAX_AREA_POINTS_PER_WAYPOINT: 256,
   MAX_AREA_POINTS_TOTAL: 10000,
@@ -179,9 +181,8 @@ function stageWaypoints(data) {
       throw new Error(`Invalid waypoint at index ${index}`);
     }
     if (serialized.id != null) {
-      if (typeof serialized.id !== 'string' || serialized.id.length === 0 || ids.has(serialized.id)) {
-        throw new Error(`Invalid or duplicate waypoint id at index ${index}`);
-      }
+      assertPersistedEntityId(serialized.id, `waypoint id at index ${index}`);
+      if (ids.has(serialized.id)) throw new Error(`Duplicate waypoint id at index ${index}`);
       ids.add(serialized.id);
     }
     for (const field of ['segmentColor', 'dotColor']) {
@@ -878,6 +879,7 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     clearTimeout(app._undoDebounceTimer);
     app._undoDebounceTimer = null;
   }
+  app.eventBus?.emit('project:replaced');
 }
 
 export const persistenceMixin = {

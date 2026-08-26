@@ -16,8 +16,39 @@ import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import { networkMixin } from '../src/app/network.js';
 import { Scene } from '../src/models/Scene.js';
 import { EventBus } from '../src/core/EventBus.js';
+import { SectionController } from '../src/controllers/SectionController.js';
+import { UIController } from '../src/controllers/UIController.js';
 
 const SCALE = 1000;
+
+function makeCanvasRecorder() {
+  const calls = { saves: 0, strokes: [], strokeRects: [], fillRects: [], dashes: [], arcs: [] };
+  const ctx = {
+    strokeStyle: '#000000', fillStyle: '#000000', lineWidth: 1, globalAlpha: 1,
+    save() { calls.saves++; }, restore() {}, beginPath() {}, closePath() {},
+    moveTo() {}, lineTo() {}, rect() {}, fill() {}, translate() {}, rotate() {},
+    arc(x, y, radius) { calls.arcs.push({ x, y, radius }); },
+    stroke() { calls.strokes.push({ style: this.strokeStyle, width: this.lineWidth }); },
+    fillRect(x, y, width, height) { calls.fillRects.push({ x, y, width, height }); },
+    strokeRect(x, y, width, height) {
+      calls.strokeRects.push({ x, y, width, height, style: this.strokeStyle, lineWidth: this.lineWidth });
+    },
+    setLineDash(pattern) { calls.dashes.push([...pattern]); },
+  };
+  return { ctx, calls };
+}
+
+function renderNetworkGuide(service, app, layer, ctx) {
+  service.renderGuide(
+    { scaleSizeClamped: value => value },
+    ctx,
+    {
+      swarmEngine: app.swarmEngine,
+      imageToCanvas: (x, y) => ({ x: x * SCALE, y: y * SCALE }),
+    },
+    layer
+  );
+}
 
 function makeApp() {
   document.body.innerHTML = `
@@ -28,6 +59,7 @@ function makeApp() {
       <option value="entry">Entry</option>
       <option value="exit">Exit</option>
     </select>
+    <p id="network-node-hint"></p>
     <button id="network-node-delete" type="button"></button>
     <fieldset id="network-path-weights" hidden>
       <p id="network-path-weights-help"></p>
@@ -40,6 +72,7 @@ function makeApp() {
     <button id="network-edge-swap" type="button" hidden></button>
     <input type="range" id="network-edge-weight" min="1" max="50" value="10">
     <span id="network-edge-weight-value"></span>
+    <p id="network-edge-hint"></p>
     <button id="network-edge-delete" type="button"></button>
   `;
   const eventBus = new EventBus();
@@ -69,7 +102,8 @@ function makeApp() {
   };
   Object.assign(app, networkMixin);
   for (const ev of ['network:edit-mode-changed', 'network:node-selected', 'network:node-deselected',
-                    'network:edge-selected', 'network:edge-deselected', 'network:changed',
+                    'network:edge-selected', 'network:edge-deselected',
+                    'network:control-selected', 'network:control-deselected', 'network:changed',
                     'crowd:param-changed', 'ui:toast']) {
     app.eventBus.on(ev, (payload) => app.events.push([ev, payload]));
   }
@@ -82,6 +116,14 @@ function enterMode(app) {
   const layer = app.scene.addFlowLayer({ guideType: 'graph', emitters: [{}] });
   app.selectedCrowd = layer;
   app.networkEditService.enter(layer);
+  return layer;
+}
+
+/** A graph-guided crowd bound for inspector use, with no drawing mode. */
+function bindForInspection(app) {
+  const layer = app.scene.addFlowLayer({ guideType: 'graph', emitters: [{}] });
+  app.selectedCrowd = layer;
+  app.networkEditService.bindForInspection(layer);
   return layer;
 }
 
@@ -112,6 +154,32 @@ describe('mode lifecycle', () => {
     expect(app.events.map(e => e[0])).toContain('network:node-deselected');
   });
 
+  test('successful project boundaries clear active and passive bindings while failed loads preserve them', () => {
+    const activeLayer = enterMode(app);
+    svc.placeNode({ x: 0.5, y: 0.5 });
+    app.eventBus.emit('project:load-failed');
+    expect(svc.active).toBe(true);
+    expect(svc.layer).toBe(activeLayer);
+
+    app.eventBus.emit('project:replaced');
+    expect(svc.active).toBe(false);
+    expect(svc.layer).toBeNull();
+    expect(svc.selection).toBeNull();
+    expect(document.getElementById('network-edit-banner')).toBeNull();
+
+    const passiveLayer = bindForInspection(app);
+    const passiveNode = passiveLayer.graph.addNode({ x: 0.4, y: 0.6 });
+    svc.selectNode(passiveNode);
+    app.eventBus.emit('project:load-failed');
+    expect(svc.layer).toBe(passiveLayer);
+    expect(svc.selectedNode()).toBe(passiveNode);
+
+    app.eventBus.emit('app:cleared');
+    expect(svc.active).toBe(false);
+    expect(svc.layer).toBeNull();
+    expect(svc.selection).toBeNull();
+  });
+
   test('the model keeps its nodes across exit — only tool state is discarded', () => {
     const layer = enterMode(app);
     svc.placeNode({ x: 0.2, y: 0.2 });
@@ -119,6 +187,264 @@ describe('mode lifecycle', () => {
     svc.exit();
     expect(layer.graph.getNodes()).toHaveLength(2);
     expect(layer.graph.getEdges()).toHaveLength(1);
+  });
+});
+
+describe('passive inspection', () => {
+  test('binds and resolves a node without entering drawing mode or changing Preview', () => {
+    app.previewMode = true;
+    const layer = bindForInspection(app);
+    const node = layer.graph.addNode({ x: 0.5, y: 0.5 });
+
+    svc.selectNode(node);
+
+    expect(svc.active).toBe(false);
+    expect(svc.layer).toBe(layer);
+    expect(svc.selectedNode()).toBe(node);
+    expect(svc.selectedEdge()).toBeNull();
+    expect(svc._keyHandler).toBeNull();
+    expect(document.getElementById('network-edit-banner')).toBeNull();
+    expect(app.previewMode).toBe(true);
+    expect(app.events.some(([event]) => event === 'network:edit-mode-changed')).toBe(false);
+  });
+
+  test('node, edge, and individual control selections are visible without pen affordances', () => {
+    const layer = bindForInspection(app);
+    layer.emitters[0].dotColor = 'transparent';
+    const source = layer.graph.addNode({ x: 0.2, y: 0.5 });
+    const target = layer.graph.addNode({ x: 0.8, y: 0.5 });
+    const edge = layer.graph.addEdge({ sourceId: source.id, targetId: target.id });
+    edge.controlPoints = [{ x: 0.4, y: 0.4 }, { x: 0.6, y: 0.6 }];
+    const ink = '#111111';
+
+    svc.selectNode(source);
+    let recording = makeCanvasRecorder();
+    renderNetworkGuide(svc, app, layer, recording.ctx);
+    expect(recording.calls.dashes).toContainEqual([4, 3]);
+    expect(recording.calls.arcs.some(({ radius }) => radius === 12)).toBe(true);
+    expect(recording.calls.strokes).toContainEqual({ style: '#FFFFFF', width: 5 });
+    expect(recording.calls.strokes).toContainEqual({ style: ink, width: 2 });
+
+    svc.selectEdge(edge);
+    recording = makeCanvasRecorder();
+    renderNetworkGuide(svc, app, layer, recording.ctx);
+    expect(recording.calls.strokes).toContainEqual({ style: '#FFFFFF', width: 4.5 });
+    expect(recording.calls.strokes).toContainEqual({ style: ink, width: 2.5 });
+    expect(recording.calls.strokeRects).toHaveLength(0);
+
+    svc.selectControlPoint(edge, 1);
+    expect(svc.selectedControlPoint()).toEqual({ edge, index: 1, point: edge.controlPoints[1] });
+    recording = makeCanvasRecorder();
+    renderNetworkGuide(svc, app, layer, recording.ctx);
+    expect(recording.calls.strokeRects).toContainEqual(expect.objectContaining({
+      width: 14, height: 14, style: '#FFFFFF', lineWidth: 4
+    }));
+    expect(recording.calls.strokeRects).toContainEqual(expect.objectContaining({
+      width: 14, height: 14, style: ink, lineWidth: 2
+    }));
+    expect(recording.calls.strokeRects.filter(({ width }) => width === 10)).toHaveLength(0);
+
+    const controlEventsBefore = app.events.filter(([event]) => event === 'network:control-selected').length;
+    svc.setSelectedEdgeDirection('one-way');
+    expect(svc.selectedControlPoint()).toEqual({ edge, index: 1, point: edge.controlPoints[1] });
+    expect(app.events.filter(([event]) => event === 'network:control-selected'))
+      .toHaveLength(controlEventsBefore + 1);
+
+    // Even corrupted/stale transient state cannot leak pen or hover drawing
+    // into passive inspection: renderOverlay owns an active-mode guard.
+    svc.penNodeId = source.id;
+    svc.hover = { kind: 'node', id: target.id };
+    svc.cursorImg = { x: 0.9, y: 0.9 };
+    recording = makeCanvasRecorder();
+    svc.renderOverlay(
+      { scaleSizeClamped: value => value },
+      recording.ctx,
+      {
+        swarmEngine: app.swarmEngine,
+        imageToCanvas: (x, y) => ({ x: x * SCALE, y: y * SCALE }),
+      }
+    );
+    expect(recording.calls.saves).toBe(0);
+
+    svc.enter(layer);
+    svc.selectEdge(edge);
+    recording = makeCanvasRecorder();
+    svc.renderOverlay(
+      { scaleSizeClamped: value => value },
+      recording.ctx,
+      {
+        swarmEngine: app.swarmEngine,
+        imageToCanvas: (x, y) => ({ x: x * SCALE, y: y * SCALE }),
+      }
+    );
+    expect(recording.calls.strokeRects.filter(({ width }) => width === 10)).toHaveLength(2);
+  });
+
+  test('card guidance names passive controls and retains active-mode shortcuts', () => {
+    const layer = bindForInspection(app);
+    const source = layer.graph.addNode({ x: 0.2, y: 0.5 });
+    const target = layer.graph.addNode({ x: 0.8, y: 0.5 });
+    const edge = layer.graph.addEdge({ sourceId: source.id, targetId: target.id });
+
+    svc.selectNode(source);
+    expect(document.getElementById('network-node-hint').textContent).toMatch(/Use Type/);
+    expect(document.getElementById('network-node-hint').textContent).toMatch(/Delete node/);
+    expect(document.getElementById('network-node-hint').textContent).not.toMatch(/T cycles|Shift-click/);
+
+    svc.selectEdge(edge);
+    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Direction and Traffic/);
+    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Delete edge/);
+    expect(document.getElementById('network-edge-hint').textContent).not.toMatch(/Shift-click/);
+
+    svc.enter(layer);
+    svc.selectNode(source);
+    expect(document.getElementById('network-node-hint').textContent).toMatch(/T cycles.*drag.*Shift-click/);
+    svc.selectEdge(edge);
+    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Drag the edge.*Shift-click/);
+  });
+
+  test('Node card edits and deletes a passive selection with one commit per action', () => {
+    const layer = bindForInspection(app);
+    const node = layer.graph.addNode({ x: 0.5, y: 0.5 });
+    svc.selectNode(node);
+    const commitsBefore = app.events.filter(
+      ([event, payload]) => event === 'network:changed' && payload.commit).length;
+    const undoBefore = app.undoSaves;
+    const autoBefore = app.autoSaves;
+
+    const type = document.getElementById('network-node-type');
+    type.value = 'entry';
+    type.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(node.type).toBe('entry');
+    expect(app.events.filter(
+      ([event, payload]) => event === 'network:changed' && payload.commit))
+      .toHaveLength(commitsBefore + 1);
+    expect(app.undoSaves).toBe(undoBefore + 1);
+    expect(app.autoSaves).toBe(autoBefore + 1);
+
+    document.getElementById('network-node-delete').click();
+    expect(layer.graph.getNodes()).toHaveLength(0);
+    expect(app.events.filter(
+      ([event, payload]) => event === 'network:changed' && payload.commit))
+      .toHaveLength(commitsBefore + 2);
+    expect(app.undoSaves).toBe(undoBefore + 2);
+    expect(app.autoSaves).toBe(autoBefore + 2);
+  });
+
+  test('Edge card edits and deletes a passive selection with one commit per action', () => {
+    const layer = bindForInspection(app);
+    const source = layer.graph.addNode({ x: 0.2, y: 0.5 });
+    const target = layer.graph.addNode({ x: 0.8, y: 0.5 });
+    const edge = layer.graph.addEdge({ sourceId: source.id, targetId: target.id });
+    svc.selectEdge(edge);
+    const commitsBefore = app.events.filter(
+      ([event, payload]) => event === 'network:changed' && payload.commit).length;
+    const undoBefore = app.undoSaves;
+    const autoBefore = app.autoSaves;
+
+    const direction = document.getElementById('network-edge-direction');
+    direction.value = 'one-way';
+    direction.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(edge.direction).toBe('one-way');
+    expect(app.events.filter(
+      ([event, payload]) => event === 'network:changed' && payload.commit))
+      .toHaveLength(commitsBefore + 1);
+    expect(app.undoSaves).toBe(undoBefore + 1);
+    expect(app.autoSaves).toBe(autoBefore + 1);
+
+    document.getElementById('network-edge-delete').click();
+    expect(layer.graph.getEdges()).toHaveLength(0);
+    expect(app.events.filter(
+      ([event, payload]) => event === 'network:changed' && payload.commit))
+      .toHaveLength(commitsBefore + 2);
+    expect(app.undoSaves).toBe(undoBefore + 2);
+    expect(app.autoSaves).toBe(autoBefore + 2);
+  });
+
+  test('inspection APIs preserve an already-active drawing session', () => {
+    const layer = enterMode(app);
+    const node = svc.placeNode({ x: 0.5, y: 0.5 });
+    const keyHandler = svc._keyHandler;
+
+    svc.bindForInspection(layer);
+    expect(svc.active).toBe(true);
+    expect(svc.layer).toBe(layer);
+    expect(svc.selectedNode()).toBe(node);
+    expect(svc._keyHandler).toBe(keyHandler);
+    expect(document.getElementById('network-edit-banner')).toBeTruthy();
+
+    svc.clearInspection();
+    expect(svc.active).toBe(true);
+    expect(svc.layer).toBe(layer);
+    expect(svc.selection).toBeNull();
+    expect(svc.penNodeId).toBe(node.id);
+    expect(svc._keyHandler).toBe(keyHandler);
+    expect(document.getElementById('network-edit-banner')).toBeTruthy();
+  });
+
+  test('crowd context changes clear passive binding and selection safely', () => {
+    const layer = bindForInspection(app);
+    const node = layer.graph.addNode({ x: 0.5, y: 0.5 });
+    svc.selectNode(node);
+
+    app.eventBus.emit('crowd:selected', layer);
+    expect(svc.selectedNode()).toBe(node); // same crowd retains inspection
+
+    const other = app.scene.addFlowLayer({ guideType: 'graph', emitters: [{}] });
+    app.eventBus.emit('crowd:selected', other);
+    expect(svc.active).toBe(false);
+    expect(svc.layer).toBeNull();
+    expect(svc.selection).toBeNull();
+
+    svc.bindForInspection(layer);
+    svc.selectNode(node);
+    app.eventBus.emit('crowd:deselected');
+    expect(svc.layer).toBeNull();
+    expect(svc.selection).toBeNull();
+    expect(app.events.map(([event]) => event)).toContain('network:node-deselected');
+  });
+
+  test('restore rebinds passive selection to fresh model objects, then clears if absent', () => {
+    const layer = bindForInspection(app);
+    const node = layer.graph.addNode({ x: 0.5, y: 0.5 });
+    svc.selectNode(node);
+
+    app.scene.fromJSON(app.scene.toJSON());
+    const fresh = app.scene.getFlowLayer(layer.id);
+    app.selectedCrowd = fresh;
+    app.resolveNetworkAfterRestore();
+
+    expect(svc.active).toBe(false);
+    expect(svc.layer).toBe(fresh);
+    expect(svc.selectedNode()).toBe(fresh.graph.getNode(node.id));
+    expect(svc.selectedNode()).not.toBe(node);
+
+    app.scene.clear();
+    app.selectedCrowd = null;
+    app.resolveNetworkAfterRestore();
+    expect(svc.layer).toBeNull();
+    expect(svc.selection).toBeNull();
+  });
+
+  test('restore preserves a passive control-point selection by edge id and index', () => {
+    const layer = bindForInspection(app);
+    const source = layer.graph.addNode({ x: 0.2, y: 0.5 });
+    const target = layer.graph.addNode({ x: 0.8, y: 0.5 });
+    const edge = layer.graph.addEdge({ sourceId: source.id, targetId: target.id });
+    edge.addControlPoint(0.5, 0.4);
+    svc.selectControlPoint(edge, 0);
+
+    app.scene.fromJSON(app.scene.toJSON());
+    const fresh = app.scene.getFlowLayer(layer.id);
+    app.selectedCrowd = fresh;
+    app.resolveNetworkAfterRestore();
+
+    expect(svc.active).toBe(false);
+    expect(svc.selectedControlPoint()).toEqual({
+      edge: fresh.graph.getEdge(edge.id),
+      index: 0,
+      point: fresh.graph.getEdge(edge.id).controlPoints[0],
+    });
   });
 });
 
@@ -213,7 +539,8 @@ describe('node and edge params', () => {
     const b = svc.placeNode({ x: 0.9, y: 0.1 });
     const edge = layer.graph.getEdges()[0];
     edge.controlPoints = [{ x: 0.3, y: 0.2 }, { x: 0.7, y: 0.2 }];
-    svc.selectEdge(edge);
+    const selectedPoint = edge.controlPoints[0];
+    svc.selectControlPoint(edge, 0);
 
     svc.swapSelectedEdgeDirection(); // two-way: no-op
     expect(edge.sourceId).toBe(a.id);
@@ -223,6 +550,7 @@ describe('node and edge params', () => {
     expect(edge.sourceId).toBe(b.id);
     expect(edge.targetId).toBe(a.id);
     expect(edge.controlPoints[0].x).toBeCloseTo(0.7, 10);
+    expect(svc.selectedControlPoint()).toEqual({ edge, index: 1, point: selectedPoint });
   });
 
   test('deleting a node cascades its edges and drops pen + selection', () => {
@@ -234,6 +562,38 @@ describe('node and edge params', () => {
     expect(layer.graph.getEdges()).toHaveLength(0);
     expect(svc.penNodeId).toBeNull();
     expect(svc.selection).toBeNull();
+  });
+
+  test('deleting a node clears an incident edge or control selection in active and passive scopes', () => {
+    const layer = enterMode(app);
+    const activeSource = svc.placeNode({ x: 0.1, y: 0.1 });
+    svc.placeNode({ x: 0.5, y: 0.1 });
+    const activeEdge = layer.graph.getEdges()[0];
+    activeEdge.controlPoints = [{ x: 0.3, y: 0.2 }];
+    svc.selectControlPoint(activeEdge, 0);
+    app.events.length = 0;
+
+    svc.deleteNode(activeSource);
+    expect(svc.selection).toBeNull();
+    expect(app.events.map(([event]) => event)).toContain('network:control-deselected');
+    expect(app.events.map(([event]) => event)).toContain('network:edge-deselected');
+
+    svc.exit();
+    const passiveLayer = app.scene.addFlowLayer({ guideType: 'graph', emitters: [{}] });
+    const passiveSource = passiveLayer.graph.addNode({ x: 0.1, y: 0.6 });
+    const passiveTarget = passiveLayer.graph.addNode({ x: 0.9, y: 0.6 });
+    const passiveEdge = passiveLayer.graph.addEdge({
+      sourceId: passiveSource.id,
+      targetId: passiveTarget.id,
+    });
+    svc.bindForInspection(passiveLayer);
+    svc.selectEdge(passiveEdge);
+    app.events.length = 0;
+
+    svc.deleteNode(passiveSource);
+    expect(svc.active).toBe(false);
+    expect(svc.selection).toBeNull();
+    expect(app.events.map(([event]) => event)).toContain('network:edge-deselected');
   });
 });
 
@@ -263,18 +623,22 @@ describe('drags', () => {
     svc.placeNode({ x: 0.1, y: 0.5 });
     svc.placeNode({ x: 0.9, y: 0.5 });
     const edge = layer.graph.getEdges()[0];
+    const selectedControls = [];
+    app.eventBus.on('network:control-selected', payload => selectedControls.push(payload));
 
     svc.beginEdgeBend(edge, { x: 0.5, y: 0.5 }, 0);
     svc.moveDrag({ x: 0.5, y: 0.3 });
     svc.endDrag();
     expect(edge.controlPoints).toHaveLength(1);
     expect(edge.controlPoints[0].y).toBeCloseTo(0.3, 10);
+    expect(selectedControls[0]).toEqual({ edge, index: 0 });
 
     // A second bend nearer the target lands after the first control
     svc.beginEdgeBend(edge, { x: 0.7, y: 0.45 }, 1);
     svc.moveDrag({ x: 0.7, y: 0.6 });
     svc.endDrag();
     expect(edge.controlPoints.map(p => p.x)).toEqual([0.5, 0.7]);
+    expect(selectedControls[1]).toEqual({ edge, index: 1 });
   });
 
   test('Esc mid-bend removes the inserted control point', () => {
@@ -286,6 +650,20 @@ describe('drags', () => {
     svc.moveDrag({ x: 0.5, y: 0.2 });
     svc.cancelDrag();
     expect(edge.controlPoints).toHaveLength(0);
+  });
+
+  test('Esc restores an existing control point instead of deleting it', () => {
+    const layer = enterMode(app);
+    svc.placeNode({ x: 0.1, y: 0.5 });
+    svc.placeNode({ x: 0.9, y: 0.5 });
+    const edge = layer.graph.getEdges()[0];
+    edge.addControlPoint(0.5, 0.5);
+
+    svc.beginControlDrag(edge, 0);
+    svc.moveDrag({ x: 0.7, y: 0.2 });
+    svc.cancelDrag();
+
+    expect(edge.controlPoints).toEqual([{ x: 0.5, y: 0.5 }]);
   });
 
   test('a drag that never moves commits nothing', () => {
@@ -599,5 +977,117 @@ describe('mixin glue', () => {
     const hint = document.getElementById('crowd-guide-hint').textContent;
     expect(hint).toMatch(/at least two route waypoints/);
     expect(hint).toMatch(/previewing or exporting/);
+  });
+});
+
+describe('passive inspector UI state', () => {
+  function inspectorMarkup() {
+    document.body.innerHTML = `
+      <div id="scope-chip" data-scope="route">
+        <button id="scope-prev-btn" type="button"></button>
+        <span id="scope-chip-text">Editing · Route</span>
+        <button id="scope-route-btn" type="button"></button>
+        <button id="scope-next-btn" type="button"></button>
+      </div>
+      <div id="settings-help-placeholder"></div>
+      <div id="settings-sections">
+        <div id="route-scope"><section class="settings-section" data-section="route"></section></div>
+        <div id="waypoint-scope" hidden></div>
+        <div id="crowd-scope" hidden></div>
+        <div id="node-scope" hidden></div>
+        <div id="edge-scope" hidden></div>
+      </div>
+      <ul id="waypoint-list"></ul>
+      <button id="outline-control" type="button">Outline item</button>
+    `;
+  }
+
+  test('node scope and chip do not depend on the drawing-mode flag', () => {
+    inspectorMarkup();
+    const bus = new EventBus();
+    const sectionController = new SectionController(bus);
+    sectionController.init();
+    const ui = new UIController({ waypointList: document.getElementById('waypoint-list') }, bus);
+    const crowd = { name: 'Visitors' };
+    const node = { id: 'node-1', type: 'entry' };
+
+    bus.emit('crowd:selected', crowd);
+    bus.emit('network:node-selected', { node });
+    expect(document.getElementById('node-scope').hidden).toBe(false);
+    expect(document.getElementById('scope-chip-text').textContent).toBe('Editing · Node · entry');
+
+    // A passive selection is not owned by edit-mode state.
+    bus.emit('network:edit-mode-changed', { active: false, layer: null });
+    expect(document.getElementById('node-scope').hidden).toBe(false);
+    expect(document.getElementById('scope-chip-text').textContent).toBe('Editing · Node · entry');
+
+    bus.emit('network:node-deselected');
+    expect(document.getElementById('node-scope').hidden).toBe(true);
+    expect(document.getElementById('crowd-scope').hidden).toBe(false);
+    expect(ui._networkSelection).toBeNull();
+  });
+
+  test('successful project replacement clears stale inspector and scope-chip objects', () => {
+    inspectorMarkup();
+    const bus = new EventBus();
+    const sections = new SectionController(bus);
+    sections.init();
+    const ui = new UIController({ waypointList: document.getElementById('waypoint-list') }, bus);
+    const oldCrowd = { name: 'Previous project visitors' };
+    const oldNode = { id: 'old-node', type: 'entry' };
+
+    bus.emit('crowd:selected', oldCrowd);
+    bus.emit('network:node-selected', { node: oldNode });
+    expect(document.getElementById('node-scope').hidden).toBe(false);
+    expect(document.getElementById('scope-chip-text').textContent).toBe('Editing · Node · entry');
+
+    bus.emit('project:replaced');
+
+    expect(ui._selectedCrowd).toBeNull();
+    expect(ui._networkSelection).toBeNull();
+    expect(sections.hasSelection).toBe(false);
+    expect(sections.hasCrowdSelection).toBe(false);
+    expect(sections.networkSelection).toBeNull();
+    expect(document.getElementById('scope-chip-text').textContent).toBe('Editing · Route');
+    expect(document.getElementById('route-scope').hidden).toBe(false);
+    expect(document.getElementById('crowd-scope').hidden).toBe(true);
+    expect(document.getElementById('node-scope').hidden).toBe(true);
+  });
+
+  test('waypoint rerender never steals focus from the scene outline', async () => {
+    inspectorMarkup();
+    const bus = new EventBus();
+    const list = document.getElementById('waypoint-list');
+    const ui = new UIController({ waypointList: list }, bus);
+    const waypoint = {
+      id: 'waypoint-1', isMajor: true, name: 'Start', dotColor: '#336699', _displayIndex: 1
+    };
+    ui.setSelection([waypoint], waypoint);
+    const outlineControl = document.getElementById('outline-control');
+    outlineControl.focus();
+
+    ui.updateWaypointList([waypoint]);
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(document.activeElement).toBe(outlineControl);
+  });
+
+  test('waypoint rerender restores focus when it already belonged to the list', async () => {
+    inspectorMarkup();
+    const bus = new EventBus();
+    const list = document.getElementById('waypoint-list');
+    const ui = new UIController({ waypointList: list }, bus);
+    const waypoint = {
+      id: 'waypoint-1', isMajor: true, name: 'Start', dotColor: '#336699', _displayIndex: 1
+    };
+    ui.updateWaypointList([waypoint]);
+    list.querySelector('.waypoint-row:not(.waypoint-add-btn)').focus();
+    ui.setSelection([waypoint], waypoint);
+
+    ui.updateWaypointList([waypoint]);
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(document.activeElement)
+      .toBe(list.querySelector('.waypoint-row:not(.waypoint-add-btn)'));
   });
 });

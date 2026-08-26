@@ -9,7 +9,11 @@
 
 import { wiringDomMixin } from '../src/app/wiringDom.js';
 import { wiringBusMixin } from '../src/app/wiringBus.js';
-import { wiringControllersMixin, reorderWaypointBlocks } from '../src/app/wiringControllers.js';
+import {
+  wiringControllersMixin,
+  reorderWaypointBlocks,
+  resolveWaypointInsertIndex,
+} from '../src/app/wiringControllers.js';
 import { undoRedoMixin } from '../src/app/undoRedo.js';
 import { playbackMixin } from '../src/app/playback.js';
 import { cameraMixin } from '../src/app/camera.js';
@@ -21,6 +25,7 @@ import { editorPanelMixin } from '../src/app/editorPanel.js';
 import { pointerMixin } from '../src/app/pointer.js';
 import { crowdsMixin } from '../src/app/crowds.js';
 import { networkMixin } from '../src/app/network.js';
+import { sceneOutlineMixin } from '../src/app/sceneOutline.js';
 import { privacyMixin } from '../src/app/privacy.js';
 import { snapToAngle } from '../src/utils/snapToAngle.js';
 import { sliderToPathWidth, pathWidthToSlider } from '../src/utils/pathWidthScale.js';
@@ -40,6 +45,7 @@ const MIXINS = {
   pointerMixin,
   crowdsMixin,
   networkMixin,
+  sceneOutlineMixin,
   privacyMixin,
 };
 
@@ -81,7 +87,33 @@ describe('RoutePlotter prototype mixins', () => {
     expect(typeof pointerMixin.findWaypointAt).toBe('function');
     expect(typeof crowdsMixin.addCrowd).toBe('function');
     expect(typeof networkMixin.findNetworkTargetAt).toBe('function');
+    expect(typeof sceneOutlineMixin.setupSceneOutline).toBe('function');
     expect(typeof privacyMixin.requestProjectSave).toBe('function');
+  });
+});
+
+describe('waypoint insertion boundaries', () => {
+  const majorA = { id: 'major-a', isMajor: true };
+  const minorA = { id: 'minor-a', isMajor: false };
+  const majorB = { id: 'major-b', isMajor: true };
+  const waypoints = [majorA, minorA, majorB];
+
+  test('semantic insertion is exact for route start, selected major, and selected minor', () => {
+    expect(resolveWaypointInsertIndex(waypoints, {
+      isMajor: true, insertAfterId: null,
+    }, null)).toBe(0);
+    expect(resolveWaypointInsertIndex(waypoints, {
+      isMajor: false, insertAfterId: majorA.id,
+    }, majorA)).toBe(1);
+    expect(resolveWaypointInsertIndex(waypoints, {
+      isMajor: false, insertAfterId: minorA.id,
+    }, minorA)).toBe(2);
+  });
+
+  test('pointer insertion retains minor-run and major-append behavior', () => {
+    expect(resolveWaypointInsertIndex(waypoints, { isMajor: false }, majorA)).toBe(2);
+    expect(resolveWaypointInsertIndex(waypoints, { isMajor: true }, majorA)).toBe(3);
+    expect(resolveWaypointInsertIndex(waypoints, { isMajor: false }, null)).toBe(3);
   });
 });
 

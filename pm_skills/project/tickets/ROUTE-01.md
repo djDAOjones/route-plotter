@@ -1,6 +1,6 @@
 # ROUTE-01 — Split hero routes
 
-> **Status:** Phase 5 implementation — approved; gated by REV-02 and REV-03.
+> **Status:** Phase 5 implementation — approved; gated by REV-03.
 
 ## Intent
 

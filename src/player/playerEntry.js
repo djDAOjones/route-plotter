@@ -12,15 +12,13 @@
  */
 
 import { PlayerApp } from './PlayerApp.js';
+import {
+  createTransportAnnouncer,
+  formatPlayerTime,
+  renderPlayerSceneSummary,
+} from './playerAccessibility.js';
 
 const TIMELINE_RESOLUTION = 10000; // slider steps; matches the app's timeline precision
-
-function formatTime(ms) {
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${minutes}:${secs.toString().padStart(2, '0')}`;
-}
 
 function loadImage(dataUrl) {
   return new Promise((resolve, reject) => {
@@ -41,6 +39,8 @@ function showError(message) {
   }
   const controls = document.querySelector('.controls');
   if (controls) controls.hidden = true;
+  const summary = document.getElementById('scene-summary-content');
+  if (summary) summary.textContent = 'Scene summary unavailable.';
 }
 
 async function boot() {
@@ -71,24 +71,50 @@ async function boot() {
   const currentTimeEl = document.getElementById('current-time');
   const totalTimeEl = document.getElementById('total-time');
   const speedSelect = document.getElementById('speed-select');
+  const sceneSummaryEl = document.getElementById('scene-summary-content');
+  const announcerEl = document.getElementById('player-announcer');
+  const transportAnnouncer = createTransportAnnouncer(announcerEl);
 
   let isScrubbing = false;
+  let preferredPlaybackSpeed = Number(speedSelect?.value) || 1;
+  let restoringPreferredSpeed = false;
 
-  const syncTransportUI = (state) => {
-    if (playBtn) {
-      playBtn.textContent = app.animationEngine.isPlaying() ? 'Pause' : 'Play';
+  const restorePreferredPlaybackSpeed = () => {
+    if (app.animationEngine.state.playbackSpeed === preferredPlaybackSpeed) return;
+    restoringPreferredSpeed = true;
+    app.animationEngine.setPlaybackSpeed(preferredPlaybackSpeed);
+    restoringPreferredSpeed = false;
+  };
+
+  const updateTimelineValueText = (state) => {
+    if (!timeline || state.duration <= 0) return;
+    const valueText = `${formatPlayerTime(state.currentTime)} of ${formatPlayerTime(state.duration)}`;
+    if (timeline.getAttribute('aria-valuetext') !== valueText) {
+      timeline.setAttribute('aria-valuetext', valueText);
     }
-    if (timeline && !isScrubbing && state.duration > 0) {
+  };
+
+  const syncTransportUI = (state, { forceTimeline = false } = {}) => {
+    if (playBtn) {
+      const label = app.animationEngine.isPlaying() ? 'Pause' : 'Play';
+      if (playBtn.textContent !== label) playBtn.textContent = label;
+    }
+    const timelineHasFocus = timeline && document.activeElement === timeline;
+    const canSyncTimeline = timeline && state.duration > 0
+      && (forceTimeline || (!isScrubbing && !timelineHasFocus));
+    if (canSyncTimeline) {
       const progress = state.currentTime / state.duration;
-      timeline.value = Math.round(progress * TIMELINE_RESOLUTION);
-      timeline.setAttribute('aria-valuetext',
-        `${formatTime(state.currentTime)} of ${formatTime(state.duration)}`);
+      const value = String(Math.round(progress * TIMELINE_RESOLUTION));
+      if (timeline.value !== value) timeline.value = value;
+      updateTimelineValueText(state);
     }
   };
 
   app.onTimeDisplay = (current, total) => {
-    if (currentTimeEl) currentTimeEl.textContent = formatTime(current);
-    if (totalTimeEl) totalTimeEl.textContent = formatTime(total);
+    const currentText = formatPlayerTime(current);
+    const totalText = formatPlayerTime(total);
+    if (currentTimeEl && currentTimeEl.textContent !== currentText) currentTimeEl.textContent = currentText;
+    if (totalTimeEl && totalTimeEl.textContent !== totalText) totalTimeEl.textContent = totalText;
   };
 
   try {
@@ -98,6 +124,31 @@ async function boot() {
     showError('The embedded project data could not be loaded. Re-export the file from Route Plotter.');
     return;
   }
+
+  // One static, aggregate-only description of the canonical hydrated scene.
+  // It is intentionally outside the render loop and never includes authored
+  // names, labels, coordinates, identifiers, or asset details.
+  const sceneSummary = renderPlayerSceneSummary(sceneSummaryEl, app);
+  transportAnnouncer.ready(sceneSummary);
+
+  // Completion is the sole engine-driven live announcement. AnimationEngine
+  // emits pause immediately before complete; not subscribing to pause avoids
+  // announcing both for the same autonomous milestone.
+  app.eventBus.on('animation:complete', () => {
+    const state = app.animationEngine.state;
+    syncTransportUI(state, { forceTimeline: true });
+    app.updateTimeDisplay();
+    transportAnnouncer.complete(state);
+  });
+
+  // AnimationEngine resets speed on pause/reset/completion because the editor's
+  // JKL speeds are temporary. The standalone selector is an explicit user
+  // preference, so immediately restore it without announcing a second change.
+  app.eventBus.on('animation:playbackSpeedChange', (speed) => {
+    if (!restoringPreferredSpeed && Number(speed) !== preferredPlaybackSpeed) {
+      restorePreferredPlaybackSpeed();
+    }
+  });
 
   // Engine loop: syncs the transport UI, and the per-second readout via
   // updateTimeDisplay (same throttle rule as the app's playback mixin).
@@ -118,41 +169,113 @@ async function boot() {
       app.resetPlayback();
     }
     app.animationEngine.togglePlayPause();
-    syncTransportUI(state);
+    syncTransportUI(state, { forceTimeline: true });
+    if (app.animationEngine.isPlaying()) {
+      transportAnnouncer.play(state);
+    } else {
+      transportAnnouncer.pause(state);
+    }
+  };
+
+  const resetToStart = () => {
+    app.resetPlayback(); // full app reset recipe, not engine.reset() alone
+    syncTransportUI(app.animationEngine.state);
+    app.updateTimeDisplay();
+    app.queueRender();
+    transportAnnouncer.reset();
+  };
+
+  const moveToEnd = () => {
+    if (app.animationEngine.isPlaying()) app.animationEngine.pause();
+    app.animationEngine.seekToProgress(1);
+    syncTransportUI(app.animationEngine.state);
+    app.updateTimeDisplay();
+    app.queueRender();
+    transportAnnouncer.end(app.animationEngine.state);
+  };
+
+  const seekByKeyboard = (deltaMs) => {
+    const state = app.animationEngine.state;
+    app.animationEngine.seekToTime(Math.max(0, Math.min(state.duration, state.currentTime + deltaMs)));
+    syncTransportUI(state, { forceTimeline: true });
+    app.updateTimeDisplay();
+    app.queueRender();
+    transportAnnouncer.scheduleKeyboardSeek(state);
   };
 
   if (playBtn) {
     playBtn.addEventListener('click', togglePlay);
   }
   if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      app.resetPlayback(); // full app reset recipe, not engine.reset() alone
-      syncTransportUI(app.animationEngine.state);
+    resetBtn.addEventListener('click', resetToStart);
+  }
+  if (timeline) {
+    timeline.addEventListener('pointerdown', () => {
+      isScrubbing = true;
+      transportAnnouncer.cancel();
+    });
+    timeline.addEventListener('pointerup', () => { isScrubbing = false; });
+    timeline.addEventListener('pointercancel', () => { isScrubbing = false; });
+    timeline.addEventListener('input', () => {
+      // Scrub = set time through the one evaluation path (seek, never advance)
+      isScrubbing = true;
+      transportAnnouncer.cancel();
+      app.animationEngine.seekToProgress(timeline.value / TIMELINE_RESOLUTION);
+      syncTransportUI(app.animationEngine.state, { forceTimeline: true });
       app.updateTimeDisplay();
       app.queueRender();
     });
-  }
-  if (timeline) {
-    timeline.addEventListener('pointerdown', () => { isScrubbing = true; });
-    timeline.addEventListener('pointerup', () => { isScrubbing = false; });
-    timeline.addEventListener('input', () => {
-      // Scrub = set time through the one evaluation path (seek, never advance)
-      app.animationEngine.seekToProgress(timeline.value / TIMELINE_RESOLUTION);
-      app.updateTimeDisplay();
-      app.queueRender();
+    timeline.addEventListener('change', () => {
+      isScrubbing = false;
+      syncTransportUI(app.animationEngine.state, { forceTimeline: true });
+      transportAnnouncer.committedSeek(app.animationEngine.state);
+    });
+    timeline.addEventListener('keydown', (event) => {
+      let deltaMs = null;
+      switch (event.key) {
+        case 'ArrowLeft':
+        case 'ArrowDown':
+          deltaMs = -5000;
+          break;
+        case 'ArrowRight':
+        case 'ArrowUp':
+          deltaMs = 5000;
+          break;
+        case 'PageDown':
+          deltaMs = -10000;
+          break;
+        case 'PageUp':
+          deltaMs = 10000;
+          break;
+        case 'Home':
+          deltaMs = -app.animationEngine.state.duration;
+          break;
+        case 'End':
+          deltaMs = app.animationEngine.state.duration;
+          break;
+        default:
+          return;
+      }
+      event.preventDefault();
+      seekByKeyboard(deltaMs);
+    });
+    timeline.addEventListener('blur', () => {
+      isScrubbing = false;
+      syncTransportUI(app.animationEngine.state, { forceTimeline: true });
     });
   }
   if (speedSelect) {
     speedSelect.addEventListener('change', () => {
-      app.animationEngine.setPlaybackSpeed(parseFloat(speedSelect.value));
+      preferredPlaybackSpeed = parseFloat(speedSelect.value);
+      app.animationEngine.setPlaybackSpeed(preferredPlaybackSpeed);
+      transportAnnouncer.speed(app.animationEngine.state.playbackSpeed);
     });
   }
 
   // Keyboard transport. Native control keys stay native: no hijacking while
   // an input, select, or button has focus (the app learned this the hard way).
   document.addEventListener('keydown', (e) => {
-    if (e.target.closest('input, select, button, textarea')) return;
-    const state = app.animationEngine.state;
+    if (e.target instanceof Element && e.target.closest('input, select, button, textarea')) return;
     switch (e.key) {
       case ' ':
       case 'k':
@@ -161,25 +284,20 @@ async function boot() {
         break;
       case 'Home':
         e.preventDefault();
-        app.resetPlayback();
-        syncTransportUI(state);
-        app.queueRender();
+        resetToStart();
         break;
       case 'End':
         e.preventDefault();
-        app.animationEngine.seekToProgress(1);
-        app.queueRender();
+        moveToEnd();
         break;
       // Absolute-time seeks still resolve path/wait state through PlayerCore.
       case 'ArrowLeft':
         e.preventDefault();
-        app.animationEngine.seekToTime(Math.max(0, state.currentTime - 1000));
-        app.queueRender();
+        seekByKeyboard(-1000);
         break;
       case 'ArrowRight':
         e.preventDefault();
-        app.animationEngine.seekToTime(Math.min(state.duration, state.currentTime + 1000));
-        app.queueRender();
+        seekByKeyboard(1000);
         break;
     }
   });

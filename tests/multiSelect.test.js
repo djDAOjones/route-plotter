@@ -361,6 +361,7 @@ describe('undo snapshot and restore of the multi-selection', () => {
       autoSave() {},
       resolveCrowdSelectionAfterRestore() {},
       resolveNetworkAfterRestore() {},
+      _syncSceneOutlineSelectionAfterRestore: vi.fn(),
       _syncGlobalStyleUI() {},
       _addWaypointToMap(wp) { this.waypointsById.set(wp.id, wp); },
       uiController: {
@@ -383,6 +384,7 @@ describe('undo snapshot and restore of the multi-selection', () => {
     const app = makeUndoApp([a, b, c]);
     app.selectedWaypoint = b;
     app.selectedWaypoints = [a, b];
+    app.selectedCrowd = { id: 'crowd-stale' };
 
     const state = app._getUndoableState();
     expect(state.selectedWaypointIds).toEqual([a.id, b.id]);
@@ -396,6 +398,8 @@ describe('undo snapshot and restore of the multi-selection', () => {
     expect(app.selectedWaypoints[0]).not.toBe(a); // New object, same identity
     expect(app.selectedWaypoint?.id).toBe(b.id);
     expect(app.selectedWaypoints).toContain(app.selectedWaypoint);
+    expect(app.selectedCrowd).toBeNull();
+    expect(app._syncSceneOutlineSelectionAfterRestore).toHaveBeenCalledOnce();
     // The UI layers were handed the re-resolved selection
     const last = app.uiController.selections.at(-1);
     expect(last.wps.map(wp => wp.id)).toEqual([a.id, b.id]);

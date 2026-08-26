@@ -17,6 +17,13 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Review Phase 2 — semantic scene authoring (shipped 2026-08-26)
+
+REV-02 — Route, crowd, emitter, custom-network and polygon structure is now
+inspectable and authorable through a synchronized semantic outline; standalone
+exports add aggregate scene context and discrete transport announcements.
+(2026-08-26) — see decision-log.
+
 ## Support hand-off (shipped 2026-08-26)
 
 SUPPORT-01 — Report a bug now previews one redacted diagnostic bundle before

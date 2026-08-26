@@ -418,6 +418,10 @@ export const wiringDomMixin = {
         if (this.selectedWaypoint._autoNamed) {
           this.selectedWaypoint.name = text;
         }
+        this.eventBus.emit('scene:semantic-changed', {
+          kind: 'waypoint-label',
+          waypointId: this.selectedWaypoint.id,
+        });
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });

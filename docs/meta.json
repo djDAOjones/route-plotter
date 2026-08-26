@@ -47,8 +47,13 @@
       ],
       "format": "esm"
     },
+    "src/utils/entityId.js": {
+      "bytes": 989,
+      "imports": [],
+      "format": "esm"
+    },
     "src/models/FlowLayer.js": {
-      "bytes": 9722,
+      "bytes": 9751,
       "imports": [
         {
           "path": "src/models/GraphModel.js",
@@ -59,6 +64,11 @@
           "path": "src/models/Emitter.js",
           "kind": "import-statement",
           "original": "./Emitter.js"
+        },
+        {
+          "path": "src/utils/entityId.js",
+          "kind": "import-statement",
+          "original": "../utils/entityId.js"
         }
       ],
       "format": "esm"
@@ -2464,7 +2474,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 85486,
+      "bytes": 86547,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2516,12 +2526,12 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 16297,
+      "bytes": 16755,
       "imports": [],
       "format": "esm"
     },
     "src/services/AreaDrawingService.js": {
-      "bytes": 10641,
+      "bytes": 10993,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2537,7 +2547,7 @@
       "format": "esm"
     },
     "src/services/NetworkEditService.js": {
-      "bytes": 30447,
+      "bytes": 38499,
       "imports": [
         {
           "path": "src/utils/snapToAngle.js",
@@ -2553,7 +2563,7 @@
       "format": "esm"
     },
     "src/services/AreaEditService.js": {
-      "bytes": 9424,
+      "bytes": 9904,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2632,7 +2642,7 @@
       "format": "esm"
     },
     "src/services/HTMLExportService.js": {
-      "bytes": 12033,
+      "bytes": 13240,
       "imports": [
         {
           "path": "src/models/ImageAsset.js",
@@ -2648,7 +2658,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 35883,
+      "bytes": 36032,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2742,7 +2752,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 46384,
+      "bytes": 46759,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2783,7 +2793,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 17130,
+      "bytes": 17324,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2862,7 +2872,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 49349,
+      "bytes": 49509,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2908,6 +2918,11 @@
           "path": "src/utils/safeColor.js",
           "kind": "import-statement",
           "original": "../utils/safeColor.js"
+        },
+        {
+          "path": "src/utils/entityId.js",
+          "kind": "import-statement",
+          "original": "../utils/entityId.js"
         }
       ],
       "format": "esm"
@@ -2976,7 +2991,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 16898,
+      "bytes": 17342,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -2992,7 +3007,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 21653,
+      "bytes": 23112,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3013,6 +3028,63 @@
           "path": "src/utils/segmentHitTest.js",
           "kind": "import-statement",
           "original": "../utils/segmentHitTest.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/sceneSemantics.js": {
+      "bytes": 8975,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/controllers/SceneOutlineController.js": {
+      "bytes": 44846,
+      "imports": [
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/sceneOutline.js": {
+      "bytes": 44689,
+      "imports": [
+        {
+          "path": "src/controllers/SceneOutlineController.js",
+          "kind": "import-statement",
+          "original": "../controllers/SceneOutlineController.js"
+        },
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/models/FlowLayer.js",
+          "kind": "import-statement",
+          "original": "../models/FlowLayer.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "../models/Scene.js"
+        },
+        {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "../models/Emitter.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./persistence.js"
+        },
+        {
+          "path": "src/utils/safeColor.js",
+          "kind": "import-statement",
+          "original": "../utils/safeColor.js"
         }
       ],
       "format": "esm"
@@ -3055,7 +3127,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 43985,
+      "bytes": 44391,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3263,6 +3335,11 @@
           "original": "./app/network.js"
         },
         {
+          "path": "src/app/sceneOutline.js",
+          "kind": "import-statement",
+          "original": "./app/sceneOutline.js"
+        },
+        {
           "path": "src/app/privacy.js",
           "kind": "import-statement",
           "original": "./app/privacy.js"
@@ -3287,13 +3364,13 @@
     }
   },
   "outputs": {
-    ".docs-build-MJqRut/app.js.map": {
+    ".docs-build-oy4gXB/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 2811875
+      "bytes": 3001513
     },
-    ".docs-build-MJqRut/app.js": {
+    ".docs-build-oy4gXB/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3319,8 +3396,11 @@
         "src/models/Emitter.js": {
           "bytesInOutput": 4339
         },
+        "src/utils/entityId.js": {
+          "bytesInOutput": 245
+        },
         "src/models/FlowLayer.js": {
-          "bytesInOutput": 4329
+          "bytesInOutput": 4276
         },
         "src/models/Scene.js": {
           "bytesInOutput": 2238
@@ -3470,7 +3550,7 @@
           "bytesInOutput": 16152
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 35326
+          "bytesInOutput": 35583
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 13079
@@ -3479,19 +3559,19 @@
           "bytesInOutput": 2379
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 6646
+          "bytesInOutput": 6743
         },
         "src/services/AreaDrawingService.js": {
-          "bytesInOutput": 4920
+          "bytesInOutput": 5039
         },
         "src/utils/snapToAngle.js": {
           "bytesInOutput": 191
         },
         "src/services/NetworkEditService.js": {
-          "bytesInOutput": 12735
+          "bytesInOutput": 16810
         },
         "src/services/AreaEditService.js": {
-          "bytesInOutput": 3223
+          "bytesInOutput": 3596
         },
         "src/components/SwatchPicker.js": {
           "bytesInOutput": 4016
@@ -3518,13 +3598,13 @@
           "bytesInOutput": 13648
         },
         "src/services/HTMLExportService.js": {
-          "bytesInOutput": 6837
+          "bytesInOutput": 8044
         },
         "src/app/operationGeneration.js": {
           "bytesInOutput": 702
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 14851
+          "bytesInOutput": 14956
         },
         "src/models/Waypoint.js": {
           "bytesInOutput": 7163
@@ -3539,13 +3619,13 @@
           "bytesInOutput": 1721
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 18866
+          "bytesInOutput": 19045
         },
         "src/utils/assetReferences.js": {
           "bytesInOutput": 2653
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 7586
+          "bytesInOutput": 7743
         },
         "src/app/playback.js": {
           "bytesInOutput": 3545
@@ -3560,7 +3640,7 @@
           "bytesInOutput": 5631
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 27283
+          "bytesInOutput": 27341
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5564
@@ -3575,10 +3655,19 @@
           "bytesInOutput": 887
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 8536
+          "bytesInOutput": 8890
         },
         "src/app/network.js": {
-          "bytesInOutput": 9606
+          "bytesInOutput": 10628
+        },
+        "src/utils/sceneSemantics.js": {
+          "bytesInOutput": 3955
+        },
+        "src/controllers/SceneOutlineController.js": {
+          "bytesInOutput": 26756
+        },
+        "src/app/sceneOutline.js": {
+          "bytesInOutput": 27076
         },
         "src/services/DiagnosticsService.js": {
           "bytesInOutput": 2176
@@ -3593,10 +3682,10 @@
           "bytesInOutput": 1468
         },
         "src/main.js": {
-          "bytesInOutput": 21188
+          "bytesInOutput": 21401
         }
       },
-      "bytes": 679777
+      "bytes": 745972
     }
   }
 }
