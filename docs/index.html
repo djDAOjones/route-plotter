@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.639</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.639">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.639">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.639">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.639">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.639">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.639">
+  <title>Route Plotter v3.2.641</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.641">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.641">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.641">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.641">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.641">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.641">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -217,7 +217,8 @@
                   <!-- Current Waypoint Zoom -->
                   <div class="control-row control-row-inline">
                     <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Smoothly transitions between waypoints">This Zoom</label>
-                    <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0">
+                    <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0"
+                           aria-describedby="camera-zoom-value" aria-valuetext="1.0x">
                     <span id="camera-zoom-value" class="slider-value">1.0x</span>
                   </div>
 
@@ -232,7 +233,8 @@
                 <div id="camera-multi-controls" style="display: none;">
                   <div class="control-row control-row-inline">
                     <label class="control-label control-label-short" for="camera-selected-zoom" data-tip="Set zoom level for all selected waypoints at once">Selected Zooms</label>
-                    <input type="range" id="camera-selected-zoom" min="0" max="1" step="0.01" value="0">
+                    <input type="range" id="camera-selected-zoom" min="0" max="1" step="0.01" value="0"
+                           aria-describedby="camera-selected-zoom-value" aria-valuetext="1.0x">
                     <span id="camera-selected-zoom-value" class="slider-value">1.0x</span>
                   </div>
                 </div>
@@ -1250,6 +1252,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.639"></script>
+  <script src="app.js?v=3.2.641"></script>
 </body>
 </html>

@@ -150,6 +150,7 @@ function createPicker(container) {
     radio.addEventListener('change', () => {
       if (!radio.checked) return;
       // Write into target <input type="color">
+      delete target.dataset.mixed;
       target.value = normalizeHex(radio.value);
       target.dispatchEvent(new Event('input', { bubbles: true }));
       target.dispatchEvent(new Event('change', { bubbles: true }));
@@ -169,7 +170,14 @@ function createPicker(container) {
   fieldset.appendChild(legend);
   fieldset.appendChild(grid);
 
+  const mixedState = document.createElement('span');
+  mixedState.className = 'swatch-mixed-state';
+  mixedState.textContent = 'Mixed';
+  mixedState.hidden = true;
+  fieldset.appendChild(mixedState);
+
   let custom = null;
+  let current = null;
   let currentChip = null;
   let currentText = null;
 
@@ -202,10 +210,12 @@ function createPicker(container) {
     custom.value = target.value || '#111111';
 
     custom.addEventListener('input', () => {
+      delete target.dataset.mixed;
       target.value = normalizeHex(custom.value);
       target.dispatchEvent(new Event('input', { bubbles: true }));
     });
     custom.addEventListener('change', () => {
+      delete target.dataset.mixed;
       target.value = normalizeHex(custom.value);
       target.dispatchEvent(new Event('change', { bubbles: true }));
     });
@@ -217,7 +227,7 @@ function createPicker(container) {
       if (!open) custom.focus();
     });
 
-    const current = document.createElement('span');
+    current = document.createElement('span');
     current.className = 'swatch-current';
     currentChip = document.createElement('span');
     currentChip.className = 'swatch-current-chip';
@@ -243,12 +253,15 @@ function createPicker(container) {
 
   // Keep chip selection in sync if external code changes the target value
   const sync = () => {
+    const isMixed = target.dataset.mixed === 'true';
     const v = normalizeHex(target.value);
     const radios = container.querySelectorAll('input[type="radio"]');
     radios.forEach(r => {
-      r.checked = normalizeHex(r.value) === v;
+      r.checked = !isMixed && normalizeHex(r.value) === v;
     });
     if (custom && /^#[0-9a-f]{6}$/i.test(v)) custom.value = v;
+    mixedState.hidden = !isMixed;
+    if (current) current.hidden = isMixed;
     if (currentChip && currentText) {
       const isNone = v === 'transparent';
       currentChip.classList.toggle('is-none', isNone);
@@ -256,6 +269,7 @@ function createPicker(container) {
       currentText.textContent = isNone ? 'Current none' : `Current ${v.toUpperCase()}`;
     }
   };
+  container._syncSwatchPicker = sync;
   target.addEventListener('input', sync);
   target.addEventListener('change', sync);
   sync();
@@ -281,8 +295,20 @@ export function refreshSwatchPicker(targetInputSelector) {
   const picker = document.querySelector(`.swatch-picker[data-target-input="${targetInputSelector}"]`);
   if (!picker) return;
   
-  // Trigger sync by dispatching change event on target
-  target.dispatchEvent(new Event('change', { bubbles: true }));
+  picker._syncSwatchPicker?.();
+}
+
+/**
+ * Present or clear a transient mixed state without changing the hidden value.
+ * @param {string} targetInputSelector - Selector for the target input
+ * @param {boolean} mixed - Whether selected write targets disagree
+ */
+export function setSwatchPickerMixed(targetInputSelector, mixed) {
+  const target = document.querySelector(targetInputSelector);
+  if (!target) return;
+  if (mixed) target.dataset.mixed = 'true';
+  else delete target.dataset.mixed;
+  refreshSwatchPicker(targetInputSelector);
 }
 
 /**

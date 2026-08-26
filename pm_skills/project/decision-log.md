@@ -2,6 +2,37 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — UI-04 makes every multi-edit field honest about disagreement
+
+**Decision:** A waypoint inspector control derives its displayed state from the
+same actual target set that its existing event handler will write. Leg and Area
+fields compare every selected waypoint; marker, arrival, label and camera
+fields compare selected major waypoints only. A selection containing one major
+and any number of minors therefore shows that major's real value, while a
+minor-only selection disables major-only controls. Disagreement is presented
+as a disabled transient Mixed option for selects, `Mixed` readout and
+`aria-valuetext` for ranges, native indeterminate state for checkboxes, and an
+unselected palette with a visible Mixed label for swatches.
+
+**Architecture and interaction:** Mixedness is DOM-only state: no Waypoint
+field, serialised shape, default, renderer, timeline, export rule or migration
+changed. Choosing any concrete value clears the presentation through the
+normal control path and applies one shared value using the established
+selection, history, render and autosave pipeline. Mixed parent choices hide
+dependent controls that would otherwise imply one active subtype. Polygon
+drawing is unavailable for a multi-selection because it is an inherently
+single-shape operation. Custom-marker preview copy no longer falsely implies
+the primary image when selected majors disagree.
+
+**Evidence and sequence:** The canonical production gate passed 49 files / 685
+tests, restart safety and the clean-build comparison for v3.2.641. Live
+Chromium checks covered mixed marker, size, colour and camera controls,
+single-step shared edits and Undo, autosave/reload, a 320 px layout and exact
+fixture restoration. UI-04 leaves the backlog and UI-05 becomes Current. The
+roadmap review found no evidence strong enough to promote an Icebox item, and
+the owner's requested full history and trajectory remain preserved despite
+the known soft-size warnings.
+
 ## 2026-08-26 — UI-03 exposes latent appearance and camera choices without a migration
 
 **Decision:** Surface the Waypoint model's existing label foreground,

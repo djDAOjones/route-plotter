@@ -376,7 +376,8 @@ export const wiringControllersMixin = {
         this.interactionHandler?.setSelectedWaypoint?.(primary);
       }
       this.uiController?.setSelection(this.selectedWaypoints, primary);
-      // Inspector shows the primary's values; edits write to the whole selection
+      // Inspector compares each control's actual write targets and presents
+      // disagreement explicitly; edits still write through one selection path.
       this.uiController?.updateWaypointEditor(primary, this.selectedWaypoints);
       this.updateWaypointList();
       this.updateWaypointEditor(); // Sync RoutePlotter's editor (camera controls etc.)

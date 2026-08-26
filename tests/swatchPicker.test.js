@@ -3,6 +3,7 @@ import {
   attachSwatchPickers,
   refreshSwatchPicker,
   setSwatchPickerEnabled,
+  setSwatchPickerMixed,
 } from '../src/components/SwatchPicker.js';
 
 function mountPicker(value = '#1a1a1a') {
@@ -72,5 +73,28 @@ describe('SwatchPicker exact custom-value state', () => {
 
     setSwatchPickerEnabled('#colour', true);
     expect(picker.querySelector('fieldset').disabled).toBe(false);
+  });
+
+  test('mixed state clears every preset and never claims the source colour', () => {
+    const { target, picker } = mountPicker('#111111');
+
+    setSwatchPickerMixed('#colour', true);
+    expect(target.value).toBe('#111111');
+    expect(target.dataset.mixed).toBe('true');
+    expect(picker.querySelectorAll('.swatch-radio:checked')).toHaveLength(0);
+    expect(picker.querySelector('.swatch-mixed-state').hidden).toBe(false);
+    expect(picker.querySelector('.swatch-current').hidden).toBe(true);
+
+    // A refresh is presentation-only and must retain the mixed contract.
+    refreshSwatchPicker('#colour');
+    expect(picker.querySelectorAll('.swatch-radio:checked')).toHaveLength(0);
+
+    const ink = [...picker.querySelectorAll('.swatch-radio')]
+      .find(radio => radio.value === '#111111');
+    ink.checked = true;
+    ink.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(target.dataset.mixed).toBeUndefined();
+    expect(picker.querySelector('.swatch-mixed-state').hidden).toBe(true);
+    expect(picker.querySelector('.swatch-current').hidden).toBe(false);
   });
 });

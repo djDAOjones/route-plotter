@@ -19,6 +19,11 @@
 
 ## Inspector foundation (shipped 2026-08-26)
 
+UI-04 — Multi-waypoint cards now compare each field's actual write targets and
+show a transient, accessible Mixed state without changing saved projects;
+choosing a value still performs the established shared edit. (2026-08-26) —
+see decision-log.
+
 UI-03 — Label text/background colour and opacity plus incoming camera zoom
 transition are now editable under More, with exact custom-colour state,
 multi-major writes, undo, reload and export-compatible persistence.

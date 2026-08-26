@@ -8,8 +8,19 @@
  */
 import { TEXT_LABEL, TEXT_VISIBILITY } from '../config/constants.js';
 import { BEACON_TIMING } from '../services/BeaconRenderer.js';
-import { setSwatchPickerEnabled } from '../components/SwatchPicker.js';
+import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
+import {
+  setSwatchPickerEnabled,
+  setSwatchPickerMixed,
+} from '../components/SwatchPicker.js';
 import { sliderToPathWidth, pathWidthToSlider } from '../utils/pathWidthScale.js';
+import {
+  MIXED_OPTION_VALUE,
+  hasMixedValues,
+  setCheckboxMixed,
+  setRangeMixed,
+  setSelectMixed,
+} from '../utils/mixedControlState.js';
 import {
   formatRendererPixels,
   formatShapeAmplitude,
@@ -202,9 +213,255 @@ export const editorPanelMixin = {
       this.elements.waypointList.appendChild(item);
     });
   },
+
+  /**
+   * Synchronize controls whose write target is selected major waypoints. The
+   * source is always one of those targets, even when a minor is primary.
+   * @param {Object|null} source
+   * @param {Array<Object>} majorTargets
+   * @private
+   */
+  _syncMajorWaypointControls(source, majorTargets) {
+    const enabled = Boolean(source);
+    const disableWhenUnavailable = [
+      'markerStyle', 'dotSize', 'editorBeaconStyle',
+      'rippleThickness', 'rippleMaxScale', 'rippleWait',
+      'pulseAmplitude', 'pulseCycleSpeed', 'waypointLabel', 'labelMode',
+      'labelSize', 'labelBgOpacity', 'labelWidth', 'labelOffsetX',
+      'labelOffsetY', 'labelAutoPosition', 'waypointPauseTime',
+      'waypointSegmentSpeed', 'markerUploadBtn',
+    ];
+    for (const key of disableWhenUnavailable) {
+      if (this.elements[key]) this.elements[key].disabled = !enabled;
+    }
+    if (this.elements.dotColor) this.elements.dotColor.disabled = !enabled;
+    if (this.elements.labelColor) this.elements.labelColor.disabled = !enabled;
+    if (this.elements.labelBgColor) this.elements.labelBgColor.disabled = !enabled;
+    setSwatchPickerEnabled('#dot-color', enabled);
+    setSwatchPickerEnabled('#label-color', enabled);
+    setSwatchPickerEnabled('#label-bg-color', enabled);
+
+    if (!source) {
+      this._updateBeaconControlsVisibility('none');
+      if (this.elements.customMarkerControls) this.elements.customMarkerControls.style.display = 'none';
+      if (this.elements.markerPreview) this.elements.markerPreview.style.display = 'none';
+      if (this.elements.pauseTimeControl) this.elements.pauseTimeControl.style.display = 'none';
+      if (this.elements.segmentSpeedControl) this.elements.segmentSpeedControl.style.display = 'none';
+      return;
+    }
+
+    const markerStyle = source.markerStyle || 'dot';
+    if (this.elements.markerStyle) this.elements.markerStyle.value = markerStyle;
+    if (this.elements.dotColor) {
+      this.elements.dotColor.value = source.dotColor || source.segmentColor || this.styles.dotColor;
+    }
+    if (this.elements.dotSize) {
+      const size = source.dotSize || this.styles.dotSize;
+      this.elements.dotSize.value = size;
+      setRangeReadout(this.elements.dotSize, this.elements.dotSizeValue, formatRendererPixels(size));
+    }
+    if (this.elements.customMarkerControls) {
+      this.elements.customMarkerControls.style.display = markerStyle === 'custom' ? 'block' : 'none';
+    }
+    if (source.customImageAssetId && this.elements.markerPreview) {
+      const asset = this.imageAssetService?.getAsset(source.customImageAssetId);
+      if (asset) {
+        this.elements.markerPreview.style.display = 'block';
+        this.elements.markerFilename.textContent = asset.name;
+        this.elements.markerPreviewImg.hidden = false;
+        this.elements.markerPreviewImg.src = asset.base64;
+      } else {
+        this.elements.markerPreview.style.display = 'none';
+      }
+    } else if (this.elements.markerPreview) {
+      this.elements.markerPreview.style.display = 'none';
+      if (this.elements.markerPreviewImg) this.elements.markerPreviewImg.hidden = false;
+    }
+
+    const beaconStyle = source.beaconStyle || 'none';
+    if (this.elements.editorBeaconStyle) this.elements.editorBeaconStyle.value = beaconStyle;
+    this._updateBeaconControlsVisibility(beaconStyle);
+    if (this.elements.rippleThickness) {
+      const value = source.rippleThickness || 2;
+      this.elements.rippleThickness.value = value;
+      this.elements.rippleThicknessValue.textContent = `${value}px`;
+    }
+    if (this.elements.rippleMaxScale) {
+      const value = source.rippleMaxScale || 1000;
+      this.elements.rippleMaxScale.value = value;
+      this.elements.rippleMaxScaleValue.textContent = `${value}%`;
+    }
+    if (this.elements.rippleWait) this.elements.rippleWait.checked = source.rippleWait !== false;
+    if (this.elements.pulseAmplitude) {
+      const value = source.pulseAmplitude ?? 1;
+      this.elements.pulseAmplitude.value = value;
+      this.elements.pulseAmplitudeValue.textContent = value.toFixed(1);
+    }
+    if (this.elements.pulseCycleSpeed) {
+      const value = source.pulseCycleSpeed ?? 4;
+      this.elements.pulseCycleSpeed.value = value;
+      this.elements.pulseCycleSpeedValue.textContent = `${value}s`;
+    }
+
+    if (this.elements.waypointLabel) this.elements.waypointLabel.value = source.label || '';
+    if (this.elements.labelMode) this.elements.labelMode.value = source.labelMode || TEXT_VISIBILITY.FADE_UP;
+    if (this.elements.labelSize) {
+      const size = Math.max(
+        TEXT_LABEL.SIZE_PX_MIN,
+        Math.min(TEXT_LABEL.SIZE_PX_MAX, Math.round(source.labelSize || TEXT_LABEL.SIZE_DEFAULT))
+      );
+      this.elements.labelSize.value = size;
+      setRangeReadout(this.elements.labelSize, this.elements.labelSizeValue, formatRendererPixels(size));
+    }
+    if (this.elements.labelColor) {
+      this.elements.labelColor.value = source.labelColor || TEXT_LABEL.COLOR_DEFAULT;
+    }
+    if (this.elements.labelBgColor) {
+      this.elements.labelBgColor.value = source.labelBgColor || TEXT_LABEL.BG_COLOR_DEFAULT;
+    }
+    if (this.elements.labelBgOpacity) {
+      const value = Math.round((source.labelBgOpacity ?? TEXT_LABEL.BG_OPACITY_DEFAULT) * 100);
+      this.elements.labelBgOpacity.value = value;
+      setRangeReadout(this.elements.labelBgOpacity, this.elements.labelBgOpacityValue, `${value}%`);
+    }
+    if (this.elements.labelWidth) {
+      const value = source.labelWidth ?? TEXT_LABEL.WIDTH_DEFAULT;
+      this.elements.labelWidth.value = value;
+      this.elements.labelWidthValue.textContent = `${value}%`;
+    }
+    if (this.elements.labelOffsetX) {
+      const value = source.labelOffsetX ?? TEXT_LABEL.OFFSET_DEFAULT_X;
+      this.elements.labelOffsetX.value = value;
+      this.elements.labelOffsetXValue.textContent = `${value}%`;
+    }
+    if (this.elements.labelOffsetY) {
+      const value = source.labelOffsetY ?? TEXT_LABEL.OFFSET_DEFAULT_Y;
+      this.elements.labelOffsetY.value = value;
+      this.elements.labelOffsetYValue.textContent = `${value}%`;
+    }
+
+    const pauseSeconds = (source.pauseTime || 0) / 1000;
+    if (this.elements.waypointPauseTime) {
+      this.elements.waypointPauseTime.value = this.uiController?.pauseTimeToSlider
+        ? this.uiController.pauseTimeToSlider(pauseSeconds)
+        : pauseSeconds;
+      this.elements.waypointPauseTimeValue.textContent =
+        MotionVisibilityService.formatUIValue(pauseSeconds, 's');
+    }
+    if (this.elements.pauseTimeControl) this.elements.pauseTimeControl.style.display = 'flex';
+
+    const speed = source.segmentSpeed || 1;
+    if (this.elements.waypointSegmentSpeed) {
+      this.elements.waypointSegmentSpeed.value = this.uiController?.segmentSpeedToSlider
+        ? this.uiController.segmentSpeedToSlider(speed)
+        : speed;
+      const display = speed < 1 ? speed.toFixed(2) : MotionVisibilityService.formatUIValue(speed);
+      this.elements.waypointSegmentSpeedValue.textContent = `${display}x`;
+    }
+    if (this.elements.segmentSpeedControl) this.elements.segmentSpeedControl.style.display = 'flex';
+
+    // Keep the ordinary checkbox value meaningful before an optional mixed
+    // overlay is applied below.
+    setCheckboxMixed(this.elements.rippleWait, false);
+  },
+
+  /**
+   * Overlay mixed presentation after ordinary source synchronization.
+   * @param {Array<Object>} targets
+   * @param {Array<Object>} majorTargets
+   * @private
+   */
+  _applyWaypointMixedStates(targets, majorTargets) {
+    const mixed = (items, read) => hasMixedValues(items, read);
+    const colour = value => String(value || '').toLowerCase();
+    const markSelect = (element, items, read) => {
+      const value = mixed(items, read);
+      setSelectMixed(element, value);
+      return value;
+    };
+    const markRange = (element, readout, items, read) => {
+      const value = mixed(items, read);
+      setRangeMixed(element, readout, value);
+      return value;
+    };
+
+    const pathShapeMixed = markSelect(this.elements.pathShape, targets, wp => wp.pathShape || 'line');
+    markSelect(this.elements.segmentStyle, targets, wp => wp.segmentStyle || 'solid');
+    setSwatchPickerMixed('#segment-color', mixed(targets, wp => colour(wp.segmentColor)));
+    markRange(this.elements.segmentWidth, this.elements.segmentWidthValue, targets, wp => wp.segmentWidth || 3);
+    markRange(this.elements.shapeAmplitude, this.elements.shapeAmplitudeValue, targets, wp => wp.shapeAmplitude ?? 10);
+    markRange(this.elements.shapeFrequency, this.elements.shapeFrequencyValue, targets, wp => wp.shapeFrequency ?? 5);
+    if (pathShapeMixed) this._updateShapeParamsVisibility(MIXED_OPTION_VALUE);
+
+    const markerStyleMixed = markSelect(this.elements.markerStyle, majorTargets, wp => wp.markerStyle || 'dot');
+    setSwatchPickerMixed('#dot-color', mixed(majorTargets, wp => colour(wp.dotColor)));
+    markRange(this.elements.dotSize, this.elements.dotSizeValue, majorTargets, wp => wp.dotSize || 8);
+    if (markerStyleMixed && this.elements.customMarkerControls) {
+      this.elements.customMarkerControls.style.display = 'none';
+    }
+    const markerImagesMixed = mixed(majorTargets, wp => wp.customImageAssetId || null);
+    if (!markerStyleMixed
+      && majorTargets[0]?.markerStyle === 'custom'
+      && markerImagesMixed
+      && this.elements.markerPreview) {
+      this.elements.markerPreview.style.display = 'block';
+      this.elements.markerFilename.textContent = 'Mixed images';
+      if (this.elements.markerPreviewImg) this.elements.markerPreviewImg.hidden = true;
+    }
+
+    const beaconStyleMixed = markSelect(
+      this.elements.editorBeaconStyle,
+      majorTargets,
+      wp => wp.beaconStyle || 'none'
+    );
+    markRange(this.elements.rippleThickness, this.elements.rippleThicknessValue, majorTargets, wp => wp.rippleThickness || 2);
+    markRange(this.elements.rippleMaxScale, this.elements.rippleMaxScaleValue, majorTargets, wp => wp.rippleMaxScale || 1000);
+    setCheckboxMixed(this.elements.rippleWait, mixed(majorTargets, wp => wp.rippleWait !== false));
+    markRange(this.elements.pulseAmplitude, this.elements.pulseAmplitudeValue, majorTargets, wp => wp.pulseAmplitude ?? 1);
+    markRange(this.elements.pulseCycleSpeed, this.elements.pulseCycleSpeedValue, majorTargets, wp => wp.pulseCycleSpeed ?? 4);
+    markRange(this.elements.waypointPauseTime, this.elements.waypointPauseTimeValue, majorTargets, wp => wp.pauseTime || 0);
+    markRange(this.elements.waypointSegmentSpeed, this.elements.waypointSegmentSpeedValue, majorTargets, wp => wp.segmentSpeed || 1);
+    if (beaconStyleMixed) this._updateBeaconControlsVisibility(MIXED_OPTION_VALUE);
+
+    markSelect(this.elements.labelMode, majorTargets, wp => wp.labelMode || TEXT_VISIBILITY.FADE_UP);
+    markRange(this.elements.labelSize, this.elements.labelSizeValue, majorTargets, wp => wp.labelSize || TEXT_LABEL.SIZE_DEFAULT);
+    setSwatchPickerMixed('#label-color', mixed(majorTargets, wp => colour(wp.labelColor || TEXT_LABEL.COLOR_DEFAULT)));
+    setSwatchPickerMixed('#label-bg-color', mixed(majorTargets, wp => colour(wp.labelBgColor || TEXT_LABEL.BG_COLOR_DEFAULT)));
+    markRange(this.elements.labelBgOpacity, this.elements.labelBgOpacityValue, majorTargets, wp => wp.labelBgOpacity ?? TEXT_LABEL.BG_OPACITY_DEFAULT);
+    markRange(this.elements.labelWidth, this.elements.labelWidthValue, majorTargets, wp => wp.labelWidth ?? TEXT_LABEL.WIDTH_DEFAULT);
+    markRange(this.elements.labelOffsetX, this.elements.labelOffsetXValue, majorTargets, wp => wp.labelOffsetX ?? TEXT_LABEL.OFFSET_DEFAULT_X);
+    markRange(this.elements.labelOffsetY, this.elements.labelOffsetYValue, majorTargets, wp => wp.labelOffsetY ?? TEXT_LABEL.OFFSET_DEFAULT_Y);
+
+    const areaShapeMixed = markSelect(this.elements.areaShape, targets, wp => wp.areaHighlight.shape || 'none');
+    markRange(this.elements.areaCircleRadius, this.elements.areaCircleRadiusValue, targets, wp => wp.areaHighlight.radius);
+    markRange(this.elements.areaRectWidth, this.elements.areaRectWidthValue, targets, wp => wp.areaHighlight.width);
+    markRange(this.elements.areaRectHeight, this.elements.areaRectHeightValue, targets, wp => wp.areaHighlight.height);
+    setSwatchPickerMixed('#area-fill-color', mixed(targets, wp => colour(wp.areaHighlight.fillColor)));
+    markRange(this.elements.areaFillOpacity, this.elements.areaFillOpacityValue, targets, wp => wp.areaHighlight.fillOpacity);
+    setSwatchPickerMixed('#area-border-color', mixed(targets, wp => colour(wp.areaHighlight.borderColor)));
+    markSelect(this.elements.areaBorderStyle, targets, wp => wp.areaHighlight.borderStyle);
+    markRange(this.elements.areaBorderWidth, this.elements.areaBorderWidthValue, targets, wp => wp.areaHighlight.borderWidth);
+    markSelect(this.elements.areaVisibility, targets, wp => wp.areaHighlight.visibility);
+    markRange(this.elements.areaFadeIn, this.elements.areaFadeInValue, targets, wp => wp.areaHighlight.fadeInMs);
+    markRange(this.elements.areaFadeOut, this.elements.areaFadeOutValue, targets, wp => wp.areaHighlight.fadeOutMs);
+    if (areaShapeMixed) this.uiController?._updateAreaSubControls(MIXED_OPTION_VALUE);
+
+    const isMulti = targets.length > 1;
+    if (this.elements.areaDrawBtn) {
+      this.elements.areaDrawBtn.disabled = isMulti;
+      this.elements.areaDrawBtn.title = isMulti
+        ? 'Draw an area with one waypoint selected'
+        : '';
+    }
+  },
   
   updateWaypointEditor() {
     if (this.selectedWaypoint) {
+      const targets = this.selectionTargets();
+      const majorTargets = this.selectionTargets(true);
+      const majorSource = majorTargets.includes(this.selectedWaypoint)
+        ? this.selectedWaypoint
+        : majorTargets[0] || null;
       // Note: Section visibility now handled by SectionController via events
       
       // Path properties
@@ -387,43 +644,13 @@ export const editorPanelMixin = {
         this.elements.pauseTimeControl.style.display = 'none';
       }
 
-      // A mixed major/minor selection still has editable major targets. Until
-      // UI-04 adds mixed-value presentation, show the primary major's exact
-      // appearance (or the first selected major when the primary is minor).
-      const labelAppearanceSource = this.selectedWaypoint.isMajor
-        ? this.selectedWaypoint
-        : this.selectionTargets(true)[0];
-      const canEditLabelAppearance = Boolean(labelAppearanceSource);
-      if (this.elements.labelColor) {
-        this.elements.labelColor.disabled = !canEditLabelAppearance;
-        if (labelAppearanceSource) {
-          this.elements.labelColor.value = labelAppearanceSource.labelColor || TEXT_LABEL.COLOR_DEFAULT;
-        }
-        setSwatchPickerEnabled('#label-color', canEditLabelAppearance);
-      }
-      if (this.elements.labelBgColor) {
-        this.elements.labelBgColor.disabled = !canEditLabelAppearance;
-        if (labelAppearanceSource) {
-          this.elements.labelBgColor.value = labelAppearanceSource.labelBgColor || TEXT_LABEL.BG_COLOR_DEFAULT;
-        }
-        setSwatchPickerEnabled('#label-bg-color', canEditLabelAppearance);
-      }
-      if (this.elements.labelBgOpacity) {
-        this.elements.labelBgOpacity.disabled = !canEditLabelAppearance;
-        if (labelAppearanceSource) {
-          const opacity = labelAppearanceSource.labelBgOpacity ?? TEXT_LABEL.BG_OPACITY_DEFAULT;
-          const opacityPct = Math.round(opacity * 100);
-          this.elements.labelBgOpacity.value = opacityPct;
-          setRangeReadout(
-            this.elements.labelBgOpacity,
-            this.elements.labelBgOpacityValue,
-            `${opacityPct}%`
-          );
-        }
-      }
-      
-      // Camera controls (apply to all waypoints)
+      // Major-only controls use an actual selected major as their source; the
+      // mixed-state overlay then compares each control's real write targets.
+      this._syncMajorWaypointControls(majorSource, majorTargets);
+
+      // Camera controls are major-keyframed and own their mixed presentation.
       this._updateCameraControls(this.selectedWaypoint);
+      this._applyWaypointMixedStates(targets, majorTargets);
     }
     // Note: Section visibility handled by SectionController which listens to
     // the same waypoint:selected/deselected events that trigger this method.

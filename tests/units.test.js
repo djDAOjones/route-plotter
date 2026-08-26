@@ -16,6 +16,7 @@ import { ImageAsset } from '../src/models/ImageAsset.js';
 import { CameraService } from '../src/services/CameraService.js';
 import { RenderingService } from '../src/services/RenderingService.js';
 import { RENDERING } from '../src/config/constants.js';
+import { cameraMixin } from '../src/app/camera.js';
 
 describe('AnimationState (extended)', () => {
   test('setTime clamps to [0, duration] and derives progress', () => {
@@ -454,6 +455,44 @@ describe('CameraService — major-only zoom keyframes', () => {
     expect(gradualZoom).toBeGreaterThan(1);
     expect(gradualZoom).toBeLessThan(4);
     expect(quickZoom).toBeCloseTo(4, 5);
+  });
+});
+
+describe('camera inspector mixed values', () => {
+  test('uses selected majors and presents differing zoom and transition values as Mixed', () => {
+    document.body.innerHTML = `
+      <input id="selected-zoom" type="range"><span id="selected-zoom-value"></span>
+      <select id="zoom-mode">
+        <option value="continuous">Gradual</option>
+        <option value="immediate">Quick</option>
+      </select>`;
+    const a = Waypoint.createMajor(0.1, 0.1);
+    const minor = Waypoint.createMinor(0.5, 0.5);
+    const b = Waypoint.createMajor(0.9, 0.9);
+    a.camera = { zoom: 2, zoomMode: 'continuous' };
+    b.camera = { zoom: 8, zoomMode: 'immediate' };
+    const app = {
+      waypoints: [a, minor, b],
+      selectedWaypoint: minor,
+      selectedWaypoints: [a, minor, b],
+      elements: {
+        cameraSelectedZoom: document.getElementById('selected-zoom'),
+        cameraSelectedZoomValue: document.getElementById('selected-zoom-value'),
+        cameraZoomMode: document.getElementById('zoom-mode'),
+      },
+      selectionTargets(majorsOnly) {
+        return majorsOnly ? [a, b] : [a, minor, b];
+      },
+    };
+
+    cameraMixin._updateCameraControls.call(app, minor);
+
+    expect(app.elements.cameraSelectedZoomValue.textContent).toBe('Mixed');
+    expect(app.elements.cameraSelectedZoom.getAttribute('aria-valuetext')).toBe('Mixed');
+    expect(app.elements.cameraZoomMode.value).toBe('__mixed__');
+    expect(app.elements.cameraZoomMode.selectedOptions[0].textContent).toBe('Mixed');
+    expect(a.camera).toEqual({ zoom: 2, zoomMode: 'continuous' });
+    expect(b.camera).toEqual({ zoom: 8, zoomMode: 'immediate' });
   });
 });
 

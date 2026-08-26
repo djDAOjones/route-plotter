@@ -1399,7 +1399,9 @@ export class UIController {
     this._waypointsCache = waypoints;
     this._updateScopeChip(this.selectedWaypoint,
       this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
-    this._updateLegSectionTitle(this.selectedWaypoint);
+    this._updateLegSectionTitle(
+      this.selectedWaypoints.size > 1 ? null : this.selectedWaypoint
+    );
 
     if (!this.elements.waypointList) return;
     this._listedMajors = waypoints.filter(wp => wp.isMajor);

@@ -114,6 +114,12 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 - Palette controls identify the exact current colour in text. A custom or
   imported value that does not match a preset leaves every preset unselected;
   the UI must never imply that a different colour is active.
+- Multi-edit controls compare the entities they will actually write. When
+  those values disagree, selects show a disabled `Mixed` option, range
+  readouts and `aria-valuetext` say `Mixed`, native checkboxes are
+  indeterminate, and palette controls clear every swatch and show `Mixed` in
+  text. The retained source value is only an interaction starting point, never
+  a claim about the whole selection; a real edit clears the transient state.
 
 ### Flexibility and efficiency
 

@@ -20,10 +20,13 @@ import {
   formatShapeAmplitude,
   setRangeReadout,
 } from '../utils/uiReadouts.js';
+import { bindMixedControlReset } from '../utils/mixedControlState.js';
 
 export const wiringDomMixin = {
   
   setupEventListeners() {
+    bindMixedControlReset(document.getElementById('waypoint-scope'));
+
     // Mode switch toggle (header)
     this.elements.modeToggleBtn?.addEventListener('click', () => {
       this._togglePreviewMode();
@@ -766,9 +769,11 @@ export const wiringDomMixin = {
       const zoom = CameraService.sliderToZoom(sliderValue);
 
       // Update display immediately for responsive feel
+      const formattedZoom = CameraService.formatZoom(zoom);
       if (this.elements.cameraZoomValue) {
-        this.elements.cameraZoomValue.textContent = CameraService.formatZoom(zoom);
+        this.elements.cameraZoomValue.textContent = formattedZoom;
       }
+      e.target.setAttribute('aria-valuetext', formattedZoom);
 
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
@@ -811,9 +816,11 @@ export const wiringDomMixin = {
       const zoom = CameraService.sliderToZoom(sliderValue);
 
       // Update display immediately
+      const formattedZoom = CameraService.formatZoom(zoom);
       if (this.elements.cameraSelectedZoomValue) {
-        this.elements.cameraSelectedZoomValue.textContent = CameraService.formatZoom(zoom);
+        this.elements.cameraSelectedZoomValue.textContent = formattedZoom;
       }
+      e.target.setAttribute('aria-valuetext', formattedZoom);
 
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {

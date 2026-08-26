@@ -24,6 +24,7 @@ import { editorPanelMixin } from '../src/app/editorPanel.js';
 import { wiringControllersMixin } from '../src/app/wiringControllers.js';
 import { undoRedoMixin } from '../src/app/undoRedo.js';
 import { UIController } from '../src/controllers/UIController.js';
+import { attachSwatchPickers } from '../src/components/SwatchPicker.js';
 
 // ── Stub waypoints ──────────────────────────────────────────────────
 
@@ -130,6 +131,105 @@ describe('selectionTargets', () => {
     const app = { selectedWaypoint: major, selectedWaypoints: [major, minor], selectionTargets: editorPanelMixin.selectionTargets };
     expect(app.selectionTargets(true)).toEqual([major]);
     expect(app.selectionTargets()).toEqual([major, minor]);
+  });
+});
+
+describe('waypoint inspector mixed presentation', () => {
+  function mountMixedHarness() {
+    document.body.innerHTML = `
+      <div id="waypoint-scope">
+        <input id="segment-color" type="hidden" value="#d55e00">
+        <div class="swatch-picker" data-target-input="#segment-color"></div>
+        <select id="path-shape"><option value="line">Line</option><option value="squiggle">Squiggle</option></select>
+        <input id="segment-width" type="range"><span id="segment-width-value"></span>
+        <input id="dot-color" type="hidden" value="#d55e00">
+        <div class="swatch-picker" data-target-input="#dot-color"></div>
+        <select id="marker-style"><option value="dot">Dot</option><option value="flag">Flag</option></select>
+        <input id="dot-size" type="range"><span id="dot-size-value"></span>
+        <select id="editor-beacon-style"><option value="none">None</option><option value="ripple">Ripple</option></select>
+        <input id="ripple-wait" type="checkbox">
+        <input id="label-color" type="hidden" value="#1a1a1a">
+        <div class="swatch-picker" data-target-input="#label-color" data-mode="neutral-ink" data-allow-custom="true"></div>
+        <input id="label-bg-color" type="hidden" value="#ffffff">
+        <div class="swatch-picker" data-target-input="#label-bg-color" data-mode="neutral-ink" data-allow-custom="true"></div>
+        <input id="label-size" type="range"><span id="label-size-value"></span>
+      </div>`;
+    attachSwatchPickers();
+    const byId = id => document.getElementById(id);
+    return {
+      elements: {
+        segmentColor: byId('segment-color'),
+        pathShape: byId('path-shape'),
+        segmentWidth: byId('segment-width'),
+        segmentWidthValue: byId('segment-width-value'),
+        dotColor: byId('dot-color'),
+        markerStyle: byId('marker-style'),
+        dotSize: byId('dot-size'),
+        dotSizeValue: byId('dot-size-value'),
+        editorBeaconStyle: byId('editor-beacon-style'),
+        rippleWait: byId('ripple-wait'),
+        labelColor: byId('label-color'),
+        labelBgColor: byId('label-bg-color'),
+        labelSize: byId('label-size'),
+        labelSizeValue: byId('label-size-value'),
+      },
+      styles: { dotColor: '#d55e00', dotSize: 8 },
+      imageAssetService: { getAsset: vi.fn() },
+      uiController: { _updateAreaSubControls: vi.fn() },
+      _updateBeaconControlsVisibility: vi.fn(),
+      _updateShapeParamsVisibility: vi.fn(),
+    };
+  }
+
+  test('compares leg values across all targets but major-only values across majors', () => {
+    const major = makeWaypoint({
+      markerStyle: 'flag',
+      pathShape: 'line',
+      segmentWidth: 3,
+      labelSize: 20,
+    });
+    const minor = Waypoint.createMinor(0.4, 0.4);
+    minor.pathShape = 'squiggle';
+    minor.segmentWidth = 9;
+    const app = mountMixedHarness();
+    Object.assign(app, {
+      _syncMajorWaypointControls: editorPanelMixin._syncMajorWaypointControls,
+      _applyWaypointMixedStates: editorPanelMixin._applyWaypointMixedStates,
+    });
+
+    app._syncMajorWaypointControls(major, [major]);
+    app._applyWaypointMixedStates([major, minor], [major]);
+
+    expect(app.elements.pathShape.value).toBe('__mixed__');
+    expect(app.elements.segmentWidthValue.textContent).toBe('Mixed');
+    expect(app.elements.markerStyle.value).toBe('flag');
+    expect(app.elements.markerStyle.dataset.mixed).toBeUndefined();
+    expect(app.elements.labelSizeValue.textContent).toBe('20 px');
+  });
+
+  test('presents select, range, checkbox and swatch disagreement without changing models', () => {
+    const a = makeWaypoint({
+      markerStyle: 'dot', dotColor: '#d55e00', rippleWait: true, labelSize: 18,
+    });
+    const b = makeWaypoint({
+      markerStyle: 'flag', dotColor: '#0072b2', rippleWait: false, labelSize: 30,
+    });
+    const before = [a.toJSON(), b.toJSON()];
+    const app = mountMixedHarness();
+    Object.assign(app, {
+      _syncMajorWaypointControls: editorPanelMixin._syncMajorWaypointControls,
+      _applyWaypointMixedStates: editorPanelMixin._applyWaypointMixedStates,
+    });
+
+    app._syncMajorWaypointControls(a, [a, b]);
+    app._applyWaypointMixedStates([a, b], [a, b]);
+
+    expect(app.elements.markerStyle.value).toBe('__mixed__');
+    expect(app.elements.labelSizeValue.textContent).toBe('Mixed');
+    expect(app.elements.labelSize.getAttribute('aria-valuetext')).toBe('Mixed');
+    expect(app.elements.rippleWait.indeterminate).toBe(true);
+    expect(document.querySelector('[data-target-input="#dot-color"] .swatch-mixed-state').hidden).toBe(false);
+    expect([a.toJSON(), b.toJSON()]).toEqual(before);
   });
 });
 
@@ -438,6 +538,7 @@ describe('UIController multi-select', () => {
         <button id="scope-route-btn" disabled>Route</button>
         <button id="scope-next-btn"></button>
       </div>
+      <h2 id="leg-section-title">Leg</h2>
       <ul id="waypoint-list"></ul>
     `;
     listEl = document.getElementById('waypoint-list');
@@ -504,6 +605,7 @@ describe('UIController multi-select', () => {
     // Stepping is disabled in multi-select
     expect(document.getElementById('scope-prev-btn').disabled).toBe(true);
     expect(document.getElementById('scope-next-btn').disabled).toBe(true);
+    expect(document.getElementById('leg-section-title').textContent).toBe('Leg');
 
     ui.setSelection([a, minor, b], b);
     ui.updateWaypointList([a, minor, b, c]);

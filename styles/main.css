@@ -1030,6 +1030,12 @@ kbd{
   box-shadow:0 0 0 2px var(--focus-inner), 0 0 0 5px var(--focus-outer);
 }
 
+/* The thumb remains an available replacement value; the adjacent readout and
+   aria-valuetext carry the authoritative mixed-state claim. */
+.section-content input[type="range"][data-mixed="true"]{
+  opacity:.72;
+}
+
 .section-content label span:last-child{
   min-width:2.5rem; /* Consistent value width per spec §I */
   text-align:right;

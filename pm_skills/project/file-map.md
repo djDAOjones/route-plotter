@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 243 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 245 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 13 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -10,9 +10,9 @@
 - `images` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
-- `src` — 83 file(s)
+- `src` — 84 file(s)
 - `styles` — 6 file(s)
-- `tests` — 50 file(s)
+- `tests` — 51 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -146,9 +146,9 @@
 ## src
 
 - `src/app/backgroundLoading.js` — Detached user/example background decoding with compressed-byte retention and latest-request commit guards
-- `src/app/camera.js` — camera keyframe UI, camera state evaluation, zoom-transition warnings
+- `src/app/camera.js` — camera keyframe UI, actual-major mixed-state sync, camera state evaluation and zoom-transition warnings
 - `src/app/crowds.js` — Crowd layers mixin (Phase 4): layers strip (Route + crowds), Crowd scope selection events, card syncing, and the single-writer wiring for Guide/Dots/Release/Motion controls editing FlowLayer + first Emitter
-- `src/app/editorPanel.js` — waypoint list + editor panel sync, control-visibility helpers, `selectionTargets()` (the write-target rule every card edit loops over; Phase 4 multi-select)
+- `src/app/editorPanel.js` — waypoint list/editor sync, actual write-target resolution and transient mixed-state overlays for waypoint cards
 - `src/app/exporting.js` — Video/HTML export flows, summary UI and exact pre-export transport/timing restoration
 - `src/app/network.js` — Network editing mixin (Phase 4): Guide-card entry point (Edit network + auto-enter), pointer routing into NetworkEditService, node/edge/control hit-testing on the engine's edge polylines, Node/Edge card wiring, traffic-share readout, restore re-binding
 - `src/app/operationGeneration.js` — Project-generation, per-channel request-token and edit-revision helpers for stale async-work rejection
@@ -164,11 +164,11 @@
 - `src/app/viewport.js` — Responsive canvas/panel bounds, coordinate conversion, aspect handling and manual zoom
 - `src/app/wiringBus.js` — EventBus + AnimationEngine subscriptions, including compatible already-saved image-edit signalling
 - `src/app/wiringControllers.js` — UIController/InteractionHandler event connections
-- `src/app/wiringDom.js` — DOM control wiring, including detached and transactional custom marker/route-head image uploads
+- `src/app/wiringDom.js` — DOM control wiring, transient mixed-state reset, and detached transactional custom marker/route-head image uploads
 - `src/components/ContextMenu.js` — Right-click menu (canvas waypoints + empty canvas): Carbon menu anatomy, arrow-key navigation, aria-disabled reasons, focus restore (Phase 3.5)
 - `src/components/Dropdown.js` — Accessible dropdown menus
 - `src/components/ParamTooltip.js` — Click-label parameter tooltips (Carbon pattern)
-- `src/components/SwatchPicker.js` — Okabe-Ito colour-blind safe palette picker
+- `src/components/SwatchPicker.js` — Okabe-Ito palette picker with exact custom, disabled and transient mixed-state synchronization
 - `src/components/Tooltip.js` — Tooltip attachment
 - `src/config/constants.js` — All tuneable values (animation, rendering, path, etc.)
 - `src/config/helpContent.js` — Welcome modal and inline help HTML generators
@@ -176,7 +176,7 @@
 - `src/config/tooltips.js` — Tooltip definitions
 - `src/controllers/SceneOutlineController.js` — Native-details/list/form renderer owning transient disclosure, focus and dirty-draft state while emitting model-free commands
 - `src/controllers/SectionController.js` — Collapsible settings sections, waypoint/route/crowd/network scope switching and deterministic native More keyboard activation
-- `src/controllers/UIController.js` — Sidebar controls, waypoint list, slider sync; scope chip (text + prev/next stepping, multi counts) and Leg-card header naming; multi-select gesture Set + `setSelection()` for app-decided selections; pause/speed/area controls write to the whole selection (Phase 4)
+- `src/controllers/UIController.js` — Sidebar/list/slider sync; stable multi-selection scope and Leg headings; selection gestures; whole-selection pause, speed and area writes
 - `src/core/EventBus.js` — Pub-sub event system
 - `src/core/PlayerCore.js` — Pure timeline math (deterministic-timeline mandate): segment/pause/beacon-schedule builders + timeline↔path mappings; one evaluation path shared by play, scrub, and export
 - `src/handlers/InteractionHandler.js` — One captured Pointer Events transaction for mouse/touch/pen waypoint, area and network taps/drags; keyboard, drop, context-menu and wheel paths stay native
@@ -222,6 +222,7 @@
 - `src/utils/focusTrap.js` — Modal inerting, focus containment/wrap, Escape handling and origin-focus restoration
 - `src/utils/graphRouting.js` — Shared directed departures, overflow-safe weight normalisation and stable whole-percentage traffic shares
 - `src/utils/index.js` — Barrel exports for Catmull-Rom and easing utilities
+- `src/utils/mixedControlState.js` — DOM-only mixed-value comparison, select/range/checkbox presentation and concrete-input reset helpers
 - `src/utils/pathWidthScale.js` — Log-scale thickness slider ↔ width (1–40px) mapping; single source shared by the DOM wiring and UIController bulk edits (Phase 3.5)
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
@@ -258,9 +259,10 @@
 - `tests/htmlExportCache.test.js` — HTML export fetches the standalone player bundle for the exact application build
 - `tests/imageAssetRoundTrip.test.js` — Persistence-safe image IDs and import→export→import asset round-trip contracts
 - `tests/interactionPointer.test.js` — Pointer transaction contracts: exactly-once mouse/touch/pen taps, common threshold, capture/window terminal fallback, cancellation, mode priority, group snapshots and teardown
+- `tests/mixedControlState.test.js` — Mixed comparison, accessible control presentation and user-input reset contracts
 - `tests/mixins.test.js` — Mixin split guards: cross-mixin name-collision check, cluster spot-checks, snapToAngle unit tests
 - `tests/modelBoundary.test.js` — Strict graph-endpoint and persisted emitter integer boundary contracts
-- `tests/multiSelect.test.js` — Multi-select everywhere: selectionTargets rules, Cmd+A incl. minors, toggle-select collapse ladder, one-gesture bulk delete/nudge, snapshot selectedWaypointIds round-trip, headless UIController list gestures + chip counts
+- `tests/multiSelect.test.js` — Multi-select write-target rules, gestures/bulk actions/persistence, stable headings and honest per-control mixed-state integration
 - `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding
 - `tests/operationGeneration.test.js` — Latest-request/project-generation guards and original background-byte retention
 - `tests/playerAccessibility.test.js` — Aggregate-summary privacy/counting and discrete/coalesced transport-announcement contracts
@@ -284,8 +286,7 @@
 - `tests/setup.js` — Vitest jsdom setup (uses defineProperty for getter-only jsdom globals)
 - `tests/startup.test.js` — Recovery-before-default-image startup ordering contracts
 - `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, call-order-free determinism, release windows/ramps, weighted junctions, four lifecycle modes, route guide, wobble bounds, edge-cache invalidation
-- `tests/swatchPicker.test.js` — Exact preset/custom colour state, external
-  refresh and complete disabled-fieldset contracts for the palette component
+- `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
 - `tests/undoService.test.js` — Prospective-save parity, natural rollover, extra oldest discard, redo preservation/invalidation and rejected-input immutability
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
 - `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch

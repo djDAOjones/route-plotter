@@ -196,6 +196,19 @@
     ) !important;
 }
 
+.swatch-mixed-state {
+  grid-column: 2;
+  align-items: center;
+  min-height: 2rem;
+  color: var(--text-02, #2E2E2E);
+  font-size: var(--type-caption, 12px);
+  font-weight: 600;
+}
+
+.swatch-mixed-state:not([hidden]) {
+  display: inline-flex;
+}
+
 /* Neutral ink grid: same auto-fit behaviour */
 .swatch-grid.swatch-grid-neutral {
   grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
