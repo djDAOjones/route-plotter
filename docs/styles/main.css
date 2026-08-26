@@ -914,6 +914,33 @@ kbd{
   padding-inline:var(--space-2);
 }
 
+.crowd-pattern-controls{
+  display:grid;
+  gap:var(--space-2);
+  margin-top:var(--space-2);
+  padding-top:var(--space-2);
+  border-top:1px solid var(--border-interactive);
+}
+
+.crowd-seed-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-2);
+  min-height:var(--touch-target-min);
+}
+
+#crowd-seed-value{
+  overflow-wrap:anywhere;
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+}
+
+#crowd-reroll-btn{
+  width:100%;
+  min-height:var(--touch-target-min);
+}
+
 /* Section tints and cap bands per spec v3.1.241 §5.1 */
 /* Header uses cap color (darker), content uses tint (lighter) */
 /* Waypoint-scope cards */
@@ -3356,6 +3383,25 @@ a.btn-primary:visited{
     max-height:calc(100vh - (2 * var(--space-2)));
     overflow-y:auto;
     padding:var(--space-4);
+  }
+
+  .section-content label.crowd-variation-control{
+    flex-wrap:wrap;
+  }
+
+  .crowd-variation-control input[type="range"]{
+    order:3;
+    flex:1 0 100%;
+    margin:var(--space-2) 0 var(--space-1);
+  }
+
+  .section-content .crowd-variation-control span:first-child{
+    flex:1 1 auto;
+  }
+
+  .section-content .crowd-variation-control span:last-child{
+    min-width:0;
+    white-space:nowrap;
   }
 }
 

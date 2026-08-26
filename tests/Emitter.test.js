@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { Emitter } from '../src/models/Emitter.js';
 
 describe('Emitter', () => {
@@ -124,6 +124,16 @@ describe('Emitter', () => {
       expect(next).toBe(e.seed);
       expect(Number.isInteger(e.seed)).toBe(true);
       expect(e.seed).toBeGreaterThanOrEqual(0);
+    });
+
+    test('always produces a different seed when the random draw collides', () => {
+      const e = new Emitter({ seed: 42 });
+      const random = vi.spyOn(Math, 'random').mockReturnValue(42 / 0xFFFFFFFF);
+      try {
+        expect(e.reseed()).toBe(43);
+      } finally {
+        random.mockRestore();
+      }
     });
   });
 

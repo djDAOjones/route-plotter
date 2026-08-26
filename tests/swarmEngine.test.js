@@ -156,6 +156,24 @@ describe('SwarmEngine.evaluate — determinism', () => {
     emitter.update({ seed: 42 });
     expect(evaluate(layer, 5000)).toEqual(before);
   });
+
+  test('a serialized clone gives editor, reload, and export consumers identical frames', () => {
+    const { layer } = forkLayer(3, 1, {
+      dotCount: 40,
+      speed: 0.2,
+      speedVariance: 1,
+      onsetVariance: 1,
+      intensityRamp: -0.6,
+      wobble: 1,
+      releaseDuration: 1,
+      lifecycleMode: 'respawn',
+    });
+    const restored = FlowLayer.fromJSON(JSON.parse(JSON.stringify(layer.toJSON())));
+
+    for (const timelineMs of [0, 1750, 5000, 10000]) {
+      expect(evaluate(restored, timelineMs)).toEqual(evaluate(layer, timelineMs));
+    }
+  });
 });
 
 describe('SwarmEngine.evaluate — release window', () => {

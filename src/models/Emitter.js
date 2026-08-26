@@ -90,7 +90,11 @@ export class Emitter {
    * @returns {number} The new seed.
    */
   reseed() {
-    this.seed = Emitter._randomSeed();
+    const previous = this.seed;
+    const candidate = Emitter._randomSeed();
+    this.seed = candidate === previous
+      ? (previous === EMITTER_LIMITS.MAX_SEED ? 0 : previous + 1)
+      : candidate;
     return this.seed;
   }
 

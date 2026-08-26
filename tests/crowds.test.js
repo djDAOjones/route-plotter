@@ -10,8 +10,12 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, test, expect, beforeEach } from 'vitest';
-import { crowdsMixin } from '../src/app/crowds.js';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
+import {
+  crowdsMixin,
+  formatCrowdReleaseBias,
+  formatCrowdReleaseTiming,
+} from '../src/app/crowds.js';
 import { Scene } from '../src/models/Scene.js';
 import { EventBus } from '../src/core/EventBus.js';
 
@@ -19,6 +23,13 @@ function makeApp({ hasRoute = true } = {}) {
   document.body.innerHTML = `
     <ul id="layers-strip"></ul>
     <button id="add-crowd-btn" type="button"></button>
+    <input id="crowd-onset-variance" type="range" min="0" max="100">
+    <span id="crowd-onset-variance-value"></span>
+    <input id="crowd-intensity-ramp" type="range" min="-100" max="100">
+    <span id="crowd-intensity-ramp-value"></span>
+    <output id="crowd-seed-value"></output>
+    <p id="crowd-pattern-hint"></p>
+    <button id="crowd-reroll-btn" type="button">Re-roll pattern</button>
   `;
   const app = {
     eventBus: new EventBus(),
@@ -211,6 +222,78 @@ describe('crowd copy', () => {
     expect(html).toContain('Repeat journey');
     expect(html).toContain('Collect at exit');
     expect(html).not.toContain('At route end');
+  });
+});
+
+describe('seeded variation controls', () => {
+  test('formats release variation in plain directional language', () => {
+    expect(formatCrowdReleaseTiming(0)).toBe('Even');
+    expect(formatCrowdReleaseTiming(100)).toBe('100% uneven');
+    expect(formatCrowdReleaseBias(-65)).toBe('Earlier 65%');
+    expect(formatCrowdReleaseBias(0)).toBe('Even');
+    expect(formatCrowdReleaseBias(40)).toBe('Later 40%');
+  });
+
+  test('writes zero/max release controls through the established crowd transaction', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const emitter = app.selectedCrowd.emitters[0];
+    const onset = document.getElementById('crowd-onset-variance');
+    const ramp = document.getElementById('crowd-intensity-ramp');
+
+    onset.value = '100';
+    onset.dispatchEvent(new Event('input', { bubbles: true }));
+    ramp.value = '-100';
+    ramp.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(emitter.onsetVariance).toBe(1);
+    expect(emitter.intensityRamp).toBe(-1);
+    expect(onset.getAttribute('aria-valuetext')).toBe('100% uneven');
+    expect(ramp.getAttribute('aria-valuetext')).toBe('Earlier 100%');
+
+    onset.value = '0';
+    onset.dispatchEvent(new Event('input', { bubbles: true }));
+    ramp.value = '100';
+    ramp.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(emitter.onsetVariance).toBe(0);
+    expect(emitter.intensityRamp).toBe(1);
+    expect(ramp.getAttribute('aria-valuetext')).toBe('Later 100%');
+  });
+
+  test('Re-roll changes only the seed through one immediate undoable transaction', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const layer = app.selectedCrowd;
+    const emitter = layer.emitters[0];
+    emitter.update({ seed: 123, speedVariance: 0.7, onsetVariance: 0.8, wobble: 0.6 });
+    app.syncCrowdEditor();
+    const before = emitter.toJSON();
+    const savesBefore = app.undoSaves;
+    const semantic = [];
+    app.eventBus.on('scene:semantic-changed', event => semantic.push(event));
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+
+    try {
+      document.getElementById('crowd-reroll-btn').click();
+    } finally {
+      random.mockRestore();
+    }
+
+    expect(emitter.seed).toBe(2147483647);
+    expect({ ...emitter.toJSON(), seed: before.seed }).toEqual(before);
+    expect(document.getElementById('crowd-seed-value').textContent).toBe('2147483647');
+    expect(app.undoSaves).toBe(savesBefore + 1);
+    expect(app.announced.at(-1)).toMatch(/pattern re-rolled.*Undo is available/);
+    expect(semantic).toEqual([{
+      kind: 'crowd-pattern-seed', layerId: layer.id, emitterId: emitter.id,
+    }]);
+  });
+
+  test('custom-network guidance separates junction shares from seeded assignments', () => {
+    const app = makeApp({ hasRoute: false });
+    app.addCrowd({ enterNetworkEditor: false });
+    expect(document.getElementById('crowd-pattern-hint').textContent)
+      .toMatch(/Junction shares set route proportions.*which dots take them/);
   });
 });
 

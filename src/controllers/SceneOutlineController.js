@@ -778,10 +778,10 @@ export class SceneOutlineController {
         ['Release start', `${emitter.releaseStart}%`],
         ['Release length', `${emitter.releaseDuration}%`],
         ['Speed', `${emitter.speed} image units/second`],
-        ['Speed variation', `${emitter.speedVariance}%`],
-        ['Onset variation', `${emitter.onsetVariance}%`],
-        ['Intensity ramp', `${emitter.intensityRamp}%`],
-        ['Wobble', `${emitter.wobble}%`],
+        ['Pace variation', `${emitter.speedVariance}%`],
+        ['Release timing', `${emitter.onsetVariance}%`],
+        ['Release bias', `${emitter.intensityRamp}%`],
+        ['Walking variation', `${emitter.wobble}%`],
         ['Lifecycle', emitter.lifecycleMode],
         ['Seed', emitter.seed],
       ]));
@@ -800,16 +800,16 @@ export class SceneOutlineController {
           key: `${emitter.key}:duration`,
           canonicalValue: emitter.releaseDurationCanonical,
         }),
-        labelledInput('onsetVariance', 'Onset variation (%)', emitter.onsetVariance, {
+        labelledInput('onsetVariance', 'Release timing (%)', emitter.onsetVariance, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:onset`, canonicalValue: emitter.onsetVarianceCanonical,
         }),
-        labelledInput('intensityRamp', 'Intensity ramp (%)', emitter.intensityRamp, {
+        labelledInput('intensityRamp', 'Release bias (%)', emitter.intensityRamp, {
           min: -100, max: 100, step: 'any', key: `${emitter.key}:ramp`, canonicalValue: emitter.intensityRampCanonical,
         }),
         labelledInput('speed', 'Speed (image units/second)', emitter.speed, {
           min: 0.001, max: 1000, step: 'any', key: `${emitter.key}:speed`,
         }),
-        labelledInput('speedVariance', 'Speed variation (%)', emitter.speedVariance, {
+        labelledInput('speedVariance', 'Pace variation (%)', emitter.speedVariance, {
           min: 0,
           max: 100,
           step: 'any',

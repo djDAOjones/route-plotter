@@ -18,7 +18,14 @@ function buildSceneData() {
   const entry = layer.graph.addNode({ x: 0.1, y: 0.5, type: 'entry' });
   const exit = layer.graph.addNode({ x: 0.9, y: 0.5, type: 'exit' });
   layer.graph.addEdge({ sourceId: entry.id, targetId: exit.id });
-  layer.addEmitter({ seed: 42, dotCount: 30 });
+  layer.addEmitter({
+    seed: 42,
+    dotCount: 30,
+    speedVariance: 0.75,
+    onsetVariance: 0.8,
+    intensityRamp: -0.4,
+    wobble: 0.6,
+  });
   return scene.toJSON();
 }
 
@@ -87,7 +94,13 @@ describe('coordVersion 9 scene persistence', () => {
       const data = app._captured.autosaved;
       expect(data.coordVersion).toBe(9);
       expect(data.scene.flowLayers).toHaveLength(1);
-      expect(data.scene.flowLayers[0].emitters[0].seed).toBe(42);
+      expect(data.scene.flowLayers[0].emitters[0]).toMatchObject({
+        seed: 42,
+        speedVariance: 0.75,
+        onsetVariance: 0.8,
+        intensityRamp: -0.4,
+        wobble: 0.6,
+      });
       // Additive: every v7 top-level key survives
       for (const key of ['waypoints', 'styles', 'animationState', 'background',
         'exportSettings', 'motionSettings', 'imageAssets']) {
@@ -134,7 +147,13 @@ describe('coordVersion 9 scene persistence', () => {
       expect(app.scene.getFlowLayers()).toHaveLength(1);
       const layer = app.scene.getFlowLayers()[0];
       expect(layer.graph.getNodes()).toHaveLength(2);
-      expect(layer.emitters[0].seed).toBe(42);
+      expect(layer.emitters[0]).toMatchObject({
+        seed: 42,
+        speedVariance: 0.75,
+        onsetVariance: 0.8,
+        intensityRamp: -0.4,
+        wobble: 0.6,
+      });
     });
 
     test('a pre-v6 autosave should still be cleared by the version gate', async () => {

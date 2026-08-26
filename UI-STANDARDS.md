@@ -141,6 +141,11 @@ Nielsen's heuristics are **hard rules**, not aspirations.
   unavailable actions with a specific accessible reason. Treat the action as
   one undoable transaction, and never propagate authored content that the card
   does not explicitly style (for example label text or polygon geometry).
+- Seeded variation controls expose the exact persisted seed and make Re-roll a
+  discrete, undoable authoring action that changes the seed only. They use
+  plain effect names and directional readouts instead of internal signed
+  parameters, and must never introduce wall-clock randomness into playback,
+  scrubbing or export.
 
 ### Motion discipline
 

@@ -19,6 +19,17 @@ import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
 
+export function formatCrowdReleaseTiming(percent) {
+  const rounded = Math.round(percent);
+  return rounded === 0 ? 'Even' : `${rounded}% uneven`;
+}
+
+export function formatCrowdReleaseBias(percent) {
+  const rounded = Math.round(percent);
+  if (rounded === 0) return 'Even';
+  return rounded < 0 ? `Earlier ${Math.abs(rounded)}%` : `Later ${rounded}%`;
+}
+
 export const crowdsMixin = {
 
   /**
@@ -77,6 +88,7 @@ export const crowdsMixin = {
     document.getElementById('crowd-guide-type')?.addEventListener('change', (e) => {
       if (!this.selectedCrowd) return;
       this.selectedCrowd.setGuideType(e.target.value);
+      this.syncCrowdEditor();
       this.eventBus.emit('crowd:param-changed');
       // The network mixin reacts: empty-network crowds go straight into
       // network editing; switching back to route closes the mode
@@ -116,6 +128,16 @@ export const crowdsMixin = {
       return `${Math.round(raw)}%`;
     });
 
+    this._wireCrowdSlider('crowd-onset-variance', (raw) => {
+      emitterOf()?.update({ onsetVariance: raw / 100 });
+      return formatCrowdReleaseTiming(raw);
+    });
+
+    this._wireCrowdSlider('crowd-intensity-ramp', (raw) => {
+      emitterOf()?.update({ intensityRamp: raw / 100 });
+      return formatCrowdReleaseBias(raw);
+    });
+
     this._wireCrowdSlider('crowd-speed', (raw) => {
       emitterOf()?.update({ speed: raw / 100 });
       return `${(raw / 100).toFixed(2)} img/s`;
@@ -131,6 +153,10 @@ export const crowdsMixin = {
       if (!em) return;
       em.update({ lifecycleMode: e.target.value });
       this.eventBus.emit('crowd:param-changed');
+    });
+
+    document.getElementById('crowd-reroll-btn')?.addEventListener('click', () => {
+      this._rerollCrowdPattern();
     });
   },
 
@@ -148,8 +174,34 @@ export const crowdsMixin = {
       if (!this.selectedCrowd?.emitters[0]) return;
       const text = apply(parseFloat(e.target.value));
       if (valueEl) valueEl.textContent = text;
+      el.setAttribute('aria-valuetext', text);
       this.eventBus.emit('crowd:param-changed');
     });
+  },
+
+  /**
+   * Give the primary emitter a new persisted pattern seed. Randomness happens
+   * only at this authoring action; playback remains a pure seeded evaluation.
+   * @returns {number|null} New seed, or null when no editable emitter exists
+   */
+  _rerollCrowdPattern() {
+    const layer = this.selectedCrowd;
+    const emitter = layer?.emitters[0];
+    if (!layer || !emitter) return null;
+
+    this._flushPendingUndo?.();
+    const seed = emitter.reseed();
+    this.syncCrowdEditor();
+    this.saveUndoState();
+    this.autoSave();
+    this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', {
+      kind: 'crowd-pattern-seed',
+      layerId: layer.id,
+      emitterId: emitter.id,
+    });
+    this.announce(`${layer.name || 'Crowd'} pattern re-rolled. Undo is available.`);
+    return seed;
   },
 
   /**
@@ -399,6 +451,10 @@ export const crowdsMixin = {
     const setText = (id, text) => {
       const el = document.getElementById(id);
       if (el) el.textContent = text;
+      const control = id.endsWith('-value')
+        ? document.getElementById(id.slice(0, -'-value'.length))
+        : null;
+      control?.setAttribute('aria-valuetext', text);
     };
 
     set('crowd-guide-type', layer.guideType);
@@ -417,11 +473,29 @@ export const crowdsMixin = {
     setText('crowd-release-start-value', `${Math.round(em.releaseStart * 100)}%`);
     set('crowd-release-duration', Math.round(em.releaseDuration * 100));
     setText('crowd-release-duration-value', `${Math.round(em.releaseDuration * 100)}%`);
+    set('crowd-onset-variance', Math.round(em.onsetVariance * 100));
+    setText(
+      'crowd-onset-variance-value',
+      formatCrowdReleaseTiming(em.onsetVariance * 100)
+    );
+    set('crowd-intensity-ramp', Math.round(em.intensityRamp * 100));
+    setText(
+      'crowd-intensity-ramp-value',
+      formatCrowdReleaseBias(em.intensityRamp * 100)
+    );
     set('crowd-speed', Math.round(em.speed * 100));
     setText('crowd-speed-value', `${em.speed.toFixed(2)} img/s`);
     set('crowd-speed-variance', Math.round(em.speedVariance * 100));
     setText('crowd-speed-variance-value', `${Math.round(em.speedVariance * 100)}%`);
     set('crowd-lifecycle', em.lifecycleMode);
+    setText('crowd-seed-value', String(em.seed));
+
+    const hint = document.getElementById('crowd-pattern-hint');
+    if (hint) {
+      hint.textContent = layer.guideType === 'graph'
+        ? 'Junction shares set route proportions. Re-roll changes which dots take them, plus individual walking and set-off variation.'
+        : 'Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path.';
+    }
 
     // Chip text follows crowd selection/name via the UIController's own
     // crowd listeners; nothing to do here beyond the controls.

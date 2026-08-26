@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.643</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.643">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.643">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.643">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.643">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.643">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.643">
+  <title>Route Plotter v3.2.645</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.645">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.645">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.645">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.645">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.645">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.645">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -981,13 +981,13 @@
 
               <label for="crowd-dot-size">
                 <span data-tip="Dot size factor, scaled with the image like other elements">Size</span>
-                <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5">
+                <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5" aria-describedby="crowd-dot-size-value" aria-valuetext="0.40×">
                 <span id="crowd-dot-size-value">0.40×</span>
               </label>
 
               <label for="crowd-wobble">
-                <span data-tip="Sideways wander as dots travel — 0% walks the line exactly">Wobble</span>
-                <input type="range" id="crowd-wobble" min="0" max="100" value="0" step="1">
+                <span data-tip="Sideways walking variation as dots travel — 0% follows the line exactly">Walking variation</span>
+                <input type="range" id="crowd-wobble" min="0" max="100" value="0" step="1" aria-describedby="crowd-wobble-value" aria-valuetext="0%">
                 <span id="crowd-wobble-value">0%</span>
               </label>
             </div>
@@ -1000,23 +1000,51 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-release-content" class="section-content">
+              <div class="section-primary">
               <label for="crowd-count">
                 <span data-tip="Total dots released across the window">Count</span>
-                <input type="range" id="crowd-count" min="1" max="500" value="50" step="1">
+                <input type="range" id="crowd-count" min="1" max="500" value="50" step="1" aria-describedby="crowd-count-value" aria-valuetext="50">
                 <span id="crowd-count-value">50</span>
               </label>
 
               <label for="crowd-release-start">
                 <span data-tip="When the first dots set off, as a position in the timeline">Window start</span>
-                <input type="range" id="crowd-release-start" min="0" max="100" value="0" step="1">
+                <input type="range" id="crowd-release-start" min="0" max="100" value="0" step="1" aria-describedby="crowd-release-start-value" aria-valuetext="0%">
                 <span id="crowd-release-start-value">0%</span>
               </label>
 
               <label for="crowd-release-duration">
                 <span data-tip="How much of the timeline the release is spread across">Window length</span>
-                <input type="range" id="crowd-release-duration" min="0" max="100" value="100" step="1">
+                <input type="range" id="crowd-release-duration" min="0" max="100" value="100" step="1" aria-describedby="crowd-release-duration-value" aria-valuetext="100%">
                 <span id="crowd-release-duration-value">100%</span>
               </label>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
+                  <label class="crowd-variation-control" for="crowd-onset-variance">
+                    <span data-tip="How unevenly individual dots set off within the release window">Release timing</span>
+                    <input type="range" id="crowd-onset-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-onset-variance-value" aria-valuetext="20% uneven">
+                    <span id="crowd-onset-variance-value">20% uneven</span>
+                  </label>
+
+                  <label class="crowd-variation-control" for="crowd-intensity-ramp">
+                    <span data-tip="Bias set-offs toward the start or end of the release window">Release bias</span>
+                    <input type="range" id="crowd-intensity-ramp" min="-100" max="100" value="0" step="1" aria-describedby="crowd-intensity-ramp-value" aria-valuetext="Even">
+                    <span id="crowd-intensity-ramp-value">Even</span>
+                  </label>
+
+                  <div class="crowd-pattern-controls" role="group" aria-labelledby="crowd-seed-label" aria-describedby="crowd-pattern-hint">
+                    <div class="crowd-seed-row">
+                      <span id="crowd-seed-label">Pattern seed</span>
+                      <output id="crowd-seed-value" aria-labelledby="crowd-seed-label">0</output>
+                    </div>
+                    <button id="crowd-reroll-btn" class="btn btn-secondary" type="button">Re-roll pattern</button>
+                    <p id="crowd-pattern-hint" class="section-hint">Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path.</p>
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -1029,13 +1057,13 @@
             <div id="section-motion-content" class="section-content">
               <label for="crowd-speed">
                 <span data-tip="Dot travel speed in image-widths per second">Speed</span>
-                <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1">
+                <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1" aria-describedby="crowd-speed-value" aria-valuetext="0.15 img/s">
                 <span id="crowd-speed-value">0.15 img/s</span>
               </label>
 
               <label for="crowd-speed-variance">
-                <span data-tip="Per-dot speed jitter — 0% moves every dot at the same speed">Variance</span>
-                <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1">
+                <span data-tip="Per-dot pace variation — 0% moves every dot at the same speed">Pace variation</span>
+                <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-speed-variance-value" aria-valuetext="20%">
                 <span id="crowd-speed-variance-value">20%</span>
               </label>
 
@@ -1268,6 +1296,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.643"></script>
+  <script src="app.js?v=3.2.645"></script>
 </body>
 </html>

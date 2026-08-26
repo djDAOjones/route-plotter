@@ -17,6 +17,13 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Crowd controls (shipped 2026-08-26)
+
+CROWD-03 — Crowds now expose plain-language seeded walking, pace, release and
+route-choice variation, the exact reproducible seed and a one-step Re-roll
+that changes the pattern without changing authored controls. (2026-08-26) —
+see decision-log.
+
 ## Inspector foundation (shipped 2026-08-26)
 
 UI-05 — Marker, On arrival, Label and Leg cards now reset the selected

@@ -437,6 +437,10 @@ describe('render and static UI regressions', () => {
         primary: ['export-res-x', 'export-res-y', 'preset-native', 'preset-16-9', 'preset-1-1', 'preset-9-16', 'export-frame-rate'],
         more: ['export-include-image', 'export-include-camera', 'export-include-text'],
       },
+      release: {
+        primary: ['crowd-count', 'crowd-release-start', 'crowd-release-duration'],
+        more: ['crowd-onset-variance', 'crowd-intensity-ramp', 'crowd-seed-value', 'crowd-reroll-btn'],
+      },
     };
 
     for (const [sectionName, expected] of Object.entries(tiers)) {
@@ -461,7 +465,7 @@ describe('render and static UI regressions', () => {
 
     for (const sectionName of [
       'marker', 'head', 'pacing', 'path-emphasis', 'background', 'guide',
-      'dots', 'release', 'motion', 'node', 'edge',
+      'dots', 'motion', 'node', 'edge',
     ]) {
       expect(document.querySelector(
         `.settings-section[data-section="${sectionName}"] .section-more`
@@ -551,6 +555,28 @@ describe('render and static UI regressions', () => {
     expect(mainCss).toMatch(
       /\.waypoint-card-actions \.btn\{[^}]*min-height:var\(--touch-target-min\);/s
     );
+  });
+
+  test('CROWD-03 exposes deterministic variation with an explicit seed and re-roll', () => {
+    document.body.innerHTML = indexHtml;
+
+    expect(document.querySelector('label[for="crowd-wobble"] span').textContent)
+      .toBe('Walking variation');
+    expect(document.querySelector('label[for="crowd-speed-variance"] span').textContent)
+      .toBe('Pace variation');
+    expect(document.querySelector('label[for="crowd-onset-variance"] span').textContent)
+      .toBe('Release timing');
+    expect(document.querySelector('label[for="crowd-intensity-ramp"] span').textContent)
+      .toBe('Release bias');
+
+    const seed = document.getElementById('crowd-seed-value');
+    const reroll = document.getElementById('crowd-reroll-btn');
+    expect(seed.tagName).toBe('OUTPUT');
+    expect(reroll.type).toBe('button');
+    expect(reroll.textContent).toBe('Re-roll pattern');
+    expect(document.getElementById('crowd-pattern-hint').textContent)
+      .toMatch(/Custom networks.*which dots take each path/);
+    expect(mainCss).toMatch(/#crowd-reroll-btn\{[^}]*min-height:var\(--touch-target-min\);/s);
   });
 
   test('Pacing explains the duration extension only for Comet mode', () => {

@@ -37,7 +37,7 @@
       "format": "esm"
     },
     "src/models/Emitter.js": {
-      "bytes": 11131,
+      "bytes": 11293,
       "imports": [
         {
           "path": "src/utils/safeColor.js",
@@ -3083,7 +3083,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 17342,
+      "bytes": 20045,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3130,7 +3130,7 @@
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
-      "bytes": 44846,
+      "bytes": 44849,
       "imports": [
         {
           "path": "src/utils/sceneSemantics.js",
@@ -3141,7 +3141,7 @@
       "format": "esm"
     },
     "src/app/sceneOutline.js": {
-      "bytes": 44689,
+      "bytes": 44685,
       "imports": [
         {
           "path": "src/controllers/SceneOutlineController.js",
@@ -3461,13 +3461,13 @@
     }
   },
   "outputs": {
-    ".docs-build-zqqkcm/app.js.map": {
+    ".docs-build-Am3uaJ/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3086941
+      "bytes": 3091443
     },
-    ".docs-build-zqqkcm/app.js": {
+    ".docs-build-Am3uaJ/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3491,7 +3491,7 @@
           "bytesInOutput": 384
         },
         "src/models/Emitter.js": {
-          "bytesInOutput": 4339
+          "bytesInOutput": 4387
         },
         "src/utils/entityId.js": {
           "bytesInOutput": 245
@@ -3761,7 +3761,7 @@
           "bytesInOutput": 887
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 8890
+          "bytesInOutput": 10512
         },
         "src/app/network.js": {
           "bytesInOutput": 10711
@@ -3770,10 +3770,10 @@
           "bytesInOutput": 3955
         },
         "src/controllers/SceneOutlineController.js": {
-          "bytesInOutput": 26756
+          "bytesInOutput": 26759
         },
         "src/app/sceneOutline.js": {
-          "bytesInOutput": 27076
+          "bytesInOutput": 27072
         },
         "src/services/DiagnosticsService.js": {
           "bytesInOutput": 2176
@@ -3791,7 +3791,7 @@
           "bytesInOutput": 21785
         }
       },
-      "bytes": 775474
+      "bytes": 777143
     }
   }
 }

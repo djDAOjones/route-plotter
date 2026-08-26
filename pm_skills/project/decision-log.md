@@ -2,6 +2,37 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — CROWD-03 exposes one reproducible pattern, not runtime randomness
+
+**Decision:** Keep the founding Emitter model and make its deterministic
+variation legible. The immediate controls remain in their task cards and use
+plain names: Walking variation for lateral wobble and Pace variation for
+per-dot speed. Release's native More tier adds Release timing for uneven
+set-offs, Release bias for earlier/later density, the exact unsigned pattern
+seed and Re-roll pattern. Directional readouts state the effective result, not
+the signed storage value.
+
+**Seed and route-choice contract:** Re-roll changes only the primary emitter's
+seed. It never changes authored variation, release, appearance or lifecycle
+controls, and it guarantees a different seed even if the authoring-time random
+draw collides. One immediate history/autosave/render transaction makes the
+change reversible and refreshes the semantic outline. Playback, scrubbing,
+reload and export remain pure evaluations of the persisted snapshot. On custom
+networks, CROWD-01 junction shares own route proportions while the seed assigns
+individual dots reproducibly; named presets and multi-emitter editing remain
+outside this tranche.
+
+**Evidence and sequence:** The canonical v3.2.645 gate passed 50 files / 708
+tests, restart safety and the clean production-build comparison. Model, crowd
+UI, persistence, semantic-outline and SwarmEngine tests cover 0/100 percent
+bounds, seed collision, weighted choices and serialized-clone frame parity.
+Production Chromium
+covered release controls, seed-only Re-roll and Undo, autosave/reload, custom
+network guidance, clean fixture restoration, a readable 320 px layout and an
+empty warning/error console. CROWD-03 leaves the backlog and CROWD-02 becomes
+Current; no Icebox trigger is met and the owner-requested full trajectory is
+preserved despite its known soft-size warning.
+
 ## 2026-08-26 — UI-05 makes card-scale propagation explicit and reversible
 
 **Decision:** Marker, On arrival, Label and Leg end with one compact action
