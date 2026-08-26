@@ -50,6 +50,9 @@ export class CameraService {
     // Rate-limited zoom state
     this._rateLimitedZoom = 1;  // Current rate-limited zoom value
     this._lastZoomUpdateTime = 0;  // Last time zoom was updated (for rate limiting)
+    this._targetZoom = 1;
+    this._targetCenterX = 0;
+    this._targetCenterY = 0;
   }
 
   /**
@@ -76,6 +79,9 @@ export class CameraService {
   }) {
     // If no waypoints, return identity transform
     if (!waypoints || waypoints.length === 0) {
+      this._targetZoom = 1;
+      this._targetCenterX = canvasWidth / 2;
+      this._targetCenterY = canvasHeight / 2;
       return {
         zoom: 1,
         centerX: canvasWidth / 2,
@@ -91,6 +97,7 @@ export class CameraService {
       waypointProgressValues,
       animationDuration
     );
+    this._targetZoom = targetZoom;
     
     // Apply rate limiting to zoom changes
     // The rate limiter smoothly transitions toward the target, preventing visual jumps
@@ -103,6 +110,8 @@ export class CameraService {
       // Continue smoothing zoom toward 1.0 (don't snap!)
       const zoomSmooth = CAMERA_DEFAULTS.ZOOM_SMOOTHING;
       const posSmooth = CAMERA_DEFAULTS.SMOOTHING_FACTOR;
+      this._targetCenterX = canvasWidth / 2;
+      this._targetCenterY = canvasHeight / 2;
       
       this._smoothedZoom += (1 - this._smoothedZoom) * zoomSmooth;
       this._smoothedCenterX += (canvasWidth / 2 - this._smoothedCenterX) * posSmooth;
@@ -153,6 +162,8 @@ export class CameraService {
     // Clamp to boundaries
     targetCenterX = Math.max(minX, Math.min(maxX, targetCenterX));
     targetCenterY = Math.max(minY, Math.min(maxY, targetCenterY));
+    this._targetCenterX = targetCenterX;
+    this._targetCenterY = targetCenterY;
 
     this._currentZoom = zoom;
     
@@ -426,14 +437,16 @@ export class CameraService {
    * @returns {boolean} True if camera is still transitioning
    */
   isZoomTransitioning(canvasWidth = 0, canvasHeight = 0) {
-    // Check if zoom is still transitioning
-    const zoomTransitioning = Math.abs(this._rateLimitedZoom - 1) > 0.001;
+    // Compare every stage with its own target. A settled authored 4x view is
+    // static; comparing it with 1x kept the old global loop awake forever.
+    const zoomTransitioning = Math.abs(this._rateLimitedZoom - this._targetZoom) > 0.001 ||
+      Math.abs(this._smoothedZoom - this._rateLimitedZoom) > 0.001;
     
     // Check if center position is still transitioning toward canvas center
     let centerTransitioning = false;
     if (canvasWidth > 0 && canvasHeight > 0) {
-      const centerDist = Math.abs(this._smoothedCenterX - canvasWidth / 2) + 
-                         Math.abs(this._smoothedCenterY - canvasHeight / 2);
+      const centerDist = Math.abs(this._smoothedCenterX - this._targetCenterX) +
+                         Math.abs(this._smoothedCenterY - this._targetCenterY);
       centerTransitioning = centerDist > 1;
     }
     

@@ -100,13 +100,13 @@ src/
     GraphEdge.js                  Active weighted directed edge with control points
     GraphModel.js                 Active network collection (CRUD, adjacency)
   services/
-    AnimationEngine.js            Playback loop, timing, segment speed, pause markers
+    AnimationEngine.js            Demand-driven preview scheduler and transport timing
     PathCalculator.js             Catmull-Rom spline, reparameterisation, curvature
     RenderingService.js           Canvas drawing — path, markers, labels, overlays
     BeaconRenderer.js             Animated waypoint effects (ripple, glow, pop, grow, pulse)
     TextLabelService.js           Text label layout, fade, auto-positioning
     MotionVisibilityService.js    Path/waypoint/background visibility calculations
-    CameraService.js              Per-waypoint zoom with continuous interpolation
+    CameraService.js              Per-waypoint zoom with target-aware interpolation
     CoordinateTransform.js        Image ↔ canvas coordinate conversion
     VideoExporter.js              MP4/WebM export (WebCodecs primary, MediaRecorder fallback)
     HTMLExportService.js           Self-contained HTML export with embedded player
@@ -182,7 +182,7 @@ User moves slider → UIController emits event
 
 ### Rendering pipeline
 
-1. `queueRender()` batches requests via `requestAnimationFrame` (one frame per tick).
+1. `queueRender()` coalesces editor mutations, while `AnimationEngine` schedules preview frames only for active transport or visible camera settling; a stable paused view leaves no frame queued.
 2. `render()` builds a `renderState` object from current waypoints, animation progress, motion settings, camera, and preview mode.
 3. `RenderingService` draws layers in order: background → tint overlay → area highlights → path → waypoints → labels → path head → beacons.
 4. `MotionVisibilityService` computes per-frame visibility/opacity for path, waypoints, and background based on animation progress and the active visibility mode.

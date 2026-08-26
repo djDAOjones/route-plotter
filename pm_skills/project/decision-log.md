@@ -2,6 +2,35 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — REV-06 makes preview scheduling demand-driven
+
+**Decision:** `AnimationEngine` now requests one coalesced update for startup,
+paused seeks and other transport mutations, then leaves no animation frame
+queued once the view is stable. Play wakes the loop without charging the idle
+interval to its first frame. A callback may keep frames alive only for visible
+non-timeline work; editor and standalone player use that contract for camera
+momentum. Export suspension cancels preview work; restore requests one
+coalesced update and only active captured transport keeps it awake, so the
+explicit synchronous export frame loop remains the sole export renderer.
+
+**Profiling boundary:** The old scheduler requested a new browser frame before
+every callback even when paused, despite the editor already suppressing most
+idle canvas redraws. A deterministic scheduler harness now proves one requested
+paused update settles to zero queued frames, while play, pause, seek, camera and
+export transitions retain their wake paths. Camera settling compares its
+rate-limited and smoothed values with their authored targets; a stable 4x view
+is no longer mistaken for a transition merely because it is not 1x.
+
+**Evidence and sequence:** A real 3,840×2,160 Canvas2D fixture with 500 seeded
+dots averaged 0.343 ms for evaluate plus batched draw, with 0.5 ms p95 across
+200 frames. The app's own near-4K MP4 run likewise reported 0.3 ms average
+rendering while encoder backpressure consumed 7.2 seconds, so no speculative
+direct-render coalescing was added. The canonical gate passes 52 files / 729
+tests, restart safety and a clean build; production Chromium proves advancing
+playback, stable pause and no warning/error logs. REV-06 leaves the backlog and
+unblocks SCALE-01 into Current. No Icebox evidence was triggered, and the full
+owner-protected trajectory remains intact despite its soft-size warning.
+
 ## 2026-08-26 — CROWD-02 compiles authored busyness into deterministic release time
 
 **Decision:** Persist `Emitter.busynessEnvelope` as two-to-eight ordered

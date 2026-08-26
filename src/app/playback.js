@@ -248,6 +248,10 @@ export const playbackMixin = {
         lastProgress = state.progress;
         lastWaitingState = state.isWaitingAtWaypoint;
       }
+
+      // AnimationEngine can now sleep. Keep it awake only while CameraService
+      // still has visible momentum to settle after timeline playback pauses.
+      return this.cameraService?.isZoomTransitioning(this.displayWidth, this.displayHeight) ?? false;
     });
   },
   

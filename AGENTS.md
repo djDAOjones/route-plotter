@@ -132,6 +132,11 @@ asks — capturing the one line is the whole interaction.
   delete only documented generated output, and never touch source or
   persistent data without an explicit hard-reset flag. See
   `DEV-INFRASTRUCTURE.md` → "Runtime lifecycle".
+- **Demand-driven preview frames.** Stable paused editor and player views
+  leave no animation frame queued. Transport mutations request one coalesced
+  update; active playback and visible camera settling may keep the preview
+  awake. Export retains its explicit synchronous frame loop and must never
+  acquire a second preview-driven renderer.
 - Full invariant list: dev guide §5.
 
 ---

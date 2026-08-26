@@ -18,10 +18,10 @@
   [verify: physical iOS Safari + Android Chrome] — Unified Pointer Events,
   captured group drag and cancel/no-op transactions are implemented and green
   in automation plus production Chromium. Record the physical mobile pass.
-- [ ] REV-06 [ready] — Measure idle/paused CPU and a representative
-  500-dot/4K scene, then sleep unnecessary animation work; assess
-  direct-render coalescing only where profiling supports it and preserve
-  synchronous export/render-loop frames.
+- [ ] SCALE-01 [[detail]](tickets/SCALE-01.md) [ready] — Implement
+  project-reference sizing so map-bound graphics preserve their authored
+  proportions across editor, HTML and video resolutions without changing
+  timing.
 - [ ] MAINT-01 [ready, low] — Remove verified-unused timing, visibility and
   export helpers without mixing user-visible behaviour into the sweep.
 
@@ -33,10 +33,6 @@
 - [ ] REV-05 [gated: REV-03] — Complete accessibility
   assurance with axe, NVDA/VoiceOver, forced colours, reduced motion and
   200–400% zoom after the new authoring UI stabilises.
-- [ ] SCALE-01 [[detail]](tickets/SCALE-01.md) [gated: REV-06] — Implement
-  project-reference sizing so map-bound graphics preserve their authored
-  proportions across editor, HTML and video resolutions without changing
-  timing.
 - [ ] ROUTE-01 [[detail]](tickets/ROUTE-01.md) [gated: REV-03] —
   Implement simultaneous split hero-route branches on one master timeline,
   with deterministic fork, reconvergence and completion semantics.

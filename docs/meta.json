@@ -191,7 +191,7 @@
       "format": "esm"
     },
     "src/services/AnimationEngine.js": {
-      "bytes": 37080,
+      "bytes": 39139,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2646,7 +2646,7 @@
       "format": "esm"
     },
     "src/services/CameraService.js": {
-      "bytes": 21039,
+      "bytes": 21651,
       "imports": [],
       "format": "esm"
     },
@@ -2880,7 +2880,7 @@
       "format": "esm"
     },
     "src/app/playback.js": {
-      "bytes": 10037,
+      "bytes": 10297,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3481,13 +3481,13 @@
     }
   },
   "outputs": {
-    ".docs-build-9bYnPp/app.js.map": {
+    ".docs-build-Xfz38r/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3127005
+      "bytes": 3131092
     },
-    ".docs-build-9bYnPp/app.js": {
+    ".docs-build-Xfz38r/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3556,7 +3556,7 @@
           "bytesInOutput": 5682
         },
         "src/services/AnimationEngine.js": {
-          "bytesInOutput": 11966
+          "bytesInOutput": 13000
         },
         "src/utils/segmentHitTest.js": {
           "bytesInOutput": 565
@@ -3715,7 +3715,7 @@
           "bytesInOutput": 2252
         },
         "src/services/CameraService.js": {
-          "bytesInOutput": 5019
+          "bytesInOutput": 5369
         },
         "src/models/ImageAsset.js": {
           "bytesInOutput": 5003
@@ -3757,7 +3757,7 @@
           "bytesInOutput": 8003
         },
         "src/app/playback.js": {
-          "bytesInOutput": 3545
+          "bytesInOutput": 3633
         },
         "src/app/camera.js": {
           "bytesInOutput": 4199
@@ -3814,7 +3814,7 @@
           "bytesInOutput": 21785
         }
       },
-      "bytes": 788376
+      "bytes": 789848
     }
   }
 }

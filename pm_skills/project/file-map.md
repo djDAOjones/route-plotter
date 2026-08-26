@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 249 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 250 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 13 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -12,7 +12,7 @@
 - `specs` — 15 file(s)
 - `src` — 86 file(s)
 - `styles` — 6 file(s)
-- `tests` — 53 file(s)
+- `tests` — 54 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -154,7 +154,7 @@
 - `src/app/operationGeneration.js` — Project-generation, per-channel request-token and edit-revision helpers for stale async-work rejection
 - `src/app/pathTiming.js` — path recalc, easing, segment/leg timing, duration updates
 - `src/app/persistence.js` — Transactional bounded project/ZIP staging, commit and rollback; honest autosave recovery, save revisions and the shared coordVersion-9 snapshot
-- `src/app/playback.js` — Single keyboard-command path, canonical transport/JKL, preview mode, paused render gating and time display
+- `src/app/playback.js` — Single keyboard-command path, canonical transport/JKL, preview mode, demand-driven render keepalive and time display
 - `src/app/pointer.js` — canvas pointer fallbacks and hit-testing
 - `src/app/privacy.js` — Explicit export disclosures plus fixed-schema diagnostics preview, public/private support hand-off, exact-address fallback and modal recovery
 - `src/app/projectReset.js` — Testable Clear All transaction: invalidate async work, clear bytes/model/UI, cancel writers and reset one empty baseline
@@ -191,15 +191,15 @@
 - `src/models/Scene.js` — Ordered flow layers (drawn beneath the hero route); serialises as the coordVersion 9 `scene` block
 - `src/models/Waypoint.js` — Waypoint data model (normalised coords, style, camera, area)
 - `src/models/index.js` — Barrel exports for canonical project and flow-scene models
-- `src/player/PlayerApp.js` — Headless app core for exported files: real service instances + adopted app mixins (pathTiming wholesale; viewport/camera cherry-picks); computes timing in the snapshot's timingReference space, renders at export resolution; never imports ImageAssetService (jszip) or the exporting mixin (mediabunny)
+- `src/player/PlayerApp.js` — Headless app core for exported files: real service instances + adopted app mixins, authored-reference timing and demand-driven camera keepalive; renders at export resolution and never imports ImageAssetService (jszip) or the exporting mixin (mediabunny)
 - `src/player/playerAccessibility.js` — Privacy-safe aggregate exported-scene summary and action-driven transport announcements
 - `src/player/playerEntry.js` — Exported-page boot: background decode, transport controls, keyboard, resize; exposes `window.__routePlotterPlayer` debug handle
-- `src/services/AnimationEngine.js` — Transport (play/pause/seek/reverse), wait-event edge-detection; all timeline mapping delegates to PlayerCore; marker fields keep their serialised shapes
+- `src/services/AnimationEngine.js` — Demand-driven preview scheduler plus transport (play/pause/seek/reverse) and wait-event edge-detection; all timeline mapping delegates to PlayerCore and export can suspend preview frames
 - `src/services/AreaDrawingService.js` — Polygon area drawing mode
 - `src/services/AreaEditService.js` — Area highlight repositioning and vertex editing
 - `src/services/AreaHighlightRenderer.js` — Per-waypoint area highlight rendering
 - `src/services/BeaconRenderer.js` — Animated waypoint effects (ripple, glow, pop, grow, pulse); closed-form: each animator's `sync(localSec, win, options)` derives state from a timeline-local clock (schedules from PlayerCore via `engine.beaconSchedules`)
-- `src/services/CameraService.js` — Per-major-waypoint zoom with continuous interpolation; `toMajorKeyframes()` drops minors (minors shape geometry, not zoom)
+- `src/services/CameraService.js` — Per-major-waypoint zoom with target-aware continuous interpolation and settling; `toMajorKeyframes()` drops minors (minors shape geometry, not zoom)
 - `src/services/CoordinateTransform.js` — Image ↔ canvas coordinate conversion
 - `src/services/DiagnosticsService.js` — Pure fixed-schema technical diagnostics with bounded allowlisted fields and URL/path/filename redaction
 - `src/services/DotRenderer.js` — Batched swarm-dot drawing: one canvas path per (colour, size) group, sizes via `scaleSizeClamped()` (Phase 3)
@@ -268,6 +268,7 @@
 - `tests/multiSelect.test.js` — Multi-select write-target rules, gestures/bulk actions/persistence, undo scope restoration, stable headings and honest per-control mixed-state integration
 - `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding
 - `tests/operationGeneration.test.js` — Latest-request/project-generation guards and original background-byte retention
+- `tests/performanceScheduling.test.js` — Manual-rAF scheduler contract: idle sleep, transport wake/coalescing, camera keepalive and export suspension/restore
 - `tests/playerAccessibility.test.js` — Aggregate-summary privacy/counting and discrete/coalesced transport-announcement contracts
 - `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings

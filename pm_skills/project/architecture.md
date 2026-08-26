@@ -46,8 +46,10 @@ add crowd/particle animation. Everything renders as a pure function of
 implemented since Phase 1 (2026-08-17) by **`src/core/PlayerCore.js`**: it
 builds the timeline (segments, exact pause budgets, beacon schedules) and
 evaluates any instant with no wall-clock reads or mutation. AnimationEngine
-is transport + events; beacons are closed-form in timeline time; play,
-scrub, and export share the one evaluation path (golden harness:
+is demand-driven transport + events: play and visible camera settling keep its
+preview frame alive, while stable paused views leave no frame queued; export
+keeps its explicit synchronous frame loop. Beacons are closed-form in timeline
+time; play, scrub, and export share the one evaluation path (golden harness:
 `tests/goldenFrames.test.js`). Since Phase 5 (2026-08-19) the HTML
 export runs the same stack: `src/player/PlayerApp.js` (bundled to
 `docs/player.js`, inlined into exports) hydrates the coordVersion-9
@@ -75,7 +77,7 @@ scene description and discrete transport announcements.
 | --- | --- | --- |
 | RoutePlotter | `src/main.js` + `src/app/*` | Sole orchestrator: owns all services, handles all events, manages state. Method groups live as prototype mixins in `src/app/*` (Object.assign; names unique across mixins) |
 | Waypoint | `src/models/Waypoint.js` | Data model for waypoints (position, style, camera, area, etc.) |
-| AnimationEngine | `src/services/AnimationEngine.js` | Playback loop, timing, segment speed, pause markers |
+| AnimationEngine | `src/services/AnimationEngine.js` | Demand-driven preview scheduler, transport, timing, segment speed and pause markers |
 | PathCalculator | `src/services/PathCalculator.js` | Catmull-Rom spline, reparameterisation, curvature |
 | RenderingService | `src/services/RenderingService.js` | Canvas drawing: path, markers, labels, overlays |
 | UIController | `src/controllers/UIController.js` | Sidebar controls, waypoint list, slider sync |

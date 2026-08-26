@@ -17,6 +17,12 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Performance (shipped 2026-08-26)
+
+REV-06 — Stable paused editor and standalone-player views now leave no animation
+frame queued; transport changes and camera settling wake on demand while the
+explicit export frame loop stays synchronous. (2026-08-26) — see decision-log.
+
 ## Crowd controls (shipped 2026-08-26)
 
 CROWD-02 — Crowds now author whole-release busyness with a direct line graph,

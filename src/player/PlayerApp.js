@@ -298,6 +298,7 @@ export class PlayerApp {
         lastProgress = state.progress;
         lastWaitingState = state.isWaitingAtWaypoint;
       }
+      return this.cameraService.isZoomTransitioning(this.displayWidth, this.displayHeight);
     });
   }
 
