@@ -1,5 +1,7 @@
 # REV-02 — Non-visual scene and keyboard authoring design
 
+> **Status:** Phase 0 — owner sign-off; gates REV-03 and REV-05.
+
 ## Intent
 
 Define how keyboard-only and non-visual users can inspect and author the full

@@ -1,12 +1,12 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 214 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 210 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 11 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 1 file(s)
 - `_Joe` — 45 file(s)
-- `docs` — 21 file(s)
+- `docs` — 17 file(s)
 - `examples` — 1 file(s)
 - `images` — 7 file(s)
 - `scripts` — 3 file(s)
@@ -89,18 +89,14 @@
 
 ## docs
 
-- `docs/UoN_map 24-bit.png` — Generated Pages copy of the legacy 24-bit UoN map asset; never hand-edit
-- `docs/UoN_map.png` — Generated Pages copy of the legacy UoN map asset; never hand-edit
 - `docs/app.js` — Generated, minified main application bundle served by GitHub Pages
 - `docs/app.js.map` — Generated source map for the Pages application bundle
 - `docs/images/Court.png` — Generated Pages copy of the Court example background
-- `docs/images/Courts.jpg` — Generated Pages copy of the legacy Courts example background
 - `docs/images/Garlic.jpg` — Generated Pages copy of the Garlic example background
 - `docs/images/Nervous_System.jpg` — Generated Pages copy of the nervous-system example background
 - `docs/images/PARM_Aerial.jpg` — Generated Pages copy of the PARM aerial example background
 - `docs/images/Rocketry.jpg` — Generated Pages copy of the Rocketry example background
 - `docs/images/UoN_map.png` — Generated Pages copy of the UoN map example background
-- `docs/images/route-project-2026-03-28 (2).zip` — Generated Pages copy of the bundled example project
 - `docs/index.html` — Generated, version-injected Pages application shell
 - `docs/meta.json` — Generated build/version metadata used for readiness and artifact checks
 - `docs/player.js` — Generated standalone-export player bundle fetched and inlined by the app
@@ -123,7 +119,7 @@
 - `images/PARM_Aerial.jpg` — Built-in PARM aerial example background
 - `images/Rocketry.jpg` — Built-in Rocketry example background
 - `images/UoN_map.png` — Built-in UoN map example background
-- `images/route-project-2026-03-28 (2).zip` — Bundled example project archive copied into Pages output
+- `images/route-project-2026-03-28 (2).zip` — Legacy example project archive retained in source but excluded from Pages pending REV-08 provenance approval
 
 ## scripts
 

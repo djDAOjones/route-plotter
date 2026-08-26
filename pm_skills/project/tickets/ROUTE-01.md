@@ -1,6 +1,6 @@
 # ROUTE-01 — Split hero routes
 
-> **Status:** Blocked / needs scoping · **Sign-off required.**
+> **Status:** Phase 0 discovery/sign-off; Phase 5 implementation remains blocked.
 
 ## Intent
 

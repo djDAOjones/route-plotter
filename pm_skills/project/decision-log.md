@@ -2,6 +2,42 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — Roadmap refactor: health and decisions before new gestures
+
+**Decision:** Replace the flat review list plus feature waves with six
+dependency-ordered phases. Phase 0 exposes owner work that can run in parallel:
+the consolidated QA feel-check, non-visual authoring, publication/privacy,
+licence/support, split-route semantics and the scaling model. Phase 1 starts
+with live defects and short user value. Source inspection promoted KEY-01
+because Undo/Redo/Save currently emit events with no subscribers; UX-01 and the
+area zoom hit-test follow. Export portability and reference-aware asset
+collection stay ahead of new public examples. ROUTE-01 moves from a buried
+blocked section into discovery now, but implementation remains behind its
+model decision and REV-02/REV-03.
+
+**Feature sequence and promotions:** CROWD-01 moves into Phase 1 because its
+engine, edge weights and selected-edge share readout already exist; it need not
+wait for the general inspector redesign. UI-01 then becomes the substrate for
+CROWD-03 controls whose deterministic model largely exists, followed by
+CROWD-02's net-new envelope. Wish-list controls for
+label appearance, camera transition and mixed multi-select values move behind
+that disclosure; graph-only crowd creation and neutral lifecycle copy become
+CROWD-04. Group drag joins REV-03, edge-weight visualisation joins CROWD-01,
+and render-call coalescing becomes a measured REV-06 technique. No standalone
+Icebox feature is promoted because the swatch and palette triggers remain
+unmet.
+
+**Reconciliation:** Three segment-speed rows become QA-01. Suspected nudge and
+restore regressions become one verify-first QA-02 because current code appears
+to satisfy them. The Clear-All undo request is cut: REV-01 deliberately makes
+Clear a non-undoable empty recovery baseline, so ordinary undo would risk stale
+work revival. Custom-head work narrows to a drone preset because upload,
+rotation, persistence and export already ship. The completed main.js split
+leaves Quarantine; history already lives in trajectory. This preserves intent
+while making one next development lane legible.
+
+---
+
 ## 2026-08-26 — REV-01 closes the bounded review repairs; product-scale work stays explicit
 
 **Decision:** Close REV-01 with the defects whose root causes could be repaired

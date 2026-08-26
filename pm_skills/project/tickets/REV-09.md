@@ -1,5 +1,7 @@
 # REV-09 — Licence, security, and support governance
 
+> **Status:** Phase 0 — owner/legal sign-off; gates SUPPORT-01.
+
 ## Intent
 
 Give contributors and downstream users an owner-approved statement of reuse,

@@ -1,5 +1,7 @@
 # REV-08 — Publication and privacy boundary
 
+> **Status:** Phase 0 — owner sign-off; gates SUPPORT-01 and DEMO-01.
+
 ## Intent
 
 Make it explicit which local project data may enter a public Pages artifact,

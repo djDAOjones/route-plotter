@@ -1,6 +1,6 @@
 # CROWD-02 — Whole-route busyness envelope
 
-> **Status:** Wave 2 — Inspector completion.
+> **Status:** Phase 3 — gated by UI-01 and CROWD-03.
 
 ## Intent
 
@@ -33,17 +33,18 @@ random state.
 
 Model a small ordered set of normalised time/value handles plus an explicit
 transition type per segment. Compile the envelope into the pure swarm release
-calculation, keeping timeline evaluation stateless. Start with one selected
-crowd layer and place the editor behind the Wave 2 disclosure layout.
+calculation, keeping timeline evaluation stateless. V1 edits the selected
+crowd's first emitter across the complete master timeline and places the
+editor behind UI-01's disclosure layout.
 
 ## Constraints
 
 Preserve seeded reproducibility, normalised project coordinates/times, existing
 projects, and editor/export parity. Do not rely on colour alone to communicate
-the graph or make pointer dragging the only editing method.
+the graph or make pointer dragging the only editing method. Multi-emitter
+authoring is explicitly outside V1.
 
 ## Open questions
 
-Whether the horizontal axis is always the complete route timeline or may be
-scoped to one emitter window; the initial maximum number of handles; whether a
-step is represented by a segment mode or paired handles at one time.
+The initial maximum number of handles; whether a step is represented by a
+segment mode or paired handles at one time.

@@ -50,7 +50,9 @@ frozen v2 line remains served from
   evaluation path. See decision-log 2026-08-17.
 - npm + esbuild for bundling (target es2022; lockfile committed),
   Vitest for testing.
-- WCAG 2.2 AAA accessibility.
+- WCAG 2.2 AAA is the product target; REV-02/REV-03/REV-05 track the
+  remaining authoring model, pointer-parity and assurance evidence before it
+  can be claimed as verified support.
 - IBM Carbon Design System for UI patterns (implemented, not installed).
 - Okabe-Ito colour-blind safe palette for map data.
 - UoN semantic design tokens for UI chrome.
@@ -64,4 +66,9 @@ frozen v2 line remains served from
 
 ## Open questions
 
-- None currently blocking.
+- Split hero-route semantics: one chosen branch, sequential branches or
+  simultaneous heads; shared timing and reconvergence rules (ROUTE-01).
+- The authored-size and export-resolution model for markers, text and effects
+  (SCALE-01).
+- Publication/privacy and repository licence/support decisions for the public
+  release (REV-08/REV-09).
