@@ -127,6 +127,9 @@ export const networkMixin = {
     this.eventBus.on('network:drag-end', () => {
       this.networkEditService.endDrag();
     });
+    this.eventBus.on('network:drag-cancel', () => {
+      this.networkEditService.cancelDrag();
+    });
     this.eventBus.on('network:hover-move', ({ x, y }, callback) => {
       const svc = this.networkEditService;
       if (!svc.active) {

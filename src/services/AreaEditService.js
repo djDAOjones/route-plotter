@@ -53,6 +53,9 @@ export class AreaEditService {
     
     /** @type {{x: number, y: number}|null} Original vertex position before drag */
     this._origVertex = null;
+
+    /** @type {boolean} Whether the current area differs from its drag-start value */
+    this._dragChanged = false;
     
     this._subscribeToEvents();
   }
@@ -86,6 +89,10 @@ export class AreaEditService {
     this.eventBus.on('area:edit-end', () => {
       this._endDrag();
     });
+
+    this.eventBus.on('area:edit-cancel', () => {
+      this._cancelDrag();
+    });
   }
 
   _resetTransientState() {
@@ -96,6 +103,7 @@ export class AreaEditService {
     this._dragStartImg = null;
     this._origCenter = null;
     this._origVertex = null;
+    this._dragChanged = false;
   }
   
   /**
@@ -151,6 +159,7 @@ export class AreaEditService {
     const ah = waypoint.areaHighlight;
     this.activeWaypoint = waypoint;
     this._dragStartImg = { x: imgX, y: imgY };
+    this._dragChanged = false;
     
     if (ah.shape === 'circle' || ah.shape === 'rectangle') {
       this.isDragging = true;
@@ -189,10 +198,17 @@ export class AreaEditService {
     const clampedY = Math.max(0, Math.min(1, imgY));
     
     if (this.dragTarget === 'center') {
+      const changedNow = ah.centerX !== clampedX || ah.centerY !== clampedY;
       ah.centerX = clampedX;
       ah.centerY = clampedY;
+      this._dragChanged = clampedX !== this._origCenter.x || clampedY !== this._origCenter.y;
+      if (!changedNow) return;
     } else if (this.dragTarget === 'vertex' && this.dragVertexIndex >= 0) {
+      const point = ah.points[this.dragVertexIndex];
+      const changedNow = point.x !== clampedX || point.y !== clampedY;
       ah.points[this.dragVertexIndex] = { x: clampedX, y: clampedY };
+      this._dragChanged = clampedX !== this._origVertex.x || clampedY !== this._origVertex.y;
+      if (!changedNow) return;
     }
     
     this.eventBus.emit('render:request');
@@ -204,17 +220,49 @@ export class AreaEditService {
    */
   _endDrag() {
     if (!this.isDragging) return;
-    
+
+    const waypoint = this.activeWaypoint;
+    const changed = this._dragChanged;
     this.isDragging = false;
     this.dragTarget = null;
     this.dragVertexIndex = -1;
     this._dragStartImg = null;
     this._origCenter = null;
     this._origVertex = null;
-    
-    if (this.activeWaypoint) {
-      this.eventBus.emit('area:changed', { waypoint: this.activeWaypoint });
+    this._dragChanged = false;
+
+    if (changed && waypoint) {
+      this.eventBus.emit('area:changed', { waypoint });
     }
+  }
+
+  /**
+   * Cancel an in-flight drag and restore the exact drag-start geometry.
+   * Cancellation is transient recovery, so it renders the restoration but
+   * never emits area:changed (and therefore creates no undo/autosave commit).
+   * @private
+   */
+  _cancelDrag() {
+    if (!this.isDragging || !this.activeWaypoint) return;
+
+    const ah = this.activeWaypoint.areaHighlight;
+    const changed = this._dragChanged;
+    if (this.dragTarget === 'center' && this._origCenter) {
+      ah.centerX = this._origCenter.x;
+      ah.centerY = this._origCenter.y;
+    } else if (this.dragTarget === 'vertex' && this.dragVertexIndex >= 0 && this._origVertex) {
+      ah.points[this.dragVertexIndex] = { ...this._origVertex };
+    }
+
+    this.isDragging = false;
+    this.dragTarget = null;
+    this.dragVertexIndex = -1;
+    this._dragStartImg = null;
+    this._origCenter = null;
+    this._origVertex = null;
+    this._dragChanged = false;
+
+    if (changed) this.eventBus.emit('render:request');
   }
   
   /**

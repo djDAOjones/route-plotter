@@ -176,6 +176,11 @@ export class NetworkEditService {
   exit() {
     if (!this.active) return;
 
+    // Mode changes can precede the outer pointer handler's cancellation.
+    // Restore the model while the bound layer is still available; a later
+    // network:drag-cancel is then an idempotent no-op.
+    if (this.drag) this.cancelDrag();
+
     const hadSelection = this.selection;
     const previousLayer = this.layer;
     this.active = false;
@@ -578,7 +583,6 @@ export class NetworkEditService {
    */
   moveDrag(img, shift = false) {
     if (!this.active || !this.drag) return;
-    this.drag.moved = true;
 
     if (this.drag.kind === 'node') {
       const node = this.layer.graph.getNode(this.drag.nodeId);
@@ -591,12 +595,14 @@ export class NetworkEditService {
         if (ref) ({ x, y } = snapToAngle(ref.x, ref.y, x, y));
       }
       node.moveTo(x, y);
+      this.drag.moved = node.x !== this.drag.origX || node.y !== this.drag.origY;
     } else {
       const edge = this.layer.graph.getEdge(this.drag.edgeId);
       const p = edge?.controlPoints[this.drag.controlIndex];
       if (!p) { this.drag = null; return; }
       p.x = Math.max(0, Math.min(1, img.x));
       p.y = Math.max(0, Math.min(1, img.y));
+      this.drag.moved = p.x !== this.drag.origX || p.y !== this.drag.origY;
     }
     this.eventBus.emit('network:changed', { commit: false });
   }
@@ -608,9 +614,9 @@ export class NetworkEditService {
   endDrag() {
     if (!this.active || !this.drag) return;
     const moved = this.drag.moved;
-    const wasBend = this.drag.kind === 'control';
+    const inserted = this.drag.inserted === true;
     this.drag = null;
-    if (moved || wasBend) {
+    if (moved || inserted) {
       this.eventBus.emit('network:changed', { commit: true });
     }
   }

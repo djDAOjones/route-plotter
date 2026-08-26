@@ -781,7 +781,11 @@ class RoutePlotter {
           : null;
       }
       this.uiController?.setSelection(this.selectedWaypoints, this.selectedWaypoint);
-      this.interactionHandler?.setSelectedWaypoint(this.selectedWaypoint);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection(this.selectedWaypoints, this.selectedWaypoint);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(this.selectedWaypoint);
+      }
       
       // Emit waypoint deleted event (triggers path recalc, UI update, save)
       // Event-driven approach ensures consistent update sequence

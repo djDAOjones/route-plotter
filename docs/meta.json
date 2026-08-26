@@ -2505,7 +2505,7 @@
       "format": "esm"
     },
     "src/handlers/InteractionHandler.js": {
-      "bytes": 33639,
+      "bytes": 38553,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2547,7 +2547,7 @@
       "format": "esm"
     },
     "src/services/NetworkEditService.js": {
-      "bytes": 38499,
+      "bytes": 38874,
       "imports": [
         {
           "path": "src/utils/snapToAngle.js",
@@ -2563,7 +2563,7 @@
       "format": "esm"
     },
     "src/services/AreaEditService.js": {
-      "bytes": 9904,
+      "bytes": 11696,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2710,7 +2710,7 @@
       "format": "esm"
     },
     "src/app/wiringBus.js": {
-      "bytes": 12788,
+      "bytes": 14899,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2752,7 +2752,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 46759,
+      "bytes": 47708,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2793,7 +2793,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 17324,
+      "bytes": 17487,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2872,7 +2872,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 49509,
+      "bytes": 49804,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2954,7 +2954,7 @@
       "format": "esm"
     },
     "src/app/editorPanel.js": {
-      "bytes": 16526,
+      "bytes": 16426,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3007,7 +3007,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 23112,
+      "bytes": 23216,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3116,7 +3116,7 @@
       "format": "esm"
     },
     "src/app/projectReset.js": {
-      "bytes": 2600,
+      "bytes": 2751,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
@@ -3127,7 +3127,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 44391,
+      "bytes": 44562,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3364,13 +3364,13 @@
     }
   },
   "outputs": {
-    ".docs-build-oy4gXB/app.js.map": {
+    ".docs-build-57e4gl/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3001513
+      "bytes": 3019374
     },
-    ".docs-build-oy4gXB/app.js": {
+    ".docs-build-57e4gl/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3553,7 +3553,7 @@
           "bytesInOutput": 35583
         },
         "src/handlers/InteractionHandler.js": {
-          "bytesInOutput": 13079
+          "bytesInOutput": 17118
         },
         "src/services/UndoService.js": {
           "bytesInOutput": 2379
@@ -3568,10 +3568,10 @@
           "bytesInOutput": 191
         },
         "src/services/NetworkEditService.js": {
-          "bytesInOutput": 16810
+          "bytesInOutput": 16939
         },
         "src/services/AreaEditService.js": {
-          "bytesInOutput": 3596
+          "bytesInOutput": 4565
         },
         "src/components/SwatchPicker.js": {
           "bytesInOutput": 4016
@@ -3610,7 +3610,7 @@
           "bytesInOutput": 7163
         },
         "src/app/wiringBus.js": {
-          "bytesInOutput": 4179
+          "bytesInOutput": 5128
         },
         "src/components/ContextMenu.js": {
           "bytesInOutput": 3100
@@ -3619,13 +3619,13 @@
           "bytesInOutput": 1721
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 19045
+          "bytesInOutput": 19620
         },
         "src/utils/assetReferences.js": {
           "bytesInOutput": 2653
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 7743
+          "bytesInOutput": 7866
         },
         "src/app/playback.js": {
           "bytesInOutput": 3545
@@ -3640,7 +3640,7 @@
           "bytesInOutput": 5631
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 27341
+          "bytesInOutput": 27532
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5564
@@ -3649,7 +3649,7 @@
           "bytesInOutput": 186
         },
         "src/app/editorPanel.js": {
-          "bytesInOutput": 7847
+          "bytesInOutput": 7784
         },
         "src/app/pointer.js": {
           "bytesInOutput": 887
@@ -3658,7 +3658,7 @@
           "bytesInOutput": 8890
         },
         "src/app/network.js": {
-          "bytesInOutput": 10628
+          "bytesInOutput": 10711
         },
         "src/utils/sceneSemantics.js": {
           "bytesInOutput": 3955
@@ -3679,13 +3679,13 @@
           "bytesInOutput": 110
         },
         "src/app/projectReset.js": {
-          "bytesInOutput": 1468
+          "bytesInOutput": 1596
         },
         "src/main.js": {
-          "bytesInOutput": 21401
+          "bytesInOutput": 21524
         }
       },
-      "bytes": 745972
+      "bytes": 753218
     }
   }
 }

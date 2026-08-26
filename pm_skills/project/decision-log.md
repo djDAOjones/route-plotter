@@ -2,6 +2,34 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — REV-03 uses one restoring pointer transaction
+
+**Decision:** Mouse, touch and pen canvas authoring share one primary Pointer
+Events transaction. `InteractionHandler` hit-tests and snapshots geometry on
+pointer down, applies one 3 CSS px tap/drag threshold, and emits exactly one
+terminal tap, drag commit or cancellation. Pointer capture is the main
+outside-canvas path; idempotent window `pointerup`/`pointercancel` fallbacks
+cover user agents that release capture before routing the terminal event back
+to the canvas. Native drop, context-menu, wheel and range-control behaviour
+remain separate.
+
+**Geometry and history:** A drag on any selected waypoint promotes it to
+primary while retaining the selection. Every member moves from immutable
+gesture-start coordinates by one shared, bounds-safe delta, with one path
+recalculation per frame and one history/autosave commit. Area centre/vertex and
+network node/control/edge drags use the same end/cancel boundary. Cancellation
+restores exact start geometry; a no-op release or a move away and back creates
+no history entry.
+
+**Evidence and sequence:** Automated mouse/touch/pen contracts, the 47-file /
+669-test canonical gate and production Chromium v3.2.629 are green, including
+an outside-canvas group release, one-step group Undo, 320/390 px layout and a
+clean console. The canonical cold restart then reached ready at v3.2.630.
+Physical iOS Safari and Android Chrome navigation/rotation evidence is
+intentionally not inferred from emulation, so REV-03 remains open with that
+named residual gate and its dependent items stay gated. UI-01 remains the next
+independent ready product slice; no Icebox item is promoted.
+
 ## 2026-08-26 — REV-02 makes the canonical scene operable without the canvas
 
 **Decision:** Ship one synchronized semantic scene outline as an equivalent

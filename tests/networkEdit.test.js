@@ -677,6 +677,82 @@ describe('drags', () => {
       ([ev, p]) => ev === 'network:changed' && p.commit).length;
     expect(commits).toBe(commitsBefore);
   });
+
+  test('an existing control drag that never moves commits nothing', () => {
+    const layer = enterMode(app);
+    svc.placeNode({ x: 0.1, y: 0.5 });
+    svc.placeNode({ x: 0.9, y: 0.5 });
+    const edge = layer.graph.getEdges()[0];
+    edge.addControlPoint(0.5, 0.5);
+    const commitsBefore = app.events.filter(
+      ([ev, p]) => ev === 'network:changed' && p.commit).length;
+
+    svc.beginControlDrag(edge, 0);
+    svc.endDrag();
+
+    const commits = app.events.filter(
+      ([ev, p]) => ev === 'network:changed' && p.commit).length;
+    expect(commits).toBe(commitsBefore);
+    expect(edge.controlPoints).toEqual([{ x: 0.5, y: 0.5 }]);
+  });
+
+  test('an inserted bend commits once even when it is released at its insertion point', () => {
+    const layer = enterMode(app);
+    svc.placeNode({ x: 0.1, y: 0.5 });
+    svc.placeNode({ x: 0.9, y: 0.5 });
+    const edge = layer.graph.getEdges()[0];
+    const commitsBefore = app.events.filter(
+      ([ev, p]) => ev === 'network:changed' && p.commit).length;
+
+    svc.beginEdgeBend(edge, { x: 0.5, y: 0.5 }, 0);
+    svc.endDrag();
+
+    const commits = app.events.filter(
+      ([ev, p]) => ev === 'network:changed' && p.commit).length;
+    expect(commits).toBe(commitsBefore + 1);
+    expect(edge.controlPoints).toEqual([{ x: 0.5, y: 0.5 }]);
+  });
+
+  test('network:drag-cancel restores geometry through the pointer-routing event without committing', () => {
+    enterMode(app);
+    const node = svc.placeNode({ x: 0.5, y: 0.5 });
+    const before = JSON.stringify(node.toJSON());
+    const commitsBefore = app.events.filter(
+      ([ev, p]) => ev === 'network:changed' && p.commit).length;
+
+    svc.beginNodeDrag(node);
+    svc.moveDrag({ x: 0.8, y: 0.2 });
+    expect(JSON.stringify(node.toJSON())).not.toBe(before);
+    app.eventBus.emit('network:drag-cancel');
+
+    expect(JSON.stringify(node.toJSON())).toBe(before);
+    expect(svc.drag).toBeNull();
+    const commits = app.events.filter(
+      ([ev, p]) => ev === 'network:changed' && p.commit).length;
+    expect(commits).toBe(commitsBefore);
+  });
+
+  test('exiting the mode cancels an active bend before unbinding its layer', () => {
+    const layer = enterMode(app);
+    svc.placeNode({ x: 0.1, y: 0.5 });
+    svc.placeNode({ x: 0.9, y: 0.5 });
+    const edge = layer.graph.getEdges()[0];
+    const commitsBefore = app.events.filter(
+      ([ev, p]) => ev === 'network:changed' && p.commit).length;
+
+    svc.beginEdgeBend(edge, { x: 0.5, y: 0.5 }, 0);
+    svc.moveDrag({ x: 0.5, y: 0.2 });
+    expect(edge.controlPoints).toHaveLength(1);
+    svc.exit();
+
+    expect(edge.controlPoints).toHaveLength(0);
+    expect(svc.active).toBe(false);
+    expect(svc.layer).toBeNull();
+    expect(svc.drag).toBeNull();
+    const commits = app.events.filter(
+      ([ev, p]) => ev === 'network:changed' && p.commit).length;
+    expect(commits).toBe(commitsBefore);
+  });
 });
 
 describe('Escape ladder and keys', () => {

@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 240 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 241 file(s) across 11 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 13 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -12,7 +12,7 @@
 - `specs` — 15 file(s)
 - `src` — 82 file(s)
 - `styles` — 6 file(s)
-- `tests` — 48 file(s)
+- `tests` — 49 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -179,7 +179,7 @@
 - `src/controllers/UIController.js` — Sidebar controls, waypoint list, slider sync; scope chip (text + prev/next stepping, multi counts) and Leg-card header naming; multi-select gesture Set + `setSelection()` for app-decided selections; pause/speed/area controls write to the whole selection (Phase 4)
 - `src/core/EventBus.js` — Pub-sub event system
 - `src/core/PlayerCore.js` — Pure timeline math (deterministic-timeline mandate): segment/pause/beacon-schedule builders + timeline↔path mappings; one evaluation path shared by play, scrub, and export
-- `src/handlers/InteractionHandler.js` — Mouse, keyboard, touch, drag-and-drop input
+- `src/handlers/InteractionHandler.js` — One captured Pointer Events transaction for mouse/touch/pen waypoint, area and network taps/drags; keyboard, drop, context-menu and wheel paths stay native
 - `src/main.js` — RoutePlotter class: app entry + orchestrator core (constructor, init, model bookkeeping, render scheduling); attaches the `src/app/*` mixins to its prototype
 - `src/models/AnimationState.js` — Playback state, canonical seek-derived timing/pause state and exact transport snapshots
 - `src/models/Emitter.js` — Dot-stream params + per-emitter seed (release window, lifecycle, wobble…) — no runtime state
@@ -256,6 +256,7 @@
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding
 - `tests/htmlExportCache.test.js` — HTML export fetches the standalone player bundle for the exact application build
 - `tests/imageAssetRoundTrip.test.js` — Persistence-safe image IDs and import→export→import asset round-trip contracts
+- `tests/interactionPointer.test.js` — Pointer transaction contracts: exactly-once mouse/touch/pen taps, common threshold, capture/window terminal fallback, cancellation, mode priority, group snapshots and teardown
 - `tests/mixins.test.js` — Mixin split guards: cross-mixin name-collision check, cluster spot-checks, snapToAngle unit tests
 - `tests/modelBoundary.test.js` — Strict graph-endpoint and persisted emitter integer boundary contracts
 - `tests/multiSelect.test.js` — Multi-select everywhere: selectionTargets rules, Cmd+A incl. minors, toggle-select collapse ladder, one-gesture bulk delete/nudge, snapshot selectedWaypointIds round-trip, headless UIController list gestures + chip counts

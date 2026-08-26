@@ -103,6 +103,10 @@ asks — capturing the one line is the whole interaction.
 - **EventBus is the only communication channel.** Components never call
   methods on each other. They emit events; `main.js` handles them. See
   dev guide §5 rule 3.
+- **One canvas gesture transaction.** `InteractionHandler` owns mouse, touch
+  and pen authoring through Pointer Events. A physical gesture resolves as one
+  tap, one drag commit or one restoring cancellation; do not add a competing
+  canvas `click`, mouse or synthetic-touch mutation path.
 - **All imports at the top of the file.** Mid-file imports break
   esbuild. See dev guide §5 rule 2.
 - **`docs/` is build output.** Never hand-edit. It is overwritten by

@@ -181,10 +181,7 @@ export const editorPanelMixin = {
       // Selection by clicking header bits
       const selectWaypoint = (e) => {
         e.stopPropagation();
-        this.selectedWaypoint = waypoint;
-        this.selectedWaypoints = [waypoint];
-        this.updateWaypointList();
-        this.updateWaypointEditor();
+        this.eventBus.emit('waypoint:selected', waypoint);
       };
       label.addEventListener('click', selectWaypoint);
       handle.addEventListener('click', selectWaypoint);

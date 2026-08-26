@@ -13,9 +13,10 @@
   format-locked strategy selection, cached player loading and one
   endpoint-inclusive frame plan are implemented. Publish real-browser
   codec/container and genuinely offline standalone-export evidence.
-- [ ] REV-03 [ready] — Replace separate mouse/touch paths with one Pointer
-  Events + capture state machine. Include exactly-once contracts, physical
-  mobile evidence and multi-selection group drag.
+- [~] REV-03 [[detail]](tickets/REV-03.md)
+  [verify: physical iOS Safari + Android Chrome] — Unified Pointer Events,
+  captured group drag and cancel/no-op transactions are implemented and green
+  in automation plus production Chromium. Record the physical mobile pass.
 - [ ] UI-01 [ready] — Introduce two-tier cards with 2–4 primary controls and a
   More disclosure; this is the layout substrate for advanced and crowd
   controls.

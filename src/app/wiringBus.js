@@ -85,13 +85,15 @@ export const wiringBusMixin = {
     /**
      * waypoint:position-changed - Waypoint moved/dragged
      * MOST EXPENSIVE: Requires full path recalculation
-     * Fired on every mousemove during drag (with isDragging=true) and
+     * Fired on every pointermove during drag (with isDragging=true) and
      * on each arrow key nudge. Undo is NOT saved here — instead:
      * - Drag completion: saved by waypoint:drag-ended (immediate)
      * - Arrow key nudge: saved by debounced timer (groups key repeats)
      */
     this.eventBus.on('waypoint:position-changed', (data) => {
-      // InteractionHandler passes {waypoint, imgX, imgY, isDragging}
+      // InteractionHandler passes {waypoint, imgX, imgY, dragGroup,
+      // isDragging}. dragGroup holds immutable gesture-start coordinates so
+      // all selected points can be derived from one shared delta per frame.
       const waypoint = data?.waypoint || data;
       const isDragging = data?.isDragging || false;
       
@@ -112,14 +114,36 @@ export const wiringBusMixin = {
         }
         
         const zoom = this.exportSettings.backgroundZoom / 100;
-        if (zoom < 1) {
-          // Zoomed out: allow waypoints outside image bounds (coords outside 0-1)
-          waypoint.imgX = newX;
-          waypoint.imgY = newY;
-        } else {
-          // Zoomed in or 100%: clamp to image bounds
-          waypoint.imgX = Math.max(0, Math.min(1, newX));
-          waypoint.imgY = Math.max(0, Math.min(1, newY));
+        const dragGroup = Array.isArray(data.dragGroup)
+          ? data.dragGroup.filter(item => item?.waypoint && this.waypoints.includes(item.waypoint))
+          : [];
+        const primaryStart = dragGroup.find(item => item.waypoint === waypoint);
+
+        if (primaryStart && dragGroup.length > 0) {
+          let dx = newX - primaryStart.imgX;
+          let dy = newY - primaryStart.imgY;
+          if (zoom >= 1) {
+            const minDx = Math.max(...dragGroup.map(item => -item.imgX));
+            const maxDx = Math.min(...dragGroup.map(item => 1 - item.imgX));
+            const minDy = Math.max(...dragGroup.map(item => -item.imgY));
+            const maxDy = Math.min(...dragGroup.map(item => 1 - item.imgY));
+            dx = minDx <= maxDx ? Math.max(minDx, Math.min(maxDx, dx)) : 0;
+            dy = minDy <= maxDy ? Math.max(minDy, Math.min(maxDy, dy)) : 0;
+          }
+          for (const item of dragGroup) {
+            item.waypoint.imgX = item.imgX + dx;
+            item.waypoint.imgY = item.imgY + dy;
+          }
+        } else if (this.waypoints.includes(waypoint)) {
+          if (zoom < 1) {
+            // Zoomed out: allow waypoints outside image bounds (coords outside 0-1)
+            waypoint.imgX = newX;
+            waypoint.imgY = newY;
+          } else {
+            // Zoomed in or 100%: clamp to image bounds
+            waypoint.imgX = Math.max(0, Math.min(1, newX));
+            waypoint.imgY = Math.max(0, Math.min(1, newY));
+          }
         }
       }
       
@@ -138,10 +162,32 @@ export const wiringBusMixin = {
      * waypoint:drag-ended - Drag operation completed (mouseup)
      * Saves undo state once for the entire drag operation.
      */
-    this.eventBus.on('waypoint:drag-ended', (waypoint) => {
+    this.eventBus.on('waypoint:drag-ended', (data) => {
+      const dragGroup = Array.isArray(data?.dragGroup) ? data.dragGroup : null;
+      if (dragGroup && !dragGroup.some(item =>
+        item?.waypoint && (item.waypoint.imgX !== item.imgX || item.waypoint.imgY !== item.imgY)
+      )) {
+        return;
+      }
       this.saveUndoState(); // Immediate — one entry per drag
       this.updateWaypointList();
       this.autoSave();
+    });
+
+    /** Restore a cancelled single/group drag without creating history. */
+    this.eventBus.on('waypoint:drag-cancelled', ({ positions } = {}) => {
+      const restored = (positions || []).filter(item =>
+        item?.waypoint && this.waypoints.includes(item.waypoint)
+      );
+      if (restored.length === 0) return;
+      for (const item of restored) {
+        item.waypoint.imgX = item.imgX;
+        item.waypoint.imgY = item.imgY;
+      }
+      this.calculatePath();
+      this.updateWaypointList();
+      this.updateWaypointEditor();
+      this.queueRender();
     });
     
     /**

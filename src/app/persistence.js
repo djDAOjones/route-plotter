@@ -748,7 +748,14 @@ function restoreLiveState(app, previous) {
   });
   runRollbackStep('the selection controls', () => {
     app.uiController?.setSelection?.(previous.selectedWaypoints || [], previous.selectedWaypoint);
-    app.interactionHandler?.setSelectedWaypoint?.(previous.selectedWaypoint);
+    if (app.interactionHandler?.setSelection) {
+      app.interactionHandler.setSelection(
+        previous.selectedWaypoints || [],
+        previous.selectedWaypoint
+      );
+    } else {
+      app.interactionHandler?.setSelectedWaypoint?.(previous.selectedWaypoint);
+    }
   });
   runRollbackStep('the waypoint list', () => app.updateWaypointList?.());
   runRollbackStep('the waypoint editor', () => app.updateWaypointEditor?.());
@@ -846,7 +853,8 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     app.animationEngine.seekToProgress?.(0);
     app.uiController?.setPlaybackSpeed?.(1);
     app.uiController?.setSelection?.([], null);
-    app.interactionHandler?.setSelectedWaypoint?.(null);
+    if (app.interactionHandler?.setSelection) app.interactionHandler.setSelection([], null);
+    else app.interactionHandler?.setSelectedWaypoint?.(null);
 
     if (staged.waypoints.length >= 2) app.calculatePath?.();
     syncLoadedProjectUI(app, staged);

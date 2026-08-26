@@ -1,9 +1,8 @@
 /**
- * InteractionHandler - Manages mouse, keyboard, and touch interactions
+ * InteractionHandler - Manages pointer, keyboard, wheel and drop interactions
  * 
  * Handles all user input on the canvas including:
- * - Mouse: click, drag, context menu
- * - Touch: tap, drag (mobile support)
+ * - Pointer Events: mouse, touch and pen tap/drag/cancel
  * - Keyboard: shortcuts for playback, waypoint manipulation, zoom
  * - Drag & drop: image file uploads
  * 
@@ -32,7 +31,7 @@
  */
 
 import { INTERACTION } from '../config/constants.js';
-import { getKeybindings, matchesMouseBinding, isMac } from '../config/keybindings.js';
+import { isMac } from '../config/keybindings.js';
 
 export class InteractionHandler {
   /**
@@ -44,11 +43,14 @@ export class InteractionHandler {
     this.eventBus = eventBus;
     this.enabled = true;
     
-    // Drag state
+    // Selection state is synchronized by the application. Active gesture state
+    // lives separately so releasing a drag never clears keyboard selection.
     this.isDragging = false;
-    this.hasDragged = false;
-    this.dragOffset = { x: 0, y: 0 };
     this.selectedWaypoint = null;
+    this.selectedWaypoints = [];
+
+    /** @type {Object|null} The one captured primary-pointer transaction. */
+    this.activePointer = null;
     
     /** @type {number} Current zoom level for proportional nudge */
     this.zoomLevel = 1;
@@ -59,17 +61,8 @@ export class InteractionHandler {
     /** @type {boolean} Whether an area edit drag is in progress */
     this.isEditingArea = false;
 
-    /** @type {boolean} Whether an area edit drag just completed (suppresses click) */
-    this._areaEditJustEnded = false;
-
     /** @type {boolean} Whether network edit mode is active (Phase 4) */
     this.isEditingNetwork = false;
-
-    /** @type {{x: number, y: number}|null} Mousedown position during network mode */
-    this._netMouseDown = null;
-
-    /** @type {boolean} Whether the current network press became a drag */
-    this._netDragStarted = false;
 
     /** @type {string|null} What the pointer is idle-hovering ('waypoint'|'area-handle'|'leg'|'leg-plus') */
     this._hoverKind = null;
@@ -83,8 +76,12 @@ export class InteractionHandler {
     /** @type {{alt: boolean, shift: boolean, meta: boolean}} Last known modifier state */
     this._modifiers = { alt: false, shift: false, meta: false };
 
+    /** @type {Function[]} EventBus unsubscribe callbacks. */
+    this._unsubscribers = [];
+
     // Listen for draw-mode state changes
-    this.eventBus.on('area:draw-mode-changed', ({ active }) => {
+    this._unsubscribers.push(this.eventBus.on('area:draw-mode-changed', ({ active }) => {
+      if (this.activePointer) this._cancelActivePointer();
       this.isDrawingArea = active;
       if (active) {
         this._clearHover();
@@ -92,25 +89,46 @@ export class InteractionHandler {
       } else {
         this.canvas.style.cursor = '';
       }
-    });
+    }));
 
     // Network edit mode intercepts the canvas the same way (Phase 4)
-    this.eventBus.on('network:edit-mode-changed', ({ active }) => {
+    this._unsubscribers.push(this.eventBus.on('network:edit-mode-changed', ({ active }) => {
+      if (this.activePointer) this._cancelActivePointer();
       this.isEditingNetwork = active;
-      this._netMouseDown = null;
-      this._netDragStarted = false;
       this._clearHover();
       this.canvas.style.cursor = active ? 'crosshair' : '';
-    });
+    }));
+
+    // A rendering-mode or project boundary cannot inherit a half-finished
+    // gesture. Failed loads emit neither project event and preserve the edit.
+    this._unsubscribers.push(
+      this.eventBus.on('motion:preview-mode-change', () => this._cancelActivePointer()),
+      this.eventBus.on('project:replaced', () => this._cancelActivePointer({
+        restoreGeometry: false,
+        restoreSelection: false
+      })),
+      this.eventBus.on('app:cleared', () => this._cancelActivePointer({
+        restoreGeometry: false,
+        restoreSelection: false
+      }))
+    );
     
     // Bind methods
-    this.handleMouseDown = this.handleMouseDown.bind(this);
-    this.handleMouseMove = this.handleMouseMove.bind(this);
-    this.handleMouseUp = this.handleMouseUp.bind(this);
+    this.handlePointerDown = this.handlePointerDown.bind(this);
+    this.handlePointerMove = this.handlePointerMove.bind(this);
+    this.handlePointerUp = this.handlePointerUp.bind(this);
+    this.handlePointerCancel = this.handlePointerCancel.bind(this);
+    this.handleLostPointerCapture = this.handleLostPointerCapture.bind(this);
+    this._handlePointerLeave = this._handlePointerLeave.bind(this);
     this.handleCanvasClick = this.handleCanvasClick.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
+    this._updateCursorForModifiers = this._updateCursorForModifiers.bind(this);
+    this._handleWindowBlur = this._handleWindowBlur.bind(this);
     this.handleDragOver = this.handleDragOver.bind(this);
     this.handleDrop = this.handleDrop.bind(this);
+    this.handleContextMenu = this.handleContextMenu.bind(this);
+    this._handleContextMenuEvent = this._handleContextMenuEvent.bind(this);
+    this.handleWheel = this.handleWheel.bind(this);
     
     this.setupEventListeners();
   }
@@ -119,42 +137,55 @@ export class InteractionHandler {
    * Set up all interaction event listeners
    */
   setupEventListeners() {
-    // Mouse events
-    this.canvas.addEventListener('mousedown', this.handleMouseDown);
-    this.canvas.addEventListener('mousemove', this.handleMouseMove);
-    this.canvas.addEventListener('mouseup', this.handleMouseUp);
-    this.canvas.addEventListener('click', this.handleCanvasClick);
-    this.canvas.addEventListener('mouseleave', () => this._clearHover());
-    
-    // Touch events (for mobile support)
-    this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
-    this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-    this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
+    // Pointer Events are the sole canvas mutation owner for mouse, touch and
+    // pen. The native click event is intentionally not registered: pointerup
+    // resolves either one tap or one drag commit itself.
+    this.canvas.addEventListener('pointerdown', this.handlePointerDown);
+    this.canvas.addEventListener('pointermove', this.handlePointerMove);
+    this.canvas.addEventListener('pointerup', this.handlePointerUp);
+    this.canvas.addEventListener('pointercancel', this.handlePointerCancel);
+    this.canvas.addEventListener('lostpointercapture', this.handleLostPointerCapture);
+    this.canvas.addEventListener('pointerleave', this._handlePointerLeave);
+
+    // Capture is the primary outside-canvas path. Window fallbacks also close
+    // the transaction when a browser or automation surface releases capture
+    // before dispatching the terminal event to the canvas. Events delivered to
+    // the canvas bubble here too; activePointer makes that second call a no-op.
+    window.addEventListener('pointerup', this.handlePointerUp);
+    window.addEventListener('pointercancel', this.handlePointerCancel);
     
     // Keyboard events
     document.addEventListener('keydown', this.handleKeyDown);
     
     // Modifier key tracking for cursor feedback
-    document.addEventListener('keydown', this._updateCursorForModifiers.bind(this));
-    document.addEventListener('keyup', this._updateCursorForModifiers.bind(this));
-    // Reset cursor when window loses focus (user may release key while away)
-    window.addEventListener('blur', () => {
-      this._modifiers = { alt: false, shift: false, meta: false };
-      this._refreshCursor();
-    });
+    document.addEventListener('keydown', this._updateCursorForModifiers);
+    document.addEventListener('keyup', this._updateCursorForModifiers);
+    window.addEventListener('blur', this._handleWindowBlur);
     
     // Drag and drop for images
     this.canvas.addEventListener('dragover', this.handleDragOver);
     this.canvas.addEventListener('drop', this.handleDrop);
     
     // Context menu (right-click)
-    this.canvas.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      this.handleContextMenu(e);
-    });
+    this.canvas.addEventListener('contextmenu', this._handleContextMenuEvent);
     
     // Mouse wheel for zoom
-    this.canvas.addEventListener('wheel', this.handleWheel.bind(this), { passive: false });
+    this.canvas.addEventListener('wheel', this.handleWheel, { passive: false });
+  }
+
+  _handleContextMenuEvent(event) {
+    event.preventDefault();
+    this.handleContextMenu(event);
+  }
+
+  _handlePointerLeave() {
+    if (!this.activePointer) this._clearHover();
+  }
+
+  _handleWindowBlur() {
+    this._cancelActivePointer();
+    this._modifiers = { alt: false, shift: false, meta: false };
+    this._refreshCursor();
   }
   
   /**
@@ -176,205 +207,347 @@ export class InteractionHandler {
   }
   
   /**
-   * Handle mouse down - initiates waypoint drag if clicking on one.
-   * @param {MouseEvent} event
+   * Begin one primary-pointer transaction. Hit-testing happens once at the
+   * gesture boundary; model mutation waits until either tap resolution or the
+   * common drag threshold is crossed.
+   * @param {PointerEvent} event
    */
-  handleMouseDown(event) {
-    // Block drag initiation during area draw mode
-    if (this.isDrawingArea) return;
+  handlePointerDown(event) {
+    if (!this.enabled || this.activePointer) return;
+    if (event.isPrimary === false || event.button !== 0) return;
 
-    const rect = this.canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const point = this._canvasPoint(event);
+    const metaKey = isMac ? !!event.metaKey : !!event.ctrlKey;
+    const modifiers = {
+      altKey: !!event.altKey,
+      shiftKey: !!event.shiftKey,
+      ctrlKey: !!event.ctrlKey,
+      metaKey: !!event.metaKey,
+      meta: metaKey
+    };
+    const selectionSnapshot = {
+      waypoints: [...this.selectedWaypoints],
+      primary: this.selectedWaypoint
+    };
+    const active = {
+      pointerId: event.pointerId ?? 1,
+      pointerType: event.pointerType || 'mouse',
+      phase: 'pressed',
+      mode: this.isDrawingArea ? 'area-draw' : (this.isEditingNetwork ? 'network' : 'canvas'),
+      down: point,
+      last: point,
+      modifiers,
+      hit: null,
+      draggable: false,
+      dragGroup: [],
+      dragOffset: { x: 0, y: 0 },
+      selectionSnapshot,
+      captured: false
+    };
 
-    // Network edit mode: record the press; mousemove promotes it to a
-    // drag past the threshold, click handles it otherwise
-    if (this.isEditingNetwork) {
-      this._netMouseDown = { x, y };
-      this._netDragStarted = false;
-      return;
-    }
-    
-    // Check if clicking on an area highlight handle (before waypoint check)
-    this.eventBus.emit('area:check-handle', { screenX: x, screenY: y }, (hit) => {
-      if (hit) {
-        this.isEditingArea = true;
-        this._clearHover();
-        this.canvas.classList.add('dragging');
-        // Convert screen coords to image coords for the edit service
-        this.eventBus.emit('coordinate:canvas-to-image', { canvasX: x, canvasY: y }, (imgPos) => {
-          this.eventBus.emit('area:edit-start', {
-            waypoint: hit.waypoint,
-            imgX: imgPos.x,
-            imgY: imgPos.y,
-            imageToScreen: hit.imageToScreen
+    if (!this.isDrawingArea && !this.isEditingNetwork) {
+      this.eventBus.emit('area:check-handle', {
+        screenX: point.x,
+        screenY: point.y,
+        pointerType: active.pointerType
+      }, (hit) => {
+        if (hit) {
+          active.mode = 'area-edit';
+          active.hit = hit;
+        }
+      });
+
+      if (!active.hit) {
+        this.eventBus.emit('waypoint:check-at-position', {
+          x: point.x,
+          y: point.y,
+          pointerType: active.pointerType
+        }, (waypoint) => {
+          if (!waypoint) return;
+          active.mode = 'waypoint';
+          active.hit = waypoint;
+          active.draggable = !modifiers.altKey && !modifiers.shiftKey && !modifiers.meta;
+          const group = this.selectedWaypoints.length > 1 && this.selectedWaypoints.includes(waypoint)
+            ? this.selectedWaypoints
+            : [waypoint];
+          active.dragGroup = group.map(item => ({
+            waypoint: item,
+            imgX: item.imgX,
+            imgY: item.imgY
+          }));
+          this.eventBus.emit('coordinate:image-to-canvas', {
+            imgX: waypoint.imgX,
+            imgY: waypoint.imgY
+          }, (screenPos) => {
+            active.dragOffset.x = point.x - screenPos.x;
+            active.dragOffset.y = point.y - screenPos.y;
           });
         });
+      }
+    }
+
+    this.activePointer = active;
+    this._clearHover();
+    try {
+      this.canvas.setPointerCapture?.(active.pointerId);
+      active.captured = this.canvas.hasPointerCapture
+        ? this.canvas.hasPointerCapture(active.pointerId)
+        : true;
+    } catch {
+      active.captured = false;
+    }
+    event.preventDefault?.();
+  }
+  
+  /**
+   * Route both idle hover and the captured gesture through one pointer path.
+   * @param {PointerEvent} event
+   */
+  handlePointerMove(event) {
+    const active = this.activePointer;
+    if (active) {
+      if ((event.pointerId ?? 1) !== active.pointerId) return;
+      this._processActivePointerMotion(active, event);
+      event.preventDefault?.();
+      return;
+    }
+
+    const point = this._canvasPoint(event);
+    if (this.isDrawingArea) {
+      this._emitAreaPosition('area:draw-move', point);
+      return;
+    }
+    if (this.isEditingNetwork) {
+      this._queueHoverTest(point.x, point.y);
+      return;
+    }
+    this._modifiers = {
+      alt: !!event.altKey,
+      shift: !!event.shiftKey,
+      meta: isMac ? !!event.metaKey : !!event.ctrlKey
+    };
+    this._queueHoverTest(point.x, point.y);
+  }
+
+  _processActivePointerMotion(active, event) {
+    const point = this._canvasPoint(event);
+    active.last = point;
+    active.modifiers = {
+      altKey: !!event.altKey,
+      shiftKey: !!event.shiftKey,
+      ctrlKey: !!event.ctrlKey,
+      metaKey: !!event.metaKey,
+      meta: isMac ? !!event.metaKey : !!event.ctrlKey
+    };
+
+    if (active.mode === 'area-draw') {
+      this._emitAreaPosition('area:draw-move', point);
+    }
+
+    if (active.phase === 'pressed') {
+      const distance = Math.hypot(point.x - active.down.x, point.y - active.down.y);
+      if (distance <= INTERACTION.DRAG_THRESHOLD) return;
+      if ((active.mode === 'waypoint' && !active.draggable) ||
+          active.mode === 'canvas' || active.mode === 'area-draw') {
+        active.phase = 'moved';
         return;
       }
-      
-      // Check if clicking on a waypoint
-      this.eventBus.emit('waypoint:check-at-position', { x, y }, (waypoint) => {
-        if (waypoint) {
-          // Cmd/Ctrl+click toggles multi-selection membership on click —
-          // selecting (or dragging) here on mousedown would collapse the
-          // multi-selection before the toggle ever fires
-          if (isMac ? event.metaKey : event.ctrlKey) return;
+      active.phase = 'dragging';
+      this.isDragging = active.mode === 'waypoint';
+      this.isEditingArea = active.mode === 'area-edit';
+      this.canvas.classList.add('dragging');
 
-          this.selectedWaypoint = waypoint;
-          this.isDragging = true;
-          this.hasDragged = false;
-          this._clearHover();
-
-          // Calculate drag offset
-          this.eventBus.emit('coordinate:image-to-canvas', 
-            { imgX: waypoint.imgX, imgY: waypoint.imgY }, 
-            (canvasPos) => {
-              this.dragOffset.x = x - canvasPos.x;
-              this.dragOffset.y = y - canvasPos.y;
-            }
-          );
-          
-          // Add dragging class to canvas
-          this.canvas.classList.add('dragging');
-          
-          // Select the waypoint
-          this.eventBus.emit('waypoint:selected', waypoint);
+      if (active.mode === 'waypoint') {
+        const movers = active.dragGroup.map(item => item.waypoint);
+        if (movers.length > 1) {
+          this.eventBus.emit('waypoint:multi-selected', {
+            waypoints: movers,
+            primary: active.hit
+          });
+        } else {
+          this.eventBus.emit('waypoint:selected', active.hit);
         }
-      });
-    });
-  }
-  
-  /**
-   * Handle mouse move - updates waypoint position during drag.
-   * Emits 'waypoint:position-changed' with isDragging=true.
-   * @param {MouseEvent} event
-   */
-  handleMouseMove(event) {
-    // During area edit drag, send position updates
-    if (this.isEditingArea) {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      this.eventBus.emit('coordinate:canvas-to-image', { canvasX: x, canvasY: y }, (imgPos) => {
-        this.eventBus.emit('area:edit-move', { imgX: imgPos.x, imgY: imgPos.y });
-      });
-      return;
-    }
-    
-    // During area draw mode, send cursor position for preview line
-    if (this.isDrawingArea) {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      this.eventBus.emit('coordinate:canvas-to-image', { canvasX: x, canvasY: y }, (imgPos) => {
-        this.eventBus.emit('area:draw-move', { imgX: imgPos.x, imgY: imgPos.y });
-      });
-      return;
-    }
-
-    // Network edit mode: button held = drag pipeline (past the same
-    // threshold rule as everything else), idle = hover pipeline
-    if (this.isEditingNetwork) {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const shiftKey = !!event.shiftKey;
-      if (this._netMouseDown) {
-        if (!this._netDragStarted) {
-          const moved = Math.hypot(x - this._netMouseDown.x, y - this._netMouseDown.y);
-          if (moved > INTERACTION.DRAG_THRESHOLD) {
-            this._netDragStarted = true;
-            this.eventBus.emit('network:drag-start', {
-              x: this._netMouseDown.x, y: this._netMouseDown.y, shiftKey
-            });
-          }
-        }
-        if (this._netDragStarted) {
-          this.eventBus.emit('network:drag-move', { x, y, shiftKey });
-        }
-      } else {
-        this._queueHoverTest(x, y);
-      }
-      return;
-    }
-
-    // Idle move (no drag in progress): hover affordance hit-testing
-    if (!this.isDragging) {
-      const rect = this.canvas.getBoundingClientRect();
-      this._modifiers = {
-        alt: !!event.altKey,
-        shift: !!event.shiftKey,
-        meta: isMac ? !!event.metaKey : !!event.ctrlKey
-      };
-      this._queueHoverTest(event.clientX - rect.left, event.clientY - rect.top);
-      return;
-    }
-
-    if (this.isDragging && this.selectedWaypoint) {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      // Track that we actually moved
-      this.hasDragged = true;
-      
-      // Calculate new position accounting for offset
-      const newX = x - this.dragOffset.x;
-      const newY = y - this.dragOffset.y;
-      
-      // Convert to image coordinates
-      const shiftKey = event.shiftKey;
-      this.eventBus.emit('coordinate:canvas-to-image',
-        { canvasX: newX, canvasY: newY },
-        (imgPos) => {
-          // Emit position change event
-          this.eventBus.emit('waypoint:position-changed', {
-            waypoint: this.selectedWaypoint,
+      } else if (active.mode === 'area-edit') {
+        this.eventBus.emit('coordinate:canvas-to-image', {
+          canvasX: active.down.x,
+          canvasY: active.down.y
+        }, (imgPos) => {
+          this.eventBus.emit('area:edit-start', {
+            waypoint: active.hit.waypoint,
             imgX: imgPos.x,
             imgY: imgPos.y,
-            isDragging: true,
-            shiftKey // For 15° angle snapping
+            imageToScreen: active.hit.imageToScreen
           });
-        }
-      );
-    }
-  }
-  
-  /**
-   * Handle mouse up - ends drag operation and saves position.
-   * @param {MouseEvent} event
-   */
-  handleMouseUp(event) {
-    // End a network drag; a plain press falls through to the click event
-    if (this.isEditingNetwork) {
-      if (this._netDragStarted) {
-        this.eventBus.emit('network:drag-end');
+        });
+      } else if (active.mode === 'network') {
+        this.eventBus.emit('network:drag-start', {
+          x: active.down.x,
+          y: active.down.y,
+          shiftKey: active.modifiers.shiftKey
+        });
       }
-      this._netMouseDown = null;
-      return;
     }
 
-    // End area edit drag
-    if (this.isEditingArea) {
-      this.isEditingArea = false;
-      this._areaEditJustEnded = true; // Suppress the subsequent click event
-      this.canvas.classList.remove('dragging');
-      this.eventBus.emit('area:edit-end');
-      return;
+    if (active.phase !== 'dragging') return;
+    if (active.mode === 'waypoint') {
+      const newX = point.x - active.dragOffset.x;
+      const newY = point.y - active.dragOffset.y;
+      this.eventBus.emit('coordinate:canvas-to-image', {
+        canvasX: newX,
+        canvasY: newY
+      }, (imgPos) => {
+        this.eventBus.emit('waypoint:position-changed', {
+          waypoint: active.hit,
+          imgX: imgPos.x,
+          imgY: imgPos.y,
+          dragGroup: active.dragGroup,
+          isDragging: true,
+          shiftKey: active.modifiers.shiftKey
+        });
+      });
+    } else if (active.mode === 'area-edit') {
+      this._emitAreaPosition('area:edit-move', point);
+    } else if (active.mode === 'network') {
+      this.eventBus.emit('network:drag-move', {
+        x: point.x,
+        y: point.y,
+        shiftKey: active.modifiers.shiftKey
+      });
     }
-    
-    if (this.isDragging) {
-      this.isDragging = false;
-      this.canvas.classList.remove('dragging');
-      
-      // If we actually dragged, save the position
-      if (this.hasDragged) {
-        this.eventBus.emit('waypoint:drag-ended', this.selectedWaypoint);
+  }
+
+  _emitAreaPosition(eventName, point) {
+    this.eventBus.emit('coordinate:canvas-to-image', {
+      canvasX: point.x,
+      canvasY: point.y
+    }, (imgPos) => {
+      this.eventBus.emit(eventName, { imgX: imgPos.x, imgY: imgPos.y });
+    });
+  }
+
+  _canvasPoint(event) {
+    const rect = this.canvas.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    };
+  }
+  
+  /** Complete exactly one tap or drag transaction. */
+  handlePointerUp(event) {
+    const active = this.activePointer;
+    if (!active || (event.pointerId ?? 1) !== active.pointerId) return;
+
+    // An up event can be the first delivered point beyond the threshold, but
+    // must not replay an already-delivered final move.
+    const upPoint = this._canvasPoint(event);
+    if (upPoint.x !== active.last.x || upPoint.y !== active.last.y) {
+      this._processActivePointerMotion(active, event);
+    } else {
+      active.modifiers = {
+        altKey: !!event.altKey,
+        shiftKey: !!event.shiftKey,
+        ctrlKey: !!event.ctrlKey,
+        metaKey: !!event.metaKey,
+        meta: isMac ? !!event.metaKey : !!event.ctrlKey
+      };
+    }
+    this.activePointer = null;
+    event.preventDefault?.();
+
+    if (active.phase === 'pressed') {
+      if (active.mode !== 'area-edit') {
+        this.handleCanvasClick({
+          clientX: event.clientX,
+          clientY: event.clientY,
+          altKey: active.modifiers.altKey,
+          shiftKey: active.modifiers.shiftKey,
+          ctrlKey: active.modifiers.ctrlKey,
+          metaKey: active.modifiers.metaKey
+        });
       }
-      
-      this.selectedWaypoint = null;
-      this.hasDragged = false;
+    } else if (active.phase === 'dragging') {
+      if (active.mode === 'waypoint') {
+        this.eventBus.emit('waypoint:drag-ended', {
+          waypoint: active.hit,
+          dragGroup: active.dragGroup
+        });
+      } else if (active.mode === 'area-edit') {
+        this.eventBus.emit('area:edit-end');
+      } else if (active.mode === 'network') {
+        this.eventBus.emit('network:drag-end');
+      }
+    }
+
+    this._resetGestureState();
+    this._releasePointer(active);
+  }
+
+  /** Cancel a browser-aborted gesture and restore its start snapshot. */
+  handlePointerCancel(event) {
+    if (!this.activePointer || (event.pointerId ?? 1) !== this.activePointer.pointerId) return;
+    event.preventDefault?.();
+    this._cancelActivePointer();
+  }
+
+  /** Unexpected capture loss is cancellation; loss after normal release is a no-op. */
+  handleLostPointerCapture(event) {
+    if (!this.activePointer || (event.pointerId ?? 1) !== this.activePointer.pointerId) return;
+    this._cancelActivePointer({ releaseCapture: false });
+  }
+
+  _cancelActivePointer({
+    restoreGeometry = true,
+    restoreSelection = true,
+    releaseCapture = true
+  } = {}) {
+    const active = this.activePointer;
+    if (!active) return;
+    this.activePointer = null;
+
+    if (active.phase === 'dragging' && restoreGeometry) {
+      if (active.mode === 'waypoint') {
+        this.eventBus.emit('waypoint:drag-cancelled', {
+          waypoint: active.hit,
+          positions: active.dragGroup
+        });
+      } else if (active.mode === 'area-edit') {
+        this.eventBus.emit('area:edit-cancel');
+      } else if (active.mode === 'network') {
+        this.eventBus.emit('network:drag-cancel');
+      }
+    }
+
+    if (active.mode === 'waypoint' && active.phase === 'dragging' && restoreSelection) {
+      const { waypoints, primary } = active.selectionSnapshot;
+      if (waypoints.length > 1 && primary) {
+        this.eventBus.emit('waypoint:multi-selected', { waypoints, primary });
+      } else if (waypoints.length === 1) {
+        this.eventBus.emit('waypoint:selected', waypoints[0]);
+      } else {
+        this.eventBus.emit('waypoint:deselected');
+      }
+    }
+
+    this._resetGestureState();
+    if (releaseCapture) this._releasePointer(active);
+  }
+
+  _resetGestureState() {
+    this.isDragging = false;
+    this.isEditingArea = false;
+    this.canvas.classList.remove('dragging');
+    this._refreshCursor();
+  }
+
+  _releasePointer(active) {
+    if (!active?.captured || !this.canvas.releasePointerCapture) return;
+    try {
+      if (!this.canvas.hasPointerCapture || this.canvas.hasPointerCapture(active.pointerId)) {
+        this.canvas.releasePointerCapture(active.pointerId);
+      }
+    } catch {
+      // Capture may already have been released by the user agent.
     }
   }
   
@@ -390,19 +563,8 @@ export class InteractionHandler {
    * - Click on empty space: add major waypoint
    */
   handleCanvasClick(event) {
-    // Suppress click after area edit drag (mouseUp fires before click)
-    if (this._areaEditJustEnded) {
-      this._areaEditJustEnded = false;
-      return;
-    }
-    
-    // Intercept clicks during network edit mode (a completed drag
-    // suppresses its trailing click, same rule as waypoint drags)
+    // Pointerup calls this only for a gesture that stayed below the threshold.
     if (this.isEditingNetwork) {
-      if (this._netDragStarted) {
-        this._netDragStarted = false;
-        return;
-      }
       const rect = this.canvas.getBoundingClientRect();
       this.eventBus.emit('network:click', {
         x: event.clientX - rect.left,
@@ -423,18 +585,11 @@ export class InteractionHandler {
       return;
     }
     
-    // Don't add waypoint if we actually dragged
-    if (this.hasDragged) {
-      this.hasDragged = false;
-      return;
-    }
-    
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     
     // Get modifier states
-    const bindings = getKeybindings().mouse;
     const isShiftClick = event.shiftKey;
     const isAltClick = event.altKey;
     const isMetaClick = isMac ? event.metaKey : event.ctrlKey; // Cmd on Mac, Ctrl on Windows
@@ -565,7 +720,7 @@ export class InteractionHandler {
   
   /**
    * Queue an idle-hover hit-test for the next animation frame.
-   * Throttles mousemove (fires at input rate) to at most one bus
+   * Throttles pointermove (fires at input rate) to at most one bus
    * round-trip per frame; the answering side updates the app's hover
    * state and re-renders, the callback here drives the cursor.
    *
@@ -851,58 +1006,6 @@ export class InteractionHandler {
   }
   
   /**
-   * Handle touch start - delegates to mouse handler for unified behavior.
-   * @param {TouchEvent} event
-   */
-  handleTouchStart(event) {
-    if (event.touches.length === 1) {
-      const touch = event.touches[0];
-      const rect = this.canvas.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
-      
-      // Simulate mouse down
-      this.handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
-    }
-  }
-  
-  /**
-   * Handle touch move - delegates to mouse handler during drag.
-   * @param {TouchEvent} event
-   */
-  handleTouchMove(event) {
-    if (event.touches.length === 1 && this.isDragging) {
-      event.preventDefault();
-      const touch = event.touches[0];
-      
-      // Simulate mouse move
-      this.handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
-    }
-  }
-  
-  /**
-   * Handle touch end - completes drag or triggers click.
-   * @param {TouchEvent} event
-   */
-  handleTouchEnd(event) {
-    if (event.changedTouches.length === 1) {
-      const touch = event.changedTouches[0];
-      
-      // Simulate mouse up
-      this.handleMouseUp({ clientX: touch.clientX, clientY: touch.clientY });
-      
-      // If no drag occurred, treat as click
-      if (!this.hasDragged) {
-        this.handleCanvasClick({ 
-          clientX: touch.clientX, 
-          clientY: touch.clientY,
-          shiftKey: false 
-        });
-      }
-    }
-  }
-  
-  /**
    * Handle drag over - enables drop zone visual feedback.
    * @param {DragEvent} event
    */
@@ -962,17 +1065,21 @@ export class InteractionHandler {
     });
   }
   
-  /**
-   * Set selected waypoint from external source (e.g., sidebar selection).
-   * @param {Object|null} waypoint - Waypoint object or null to deselect
-   */
+  /** Synchronize the canonical route selection used by keyboard/group drag. */
+  setSelection(waypoints, primary = null) {
+    this.selectedWaypoints = Array.isArray(waypoints) ? [...waypoints] : [];
+    this.selectedWaypoint = primary || null;
+  }
+
+  /** Backward-compatible single-selection adapter. */
   setSelectedWaypoint(waypoint) {
-    this.selectedWaypoint = waypoint;
+    this.setSelection(waypoint ? [waypoint] : [], waypoint);
   }
 
   /** Enable or suspend document-level application shortcuts. */
   setEnabled(enabled) {
     this.enabled = Boolean(enabled);
+    if (!this.enabled) this._cancelActivePointer();
   }
   
   /**
@@ -988,16 +1095,28 @@ export class InteractionHandler {
    * Clean up all event listeners. Call when removing handler.
    */
   destroy() {
+    this._cancelActivePointer();
     if (this._hoverRaf !== null) {
       cancelAnimationFrame(this._hoverRaf);
       this._hoverRaf = null;
     }
-    this.canvas.removeEventListener('mousedown', this.handleMouseDown);
-    this.canvas.removeEventListener('mousemove', this.handleMouseMove);
-    this.canvas.removeEventListener('mouseup', this.handleMouseUp);
-    this.canvas.removeEventListener('click', this.handleCanvasClick);
+    this.canvas.removeEventListener('pointerdown', this.handlePointerDown);
+    this.canvas.removeEventListener('pointermove', this.handlePointerMove);
+    this.canvas.removeEventListener('pointerup', this.handlePointerUp);
+    this.canvas.removeEventListener('pointercancel', this.handlePointerCancel);
+    this.canvas.removeEventListener('lostpointercapture', this.handleLostPointerCapture);
+    this.canvas.removeEventListener('pointerleave', this._handlePointerLeave);
+    window.removeEventListener('pointerup', this.handlePointerUp);
+    window.removeEventListener('pointercancel', this.handlePointerCancel);
     document.removeEventListener('keydown', this.handleKeyDown);
+    document.removeEventListener('keydown', this._updateCursorForModifiers);
+    document.removeEventListener('keyup', this._updateCursorForModifiers);
+    window.removeEventListener('blur', this._handleWindowBlur);
     this.canvas.removeEventListener('dragover', this.handleDragOver);
     this.canvas.removeEventListener('drop', this.handleDrop);
+    this.canvas.removeEventListener('contextmenu', this._handleContextMenuEvent);
+    this.canvas.removeEventListener('wheel', this.handleWheel);
+    for (const unsubscribe of this._unsubscribers) unsubscribe();
+    this._unsubscribers = [];
   }
 }

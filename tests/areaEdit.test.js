@@ -85,6 +85,78 @@ describe('area edit handle coordinates', () => {
     expect(selected).toHaveBeenCalledWith({ waypoint, index: 1 });
   });
 
+  test('area drag release commits only when final geometry differs from drag start', () => {
+    const bus = new EventBus();
+    new AreaEditService(bus);
+    const waypoint = makeAreaWaypoint({
+      shape: 'circle',
+      centerX: 0.4,
+      centerY: 0.3,
+    });
+    const changed = vi.fn();
+    bus.on('area:changed', changed);
+
+    bus.emit('area:edit-start', { waypoint, imgX: 0.4, imgY: 0.3, imageToScreen });
+    bus.emit('area:edit-move', { imgX: 0.4, imgY: 0.3 });
+    bus.emit('area:edit-end');
+    expect(changed).not.toHaveBeenCalled();
+
+    bus.emit('area:edit-start', { waypoint, imgX: 0.4, imgY: 0.3, imageToScreen });
+    bus.emit('area:edit-move', { imgX: 0.7, imgY: 0.8 });
+    bus.emit('area:edit-move', { imgX: 0.4, imgY: 0.3 });
+    bus.emit('area:edit-end');
+    expect(changed).not.toHaveBeenCalled();
+
+    bus.emit('area:edit-start', { waypoint, imgX: 0.4, imgY: 0.3, imageToScreen });
+    bus.emit('area:edit-move', { imgX: 0.6, imgY: 0.5 });
+    bus.emit('area:edit-end');
+    expect(changed).toHaveBeenCalledTimes(1);
+    expect(changed).toHaveBeenCalledWith({ waypoint });
+  });
+
+  test('area:edit-cancel restores polygon geometry byte-for-byte without a commit', () => {
+    const bus = new EventBus();
+    const service = new AreaEditService(bus);
+    const waypoint = makeAreaWaypoint({
+      shape: 'polygon',
+      points: [
+        { x: 0.2, y: 0.2 },
+        { x: 0.7, y: 0.25, retained: 'metadata' },
+        { x: 0.5, y: 0.8 },
+      ],
+    });
+    const before = JSON.stringify(waypoint.areaHighlight);
+    const changed = vi.fn();
+    const rendered = vi.fn();
+    bus.on('area:changed', changed);
+    bus.on('render:request', rendered);
+
+    bus.emit('area:edit-start', {
+      waypoint,
+      imgX: 0.7,
+      imgY: 0.25,
+      imageToScreen,
+    });
+    bus.emit('area:edit-move', { imgX: 0.95, imgY: 0.05 });
+    expect(JSON.stringify(waypoint.areaHighlight)).not.toBe(before);
+
+    bus.emit('area:edit-cancel');
+
+    expect(JSON.stringify(waypoint.areaHighlight)).toBe(before);
+    expect(service).toMatchObject({
+      isDragging: false,
+      dragTarget: null,
+      dragVertexIndex: -1,
+      _dragChanged: false,
+    });
+    expect(changed).not.toHaveBeenCalled();
+    expect(rendered).toHaveBeenCalledTimes(2);
+
+    // A stale release after cancellation remains an inert no-op.
+    bus.emit('area:edit-end');
+    expect(changed).not.toHaveBeenCalled();
+  });
+
   test('successful project boundaries clear modal draw and edit state but failed loads do not', () => {
     document.body.innerHTML = '';
     const bus = new EventBus();

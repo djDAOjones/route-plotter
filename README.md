@@ -91,7 +91,7 @@ src/
     playerEntry.js                Exported-page boot + transport controls (bundled → docs/player.js)
     playerAccessibility.js        Static scene summary and discrete transport announcements
   handlers/
-    InteractionHandler.js         Mouse, keyboard, touch, and drag-and-drop input
+    InteractionHandler.js         Captured Pointer Events, keyboard, and drag-and-drop input
   models/
     Waypoint.js                   Waypoint data model (position, style, camera, area, etc.)
     AnimationState.js             Playback state (progress, timing, pause tracking)
@@ -155,7 +155,7 @@ There is no framework. The app is pure JavaScript with Canvas 2D rendering and v
 Components talk through `EventBus` (pub-sub), not direct method calls:
 
 ```text
-User clicks canvas → InteractionHandler emits event
+Captured canvas gesture → InteractionHandler emits one terminal event
     → main.js handles event, updates Waypoint model
     → main.js calls queueRender()
     → RenderingService draws the frame

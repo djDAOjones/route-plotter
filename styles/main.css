@@ -2732,6 +2732,9 @@ kbd{
 #canvas{
   flex:0 0 auto;
   width:100%;
+  /* Canvas gestures are authored by the captured Pointer Events state
+     machine. Page scrolling remains available outside the canvas surface. */
+  touch-action:none;
   background:#fff;
   cursor:crosshair;
   display:block;

@@ -38,6 +38,8 @@ export function clearProject(app) {
     app.eventBus.emit('crowd:deselected');
   }
   app.updateLayersStrip();
+  if (app.interactionHandler?.setSelection) app.interactionHandler.setSelection([], null);
+  else app.interactionHandler?.setSelectedWaypoint?.(null);
 
   app.animationEngine.reset();
   app.animationEngine.setDuration(0);

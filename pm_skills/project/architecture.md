@@ -26,7 +26,7 @@ src/
   services/            — single-responsibility services (18 modules)
   controllers/         — UIController, SectionController, SceneOutlineController
   components/          — SwatchPicker, Dropdown, Tooltip, ParamTooltip
-  handlers/            — InteractionHandler (mouse, keyboard, touch, DnD)
+  handlers/            — InteractionHandler (Pointer Events transactions, keyboard, DnD)
   utils/               — CatmullRom, Easing, focusTrap
 styles/                — tokens.css, main.css, swatch-picker.css, dropdown.css, tooltip.css
 specs/                 — archived dot-crowd-navigator material (spec, memory, salvaged tests/src) for Phases 2–4
@@ -79,7 +79,7 @@ scene description and discrete transport announcements.
 | RenderingService | `src/services/RenderingService.js` | Canvas drawing: path, markers, labels, overlays |
 | UIController | `src/controllers/UIController.js` | Sidebar controls, waypoint list, slider sync |
 | SceneOutlineController | `src/controllers/SceneOutlineController.js` | Lazy native semantic outline, authoring forms, focus and draft state |
-| InteractionHandler | `src/handlers/InteractionHandler.js` | Mouse, keyboard, touch, drag-and-drop input |
+| InteractionHandler | `src/handlers/InteractionHandler.js` | Captured mouse/touch/pen transactions, keyboard and drag-and-drop input |
 | CoordinateTransform | `src/services/CoordinateTransform.js` | Image ↔ canvas coordinate conversion |
 | VideoExporter | `src/services/VideoExporter.js` | MP4/WebM export via WebCodecs |
 
@@ -90,6 +90,13 @@ components. UIController, SceneOutlineController and InteractionHandler emit
 events; `main.js` handles them. No direct method calls between components.
 
 Exceptions: none. This is a hard rule.
+
+Canvas authoring uses one primary-pointer transaction owned by
+`InteractionHandler`: hit-test and immutable geometry snapshot on down, a
+shared 3 CSS px tap/drag threshold, captured movement, then exactly one commit
+or restoring cancellation. Window terminal-event fallbacks are deliberately
+idempotent with captured canvas events. Area, network and waypoint drags share
+this boundary; a selected waypoint group moves by one shared bounds-safe delta.
 
 ## Dependency policy
 

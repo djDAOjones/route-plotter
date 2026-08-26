@@ -323,6 +323,11 @@ export const wiringControllersMixin = {
         this.selectedWaypoint = waypoint;
         this.selectedWaypoints = [waypoint];
         this.uiController?.setSelection([waypoint], waypoint);
+        if (this.interactionHandler?.setSelection) {
+          this.interactionHandler.setSelection([waypoint], waypoint);
+        } else {
+          this.interactionHandler?.setSelectedWaypoint?.(waypoint);
+        }
       }
 
       this.eventBus.emit('waypoint:added', waypoint);
@@ -334,7 +339,11 @@ export const wiringControllersMixin = {
     this.eventBus.on('waypoint:selected', (waypoint) => {
       this.selectedWaypoint = waypoint;
       this.selectedWaypoints = [waypoint];
-      this.interactionHandler?.setSelectedWaypoint(waypoint);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection([waypoint], waypoint);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(waypoint);
+      }
       this.uiController?.setSelection([waypoint], waypoint);
       this.uiController?.updateWaypointEditor(waypoint);
       this.updateWaypointList();
@@ -359,7 +368,11 @@ export const wiringControllersMixin = {
       const inSelection = new Set(waypoints);
       this.selectedWaypoints = this.waypoints.filter(wp => inSelection.has(wp));
       this.selectedWaypoint = primary;
-      this.interactionHandler?.setSelectedWaypoint(primary);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection(this.selectedWaypoints, primary);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(primary);
+      }
       this.uiController?.setSelection(this.selectedWaypoints, primary);
       // Inspector shows the primary's values; edits write to the whole selection
       this.uiController?.updateWaypointEditor(primary, this.selectedWaypoints);
@@ -406,7 +419,11 @@ export const wiringControllersMixin = {
     this.eventBus.on('waypoint:deselected', () => {
       this.selectedWaypoint = null;
       this.selectedWaypoints = [];
-      this.interactionHandler?.setSelectedWaypoint(null);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection([], null);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(null);
+      }
       this.uiController?.setSelection([], null);
       this.uiController?.updateWaypointEditor(null);
       this.updateWaypointList();
@@ -434,7 +451,11 @@ export const wiringControllersMixin = {
         }
         this.selectedWaypoint = null;
         this.selectedWaypoints = [];
-        this.interactionHandler?.setSelectedWaypoint(null);
+        if (this.interactionHandler?.setSelection) {
+          this.interactionHandler.setSelection([], null);
+        } else {
+          this.interactionHandler?.setSelectedWaypoint?.(null);
+        }
         this.uiController?.setSelection([], null);
         // One pass through the shared deleted pipeline: one undo
         // snapshot, one path recalc, one autosave. The deselected event
@@ -488,7 +509,11 @@ export const wiringControllersMixin = {
       this.selectedWaypoint = newWaypoint;
       this.selectedWaypoints = [newWaypoint];
       this.uiController?.setSelection([newWaypoint], newWaypoint);
-      this.interactionHandler?.setSelectedWaypoint(newWaypoint);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection([newWaypoint], newWaypoint);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(newWaypoint);
+      }
       
       // Update path and UI
       this.generatePathData();
