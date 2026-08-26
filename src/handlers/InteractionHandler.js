@@ -25,7 +25,7 @@
  * | Arrows | Nudge waypoint (zoom-proportional, Shift for larger) |
  * | +/- | Zoom in/out |
  * | Del | Delete selected waypoint |
- * | Tab | Select next/prev waypoint |
+ * | Tab | Native browser focus navigation |
  * | T | Toggle waypoint type |
  * | Ctrl+Z | Undo (Shift for redo) |
  * | ? | Help |
@@ -207,7 +207,7 @@ export class InteractionHandler {
             waypoint: hit.waypoint,
             imgX: imgPos.x,
             imgY: imgPos.y,
-            imageToCanvas: hit.imageToCanvas
+            imageToScreen: hit.imageToScreen
           });
         });
         return;

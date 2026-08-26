@@ -1,6 +1,7 @@
 {
   "name": "route-plotter",
   "version": "3.2.0",
+  "private": true,
   "description": "Route Plotter v3 - Interactive path animation tool",
   "type": "module",
   "packageManager": "npm@11.5.1",

@@ -16,9 +16,10 @@
  * crowd cards — the handlers no-op headless without their elements).
  */
 
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { EventBus } from '../src/core/EventBus.js';
 import { Waypoint } from '../src/models/Waypoint.js';
+import { UndoService } from '../src/services/UndoService.js';
 import { editorPanelMixin } from '../src/app/editorPanel.js';
 import { wiringControllersMixin } from '../src/app/wiringControllers.js';
 import { undoRedoMixin } from '../src/app/undoRedo.js';
@@ -295,6 +296,48 @@ describe('waypoint:nudge with a multi-selection', () => {
     expect(b.imgX).toBeCloseTo(0.61, 10);
     expect(a.imgX).toBeCloseTo(0.2, 10);
   });
+
+  test('a burst of nudges becomes one undo step for the whole selection', () => {
+    vi.useFakeTimers();
+    try {
+      const a = makeWaypoint({ imgX: 0.2, imgY: 0.2 });
+      const b = makeWaypoint({ imgX: 0.6, imgY: 0.6 });
+      const app = makeApp({ waypoints: [a, b] });
+      app.scene = { toJSON: () => ({}) };
+      app.styles = {};
+      app.undoService = new UndoService(app.eventBus);
+      app._undoDebounceTimer = null;
+      app._getUndoableState = undoRedoMixin._getUndoableState;
+      app.saveUndoState = undoRedoMixin.saveUndoState;
+      app.saveUndoStateDebounced = undoRedoMixin.saveUndoStateDebounced;
+
+      app.eventBus.emit('waypoint:selected', a);
+      app.eventBus.emit('waypoint:toggle-select', b);
+      app.saveUndoState();
+
+      for (let i = 0; i < 3; i++) {
+        app.eventBus.emit('waypoint:nudge', {
+          waypoint: a,
+          dxFraction: 0.01,
+          dyFraction: 0,
+        });
+      }
+
+      expect(app.undoService.canUndo()).toBe(false);
+      vi.advanceTimersByTime(399);
+      expect(app.undoService.canUndo()).toBe(false);
+      vi.advanceTimersByTime(1);
+      expect(app.undoService.canUndo()).toBe(true);
+
+      const beforeBurst = app.undoService.undo();
+      expect(beforeBurst.waypoints[0].imgX).toBeCloseTo(0.2, 10);
+      expect(beforeBurst.waypoints[1].imgX).toBeCloseTo(0.6, 10);
+      expect(app.undoService.canUndo()).toBe(false);
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
+  });
 });
 
 // ── Undo: the multi-selection survives snapshot → restore ───────────
@@ -322,7 +365,9 @@ describe('undo snapshot and restore of the multi-selection', () => {
       _addWaypointToMap(wp) { this.waypointsById.set(wp.id, wp); },
       uiController: {
         selections: [],
-        setSelection(wps, primary) { this.selections.push({ wps: [...wps], primary }); }
+        editors: [],
+        setSelection(wps, primary) { this.selections.push({ wps: [...wps], primary }); },
+        updateWaypointEditor(primary, multi) { this.editors.push({ primary, multi }); }
       },
       interactionHandler: { setSelectedWaypoint() {} }
     };
@@ -355,6 +400,9 @@ describe('undo snapshot and restore of the multi-selection', () => {
     const last = app.uiController.selections.at(-1);
     expect(last.wps.map(wp => wp.id)).toEqual([a.id, b.id]);
     expect(last.primary?.id).toBe(b.id);
+    const editor = app.uiController.editors.at(-1);
+    expect(editor.primary).toBe(app.selectedWaypoint);
+    expect(editor.multi).toEqual(app.selectedWaypoints);
   });
 
   test('single selection restores as a one-waypoint selection array', () => {
@@ -383,6 +431,7 @@ describe('UIController multi-select', () => {
       <div id="scope-chip" data-scope="route">
         <button id="scope-prev-btn"></button>
         <span id="scope-chip-text">Editing · Route</span>
+        <button id="scope-route-btn" disabled>Route</button>
         <button id="scope-next-btn"></button>
       </div>
       <ul id="waypoint-list"></ul>
@@ -455,6 +504,35 @@ describe('UIController multi-select', () => {
     ui.setSelection([a, minor, b], b);
     ui.updateWaypointList([a, minor, b, c]);
     expect(chipText()).toBe('Editing · 3 waypoints (1 minor)');
+  });
+
+  test('Route button exits single and multi waypoint scope but not route or crowd scope', () => {
+    ui.updateWaypointList([a, b, c]);
+    const routeButton = document.getElementById('scope-route-btn');
+    const deselected = [];
+    bus.on('waypoint:deselected', () => deselected.push(true));
+
+    ui.setSelection([a], a);
+    ui.updateWaypointEditor(a);
+    expect(routeButton.disabled).toBe(false);
+    routeButton.click();
+
+    ui.setSelection([a, b], b);
+    ui.updateWaypointEditor(b, [a, b]);
+    expect(routeButton.disabled).toBe(false);
+    routeButton.click();
+    expect(deselected).toHaveLength(2);
+
+    ui.setSelection([], null);
+    ui.updateWaypointEditor(null);
+    expect(routeButton.disabled).toBe(true);
+    routeButton.click();
+
+    bus.emit('crowd:selected', { name: 'Visitors' });
+    ui.updateWaypointEditor(null);
+    expect(routeButton.disabled).toBe(true);
+    routeButton.click();
+    expect(deselected).toHaveLength(2);
   });
 
   test('setSelection keeps the list rows in sync with an app-decided selection', () => {

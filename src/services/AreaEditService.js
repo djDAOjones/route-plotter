@@ -73,8 +73,8 @@ export class AreaEditService {
     });
     
     // Area edit drag events (emitted by InteractionHandler)
-    this.eventBus.on('area:edit-start', ({ waypoint, imgX, imgY, imageToCanvas }) => {
-      this._startDrag(waypoint, imgX, imgY, imageToCanvas);
+    this.eventBus.on('area:edit-start', ({ waypoint, imgX, imgY, imageToScreen }) => {
+      this._startDrag(waypoint, imgX, imgY, imageToScreen);
     });
     
     this.eventBus.on('area:edit-move', ({ imgX, imgY }) => {
@@ -93,12 +93,10 @@ export class AreaEditService {
    * @param {Object} waypoint - Waypoint to test
    * @param {number} screenX - Screen X (CSS pixels relative to canvas)
    * @param {number} screenY - Screen Y (CSS pixels relative to canvas)
-   * @param {Function} imageToCanvas - Coordinate transform
-   * @param {number} displayWidth - Canvas width
-   * @param {number} displayHeight - Canvas height
+   * @param {Function} imageToScreen - Image-to-screen coordinate transform
    * @returns {{type: string, vertexIndex?: number}|null} Hit result or null
    */
-  hitTest(waypoint, screenX, screenY, imageToCanvas, displayWidth, displayHeight) {
+  hitTest(waypoint, screenX, screenY, imageToScreen) {
     if (!waypoint?.hasAreaHighlight()) return null;
     
     const ah = waypoint.areaHighlight;
@@ -106,7 +104,7 @@ export class AreaEditService {
     
     if (shape === 'circle' || shape === 'rectangle') {
       // Test center handle
-      const center = imageToCanvas(ah.centerX, ah.centerY);
+      const center = imageToScreen(ah.centerX, ah.centerY);
       const dist = Math.sqrt((screenX - center.x) ** 2 + (screenY - center.y) ** 2);
       if (dist <= HANDLE_HIT_RADIUS) {
         return { type: 'center' };
@@ -116,7 +114,7 @@ export class AreaEditService {
     if (shape === 'polygon' && ah.points && ah.points.length > 0) {
       // Test each vertex handle
       for (let i = 0; i < ah.points.length; i++) {
-        const p = imageToCanvas(ah.points[i].x, ah.points[i].y);
+        const p = imageToScreen(ah.points[i].x, ah.points[i].y);
         const dist = Math.sqrt((screenX - p.x) ** 2 + (screenY - p.y) ** 2);
         if (dist <= HANDLE_HIT_RADIUS) {
           return { type: 'vertex', vertexIndex: i };
@@ -133,9 +131,9 @@ export class AreaEditService {
    * @param {Object} waypoint - Waypoint being edited
    * @param {number} imgX - Normalized image X
    * @param {number} imgY - Normalized image Y
-   * @param {Function} imageToCanvas - Coordinate transform for hit test
+   * @param {Function} imageToScreen - Image-to-screen transform for hit test
    */
-  _startDrag(waypoint, imgX, imgY, imageToCanvas) {
+  _startDrag(waypoint, imgX, imgY, imageToScreen) {
     if (!waypoint?.hasAreaHighlight()) return;
     
     const ah = waypoint.areaHighlight;
@@ -148,9 +146,10 @@ export class AreaEditService {
       this._origCenter = { x: ah.centerX, y: ah.centerY };
     } else if (ah.shape === 'polygon') {
       // Find which vertex is closest to drag start
-      // We need canvas coords for hit testing, so use the imageToCanvas fn
-      const canvasPos = imageToCanvas(imgX, imgY);
-      const hit = this.hitTest(waypoint, canvasPos.x, canvasPos.y, imageToCanvas, 0, 0);
+      // Keep the pointer and the 8px hit radius in screen space so viewport
+      // zoom does not make the target drift away from its rendered handle.
+      const screenPos = imageToScreen(imgX, imgY);
+      const hit = this.hitTest(waypoint, screenPos.x, screenPos.y, imageToScreen);
       if (hit && hit.type === 'vertex') {
         this.isDragging = true;
         this.dragTarget = 'vertex';

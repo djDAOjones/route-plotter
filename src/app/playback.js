@@ -18,15 +18,7 @@ import { ANIMATION } from '../config/constants.js';
 const JKL_MAX_SPEED = 16;
 
 export const playbackMixin = {
-  
-  /**
-   * Compatibility hook for the legacy document listener.
-   * InteractionHandler is the single keyboard dispatcher and emits commands
-   * through EventBus, so this hook must not mutate transport or history state.
-   * @private
-   */
-  _handleKeyDown() {},
-  
+
   /**
    * Reset JKL playback state to defaults
    * Called on pause, stop, reset, and complete events

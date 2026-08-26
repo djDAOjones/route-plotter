@@ -2,11 +2,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, test, expect, vi, afterEach } from 'vitest';
 import { InteractionHandler } from '../src/handlers/InteractionHandler.js';
+import { setupDocumentCommands } from '../src/app/wiringControllers.js';
 import { playbackMixin } from '../src/app/playback.js';
 import { viewportMixin } from '../src/app/viewport.js';
 import { UIController } from '../src/controllers/UIController.js';
 import { initDropdown } from '../src/components/Dropdown.js';
 import { getSplashHelpHTML } from '../src/config/helpContent.js';
+import { getDefaultBindings } from '../src/config/keybindings.js';
 import { EventBus } from '../src/core/EventBus.js';
 import { createFocusTrap } from '../src/utils/focusTrap.js';
 
@@ -78,23 +80,64 @@ describe('review remediation keyboard path', () => {
     expect(toggle).not.toHaveBeenCalled();
   });
 
-  test('the legacy playback key hook cannot dispatch transport or history directly', () => {
-    const context = {
-      animationEngine: { togglePlayPause: vi.fn() },
-      _updatePlayPauseUI: vi.fn(),
+  test('Undo, Redo and Save use one command route for shortcuts and buttons', () => {
+    document.body.innerHTML = `
+      <button id="undo">Undo</button>
+      <button id="redo">Redo</button>
+      <button id="save">Save</button>
+    `;
+    const bus = new EventBus();
+    const app = {
+      eventBus: bus,
+      elements: {
+        undoBtn: document.getElementById('undo'),
+        redoBtn: document.getElementById('redo'),
+        saveProjectBtn: document.getElementById('save'),
+      },
       undo: vi.fn(),
-      redo: vi.fn()
+      redo: vi.fn(),
+      saveProject: vi.fn(),
+    };
+    setupDocumentCommands(app);
+
+    const context = {
+      eventBus: bus,
+      isEditingNetwork: false,
+      selectedWaypoint: null,
+      zoomLevel: 1,
+    };
+    const command = (key, options = {}) => {
+      const event = new KeyboardEvent('keydown', {
+        key,
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+        ...options,
+      });
+      InteractionHandler.prototype.handleKeyDown.call(context, event);
+      expect(event.defaultPrevented).toBe(true);
     };
 
-    playbackMixin._handleKeyDown.call(context,
-      new KeyboardEvent('keydown', { key: ' ', cancelable: true }));
-    playbackMixin._handleKeyDown.call(context,
-      new KeyboardEvent('keydown', { key: 'j', cancelable: true }));
+    command('z');
+    command('z', { shiftKey: true });
+    command('s');
+    expect(app.undo).toHaveBeenCalledTimes(1);
+    expect(app.redo).toHaveBeenCalledTimes(1);
+    expect(app.saveProject).toHaveBeenCalledTimes(1);
 
-    expect(context.animationEngine.togglePlayPause).not.toHaveBeenCalled();
-    expect(context._updatePlayPauseUI).not.toHaveBeenCalled();
-    expect(context.undo).not.toHaveBeenCalled();
-    expect(context.redo).not.toHaveBeenCalled();
+    app.elements.undoBtn.click();
+    app.elements.redoBtn.click();
+    app.elements.saveProjectBtn.click();
+    expect(app.undo).toHaveBeenCalledTimes(2);
+    expect(app.redo).toHaveBeenCalledTimes(2);
+    expect(app.saveProject).toHaveBeenCalledTimes(2);
+  });
+
+  test('Tab waypoint bindings no longer appear in configuration or Help', () => {
+    const bindings = Object.values(getDefaultBindings().keyboard);
+    expect(bindings.some(binding => binding.key === 'Tab')).toBe(false);
+    expect(getSplashHelpHTML()).not.toContain('Select next waypoint');
+    expect(getSplashHelpHTML()).not.toContain('Select previous waypoint');
   });
 
   test('Help disclosure keeps native Summary Tab and Space behaviour', () => {

@@ -549,6 +549,30 @@ kbd{
   overflow-wrap:anywhere;
 }
 
+.scope-route-btn{
+  flex:none;
+  min-width:3.5rem;
+  min-height:2.75rem;
+  padding:0 var(--space-2);
+  border:1px solid currentColor;
+  border-radius:var(--radius-2);
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.scope-route-btn:hover:not(:disabled){
+  background:rgba(0,0,0,0.06);
+}
+
+.scope-route-btn:disabled{
+  border-color:transparent;
+  opacity:0.55;
+  cursor:default;
+}
+
 .scope-nav-btn{
   flex:none;
   min-width:2.75rem;

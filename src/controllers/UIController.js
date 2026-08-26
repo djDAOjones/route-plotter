@@ -228,9 +228,15 @@ export class UIController {
   _setupScopeChip() {
     this._scopeChip = document.getElementById('scope-chip');
     this._scopeChipText = document.getElementById('scope-chip-text');
+    this._scopeRouteBtn = document.getElementById('scope-route-btn');
     this._scopePrevBtn = document.getElementById('scope-prev-btn');
     this._scopeNextBtn = document.getElementById('scope-next-btn');
 
+    this._scopeRouteBtn?.addEventListener('click', () => {
+      if (this.selectedWaypoint || this.selectedWaypoints.size > 0) {
+        this.eventBus.emit('waypoint:deselected');
+      }
+    });
     this._scopePrevBtn?.addEventListener('click', () => this._navigateScope(-1));
     this._scopeNextBtn?.addEventListener('click', () => this._navigateScope(1));
 
@@ -365,6 +371,9 @@ export class UIController {
 
     this._scopeChip.dataset.scope = scope;
     if (this._scopeChipText) this._scopeChipText.textContent = text;
+    if (this._scopeRouteBtn) {
+      this._scopeRouteBtn.disabled = scope !== 'waypoint' && scope !== 'multi';
+    }
 
     // Prev/next stepping: only meaningful in single-selection or route
     // scope — crowds sit outside the step cycle

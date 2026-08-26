@@ -48,6 +48,43 @@ export function reorderWaypointBlocks(waypoints, newMajorOrder) {
   return reordered;
 }
 
+/**
+ * Resolve an area handle against a pointer in screen CSS pixels. Keeping this
+ * boundary explicit prevents viewport zoom/pan from mixing canvas and screen
+ * coordinate spaces.
+ * @param {Object} app - RoutePlotter-compatible orchestrator
+ * @param {number} screenX
+ * @param {number} screenY
+ * @returns {Object|null}
+ */
+export function findAreaHandleAtScreen(app, screenX, screenY) {
+  if (!app.selectedWaypoint || !app.areaEditService) return null;
+  const imageToScreen = (x, y) => app.imageToScreen(x, y);
+  const hit = app.areaEditService.hitTest(
+    app.selectedWaypoint,
+    screenX,
+    screenY,
+    imageToScreen
+  );
+  return hit
+    ? { ...hit, waypoint: app.selectedWaypoint, imageToScreen }
+    : null;
+}
+
+/**
+ * Give document commands one execution owner while allowing toolbar and
+ * keyboard emitters to share the same EventBus route.
+ * @param {Object} app - RoutePlotter-compatible orchestrator
+ */
+export function setupDocumentCommands(app) {
+  app.eventBus.on('history:undo', () => app.undo());
+  app.eventBus.on('history:redo', () => app.redo());
+  app.eventBus.on('file:save', () => void app.saveProject());
+  app.elements.saveProjectBtn?.addEventListener('click', () => app.eventBus.emit('file:save'));
+  app.elements.undoBtn?.addEventListener('click', () => app.eventBus.emit('history:undo'));
+  app.elements.redoBtn?.addEventListener('click', () => app.eventBus.emit('history:redo'));
+}
+
 export const wiringControllersMixin = {
   
   /**
@@ -411,8 +448,8 @@ export const wiringControllersMixin = {
       this.clearAll();
     });
     
-    // Project save/load buttons
-    this.elements.saveProjectBtn?.addEventListener('click', () => this.saveProject());
+    // Project load remains a direct file-picker action. Save joins Undo/Redo
+    // in setupDocumentCommands so toolbar and keyboard share one owner.
     this.elements.loadProjectBtn?.addEventListener('click', () => this.elements.loadProjectInput?.click());
     this.elements.loadProjectInput?.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
@@ -916,20 +953,7 @@ export const wiringControllersMixin = {
     
     // Area highlight handle hit test (for edit dragging)
     this.eventBus.on('area:check-handle', ({ screenX, screenY }, callback) => {
-      if (!this.selectedWaypoint || !this.areaEditService) {
-        if (callback) callback(null);
-        return;
-      }
-      const imageToCanvas = (x, y) => this.imageToCanvas(x, y);
-      const hit = this.areaEditService.hitTest(
-        this.selectedWaypoint, screenX, screenY,
-        imageToCanvas, this.canvas.width, this.canvas.height
-      );
-      if (hit) {
-        if (callback) callback({ ...hit, waypoint: this.selectedWaypoint, imageToCanvas });
-      } else {
-        if (callback) callback(null);
-      }
+      if (callback) callback(findAreaHandleAtScreen(this, screenX, screenY));
     });
 
     // ========== CANVAS HOVER AFFORDANCES (Phase 4) ==========
@@ -946,15 +970,10 @@ export const wiringControllersMixin = {
 
       if (!this.previewMode && !this.areaDrawingService?.isDrawing) {
         // Area handles first (they sit above waypoints when editing)
-        if (this.selectedWaypoint && this.areaEditService) {
-          const handleHit = this.areaEditService.hitTest(
-            this.selectedWaypoint, x, y,
-            (ix, iy) => this.imageToCanvas(ix, iy),
-            this.canvas.width, this.canvas.height
-          );
-          if (handleHit) {
-            hover = { type: 'area-handle', waypoint: this.selectedWaypoint, handle: handleHit };
-          }
+        const areaHandle = findAreaHandleAtScreen(this, x, y);
+        if (areaHandle) {
+          const { waypoint, imageToScreen: _imageToScreen, ...handle } = areaHandle;
+          hover = { type: 'area-handle', waypoint, handle };
         }
 
         if (!hover) {
@@ -1157,14 +1176,8 @@ export const wiringControllersMixin = {
       }
     });
     
-    // Undo/Redo button click handlers
-    this.elements.undoBtn?.addEventListener('click', () => this.undo());
-    this.elements.redoBtn?.addEventListener('click', () => this.redo());
-    
-    // ========== KEYBOARD SHORTCUTS ==========
-    // Centralized keyboard handler for global shortcuts
-    // Delegates to specific handlers for modularity
-    
-    document.addEventListener('keydown', (e) => this._handleKeyDown(e));
+    // Document commands have one EventBus-owned execution path. Both toolbar
+    // buttons and InteractionHandler shortcuts emit these events exactly once.
+    setupDocumentCommands(this);
   }
 };

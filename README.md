@@ -366,9 +366,9 @@ Precise terms used across the codebase.
 
 ## License
 
-`package.json` currently records MIT, but the repository does not yet ship the
-licence text. Reuse terms remain pending maintainer/legal confirmation; see
-REV-09 in the project backlog.
+Route Plotter's first-party source is available under the [MIT License](LICENSE).
+Third-party components retain their own terms; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Author
 
@@ -380,3 +380,5 @@ Joe Bell — University of Nottingham
 - [Live demo](https://djdaojones.github.io/route-plotter/)
 - [Live demo (frozen v2 line)](https://djdaojones.github.io/router-plotter-02/)
 - [Issues](https://github.com/djDAOjones/route-plotter/issues)
+- [Support policy](.github/SUPPORT.md)
+- [Security policy](.github/SECURITY.md)

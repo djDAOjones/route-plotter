@@ -228,6 +228,10 @@ export const undoRedoMixin = {
       this.pathPoints = [];
     }
     this.updateWaypointList();
+    this.uiController?.updateWaypointEditor?.(
+      this.selectedWaypoint,
+      this.selectedWaypoints.length > 1 ? this.selectedWaypoints : null
+    );
     this.updateWaypointEditor();
     
     // Sync swatch pickers to restored waypoint colors
