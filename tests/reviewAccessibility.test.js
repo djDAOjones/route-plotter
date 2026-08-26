@@ -532,6 +532,27 @@ describe('render and static UI regressions', () => {
     ]);
   });
 
+  test('UI-05 keeps route-style actions explicit, card-local and touch-sized', () => {
+    document.body.innerHTML = indexHtml;
+    const actionCards = ['marker', 'on-arrival', 'label', 'leg'];
+    for (const card of actionCards) {
+      const section = document.querySelector(`.settings-section[data-section="${card}"]`);
+      const row = section?.querySelector(':scope > .section-content > .waypoint-card-actions');
+      expect(row, `${card} action row`).not.toBeNull();
+      expect(row.getAttribute('role')).toBe('group');
+      expect(row.querySelector(`[data-card="${card}"][data-card-action="reset"]`)?.type)
+        .toBe('button');
+      expect(row.querySelector(`[data-card="${card}"][data-card-action="apply-onward"]`)?.type)
+        .toBe('button');
+    }
+    expect(document.querySelector(
+      '.settings-section[data-section="area-highlight"] .waypoint-card-actions'
+    )).toBeNull();
+    expect(mainCss).toMatch(
+      /\.waypoint-card-actions \.btn\{[^}]*min-height:var\(--touch-target-min\);/s
+    );
+  });
+
   test('Pacing explains the duration extension only for Comet mode', () => {
     document.body.innerHTML = indexHtml;
     const controller = Object.create(UIController.prototype);

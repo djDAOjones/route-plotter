@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.641</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.641">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.641">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.641">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.641">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.641">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.641">
+  <title>Route Plotter v3.2.643</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.643">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.643">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.643">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.643">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.643">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.643">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -167,7 +167,11 @@
                 <input type="range" id="dot-size" min="4" max="16" value="8" step="1" aria-describedby="dot-size-value" aria-valuetext="8 px">
                 <span id="dot-size-value">8 px</span>
               </label>
-              
+
+              <div class="waypoint-card-actions" role="group" aria-label="Marker actions">
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="marker" aria-label="Reset Marker to route style">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" aria-label="Apply Marker onward">Apply onward</button>
+              </div>
             </div>
           </div>
 
@@ -288,6 +292,10 @@
                   </div>
                 </div>
               </details>
+              <div class="waypoint-card-actions" role="group" aria-label="On arrival actions">
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" aria-label="Reset On arrival to route style">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" aria-label="Apply On arrival onward">Apply onward</button>
+              </div>
             </div>
           </div>
 
@@ -382,6 +390,10 @@
               </div>
                 </div>
               </details>
+              <div class="waypoint-card-actions" role="group" aria-label="Label actions">
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="label" aria-label="Reset Label to route style">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" aria-label="Apply Label style onward">Apply onward</button>
+              </div>
             </div>
           </div>
           
@@ -460,6 +472,10 @@
               </label>
                 </div>
               </details>
+              <div class="waypoint-card-actions" role="group" aria-label="Leg actions">
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="leg" aria-label="Reset Leg to route style">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" aria-label="Apply Leg onward">Apply onward</button>
+              </div>
             </div>
           </div>
           
@@ -1252,6 +1268,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.641"></script>
+  <script src="app.js?v=3.2.643"></script>
 </body>
 </html>

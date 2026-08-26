@@ -2,6 +2,36 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — UI-05 makes card-scale propagation explicit and reversible
+
+**Decision:** Marker, On arrival, Label and Leg end with one compact action
+row. Reset writes canonical route/default values to the card's actual selected
+targets; Apply onward requires exactly one source and writes only later
+route-order targets. Major-only properties continue to skip minors, while Leg
+appearance includes them. Area is deliberately excluded because polygon
+geometry is authored content and already has an explicit Delete action. Label
+actions preserve label text, waypoint names and auto-name state.
+
+**Transaction and state:** Each available action flushes a pending continuous
+edit, performs at most one model transaction, refreshes only its required
+path/timing/list effects, records one immediate undo state and schedules one
+autosave. Visually empty actions are disabled with an accessible reason;
+colour comparisons are case-insensitive and dormant custom-marker assets do
+not create false differences. Custom images reuse the already-admitted runtime
+asset reference while serialisable nested camera data is copied by value.
+Undo/redo also synchronises the inspector's visible route/waypoint scope with
+the restored selection without replaying mutation events.
+
+**Evidence and sequence:** Focused action, wiring and multi-selection tests and
+the canonical production gate cover selection boundaries, content
+preservation, one-step history and persistence. Production Chromium covered
+Marker and On arrival propagation, one-step Undo, no-op and multi-selection
+reasons, autosave/reload, route-scope restoration, a 320 px layout and a clean
+warning/error console. UI-05 leaves the backlog and CROWD-03 becomes Current;
+UI-02 remains an owner sign-off gate and no Icebox trigger is met. The owner's
+requested full history and trajectory remain preserved despite the known
+soft-size warnings.
+
 ## 2026-08-26 — UI-04 makes every multi-edit field honest about disagreement
 
 **Decision:** A waypoint inspector control derives its displayed state from the

@@ -542,6 +542,16 @@ export class SectionController {
       this.helpPlaceholder.innerHTML = html;
     }
   }
+
+  /**
+   * Synchronize waypoint-scope visibility after state is restored without
+   * replaying selection events (which would mutate the restored selection).
+   * @param {boolean} hasSelection - Whether the restored state selects a waypoint
+   */
+  setWaypointSelectionState(hasSelection) {
+    this.hasSelection = Boolean(hasSelection);
+    this._updateUIState();
+  }
   
   /**
    * Force refresh of UI state

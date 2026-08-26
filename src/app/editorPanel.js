@@ -26,6 +26,25 @@ import {
   formatShapeAmplitude,
   setRangeReadout,
 } from '../utils/uiReadouts.js';
+import {
+  WAYPOINT_CARD,
+  applyWaypointCardOnward,
+  getWaypointCardActionState,
+  resetWaypointCard,
+} from '../utils/waypointCardActions.js';
+
+const WAYPOINT_CARD_LABELS = Object.freeze({
+  [WAYPOINT_CARD.MARKER]: 'Marker',
+  [WAYPOINT_CARD.ON_ARRIVAL]: 'On arrival',
+  [WAYPOINT_CARD.LABEL]: 'Label style',
+  [WAYPOINT_CARD.LEG]: 'Leg',
+});
+
+const MAJOR_ONLY_CARDS = new Set([
+  WAYPOINT_CARD.MARKER,
+  WAYPOINT_CARD.ON_ARRIVAL,
+  WAYPOINT_CARD.LABEL,
+]);
 
 export const editorPanelMixin = {
 
@@ -46,6 +65,95 @@ export const editorPanelMixin = {
       ? this.selectedWaypoints
       : (this.selectedWaypoint ? [this.selectedWaypoint] : []);
     return majorsOnly ? targets.filter(wp => wp.isMajor) : targets;
+  },
+
+  _waypointCardSource(card) {
+    if (this.selectionTargets().length !== 1) return null;
+    if (MAJOR_ONLY_CARDS.has(card) && this.selectedWaypoint?.isMajor === false) return null;
+    return this.selectedWaypoint;
+  },
+
+  _syncWaypointCardActions() {
+    const selection = this.selectionTargets();
+    const waypointScope = document.getElementById('waypoint-scope');
+    if (!waypointScope) return;
+
+    for (const card of Object.values(WAYPOINT_CARD)) {
+      const state = getWaypointCardActionState({
+        card,
+        waypoints: this.waypoints,
+        selection,
+        source: this._waypointCardSource(card),
+        styles: this.styles,
+      });
+      const label = WAYPOINT_CARD_LABELS[card];
+      const reset = waypointScope.querySelector(`[data-card="${card}"][data-card-action="reset"]`);
+      const apply = waypointScope.querySelector(`[data-card="${card}"][data-card-action="apply-onward"]`);
+      if (reset) {
+        reset.disabled = !state.canReset;
+        reset.title = state.resetReason;
+        reset.setAttribute('aria-label', state.canReset
+          ? `Reset ${label} to route style`
+          : `Reset ${label}: ${state.resetReason}`);
+      }
+      if (apply) {
+        apply.disabled = !state.canApplyOnward;
+        apply.title = state.applyReason;
+        apply.setAttribute('aria-label', state.canApplyOnward
+          ? `Apply ${label} onward`
+          : `Apply ${label} onward: ${state.applyReason}`);
+      }
+    }
+  },
+
+  _handleWaypointCardAction(card, action) {
+    if (!Object.values(WAYPOINT_CARD).includes(card)) return;
+    const selection = this.selectionTargets();
+    const source = this._waypointCardSource(card);
+    const state = getWaypointCardActionState({
+      card,
+      waypoints: this.waypoints,
+      selection,
+      source,
+      styles: this.styles,
+    });
+    if ((action === 'reset' && !state.canReset) ||
+        (action === 'apply-onward' && !state.canApplyOnward)) return;
+    if (action !== 'reset' && action !== 'apply-onward') return;
+
+    // Resolve any preceding slider gesture before this discrete action so Undo
+    // reaches the exact state the author saw before clicking.
+    this._flushPendingUndo?.();
+    const result = action === 'reset'
+      ? resetWaypointCard(card, selection, this.styles)
+      : applyWaypointCardOnward(card, this.waypoints, source);
+    if (result.changedWaypoints.length === 0) {
+      this._syncWaypointCardActions();
+      return;
+    }
+
+    if (result.effects.beacons) {
+      for (const waypoint of result.changedWaypoints) {
+        this.renderingService?.beaconRenderer?.resetBeacon?.(waypoint.id);
+      }
+    }
+    if (result.effects.path) {
+      this.calculatePath();
+    } else if (result.effects.timing) {
+      this.updateAnimationDuration();
+    }
+    this.validateZoomTransitions?.();
+    if (result.effects.list) this.uiController?.updateWaypointList(this.waypoints);
+    this.updateWaypointEditor();
+    this.queueRender();
+    this.saveUndoState();
+    this.autoSave();
+
+    const label = WAYPOINT_CARD_LABELS[card];
+    const count = result.changedWaypoints.length;
+    this.announce?.(action === 'reset'
+      ? `${label} reset for ${count} ${count === 1 ? 'waypoint' : 'waypoints'}. Undo is available.`
+      : `${label} applied to ${count} later ${count === 1 ? 'waypoint' : 'waypoints'}. Undo is available.`);
   },
 
   /**
@@ -651,6 +759,7 @@ export const editorPanelMixin = {
       // Camera controls are major-keyframed and own their mixed presentation.
       this._updateCameraControls(this.selectedWaypoint);
       this._applyWaypointMixedStates(targets, majorTargets);
+      this._syncWaypointCardActions();
     }
     // Note: Section visibility handled by SectionController which listens to
     // the same waypoint:selected/deselected events that trigger this method.

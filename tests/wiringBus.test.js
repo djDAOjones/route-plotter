@@ -15,6 +15,10 @@ function makeApp() {
     autoSave: vi.fn(),
     updateWaypointList: vi.fn(),
     updateWaypointEditor: vi.fn(),
+    updateAnimationDuration: vi.fn(),
+    recalculateDurationWithSegmentSpeeds: vi.fn(),
+    animationEngine: { dumpSegmentState: vi.fn() },
+    _syncWaypointCardActions: vi.fn(),
     uiController: { updateWaypointList: vi.fn() },
   };
 }
@@ -33,6 +37,7 @@ describe('waypoint style-change event contract', () => {
     expect(app.uiController.updateWaypointList).toHaveBeenCalledWith(app.waypoints);
     expect(app.saveUndoStateDebounced).toHaveBeenCalledTimes(1);
     expect(app.autoSave).toHaveBeenCalledTimes(1);
+    expect(app._syncWaypointCardActions).toHaveBeenCalledTimes(1);
   });
 
   test('an image commit skips only the duplicate history save', () => {
@@ -49,6 +54,22 @@ describe('waypoint style-change event contract', () => {
     expect(app.uiController.updateWaypointList).toHaveBeenCalledWith(app.waypoints);
     expect(app.saveUndoStateDebounced).not.toHaveBeenCalled();
     expect(app.autoSave).toHaveBeenCalledTimes(1);
+    expect(app._syncWaypointCardActions).toHaveBeenCalledTimes(1);
+  });
+
+  test('path, arrival, and speed edits also refresh card action availability', () => {
+    const app = makeApp();
+    wiringBusMixin.setupEventBusListeners.call(app);
+
+    app.eventBus.emit('waypoint:path-property-changed', app.waypoints[0]);
+    app.eventBus.emit('waypoint:pause-changed', {
+      waypoint: app.waypoints[0], pauseTime: 500, pauseMode: 'continuous'
+    });
+    app.eventBus.emit('waypoint:speed-changed', {
+      waypoint: app.waypoints[0], segmentSpeed: 1
+    });
+
+    expect(app._syncWaypointCardActions).toHaveBeenCalledTimes(3);
   });
 });
 

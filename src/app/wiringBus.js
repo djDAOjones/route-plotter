@@ -198,6 +198,7 @@ export const wiringBusMixin = {
     this.eventBus.on('waypoint:style-changed', (_waypoint, { historyAlreadySaved = false } = {}) => {
       this.queueRender(); // Visual update only
       this.uiController.updateWaypointList(this.waypoints); // Sync sidebar dots/labels
+      this._syncWaypointCardActions?.();
       if (!historyAlreadySaved) {
         this.saveUndoStateDebounced(); // Groups slider drags into single undo entry
       }
@@ -265,6 +266,7 @@ export const wiringBusMixin = {
      */
     this.eventBus.on('waypoint:path-property-changed', (waypoint) => {
       this.calculatePath(); // Path appearance changed
+      this._syncWaypointCardActions?.();
       this.saveUndoStateDebounced(); // Groups slider drags into single undo entry
       this.autoSave();
       this.queueRender();
@@ -280,6 +282,7 @@ export const wiringBusMixin = {
       
       // Use unified duration update (accounts for segment speeds and pauses)
       this.updateAnimationDuration();
+      this._syncWaypointCardActions?.();
       this.saveUndoStateDebounced();
       this.autoSave();
     });
@@ -299,6 +302,7 @@ export const wiringBusMixin = {
         // Dump full segment state after recalculation
         this.animationEngine.dumpSegmentState();
       }
+      this._syncWaypointCardActions?.();
       
       this.saveUndoStateDebounced();
       this.autoSave();

@@ -305,6 +305,9 @@ export const undoRedoMixin = {
       this.selectedWaypoints = [this.selectedWaypoint];
     }
     this.uiController?.setSelection(this.selectedWaypoints, this.selectedWaypoint);
+    this.sectionController?.setWaypointSelectionState(
+      Boolean(this.selectedWaypoint || this.selectedWaypoints.length)
+    );
     if (this.interactionHandler?.setSelection) {
       this.interactionHandler.setSelection(this.selectedWaypoints, this.selectedWaypoint);
     } else {

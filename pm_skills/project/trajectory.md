@@ -19,6 +19,11 @@
 
 ## Inspector foundation (shipped 2026-08-26)
 
+UI-05 — Marker, On arrival, Label and Leg cards now reset the selected
+waypoints to route style or apply one waypoint's settings to later applicable
+waypoints as one accessible, undoable transaction; authored label text and
+polygon geometry stay untouched. (2026-08-26) — see decision-log.
+
 UI-04 — Multi-waypoint cards now compare each field's actual write targets and
 show a transient, accessible Mixed state without changing saved projects;
 choosing a value still performs the established shared edit. (2026-08-26) —

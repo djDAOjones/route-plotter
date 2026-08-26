@@ -135,6 +135,12 @@ Nielsen's heuristics are **hard rules**, not aspirations.
   complete task visible in `.section-primary`. Secondary refinements use one
   native `details.section-more` disclosure labelled `More`; compact cards do
   not render an empty tier, and prerequisites never move behind it.
+- Repeated waypoint-card actions use one compact final row. `Reset` applies
+  route/default values to the card's actual selected targets; `Apply onward`
+  requires one source and follows route order. Disable no-op, ambiguous and
+  unavailable actions with a specific accessible reason. Treat the action as
+  one undoable transaction, and never propagate authored content that the card
+  does not explicitly style (for example label text or polygon geometry).
 
 ### Motion discipline
 

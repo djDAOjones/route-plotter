@@ -25,7 +25,13 @@ import { bindMixedControlReset } from '../utils/mixedControlState.js';
 export const wiringDomMixin = {
   
   setupEventListeners() {
-    bindMixedControlReset(document.getElementById('waypoint-scope'));
+    const waypointScope = document.getElementById('waypoint-scope');
+    bindMixedControlReset(waypointScope);
+    waypointScope?.addEventListener('click', event => {
+      const button = event.target.closest?.('[data-card-action][data-card]');
+      if (!button || !waypointScope.contains(button)) return;
+      this._handleWaypointCardAction(button.dataset.card, button.dataset.cardAction);
+    });
 
     // Mode switch toggle (header)
     this.elements.modeToggleBtn?.addEventListener('click', () => {

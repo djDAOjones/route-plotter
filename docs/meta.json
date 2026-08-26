@@ -2552,7 +2552,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 17576,
+      "bytes": 17946,
       "imports": [],
       "format": "esm"
     },
@@ -2689,7 +2689,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 38620,
+      "bytes": 38951,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2751,7 +2751,7 @@
       "format": "esm"
     },
     "src/app/wiringBus.js": {
-      "bytes": 14899,
+      "bytes": 15063,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2834,7 +2834,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 17701,
+      "bytes": 17833,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -3004,8 +3004,24 @@
       ],
       "format": "esm"
     },
+    "src/utils/waypointCardActions.js": {
+      "bytes": 8817,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/app/editorPanel.js": {
-      "bytes": 31068,
+      "bytes": 34921,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3041,6 +3057,11 @@
           "path": "src/utils/uiReadouts.js",
           "kind": "import-statement",
           "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/waypointCardActions.js",
+          "kind": "import-statement",
+          "original": "../utils/waypointCardActions.js"
         }
       ],
       "format": "esm"
@@ -3440,13 +3461,13 @@
     }
   },
   "outputs": {
-    ".docs-build-TjL5Vy/app.js.map": {
+    ".docs-build-zqqkcm/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3064056
+      "bytes": 3086941
     },
-    ".docs-build-TjL5Vy/app.js": {
+    ".docs-build-zqqkcm/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3641,7 +3662,7 @@
           "bytesInOutput": 2379
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 7040
+          "bytesInOutput": 7113
         },
         "src/services/AreaDrawingService.js": {
           "bytesInOutput": 5039
@@ -3689,13 +3710,13 @@
           "bytesInOutput": 1326
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 16323
+          "bytesInOutput": 16511
         },
         "src/models/Waypoint.js": {
           "bytesInOutput": 7163
         },
         "src/app/wiringBus.js": {
-          "bytesInOutput": 5128
+          "bytesInOutput": 5264
         },
         "src/components/ContextMenu.js": {
           "bytesInOutput": 3100
@@ -3710,7 +3731,7 @@
           "bytesInOutput": 2653
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 7895
+          "bytesInOutput": 8003
         },
         "src/app/playback.js": {
           "bytesInOutput": 3545
@@ -3730,8 +3751,11 @@
         "src/app/exporting.js": {
           "bytesInOutput": 5564
         },
+        "src/utils/waypointCardActions.js": {
+          "bytesInOutput": 4621
+        },
         "src/app/editorPanel.js": {
-          "bytesInOutput": 16770
+          "bytesInOutput": 18895
         },
         "src/app/pointer.js": {
           "bytesInOutput": 887
@@ -3767,7 +3791,7 @@
           "bytesInOutput": 21785
         }
       },
-      "bytes": 768223
+      "bytes": 775474
     }
   }
 }

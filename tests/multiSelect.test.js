@@ -464,6 +464,7 @@ describe('undo snapshot and restore of the multi-selection', () => {
       _syncSceneOutlineSelectionAfterRestore: vi.fn(),
       _syncGlobalStyleUI() {},
       _addWaypointToMap(wp) { this.waypointsById.set(wp.id, wp); },
+      sectionController: { setWaypointSelectionState: vi.fn() },
       uiController: {
         selections: [],
         editors: [],
@@ -507,6 +508,7 @@ describe('undo snapshot and restore of the multi-selection', () => {
     const editor = app.uiController.editors.at(-1);
     expect(editor.primary).toBe(app.selectedWaypoint);
     expect(editor.multi).toEqual(app.selectedWaypoints);
+    expect(app.sectionController.setWaypointSelectionState).toHaveBeenCalledWith(true);
   });
 
   test('single selection restores as a one-waypoint selection array', () => {
@@ -520,6 +522,19 @@ describe('undo snapshot and restore of the multi-selection', () => {
 
     expect(app.selectedWaypoints).toHaveLength(1);
     expect(app.selectedWaypoints[0].id).toBe(a.id);
+    expect(app.sectionController.setWaypointSelectionState).toHaveBeenCalledWith(true);
+  });
+
+  test('restoring route scope clears the section controller selection state', () => {
+    const a = makeWaypoint();
+    const app = makeUndoApp([a]);
+
+    const state = app._getUndoableState();
+    app._restoreState(state);
+
+    expect(app.selectedWaypoint).toBeNull();
+    expect(app.selectedWaypoints).toEqual([]);
+    expect(app.sectionController.setWaypointSelectionState).toHaveBeenCalledWith(false);
   });
 });
 

@@ -18,8 +18,9 @@
   [verify: physical iOS Safari + Android Chrome] — Unified Pointer Events,
   captured group drag and cancel/no-op transactions are implemented and green
   in automation plus production Chromium. Record the physical mobile pass.
-- [~] UI-05 — Add per-card Reset to route style and Apply onward now that the
-  card layout and mixed-value rules are stable.
+- [~] CROWD-03 [[detail]](tickets/CROWD-03.md) — Expose seeded walking,
+  release and route-choice variation plus a deterministic Re-roll action,
+  building on the model and UI foundations already shipped.
 - [ ] REV-06 [ready] — Measure idle/paused CPU and a representative
   500-dot/4K scene, then sleep unnecessary animation work; assess
   direct-render coalescing only where profiling supports it and preserve
@@ -32,9 +33,6 @@
 - [ ] UI-02 [ready] [sign-off] — Show minor waypoints as
   indented, selectable, renameable and reorder-visible rows using the approved
   semantic outline.
-- [ ] CROWD-03 [[detail]](tickets/CROWD-03.md) [ready] — Expose seeded
-  walking/release/route-choice variation and re-roll using the deterministic
-  model already present.
 - [ ] CROWD-02 [[detail]](tickets/CROWD-02.md)
   [gated: CROWD-03] — Add the whole-route busyness line graph with
   handles and gradual/step transitions, identical in editor, reload and
