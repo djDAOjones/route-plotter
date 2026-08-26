@@ -44,3 +44,6 @@ Thumbs.db
 
 # Archive folders
 Obsolete/
+
+# User project exports are private unless individually reviewed for publication
+*.zip

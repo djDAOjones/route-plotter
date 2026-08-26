@@ -8,6 +8,7 @@
  */
 import { VIDEO_EXPORT } from '../config/constants.js';
 import { VideoExporter } from '../services/VideoExporter.js';
+import { getRetainedBackgroundDataURL } from './persistence.js';
 
 export const exportingMixin = {
   
@@ -81,7 +82,7 @@ export const exportingMixin = {
    * Uses frame-by-frame capture for consistent output regardless of system performance
    * 
    * Process:
-   * 1. Check browser support
+   * 1. Validate the export request
    * 2. Pause current playback
    * 3. Resize canvas to export resolution
    * 4. Initialize VideoExporter
@@ -91,13 +92,6 @@ export const exportingMixin = {
    * 8. Restore canvas to display resolution
    */
   async exportVideo() {
-    // Check browser support first
-    const support = VideoExporter.checkSupport();
-    if (!support.supported) {
-      alert(`Video export not supported in this browser: ${support.reason}`);
-      return;
-    }
-    
     // Validate we have something to export
     if (this.waypoints.length < 2) {
       alert('Please add at least 2 waypoints before exporting.');
@@ -277,8 +271,12 @@ export const exportingMixin = {
     this.announce('Starting HTML export');
     
     try {
+      // Standalone exports preserve the exact validated source data URL. Never
+      // draw the live image to a canvas or silently change its format/bytes.
+      const backgroundDataURL = getRetainedBackgroundDataURL(this, 'exporting HTML');
+
       // Estimate file size first
-      const sizeEstimate = await this.htmlExportService.estimateSize(this.background.image);
+      const sizeEstimate = await this.htmlExportService.estimateSize(backgroundDataURL);
       console.log(`📦 Estimated HTML export size: ${sizeEstimate.formatted}`);
 
       // Phase 5: embed the canonical project snapshot (persistence mixin's
@@ -287,7 +285,7 @@ export const exportingMixin = {
       // modules. includeCamera/includeText travel inside exportSettings.
       const blob = await this.htmlExportService.exportHTML({
         projectData: this._buildProjectSnapshot(),
-        backgroundImage: this.background.image,
+        backgroundDataURL,
         title: 'Route animation'
       });
       

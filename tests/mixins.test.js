@@ -21,6 +21,7 @@ import { editorPanelMixin } from '../src/app/editorPanel.js';
 import { pointerMixin } from '../src/app/pointer.js';
 import { crowdsMixin } from '../src/app/crowds.js';
 import { networkMixin } from '../src/app/network.js';
+import { privacyMixin } from '../src/app/privacy.js';
 import { snapToAngle } from '../src/utils/snapToAngle.js';
 import { sliderToPathWidth, pathWidthToSlider } from '../src/utils/pathWidthScale.js';
 
@@ -39,6 +40,7 @@ const MIXINS = {
   pointerMixin,
   crowdsMixin,
   networkMixin,
+  privacyMixin,
 };
 
 describe('RoutePlotter prototype mixins', () => {
@@ -79,6 +81,7 @@ describe('RoutePlotter prototype mixins', () => {
     expect(typeof pointerMixin.findWaypointAt).toBe('function');
     expect(typeof crowdsMixin.addCrowd).toBe('function');
     expect(typeof networkMixin.findNetworkTargetAt).toBe('function');
+    expect(typeof privacyMixin.requestProjectSave).toBe('function');
   });
 });
 

@@ -425,6 +425,32 @@ export class ImageAssetService {
     }
     return false;
   }
+
+  /**
+   * Remove only assets absent from the caller's complete live/history root
+   * set. Validation happens before mutation so a malformed collector result
+   * cannot turn into a partial destructive sweep.
+   * @param {Iterable<string>} referencedIds
+   * @returns {string[]} Removed IDs in stable asset insertion order
+   */
+  pruneUnreferenced(referencedIds) {
+    if (!referencedIds || typeof referencedIds === 'string' ||
+        typeof referencedIds[Symbol.iterator] !== 'function') {
+      throw new Error('Image asset references must be an iterable of IDs');
+    }
+    const retained = new Set(referencedIds);
+    if ([...retained].some(id => typeof id !== 'string' || id.length === 0)) {
+      throw new Error('Image asset references must contain non-empty string IDs');
+    }
+
+    const removed = [];
+    for (const id of this.getAssetIds()) {
+      if (retained.has(id)) continue;
+      this.removeAsset(id);
+      removed.push(id);
+    }
+    return removed;
+  }
   
   /**
    * Clear all assets

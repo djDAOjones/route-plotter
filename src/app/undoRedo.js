@@ -8,6 +8,8 @@
  */
 import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
+import { PROJECT_ARCHIVE_LIMITS, SIZE_LIMITS } from '../services/ImageAssetService.js';
+import { collectImageAssetReferences, planImageAssetAdmission } from '../utils/assetReferences.js';
 
 function updatePathHeadPreview(app, asset = null) {
   if (app.elements?.headPreview) app.elements.headPreview.style.display = asset ? 'block' : 'none';
@@ -17,6 +19,17 @@ function updatePathHeadPreview(app, asset = null) {
     else if (app.elements.headPreviewImg.removeAttribute) app.elements.headPreviewImg.removeAttribute('src');
     else app.elements.headPreviewImg.src = '';
   }
+}
+
+function pruneUnreferencedImageAssets(app) {
+  if (!app.imageAssetService?.pruneUnreferenced ||
+      !app.undoService?.getRetainedSerializedStates ||
+      typeof app._getUndoableState !== 'function') return [];
+  const references = collectImageAssetReferences([
+    app._getUndoableState(),
+    ...app.undoService.getRetainedSerializedStates(),
+  ]);
+  return app.imageAssetService.pruneUnreferenced(references);
 }
 
 export const undoRedoMixin = {
@@ -55,6 +68,7 @@ export const undoRedoMixin = {
       this._undoDebounceTimer = null;
     }
     this.undoService.saveState(this._getUndoableState());
+    pruneUnreferencedImageAssets(this);
   },
   
   /**
@@ -71,6 +85,7 @@ export const undoRedoMixin = {
     this._undoDebounceTimer = setTimeout(() => {
       this._undoDebounceTimer = null;
       this.undoService.saveState(this._getUndoableState());
+      pruneUnreferencedImageAssets(this);
     }, 400);
   },
   
@@ -84,7 +99,130 @@ export const undoRedoMixin = {
       clearTimeout(this._undoDebounceTimer);
       this._undoDebounceTimer = null;
       this.undoService.saveState(this._getUndoableState());
+      pruneUnreferencedImageAssets(this);
     }
+  },
+
+  /**
+   * Sweep assets that are unreachable from both the live model and every
+   * retained undo/redo snapshot. If reference collection fails, no service
+   * mutation is attempted.
+   * @returns {string[]} Removed asset IDs
+   */
+  pruneImageAssets() {
+    return pruneUnreferencedImageAssets(this);
+  },
+
+  /**
+   * Commit one interactive marker/head image edit as a synchronous model,
+   * asset, and history transaction. Imports deliberately bypass this path and
+   * retain their detached stage/commit boundary.
+   *
+   * @param {Object} options
+   * @param {import('../models/ImageAsset.js').ImageAsset} options.candidate
+   * @param {Function} options.apply - Apply the candidate ID/image to live model state.
+   * @param {Function} options.rollback - Restore the prior live model fields.
+   * @returns {{asset: Object, isNew: boolean, warning: string|null, historyShortenedBy: number, removedIds: string[]}}
+   */
+  commitImageAssetEdit({ candidate, apply, rollback }) {
+    if (!candidate || typeof apply !== 'function' || typeof rollback !== 'function') {
+      throw new Error('Image asset edit requires a candidate, apply, and rollback');
+    }
+
+    // A prior debounced action must become a real root before this discrete
+    // image action plans any history loss.
+    this._flushPendingUndo();
+    const historyBefore = this.undoService.createSnapshot();
+    const assetsBefore = this.imageAssetService.getAssets();
+    const existedBefore = Boolean(this.imageAssetService.getAsset(candidate.id));
+    let liveApplied = false;
+    let outcome;
+
+    try {
+      // Treat the callback as having entered the live-model transaction before
+      // invoking it. A callback that mutates one target and then throws must
+      // still restore every target through the caller's rollback closure.
+      liveApplied = true;
+      apply(candidate);
+      const nextState = this._getUndoableState();
+      const preview = this.undoService.previewSaveState(nextState);
+
+      if (!preview.saved) {
+        // Re-selecting the identical image is not a new branch and must not
+        // invalidate redo or shorten history.
+        const result = this.imageAssetService.addAsset(candidate);
+        outcome = {
+          ...result,
+          historyShortenedBy: 0,
+          removedIds: [],
+        };
+      } else {
+        const plan = planImageAssetAdmission({
+          assets: assetsBefore,
+          candidate,
+          prospectiveUndoStates: preview.undoStack,
+          limits: PROJECT_ARCHIVE_LIMITS,
+        });
+        if (!plan.fits) throw new Error(plan.error);
+
+        // No event/render/await occurs between the validated asset replacement
+        // and the one history assignment, so observers never see mismatched
+        // model references and bytes.
+        this.imageAssetService.replaceAssets(plan.nextAssets);
+        const saved = this.undoService.saveState(nextState, {
+          discardOldest: plan.additionalDiscardCount,
+        });
+        if (!saved.saved) throw new Error('Image edit did not create an undo state');
+
+        const asset = this.imageAssetService.getAsset(candidate.id);
+        const warning = asset.size > SIZE_LIMITS.SINGLE_IMAGE_WARN
+          ? `Image "${asset.name}" is ${asset.getFormattedSize()}. Large images may slow down the app.`
+          : null;
+        outcome = {
+          asset,
+          isNew: !existedBefore,
+          warning,
+          historyShortenedBy: saved.additionalDiscardCount,
+          removedIds: plan.removedIds,
+        };
+      }
+    } catch (error) {
+      const rollbackErrors = [];
+      if (liveApplied) {
+        try {
+          rollback();
+        } catch (rollbackError) {
+          console.error('Image reference rollback failed:', rollbackError);
+          rollbackErrors.push(rollbackError);
+        }
+      }
+      try {
+        this.imageAssetService.replaceAssets(assetsBefore);
+      } catch (rollbackError) {
+        console.error('Image asset rollback failed:', rollbackError);
+        rollbackErrors.push(rollbackError);
+      }
+      try {
+        this.undoService.restoreSnapshot(historyBefore);
+      } catch (rollbackError) {
+        console.error('Image history rollback failed:', rollbackError);
+        rollbackErrors.push(rollbackError);
+      }
+      if (rollbackErrors.length > 0) {
+        throw new AggregateError(
+          [error, ...rollbackErrors],
+          'Image edit failed and rollback was incomplete'
+        );
+      }
+      throw error;
+    }
+
+    if (outcome.historyShortenedBy > 0) {
+      const count = outcome.historyShortenedBy;
+      const message = `Image added. Undo history was shortened by ${count} additional ${count === 1 ? 'step' : 'steps'} to stay within project image limits.`;
+      this.eventBus?.emit('ui:toast', { message, duration: 8000 });
+    }
+    return outcome;
   },
   
   /**
@@ -240,6 +378,7 @@ export const undoRedoMixin = {
     refreshSwatchPicker('#path-head-color');
     
     this.render();
+    pruneUnreferencedImageAssets(this);
     this.autoSave();
   },
   

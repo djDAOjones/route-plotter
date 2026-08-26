@@ -27,6 +27,7 @@ import {
   beginAsyncProjectOperation,
   isAsyncProjectOperationCurrent,
 } from './operationGeneration.js';
+import { assertSafeStoredColor } from '../utils/safeColor.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_WAYPOINTS: 2000,
@@ -135,6 +136,28 @@ function assertSafeProjectTree(root) {
   }
 }
 
+/**
+ * Validate project metadata without charging separately bounded bitmap payloads
+ * against the text-field budget. Older recovery records stored original image
+ * data URLs inline; those bytes are still validated by ImageAsset's MIME,
+ * signature, byte and pixel limits before they can enter live state.
+ *
+ * @param {Object} projectData
+ */
+function assertSafeProjectEnvelope(projectData) {
+  const metadata = { ...projectData };
+  if (typeof metadata.backgroundImage === 'string') {
+    metadata.backgroundImage = null;
+  }
+  if (Array.isArray(metadata.imageAssets)) {
+    metadata.imageAssets = metadata.imageAssets.map(asset => {
+      if (!asset || typeof asset !== 'object' || Array.isArray(asset)) return asset;
+      return typeof asset.base64 === 'string' ? { ...asset, base64: null } : asset;
+    });
+  }
+  assertSafeProjectTree(metadata);
+}
+
 function safeClone(value) {
   if (value == null) return value;
   assertSafeProjectTree(value);
@@ -161,6 +184,24 @@ function stageWaypoints(data) {
       }
       ids.add(serialized.id);
     }
+    for (const field of ['segmentColor', 'dotColor']) {
+      assertSafeStoredColor(serialized[field], `waypoint ${field} at index ${index}`, {
+        allowTransparent: true,
+      });
+    }
+    for (const field of ['labelColor', 'labelBgColor']) {
+      assertSafeStoredColor(serialized[field], `waypoint ${field} at index ${index}`);
+    }
+    assertSafeStoredColor(
+      serialized.areaHighlight?.fillColor,
+      `waypoint area fillColor at index ${index}`,
+      { allowTransparent: true }
+    );
+    assertSafeStoredColor(
+      serialized.areaHighlight?.borderColor,
+      `waypoint area borderColor at index ${index}`,
+      { allowTransparent: true }
+    );
     const numericFields = [
       'segmentWidth', 'segmentSpeed', 'shapeAmplitude', 'shapeFrequency',
       'dotSize', 'rippleThickness', 'rippleMaxScale', 'pulseAmplitude',
@@ -308,6 +349,9 @@ function assertProjectSettings(data) {
   assertFiniteFields(data.styles, ['pathThickness', 'dotSize', 'graphicsScale'], 'style');
   assertFiniteFields(data.styles?.pathHead, ['size', 'rotationOffset'], 'path-head style');
   assertFiniteFields(data.styles?.pathGlow, ['intensity'], 'path-glow style');
+  assertSafeStoredColor(data.styles?.pathColor, 'style pathColor');
+  assertSafeStoredColor(data.styles?.dotColor, 'style dotColor');
+  assertSafeStoredColor(data.styles?.pathHead?.color, 'path-head colour');
   if (data.styles?.graphicsScale != null &&
       (Number(data.styles.graphicsScale) <= 0 || Number(data.styles.graphicsScale) > 16)) {
     throw new Error('Invalid graphics scale');
@@ -321,7 +365,7 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
   if (!projectData || typeof projectData !== 'object' || Array.isArray(projectData)) {
     throw new Error('Invalid project data');
   }
-  assertSafeProjectTree(projectData);
+  assertSafeProjectEnvelope(projectData);
   assertProjectSettings(projectData);
 
   const waypoints = stageWaypoints(projectData.waypoints);
@@ -441,31 +485,45 @@ function getUndoBaseline(staged) {
   };
 }
 
-function encodeBackgroundForAutosave(app) {
+/**
+ * Return the exact validated bytes that produced the live background image.
+ *
+ * The historical `_autosaveBackgroundCache` field is actually a short-lived
+ * source-byte cache. It must never be populated by drawing the image to a
+ * canvas: ZIP and HTML exports preserve the user's PNG/JPEG/WebP bytes, while
+ * browser recovery deliberately excludes them.
+ *
+ * @param {Object} app
+ * @param {string} [action]
+ * @returns {string|null}
+ */
+export function getRetainedBackgroundDataURL(app, action = 'exporting') {
   const image = app.background?.image;
   if (!image) return null;
-  if (app._autosaveBackgroundCache?.image === image) return app._autosaveBackgroundCache.dataURL;
 
-  const width = Number(image.naturalWidth || image.width);
-  const height = Number(image.naturalHeight || image.height);
-  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0 ||
-      width > IMAGE_LIMITS.MAX_DIMENSION || height > IMAGE_LIMITS.MAX_DIMENSION ||
-      width * height > IMAGE_LIMITS.MAX_PIXELS) {
-    throw new Error('Background exceeds the autosave pixel budget');
+  const retained = app._autosaveBackgroundCache;
+  const unavailableMessage =
+    `Original background bytes are unavailable. Reload the PNG, JPEG, or WebP background before ${action}.`;
+  if (retained?.image !== image || typeof retained.dataURL !== 'string') {
+    throw new Error(unavailableMessage);
   }
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('Background autosave canvas is unavailable');
-  context.drawImage(image, 0, 0);
-  const dataURL = canvas.toDataURL('image/png');
-  const metadata = ImageAsset.inspectDataURL(dataURL);
-  if (metadata.byteLength <= 0 || metadata.byteLength > IMAGE_LIMITS.MAX_BYTES) {
-    throw new Error('Background exceeds the 16 MB autosave image limit');
+
+  try {
+    const metadata = ImageAsset.inspectDataURL(retained.dataURL);
+    ImageAsset.assertValidSerialized({
+      id: 'background',
+      name: 'background',
+      base64: retained.dataURL,
+      width: Number(image.naturalWidth || image.width),
+      height: Number(image.naturalHeight || image.height),
+      mimeType: metadata.mimeType,
+      size: metadata.byteLength,
+    }, { maxBytes: PROJECT_ARCHIVE_LIMITS.MAX_BACKGROUND_BYTES });
+  } catch (error) {
+    console.error('Retained background source bytes are invalid:', error);
+    throw new Error(unavailableMessage);
   }
-  app._autosaveBackgroundCache = { image, dataURL };
-  return dataURL;
+  return retained.dataURL;
 }
 
 function getSerializedByteLength(value) {
@@ -497,126 +555,37 @@ function stripAssetReferences(modelSnapshot) {
   };
 }
 
-function makeAutosaveCandidate(modelSnapshot, modelWithoutAssets, imageAssets, backgroundImage, {
-  includeAssets,
-  includeBackground,
-}) {
-  const candidate = {
-    ...(includeAssets ? modelSnapshot : modelWithoutAssets),
-    imageAssets: includeAssets ? imageAssets : [],
-  };
-  if (includeBackground && backgroundImage) candidate.backgroundImage = backgroundImage;
-  return candidate;
-}
-
-function getImagePayloadCharacterLength(imageAssets, backgroundImage, options) {
-  let length = 0;
-  if (options.includeAssets) {
-    for (const asset of imageAssets) {
-      if (typeof asset?.base64 === 'string') length += asset.base64.length;
-    }
-  }
-  if (options.includeBackground && typeof backgroundImage === 'string') {
-    length += backgroundImage.length;
-  }
-  return length;
-}
-
 /**
- * Choose the richest recovery snapshot that actually fits the serialized
- * local-storage envelope. Custom marker/head assets take precedence over the
- * background when only one image category fits; the model-only candidate is
- * always the final fallback.
+ * Build a privacy-bounded browser recovery snapshot. Recovery keeps the route
+ * model but never original bitmap bytes, original image filenames, or custom
+ * image references that cannot be hydrated without those bytes.
  */
 function prepareAutosaveSnapshot(app) {
-  const modelSnapshot = app._buildProjectSnapshot({ includeAssets: false, includeBackground: false });
-  const modelWithoutAssets = stripAssetReferences(modelSnapshot);
-  let modelBytes;
+  const hasAssets = app.imageAssetService?.getAssetCount?.() > 0;
+  const hasBackground = Boolean(app.background?.image);
   try {
-    modelBytes = getSerializedByteLength(modelWithoutAssets);
+    const modelSnapshot = app._buildProjectSnapshot({ includeAssets: false });
+    const snapshot = {
+      ...stripAssetReferences(modelSnapshot),
+      imageAssets: [],
+    };
+    if (getSerializedByteLength(snapshot) > STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX) {
+      throw new Error('Project model exceeds the autosave storage limit');
+    }
+    return {
+      snapshot,
+      error: null,
+      omittedAssets: hasAssets,
+      omittedBackground: hasBackground,
+    };
   } catch (error) {
-    return { snapshot: null, error, omittedAssets: false, omittedBackground: false };
-  }
-  if (modelBytes > STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX) {
     return {
       snapshot: null,
-      error: new Error('Project model exceeds the autosave storage limit'),
-      omittedAssets: app.imageAssetService?.getAssetCount?.() > 0,
-      omittedBackground: Boolean(app.background?.image),
+      error,
+      omittedAssets: hasAssets,
+      omittedBackground: hasBackground,
     };
   }
-
-  const hasAssets = app.imageAssetService?.getAssetCount?.() > 0;
-  let imageAssets = [];
-  let assetPreparationError = null;
-  if (hasAssets) {
-    try {
-      imageAssets = app.imageAssetService.toJSON();
-    } catch (error) {
-      assetPreparationError = error;
-    }
-  }
-
-  const hasBackground = Boolean(app.background?.image);
-  let backgroundImage = null;
-  let backgroundPreparationError = null;
-  if (hasBackground) {
-    try {
-      backgroundImage = encodeBackgroundForAutosave(app);
-    } catch (error) {
-      backgroundPreparationError = error;
-    }
-  }
-
-  const candidates = [];
-  if (hasAssets && !assetPreparationError && hasBackground && !backgroundPreparationError) {
-    candidates.push({ includeAssets: true, includeBackground: true });
-  }
-  if (hasAssets && !assetPreparationError) {
-    candidates.push({ includeAssets: true, includeBackground: false });
-  }
-  if (hasBackground && !backgroundPreparationError) {
-    candidates.push({ includeAssets: false, includeBackground: true });
-  }
-  candidates.push({ includeAssets: false, includeBackground: false });
-
-  let candidateError = assetPreparationError || backgroundPreparationError;
-  for (const options of candidates) {
-    // Base64 data URLs are ASCII, so their character count is a lower bound on
-    // the candidate's UTF-8 JSON size. Skip obviously impossible image
-    // candidates before JSON.stringify; valid projects may hold tens of MiB of
-    // image data and autosave runs on ordinary editor changes.
-    const imagePayloadLength = getImagePayloadCharacterLength(imageAssets, backgroundImage, options);
-    if (modelBytes + imagePayloadLength > STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX) continue;
-    const snapshot = makeAutosaveCandidate(
-      modelSnapshot,
-      modelWithoutAssets,
-      imageAssets,
-      backgroundImage,
-      options
-    );
-    try {
-      if (getSerializedByteLength(snapshot) <= STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX) {
-        return {
-          snapshot,
-          error: candidateError,
-          omittedAssets: hasAssets && !options.includeAssets,
-          omittedBackground: hasBackground && !options.includeBackground,
-        };
-      }
-    } catch (error) {
-      candidateError = error;
-    }
-  }
-
-  // The separately measured model candidate should make this unreachable, but
-  // keep the failure explicit if the snapshot changes between measurements.
-  return {
-    snapshot: null,
-    error: candidateError || new Error('No autosave snapshot fits the storage limit'),
-    omittedAssets: hasAssets,
-    omittedBackground: hasBackground,
-  };
 }
 
 function reportAutosaveOmissions(app, { omittedAssets, omittedBackground }) {
@@ -626,12 +595,31 @@ function reportAutosaveOmissions(app, { omittedAssets, omittedBackground }) {
   app._autosaveBackgroundWarningShown = omittedBackground;
 
   if (newlyOmittedAssets && newlyOmittedBackground) {
-    app.announce('Auto-save omitted the background and custom images. Save a project file to preserve them.');
+    app.announce('Browser recovery excludes the background and custom images. Save a project file to preserve them.');
   } else if (newlyOmittedAssets) {
-    app.announce('Auto-save cannot include custom images. Save a project file to preserve them.');
+    app.announce('Browser recovery excludes custom images. Save a project file to preserve them.');
   } else if (newlyOmittedBackground) {
-    app.announce('Auto-save cannot include the background. Save a project file to preserve it.');
+    app.announce('Browser recovery excludes the background. Save a project file to preserve it.');
   }
+}
+
+function replaceImmediateRecovery(app) {
+  if (!app.storageService.saveAutoSave) return { attempted: false, saved: false };
+
+  const prepared = prepareAutosaveSnapshot(app);
+  reportAutosaveOmissions(app, prepared);
+  if (prepared.error) console.warn('Browser recovery snapshot could not be prepared:', prepared.error);
+
+  let saved = false;
+  if (prepared.snapshot) {
+    try {
+      saved = app.storageService.saveAutoSave(prepared.snapshot);
+    } catch (error) {
+      console.error('Failed to write browser recovery:', error);
+    }
+  }
+  if (!saved) app.storageService.clearAutoSave?.();
+  return { attempted: true, saved };
 }
 
 function reportAutosaveFailure(app) {
@@ -844,8 +832,8 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     app.selectedCrowd = null;
     app.pathPoints = [];
     app._majorWaypointsCache = null;
-    app._autosaveBackgroundCache = staged.background.image && staged.backgroundDataURL
-      ? { image: staged.background.image, dataURL: staged.backgroundDataURL }
+    app._autosaveBackgroundCache = staged.background.image && staged.backgroundSourceDataURL
+      ? { image: staged.background.image, dataURL: staged.backgroundSourceDataURL }
       : null;
 
     app.updateImageTransform?.(staged.background.image ?? null);
@@ -865,6 +853,7 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     app.render?.();
 
     app.undoService?.reset?.(getUndoBaseline(staged));
+    app.pruneImageAssets?.();
     app._isDirty = markClean ? false : app._isDirty;
     app.updateTitleIndicator?.();
   } catch (error) {
@@ -937,11 +926,9 @@ export const persistenceMixin = {
         motionSettings: { ...this.motionSettings }
       };
       
-      // Get background image as base64 if present
-      let backgroundBase64 = null;
-      if (this.background.image) {
-        backgroundBase64 = encodeBackgroundForAutosave(this);
-      }
+      // Preserve the original validated PNG/JPEG/WebP bytes exactly. Export
+      // must fail rather than silently substituting a canvas re-encoding.
+      const backgroundBase64 = getRetainedBackgroundDataURL(this, 'saving the project');
       
       // Export as ZIP
       const zipBlob = await this.imageAssetService.exportZip(projectData, backgroundBase64, 'route-project');
@@ -968,7 +955,7 @@ export const persistenceMixin = {
       console.log(`📦 Project saved: ${filename}`);
     } catch (err) {
       console.error('Failed to save project:', err);
-      this.announce('Failed to save project');
+      this.announce(`Failed to save project: ${err.message}`);
     }
   },
   
@@ -990,27 +977,14 @@ export const persistenceMixin = {
         imageAssets: imported.imageAssets,
       });
       if (!isAsyncProjectOperationCurrent(this, operation)) return false;
-      staged.backgroundDataURL = imported.backgroundBase64 || null;
+      staged.backgroundSourceDataURL = imported.backgroundBase64 || null;
       commitStagedProject(this, staged, { markClean: true });
 
       // Replace the previous session's recovery point with the newly loaded
       // project. If the browser quota rejects it, remove the stale recovery
       // point so a reload cannot resurrect the old project.
-      let recoveryUnavailable = false;
-      if (this.storageService.saveAutoSave) {
-        let recoverySaved = false;
-        try {
-          recoverySaved = this.storageService.saveAutoSave(
-            this._buildProjectSnapshot({ includeAssets: true, includeBackground: true })
-          );
-        } catch (error) {
-          console.error('Failed to prepare loaded-project recovery:', error);
-        }
-        if (!recoverySaved) {
-          this.storageService.clearAutoSave?.();
-          recoveryUnavailable = true;
-        }
-      }
+      const recovery = replaceImmediateRecovery(this);
+      const recoveryUnavailable = recovery.attempted && !recovery.saved;
       
       this.announce(recoveryUnavailable
         ? 'Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.'
@@ -1063,18 +1037,15 @@ export const persistenceMixin = {
   /**
    * Build the canonical coordVersion-9 project snapshot.
    *
-   * Single source of the save shape: autoSave() persists it to localStorage
-   * and exportHTML() embeds it verbatim in exported files (Phase 5), so the
-   * exported player always reads exactly what the app would reload.
+   * Single source of the project model shape. Explicit exports can include
+   * custom image assets; browser recovery calls this with includeAssets=false
+   * and then strips unusable custom-image references.
    *
    * @param {Object} [options]
    * @param {boolean} [options.includeAssets=true] - Include custom image assets.
-   * @param {boolean} [options.includeBackground=false] - Include a recoverable
-   *   raster background for local autosave. ZIP/HTML exports handle their
-   *   background bytes separately.
    * @returns {Object} Serialisable project data (coordVersion 9)
    */
-  _buildProjectSnapshot({ includeAssets = true, includeBackground = false } = {}) {
+  _buildProjectSnapshot({ includeAssets = true } = {}) {
     // Create a clean copy of styles without the pathHead image object (but keep imageAssetId)
     const stylesCopy = { ...this.styles };
     if (stylesCopy.pathHead) {
@@ -1129,9 +1100,6 @@ export const persistenceMixin = {
       timingReference: { width: this.displayWidth, height: this.displayHeight }
       // Note: Camera settings are per-waypoint, saved in waypoint.camera
     };
-    if (includeBackground) {
-      snapshot.backgroundImage = encodeBackgroundForAutosave(this);
-    }
     return snapshot;
   },
 
@@ -1179,12 +1147,18 @@ export const persistenceMixin = {
       }
 
       const staged = await stageProject(this, data);
-      staged.backgroundDataURL = data.backgroundImage || null;
+      staged.backgroundSourceDataURL = data.backgroundImage || null;
       commitStagedProject(this, staged);
+      // Legacy recovery points may contain image bytes and original filenames.
+      // Restore them once, then immediately replace or clear the local record
+      // so browser storage conforms to the model-only policy going forward.
+      const recovery = replaceImmediateRecovery(this);
       console.debug(`📷 Loaded ${staged.assets.length} image assets`);
       console.debug('Loaded waypoints:', staged.waypoints.length);
       console.debug('Loaded flow layers:', staged.scene.getFlowLayers().length);
-      this.announce('Previous session restored');
+      this.announce(recovery.attempted && !recovery.saved
+        ? 'Previous session restored, but browser recovery is now unavailable. Save a project file to keep it safe.'
+        : 'Previous session restored');
       return true;
     } catch (error) {
       console.warn('Autosave was not restored; current state was left unchanged:', error);

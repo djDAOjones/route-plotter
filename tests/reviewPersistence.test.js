@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { persistenceMixin } from '../src/app/persistence.js';
+import { persistenceMixin, PROJECT_MODEL_LIMITS } from '../src/app/persistence.js';
 import { undoRedoMixin } from '../src/app/undoRedo.js';
 import { Scene } from '../src/models/Scene.js';
 import { Waypoint } from '../src/models/Waypoint.js';
@@ -132,6 +132,12 @@ function makeApp() {
     jklDirection: 0,
     jklSpeed: 1,
     _buildProjectSnapshot: persistenceMixin._buildProjectSnapshot,
+    _getUndoableState() {
+      return undoRedoMixin._getUndoableState.call(this);
+    },
+    pruneImageAssets() {
+      return undoRedoMixin.pruneImageAssets.call(this);
+    },
   };
   return app;
 }
@@ -338,6 +344,7 @@ describe('transactional project loading', () => {
 
   test('validation failure leaves live state, assets, autosave and history unchanged', async () => {
     const app = makeApp();
+    const prune = vi.spyOn(app, 'pruneImageAssets');
     const before = {
       waypoint: app.waypoints[0],
       scene: app.scene.toJSON(),
@@ -363,6 +370,91 @@ describe('transactional project loading', () => {
     expect(app.storageService.cancelAutoSave).not.toHaveBeenCalled();
     expect(app.storageService.saveAutoSave).not.toHaveBeenCalled();
     expect(app.clearAll).not.toHaveBeenCalled();
+    expect(prune).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    {
+      label: 'waypoint',
+      project: validProject({
+        waypoints: [{ id: 'hostile-waypoint', imgX: 0.2, imgY: 0.3, dotColor: 'url(https://example.invalid/waypoint)' }],
+      }),
+    },
+    {
+      label: 'route style',
+      project: validProject({ styles: { pathColor: 'var(--hostile-colour)' } }),
+    },
+    {
+      label: 'crowd emitter',
+      project: validProject({
+        scene: {
+          flowLayers: [{
+            id: 'hostile-layer',
+            graph: { nodes: [], edges: [] },
+            emitters: [{ id: 'hostile-emitter', dotColor: 'rgb(1, 2, 3)' }],
+          }],
+        },
+      }),
+    },
+  ])('rejects hostile $label colours before replacing live project state', async ({ project }) => {
+    const app = makeApp();
+    const beforeWaypoint = app.waypoints[0];
+    const beforeAssets = app.imageAssetService.getAssetIds();
+    vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
+      projectData: project,
+      backgroundBase64: null,
+      imageAssets: [],
+    });
+
+    await expect(persistenceMixin.loadProject.call(app, { name: 'hostile.zip' }))
+      .resolves.toBe(false);
+
+    expect(app.waypoints[0]).toBe(beforeWaypoint);
+    expect(app.imageAssetService.getAssetIds()).toEqual(beforeAssets);
+    expect(app.storageService.saveAutoSave).not.toHaveBeenCalled();
+  });
+
+  test('reloads the transparent sentinel authored by None-capable swatches', async () => {
+    const app = makeApp();
+    vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
+      projectData: validProject({
+        waypoints: [{
+          id: 'transparent-wp', imgX: 0.2, imgY: 0.3,
+          segmentColor: 'transparent',
+          dotColor: 'transparent',
+          areaHighlight: {
+            enabled: true,
+            shape: 'circle',
+            fillColor: 'transparent',
+            borderColor: 'transparent',
+          },
+        }],
+        scene: {
+          flowLayers: [{
+            id: 'transparent-crowd',
+            name: 'Transparent crowd',
+            graph: { nodes: [], edges: [] },
+            emitters: [{ id: 'transparent-emitter', dotColor: 'transparent' }],
+          }],
+        },
+      }),
+      imageAssets: [],
+      backgroundBase64: null,
+      projectName: 'transparent.zip',
+    });
+
+    await expect(persistenceMixin.loadProject.call(app, new Blob(['zip'])))
+      .resolves.toBe(true);
+
+    expect(app.waypoints[0]).toMatchObject({
+      segmentColor: 'transparent',
+      dotColor: 'transparent',
+      areaHighlight: expect.objectContaining({
+        fillColor: 'transparent',
+        borderColor: 'transparent',
+      }),
+    });
+    expect(app.scene.getFlowLayers()[0].emitters[0].dotColor).toBe('transparent');
   });
 
   test('successful load commits once, hydrates waypoint/head images and resets undo', async () => {
@@ -371,6 +463,7 @@ describe('transactional project loading', () => {
     app._autosaveBackgroundWarningShown = true;
     app._autosaveFailureWarningShown = true;
     const newAsset = makeAsset('new-asset', 'marker.png');
+    const orphanAsset = makeAsset('orphan-asset', 'orphan.png');
     vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
       projectData: validProject({
         waypoints: [{
@@ -380,7 +473,7 @@ describe('transactional project loading', () => {
         styles: { pathHead: { style: 'custom', imageAssetId: 'new-asset', size: 9 } },
       }),
       backgroundBase64: null,
-      imageAssets: [newAsset],
+      imageAssets: [newAsset, orphanAsset],
     });
 
     await persistenceMixin.loadProject.call(app, new Blob(['good']));
@@ -395,11 +488,52 @@ describe('transactional project loading', () => {
     expect(app.storageService.cancelAutoSave).toHaveBeenCalledTimes(1);
     expect(app.storageService.saveAutoSave).toHaveBeenCalledTimes(1);
     expect(app._isDirty).toBe(false);
-    expect(app._autosaveAssetWarningShown).toBe(false);
+    expect(app._autosaveAssetWarningShown).toBe(true);
     expect(app._autosaveBackgroundWarningShown).toBe(false);
     expect(app._autosaveFailureWarningShown).toBe(false);
     expect(app.updateImageTransform).toHaveBeenCalledWith(null);
     expect(app.render).toHaveBeenCalledTimes(1);
+
+    const recovery = app.storageService.saveAutoSave.mock.calls[0][0];
+    expect(recovery.imageAssets).toEqual([]);
+    expect(recovery.waypoints[0]).toMatchObject({
+      markerStyle: 'dot', customImage: null, customImageAssetId: null,
+    });
+    expect(recovery.styles.pathHead).toMatchObject({
+      style: 'arrow', image: null, imageAssetId: null,
+    });
+    expect(JSON.stringify(recovery)).not.toContain('marker.png');
+  });
+
+  test('a prune failure during commit restores the prior model, assets and history', async () => {
+    const app = makeApp();
+    const priorWaypoint = app.waypoints[0];
+    const priorAssets = app.imageAssetService.getAssets();
+    const priorHistory = app.undoService.createSnapshot();
+    const newAsset = makeAsset('new-asset');
+    vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
+      projectData: validProject({
+        waypoints: [{
+          id: 'new-wp', imgX: 0.25, imgY: 0.75,
+          customImageAssetId: 'new-asset', markerStyle: 'custom',
+        }],
+      }),
+      backgroundBase64: null,
+      imageAssets: [newAsset],
+    });
+    vi.spyOn(app, 'pruneImageAssets').mockImplementation(() => {
+      throw new Error('prune failed');
+    });
+
+    await expect(persistenceMixin.loadProject.call(app, new Blob(['good'])))
+      .resolves.toBe(false);
+
+    expect(app.waypoints[0]).toBe(priorWaypoint);
+    expect(app.imageAssetService.getAssets()).toEqual(priorAssets);
+    expect(app.undoService.createSnapshot()).toEqual(priorHistory);
+    expect(app.storageService.cancelAutoSave).not.toHaveBeenCalled();
+    expect(app.storageService.saveAutoSave).not.toHaveBeenCalled();
+    expect(app.announce).toHaveBeenLastCalledWith('Failed to load project: prune failed');
   });
 
   test('an older project uses canonical defaults instead of inheriting the live custom path head', async () => {
@@ -428,6 +562,31 @@ describe('transactional project loading', () => {
     expect(app.motionSettings.aovAngle).toBe(60);
     expect(app.imageAssetService.getAssetIds()).toEqual([]);
     expect(app.updateImageTransform).toHaveBeenCalledWith(null);
+  });
+
+  test('loaded source bytes stay live for export but immediate recovery redacts them', async () => {
+    const app = makeApp();
+    const backgroundImage = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
+    vi.spyOn(ImageAsset, 'decodeDataURL').mockResolvedValue(backgroundImage);
+    vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
+      projectData: validProject(),
+      backgroundBase64: PIXEL_PNG,
+      imageAssets: [makeAsset('private-asset', 'private-source-name.png')],
+    });
+
+    await expect(persistenceMixin.loadProject.call(app, { name: 'source.zip' }))
+      .resolves.toBe(true);
+
+    expect(app._autosaveBackgroundCache).toEqual({
+      image: backgroundImage,
+      dataURL: PIXEL_PNG,
+    });
+    const recovery = app.storageService.saveAutoSave.mock.calls[0][0];
+    const serialized = JSON.stringify(recovery);
+    expect(recovery.imageAssets).toEqual([]);
+    expect(recovery).not.toHaveProperty('backgroundImage');
+    expect(serialized).not.toContain(PIXEL_PNG);
+    expect(serialized).not.toContain('private-source-name.png');
   });
 
   test('a recovery-write failure remains the final perceivable load message', async () => {
@@ -541,23 +700,44 @@ describe('transactional project loading', () => {
     expect(app.announce).toHaveBeenLastCalledWith('Failed to load project: render failed');
   });
 
-  test('autosave snapshot preserves in-budget custom assets and background bytes', () => {
+  test('autosave is model-only even when custom assets and background bytes fit', () => {
     const app = makeApp();
     const saved = {};
     app.markDirty = vi.fn();
     app.imageAssetService.clear();
-    app.imageAssetService.addAsset(makeAsset('marker'));
+    app.imageAssetService.addAsset(makeAsset('marker', 'private-original-filename.png'));
+    app.waypoints = [Waypoint.fromJSON({
+      id: 'custom-wp', imgX: 0.4, imgY: 0.6,
+      markerStyle: 'custom', customImageAssetId: 'marker',
+    })];
+    app.styles.pathHead = {
+      ...app.styles.pathHead,
+      style: 'custom', image: { id: 'head-image' }, imageAssetId: 'marker',
+    };
     app.background.image = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
+    app._autosaveBackgroundCache = { image: app.background.image, dataURL: PIXEL_PNG };
     app.storageService.autoSave.mockImplementation((snapshot) => {
       saved.snapshot = snapshot;
       return { ok: true, pending: true };
     });
-    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(PIXEL_PNG);
+    const canvasEncoding = vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL');
+    const assetSerialization = vi.spyOn(app.imageAssetService, 'toJSON');
 
     persistenceMixin.autoSave.call(app);
 
-    expect(saved.snapshot.imageAssets.map(asset => asset.id)).toEqual(['marker']);
-    expect(saved.snapshot.backgroundImage).toBe(PIXEL_PNG);
+    expect(saved.snapshot.imageAssets).toEqual([]);
+    expect(saved.snapshot).not.toHaveProperty('backgroundImage');
+    expect(saved.snapshot.waypoints[0]).toMatchObject({
+      markerStyle: 'dot', customImage: null, customImageAssetId: null,
+    });
+    expect(saved.snapshot.styles.pathHead).toMatchObject({
+      style: 'arrow', image: null, imageAssetId: null,
+    });
+    const serialized = JSON.stringify(saved.snapshot);
+    expect(serialized).not.toContain(PIXEL_PNG);
+    expect(serialized).not.toContain('private-original-filename.png');
+    expect(canvasEncoding).not.toHaveBeenCalled();
+    expect(assetSerialization).not.toHaveBeenCalled();
   });
 
   test('base64 expansion falls back to a loadable model-only recovery snapshot', async () => {
@@ -616,7 +796,89 @@ describe('transactional project loading', () => {
     });
   });
 
-  test('combined background and asset overflow retains assets and warns about the omitted background once', () => {
+  test('legacy rich recovery is restored once and immediately rewritten model-only', async () => {
+    const app = makeApp();
+    const privateAsset = makeAsset('legacy-asset', 'legacy-private-name.png');
+    const decodedImage = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
+    vi.spyOn(ImageAsset, 'decodeDataURL').mockResolvedValue(decodedImage);
+    app.storageService.loadAutoSave.mockReturnValue({
+      ...validProject({
+        waypoints: [{
+          id: 'legacy-wp', imgX: 0.2, imgY: 0.3,
+          markerStyle: 'custom', customImageAssetId: 'legacy-asset',
+        }],
+        styles: {
+          pathHead: { style: 'custom', imageAssetId: 'legacy-asset', size: 8 },
+        },
+      }),
+      imageAssets: [privateAsset.toJSON()],
+      backgroundImage: PIXEL_PNG,
+    });
+
+    await expect(persistenceMixin.loadAutosave.call(app)).resolves.toBe(true);
+
+    // The live restored project still has the explicitly recovered images.
+    expect(app.imageAssetService.getAssetIds()).toEqual(['legacy-asset']);
+    expect(app.background.image).toBe(decodedImage);
+    expect(app._autosaveBackgroundCache?.dataURL).toBe(PIXEL_PNG);
+
+    // The browser record is immediately migrated to the privacy boundary.
+    const replacement = app.storageService.saveAutoSave.mock.calls[0][0];
+    const serialized = JSON.stringify(replacement);
+    expect(replacement.imageAssets).toEqual([]);
+    expect(replacement).not.toHaveProperty('backgroundImage');
+    expect(replacement.waypoints[0]).toMatchObject({
+      markerStyle: 'dot', customImage: null, customImageAssetId: null,
+    });
+    expect(replacement.styles.pathHead).toMatchObject({
+      style: 'arrow', image: null, imageAssetId: null,
+    });
+    expect(serialized).not.toContain(PIXEL_PNG);
+    expect(serialized).not.toContain('legacy-private-name.png');
+  });
+
+  test('legacy image bytes use image budgets instead of the metadata text-field cap', async () => {
+    const app = makeApp();
+    const payload = `iVBORw0KGgo${'A'.repeat(150001)}`;
+    const largeDataURL = `data:image/png;base64,${payload}`;
+    const { byteLength } = ImageAsset.inspectDataURL(largeDataURL);
+    const privateAsset = new ImageAsset({
+      id: 'legacy-large-asset',
+      base64: largeDataURL,
+      name: 'legacy-large-private-name.png',
+      width: 1,
+      height: 1,
+      mimeType: 'image/png',
+      size: byteLength,
+    });
+    const decodedImage = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
+    vi.spyOn(ImageAsset, 'decodeDataURL').mockResolvedValue(decodedImage);
+    expect(largeDataURL.length).toBeGreaterThan(PROJECT_MODEL_LIMITS.MAX_STRING_LENGTH);
+
+    app.storageService.loadAutoSave.mockReturnValue({
+      ...validProject({
+        waypoints: [{
+          id: 'legacy-large-wp', imgX: 0.2, imgY: 0.3,
+          markerStyle: 'custom', customImageAssetId: 'legacy-large-asset',
+        }],
+      }),
+      imageAssets: [privateAsset.toJSON()],
+      backgroundImage: largeDataURL,
+    });
+
+    await expect(persistenceMixin.loadAutosave.call(app)).resolves.toBe(true);
+    expect(app.imageAssetService.getAssetIds()).toEqual(['legacy-large-asset']);
+    expect(app._autosaveBackgroundCache?.dataURL).toBe(largeDataURL);
+
+    const replacement = app.storageService.saveAutoSave.mock.calls[0][0];
+    const serialized = JSON.stringify(replacement);
+    expect(replacement.imageAssets).toEqual([]);
+    expect(replacement).not.toHaveProperty('backgroundImage');
+    expect(serialized).not.toContain(largeDataURL);
+    expect(serialized).not.toContain('legacy-large-private-name.png');
+  });
+
+  test('recovery exclusion is size-independent and warns once per image category', () => {
     const app = makeApp();
     const saved = {};
     const payloadLength = Math.floor(2.25 * 1024 * 1024);
@@ -624,7 +886,7 @@ describe('transactional project loading', () => {
     app.markDirty = vi.fn();
     app.imageAssetService.clear();
     app.imageAssetService.addAsset(makeAsset('marker'));
-    vi.spyOn(app.imageAssetService, 'toJSON').mockReturnValue([{
+    const assetSerialization = vi.spyOn(app.imageAssetService, 'toJSON').mockReturnValue([{
       id: 'marker', base64: largeDataURL, name: 'marker.png',
       width: 1, height: 1, mimeType: 'image/png', size: payloadLength * 3 / 4,
     }]);
@@ -633,16 +895,19 @@ describe('transactional project loading', () => {
       saved.snapshot = snapshot;
       return { ok: true, pending: true };
     });
-    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(largeDataURL);
+    const canvasEncoding = vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL');
 
     persistenceMixin.autoSave.call(app);
     persistenceMixin.autoSave.call(app);
 
-    expect(saved.snapshot.imageAssets.map(asset => asset.id)).toEqual(['marker']);
+    expect(saved.snapshot.imageAssets).toEqual([]);
     expect(saved.snapshot).not.toHaveProperty('backgroundImage');
     expect(new TextEncoder().encode(JSON.stringify(saved.snapshot)).length)
       .toBeLessThanOrEqual(STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX);
     expect(app.announce.mock.calls.filter(([message]) => message.includes('background'))).toHaveLength(1);
+    expect(app.announce.mock.calls.filter(([message]) => message.includes('custom images'))).toHaveLength(1);
+    expect(assetSerialization).not.toHaveBeenCalled();
+    expect(canvasEncoding).not.toHaveBeenCalled();
   });
 
   test('a synchronous storage rejection is announced only once across callback and return paths', () => {
@@ -663,6 +928,36 @@ describe('transactional project loading', () => {
 });
 
 describe('project save revision tracking', () => {
+  test('ZIP save passes the retained original background data URL unchanged', async () => {
+    const app = makeApp();
+    const backgroundImage = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
+    app.background.image = backgroundImage;
+    app._autosaveBackgroundCache = { image: backgroundImage, dataURL: PIXEL_PNG };
+    app.imageAssetService.exportZip = vi.fn().mockResolvedValue(new Blob(['archive']));
+    app.imageAssetService.downloadZip = vi.fn();
+    const canvasEncoding = vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL');
+
+    await persistenceMixin.saveProject.call(app);
+
+    expect(app.imageAssetService.exportZip).toHaveBeenCalledTimes(1);
+    expect(app.imageAssetService.exportZip.mock.calls[0][1]).toBe(PIXEL_PNG);
+    expect(canvasEncoding).not.toHaveBeenCalled();
+  });
+
+  test('ZIP save fails clearly when live background source bytes are unavailable', async () => {
+    const app = makeApp();
+    app.background.image = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
+    app._autosaveBackgroundCache = null;
+    app.imageAssetService.exportZip = vi.fn();
+
+    await persistenceMixin.saveProject.call(app);
+
+    expect(app.imageAssetService.exportZip).not.toHaveBeenCalled();
+    expect(app.announce).toHaveBeenLastCalledWith(expect.stringMatching(
+      /Failed to save project: Original background bytes are unavailable/
+    ));
+  });
+
   test('an edit made while ZIP generation is pending remains dirty', async () => {
     const app = makeApp();
     app._editRevision = 4;

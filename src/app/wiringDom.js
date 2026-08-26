@@ -259,16 +259,29 @@ export const wiringDomMixin = {
 
           const liveTargets = targets.filter(wp => this.waypoints.includes(wp));
           if (liveTargets.length === 0) return;
-          const { asset, isNew, warning } = this.imageAssetService.addAsset(candidate);
+          const previousTargets = liveTargets.map(waypoint => ({
+            waypoint,
+            customImageAssetId: waypoint.customImageAssetId,
+            customImage: waypoint.customImage,
+          }));
+          const { asset, isNew, warning } = this.commitImageAssetEdit({
+            candidate,
+            apply: nextAsset => {
+              for (const wp of liveTargets) {
+                wp.customImageAssetId = nextAsset.id;
+                wp.customImage = image;
+              }
+            },
+            rollback: () => {
+              for (const previous of previousTargets) {
+                previous.waypoint.customImageAssetId = previous.customImageAssetId;
+                previous.waypoint.customImage = previous.customImage;
+              }
+            },
+          });
 
           if (warning) {
             console.warn(warning);
-          }
-
-          // Store asset ID on every selected waypoint (shared asset)
-          for (const wp of liveTargets) {
-            wp.customImageAssetId = asset.id;
-            wp.customImage = image;
           }
 
           // Update preview
@@ -278,8 +291,11 @@ export const wiringDomMixin = {
             this.elements.markerPreviewImg.src = asset.base64;
           }
 
-          this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
-          this.autoSave();
+          this.eventBus.emit(
+            'waypoint:style-changed',
+            this.selectedWaypoint,
+            { historyAlreadySaved: true }
+          );
 
           console.log(`📷 Waypoint marker image ${isNew ? 'added' : 'reused'}: ${asset.name} (${asset.getFormattedSize()})`);
         } catch (err) {
@@ -550,15 +566,23 @@ export const wiringDomMixin = {
           const image = await candidate.getImageElement();
           if (!isAsyncProjectOperationCurrent(this, token) || this.styles.pathHead !== pathHead) return;
 
-          const { asset, isNew, warning } = this.imageAssetService.addAsset(candidate);
+          const previousAssetId = pathHead.imageAssetId;
+          const previousImage = pathHead.image;
+          const { asset, isNew, warning } = this.commitImageAssetEdit({
+            candidate,
+            apply: nextAsset => {
+              pathHead.imageAssetId = nextAsset.id;
+              pathHead.image = image;
+            },
+            rollback: () => {
+              pathHead.imageAssetId = previousAssetId;
+              pathHead.image = previousImage;
+            },
+          });
           
           if (warning) {
             console.warn(warning);
           }
-          
-          // Store asset ID and get cached image element
-          pathHead.imageAssetId = asset.id;
-          pathHead.image = image;
           
           // Update preview
           this.elements.headPreview.style.display = 'block';
@@ -566,7 +590,6 @@ export const wiringDomMixin = {
           this.elements.headPreviewImg.src = asset.base64;
           
           this.queueRender();
-          this.saveUndoState(); // Discrete action — immediate save
           this.autoSave();
           
           console.log(`📷 Path head image ${isNew ? 'added' : 'reused'}: ${asset.name} (${asset.getFormattedSize()})`);

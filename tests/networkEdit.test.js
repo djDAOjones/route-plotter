@@ -29,6 +29,10 @@ function makeApp() {
       <option value="exit">Exit</option>
     </select>
     <button id="network-node-delete" type="button"></button>
+    <fieldset id="network-path-weights" hidden>
+      <p id="network-path-weights-help"></p>
+      <div id="network-path-weight-rows"></div>
+    </fieldset>
     <select id="network-edge-direction">
       <option value="two-way">Two-way</option>
       <option value="one-way">One-way</option>
@@ -65,7 +69,8 @@ function makeApp() {
   };
   Object.assign(app, networkMixin);
   for (const ev of ['network:edit-mode-changed', 'network:node-selected', 'network:node-deselected',
-                    'network:edge-selected', 'network:edge-deselected', 'network:changed', 'ui:toast']) {
+                    'network:edge-selected', 'network:edge-deselected', 'network:changed',
+                    'crowd:param-changed', 'ui:toast']) {
     app.eventBus.on(ev, (payload) => app.events.push([ev, payload]));
   }
   app.setupNetworkControls();
@@ -426,13 +431,122 @@ describe('mixin glue', () => {
     svc.selectEdge(ab); // weight 1; at b the sibling has weight 3 → 25%
     app.syncNetworkCards();
     const readout = document.getElementById('network-edge-weight-value').textContent;
-    expect(readout).toBe('100% · 25% of departures');
+    expect(readout).toBe('100% · 25% configured shares');
 
     ab.setDirection('one-way'); // departures from a only
     app.syncNetworkCards();
     expect(document.getElementById('network-edge-weight-value').textContent)
-      .toBe('100% of departures');
+      .toBe('100% configured share');
     expect(a.id).toBe(ab.sourceId);
+  });
+
+  test('junction rows edit all competing path weights and keep percentages at 100', () => {
+    const layer = enterMode(app);
+    const junction = layer.graph.addNode({ id: 'junction', x: 0.5, y: 0.5 });
+    const exitA = layer.graph.addNode({ id: 'exit-a', x: 0.9, y: 0.2, type: 'exit' });
+    const exitB = layer.graph.addNode({ id: 'exit-b', x: 0.9, y: 0.8, type: 'exit' });
+    const heavy = layer.graph.addEdge({
+      id: 'heavy', sourceId: junction.id, targetId: exitA.id, direction: 'one-way', weight: 3
+    });
+    const light = layer.graph.addEdge({
+      id: 'light', sourceId: junction.id, targetId: exitB.id, direction: 'one-way', weight: 1
+    });
+
+    svc.selectNode(junction);
+
+    const fieldset = document.getElementById('network-path-weights');
+    const inputs = [...document.querySelectorAll('.network-path-weight-row input')];
+    const names = [...document.querySelectorAll('.network-path-weight-name')].map(el => el.textContent);
+    const outputs = () => [...document.querySelectorAll('.network-path-weight-value')]
+      .map(el => el.textContent);
+    expect(fieldset.hidden).toBe(false);
+    expect(names).toEqual(['Path 1 to exit 1', 'Path 2 to exit 2']);
+    expect(outputs()).toEqual(['Weight 3 · 75%', 'Weight 1 · 25%']);
+
+    const paramEventsBefore = app.events.filter(([event]) => event === 'crowd:param-changed').length;
+    inputs[1].value = '3';
+    inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(heavy.weight).toBe(3);
+    expect(light.weight).toBe(3);
+    expect(outputs()).toEqual(['Weight 3 · 50%', 'Weight 3 · 50%']);
+    expect(app.events.filter(([event]) => event === 'crowd:param-changed'))
+      .toHaveLength(paramEventsBefore + 1);
+  });
+
+  test('junction rows hide without a choice and reject non-positive input', () => {
+    const layer = enterMode(app);
+    const source = layer.graph.addNode({ x: 0.1, y: 0.5 });
+    const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
+    const exitA = layer.graph.addNode({ x: 0.9, y: 0.2, type: 'exit' });
+    const exitB = layer.graph.addNode({ x: 0.9, y: 0.8, type: 'exit' });
+    layer.graph.addEdge({ sourceId: source.id, targetId: junction.id, direction: 'one-way' });
+    const first = layer.graph.addEdge({ sourceId: junction.id, targetId: exitA.id, direction: 'one-way' });
+
+    svc.selectNode(junction);
+    expect(document.getElementById('network-path-weights').hidden).toBe(true);
+
+    layer.graph.addEdge({ sourceId: junction.id, targetId: exitB.id, direction: 'one-way' });
+    app.syncNetworkCards();
+    const input = document.querySelector('.network-path-weight-row input');
+    expect(document.getElementById('network-path-weights').hidden).toBe(false);
+    const paramEventsBefore = app.events.filter(([event]) => event === 'crowd:param-changed').length;
+    input.value = '0';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(first.weight).toBe(1);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(app.events.filter(([event]) => event === 'crowd:param-changed'))
+      .toHaveLength(paramEventsBefore);
+  });
+
+  test('junction rows rebuild from fresh edge objects after restore', () => {
+    const layer = enterMode(app);
+    const junction = layer.graph.addNode({ id: 'junction', x: 0.5, y: 0.5 });
+    const a = layer.graph.addNode({ id: 'a', x: 0.9, y: 0.2, type: 'exit' });
+    const b = layer.graph.addNode({ id: 'b', x: 0.9, y: 0.8, type: 'exit' });
+    layer.graph.addEdge({ id: 'a-edge', sourceId: junction.id, targetId: a.id, weight: 3 });
+    layer.graph.addEdge({ id: 'b-edge', sourceId: junction.id, targetId: b.id, weight: 1 });
+    svc.selectNode(junction);
+
+    app.scene.fromJSON(app.scene.toJSON());
+    const fresh = app.scene.getFlowLayer(layer.id);
+    app.selectedCrowd = fresh;
+    app.resolveNetworkAfterRestore();
+
+    expect(svc.selectedNode()).toBe(fresh.graph.getNode(junction.id));
+    expect([...document.querySelectorAll('.network-path-weight-value')].map(el => el.textContent))
+      .toEqual(['Weight 3 · 75%', 'Weight 1 · 25%']);
+  });
+
+  test('selected-junction guide widths preview shares without changing edge colour', () => {
+    const layer = enterMode(app);
+    const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
+    const a = layer.graph.addNode({ x: 0.9, y: 0.2, type: 'exit' });
+    const b = layer.graph.addNode({ x: 0.9, y: 0.8, type: 'exit' });
+    layer.graph.addEdge({ sourceId: junction.id, targetId: a.id, weight: 3 });
+    layer.graph.addEdge({ sourceId: junction.id, targetId: b.id, weight: 1 });
+    svc.selectNode(junction);
+
+    const strokes = [];
+    const ctx = {
+      save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {},
+      closePath() {}, arc() {}, rect() {}, fill() {},
+      stroke() { strokes.push({ width: this.lineWidth, style: this.strokeStyle }); },
+    };
+    svc.renderGuide(
+      { scaleSizeClamped: value => value },
+      ctx,
+      {
+        swarmEngine: app.swarmEngine,
+        imageToCanvas: (x, y) => ({ x: x * SCALE, y: y * SCALE }),
+      },
+      layer
+    );
+
+    expect(strokes[0].width).toBeGreaterThan(strokes[1].width);
+    expect(strokes[1].width).toBeGreaterThan(2);
+    expect(strokes[0].style).toBe(strokes[1].style);
   });
 
   test('restore re-binds the fresh layer and re-resolves the selection by id', () => {
@@ -473,5 +587,17 @@ describe('mixin glue', () => {
     layer.graph.addNode({ x: 0.8, y: 0.2 });
     app.updateGuideCard();
     expect(document.getElementById('crowd-guide-hint').textContent).toMatch(/2 nodes, 0 edges/);
+  });
+
+  test('a route-free network explains the timing needed for preview and export', () => {
+    const layer = app.scene.addFlowLayer({ guideType: 'graph', emitters: [{}] });
+    app.selectedCrowd = layer;
+    app.waypoints = [];
+
+    app.updateGuideCard();
+
+    const hint = document.getElementById('crowd-guide-hint').textContent;
+    expect(hint).toMatch(/at least two route waypoints/);
+    expect(hint).toMatch(/previewing or exporting/);
   });
 });

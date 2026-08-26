@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "approval": {
+    "approvedOn": "2026-08-26",
+    "approvedBy": "owner",
+    "scope": "The exact bytes of the six listed built-in background images are approved for public publication."
+  },
+  "assets": [
+    {
+      "path": "images/Court.png",
+      "sha256": "ff7a7436c6cf42afa9d8ee4a5d69d2c94de60f84fc920e58ec22d3fff1693bb5"
+    },
+    {
+      "path": "images/Garlic.jpg",
+      "sha256": "87031c28a3eb6788e9fddcf91393c6f0f80114da22a819a5f3bcaefe90dd5cc6"
+    },
+    {
+      "path": "images/Nervous_System.jpg",
+      "sha256": "25792a838d1a5ebb9d9457375d611198e7e0e6b383c0cf8cc88d1bcd11f1be05"
+    },
+    {
+      "path": "images/PARM_Aerial.jpg",
+      "sha256": "380a6ead0f0a8c179eeee798a835605e8416f1055354b26b6a17c3be22e996af"
+    },
+    {
+      "path": "images/Rocketry.jpg",
+      "sha256": "07e7cd19facb06dc9071929e21ec0130c266467fd9127e15634e2e9e71b05ec8"
+    },
+    {
+      "path": "images/UoN_map.png",
+      "sha256": "2951edd4fd35392948b337224e2820cc6ca64916ebded1f6beb7c789e85d0bea"
+    }
+  ]
+}

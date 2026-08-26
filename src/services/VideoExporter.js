@@ -4,12 +4,9 @@
  * ## Encoding Strategies
  * 
  * ### Primary: WebCodecs (VideoEncoder) + Mediabunny muxer
- * Uses explicit timestamps per frame, completely immune to browser tab
- * throttling. The user can freely switch tabs during export without
- * affecting output quality or duration.
- * - Chrome 94+, Edge 94+: Full VP8 support
- * - Safari 16.4+: May not support VP8; falls back to MediaRecorder
- * - Firefox: No WebCodecs support; falls back to MediaRecorder
+ * Uses explicit timestamps per frame, so browser timer throttling cannot
+ * stretch the authored video timeline. Runtime capability probes choose a
+ * container-compatible encoder; no browser/version matrix is assumed here.
  * 
  * ### Fallback: MediaRecorder + visibility-aware pause
  * Uses captureStream(0) for manual frame control. Enhanced with
@@ -45,22 +42,117 @@
  * - video:export-error     { error }
  * 
  * ## Browser Support
- * - Chrome 94+/Edge 94+: WebCodecs (VP8, immune to tab throttling)
- * - Firefox: MediaRecorder fallback (pauses on tab switch)
- * - Safari 14.1+: MediaRecorder fallback (pauses on tab switch)
+ * Support is determined at export time by probing the exact codec, container,
+ * capture stream, and manual-frame controls required by the requested format.
+ * Cross-browser claims remain an explicit release-verification item.
  */
 
 import { Output, WebMOutputFormat, Mp4OutputFormat, BufferTarget, EncodedVideoPacketSource, EncodedPacket } from 'mediabunny';
 import { VIDEO_EXPORT } from '../config/constants.js';
+
+const VIDEO_FORMATS = new Set(['mp4', 'webm']);
+const WEBM_RECORDER_MIME_TYPES = [
+  'video/webm;codecs=vp9',
+  'video/webm;codecs=vp8',
+  'video/webm'
+];
+
+const DEFAULT_MEDIA_API = Object.freeze({
+  Output,
+  WebMOutputFormat,
+  Mp4OutputFormat,
+  BufferTarget,
+  EncodedVideoPacketSource,
+  EncodedPacket
+});
+
+/**
+ * Build the one authoritative sampling plan used by every video encoder.
+ *
+ * Animation duration determines how many frame slots are available; those
+ * slots sample progress 0 through 1 inclusively. The start buffer adds its
+ * own repeated progress-0 slots. `frameCount` is therefore both the intended
+ * video length at the requested rate and the exact count emitted.
+ */
+export function createVideoFramePlan({ frameRate, duration, startBuffer = 0 }) {
+  if (!Number.isFinite(frameRate) || frameRate <= 0) {
+    throw new Error('Invalid frame rate: must be positive');
+  }
+  if (!Number.isFinite(duration) || duration <= 0) {
+    throw new Error('Invalid duration: must be positive');
+  }
+  if (!Number.isFinite(startBuffer) || startBuffer < 0) {
+    throw new Error('Invalid start buffer: must not be negative');
+  }
+
+  const startBufferFrames = Math.ceil((startBuffer / 1000) * frameRate);
+  // A video shorter than one frame still needs both authored endpoints. Two
+  // samples are the smallest honest representation of progress 0 through 1.
+  const animationFrames = Math.max(2, Math.ceil((duration / 1000) * frameRate));
+  const frameCount = startBufferFrames + animationFrames;
+  const frameDurationUs = Math.round(1_000_000 / frameRate);
+
+  const sampleAt = (frameIndex) => {
+    if (!Number.isInteger(frameIndex) || frameIndex < 0 || frameIndex >= frameCount) {
+      throw new RangeError(`Frame index ${frameIndex} is outside the export plan`);
+    }
+
+    return Object.freeze({
+      frameIndex,
+      ordinal: frameIndex + 1,
+      progress: frameIndex < startBufferFrames
+        ? 0
+        : Math.min(1, (frameIndex - startBufferFrames) / (animationFrames - 1)),
+      timestampUs: frameIndex * frameDurationUs,
+      percent: frameCount === 1
+        ? 100
+        : Math.round((frameIndex / (frameCount - 1)) * 100)
+    });
+  };
+
+  return Object.freeze({
+    frameRate,
+    duration,
+    startBuffer,
+    startBufferFrames,
+    animationFrames,
+    frameCount,
+    frameDurationUs,
+    sampleAt,
+    *samples() {
+      for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+        yield sampleAt(frameIndex);
+      }
+    }
+  });
+}
+
+function unsupportedPlan(format, reason) {
+  return Object.freeze({
+    supported: false,
+    strategy: null,
+    format,
+    mimeType: null,
+    reason
+  });
+}
+
+function stopMediaStream(stream) {
+  if (typeof stream?.getTracks !== 'function') return;
+  for (const track of stream.getTracks()) {
+    if (typeof track.stop === 'function') track.stop();
+  }
+}
 
 export class VideoExporter {
   /**
    * @param {HTMLCanvasElement} canvas - Canvas element to capture
    * @param {EventBus} eventBus - Event bus for status updates
    */
-  constructor(canvas, eventBus = null) {
+  constructor(canvas, eventBus = null, mediaApi = DEFAULT_MEDIA_API) {
     this.canvas = canvas;
     this.eventBus = eventBus;
+    this._mediaApi = mediaApi;
     this.isExporting = false;
     this.abortController = null;
   }
@@ -68,45 +160,153 @@ export class VideoExporter {
   // ========== SUPPORT DETECTION ==========
 
   /**
-   * Check if any video export is supported in this browser.
-   * Reports which strategy will be used.
+   * Coarse synchronous support hint retained for callers that cannot await a
+   * real capability plan. Export execution never relies on this hint.
+   * @param {'mp4'|'webm'} [format]
    * @returns {{ supported: boolean, strategy: string|null, mimeType: string|null, reason: string|null }}
    */
-  static checkSupport() {
-    // Check WebCodecs first (preferred — immune to tab throttling)
+  static checkSupport(format = 'webm') {
+    if (!VIDEO_FORMATS.has(format)) {
+      return { supported: false, mimeType: null, strategy: null, reason: `Unknown video format: ${format}` };
+    }
+
     const hasWebCodecs = typeof VideoEncoder !== 'undefined' &&
-                         typeof VideoFrame !== 'undefined';
-    
+                         typeof VideoFrame !== 'undefined' &&
+                         typeof VideoEncoder.isConfigSupported === 'function';
     if (hasWebCodecs) {
-      // WebCodecs detected — actual codec check happens async in export()
-      return { supported: true, mimeType: 'video/webm', strategy: 'webcodecs', reason: null };
+      return {
+        supported: true,
+        mimeType: format === 'mp4' ? 'video/mp4' : 'video/webm',
+        strategy: 'webcodecs',
+        reason: null
+      };
     }
 
-    // Fall back to MediaRecorder
-    if (typeof MediaRecorder === 'undefined') {
-      return { supported: false, mimeType: null, strategy: null, reason: 'No video export API available' };
+    // MP4 is intentionally H.264 WebCodecs-only. A generic MediaRecorder
+    // result is not evidence that its MP4 output can satisfy this export.
+    if (format === 'mp4') {
+      return {
+        supported: false,
+        mimeType: null,
+        strategy: null,
+        reason: 'MP4 export requires H.264 WebCodecs support'
+      };
     }
 
-    const formats = [
-      'video/webm;codecs=vp9',
-      'video/webm;codecs=vp8',
-      'video/webm',
-      'video/mp4'
-    ];
-
-    for (const format of formats) {
-      if (MediaRecorder.isTypeSupported(format)) {
-        return { supported: true, mimeType: format, strategy: 'mediarecorder', reason: null };
-      }
-    }
-
-    return { supported: false, mimeType: null, strategy: null, reason: 'No supported video format found' };
+    const hasRecorder = typeof MediaRecorder !== 'undefined' &&
+                        typeof MediaRecorder.isTypeSupported === 'function';
+    const mimeType = hasRecorder
+      ? WEBM_RECORDER_MIME_TYPES.find(candidate => MediaRecorder.isTypeSupported(candidate))
+      : null;
+    return mimeType
+      ? { supported: true, mimeType, strategy: 'mediarecorder', reason: null }
+      : { supported: false, mimeType: null, strategy: null, reason: 'No WebM video export API available' };
   }
 
   /**
-   * Find the best WebCodecs encoder config for the given dimensions.
-   * Tries H.264 with hardware acceleration first (fast on all modern
-   * hardware), then falls back to VP8.
+   * Resolve and lock the complete export capability before emitting a frame.
+   * The returned plan never crosses the requested container boundary. The
+   * MediaRecorder fallback is WebM-only and carries the exact stream/track
+   * whose manual-frame API was proven here.
+   *
+   * @param {Object} options
+   * @returns {Promise<Object>}
+   */
+  static async createExportPlan({
+    format = 'mp4',
+    width,
+    height,
+    frameRate = VIDEO_EXPORT.DEFAULT_FRAME_RATE,
+    videoBitrate = VIDEO_EXPORT.DEFAULT_BITRATE,
+    canvas = null
+  }) {
+    if (!VIDEO_FORMATS.has(format)) {
+      return unsupportedPlan(format, `Unknown video format: ${format}`);
+    }
+
+    const codecConfig = await VideoExporter._testWebCodecsConfig(
+      width,
+      height,
+      videoBitrate,
+      frameRate,
+      format
+    );
+    if (codecConfig?._container === format) {
+      return Object.freeze({
+        supported: true,
+        strategy: 'webcodecs',
+        format,
+        mimeType: format === 'mp4' ? 'video/mp4' : 'video/webm',
+        codecConfig,
+        reason: null
+      });
+    }
+
+    if (format === 'mp4') {
+      return unsupportedPlan(format, 'MP4 export requires a supported H.264 WebCodecs encoder');
+    }
+
+    if (typeof MediaRecorder === 'undefined' ||
+        typeof MediaRecorder.isTypeSupported !== 'function') {
+      return unsupportedPlan(format, 'WebM export requires WebCodecs or MediaRecorder support');
+    }
+    if (typeof canvas?.captureStream !== 'function') {
+      return unsupportedPlan(format, 'This browser cannot capture the export canvas');
+    }
+
+    const mimeType = WEBM_RECORDER_MIME_TYPES.find(candidate => {
+      try {
+        return MediaRecorder.isTypeSupported(candidate);
+      } catch {
+        return false;
+      }
+    });
+    if (!mimeType) {
+      return unsupportedPlan(format, 'No supported WebM MediaRecorder format was found');
+    }
+
+    let mediaStream;
+    try {
+      mediaStream = canvas.captureStream(0);
+      const videoTracks = typeof mediaStream?.getVideoTracks === 'function'
+        ? mediaStream.getVideoTracks()
+        : [];
+      const videoTrack = videoTracks[0];
+      if (!videoTrack || typeof videoTrack.requestFrame !== 'function') {
+        stopMediaStream(mediaStream);
+        return unsupportedPlan(format, 'This browser cannot manually capture reliable video frames');
+      }
+
+      const mediaRecorder = new MediaRecorder(mediaStream, {
+        mimeType,
+        videoBitsPerSecond: videoBitrate
+      });
+      const requiredRecorderMethods = ['start', 'stop', 'pause', 'resume'];
+      if (requiredRecorderMethods.some(method => typeof mediaRecorder[method] !== 'function')) {
+        stopMediaStream(mediaStream);
+        return unsupportedPlan(format, 'This browser lacks the MediaRecorder controls required for reliable export');
+      }
+
+      return Object.freeze({
+        supported: true,
+        strategy: 'mediarecorder',
+        format,
+        mimeType,
+        mediaStream,
+        videoTrack,
+        mediaRecorder,
+        dispose: () => stopMediaStream(mediaStream),
+        reason: null
+      });
+    } catch (error) {
+      stopMediaStream(mediaStream);
+      return unsupportedPlan(format, `The WebM MediaRecorder fallback could not be prepared: ${error.message}`);
+    }
+  }
+
+  /**
+   * Find the best WebCodecs encoder config for the requested container and
+   * dimensions. MP4 probes H.264 only; WebM probes VP9 then VP8.
    *
    * Returns an augmented config with `_container` ('mp4'|'webm') and
    * `_muxCodec` (the codec name Mediabunny expects) for the muxer.
@@ -119,7 +319,9 @@ export class VideoExporter {
    * @private
    */
   static async _testWebCodecsConfig(width, height, bitrate = VIDEO_EXPORT.DEFAULT_BITRATE, framerate = VIDEO_EXPORT.DEFAULT_FRAME_RATE, format = 'mp4') {
-    if (typeof VideoEncoder === 'undefined') return null;
+    if (typeof VideoEncoder === 'undefined' ||
+        typeof VideoFrame === 'undefined' ||
+        typeof VideoEncoder.isConfigSupported !== 'function') return null;
 
     // Codec candidates filtered by requested format
     // MP4: H.264 (AVCC format for MP4 muxing, even dimensions required)
@@ -178,7 +380,7 @@ export class VideoExporter {
 
   /**
    * Export animation as video file.
-   * Automatically selects the best encoding strategy for the current browser.
+   * Selects a proven encoding strategy without changing the requested format.
    * 
    * @param {Object} options - Export options
    * @param {number} options.frameRate - Frames per second (default: 25)
@@ -189,6 +391,7 @@ export class VideoExporter {
    * @param {Function} [options.onError] - Called with Error on failure
    * @param {number} [options.videoBitrate] - Video bitrate (default: 20Mbps)
    * @param {number} [options.startBuffer] - Static frames at start in ms (default: 0)
+   * @param {Object} [options.capabilityPlan] - A pre-resolved, format-locked capability plan
    * @returns {Promise<Blob>} Video blob
    */
   async export(options) {
@@ -201,7 +404,8 @@ export class VideoExporter {
       onComplete = () => {},
       onError = () => {},
       videoBitrate = VIDEO_EXPORT.DEFAULT_BITRATE,
-      startBuffer = 0
+      startBuffer = 0,
+      capabilityPlan = null
     } = options;
 
     // Validate inputs
@@ -226,34 +430,63 @@ export class VideoExporter {
 
     this.isExporting = true;
     this.abortController = new AbortController();
+    let selectedPlan = capabilityPlan;
 
     try {
-      // Check WebCodecs support for the actual export dimensions
-      const codecConfig = await VideoExporter._testWebCodecsConfig(
-        this.canvas.width, this.canvas.height, videoBitrate, frameRate, format
-      );
+      const framePlan = createVideoFramePlan({ frameRate, duration, startBuffer });
+      selectedPlan ||= await VideoExporter.createExportPlan({
+        format,
+        width: this.canvas.width,
+        height: this.canvas.height,
+        frameRate,
+        videoBitrate,
+        canvas: this.canvas
+      });
 
-      if (codecConfig) {
+      if (!selectedPlan?.supported) {
+        throw new Error(`Video export not supported: ${selectedPlan?.reason || 'No compatible encoder found'}`);
+      }
+      if (selectedPlan.format !== format) {
+        throw new Error(`Video export plan format mismatch: requested ${format}, received ${selectedPlan.format}`);
+      }
+
+      if (selectedPlan.strategy === 'webcodecs') {
+        const { codecConfig } = selectedPlan;
+        if (!codecConfig || codecConfig._container !== format) {
+          throw new Error(`WebCodecs plan cannot produce the requested ${format.toUpperCase()} container`);
+        }
         const hw = codecConfig.hardwareAcceleration || 'unknown';
         console.log(`\ud83c\udfac [VideoExporter] Using WebCodecs: ${codecConfig._label} (${codecConfig._container}) \u2014 hw=${hw}`);
         return await this._exportWebCodecs({
-          frameRate, duration, renderFrame, onProgress, onComplete, videoBitrate, startBuffer,
+          frameRate,
+          duration,
+          renderFrame,
+          onProgress,
+          onComplete,
+          videoBitrate,
+          framePlan,
           codecConfig
         });
       }
 
-      // Fallback to MediaRecorder with visibility-aware pause
-      const support = VideoExporter.checkSupport();
-      if (!support.supported) {
-        const error = new Error(`Video export not supported: ${support.reason}`);
-        onError(error);
-        throw error;
+      if (selectedPlan.strategy !== 'mediarecorder' ||
+          selectedPlan.format !== 'webm' ||
+          !selectedPlan.mimeType?.startsWith('video/webm') ||
+          !selectedPlan.mediaStream ||
+          typeof selectedPlan.videoTrack?.requestFrame !== 'function' ||
+          !selectedPlan.mediaRecorder) {
+        throw new Error('MediaRecorder plan does not prove a reliable WebM export path');
       }
 
       console.log('🎬 [VideoExporter] Using MediaRecorder fallback (pauses on tab switch)');
       return await this._exportMediaRecorder({
-        frameRate, duration, renderFrame, onProgress, onComplete, videoBitrate, startBuffer,
-        mimeType: support.mimeType
+        frameRate,
+        duration,
+        renderFrame,
+        onProgress,
+        onComplete,
+        framePlan,
+        capabilityPlan: selectedPlan
       });
 
     } catch (error) {
@@ -263,6 +496,13 @@ export class VideoExporter {
       throw error;
 
     } finally {
+      if (selectedPlan?.strategy === 'mediarecorder') {
+        if (typeof selectedPlan.dispose === 'function') {
+          selectedPlan.dispose();
+        } else {
+          stopMediaStream(selectedPlan.mediaStream);
+        }
+      }
       this.isExporting = false;
       this.abortController = null;
     }
@@ -308,15 +548,20 @@ export class VideoExporter {
    * (frameIndex × frameDuration), making the output immune to
    * setTimeout throttling in background tabs.
    * 
-   * Uses Mediabunny for WebM container muxing.
+   * Uses Mediabunny for MP4/WebM container muxing.
    * @private
    */
-  async _exportWebCodecs({ frameRate, duration, renderFrame, onProgress, onComplete, videoBitrate, startBuffer, codecConfig }) {
-    const startBufferFrames = Math.ceil((startBuffer / 1000) * frameRate);
-    const animationFrames = Math.ceil((duration / 1000) * frameRate);
-    const totalFrames = startBufferFrames + animationFrames;
-    const frameDurationUs = Math.round(1_000_000 / frameRate); // microseconds per frame
+  async _exportWebCodecs({ frameRate, duration, renderFrame, onProgress, onComplete, videoBitrate, framePlan, codecConfig }) {
+    const totalFrames = framePlan.frameCount;
     const isH264 = codecConfig.codec.startsWith('avc1');
+    const {
+      Output: OutputClass,
+      WebMOutputFormat: WebMOutputFormatClass,
+      Mp4OutputFormat: Mp4OutputFormatClass,
+      BufferTarget: BufferTargetClass,
+      EncodedVideoPacketSource: EncodedVideoPacketSourceClass,
+      EncodedPacket: EncodedPacketClass
+    } = this._mediaApi;
 
     console.warn(`🎬 [VideoExporter] STEP 1/4: Setup — ${totalFrames} frames at ${frameRate}fps, ` +
       `${this.canvas.width}×${this.canvas.height}, ${(videoBitrate / 1_000_000).toFixed(0)}Mbps, ` +
@@ -329,169 +574,195 @@ export class VideoExporter {
     // ── Step 2: Initialize muxer ──
     const isMP4 = codecConfig._container === 'mp4';
     const mimeType = isMP4 ? 'video/mp4' : 'video/webm';
-    let output, videoSource;
-    try {
-      output = new Output({
-        format: isMP4 ? new Mp4OutputFormat() : new WebMOutputFormat(),
-        target: new BufferTarget(),
-      });
-      videoSource = new EncodedVideoPacketSource(codecConfig._muxCodec);
-      output.addVideoTrack(videoSource, { frameRate });
-      await output.start();
-      console.warn(`🎬 [VideoExporter] STEP 2/4: Muxer ready (${isMP4 ? 'MP4' : 'WebM'})`);
-    } catch (e) {
-      console.error('❌ [VideoExporter] Muxer init failed:', e);
-      throw e;
-    }
-
-    await this._yieldToMain();
-
-    // ── Step 3: Initialize encoder ──
-    let encoder, encoderError = null;
+    let output = null;
+    let videoSource = null;
+    let encoder = null;
+    let encoderError = null;
+    let finalized = false;
     let muxCount = 0;
+
     try {
-      encoder = new VideoEncoder({
-        output: async (chunk, meta) => {
-          try {
-            await videoSource.add(EncodedPacket.fromEncodedChunk(chunk), meta);
-            muxCount++;
-          } catch (e) {
-            console.error('❌ [VideoExporter] Muxer add packet failed:', e);
+      try {
+        output = new OutputClass({
+          format: isMP4 ? new Mp4OutputFormatClass() : new WebMOutputFormatClass(),
+          target: new BufferTargetClass(),
+        });
+        videoSource = new EncodedVideoPacketSourceClass(codecConfig._muxCodec);
+        output.addVideoTrack(videoSource, { frameRate });
+        await output.start();
+        console.warn(`🎬 [VideoExporter] STEP 2/4: Muxer ready (${isMP4 ? 'MP4' : 'WebM'})`);
+      } catch (e) {
+        console.error('❌ [VideoExporter] Muxer init failed:', e);
+        throw e;
+      }
+
+      await this._yieldToMain();
+
+      // ── Step 3: Initialize encoder ──
+      try {
+        encoder = new VideoEncoder({
+          output: async (chunk, meta) => {
+            try {
+              await videoSource.add(EncodedPacketClass.fromEncodedChunk(chunk), meta);
+              muxCount++;
+            } catch (e) {
+              console.error('❌ [VideoExporter] Muxer add packet failed:', e);
+              encoderError = e;
+            }
+          },
+          error: (e) => {
+            console.error('❌ [VideoExporter] Encoder error callback:', e);
             encoderError = e;
           }
-        },
-        error: (e) => {
-          console.error('❌ [VideoExporter] Encoder error callback:', e);
-          encoderError = e;
-        }
-      });
-
-      const encConfig = {
-        codec: codecConfig.codec,
-        width: this.canvas.width,
-        height: this.canvas.height,
-        bitrate: videoBitrate,
-        framerate: frameRate,
-        hardwareAcceleration: codecConfig.hardwareAcceleration || 'prefer-hardware',
-        latencyMode: codecConfig.latencyMode || 'realtime',
-      };
-      // H.264 needs AVCC byte format for MP4 container muxing
-      if (isH264) encConfig.avc = { format: 'avc' };
-
-      encoder.configure(encConfig);
-      console.warn(`🎬 [VideoExporter] STEP 3/4: Encoder configured (${codecConfig._label})`);
-    } catch (e) {
-      console.error('❌ [VideoExporter] Encoder init failed:', e);
-      throw e;
-    }
-
-    await this._yieldToMain();
-
-    // ── Step 4: Render and encode frames ──
-    console.warn(`🎬 [VideoExporter] STEP 4/4: Starting frame loop (${totalFrames} frames)`);
-    const diag = {
-      totalRenderMs: 0,
-      totalEncodeMs: 0,
-      totalBackpressureMs: 0,
-      totalYieldMs: 0,
-      backpressureHits: 0,
-      startTime: performance.now(),
-    };
-
-    for (let frame = 0; frame <= totalFrames; frame++) {
-      if (this.abortController.signal.aborted) {
-        encoder.close();
-        throw new Error('Export cancelled');
-      }
-
-      // Check for async encoder/muxer errors
-      if (encoderError) {
-        encoder.close();
-        throw new Error(`Encoder/muxer error during export: ${encoderError.message}`);
-      }
-
-      // Backpressure: wait for encoder 'dequeue' event instead of polling
-      // Race with abort signal so Escape key cancels immediately
-      if (encoder.encodeQueueSize > VIDEO_EXPORT.ENCODER_QUEUE_LIMIT) {
-        const bpStart = performance.now();
-        diag.backpressureHits++;
-        await new Promise(resolve => {
-          const onDequeue = () => { cleanup(); resolve(); };
-          const onAbort  = () => { cleanup(); resolve(); };
-          const cleanup  = () => {
-            encoder.removeEventListener('dequeue', onDequeue);
-            this.abortController.signal.removeEventListener('abort', onAbort);
-          };
-          encoder.addEventListener('dequeue', onDequeue, { once: true });
-          this.abortController.signal.addEventListener('abort', onAbort, { once: true });
         });
-        diag.totalBackpressureMs += performance.now() - bpStart;
+
+        const encConfig = {
+          codec: codecConfig.codec,
+          width: this.canvas.width,
+          height: this.canvas.height,
+          bitrate: videoBitrate,
+          framerate: frameRate,
+          hardwareAcceleration: codecConfig.hardwareAcceleration || 'prefer-hardware',
+          latencyMode: codecConfig.latencyMode || 'realtime',
+        };
+        // H.264 needs AVCC byte format for MP4 container muxing
+        if (isH264) encConfig.avc = { format: 'avc' };
+
+        encoder.configure(encConfig);
+        console.warn(`🎬 [VideoExporter] STEP 3/4: Encoder configured (${codecConfig._label})`);
+      } catch (e) {
+        console.error('❌ [VideoExporter] Encoder init failed:', e);
+        throw e;
       }
 
-      // Calculate animation progress (0 to 1)
-      const progress = frame < startBufferFrames
-        ? 0
-        : Math.min(1, (frame - startBufferFrames) / animationFrames);
+      await this._yieldToMain();
 
-      // Render the frame
-      const renderStart = performance.now();
-      await renderFrame(progress);
-      diag.totalRenderMs += performance.now() - renderStart;
+      // ── Step 4: Render and encode frames ──
+      console.warn(`🎬 [VideoExporter] STEP 4/4: Starting frame loop (${totalFrames} frames)`);
+      const diag = {
+        totalRenderMs: 0,
+        totalEncodeMs: 0,
+        totalBackpressureMs: 0,
+        totalYieldMs: 0,
+        backpressureHits: 0,
+        startTime: performance.now(),
+      };
 
-      // Create VideoFrame with explicit timestamp (microseconds) and encode
-      const encodeStart = performance.now();
-      const timestampUs = frame * frameDurationUs;
-      const videoFrame = new VideoFrame(this.canvas, {
-        timestamp: timestampUs,
-        duration: frameDurationUs,
-      });
+      for (const sample of framePlan.samples()) {
+        const { frameIndex: frame, progress, timestampUs, percent } = sample;
+        if (this.abortController.signal.aborted) {
+          throw new Error('Export cancelled');
+        }
 
-      const keyFrame = frame === 0 || frame % VIDEO_EXPORT.KEYFRAME_INTERVAL === 0;
-      encoder.encode(videoFrame, { keyFrame });
-      videoFrame.close();
-      diag.totalEncodeMs += performance.now() - encodeStart;
+        // Check for async encoder/muxer errors
+        if (encoderError) {
+          throw new Error(`Encoder/muxer error during export: ${encoderError.message || encoderError}`);
+        }
 
-      // Progress update
-      const percent = Math.round((frame / totalFrames) * 100);
-      onProgress(percent);
-      this.eventBus?.emit('video:export-progress', { frame, totalFrames, percent });
+        // Backpressure: wait for encoder 'dequeue' event instead of polling
+        // Race with abort signal so Escape key cancels immediately
+        if (encoder.encodeQueueSize > VIDEO_EXPORT.ENCODER_QUEUE_LIMIT) {
+          const bpStart = performance.now();
+          diag.backpressureHits++;
+          await new Promise(resolve => {
+            const onDequeue = () => { cleanup(); resolve(); };
+            const onAbort  = () => { cleanup(); resolve(); };
+            const cleanup  = () => {
+              encoder.removeEventListener('dequeue', onDequeue);
+              this.abortController.signal.removeEventListener('abort', onAbort);
+            };
+            encoder.addEventListener('dequeue', onDequeue, { once: true });
+            this.abortController.signal.addEventListener('abort', onAbort, { once: true });
+          });
+          diag.totalBackpressureMs += performance.now() - bpStart;
+          if (this.abortController.signal.aborted) {
+            throw new Error('Export cancelled');
+          }
+        }
 
-      // Yield EVERY frame via setTimeout to keep UI + console alive
-      const yieldStart = performance.now();
-      await new Promise(resolve => setTimeout(resolve, 0));
-      diag.totalYieldMs += performance.now() - yieldStart;
+        // Render the frame
+        const renderStart = performance.now();
+        await renderFrame(progress);
+        diag.totalRenderMs += performance.now() - renderStart;
 
-      // Periodic diagnostic log (every 1 second of video)
-      if (frame > 0 && frame % frameRate === 0) {
-        const elapsed = performance.now() - diag.startTime;
-        const fps = frame / (elapsed / 1000);
-        console.warn(`📊 [VideoExporter] Frame ${frame}/${totalFrames}: ` +
-          `${fps.toFixed(1)}fps | queue=${encoder.encodeQueueSize} | mux=${muxCount}pkts`);
+        // Create VideoFrame with explicit timestamp (microseconds) and encode.
+        // Always close the frame, including when encode() throws synchronously.
+        const encodeStart = performance.now();
+        let videoFrame = null;
+        try {
+          videoFrame = new VideoFrame(this.canvas, {
+            timestamp: timestampUs,
+            duration: framePlan.frameDurationUs,
+          });
+
+          const keyFrame = frame === 0 || frame % VIDEO_EXPORT.KEYFRAME_INTERVAL === 0;
+          encoder.encode(videoFrame, { keyFrame });
+        } finally {
+          videoFrame?.close();
+        }
+        diag.totalEncodeMs += performance.now() - encodeStart;
+
+        // Progress update
+        onProgress(percent);
+        this.eventBus?.emit('video:export-progress', { frame, totalFrames, percent });
+
+        // Yield EVERY frame via setTimeout to keep UI + console alive
+        const yieldStart = performance.now();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        diag.totalYieldMs += performance.now() - yieldStart;
+
+        // Periodic diagnostic log (every 1 second of video)
+        if (frame > 0 && frame % frameRate === 0) {
+          const elapsed = performance.now() - diag.startTime;
+          const fps = frame / (elapsed / 1000);
+          console.warn(`📊 [VideoExporter] Frame ${sample.ordinal}/${totalFrames}: ` +
+            `${fps.toFixed(1)}fps | queue=${encoder.encodeQueueSize} | mux=${muxCount}pkts`);
+        }
+      }
+
+      // Flush encoder and finalize muxer
+      console.warn('🎬 [VideoExporter] Flushing encoder...');
+      const flushStart = performance.now();
+      await encoder.flush();
+      if (encoderError) {
+        throw new Error(`Encoder/muxer error during export: ${encoderError.message || encoderError}`);
+      }
+      encoder.close();
+      encoder = null;
+      await output.finalize();
+      finalized = true;
+      const flushMs = performance.now() - flushStart;
+
+      const blob = new Blob([output.target.buffer], { type: mimeType });
+      const totalMs = performance.now() - diag.startTime;
+      const n = totalFrames;
+
+      // ── Performance summary ──
+      console.warn(`✅ [VideoExporter] Export complete: ${(blob.size / 1024 / 1024).toFixed(2)}MB (${mimeType})`);
+      console.warn(`📊 Performance: ${(totalMs / 1000).toFixed(1)}s for ${n} frames (${(n / (totalMs / 1000)).toFixed(1)} fps)`);
+      console.warn(`   Render: ${(diag.totalRenderMs / n).toFixed(1)}ms avg | Encode: ${(diag.totalEncodeMs / n).toFixed(1)}ms avg`);
+      console.warn(`   Backpressure: ${diag.backpressureHits} waits (${(diag.totalBackpressureMs / 1000).toFixed(1)}s) | Flush: ${flushMs.toFixed(0)}ms`);
+
+      this.eventBus?.emit('video:export-complete', { blob, size: blob.size, strategy: 'webcodecs' });
+
+      onComplete(blob);
+      return blob;
+    } finally {
+      if (encoder) {
+        try {
+          encoder.close();
+        } catch (cleanupError) {
+          console.warn('⚠️ [VideoExporter] Encoder cleanup failed:', cleanupError);
+        }
+      }
+      if (output && !finalized && typeof output.cancel === 'function') {
+        try {
+          await output.cancel();
+        } catch (cleanupError) {
+          console.warn('⚠️ [VideoExporter] Muxer cleanup failed:', cleanupError);
+        }
       }
     }
-
-    // Flush encoder and finalize muxer
-    console.warn('🎬 [VideoExporter] Flushing encoder...');
-    const flushStart = performance.now();
-    await encoder.flush();
-    encoder.close();
-    await output.finalize();
-    const flushMs = performance.now() - flushStart;
-
-    const blob = new Blob([output.target.buffer], { type: mimeType });
-    const totalMs = performance.now() - diag.startTime;
-    const n = totalFrames + 1;
-
-    // ── Performance summary ──
-    console.warn(`✅ [VideoExporter] Export complete: ${(blob.size / 1024 / 1024).toFixed(2)}MB (${mimeType})`);
-    console.warn(`📊 Performance: ${(totalMs / 1000).toFixed(1)}s for ${n} frames (${(n / (totalMs / 1000)).toFixed(1)} fps)`);
-    console.warn(`   Render: ${(diag.totalRenderMs / n).toFixed(1)}ms avg | Encode: ${(diag.totalEncodeMs / n).toFixed(1)}ms avg`);
-    console.warn(`   Backpressure: ${diag.backpressureHits} waits (${(diag.totalBackpressureMs / 1000).toFixed(1)}s) | Flush: ${flushMs.toFixed(0)}ms`);
-
-    this.eventBus?.emit('video:export-complete', { blob, size: blob.size, strategy: 'webcodecs' });
-
-    onComplete(blob);
-    return blob;
   }
 
   // ========== MEDIARECORDER FALLBACK ==========
@@ -503,118 +774,244 @@ export class VideoExporter {
    * Resumes automatically when the tab becomes visible again.
    * @private
    */
-  async _exportMediaRecorder({ frameRate, duration, renderFrame, onProgress, onComplete, mimeType, videoBitrate, startBuffer }) {
-    const startBufferFrames = Math.ceil((startBuffer / 1000) * frameRate);
-    const animationFrames = Math.ceil((duration / 1000) * frameRate);
-    const totalFrames = startBufferFrames + animationFrames;
+  async _exportMediaRecorder({ frameRate, duration, renderFrame, onProgress, onComplete, framePlan, capabilityPlan }) {
+    const totalFrames = framePlan.frameCount;
     const frameInterval = 1000 / frameRate;
+    const { mimeType, videoTrack, mediaRecorder: recorder } = capabilityPlan;
+    const signal = this.abortController.signal;
 
-    console.log(`🎬 [VideoExporter] MediaRecorder: ${totalFrames} frames at ${frameRate}fps (${startBufferFrames} buffer + ${animationFrames} animation)`);
+    console.log(`🎬 [VideoExporter] MediaRecorder: ${totalFrames} frames at ${frameRate}fps ` +
+      `(${framePlan.startBufferFrames} buffer + ${framePlan.animationFrames} animation frames)`);
     this.eventBus?.emit('video:export-started', { totalFrames, frameRate, duration, strategy: 'mediarecorder' });
 
-    // Create stream with manual frame control (0 = no automatic capture)
-    const stream = this.canvas.captureStream(0);
-    const videoTrack = stream.getVideoTracks()[0];
-
-    const recorder = new MediaRecorder(stream, {
-      mimeType,
-      videoBitsPerSecond: videoBitrate
-    });
     const chunks = [];
+    let visibilityController = null;
+    let rejectRecorderFailure;
+    const recorderFailure = new Promise((_, reject) => {
+      rejectRecorderFailure = reject;
+    });
+    const guardRecorder = promise => Promise.race([Promise.resolve(promise), recorderFailure]);
 
     recorder.ondataavailable = (event) => {
       if (event.data?.size > 0) chunks.push(event.data);
     };
+    recorder.onerror = (event) => {
+      rejectRecorderFailure(event.error || new Error('Recording failed'));
+    };
 
-    recorder.start();
+    try {
+      recorder.start();
+      visibilityController = this._createRecorderVisibilityController(recorder, signal);
 
-    // Render each frame with adaptive timing and visibility awareness
-    for (let frame = 0; frame <= totalFrames; frame++) {
-      const frameStartTime = performance.now();
+      // Render each frame with adaptive timing and continuous visibility awareness.
+      for (const sample of framePlan.samples()) {
+        const { frameIndex: frame, progress, percent } = sample;
 
-      // Check for abort
-      if (this.abortController.signal.aborted) {
-        recorder.stop();
-        throw new Error('Export cancelled');
+        if (signal.aborted) {
+          throw new Error('Export cancelled');
+        }
+
+        await guardRecorder(visibilityController.waitUntilVisible());
+        const frameStartTime = visibilityController.activeNow();
+
+        // Rendering may itself span a visibility transition. The recorder is
+        // paused immediately by the lifetime guard, and capture waits until
+        // the document is visible again.
+        await guardRecorder(renderFrame(progress));
+        await guardRecorder(visibilityController.waitUntilVisible());
+        if (signal.aborted) {
+          throw new Error('Export cancelled');
+        }
+
+        videoTrack.requestFrame();
+
+        onProgress(percent);
+        this.eventBus?.emit('video:export-progress', { frame, totalFrames, percent });
+
+        // Exclude hidden time from pacing so a throttled background timer can
+        // never become dead time in the recording.
+        const elapsed = visibilityController.activeNow() - frameStartTime;
+        const remainingTime = Math.max(10, frameInterval - elapsed);
+        await guardRecorder(visibilityController.waitForVisibleDuration(remainingTime));
       }
 
-      // Pause if tab is hidden — prevents setTimeout throttling from
-      // stretching MediaRecorder timestamps between requestFrame() calls
-      await this._waitForVisibility(recorder);
+      // Stop recording and wait for the final dataavailable/onstop sequence.
+      const stopResult = new Promise((resolve, reject) => {
+        recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
+        try {
+          recorder.stop();
+        } catch (error) {
+          reject(error);
+        }
+      });
+      const blob = await guardRecorder(stopResult);
 
-      // Calculate animation progress (0 to 1)
-      const progress = frame < startBufferFrames
-        ? 0
-        : Math.min(1, (frame - startBufferFrames) / animationFrames);
+      console.log(`✅ [VideoExporter] MediaRecorder export complete: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+      this.eventBus?.emit('video:export-complete', { blob, size: blob.size, strategy: 'mediarecorder' });
 
-      // Render the frame
-      await renderFrame(progress);
-
-      // Capture this frame
-      videoTrack.requestFrame();
-
-      // Progress update
-      const percent = Math.round((frame / totalFrames) * 100);
-      onProgress(percent);
-      this.eventBus?.emit('video:export-progress', { frame, totalFrames, percent });
-
-      // Adaptive timing: wait for remainder of frame interval.
-      // If rendering took longer than the interval, still wait a minimum
-      // time to let the encoder process the frame.
-      const elapsed = performance.now() - frameStartTime;
-      const remainingTime = Math.max(10, frameInterval - elapsed);
-      await this._delay(remainingTime);
+      onComplete(blob);
+      return blob;
+    } finally {
+      visibilityController?.dispose();
+      if (recorder.state !== 'inactive') {
+        try {
+          recorder.stop();
+        } catch (cleanupError) {
+          console.warn('⚠️ [VideoExporter] Recorder cleanup failed:', cleanupError);
+        }
+      }
+      recorder.ondataavailable = null;
+      recorder.onstop = null;
+      recorder.onerror = null;
     }
-
-    // Stop recording and wait for final data
-    const blob = await new Promise((resolve, reject) => {
-      recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
-      recorder.onerror = (e) => reject(e.error || new Error('Recording failed'));
-      recorder.stop();
-    });
-
-    console.log(`✅ [VideoExporter] MediaRecorder export complete: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
-    this.eventBus?.emit('video:export-complete', { blob, size: blob.size, strategy: 'mediarecorder' });
-
-    onComplete(blob);
-    return blob;
   }
 
   // ========== VISIBILITY MANAGEMENT ==========
 
   /**
-   * Block the frame loop while the tab is hidden, pausing the
-   * MediaRecorder to prevent dead time from being encoded into
-   * the output video. Returns immediately if the tab is visible.
-   * 
-   * @param {MediaRecorder} recorder - Active recorder to pause/resume
-   * @returns {Promise<void>}
+   * Install one export-lifetime visibility guard. It pauses the recorder as
+   * soon as the document becomes hidden, exposes a clock that excludes hidden
+   * time, and makes both pacing and hidden waits abortable.
    * @private
    */
-  async _waitForVisibility(recorder) {
-    if (document.visibilityState === 'visible') return;
+  _createRecorderVisibilityController(recorder, signal) {
+    let hidden = false;
+    let hiddenStartedAt = null;
+    let totalHiddenMs = 0;
+    let pausedForVisibility = false;
+    let disposed = false;
+    let fatalError = null;
+    const visibleWaiters = new Set();
 
-    // Tab is hidden — pause recording to prevent timestamp stretching
-    if (recorder.state === 'recording') {
-      recorder.pause();
-    }
-    this.eventBus?.emit('video:export-paused', { reason: 'tab-hidden' });
-    console.log('⏸️ [VideoExporter] Export paused (tab hidden)');
+    const cancellationError = () => new Error('Export cancelled');
+    const settleVisibleWaiters = (error = null) => {
+      for (const waiter of visibleWaiters) {
+        if (error) waiter.reject(error);
+        else waiter.resolve();
+      }
+      visibleWaiters.clear();
+    };
 
-    return new Promise(resolve => {
-      const handler = () => {
-        if (document.visibilityState === 'visible') {
-          document.removeEventListener('visibilitychange', handler);
-          if (recorder.state === 'paused') {
-            recorder.resume();
+    const activeNow = () => {
+      const now = performance.now();
+      const currentHiddenMs = hidden && hiddenStartedAt !== null
+        ? now - hiddenStartedAt
+        : 0;
+      return now - totalHiddenMs - currentHiddenMs;
+    };
+
+    const handleVisibilityChange = () => {
+      if (disposed) return;
+      const nextHidden = document.visibilityState !== 'visible';
+      if (nextHidden === hidden) return;
+
+      const now = performance.now();
+      if (nextHidden) {
+        hidden = true;
+        hiddenStartedAt = now;
+        try {
+          if (recorder.state === 'recording') {
+            recorder.pause();
+            pausedForVisibility = true;
           }
-          this.eventBus?.emit('video:export-resumed');
-          console.log('▶️ [VideoExporter] Export resumed (tab visible)');
-          resolve();
+        } catch (error) {
+          fatalError = error;
+          settleVisibleWaiters(error);
+          return;
         }
-      };
-      document.addEventListener('visibilitychange', handler);
-    });
+        this.eventBus?.emit('video:export-paused', { reason: 'tab-hidden' });
+        console.log('⏸️ [VideoExporter] Export paused (tab hidden)');
+        return;
+      }
+
+      if (hiddenStartedAt !== null) {
+        totalHiddenMs += now - hiddenStartedAt;
+      }
+      hidden = false;
+      hiddenStartedAt = null;
+      try {
+        if (pausedForVisibility && recorder.state === 'paused') {
+          recorder.resume();
+        }
+      } catch (error) {
+        fatalError = error;
+        settleVisibleWaiters(error);
+        return;
+      }
+      pausedForVisibility = false;
+      this.eventBus?.emit('video:export-resumed');
+      console.log('▶️ [VideoExporter] Export resumed (tab visible)');
+      settleVisibleWaiters();
+    };
+
+    const handleAbort = () => settleVisibleWaiters(cancellationError());
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    signal.addEventListener('abort', handleAbort);
+    handleVisibilityChange();
+
+    const waitUntilVisible = () => {
+      if (fatalError) return Promise.reject(fatalError);
+      if (signal.aborted) return Promise.reject(cancellationError());
+      if (!hidden && document.visibilityState === 'visible') return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        visibleWaiters.add({ resolve, reject });
+      });
+    };
+
+    const waitForVisibleDuration = async (durationMs) => {
+      let remainingMs = Math.max(0, durationMs);
+      while (remainingMs > 0) {
+        await waitUntilVisible();
+        const segmentStartedAt = activeNow();
+        let cleanupInterruption = () => {};
+        const interruption = new Promise((resolve, reject) => {
+          const onVisibility = () => {
+            if (document.visibilityState !== 'visible') {
+              cleanup();
+              resolve('hidden');
+            }
+          };
+          const onAbort = () => {
+            cleanup();
+            reject(cancellationError());
+          };
+          const cleanup = () => {
+            document.removeEventListener('visibilitychange', onVisibility);
+            signal.removeEventListener('abort', onAbort);
+          };
+          cleanupInterruption = cleanup;
+          document.addEventListener('visibilitychange', onVisibility);
+          signal.addEventListener('abort', onAbort);
+          onVisibility();
+          if (signal.aborted) onAbort();
+        });
+
+        let outcome;
+        try {
+          outcome = await Promise.race([
+            this._delay(remainingMs).then(() => 'elapsed'),
+            interruption
+          ]);
+        } finally {
+          cleanupInterruption();
+        }
+        if (outcome === 'elapsed') return;
+        remainingMs = Math.max(0, remainingMs - (activeNow() - segmentStartedAt));
+      }
+    };
+
+    return {
+      activeNow,
+      waitUntilVisible,
+      waitForVisibleDuration,
+      dispose: () => {
+        if (disposed) return;
+        disposed = true;
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        signal.removeEventListener('abort', handleAbort);
+        settleVisibleWaiters(cancellationError());
+      }
+    };
   }
 
   // ========== UTILITIES ==========

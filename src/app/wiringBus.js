@@ -149,10 +149,12 @@ export const wiringBusMixin = {
      * LEAST EXPENSIVE: Only re-render, no path calculation needed
      * Examples: dot color, dot size, marker style, beacon color, label
      */
-    this.eventBus.on('waypoint:style-changed', (waypoint) => {
+    this.eventBus.on('waypoint:style-changed', (_waypoint, { historyAlreadySaved = false } = {}) => {
       this.queueRender(); // Visual update only
       this.uiController.updateWaypointList(this.waypoints); // Sync sidebar dots/labels
-      this.saveUndoStateDebounced(); // Groups slider drags into single undo entry
+      if (!historyAlreadySaved) {
+        this.saveUndoStateDebounced(); // Groups slider drags into single undo entry
+      }
       this.autoSave();
     });
     

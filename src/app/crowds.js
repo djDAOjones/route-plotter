@@ -67,8 +67,8 @@ export const crowdsMixin = {
       this.queueRender();
     });
 
-    // The Add-crowd gate follows route existence (crowds need a route
-    // to follow until network editing ships)
+    // Route changes update the Add-crowd description: a new crowd follows
+    // an existing route or starts an empty custom network.
     this.eventBus.on('waypoint:list-updated', () => this.updateLayersStrip());
 
     // ── Card controls (single-writer: this is the only wiring) ──
@@ -202,13 +202,12 @@ export const crowdsMixin = {
       strip.appendChild(this._buildCrowdRow(layer));
     }
 
-    // Add crowd needs a route for dots to follow (route guide is the
-    // only guide until network editing ships)
+    // A route is optional: without one, Add crowd starts network authoring.
     if (this._addCrowdBtn) {
       const noRoute = this.waypoints.length < 2;
-      this._addCrowdBtn.disabled = noRoute;
+      this._addCrowdBtn.disabled = false;
       this._addCrowdBtn.title = noRoute
-        ? 'Crowds follow the route — draw a route first'
+        ? 'Add a crowd and draw the network it follows'
         : 'Add a crowd of dots that follows the route';
     }
   },
@@ -335,25 +334,28 @@ export const crowdsMixin = {
   },
 
   /**
-   * Create a crowd that follows the route, with one dot stream, and
-   * select it. Dots are flowing as soon as the timeline moves — no
-   * graph UI involved.
+   * Create and select a crowd with one dot stream. An existing route is
+   * the guide; otherwise the crowd starts with an empty custom network and
+   * the ordinary network event hands authoring to network edit mode.
    */
   addCrowd() {
-    if (this.waypoints.length < 2) {
-      this.announce('Crowds follow the route — draw a route first');
-      return;
-    }
+    const hasRoute = this.waypoints.length >= 2;
     const layer = this.scene.addFlowLayer({
       name: this._nextCrowdName(),
-      guideType: 'route',
+      guideType: hasRoute ? 'route' : 'graph',
       emitters: [{ dotColor: NEW_CROWD_DOT_COLOR }],
     });
     this.saveUndoState();
     this.autoSave();
     this.eventBus.emit('crowd:selected', layer);
     this.queueRender();
-    this.announce(`${layer.name} added — dots follow the route`);
+    this.announce(hasRoute
+      ? `${layer.name} added — dots follow the route`
+      : `${layer.name} added — draw the network its dots will follow`);
+    if (!hasRoute) {
+      // crowd:selected must land first so the network mixin edits this layer.
+      this.eventBus.emit('network:guide-changed', layer);
+    }
   },
 
   /**

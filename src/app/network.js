@@ -16,7 +16,19 @@
  */
 import { INTERACTION } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
+import { getGraphDepartureShares } from '../utils/graphRouting.js';
 import { nearestOnPolyline } from '../utils/segmentHitTest.js';
+
+const NODE_TYPE_LABELS = {
+  normal: 'pass-through',
+  entry: 'entry',
+  exit: 'exit',
+};
+
+/** Compact author-facing weight text without losing useful decimals. */
+function formatWeight(weight) {
+  return Number(weight.toFixed(2)).toString();
+}
 
 export const networkMixin = {
 
@@ -108,6 +120,7 @@ export const networkMixin = {
     // ── Selection → cards ───────────────────────────────────
     this.eventBus.on('network:node-selected', () => this.syncNetworkCards());
     this.eventBus.on('network:edge-selected', () => this.syncNetworkCards());
+    this.eventBus.on('network:node-deselected', () => this._syncNodePathWeights(null));
 
     // ── Node card (single-writer wiring) ────────────────────
     document.getElementById('network-node-type')?.addEventListener('change', (e) => {
@@ -342,9 +355,14 @@ export const networkMixin = {
       } else {
         const nodes = layer.graph.getNodes().length;
         const edges = layer.graph.getEdges().length;
-        this._guideHintEl.textContent = nodes === 0
+        const networkHint = nodes === 0
           ? 'No network yet — Edit network hands you the pen.'
-          : `Dots walk this crowd's own network (${nodes} node${nodes === 1 ? '' : 's'}, ${edges} edge${edges === 1 ? '' : 's'}).`;
+          : `Dots walk this crowd's own network (${nodes} node${nodes === 1 ? '' : 's'}, `
+            + `${edges} edge${edges === 1 ? '' : 's'}).`;
+        const timingHint = this.waypoints?.length < 2
+          ? ' Add at least two route waypoints to set the master timing before previewing or exporting.'
+          : '';
+        this._guideHintEl.textContent = networkHint + timingHint;
       }
     }
   },
@@ -361,6 +379,7 @@ export const networkMixin = {
       const typeEl = document.getElementById('network-node-type');
       if (typeEl) typeEl.value = node.type;
     }
+    this._syncNodePathWeights(node);
 
     const edge = svc.selectedEdge();
     if (edge) {
@@ -375,10 +394,118 @@ export const networkMixin = {
   },
 
   /**
-   * Weight readout as computed junction traffic shares, not a bare
-   * number (backlog): of the dots leaving each end's junction, the
-   * percentage that picks this edge. One-way edges depart their source
-   * only. The approximation ignores the walk's came-from exclusion.
+   * Build the selected junction's relative-weight rows. The visible rows are
+   * the exact directionally valid departures used by SwarmEngine; a single
+   * path has no choice to weight, so the fieldset stays hidden.
+   * @param {Object|null} node
+   * @private
+   */
+  _syncNodePathWeights(node) {
+    const fieldset = document.getElementById('network-path-weights');
+    const rowsEl = document.getElementById('network-path-weight-rows');
+    if (!fieldset || !rowsEl) return;
+
+    rowsEl.replaceChildren();
+    const svc = this.networkEditService;
+    if (!node || !svc.active) {
+      fieldset.hidden = true;
+      return;
+    }
+
+    const graph = svc.layer.graph;
+    const departures = getGraphDepartureShares(graph, node.id);
+    if (departures.length < 2) {
+      fieldset.hidden = true;
+      return;
+    }
+
+    const nodes = graph.getNodes();
+    departures.forEach((departure, index) => {
+      const destinationId = departure.reversed
+        ? departure.edge.sourceId
+        : departure.edge.targetId;
+      const destination = graph.getNode(destinationId);
+      const type = destination?.type || 'normal';
+      const ordinal = Math.max(1,
+        nodes.filter(candidate => candidate.type === type)
+          .findIndex(candidate => candidate.id === destinationId) + 1
+      );
+      const inputId = `network-path-weight-${index + 1}`;
+      const nameId = `${inputId}-name`;
+      const outputId = `${inputId}-value`;
+
+      const row = document.createElement('label');
+      row.className = 'network-path-weight-row';
+      row.dataset.edgeId = departure.edge.id;
+
+      const name = document.createElement('span');
+      name.id = nameId;
+      name.className = 'network-path-weight-name';
+      name.textContent = `Path ${index + 1} to ${NODE_TYPE_LABELS[type]} ${ordinal}`;
+
+      const input = document.createElement('input');
+      input.id = inputId;
+      input.type = 'number';
+      input.min = '0.01';
+      input.step = '0.01';
+      input.value = formatWeight(departure.edge.weight);
+      input.setAttribute('aria-labelledby', nameId);
+      input.setAttribute('aria-describedby', `${outputId} network-path-weights-help`);
+      input.addEventListener('input', () => {
+        const weight = Number(input.value);
+        if (!Number.isFinite(weight) || weight < 0.01) {
+          input.setCustomValidity('Enter a weight of 0.01 or more.');
+          input.setAttribute('aria-invalid', 'true');
+          return;
+        }
+        input.setCustomValidity('');
+        input.removeAttribute('aria-invalid');
+        departure.edge.setWeight(weight);
+        this._updateNodePathWeightReadouts(node.id);
+        // crowd:param-changed → crowds mixin → debounced undo/autosave/render.
+        this.eventBus.emit('crowd:param-changed');
+      });
+      input.addEventListener('change', () => {
+        if (input.validity.valid) return;
+        input.value = formatWeight(departure.edge.weight);
+        input.setCustomValidity('');
+        input.removeAttribute('aria-invalid');
+      });
+
+      const output = document.createElement('output');
+      output.id = outputId;
+      output.className = 'network-path-weight-value';
+      output.setAttribute('for', inputId);
+
+      row.append(name, input, output);
+      rowsEl.appendChild(row);
+    });
+
+    fieldset.hidden = false;
+    this._updateNodePathWeightReadouts(node.id);
+  },
+
+  /** Update every displayed percentage after one relative weight changes. */
+  _updateNodePathWeightReadouts(nodeId) {
+    const rowsEl = document.getElementById('network-path-weight-rows');
+    const graph = this.networkEditService.layer?.graph;
+    if (!rowsEl || !graph) return;
+    const shares = new Map(
+      getGraphDepartureShares(graph, nodeId).map(share => [share.edge.id, share])
+    );
+    for (const row of rowsEl.querySelectorAll('.network-path-weight-row')) {
+      const share = shares.get(row.dataset.edgeId);
+      const output = row.querySelector('.network-path-weight-value');
+      if (share && output) {
+        output.textContent = `Weight ${formatWeight(share.edge.weight)} · ${share.percent}%`;
+      }
+    }
+  },
+
+  /**
+   * Configured junction shares for the selected edge. Actual choices can be
+   * renormalised by arrival path because the walk avoids an immediate U-turn
+   * whenever another departure exists.
    * @param {Object} edge
    * @private
    */
@@ -388,17 +515,13 @@ export const networkMixin = {
     if (!valueEl || !svc.active) return;
     const graph = svc.layer.graph;
 
-    const shareFrom = (nodeId) => {
-      let total = 0;
-      for (const e of graph.getEdgesForNode(nodeId)) {
-        if (e.sourceId === nodeId || e.direction === 'two-way') total += e.weight;
-      }
-      return total > 0 ? Math.round((edge.weight / total) * 100) : 100;
-    };
+    const shareFrom = (nodeId) =>
+      getGraphDepartureShares(graph, nodeId)
+        .find(share => share.edge.id === edge.id)?.percent ?? 0;
 
     valueEl.textContent = edge.direction === 'one-way'
-      ? `${shareFrom(edge.sourceId)}% of departures`
-      : `${shareFrom(edge.sourceId)}% · ${shareFrom(edge.targetId)}% of departures`;
+      ? `${shareFrom(edge.sourceId)}% configured share`
+      : `${shareFrom(edge.sourceId)}% · ${shareFrom(edge.targetId)}% configured shares`;
   },
 
   /**

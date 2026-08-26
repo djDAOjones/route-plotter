@@ -32,6 +32,7 @@
  */
 
 import { snapToAngle } from '../utils/snapToAngle.js';
+import { getGraphDepartureShares } from '../utils/graphRouting.js';
 
 /** Node types in T-key cycle order; 'normal' is user-facing "pass-through". */
 const NODE_TYPE_CYCLE = ['normal', 'entry', 'exit'];
@@ -630,6 +631,15 @@ export class NetworkEditService {
 
     const ink = layer.emitters[0]?.dotColor || '#56B4E9';
     const lineWidth = svc.scaleSizeClamped(2);
+    const selectedNodeId = this.active && this.layer === layer && this.selection?.kind === 'node'
+      ? this.selection.id
+      : null;
+    const selectedShares = selectedNodeId
+      ? getGraphDepartureShares(graph, selectedNodeId)
+      : [];
+    const shareByEdgeId = selectedShares.length >= 2
+      ? new Map(selectedShares.map(({ edge, share }) => [edge.id, share]))
+      : new Map();
 
     ctx.save();
 
@@ -642,6 +652,10 @@ export class NetworkEditService {
     for (const edge of graph.getEdges()) {
       const pts = this._edgeCanvasPoints(state, graph, edge);
       if (pts.length < 2) continue;
+      const share = shareByEdgeId.get(edge.id);
+      ctx.lineWidth = share === undefined
+        ? lineWidth
+        : svc.scaleSizeClamped(2 + 6 * Math.sqrt(share));
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);

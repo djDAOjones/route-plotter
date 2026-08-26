@@ -8,6 +8,8 @@
  * live-verified instead — their wiring is guarded to no-op headless.
  */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, test, expect, beforeEach } from 'vitest';
 import { crowdsMixin } from '../src/app/crowds.js';
 import { Scene } from '../src/models/Scene.js';
@@ -39,6 +41,7 @@ function makeApp({ hasRoute = true } = {}) {
   Object.assign(app, crowdsMixin);
   app.eventBus.on('crowd:selected', l => app.events.push(['selected', l.id]));
   app.eventBus.on('crowd:deselected', () => app.events.push(['deselected']));
+  app.eventBus.on('network:guide-changed', l => app.events.push(['network-guide', l.id]));
   app.eventBus.on('ui:toast', t => app.events.push(['toast', t.message]));
   app.setupCrowdControls();
   app.updateLayersStrip();
@@ -73,11 +76,21 @@ describe('addCrowd', () => {
     expect(app.scene.getFlowLayers().map(l => l.name)).toEqual(['Crowd 2', 'Crowd 1']);
   });
 
-  test('refuses without a route (crowds follow the route)', () => {
+  test('without a route creates a graph crowd, then hands it to network editing', () => {
     const app = makeApp({ hasRoute: false });
     app.addCrowd();
-    expect(app.scene.isEmpty()).toBe(true);
-    expect(app.announced[0]).toMatch(/draw a route first/);
+
+    const layer = app.scene.getFlowLayers()[0];
+    expect(layer.guideType).toBe('graph');
+    expect(layer.emitters).toHaveLength(1);
+    expect(app.selectedCrowd).toBe(layer);
+    expect(app.events).toEqual([
+      ['selected', layer.id],
+      ['network-guide', layer.id],
+    ]);
+    expect(app.undoSaves).toBe(1);
+    expect(app.autoSaves).toBe(1);
+    expect(app.announced[0]).toMatch(/draw the network/);
   });
 });
 
@@ -150,13 +163,27 @@ describe('layers strip', () => {
     expect(layer.visible).toBe(true);
   });
 
-  test('the Add crowd button gates on route existence', () => {
+  test('the Add crowd button remains available and describes the guide it will create', () => {
     const app = makeApp({ hasRoute: false });
-    expect(document.getElementById('add-crowd-btn').disabled).toBe(true);
+    const button = document.getElementById('add-crowd-btn');
+    expect(button.disabled).toBe(false);
+    expect(button.title).toMatch(/draw the network/);
 
     app.waypoints = [{}, {}];
     app.eventBus.emit('waypoint:list-updated', app.waypoints);
-    expect(document.getElementById('add-crowd-btn').disabled).toBe(false);
+    expect(button.disabled).toBe(false);
+    expect(button.title).toMatch(/follows the route/);
+  });
+});
+
+describe('crowd copy', () => {
+  test('lifecycle controls are neutral to route and network guides', () => {
+    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+    expect(html).toContain('At journey end');
+    expect(html).toContain('Respawn at entry');
+    expect(html).toContain('Repeat journey');
+    expect(html).toContain('Collect at exit');
+    expect(html).not.toContain('At route end');
   });
 });
 

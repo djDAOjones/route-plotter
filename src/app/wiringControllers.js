@@ -79,7 +79,7 @@ export function findAreaHandleAtScreen(app, screenX, screenY) {
 export function setupDocumentCommands(app) {
   app.eventBus.on('history:undo', () => app.undo());
   app.eventBus.on('history:redo', () => app.redo());
-  app.eventBus.on('file:save', () => void app.saveProject());
+  app.eventBus.on('file:save', () => void app.requestProjectSave());
   app.elements.saveProjectBtn?.addEventListener('click', () => app.eventBus.emit('file:save'));
   app.elements.undoBtn?.addEventListener('click', () => app.eventBus.emit('history:undo'));
   app.elements.redoBtn?.addEventListener('click', () => app.eventBus.emit('history:redo'));
@@ -776,7 +776,7 @@ export const wiringControllersMixin = {
       if (!this.previewMode) {
         this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
       }
-      this.exportHTML();
+      void this.requestHTMLExport();
     });
     
     // ========== MOTION VISIBILITY EVENTS ==========

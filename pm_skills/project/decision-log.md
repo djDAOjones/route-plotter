@@ -2,6 +2,55 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — REV-10 uses minimum-loss transactional image admission
+
+**Decision:** Interactive custom marker and route-head uploads preview the
+exact undo stack that an ordinary successful save would retain, including the
+normal 150-state rollover and redo invalidation. They first sweep asset bytes
+unreachable from that prospective stack, then discard only the minimum strict
+oldest prefix needed to meet the 128-asset, 40 MiB and 48-million-pixel project
+limits. The new current state is never eligible for removal. Additional
+history loss receives one visible and announced toast; normal rollover does
+not.
+
+**Transaction boundary:** Model references, asset bytes and history commit as
+one synchronous unit. Any admission or assignment failure restores all three;
+rollback failures are surfaced rather than hidden. Selecting the identical
+image creates no history branch and preserves redo. Existing Waypoint event
+payloads remain compatible, with the already-saved marker flag carried as a
+second event argument.
+
+**Persistence boundary:** Autosave remains deliberately model-only and is not
+an asset-retention root. Explicit project imports stay detached until their
+validated commit, then reset one baseline and prune only within the protected
+transaction. Clear All invalidates late async work, removes every image byte
+and reference, cancels pending writers and creates one empty non-undoable
+baseline. Explicit ZIPs round-trip every reachable asset at the full boundary
+and omit bytes already swept as unreachable.
+
+## 2026-08-26 — Roadmap refactor: lifecycle queue after Phase 1 health work
+
+**Decision:** Replace six numbered implementation phases with a dependency-led
+Current / Next / Icebox queue. KEY-01, UX-01, BUG-01, QA-02, CROWD-04,
+CROWD-01, REV-08 and REV-09 leave the live backlog because their outcomes are
+implemented and canonically verified. REV-04 stays visible as a real-browser
+and offline-artifact verification residual. REV-10 stays visible until the
+approved minimum-oldest-history shortening rule and the full asset-boundary
+matrix are proven.
+
+**Sequence:** Promote SUPPORT-01 to Current because the public/privacy and
+governance contracts now exist: the remaining work is an explicit GitHub
+Issues hand-off that reuses previewed/redacted diagnostics and never uploads
+automatically. MAINT-01 is also ready now that the keyboard-path repair has
+shipped. All other open work is ordered by its actual dependency chain rather
+than a stale phase label; REV-07 remains deferred in Icebox and Quarantine is
+unchanged.
+
+**History:** No wish-list item is promoted or cut because its trigger remains
+unmet. The maintainer explicitly chose to preserve the complete trajectory
+despite its size warning, so this refactor adds the new shipped lines without
+archiving or deleting older trajectory content.
+
 ## 2026-08-26 — Phase 0 signed off; decisions become implementation contracts
 
 **Decision:** Accept QA-01 and convert every Phase 0 decision ticket into

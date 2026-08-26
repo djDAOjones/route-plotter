@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
   <title>Route Plotter</title>
   <link rel="stylesheet" href="styles/tokens.css?v=470">
   <link rel="stylesheet" href="styles/main.css?v=470">
@@ -72,8 +73,8 @@
             <button id="export-webm-btn" class="dropdown-item" role="menuitem" type="button">Export WebM</button>
             <button id="export-html-btn" class="dropdown-item" role="menuitem" type="button">Export HTML</button>
             <div class="dropdown-separator" role="separator"></div>
-            <button id="download-debug-btn" class="dropdown-item" role="menuitem" type="button">Download Debug Log</button>
-            <button id="copy-debug-btn" class="dropdown-item" role="menuitem" type="button">Copy Debug Log</button>
+            <button id="download-debug-btn" class="dropdown-item" role="menuitem" type="button">Download diagnostics…</button>
+            <button id="copy-debug-btn" class="dropdown-item" role="menuitem" type="button">Copy diagnostics…</button>
           </div>
         </div>
         <!-- Support (ghost style per spec) -->
@@ -931,12 +932,12 @@
               </label>
 
               <label for="crowd-lifecycle">
-                <span data-tip="What a dot does when it reaches the end of the route">At route end</span>
+                <span data-tip="What a dot does when it reaches the end of its journey">At journey end</span>
                 <select id="crowd-lifecycle">
-                  <option value="respawn">Respawn at start</option>
-                  <option value="loop">Loop around</option>
+                  <option value="respawn">Respawn at entry</option>
+                  <option value="loop">Repeat journey</option>
                   <option value="disappear">Disappear</option>
-                  <option value="collect">Collect at end</option>
+                  <option value="collect">Collect at exit</option>
                 </select>
               </label>
             </div>
@@ -965,6 +966,14 @@
                 </select>
               </label>
               <p class="section-hint">Dots appear at entries and finish at exits. T cycles the type; drag to move; Shift-click deletes.</p>
+              <fieldset id="network-path-weights" class="network-path-weights" hidden>
+                <legend>Path weights</legend>
+                <p id="network-path-weights-help" class="section-hint">
+                  Relative weights set each path's configured share. Actual choices avoid an immediate U-turn when
+                  another path is available.
+                </p>
+                <div id="network-path-weight-rows" class="network-path-weight-rows"></div>
+              </fieldset>
               <button id="network-node-delete" class="btn btn-secondary" type="button">Delete node</button>
             </div>
           </div>
@@ -996,9 +1005,13 @@
               <label for="network-edge-weight">
                 <span data-tip="How strongly dots prefer this edge at a junction, shown as the share of departures that pick it">Traffic</span>
                 <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1">
-                <span id="network-edge-weight-value">100% of departures</span>
+                <span id="network-edge-weight-value">100% configured share</span>
               </label>
-              <p class="section-hint">Share of dots leaving each end that choose this edge. Drag the edge to bend it; Shift-click deletes.</p>
+              <p class="section-hint">
+                Configured share among paths leaving each end. Arriving dots avoid an immediate U-turn when another
+                path is available.
+                Drag the edge to bend it; Shift-click deletes.
+              </p>
               <button id="network-edge-delete" class="btn btn-secondary" type="button">Delete edge</button>
             </div>
           </div>
@@ -1089,6 +1102,39 @@
       <div class="modal-buttons">
         <button id="clear-cancel" class="btn btn-secondary" type="button">Cancel</button>
         <button id="clear-confirm" class="btn btn-danger" type="button">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual file sharing disclosure — no export begins until confirmed. -->
+  <div id="share-disclosure-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="share-disclosure-title" aria-describedby="share-disclosure-description" style="display: none;">
+    <div class="modal-content">
+      <button class="modal-close-x" type="button" aria-label="Close" title="Close" data-share-disclosure-close>×</button>
+      <h3 id="share-disclosure-title">Share file?</h3>
+      <p id="share-disclosure-description"></p>
+      <div class="modal-buttons">
+        <button id="share-disclosure-cancel" class="btn btn-secondary" type="button">Cancel</button>
+        <button id="share-disclosure-confirm" class="btn btn-primary" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy-first technical diagnostics: the exact payload is visible first. -->
+  <div id="diagnostics-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="diagnostics-title" aria-describedby="diagnostics-description" style="display: none;">
+    <div class="modal-content diagnostics-modal-content">
+      <button class="modal-close-x" type="button" aria-label="Close" title="Close" data-diagnostics-close>×</button>
+      <h3 id="diagnostics-title">Preview diagnostics</h3>
+      <p id="diagnostics-description">
+        Review the exact technical information below. It excludes project content, images, filenames, browser storage,
+        console logs, URLs and paths. Nothing is sent automatically.
+      </p>
+      <label class="diagnostics-preview-label" for="diagnostics-preview">Technical information</label>
+      <textarea id="diagnostics-preview" class="diagnostics-preview" rows="15" readonly spellcheck="false"></textarea>
+      <p id="diagnostics-status" class="diagnostics-status" role="status" aria-live="polite"></p>
+      <div class="modal-buttons">
+        <button id="diagnostics-cancel" class="btn btn-secondary" type="button">Cancel</button>
+        <button id="diagnostics-copy" class="btn btn-secondary" type="button">Copy</button>
+        <button id="diagnostics-download" class="btn btn-primary" type="button">Download</button>
       </div>
     </div>
   </div>

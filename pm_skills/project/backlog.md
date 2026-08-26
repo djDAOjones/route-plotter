@@ -4,69 +4,94 @@
 
 ## Active
 
-<!-- Phases are dependency-ordered. Phase 0 owner decisions were signed off on
-     2026-08-26; their implementation work now sits in the phase it unlocks.
-     Status tags name the next gate; Quarantine is not schedulable work. -->
+<!-- Current is dependency-ready or has a named residual gate. Next is ordered
+     by dependency chain rather than deadline. Quarantine is not schedulable. -->
 
-### Phase 1 — Live-app health and immediate user value
+### Current
 
-- [ ] KEY-01 [ready] — Restore one authoritative Cmd/Ctrl+Z, redo and Cmd/Ctrl+S path: current `history:*`/`file:save` events have no subscribers. Remove stale Tab-next/previous configuration/help and test each document command exactly once.
-- [ ] UX-01 [ready] — Add a direct labelled Route target to waypoint scope so users return to route controls in one click or keystroke without stepping through the back arrow.
-- [ ] BUG-01 [ready] — Fix area-handle hit-testing at viewport zoom > 1 by comparing pointer and handle coordinates in one space; pin hover and drag regressions.
-- [ ] QA-02 [verify] — Add focused tests for nudge undo grouping and editor-control restoration after undo/redo. Current code appears to satisfy both; close rather than rewrite if the tests confirm it.
-- [ ] CROWD-04 [ready] — Allow Add crowd without a hero route by creating a graph-guided crowd and entering network edit; use route/network-neutral lifecycle copy such as journey end or exit.
-- [ ] CROWD-01 [[detail]](tickets/CROWD-01.md) [ready, partly-built] — Edit all competing outgoing route shares together, normalise predictably, and preview allocation with a non-colour-only weight treatment.
-- [ ] REV-04 [ready] — Prove portable, honest export strategy selection: preload/cache the player, probe required APIs, emit the announced frame count, and publish Chromium/Firefox/Safari codec and offline evidence.
-- [ ] REV-10 [[detail]](tickets/REV-10.md) [ready] — Prune unreferenced custom-image assets without breaking live waypoints, the route head, undo/redo or save/load.
-- [ ] REV-08 [[detail]](tickets/REV-08.md) [ready] — Enforce the approved public/share/support boundary with CSP, reviewed build assets, documented original-byte handling and previewable redacted diagnostics.
-- [ ] REV-09 [[detail]](tickets/REV-09.md) [ready] — Ship the approved MIT licence, third-party notices, private security-reporting route and best-effort GitHub Issues support posture.
+- [~] REV-04 [verify: Chromium/Firefox/Safari + offline] — Runtime probes,
+  format-locked strategy selection, cached player loading and one
+  endpoint-inclusive frame plan are implemented. Publish real-browser
+  codec/container and genuinely offline standalone-export evidence.
+- [ ] SUPPORT-01 [ready] — Add an in-app Report a bug hand-off that reuses
+  REV-08's previewed/redacted copy/download diagnostics and routes users to
+  REV-09's best-effort GitHub Issues. Sharing stays explicit and nothing
+  uploads automatically.
+- [ ] REV-02 [[detail]](tickets/REV-02.md) [ready] — Implement the approved
+  synchronized semantic scene outline plus explicit keyboard and coordinate
+  authoring for route, crowd, network and polygon structures.
+- [ ] UI-01 [ready] — Introduce two-tier cards with 2–4 primary controls and a
+  More disclosure; this is the layout substrate for advanced and crowd
+  controls.
+- [ ] REV-06 [ready] — Measure idle/paused CPU and a representative
+  500-dot/4K scene, then sleep unnecessary animation work; assess
+  direct-render coalescing only where profiling supports it and preserve
+  synchronous export/render-loop frames.
+- [ ] MAINT-01 [ready, low] — Remove verified-unused timing, visibility and
+  export helpers without mixing user-visible behaviour into the sweep.
 
-### Phase 2 — Authoring and inspector foundation
+### Next
 
-- [ ] REV-02 [[detail]](tickets/REV-02.md) [ready] — Implement the approved synchronized semantic scene outline plus explicit keyboard and coordinate authoring for route, crowd, network and polygon structures.
-- [ ] REV-03 [gated: REV-02] — Replace separate mouse/touch paths with one Pointer Events + capture state machine. Include exactly-once contracts, physical mobile evidence and multi-selection group drag.
-- [ ] UI-01 [ready] — Introduce two-tier cards with 2–4 primary controls and a More disclosure; this is the layout substrate for advanced and crowd controls.
-- [ ] UX-02 [gated: UI-01] — Make names/readouts honest in renderer units, migrate Text Size to pixels, and explain comet mode's intentional preview-tail duration in Pacing.
-- [ ] UI-02 [gated: REV-02, UI-01] [sign-off] — Show minor waypoints as indented, selectable, renameable and reorder-visible rows using the approved semantic outline.
-- [ ] UI-03 [gated: UI-01] — Surface existing Label colour/background/opacity and camera zoom-transition controls behind More; model, rendering and persistence already exist.
-- [ ] UI-04 [gated: UI-01] — Show an honest mixed state when a multi-selection disagrees instead of silently displaying the primary waypoint's values.
-- [ ] UI-05 [gated: UI-01] — Add per-card Reset to route style and Apply onward after the card layout and mixed-value rules are stable.
+- [ ] REV-03 [gated: REV-02] — Replace separate mouse/touch paths with one
+  Pointer Events + capture state machine. Include exactly-once contracts,
+  physical mobile evidence and multi-selection group drag.
+- [ ] UX-02 [gated: UI-01] — Make names/readouts honest in renderer units,
+  migrate Text Size to pixels, and explain comet mode's intentional
+  preview-tail duration in Pacing.
+- [ ] UI-03 [gated: UI-01] — Surface existing Label
+  colour/background/opacity and camera zoom-transition controls behind More;
+  model, rendering and persistence already exist.
+- [ ] UI-04 [gated: UI-01] — Show an honest mixed state when a multi-selection
+  disagrees instead of silently displaying the primary waypoint's values.
+- [ ] UI-05 [gated: UI-01] — Add per-card Reset to route style and Apply onward
+  after the card layout and mixed-value rules are stable.
+- [ ] UI-02 [gated: REV-02, UI-01] [sign-off] — Show minor waypoints as
+  indented, selectable, renameable and reorder-visible rows using the approved
+  semantic outline.
+- [ ] CROWD-03 [[detail]](tickets/CROWD-03.md) [gated: UI-01] — Expose seeded
+  walking/release/route-choice variation and re-roll using the deterministic
+  model already present.
+- [ ] CROWD-02 [[detail]](tickets/CROWD-02.md)
+  [gated: UI-01, CROWD-03] — Add the whole-route busyness line graph with
+  handles and gradual/step transitions, identical in editor, reload and
+  export.
+- [ ] REV-05 [gated: REV-02, REV-03, CROWD-02] — Complete accessibility
+  assurance with axe, NVDA/VoiceOver, forced colours, reduced motion and
+  200–400% zoom after the new authoring UI stabilises.
+- [ ] SCALE-01 [[detail]](tickets/SCALE-01.md) [gated: REV-06] — Implement
+  project-reference sizing so map-bound graphics preserve their authored
+  proportions across editor, HTML and video resolutions without changing
+  timing.
+- [ ] ROUTE-01 [[detail]](tickets/ROUTE-01.md) [gated: REV-02, REV-03] —
+  Implement simultaneous split hero-route branches on one master timeline,
+  with deterministic fork, reconvergence and completion semantics.
+- [ ] COMPOSE-01 [[detail]](tickets/COMPOSE-01.md)
+  [gated: ROUTE-01, REV-03, CROWD-03] — Bind graph nodes and emitter release
+  timing to route waypoints while preserving deterministic hashes and one-way
+  graph→route ownership.
+- [ ] COMPOSE-03 [gated: ROUTE-01, CROWD-03] — Trace the compatible hero route
+  into a one-way copied guide network so crowds can follow it and branch.
+- [ ] COMPOSE-02 [gated: COMPOSE-01] — Fit a route wait to the analytically
+  computed last crowd arrival as a baked authored value, never a live timing
+  dependency.
+- [ ] COMPOSE-04 [gated: COMPOSE-01, COMPOSE-03, REV-03] — Add the waypoint
+  “+” branch gesture from a bound entry node.
+- [ ] DEMO-01 [gated: COMPOSE-02, COMPOSE-04, REV-04] — Replace bare example
+  backgrounds with approved example projects that demonstrate route, crowd
+  and anchors and double as living fixtures.
+- [ ] HEAD-01 [gated: SCALE-01] [low] — Ship a reviewed drone head
+  preset; custom head upload, rotation, persistence, undo and player hydration
+  are already implemented.
 
-### Phase 3 — Crowd control
+### Icebox
 
-- [ ] CROWD-03 [[detail]](tickets/CROWD-03.md) [gated: CROWD-01, UI-01] — Expose seeded walking/release/route-choice variation and re-roll using the deterministic model already present.
-- [ ] CROWD-02 [[detail]](tickets/CROWD-02.md) [gated: UI-01, CROWD-03] — Add the whole-route busyness line graph with handles and gradual/step transitions, identical in editor, reload and export.
-
-### Phase 4 — Assurance and maintainability
-
-- [ ] REV-05 [gated: REV-02, REV-03, Phase 3] — Complete accessibility assurance with axe, NVDA/VoiceOver, forced colours, reduced motion and 200–400% zoom after the new authoring UI stabilises.
-- [ ] REV-06 [ready] — Measure idle/paused CPU and a representative 500-dot/4K scene, then sleep unnecessary animation work; assess direct-render coalescing only where profiling supports it and preserve synchronous export/render-loop frames.
-- [ ] REV-07 [deferred] — Mature the already-green CI gate with risk-based coverage thresholds, a supported-Node matrix and dependency-update automation.
-- [ ] MAINT-01 [low] — Remove the verified-unused timing/visibility/export helpers after KEY-01, without mixing user-visible behaviour into the sweep.
-- [ ] SUPPORT-01 [gated: REV-08, REV-09] — Build the approved bug-report flow as a previewable/redacted diagnostic bundle plus an owner-approved contact route; do not preselect an email or attachment policy.
-
-### Phase 5 — Route and crowd composition
-
-<!-- If ROUTE-01 changes the hero-route model, implement that compatible model
-     before composition features that assume a linear route. REV-03 gates all
-     new gestures. -->
-
-- [ ] ROUTE-01 [[detail]](tickets/ROUTE-01.md) [gated: REV-02, REV-03] — Implement simultaneous split hero-route branches on one master timeline, with deterministic fork, reconvergence and completion semantics.
-- [ ] COMPOSE-01 [[detail]](tickets/COMPOSE-01.md) [gated: ROUTE-01, REV-03, CROWD-03] — Bind graph nodes and emitter release timing to route waypoints while preserving deterministic hashes and one-way graph→route ownership.
-- [ ] COMPOSE-02 [gated: COMPOSE-01] — Fit a route wait to the analytically computed last crowd arrival as a baked authored value, never a live timing dependency.
-- [ ] COMPOSE-03 [gated: ROUTE-01, CROWD-03] — Trace the compatible hero route into a one-way copied guide network so crowds can follow it and branch.
-- [ ] COMPOSE-04 [gated: REV-03, COMPOSE-01, COMPOSE-03] — Add the waypoint “+” branch gesture from a bound entry node.
-
-### Phase 6 — Showcase and scale
-
-- [ ] SCALE-01 [[detail]](tickets/SCALE-01.md) [gated: REV-06] — Implement project-reference sizing so map-bound graphics preserve their authored proportions across editor, HTML and video resolutions without changing timing.
-- [ ] DEMO-01 [gated: Phase 5, REV-04, REV-08] — Replace bare example backgrounds with approved example projects that demonstrate route, crowd and anchors and double as living fixtures.
-- [ ] HEAD-01 [gated: REV-10, SCALE-01] [low] — Ship a reviewed drone head preset; custom head upload, rotation, persistence, undo and player hydration are already implemented.
-
-## Icebox
-
-- [ ] ICE-01 — Swatch-picker popover. Re-evaluate after UI-01; More disclosures may make it redundant.
-- [ ] ICE-02 — Import-time Okabe-Ito/UoN palette conversion. Promote only on user demand; photo posterisation/dithering needs separate quality work.
+- [ ] REV-07 [deferred] — Mature the already-green CI gate with risk-based
+  coverage thresholds, a supported-Node matrix and dependency-update
+  automation.
+- [ ] ICE-01 — Swatch-picker popover. Re-evaluate after UI-01; More disclosures
+  may make it redundant.
+- [ ] ICE-02 — Import-time Okabe-Ito/UoN palette conversion. Promote only on
+  user demand; photo posterisation/dithering needs separate quality work.
 
 ## Quarantine — proposed cuts, awaiting owner approval
 

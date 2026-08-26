@@ -17,7 +17,7 @@
  * - Automatic pruning when history exceeds MAX_HISTORY
  */
 
-const MAX_HISTORY = 150;
+export const MAX_HISTORY = 150;
 
 export class UndoService {
   /**
@@ -41,28 +41,69 @@ export class UndoService {
    * Call this after each undoable user action.
    * 
    * @param {Object} state - Application state to save (will be JSON serialized)
+   * @param {Object} [options]
+   * @param {number} [options.discardOldest=0] - Additional oldest snapshots
+   *   to discard after the ordinary MAX_HISTORY rollover.
+   * @returns {{saved: boolean, automaticDiscardCount: number, additionalDiscardCount: number}}
    */
-  saveState(state) {
-    const serialized = JSON.stringify(state);
-    
-    // Skip if state hasn't changed
-    if (serialized === this._lastState) {
-      return;
+  saveState(state, { discardOldest = 0 } = {}) {
+    if (!Number.isInteger(discardOldest) || discardOldest < 0) {
+      throw new Error('Additional history discard count must be a non-negative integer');
     }
-    
-    // Push to undo stack
-    this._undoStack.push(serialized);
-    
-    // Clear redo stack (new action invalidates redo history)
-    this._redoStack = [];
-    
-    // Prune if exceeds max history
-    if (this._undoStack.length > MAX_HISTORY) {
-      this._undoStack.shift();
+
+    const preview = this.previewSaveState(state);
+    if (!preview.saved) {
+      if (discardOldest !== 0) {
+        throw new Error('Cannot discard undo history without saving a new state');
+      }
+      return { saved: false, automaticDiscardCount: 0, additionalDiscardCount: 0 };
     }
-    
-    this._lastState = serialized;
+
+    const maxAdditionalDiscard = Math.max(0, preview.undoStack.length - 1);
+    if (discardOldest > maxAdditionalDiscard) {
+      throw new Error('Cannot discard the current undo state');
+    }
+
+    this._undoStack = preview.undoStack.slice(discardOldest);
+    this._redoStack = preview.redoStack;
+    this._lastState = preview.lastState;
     this._emitStateChange();
+    return {
+      saved: true,
+      automaticDiscardCount: preview.automaticDiscardCount,
+      additionalDiscardCount: discardOldest,
+    };
+  }
+
+  /**
+   * Preview the exact stacks a successful save would retain without mutating
+   * history. Asset admission uses this to account for normal redo invalidation
+   * and MAX_HISTORY rollover before considering extra history loss.
+   * @param {Object} state
+   * @returns {{saved: boolean, undoStack: string[], redoStack: string[], lastState: string|null, automaticDiscardCount: number}}
+   */
+  previewSaveState(state) {
+    const serialized = JSON.stringify(state);
+    if (serialized === this._lastState) {
+      return {
+        saved: false,
+        undoStack: [...this._undoStack],
+        redoStack: [...this._redoStack],
+        lastState: this._lastState,
+        automaticDiscardCount: 0,
+      };
+    }
+
+    const undoStack = [...this._undoStack, serialized];
+    const automaticDiscardCount = Math.max(0, undoStack.length - MAX_HISTORY);
+    return {
+      saved: true,
+      undoStack: undoStack.slice(automaticDiscardCount),
+      // A successful new state always starts a new branch.
+      redoStack: [],
+      lastState: serialized,
+      automaticDiscardCount,
+    };
   }
   
   /**
@@ -154,6 +195,15 @@ export class UndoService {
       redoStack: [...this._redoStack],
       lastState: this._lastState,
     };
+  }
+
+  /**
+   * Return immutable serialized roots for reference accounting without
+   * exposing the mutable history arrays themselves.
+   * @returns {string[]}
+   */
+  getRetainedSerializedStates() {
+    return [...this._undoStack, ...this._redoStack];
   }
 
   /**

@@ -20,9 +20,26 @@
  * interactive scrubbing, responsive vector rendering, iframe-friendly.
  */
 
+import { ImageAsset, IMAGE_LIMITS } from '../models/ImageAsset.js';
+
 export class HTMLExportService {
   constructor() {
     this.playerVersion = '3.0.0';
+    this._playerBundle = null;
+    this._playerBundlePromise = null;
+
+    // Warm the standalone player while the user works. A failed warm-up is
+    // deliberately non-fatal and is not cached, so export can retry after a
+    // transient network or deployment error.
+    this._preloadAttempt = this.preloadPlayerBundle().catch(() => null);
+  }
+
+  /**
+   * Start (or join) the successful-only player bundle cache.
+   * @returns {Promise<string>}
+   */
+  preloadPlayerBundle() {
+    return this._fetchPlayerBundle();
   }
 
   /**
@@ -30,20 +47,17 @@ export class HTMLExportService {
    * @param {Object} options - Export options
    * @param {Object} options.projectData - Full coordVersion-9 project snapshot
    *   (the persistence mixin's _buildProjectSnapshot shape, assets included)
-   * @param {HTMLImageElement} options.backgroundImage - Background image element
+   * @param {string} options.backgroundDataURL - Exact retained PNG/JPEG/WebP
+   *   source data URL. The service never re-encodes it.
    * @param {string} options.title - Project title for the HTML page
    * @returns {Promise<Blob>} HTML file as a Blob
    */
   async exportHTML(options) {
-    const { projectData, backgroundImage, title = 'Route animation' } = options;
-
-    let backgroundBase64 = null;
-    if (backgroundImage) {
-      backgroundBase64 = await this._imageToBase64(backgroundImage);
-    }
+    const { projectData, backgroundDataURL, title = 'Route animation' } = options;
+    const retainedBackground = this._validateBackgroundDataURL(backgroundDataURL);
 
     const playerBundle = await this._fetchPlayerBundle();
-    const html = this._generateHTML(title, backgroundBase64, projectData, playerBundle);
+    const html = this._generateHTML(title, retainedBackground, projectData, playerBundle);
     return new Blob([html], { type: 'text/html' });
   }
 
@@ -53,7 +67,30 @@ export class HTMLExportService {
    * GitHub Pages both serve it at a URL relative to the page.
    * @returns {Promise<string>} The bundle source, ready to inline
    */
-  async _fetchPlayerBundle() {
+  _fetchPlayerBundle() {
+    if (this._playerBundle !== null) {
+      return Promise.resolve(this._playerBundle);
+    }
+    if (this._playerBundlePromise) {
+      return this._playerBundlePromise;
+    }
+
+    this._playerBundlePromise = this._loadPlayerBundle()
+      .then((playerBundle) => {
+        this._playerBundle = playerBundle;
+        this._playerBundlePromise = null;
+        return playerBundle;
+      })
+      .catch((error) => {
+        // Failure is never sticky: the next preload/export gets a fresh try.
+        this._playerBundlePromise = null;
+        throw error;
+      });
+
+    return this._playerBundlePromise;
+  }
+
+  async _loadPlayerBundle() {
     const url = new URL('player.js', document.baseURI);
     const version = typeof APP_VERSION === 'string' ? APP_VERSION : 'dev';
     url.searchParams.set('v', version);
@@ -81,29 +118,21 @@ export class HTMLExportService {
       .replace(/\u2029/g, '\\u2029');
   }
 
-  /**
-   * Convert an image element to base64 data URL
-   * Fills transparent areas with white before encoding to JPEG
-   */
-  async _imageToBase64(img) {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth || img.width;
-      canvas.height = img.naturalHeight || img.height;
-      const ctx = canvas.getContext('2d');
-
-      // Fill with white first to handle transparent images
-      // JPEG doesn't support transparency, so transparent areas would become black
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw image on top of white background
-      ctx.drawImage(img, 0, 0);
-
-      // Use JPEG for smaller file size (transparency already handled)
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-      resolve(dataUrl);
-    });
+  _validateBackgroundDataURL(dataURL) {
+    const unavailableMessage =
+      'Original background bytes are unavailable. Reload the PNG, JPEG, or WebP background before exporting HTML.';
+    try {
+      const metadata = ImageAsset.inspectDataURL(dataURL);
+      if (!IMAGE_LIMITS.ALLOWED_MIME_TYPES.includes(metadata.mimeType) ||
+          metadata.byteLength <= 0 || metadata.byteLength > IMAGE_LIMITS.MAX_BYTES ||
+          !ImageAsset._hasExpectedSignature(dataURL, metadata.mimeType)) {
+        throw new Error('Unsupported or invalid background source');
+      }
+    } catch (error) {
+      console.error('HTML export background source is invalid:', error);
+      throw new Error(unavailableMessage);
+    }
+    return dataURL;
   }
 
   /**
@@ -114,12 +143,13 @@ export class HTMLExportService {
    * cannot reference styles/tokens.css), 44px targets, visible focus rings,
    * 7:1 text contrast, native form controls, sentence case.
    */
-  _generateHTML(title, backgroundBase64, projectData, playerBundle) {
+  _generateHTML(title, backgroundDataURL, projectData, playerBundle) {
     const safeTitle = this._escapeHTML(title);
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${safeTitle}</title>
   <style>
@@ -260,7 +290,7 @@ export class HTMLExportService {
   </div>
   <script>
     window.__ROUTE_PLOTTER_PROJECT__ = ${this._embedJSON(projectData)};
-    window.__ROUTE_PLOTTER_BG__ = ${this._embedJSON(backgroundBase64)};
+    window.__ROUTE_PLOTTER_BG__ = ${this._embedJSON(backgroundDataURL)};
   </script>
   <script>
 ${playerBundle}
@@ -283,15 +313,14 @@ ${playerBundle}
 
   /**
    * Estimate the file size of the export
-   * @param {HTMLImageElement} backgroundImage - Background image
+   * @param {string} backgroundDataURL - Exact retained source data URL
    * @returns {Promise<Object>} Size estimate { bytes, formatted }
    */
-  async estimateSize(backgroundImage) {
-    let imageSize = 0;
-    if (backgroundImage) {
-      const base64 = await this._imageToBase64(backgroundImage);
-      imageSize = base64.length * 0.75; // Base64 is ~33% larger than binary
-    }
+  async estimateSize(backgroundDataURL) {
+    const retainedBackground = this._validateBackgroundDataURL(backgroundDataURL);
+    // The data URL is embedded as text, so count its actual UTF-8 footprint;
+    // estimating decoded binary bytes would understate the standalone file.
+    const imageSize = new TextEncoder().encode(retainedBackground).length;
 
     const playerSize = 140000; // ~137KB minified player bundle (docs/player.js)
     const dataSize = 4000;     // project snapshot JSON (typical scene)

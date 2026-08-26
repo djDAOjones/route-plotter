@@ -17,6 +17,41 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Phase 1 — live-app health and public boundary (shipped 2026-08-26)
+
+KEY-01 — Undo, redo and Save now have one authoritative keyboard/button event
+path; stale Tab navigation was removed. (2026-08-26) — see decision-log.
+
+UX-01 — Waypoint scope now has a direct labelled Route target, avoiding
+repeated back-arrow navigation. (2026-08-26) — see decision-log.
+
+BUG-01 — Area-handle hit-testing now compares one coordinate space and remains
+correct through viewport zoom and drag. (2026-08-26) — see decision-log.
+
+QA-02 — Nudge undo grouping and editor restoration after undo/redo are pinned
+as verified behaviour. (2026-08-26) — see decision-log.
+
+CROWD-04 — Add crowd works without a hero route by creating a graph guide and
+entering network authoring with neutral lifecycle copy. (2026-08-26) — see
+decision-log.
+
+CROWD-01 — Junction choices are edited together as normalised shares and
+previewed with percentage text plus non-colour-only guide widths.
+(2026-08-26) — see decision-log.
+
+REV-08 — The public/share/support boundary is enforced by an explicit build
+allowlist, CSP, safe style grammar, original-byte disclosure and previewed
+redacted diagnostics. (2026-08-26) — see decision-log.
+
+REV-09 — MIT terms, dependency notices, private vulnerability reporting and
+best-effort GitHub Issues support now ship as checked governance contracts.
+(2026-08-26) — see decision-log.
+
+REV-10 — Custom marker and route-head images now use reference-aware asset
+reachability, rollback-safe admission and minimum-oldest undo shortening at
+the project limits; Clear, load, recovery and ZIP boundaries are pinned.
+(2026-08-26) — see decision-log.
+
 ## Phase 0 — owner decisions and acceptance (closed 2026-08-26)
 
 QA-01 — Owner accepted selection behaviour, standalone-player feel, major-leg

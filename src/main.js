@@ -19,83 +19,6 @@
  */
 console.log(`🚀 Route Plotter v${APP_VERSION} loaded`);
 
-// ========== DEBUG LOG BUFFER ==========
-// Captures console.log, .warn, .error for easy copying to clipboard
-const DEBUG_LOG_BUFFER = [];
-const DEBUG_LOG_MAX_SIZE = 500; // Keep last 500 log entries
-
-// Intercept console methods to capture debug messages
-['log', 'warn', 'error'].forEach(method => {
-  const original = console[method].bind(console);
-  console[method] = function(...args) {
-    original(...args);
-    const tag = method === 'log' ? 'LOG' : method === 'warn' ? 'WRN' : 'ERR';
-    const message = args.map(arg => {
-      if (arg instanceof Error) return `${arg.message}\n${arg.stack}`;
-      if (typeof arg === 'object') try { return JSON.stringify(arg); } catch { return String(arg); }
-      return String(arg);
-    }).join(' ');
-    DEBUG_LOG_BUFFER.push(`[${new Date().toISOString().slice(11, 23)}] [${tag}] ${message}`);
-    if (DEBUG_LOG_BUFFER.length > DEBUG_LOG_MAX_SIZE) {
-      DEBUG_LOG_BUFFER.shift();
-    }
-  };
-});
-
-/**
- * Build the debug log content as a markdown string.
- * Shared by download and copy functions.
- * @returns {string} Formatted markdown debug log
- */
-function buildDebugLogContent() {
-  const now = new Date();
-  const header = [
-    `# Route Plotter v${APP_VERSION} — Debug Log`,
-    '',
-    `| Field | Value |`,
-    `|-------|-------|`,
-    `| Generated | ${now.toISOString()} |`,
-    `| User Agent | ${navigator.userAgent} |`,
-    `| Screen | ${screen.width}\u00d7${screen.height} @ ${devicePixelRatio}x |`,
-    `| WebCodecs | ${typeof VideoEncoder !== 'undefined' ? 'available' : 'unavailable'} |`,
-    '',
-    '## Console Log',
-    '',
-    '```',
-  ].join('\n');
-  const footer = '\n```\n';
-  return header + '\n' + DEBUG_LOG_BUFFER.join('\n') + footer;
-}
-
-/**
- * Download debug logs as a .md file with markdown-formatted system info.
- */
-function downloadDebugLog() {
-  const logText = buildDebugLogContent();
-  const blob = new Blob([logText], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  const ts = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-  a.download = `route-plotter-debug-${ts}.md`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/**
- * Copy debug logs to clipboard as markdown.
- * @returns {Promise<boolean>} True if successful
- */
-async function copyDebugLog() {
-  try {
-    await navigator.clipboard.writeText(buildDebugLogContent());
-    return true;
-  } catch (err) {
-    console.error('Failed to copy debug log:', err);
-    return false;
-  }
-}
-
 // Update page title and header with version on load
 document.addEventListener('DOMContentLoaded', () => {
   document.title = `Route Plotter v${APP_VERSION}`;
@@ -103,23 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (h1) {
     h1.textContent = 'Route Plotter';
     h1.title = `Version ${APP_VERSION}`;
-  }
-  
-  // Setup debug log download button
-  const debugBtn = document.getElementById('download-debug-btn');
-  if (debugBtn) {
-    debugBtn.addEventListener('click', () => downloadDebugLog());
-  }
-  
-  // Setup debug log copy button
-  const copyDebugBtn = document.getElementById('copy-debug-btn');
-  if (copyDebugBtn) {
-    copyDebugBtn.addEventListener('click', async () => {
-      const ok = await copyDebugLog();
-      const orig = copyDebugBtn.textContent;
-      copyDebugBtn.textContent = ok ? 'Copied!' : 'Failed';
-      setTimeout(() => { copyDebugBtn.textContent = orig; }, 2000);
-    });
   }
 });
 
@@ -167,13 +73,16 @@ import { editorPanelMixin } from './app/editorPanel.js';
 import { pointerMixin } from './app/pointer.js';
 import { crowdsMixin } from './app/crowds.js';
 import { networkMixin } from './app/network.js';
+import { privacyMixin } from './app/privacy.js';
 import { restoreStartupProject } from './app/startup.js';
-import { invalidateProjectOperations } from './app/operationGeneration.js';
 import { loadExampleBackground } from './app/backgroundLoading.js';
+import { clearProject } from './app/projectReset.js';
 
 // Main application class for Route Plotter v3
 class RoutePlotter {
   constructor() {
+    this.appVersion = APP_VERSION;
+
     // Services
     this.storageService = new StorageService();
     this.storageService.attachLifecycle(window);
@@ -660,6 +569,9 @@ class RoutePlotter {
     
     // Initialize dropdown menus
     initAllDropdowns();
+
+    // Manual file and diagnostics sharing pauses at a disclosure/preview.
+    this.setupPrivacyControls();
     
     // Initialize waypoint list (shows getting started instructions when empty)
     this.updateWaypointList();
@@ -880,81 +792,7 @@ class RoutePlotter {
    * Resets animation state, clears path data, and triggers a re-render
    */
   clearAll() {
-    // Clear establishes a new project baseline. Any background/custom-image
-    // decode or Open Project operation started against the prior baseline is
-    // no longer allowed to commit when it eventually resolves.
-    invalidateProjectOperations(this);
-    this._editRevision += 1;
-    this.waypoints = []; // Clear Waypoint instances
-    this.waypointsById.clear(); // Clear ID lookup map
-    this.scene.clear(); // Clear flow layers
-    this.pathPoints = [];
-    this.selectedWaypoint = null;
-    this.selectedWaypoints = [];
-    this.imageAssetService.clear();
-    this.background.image = null;
-    this.updateImageTransform(null);
-    this._autosaveBackgroundCache = null;
-    this._autosaveAssetWarningShown = false;
-    this._autosaveBackgroundWarningShown = false;
-    this._autosaveFailureWarningShown = false;
-    if (this.styles.pathHead) {
-      this.styles.pathHead.image = null;
-      this.styles.pathHead.imageAssetId = null;
-    }
-    if (this.elements.headPreview) this.elements.headPreview.style.display = 'none';
-    if (this.elements.headFilename) this.elements.headFilename.textContent = '';
-    if (this.elements.headPreviewImg) this.elements.headPreviewImg.removeAttribute('src');
-    this.uiController?.setSelection([], null);
-    if (this.selectedCrowd) {
-      this.selectedCrowd = null;
-      this.eventBus.emit('crowd:deselected');
-    }
-    this.updateLayersStrip();
-    
-    // Reset animation state via AnimationEngine
-    this.animationEngine.reset();
-    this.animationEngine.setDuration(0);
-    
-    this.pause();
-    this.updateTimeDisplay();
-    this.updateWaypointList();
-    
-    // Switch to edit mode
-    if (this.previewMode) {
-      this.previewMode = false;
-      this.eventBus.emit('mode:changed', { previewMode: false });
-    }
-    
-    // Emit app:cleared event for SectionController to show help
-    this.eventBus.emit('app:cleared');
-    
-    // Update waypoint editor to show no selection
-    if (this.uiController) {
-      this.uiController.updateWaypointEditor(null);
-    }
-    
-    // Re-render canvas to clear waypoints visually
-    this.render();
-
-    // Clear is a new, non-undoable local baseline. Cancel pending writers
-    // before resetting both recovery and history so old work cannot reappear
-    // after the confirmation has completed.
-    if (this._undoDebounceTimer) {
-      clearTimeout(this._undoDebounceTimer);
-      this._undoDebounceTimer = null;
-    }
-    this.undoService.reset(this._getUndoableState());
-    const recoveryCleared = this.storageService.clearAutoSave();
-    this._isDirty = false;
-    this.updateTitleIndicator();
-    if (!recoveryCleared) {
-      this.announce('Browser recovery could not be cleared; reload may restore old work.', 'assertive');
-    } else {
-      this.announce('Project cleared');
-    }
-    
-    console.log('Cleared all waypoints and path');
+    clearProject(this);
   }
   
   showSplash() {
@@ -1166,6 +1004,7 @@ Object.assign(
   pointerMixin,
   crowdsMixin,
   networkMixin,
+  privacyMixin,
 );
 
 // Initialize app when DOM is ready

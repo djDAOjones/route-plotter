@@ -36,6 +36,8 @@ export async function loadBackgroundFile(app, file) {
     if (!isAsyncProjectOperationCurrent(app, token)) return false;
 
     app.background.image = img;
+    // Historical field name: this retains the validated original source data
+    // URL for explicit ZIP/HTML export. Browser autosave never serialises it.
     app._autosaveBackgroundCache = asset?.base64
       ? { image: img, dataURL: asset.base64 }
       : null;
@@ -73,6 +75,7 @@ export async function loadExampleBackground(app, imagePath, {
     if (!isAsyncProjectOperationCurrent(app, token)) return false;
 
     app.background.image = img;
+    // See loadBackgroundFile: source bytes are export-only, not recovery data.
     app._autosaveBackgroundCache = { image: img, dataURL: asset.base64 };
     app.updateImageTransform(img);
     app.eventBus.emit('video:resolution-native');

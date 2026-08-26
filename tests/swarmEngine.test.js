@@ -281,6 +281,15 @@ describe('SwarmEngine.evaluate — graph routing', () => {
     expect(ratio).toBeLessThan(4.0);
   });
 
+  test('junction choices stay distributed when finite weights overflow a direct sum', () => {
+    const { layer, exitA, exitB } = forkLayer(1e308, 1e308, { dotCount: 400, speed: 5 });
+    const dots = evaluate(layer, 9000);
+    const atA = dots.filter(d => Math.abs(d.y - exitA.y) < 0.01).length;
+    const atB = dots.filter(d => Math.abs(d.y - exitB.y) < 0.01).length;
+    expect(atA).toBeGreaterThan(150);
+    expect(atB).toBeGreaterThan(150);
+  });
+
   test('one-way edges are never traversed backwards', () => {
     // Only edge is exit→entry one-way, so the entry has no way onward:
     // dots park at the entry node (dead end behaves as an exit).

@@ -1,4 +1,5 @@
 import { PathCalculator } from './PathCalculator.js';
+import { getGraphDepartures, normalizeGraphWeights } from '../utils/graphRouting.js';
 
 /**
  * Deterministic swarm evaluator for flow layers (Phase 3).
@@ -380,26 +381,16 @@ export class SwarmEngine {
    * @returns {Array<{edge, reversed:boolean}>}
    */
   _traversableEdges(graph, nodeId, cameFromEdgeId) {
-    const all = [];
-    for (const edge of graph.getEdgesForNode(nodeId)) {
-      if (edge.sourceId === nodeId) {
-        all.push({ edge, reversed: false });
-      } else if (edge.direction === 'two-way') {
-        all.push({ edge, reversed: true });
-      }
-    }
-    const onward = all.filter(t => t.edge.id !== cameFromEdgeId);
-    return onward.length > 0 ? onward : all;
+    return getGraphDepartures(graph, nodeId, { cameFromEdgeId });
   }
 
   /** Weight-proportional traversal choice via one hash draw. @private */
   _pickWeighted(candidates, seed, dotIndex, hopIndex) {
-    let total = 0;
-    for (const c of candidates) total += c.edge.weight;
-    let target = SwarmEngine.hash(seed, dotIndex, hopIndex) * total;
-    for (const c of candidates) {
-      target -= c.edge.weight;
-      if (target < 0) return c;
+    const shares = normalizeGraphWeights(candidates.map(candidate => candidate.edge.weight));
+    let target = SwarmEngine.hash(seed, dotIndex, hopIndex);
+    for (let index = 0; index < candidates.length; index++) {
+      target -= shares[index];
+      if (target < 0) return candidates[index];
     }
     return candidates[candidates.length - 1];
   }

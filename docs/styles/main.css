@@ -549,6 +549,30 @@ kbd{
   overflow-wrap:anywhere;
 }
 
+.scope-route-btn{
+  flex:none;
+  min-width:3.5rem;
+  min-height:2.75rem;
+  padding:0 var(--space-2);
+  border:1px solid currentColor;
+  border-radius:var(--radius-2);
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.scope-route-btn:hover:not(:disabled){
+  background:rgba(0,0,0,0.06);
+}
+
+.scope-route-btn:disabled{
+  border-color:transparent;
+  opacity:0.55;
+  cursor:default;
+}
+
 .scope-nav-btn{
   flex:none;
   min-width:2.75rem;
@@ -1537,6 +1561,69 @@ kbd{
   margin:var(--space-1) 0 0;
 }
 
+/* Junction path-choice fieldset: native number inputs keep exact weights
+   keyboard-editable; read-only percentages explain the resulting split. */
+.network-path-weights{
+  border:0;
+  min-inline-size:0;
+  margin:var(--space-4) 0;
+  padding:0;
+}
+
+.network-path-weights[hidden]{
+  display:none;
+}
+
+.network-path-weights legend{
+  padding:0;
+  color:var(--text-01);
+  font-size:var(--type-label);
+  font-weight:var(--w-label);
+}
+
+.network-path-weights > .section-hint{
+  margin-bottom:var(--space-2);
+}
+
+.network-path-weight-rows{
+  display:grid;
+  gap:var(--space-2);
+}
+
+.section-content .network-path-weight-row{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) 5rem;
+  align-items:center;
+  gap:var(--space-1) var(--space-2);
+  min-height:var(--touch-target-min);
+  margin:0;
+}
+
+.section-content .network-path-weight-row .network-path-weight-name{
+  min-width:0;
+  flex:none;
+  color:var(--text-01);
+  font-size:var(--type-caption);
+  font-weight:500;
+}
+
+.section-content .network-path-weight-row input[type="number"]{
+  width:5rem;
+  min-height:var(--touch-target-min);
+  box-sizing:border-box;
+  background:var(--ui-00);
+}
+
+.section-content .network-path-weight-row .network-path-weight-value{
+  grid-column:1 / -1;
+  min-width:0;
+  text-align:left;
+  color:var(--text-02);
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  font-weight:var(--w-mono);
+}
+
 .waypoint-item{
   position:relative;
   display:flex;
@@ -1864,6 +1951,49 @@ kbd{
   display:flex;
   gap:var(--space-3);
   justify-content:flex-end;
+}
+
+.diagnostics-modal-content{
+  max-width:48rem;
+}
+
+.diagnostics-preview-label{
+  display:block;
+  margin:0 0 var(--space-2);
+  color:var(--text-01);
+  font-size:var(--type-label);
+  font-weight:var(--w-label);
+}
+
+.diagnostics-preview{
+  display:block;
+  width:100%;
+  min-height:16rem;
+  max-height:45vh;
+  margin:0;
+  padding:var(--space-3);
+  resize:vertical;
+  box-sizing:border-box;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  background:var(--ui-00);
+  color:var(--text-01);
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  line-height:var(--lh-body);
+}
+
+.diagnostics-preview:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.modal-content .diagnostics-status{
+  min-height:1.5rem;
+  margin:var(--space-2) 0 var(--space-3);
+  color:var(--text-02);
 }
 
 /* ========== Keyboard Shortcuts Modal ========== */

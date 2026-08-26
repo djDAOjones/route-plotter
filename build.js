@@ -36,6 +36,7 @@
  */
 
 import * as esbuild from 'esbuild';
+import { createHash } from 'node:crypto';
 import fs from 'fs';
 import path from 'path';
 
@@ -43,6 +44,94 @@ import path from 'path';
 
 const VERSION_FILE = './version.json';
 const PACKAGE_FILE = './package.json';
+const PUBLIC_ASSET_MANIFEST_FILE = './public-assets.json';
+const APPROVED_PUBLIC_ASSET_COUNT = 6;
+
+/**
+ * Read and validate the owner-approved public image manifest. Its paths are
+ * repository-relative and deliberately limited to bitmap files in images/;
+ * project archives can therefore never enter the Pages copy list through this
+ * boundary.
+ * @param {string} manifestFile
+ * @returns {{schemaVersion: number, approval: Object, assets: Array<{path: string, sha256: string}>}}
+ */
+function readPublicAssetManifest(manifestFile = PUBLIC_ASSET_MANIFEST_FILE) {
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+  } catch (error) {
+    throw new Error(`Public asset manifest could not be read: ${manifestFile} (${error.message})`);
+  }
+
+  if (manifest?.schemaVersion !== 1 || !manifest.approval || !Array.isArray(manifest.assets)) {
+    throw new Error('Public asset manifest has an unsupported shape');
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(manifest.approval.approvedOn || '') ||
+      manifest.approval.approvedBy !== 'owner' ||
+      typeof manifest.approval.scope !== 'string' || manifest.approval.scope.length === 0) {
+    throw new Error('Public asset manifest is missing its owner approval record');
+  }
+  if (manifest.assets.length !== APPROVED_PUBLIC_ASSET_COUNT) {
+    throw new Error(`Public asset manifest must contain exactly ${APPROVED_PUBLIC_ASSET_COUNT} approved images`);
+  }
+
+  const seenPaths = new Set();
+  for (const asset of manifest.assets) {
+    const assetPath = asset?.path;
+    const isSafeImagePath = typeof assetPath === 'string' &&
+      assetPath === path.posix.normalize(assetPath) &&
+      /^images\/[A-Za-z0-9._-]+\.(?:png|jpe?g|webp)$/i.test(assetPath);
+    if (!isSafeImagePath) throw new Error(`Invalid public image path: ${String(assetPath)}`);
+    if (seenPaths.has(assetPath)) throw new Error(`Duplicate public image path: ${assetPath}`);
+    if (!/^[a-f0-9]{64}$/.test(asset.sha256 || '')) {
+      throw new Error(`Invalid SHA-256 for public image: ${assetPath}`);
+    }
+    seenPaths.add(assetPath);
+  }
+  return manifest;
+}
+
+/**
+ * Verify that every approved path still contains the exact bytes reviewed by
+ * the owner. `sourceRoot` may be a staging directory when validating output.
+ * @param {{assets: Array<{path: string, sha256: string}>}} manifest
+ * @param {string} sourceRoot
+ */
+function verifyPublicAssetHashes(manifest, sourceRoot = '.') {
+  for (const asset of manifest.assets) {
+    const file = path.join(sourceRoot, asset.path);
+    if (!fs.existsSync(file)) throw new Error(`Approved public image is missing: ${asset.path}`);
+    const actual = createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+    if (actual !== asset.sha256) {
+      throw new Error(
+        `Approved public image hash mismatch: ${asset.path} (expected ${asset.sha256}, received ${actual})`
+      );
+    }
+  }
+}
+
+// Read-only verification mode lets the focused boundary test exercise a bad
+// manifest without ever replacing an approved image in the shared worktree.
+const verifyOnlyIndex = process.argv.indexOf('--verify-public-assets-only');
+if (verifyOnlyIndex !== -1) {
+  const candidateManifestFile = process.argv[verifyOnlyIndex + 1] || PUBLIC_ASSET_MANIFEST_FILE;
+  try {
+    const candidateManifest = readPublicAssetManifest(candidateManifestFile);
+    verifyPublicAssetHashes(candidateManifest);
+    console.log(`Verified ${candidateManifest.assets.length} approved public image hashes`);
+    process.exit(0);
+  } catch (error) {
+    console.error(`Public asset verification failed: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+const publicAssetManifest = readPublicAssetManifest();
+verifyPublicAssetHashes(publicAssetManifest);
+const approvedPublicImageFiles = publicAssetManifest.assets.map(asset => asset.path);
+const approvedPublicImageHashes = new Map(
+  publicAssetManifest.assets.map(asset => [asset.path, asset.sha256])
+);
 
 /**
  * Read package.json version and extract major.minor only
@@ -152,22 +241,17 @@ const distDir = isWatchMode
 
 fs.mkdirSync(distDir, { recursive: true });
 
-// Static files to copy
-const staticFiles = [
+// Static shell files plus the manifest-derived, byte-bound image allowlist.
+const staticShellFiles = [
   'index.html',
   'styles/tokens.css',
   'styles/main.css',
   'styles/swatch-picker.css',
   'styles/tooltip.css',
   'styles/dropdown.css',
-  'styles/context-menu.css',
-  'images/Court.png',
-  'images/Garlic.jpg',
-  'images/Nervous_System.jpg',
-  'images/PARM_Aerial.jpg',
-  'images/Rocketry.jpg',
-  'images/UoN_map.png'
+  'styles/context-menu.css'
 ];
+const staticFiles = [...staticShellFiles, ...approvedPublicImageFiles];
 
 /**
  * Copy a single static file to dist
@@ -179,6 +263,9 @@ function copyStaticFile(file, version = null) {
 
   if (!fs.existsSync(src)) {
     throw new Error(`Required static asset is missing: ${file}`);
+  }
+  if (approvedPublicImageHashes.has(file)) {
+    verifyPublicAssetHashes({ assets: [{ path: file, sha256: approvedPublicImageHashes.get(file) }] });
   }
   
   // Create directory if needed
@@ -230,6 +317,29 @@ function copyAllStaticFiles(version) {
 }
 
 /**
+ * Enumerate ordinary files in a generated output tree using POSIX separators.
+ * Generated symlinks or special entries are not valid Pages artifacts.
+ * @param {string} root
+ * @param {string} relativeDir
+ * @returns {string[]}
+ */
+function listOutputFiles(root, relativeDir = '') {
+  const directory = path.join(root, relativeDir);
+  const files = [];
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const relativePath = relativeDir ? `${relativeDir}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) {
+      files.push(...listOutputFiles(root, relativePath));
+    } else if (entry.isFile()) {
+      files.push(relativePath);
+    } else {
+      throw new Error(`Build output contains a non-file entry: ${relativePath}`);
+    }
+  }
+  return files.sort();
+}
+
+/**
  * Verify that every local asset referenced by the generated shell exists.
  * This is deliberately performed before docs/ is replaced.
  * @param {string} outputDir
@@ -248,8 +358,23 @@ function validateBuiltOutput(outputDir, version) {
   if (stylesheetVersions.length === 0 || stylesheetVersions.some(value => value !== version)) {
     throw new Error(`Generated index does not cache-bust every stylesheet with v=${version}`);
   }
-  const references = [...html.matchAll(/\b(?:src|href|data-image)="([^"]+)"/g)]
-    .map(match => match[1].split(/[?#]/, 1)[0])
+
+  const referencedPublicImages = [...html.matchAll(/\bdata-image="([^"]+)"/g)]
+    .map(match => match[1]);
+  if (JSON.stringify(referencedPublicImages) !== JSON.stringify(approvedPublicImageFiles)) {
+    throw new Error(
+      'Generated index example images do not match the owner-approved public asset manifest'
+    );
+  }
+
+  const rawReferences = [...html.matchAll(/\b(?:src|href|data-image)="([^"]+)"/g)]
+    .map(match => match[1]);
+  const outboundReferences = rawReferences.filter(ref => /^(?:https?:)?\/\//i.test(ref));
+  if (outboundReferences.length > 0) {
+    throw new Error(`Generated index contains outbound resource references: ${outboundReferences.join(', ')}`);
+  }
+  const references = rawReferences
+    .map(ref => ref.split(/[?#]/, 1)[0])
     .filter(ref => ref && !ref.startsWith('#') && !/^(?:https?:|mailto:|data:)/.test(ref));
 
   const missing = [...new Set(references)]
@@ -257,6 +382,32 @@ function validateBuiltOutput(outputDir, version) {
   if (missing.length > 0) {
     throw new Error(`Generated index references missing assets: ${missing.join(', ')}`);
   }
+
+  verifyPublicAssetHashes(publicAssetManifest, outputDir);
+
+  const expectedInventory = [
+    ...staticFiles,
+    'app.js',
+    'app.js.map',
+    'player.js',
+    'meta.json'
+  ].sort();
+  const actualInventory = listOutputFiles(outputDir);
+  const expectedSet = new Set(expectedInventory);
+  const actualSet = new Set(actualInventory);
+  const missingOutput = expectedInventory.filter(file => !actualSet.has(file));
+  const unexpectedOutput = actualInventory.filter(file => !expectedSet.has(file));
+  if (missingOutput.length > 0 || unexpectedOutput.length > 0) {
+    throw new Error(
+      `Build artifact inventory mismatch (missing: ${missingOutput.join(', ') || 'none'}; ` +
+      `unexpected: ${unexpectedOutput.join(', ') || 'none'})`
+    );
+  }
+  if (actualInventory.some(file => /\.zip$/i.test(file))) {
+    throw new Error('Build output contains a project ZIP');
+  }
+  console.log(`Artifact inventory (${actualInventory.length} files): ${JSON.stringify(actualInventory)}`);
+  return actualInventory;
 }
 
 /**

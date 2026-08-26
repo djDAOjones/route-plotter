@@ -17,6 +17,7 @@ const mainCss = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
 const wiringDomSource = readFileSync(resolve(process.cwd(), 'src/app/wiringDom.js'), 'utf8');
 const uiControllerSource = readFileSync(resolve(process.cwd(), 'src/controllers/UIController.js'), 'utf8');
 const mainSource = readFileSync(resolve(process.cwd(), 'src/main.js'), 'utf8');
+const projectResetSource = readFileSync(resolve(process.cwd(), 'src/app/projectReset.js'), 'utf8');
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -96,7 +97,7 @@ describe('review remediation keyboard path', () => {
       },
       undo: vi.fn(),
       redo: vi.fn(),
-      saveProject: vi.fn(),
+      requestProjectSave: vi.fn(),
     };
     setupDocumentCommands(app);
 
@@ -123,14 +124,14 @@ describe('review remediation keyboard path', () => {
     command('s');
     expect(app.undo).toHaveBeenCalledTimes(1);
     expect(app.redo).toHaveBeenCalledTimes(1);
-    expect(app.saveProject).toHaveBeenCalledTimes(1);
+    expect(app.requestProjectSave).toHaveBeenCalledTimes(1);
 
     app.elements.undoBtn.click();
     app.elements.redoBtn.click();
     app.elements.saveProjectBtn.click();
     expect(app.undo).toHaveBeenCalledTimes(2);
     expect(app.redo).toHaveBeenCalledTimes(2);
-    expect(app.saveProject).toHaveBeenCalledTimes(2);
+    expect(app.requestProjectSave).toHaveBeenCalledTimes(2);
   });
 
   test('Tab waypoint bindings no longer appear in configuration or Help', () => {
@@ -380,14 +381,13 @@ describe('render and static UI regressions', () => {
 
   test('Clear All cancels recovery and creates one empty undo baseline', () => {
     const clearAllBody = mainSource.match(/clearAll\(\) \{([\s\S]*?)\n  \}\n\s+showSplash\(\)/)?.[1] || '';
-    expect(clearAllBody).toContain('invalidateProjectOperations(this)');
-    expect(clearAllBody).toContain('this.imageAssetService.clear()');
-    expect(clearAllBody).toContain('this.background.image = null');
-    expect(clearAllBody).toContain('this._autosaveBackgroundWarningShown = false');
-    expect(clearAllBody).toContain('this._autosaveFailureWarningShown = false');
-    expect(clearAllBody).toContain('this.undoService.reset(this._getUndoableState())');
-    expect(clearAllBody).toContain('this.storageService.clearAutoSave()');
-    expect(clearAllBody).not.toContain('this.autoSave()');
+    expect(clearAllBody).toContain('clearProject(this)');
+    expect(projectResetSource).toContain('invalidateProjectOperations(app)');
+    expect(projectResetSource).toContain('app.imageAssetService.clear()');
+    expect(projectResetSource).toContain('app.background.image = null');
+    expect(projectResetSource).toContain('app.undoService.reset(app._getUndoableState())');
+    expect(projectResetSource).toContain('app.storageService.clearAutoSave()');
+    expect(projectResetSource).not.toContain('app.autoSave()');
   });
 
   test('custom-image uploads decode detached and reject stale project completions', () => {

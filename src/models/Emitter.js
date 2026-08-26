@@ -16,6 +16,8 @@
  * window at evaluation time.
  */
 
+import { assertSafeStoredColor } from '../utils/safeColor.js';
+
 const VALID_LIFECYCLE_MODES = ['disappear', 'respawn', 'loop', 'collect'];
 const MIN_SPEED = 0.001;
 const MIN_DOT_SIZE = 0.01;
@@ -164,6 +166,7 @@ export class Emitter {
     if ('dotSize' in data && (Number(data.dotSize) < MIN_DOT_SIZE || Number(data.dotSize) > EMITTER_LIMITS.MAX_DOT_SIZE)) {
       throw new Error(`Invalid emitter dotSize: expected ${MIN_DOT_SIZE} to ${EMITTER_LIMITS.MAX_DOT_SIZE}`);
     }
+    assertSafeStoredColor(data.dotColor, 'emitter dotColor', { allowTransparent: true });
 
     for (const field of ['speedVariance', 'releaseStart', 'releaseDuration', 'onsetVariance', 'wobble']) {
       if (field in data && (Number(data[field]) < 0 || Number(data[field]) > 1)) {
