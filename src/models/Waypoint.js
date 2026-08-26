@@ -276,7 +276,8 @@ export class Waypoint {
       'beaconStyle', 'labelMode',
       'labelOffsetX', 'labelOffsetY', 'labelWidth', 'labelSize',
       'labelColor', 'labelBgColor', 'labelBgOpacity',
-      'customImage'
+      'customImage', 'customImageAssetId',
+      'customImageRotation', 'customImageRotationOffset'
     ];
     
     copyProps.forEach(prop => {

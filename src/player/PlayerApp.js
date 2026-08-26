@@ -292,7 +292,7 @@ export class PlayerApp {
       const progressChanged = Math.abs(state.progress - lastProgress) > 0.0001;
       const waitingChanged = state.isWaitingAtWaypoint !== lastWaitingState;
       const zoomTransitioning = this.cameraService.isZoomTransitioning(this.displayWidth, this.displayHeight);
-      if (state.isPlaying || progressChanged || waitingChanged || zoomTransitioning) {
+      if (this.animationEngine.isPlaying() || progressChanged || waitingChanged || zoomTransitioning) {
         if (onFrame) onFrame(state);
         this.render();
         lastProgress = state.progress;

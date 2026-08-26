@@ -2,6 +2,36 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — REV-01 closes the bounded review repairs; product-scale work stays explicit
+
+**Decision:** Close REV-01 with the defects whose root causes could be repaired
+without changing the product model: detached transactional project loading and
+rollback, documented import ceilings, honest bounded autosave and recovery
+ownership, generation-guarded async image work, deterministic trail/timeline
+and transport restoration, one keyboard command path, modal/focus repairs,
+responsive 1280/1024/480/320 reflow with 44 px targets, and reproducible CI,
+clean Pages builds, current-branch deployment and owned-process restart. The
+former blocked reflow item is therefore shipped under REV-01, not left as a
+second description of completed work. The canonical check passed 410 tests,
+the restart contract and a non-mutating production build.
+
+**Boundary and roadmap:** Do not let this corrective branch imply that the
+larger review questions are solved. Non-visual scene authoring, unified Pointer
+Events, cross-browser/offline export proof, full accessibility assurance, idle
+profiling, CI maturity, publication/privacy, licence/support governance and
+reference-aware asset collection remain REV-02–REV-10. The requested direct
+way back from waypoint editing is UX-01 in Wave 1. Competing-route shares,
+whole-route busyness handles and seeded walking/release/choice variation are
+CROWD-01–CROWD-03 in Wave 2, after the inspector disclosure layout they need.
+Split hero routes are ROUTE-01 in Blocked / needs scoping because fork/rejoin
+authoring also changes selection, waits, timing, head count, completion and
+standalone-player/export semantics; owner sign-off must choose one branch, all
+branches in sequence, or simultaneous heads before implementation. This keeps
+bounded reliability work shippable while preserving each product decision as
+an explicit, testable commitment.
+
+---
+
 ## 2026-08-19 — Backlog triage: next milestone resequenced into waves; quarantine created
 
 **Task:** Owner-requested assessment of every backlog item (useful? fits

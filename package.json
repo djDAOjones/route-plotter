@@ -3,20 +3,28 @@
   "version": "3.2.0",
   "description": "Route Plotter v3 - Interactive path animation tool",
   "type": "module",
+  "packageManager": "npm@11.5.1",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
   "scripts": {
     "start": "node build.js --watch --serve",
     "dev": "node build.js --watch --serve",
     "build": "NODE_ENV=production node build.js",
+    "build:check": "NODE_ENV=production node build.js --check",
     "build:deploy": "npm run build",
     "push": "node push.js",
+    "push:dry-run": "node push.js --dry-run",
     "test": "vitest run --pool=threads --no-file-parallelism",
+    "test:shell": "bash tests/restartSafety.test.sh",
+    "check": "npm test && npm run test:shell && npm run build:check",
     "test:watch": "vitest watch --pool=threads --no-file-parallelism",
     "serve": "python3 -m http.server 3000",
     "serve:dist": "cd docs && python3 -m http.server 3000"
   },
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.27.0",
+    "esbuild": "^0.28.1",
     "jsdom": "^27.2.0",
     "vitest": "^4.0.8"
   },

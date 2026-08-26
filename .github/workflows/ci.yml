@@ -1,0 +1,36 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Use pinned Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install frozen dependencies
+        run: npm ci
+
+      - name: Run canonical verification
+        run: npm run check
+
+      - name: Prove verification did not rewrite Pages output
+        run: git diff --exit-code -- docs version.json

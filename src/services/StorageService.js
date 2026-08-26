@@ -1,5 +1,12 @@
 import { STORAGE } from '../config/constants.js';
 
+// localStorage quotas vary by browser and origin. Four MiB leaves headroom
+// for preferences and browser accounting while still preserving useful image
+// data in the autosave snapshot.
+export const STORAGE_LIMITS = Object.freeze({
+  AUTOSAVE_SERIALIZED_MAX: 4 * 1024 * 1024,
+});
+
 /**
  * Service for handling localStorage operations
  * Provides methods for saving and loading application state with error handling
@@ -8,6 +15,31 @@ export class StorageService {
   constructor() {
     this.debounceTimer = null;
     this._lastSerialized = null; // Track last saved state for change detection
+    this._pendingAutoSave = null;
+    this._lifecycleTarget = null;
+    this._pageHideHandler = null;
+  }
+
+  /**
+   * Flush pending recovery state when the page is being discarded. Keeping
+   * this opt-in makes the service testable and lets the app detach cleanly.
+   * @param {EventTarget} target - Usually window
+   */
+  attachLifecycle(target) {
+    if (!target?.addEventListener) return;
+    this.detachLifecycle();
+    this._lifecycleTarget = target;
+    this._pageHideHandler = () => this.flushAutoSave();
+    target.addEventListener('pagehide', this._pageHideHandler);
+  }
+
+  /** Remove the page lifecycle hook without cancelling pending recovery. */
+  detachLifecycle() {
+    if (this._lifecycleTarget && this._pageHideHandler) {
+      this._lifecycleTarget.removeEventListener('pagehide', this._pageHideHandler);
+    }
+    this._lifecycleTarget = null;
+    this._pageHideHandler = null;
   }
   
   /**
@@ -19,8 +51,7 @@ export class StorageService {
   save(key, data) {
     try {
       const serialized = JSON.stringify(data);
-      localStorage.setItem(key, serialized);
-      return true;
+      return this._writeSerialized(key, serialized).ok;
     } catch (error) {
       console.error(`Failed to save to localStorage (${key}):`, error);
       return false;
@@ -76,12 +107,29 @@ export class StorageService {
   /**
    * Save application state (debounced with change detection)
    * @param {Object} state - Application state to save
+   * @param {Function|null} onResult - Called after the actual storage write
+   * @returns {{ok: boolean, pending?: boolean, unchanged?: boolean, error?: Error}}
    */
-  autoSave(state) {
-    // Skip if nothing changed - pure optimization with no downside
-    const newSerialized = JSON.stringify(state);
+  autoSave(state, onResult = null) {
+    let newSerialized;
+    try {
+      newSerialized = JSON.stringify(state);
+      const bytes = new TextEncoder().encode(newSerialized).length;
+      if (bytes > STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX) {
+        throw new Error('Autosave exceeds the 4 MB local-storage safety limit');
+      }
+    } catch (error) {
+      console.error('Failed to prepare autosave:', error);
+      return { ok: false, error };
+    }
+
+    // Skip if nothing changed - pure optimization with no downside.
     if (newSerialized === this._lastSerialized) {
-      return; // No changes detected, skip save
+      // A different state may already be pending. Reverting to the last
+      // durable state must cancel that stale write.
+      this.cancelAutoSave();
+      onResult?.({ ok: true, unchanged: true });
+      return { ok: true, unchanged: true };
     }
     
     // Clear existing timer
@@ -89,12 +137,71 @@ export class StorageService {
       clearTimeout(this.debounceTimer);
     }
     
+    this._pendingAutoSave = { serialized: newSerialized, onResult };
+
     // Set new timer
     this.debounceTimer = setTimeout(() => {
-      this.save(STORAGE.AUTOSAVE_KEY, state);
-      this._lastSerialized = newSerialized; // Remember for next comparison
-      console.debug('Auto-saved state');
+      this.flushAutoSave();
     }, STORAGE.AUTOSAVE_INTERVAL);
+    return { ok: true, pending: true };
+  }
+
+  /**
+   * Write a pending debounced autosave immediately.
+   * @returns {boolean} True when there was nothing pending or the write worked.
+   */
+  flushAutoSave() {
+    if (!this._pendingAutoSave) return true;
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = null;
+
+    const pending = this._pendingAutoSave;
+    this._pendingAutoSave = null;
+    const result = this._writeSerialized(STORAGE.AUTOSAVE_KEY, pending.serialized);
+    if (result.ok) {
+      this._lastSerialized = pending.serialized;
+      console.debug('Auto-saved state');
+    }
+    pending.onResult?.(result);
+    return result.ok;
+  }
+
+  /**
+   * Cancel a pending write so stale state cannot be written after Clear All or
+   * a project replacement.
+   * @returns {boolean} True if a pending write was cancelled.
+   */
+  cancelAutoSave() {
+    const hadPending = Boolean(this._pendingAutoSave || this.debounceTimer);
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = null;
+    this._pendingAutoSave = null;
+    return hadPending;
+  }
+
+  /**
+   * Persist an autosave immediately, replacing any pending older snapshot.
+   * @param {Object} state
+   * @returns {boolean}
+   */
+  saveAutoSave(state) {
+    this.cancelAutoSave();
+    let serialized;
+    try {
+      serialized = JSON.stringify(state);
+      if (new TextEncoder().encode(serialized).length > STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX) {
+        throw new Error('Autosave exceeds the 4 MB local-storage safety limit');
+      }
+    } catch (error) {
+      console.error('Failed to prepare autosave:', error);
+      return false;
+    }
+    const result = this._writeSerialized(STORAGE.AUTOSAVE_KEY, serialized);
+    if (result.ok) {
+      this._lastSerialized = serialized;
+      console.debug('Auto-saved state');
+    }
+    return result.ok;
   }
   
   /**
@@ -110,7 +217,10 @@ export class StorageService {
    * @returns {boolean} True if successful
    */
   clearAutoSave() {
-    return this.remove(STORAGE.AUTOSAVE_KEY);
+    this.cancelAutoSave();
+    const removed = this.remove(STORAGE.AUTOSAVE_KEY);
+    if (removed) this._lastSerialized = null;
+    return removed;
   }
   
   /**
@@ -195,14 +305,16 @@ export class StorageService {
    */
   clearAll() {
     try {
+      this.cancelAutoSave();
       const keys = [
         STORAGE.AUTOSAVE_KEY,
         STORAGE.PREFERENCES_KEY,
         STORAGE.SPLASH_SHOWN_KEY
       ];
       
-      keys.forEach(key => this.remove(key));
-      return true;
+      const removed = keys.map(key => this.remove(key)).every(Boolean);
+      if (removed) this._lastSerialized = null;
+      return removed;
     } catch (error) {
       console.error('Failed to clear all data:', error);
       return false;
@@ -227,5 +339,16 @@ export class StorageService {
       }
     }
     return null;
+  }
+
+  /** @private */
+  _writeSerialized(key, serialized) {
+    try {
+      localStorage.setItem(key, serialized);
+      return { ok: true };
+    } catch (error) {
+      console.error(`Failed to save to localStorage (${key}):`, error);
+      return { ok: false, error };
+    }
   }
 }

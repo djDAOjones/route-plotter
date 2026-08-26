@@ -8,7 +8,8 @@
 | Canvas 2D | Direct pixel manipulation for path rendering and animation |
 | esbuild | Fast bundling, simple config, ESM output |
 | Vitest + jsdom | Unit testing with DOM simulation |
-| mediabunny | MP4/WebM mux layer (only runtime dependency) |
+| mediabunny | MP4/WebM mux layer |
+| jszip | Project ZIP import/export |
 | CSS custom properties | Design tokens for theming (UoN + Okabe-Ito) |
 
 ## Project structure
@@ -89,8 +90,9 @@ Exceptions: none. This is a hard rule.
 
 ## Dev workflow
 
-- Install: `npm install`
+- Install: `npm ci` (Node 24 is pinned in `.nvmrc`)
 - Dev: `npm run dev` → http://localhost:3000
 - Build: `npm run build` → output in `docs/`
-- Test: `npm test` (Vitest)
-- Deploy: `npm run push`
+- Check: `npm run check` (Vitest + restart-script safety contract +
+  non-mutating production build)
+- Deploy: commit source, run `npm run push:dry-run`, then `npm run push`

@@ -8,10 +8,10 @@ If the executable bit is ever lost (e.g. via OneDrive sync), run them with
 
 ## `restart.sh` — clean restart / boot
 
-Stops any running dev server, boots it (`npm run dev`), and waits until
+Stops this checkout's running dev server, boots it (`npm run dev`), and waits until
 `http://localhost:3000` actually answers HTTP 200 before reporting ready.
-Stopping targets the whole dev tree — the port-3000 listener **and** its
-`node build.js --watch` parent — so no watcher is left orphaned.
+Stopping targets the recorded process tree, so no watcher is left orphaned.
+An unrelated process listening on port 3000 is reported and left untouched.
 
 ```bash
 ./scripts/restart.sh              # stop dev server, boot, verify readiness
@@ -19,8 +19,10 @@ Stopping targets the whole dev tree — the port-3000 listener **and** its
 ./scripts/restart.sh --help
 ```
 
-- Stops only this project's dev server (the port-3000 listener and its
-  `node build.js --watch` parent) — never a broad `pkill node`.
+- Stops only this project's recorded dev tree — never a broad `pkill node` and
+  never a process merely because it owns port 3000.
+- Records ownership in ignored `.route-plotter-dev.pid` and removes the file on
+  shutdown.
 - `--hard-reset` deletes only `docs/` (build output). Source files,
   `version.json`, and `_Joe/` are never touched.
 - Runs in the foreground; Ctrl-C stops the server cleanly.

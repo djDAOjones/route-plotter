@@ -1271,9 +1271,15 @@ export class RenderingService {
       } else if (isWaiting) {
         pauseElapsed = this._getPauseElapsed(animationEngine);
       }
-      
+
+      // Absolute marker/time context preserves the post-pause held tail while
+      // keeping comet evaluation independent of which frames rendered before.
+      const trailContext = animationEngine.getTrailVisibilityContext
+        ? animationEngine.getTrailVisibilityContext()
+        : null;
+
       visibleRange = motionVisibilityService.getPathVisibleRange(
-        progress, motionSettings, pathDuration, isWaiting, pauseElapsed, isInTailTime
+        progress, motionSettings, pathDuration, isWaiting, pauseElapsed, isInTailTime, trailContext
       );
       trailProgress = motionSettings.pathTrail > 0 && pathDuration > 0 
         ? (motionSettings.pathTrail * 1000) / pathDuration 
@@ -2038,7 +2044,7 @@ export class RenderingService {
         // NOTE: Beacon scale REPLACES visibility scale, not multiplies, because
         // beacons like Pop/Grow/Pulse handle the full scale animation themselves
         // (including hide-before/hide-after behavior)
-        const isAnimationPlaying = animationEngine?.state?.isPlaying === true;
+        const isAnimationPlaying = animationEngine?.isPlaying?.() === true;
         if (isAnimationPlaying) {
           const beaconOverride = this.getBeaconScaleOverride(waypoint);
           if (beaconOverride && beaconOverride.scale !== undefined) {

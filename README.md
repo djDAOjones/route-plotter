@@ -24,21 +24,24 @@ An animated route editor for maps and images. Drop in a background, click to pla
 ```bash
 git clone https://github.com/djDAOjones/route-plotter.git
 cd route-plotter
-npm install
+nvm use            # Node version is pinned in .nvmrc
+npm ci
 npm run dev        # Dev server with watch → http://localhost:3000
 ```
 
 ```bash
 npm run build          # Production bundle → docs/
-npm run build:deploy   # Production build → docs/ (alias of build, for GitHub Pages)
+npm run build:check    # Validate a production build without changing docs/ or the version
 npm test               # Vitest (jsdom)
-npm run push           # Build, commit docs/, push to origin/main
+npm run check          # Tests + non-mutating production build
+npm run push:dry-run   # Preview the clean-tree deployment commands
+npm run push           # Test, build, commit docs/, push the current branch
 ```
 
 Maintainer shortcuts — wrappers around the above, runnable from any directory (see `scripts/README.md`):
 
 ```bash
-./scripts/restart.sh   # free port 3000, reboot dev, wait for HTTP 200
+./scripts/restart.sh   # restart this repo's server, then wait for HTTP 200
 ./scripts/build.sh     # production build into docs/ (add --test to run tests)
 ```
 
@@ -48,12 +51,13 @@ Maintainer shortcuts — wrappers around the above, runnable from any directory 
 
 ```text
 index.html                        Single-page app shell (sidebar + canvas + controls)
+.nvmrc                            Supported local Node major
 build.js                          esbuild bundler, version management, dev server
 version.json                      Auto-incremented build number
-push.js                           GitHub Pages deploy helper
+push.js                           Clean-tree, current-branch GitHub Pages deploy helper
 
 scripts/                          Maintainer convenience wrappers (run from anywhere)
-  restart.sh                      Clean restart/boot — free port 3000, reboot dev, verify HTTP 200
+  restart.sh                      Owned-process restart/boot — refuse foreign port holders, verify HTTP 200
   build.sh                        Production build into docs/ (--test also runs tests)
   README.md                       Usage reference for these scripts
 
@@ -89,9 +93,9 @@ src/
     Waypoint.js                   Waypoint data model (position, style, camera, area, etc.)
     AnimationState.js             Playback state (progress, timing, pause tracking)
     ImageAsset.js                 Custom image references (marker, path head)
-    GraphNode.js                  Flow-network node — unwired until Phase 2
-    GraphEdge.js                  Weighted directed edge with control points — unwired until Phase 2
-    GraphModel.js                 Node/edge collection (CRUD, adjacency) — unwired until Phase 2
+    GraphNode.js                  Active flow-network node model
+    GraphEdge.js                  Active weighted directed edge with control points
+    GraphModel.js                 Active network collection (CRUD, adjacency)
   services/
     AnimationEngine.js            Playback loop, timing, segment speed, pause markers
     PathCalculator.js             Catmull-Rom spline, reparameterisation, curvature
@@ -122,8 +126,10 @@ styles/
   tooltip.css                     Tooltip styles
 
 tests/
-  example.test.js                 Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
-  units.test.js                   Extended unit coverage (state, coordinates, path maths, serialisation)
+  *.test.js                       Unit, integration, golden-frame, persistence, safety, and UI contracts
+  review*.test.js                 Regression contracts added from repository reviews
+  projectLimits.test.js           Adversarial project/model resource ceilings
+  releaseSafety.test.js           Build/deployment argument and dry-run safety
   setup.js                        Vitest jsdom setup
 
 docs/                             Build output served by GitHub Pages
@@ -191,13 +197,31 @@ Zoom, pan, and fit/fill mode are handled inside the transform. Path points are r
 
 ### Auto-save (localStorage)
 
-State is debounce-saved to `routePlotter_autosave` on every change. Loaded on startup. Includes waypoints, styles, motion settings, background reference, animation state, and export settings.
+State is debounce-saved to `routePlotter_autosave` on every change and loaded
+on startup. Recovery includes route/scene state and, when the complete snapshot
+fits the 4 MiB safety envelope, the background and custom images. The app warns
+when those bytes cannot be retained; **Save Project** is the durable option for
+important work. Pending recovery is flushed on `pagehide`, and **Clear All**
+also removes the old recovery point so cleared work cannot return on reload.
 
 Other localStorage keys: `routePlotter_preferences`, `routePlotter_splashShown`, `routePlotter_customKeybindings`.
 
 ### Project save/load (ZIP)
 
-Save Project packages all state (including the background image) into a `.zip` file. Open Project restores from a `.zip`.
+Save Project packages all state (including the background image) into a `.zip`
+file. Open Project validates and decodes a detached candidate before replacing
+the current project; any failure leaves the live project, assets, history, and
+autosave unchanged.
+
+### Import safety limits
+
+Imported images must be PNG, JPEG, or WebP and are limited to 16 MiB, 8,192 px
+on either axis, and 24 megapixels each. A project ZIP is limited to 50 MiB
+compressed, 256 entries, 64 MiB decompressed, 2 MiB of project JSON, 128 image
+assets, 40 MiB of asset bytes, and 48 megapixels across those assets. Model
+ceilings include 2,000 waypoints, 32 flow layers, 256 emitters, 20,000 dots,
+10,000 graph nodes, 20,000 graph edges, and 10,000 polygon points. Files above
+these ceilings are rejected before live state changes.
 
 ### Video export
 
@@ -224,7 +248,7 @@ The combined string is injected at build time via esbuild's `define` as `APP_VER
 | --- | --- |
 | Edit JS in `src/` | Build increments on next `npm run dev` restart or `npm run build` |
 | Edit CSS/HTML only | No (static files are copied, not rebuilt) |
-| Force bump after CSS | Restart dev server, or `touch src/main.js` |
+| Force bump after CSS | Restart the dev server, or run a production build |
 
 ---
 
@@ -302,10 +326,15 @@ Edit `RenderingService.js`. Drawing methods follow the naming pattern `render*()
 - **Don't edit `docs/`** — it is generated by the build. Edit source files in `src/`, `styles/`, or `index.html`.
 - **Imports at top only** — esbuild bundles from `src/main.js`. Never import mid-file.
 - **Coordinate transform** — always use `CoordinateTransform.canvasToImage()` / `imageToCanvas()` when converting between screen and storage positions.
-- **Autosave can get stuck** — if the app enters a bad state, clear `routePlotter_autosave` in browser DevTools → Application → Local Storage.
+- **Autosave is bounded recovery, not a project file** — heed any in-app
+  warning that the background, custom images, or complete snapshot could not be
+  stored; use **Save Project** for durable work.
 - **Slider feedback loops** — programmatic slider updates must go through `ui:slider:update-speed` to avoid re-triggering input event handlers. Check `isUpdatingSlider` flag in `UIController`.
 - **H.264 even dimensions** — MP4 export requires even width and height. The exporter auto-rounds, but custom resolution inputs can produce odd values.
-- **Two runtime dependencies, both bundled** — mediabunny (MP4/WebM mux) and jszip (project save/load). Nothing loads from a CDN; the app works fully offline. Everything else is vanilla JS.
+- **Two runtime dependencies, both bundled** — mediabunny (MP4/WebM mux) and
+  jszip (project save/load). Nothing loads from a CDN. Creating the first HTML
+  export still reads the same-origin `player.js`; offline-first export is
+  tracked as follow-up work. Everything else is vanilla JS.
 
 ---
 
@@ -337,7 +366,9 @@ Precise terms used across the codebase.
 
 ## License
 
-MIT
+`package.json` currently records MIT, but the repository does not yet ship the
+licence text. Reuse terms remain pending maintainer/legal confirmation; see
+REV-09 in the project backlog.
 
 ## Author
 

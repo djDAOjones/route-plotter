@@ -37,6 +37,15 @@ export class CoordinateTransform {
     this.fitMode = fitMode;
     this.calculateImageBounds();
   }
+
+  /** Clear only image-derived state while retaining the live canvas size. */
+  clearImage() {
+    this.imageWidth = 0;
+    this.imageHeight = 0;
+    this.imageBounds = null;
+    this.transform = null;
+    this.fitMode = 'fit';
+  }
   
   /**
    * Set background zoom factor

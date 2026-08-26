@@ -55,6 +55,8 @@ export class HTMLExportService {
    */
   async _fetchPlayerBundle() {
     const url = new URL('player.js', document.baseURI);
+    const version = typeof APP_VERSION === 'string' ? APP_VERSION : 'dev';
+    url.searchParams.set('v', version);
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`The player bundle could not be loaded (HTTP ${response.status}). ` +

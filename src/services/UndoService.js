@@ -130,6 +130,45 @@ export class UndoService {
     this._lastState = null;
     this._emitStateChange();
   }
+
+  /**
+   * Replace history with one validated baseline snapshot. Loading a project
+   * must not leave undo entries that refer to objects from the prior project.
+   * @param {Object} state
+   */
+  reset(state) {
+    const serialized = JSON.stringify(state);
+    this._undoStack = [serialized];
+    this._redoStack = [];
+    this._lastState = serialized;
+    this._emitStateChange();
+  }
+
+  /**
+   * Capture history for transactional rollback around a project commit.
+   * @returns {{undoStack: string[], redoStack: string[], lastState: string|null}}
+   */
+  createSnapshot() {
+    return {
+      undoStack: [...this._undoStack],
+      redoStack: [...this._redoStack],
+      lastState: this._lastState,
+    };
+  }
+
+  /**
+   * Restore a snapshot created by createSnapshot().
+   * @param {{undoStack: string[], redoStack: string[], lastState: string|null}} snapshot
+   */
+  restoreSnapshot(snapshot) {
+    if (!snapshot || !Array.isArray(snapshot.undoStack) || !Array.isArray(snapshot.redoStack)) {
+      throw new Error('Invalid undo history snapshot');
+    }
+    this._undoStack = [...snapshot.undoStack];
+    this._redoStack = [...snapshot.redoStack];
+    this._lastState = snapshot.lastState ?? null;
+    this._emitStateChange();
+  }
   
   /**
    * Emit event with current undo/redo availability

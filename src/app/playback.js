@@ -1,5 +1,5 @@
 /**
- * Transport + JKL playback: keyboard dispatch, play/pause/skip, preview mode, render loop, time display sync.
+ * Transport + playback helpers: play/pause/skip, preview mode, render loop, and time display sync.
  *
  * RoutePlotter prototype mixin: methods moved verbatim out of main.js
  * (Phase 1 enabling refactor). Every method runs with `this` bound to the
@@ -20,70 +20,12 @@ const JKL_MAX_SPEED = 16;
 export const playbackMixin = {
   
   /**
-   * Global keyboard shortcut handler
-   * 
-   * ## Shortcuts
-   * | Key | Action |
-   * |-----|--------|
-   * | Cmd/Ctrl+Z | Undo |
-   * | Cmd/Ctrl+Shift+Z | Redo |
-   * | Ctrl+Y | Redo (Windows) |
-   * | Space | Play/Pause toggle |
-   * | K | Pause (JKL style) |
-   * | L | Play forward, 2x/4x/8x/16x on repeat |
-   * | J | Play reverse, 2x/4x/8x/16x on repeat |
-   * 
-   * @param {KeyboardEvent} e - Keyboard event
+   * Compatibility hook for the legacy document listener.
+   * InteractionHandler is the single keyboard dispatcher and emits commands
+   * through EventBus, so this hook must not mutate transport or history state.
    * @private
    */
-  _handleKeyDown(e) {
-    // Skip if user is typing in an input field, or a dropdown has focus —
-    // arrows/letters must change the dropdown value, not fire shortcuts
-    // (review 2026-08-18)
-    const tag = e.target.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) {
-      return;
-    }
-    
-    const key = e.key.toLowerCase();
-    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-    const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
-    
-    // Undo: Cmd+Z (Mac) or Ctrl+Z (Windows/Linux)
-    if (cmdOrCtrl && !e.shiftKey && key === 'z') {
-      e.preventDefault();
-      this.undo();
-      return;
-    }
-    
-    // Redo: Cmd+Shift+Z (Mac) or Ctrl+Shift+Z / Ctrl+Y (Windows/Linux)
-    if (cmdOrCtrl && ((e.shiftKey && key === 'z') || key === 'y')) {
-      e.preventDefault();
-      this.redo();
-      return;
-    }
-    
-    // JKL video editor style playback controls
-    switch (key) {
-      case 'k':
-        e.preventDefault();
-        this._handleJKL_K();
-        return;
-      case 'l':
-        e.preventDefault();
-        this._handleJKL_L();
-        return;
-      case 'j':
-        e.preventDefault();
-        this._handleJKL_J();
-        return;
-      case ' ':
-        e.preventDefault();
-        this.animationEngine.togglePlayPause();
-        this._updatePlayPauseUI();
-        return;
-    }
-  },
+  _handleKeyDown() {},
   
   /**
    * Reset JKL playback state to defaults
@@ -300,7 +242,8 @@ export const playbackMixin = {
       const waitingChanged = state.isWaitingAtWaypoint !== lastWaitingState;
       // Also continue rendering while camera is transitioning (zoom or center position)
       const zoomTransitioning = this.cameraService?.isZoomTransitioning(this.displayWidth, this.displayHeight) ?? false;
-      const shouldRender = state.isPlaying || progressChanged || waitingChanged || zoomTransitioning;
+      const shouldRender = this.animationEngine.isPlaying() ||
+        progressChanged || waitingChanged || zoomTransitioning;
       
       if (shouldRender) {
         // Sync UI with animation state (minimal updates)

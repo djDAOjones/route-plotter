@@ -323,6 +323,22 @@ export const pathTimingMixin = {
       baseSpeed
     );
   },
+
+  /**
+   * Immediately rebuild every derived timeline field after a setting that
+   * changes intro or comet-tail time. Clearing the path debounce prevents an
+   * older scheduled calculation from overwriting the canonical result later.
+   * @param {number|null} baseSpeed - Optional px/s override
+   * @returns {number} Current total timeline duration in milliseconds
+   */
+  invalidateAnimationTiming(baseSpeed = null) {
+    if (this._durationUpdateTimeout) {
+      clearTimeout(this._durationUpdateTimeout);
+      this._durationUpdateTimeout = null;
+    }
+    this.updateAnimationDuration(baseSpeed);
+    return this.animationEngine.state.duration;
+  },
   
   /**
    * Update animation duration, segment markers, pause markers, and tail time
@@ -344,6 +360,7 @@ export const pathTimingMixin = {
    * - Total tail time = trail duration + handle
    * 
    * @param {number} baseSpeed - Base animation speed in px/s (optional, uses current if not provided)
+   * @returns {number|undefined} Total timeline duration, or undefined when no path exists
    */
   updateAnimationDuration(baseSpeed = null) {
     if (!this.pathPoints || this.pathPoints.length < 2) return;
@@ -437,6 +454,7 @@ export const pathTimingMixin = {
       this.elements.animationSpeedValueRight.textContent = durationSec + 's';
     }
     this.updateTimeDisplay();
+    return finalDuration;
   },
   
   /**

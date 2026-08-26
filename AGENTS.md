@@ -107,8 +107,8 @@ asks — capturing the one line is the whole interaction.
   esbuild. See dev guide §5 rule 2.
 - **`docs/` is build output.** Never hand-edit. It is overwritten by
   `npm run build`.
-- **One runtime dependency: `mediabunny`.** Do not add npm packages
-  without explicit approval.
+- **Two runtime dependencies: `jszip` and `mediabunny`.** Do not add npm
+  packages without explicit approval.
 - **Okabe-Ito palette for map data; UoN semantic tokens for UI chrome.**
   These two colour systems must stay separate. See `UI-STANDARDS.md`.
 - **Carbon-first UI.** All UI work must follow IBM Carbon's productive

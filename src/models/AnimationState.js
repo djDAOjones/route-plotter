@@ -55,6 +55,16 @@ export class AnimationState {
   pause() {
     this.isPaused = true;
   }
+
+  /**
+   * Whether timeline time is actively advancing. `isPlaying` remains latched
+   * after pause so resume can retain its started state; callers deciding whether
+   * to render or toggle transport must use this predicate instead.
+   * @returns {boolean}
+   */
+  isActivelyPlaying() {
+    return this.isPlaying && !this.isPaused;
+  }
   
   /**
    * Stop animation and reset
@@ -70,11 +80,37 @@ export class AnimationState {
    * Toggle between play and pause
    */
   togglePlayPause() {
-    if (this.isPlaying && !this.isPaused) {
+    if (this.isActivelyPlaying()) {
       this.pause();
     } else {
       this.play();
     }
+  }
+
+  /**
+   * Capture the user-visible transport state in timeline-progress space.
+   * Path progress is derived and must never be fed back into a timeline seek.
+   * @returns {{timelineProgress: number, isPlaying: boolean, isPaused: boolean, playbackSpeed: number}}
+   */
+  captureTransportState() {
+    return {
+      timelineProgress: this.progress,
+      isPlaying: this.isPlaying,
+      isPaused: this.isPaused,
+      playbackSpeed: this.playbackSpeed
+    };
+  }
+
+  /**
+   * Restore flags and speed captured by captureTransportState(). The engine is
+   * responsible for re-evaluating derived path/wait state through PlayerCore.
+   * @param {{timelineProgress: number, isPlaying: boolean, isPaused: boolean, playbackSpeed: number}} snapshot
+   */
+  restoreTransportState(snapshot) {
+    this.setProgress(snapshot.timelineProgress);
+    this.isPlaying = snapshot.isPlaying;
+    this.isPaused = snapshot.isPaused;
+    this.playbackSpeed = snapshot.playbackSpeed;
   }
   
   /**

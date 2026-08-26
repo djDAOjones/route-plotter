@@ -9,6 +9,16 @@
 import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 
+function updatePathHeadPreview(app, asset = null) {
+  if (app.elements?.headPreview) app.elements.headPreview.style.display = asset ? 'block' : 'none';
+  if (app.elements?.headFilename) app.elements.headFilename.textContent = asset?.name || '';
+  if (app.elements?.headPreviewImg) {
+    if (asset?.base64) app.elements.headPreviewImg.src = asset.base64;
+    else if (app.elements.headPreviewImg.removeAttribute) app.elements.headPreviewImg.removeAttribute('src');
+    else app.elements.headPreviewImg.src = '';
+  }
+}
+
 export const undoRedoMixin = {
   
   // ========== UNDO/REDO METHODS ==========
@@ -108,12 +118,40 @@ export const undoRedoMixin = {
    * @private
    */
   _restoreState(state) {
+    // Each restore invalidates image work started by an older undo/redo. Image
+    // decoding is asynchronous and may otherwise resolve out of order.
+    const imageRestoreGeneration = (this._undoImageRestoreGeneration || 0) + 1;
+    this._undoImageRestoreGeneration = imageRestoreGeneration;
+
     // Clear waypoint map
     this.waypointsById.clear();
     
     // Restore waypoints
     this.waypoints = state.waypoints.map(wpData => Waypoint.fromJSON(wpData));
     this.waypoints.forEach(wp => this._addWaypointToMap(wp));
+
+    // Waypoint snapshots store only asset IDs. Rehydrate every referenced
+    // custom marker without allowing a slow, superseded restore to overwrite a
+    // newer undo/redo result.
+    for (const waypoint of this.waypoints) {
+      waypoint.customImage = null;
+      const assetId = waypoint.customImageAssetId;
+      if (!assetId || !this.imageAssetService?.getImageElement) continue;
+      Promise.resolve()
+        .then(() => this.imageAssetService.getImageElement(assetId))
+        .then(image => {
+          if (this._undoImageRestoreGeneration !== imageRestoreGeneration) return;
+          if (this.waypointsById.get(waypoint.id) !== waypoint) return;
+          if (waypoint.customImageAssetId !== assetId) return;
+          waypoint.customImage = image || null;
+          this.queueRender?.();
+        })
+        .catch(error => {
+          if (this._undoImageRestoreGeneration === imageRestoreGeneration) {
+            console.warn(`Could not restore custom image for waypoint ${waypoint.id}:`, error);
+          }
+        });
+    }
     
     // Restore selection — the rebuilt waypoints are new objects, so
     // re-resolve both the primary and the multi-selection by id, and
@@ -140,19 +178,41 @@ export const undoRedoMixin = {
 
     // Restore global styles (if present in snapshot)
     if (state.styles) {
-      // Preserve non-serializable Image reference
-      const currentImage = this.styles.pathHead?.image;
-      this.styles = { ...this.styles, ...state.styles };
-      if (this.styles.pathHead) {
-        this.styles.pathHead.image = currentImage;
-      }
-      // Restore path head image from asset if ID changed
-      if (state.styles.pathHead?.imageAssetId) {
-        this.imageAssetService.getImageElement(state.styles.pathHead.imageAssetId)
-          .then(img => {
-            if (img) this.styles.pathHead.image = img;
-            this.queueRender();
-          });
+      const currentPathHead = this.styles?.pathHead;
+      const hasRestoredPathHead = Object.prototype.hasOwnProperty.call(state.styles, 'pathHead');
+      this.styles = { ...(this.styles || {}), ...state.styles };
+      if (currentPathHead || hasRestoredPathHead) {
+        const restoredPathHead = state.styles.pathHead && typeof state.styles.pathHead === 'object'
+          ? state.styles.pathHead
+          : {};
+        const restoredAssetId = restoredPathHead.imageAssetId || null;
+        this.styles.pathHead = {
+          ...(currentPathHead || {}),
+          ...restoredPathHead,
+          imageAssetId: restoredAssetId,
+          // Clear synchronously. Keeping the prior Image here makes restoring a
+          // null or changed ID display the wrong path head until decoding ends.
+          image: null,
+        };
+        updatePathHeadPreview(this);
+
+        if (restoredAssetId && this.imageAssetService?.getImageElement) {
+          Promise.resolve()
+            .then(() => this.imageAssetService.getImageElement(restoredAssetId))
+            .then(image => {
+              if (this._undoImageRestoreGeneration !== imageRestoreGeneration) return;
+              if (this.styles.pathHead?.imageAssetId !== restoredAssetId) return;
+              this.styles.pathHead.image = image || null;
+              const asset = image ? this.imageAssetService.getAsset?.(restoredAssetId) : null;
+              updatePathHeadPreview(this, asset || null);
+              this.queueRender?.();
+            })
+            .catch(error => {
+              if (this._undoImageRestoreGeneration === imageRestoreGeneration) {
+                console.warn('Could not restore the custom path-head image:', error);
+              }
+            });
+        }
       }
       // Sync global style UI controls
       this._syncGlobalStyleUI();

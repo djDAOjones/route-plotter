@@ -12,11 +12,15 @@ scripts, configuration, or deployment.
 Package manager: **npm**
 
 - `package.json` lives in the project root.
-- **One runtime dependency: `mediabunny`** (MP4/WebM mux layer).
-  Do not add runtime packages without explicit approval.
+- **Runtime dependencies:** `jszip` (project archives) and `mediabunny`
+  (MP4/WebM mux layer). Do not add runtime packages without explicit
+  approval.
 - **Dev dependencies** (esbuild, vitest, jsdom) are established.
   New dev dependencies can be added when justified.
-- Run `npm install` after cloning. Do not commit `node_modules/`.
+- Supported Node versions are declared in `package.json`; `.nvmrc` pins
+  Node 24 for maintainers and `packageManager` records the expected npm
+  release (npm does not enforce that field by itself).
+- Run `npm ci` after cloning. Do not commit `node_modules/`.
 
 ---
 
@@ -27,16 +31,20 @@ Package manager: **npm**
 | `dev` | `node build.js --watch --serve` | Dev server with watch | Day-to-day development |
 | `build` | `NODE_ENV=production node build.js` | Production build (minified, sourcemap) | Before deploy |
 | `build:deploy` | `npm run build` | Alias of `build` — outputs straight to `docs/` (the GitHub Pages dir) | When deploying |
+| `build:check` | `NODE_ENV=production node build.js --check` | Validate a temporary production build without changing `docs/` or `version.json` | CI / close-out |
+| `check` | `npm test && npm run test:shell && npm run build:check` | Canonical JS, maintainer-script and build gate | Before commit |
 | `test` | `vitest run --pool=threads --no-file-parallelism` | Run tests once | After every change |
+| `test:shell` | `bash tests/restartSafety.test.sh` | Project-scoped dev-server PID/cleanup contract | After restart-script changes / in CI |
 | `test:watch` | `vitest watch --pool=threads --no-file-parallelism` | Tests in watch mode | During development |
-| `push` | `node push.js` | Build, stage, commit, push | When ready to ship |
+| `push:dry-run` | `node push.js --dry-run` | Show deployment commands without changing files or Git | Before deploy |
+| `push` | `node push.js` | From a clean source commit: test, build, stage generated files, commit, push current branch | When ready to ship |
 
 Do not add scripts without updating this table.
 
 > **Why the threads pool?** Vitest's default `forks` pool times out
 > starting its worker in this OneDrive-synced workspace path and
 > silently reports "no tests" with exit 0 — a false green. The
-> `threads` pool with `--no-file-parallelism` runs reliably (57/57).
+> `threads` pool with `--no-file-parallelism` runs reliably.
 > See decision-log 2026-06-16.
 
 ---
@@ -50,11 +58,13 @@ Do not add scripts without updating this table.
 - **No hot-module replacement.** After any change, hard-refresh
   (`Cmd+Shift+R`).
 
-Port 3000 already in use:
+If port 3000 is already in use, `restart.sh` stops it only when the process
+belongs to this checkout. It reports and preserves a foreign listener. Inspect
+that process before deciding whether to stop it:
 
 ```bash
-lsof -i :3000          # find the PID
-kill -9 <PID>          # terminate it
+lsof -nP -iTCP:3000 -sTCP:LISTEN
+ps -p <PID> -o pid=,command=
 ```
 
 ---
@@ -71,7 +81,7 @@ serving `docs/` over HTTP. Reaching a known-good state is one command
 | Verb | Command | Does |
 | --- | --- | --- |
 | Boot | `npm run dev` | Build, watch `src/`, serve `docs/` at the dev URL. The canonical run command. |
-| Reboot | `./scripts/restart.sh` (or `Ctrl-C`, then `npm run dev`) | Stop the watcher and start fresh (also bumps the build number); the script stops any prior dev server (the port-3000 listener **and** its `node build.js --watch` parent) and verifies readiness. |
+| Reboot | `./scripts/restart.sh` (or `Ctrl-C`, then `npm run dev`) | Stop this checkout's recorded watcher tree and start fresh (also bumps the build number); refuse to kill an unrelated port holder; verify readiness. |
 | Build | `npm run build` (or `./scripts/build.sh`) | One-off production build into `docs/` (no server). |
 | Test | `npm test` | Run the vitest suite once. |
 
@@ -79,8 +89,9 @@ serving `docs/` over HTTP. Reaching a known-good state is one command
 - **Components & startup order:** a single foreground process —
   esbuild (watch + rebuild) and the static file server are started
   together by `build.js`. No ordering concerns.
-- **Process ownership:** runs in the foreground; no background PIDs or
-  log files. The tree is `npm run dev` → `node build.js --watch` → an
+- **Process ownership:** runs in the foreground; `restart.sh` records its
+  wrapper PID in ignored `.route-plotter-dev.pid` and removes it at shutdown;
+  no log files are written. The tree is `npm run dev` → `node build.js --watch` → an
   esbuild service child that binds port 3000. A clean stop must kill the
   `node build.js --watch` parent, not just the port listener, or the
   watcher is orphaned (see decision-log 2026-06-17).
@@ -99,14 +110,16 @@ serving `docs/` over HTTP. Reaching a known-good state is one command
 ./scripts/restart.sh             # stop dev server, reboot, verify readiness
 ```
 
-  Manual equivalent, if you prefer the individual steps:
+  Manual equivalent for a server you launched in the current terminal:
 
 ```bash
-pkill -f 'build.js --watch'      # stop the dev server (node watcher + esbuild child)
-lsof -ti :3000 | xargs kill -9   # free the port if anything still holds it
+Ctrl-C                           # stop that foreground server tree
 npm run dev                      # reboot to a ready state
 # then hard-refresh the browser (Cmd+Shift+R) — no HMR
 ```
+
+  If the wrapper reports a foreign port holder, inspect the PID with the
+  commands in Dev server above and stop it explicitly only when you own it.
 
 - **Exposure:** local only by default (`localhost`). There is no public
   tunnel or LAN mode; publishing is a separate, explicit `npm run push`
@@ -126,8 +139,11 @@ npm run dev                      # reboot to a ready state
 - **Format:** ESM
 - **Source maps:** Enabled in both dev and production
 - **Minification:** Production builds only
-- **Static files:** `index.html`, `styles/*.css`, and `images/` are
-  copied to the output directory by the build script.
+- **Static files:** an explicit allowlist in `build.js` copies `index.html`,
+  the six shipped stylesheets, and the six built-in example images. Production
+  output is assembled in a same-filesystem staging directory, checked for
+  missing local references, then swapped into `docs/`; stale or accidental
+  files cannot survive from an older build.
 
 The output directory is **read-only** — never hand-edit files in it.
 They are overwritten on every build.
@@ -152,6 +168,7 @@ as `APP_VERSION`. It is a compile-time constant.
 | Edit CSS/HTML | No (static copy, not a JS rebuild) |
 | Restart dev server | Yes (once per session) |
 | `npm run build` | Yes |
+| `npm run build:check` | No |
 
 Do not edit `version.json` manually — the build script manages it.
 Bump `major.minor` in `package.json` when shipping a new feature or
@@ -161,22 +178,25 @@ breaking change.
 
 ## Deployment
 
-- **Target:** GitHub Pages (served from `docs/` on `main` branch)
-- **Pipeline:** `npm run push` — runs build, stages `docs/` and
-  `version.json`, commits with version-stamped message, pushes to
-  `origin/main`.
-- **Custom message:** `npm run push "custom msg"`
-- **Dry run:** `npm run push --dry-run`
+- **Target:** GitHub Pages served from `/docs` on the selected branch. The live
+  site currently selects `main`; a review branch can be selected for a Pages
+  preview without changing the helper.
+- **Pipeline:** first commit all source changes, then run `npm run push`. The
+  helper requires a clean tree, runs tests, creates and validates a fresh
+  production output, permits only `docs/` and `version.json` to change, commits
+  those generated files, and pushes the current branch to the same remote ref.
+- **Custom message:** `npm run push -- "custom msg"`
+- **Dry run:** `npm run push:dry-run`
 - **Live URL:** <https://djdaojones.github.io/route-plotter/> (Pages enabled 2026-08-19, Phase 5; the frozen v2 line stays at <https://djdaojones.github.io/router-plotter-02/>)
 
 ---
 
 ## Utility scripts
 
-- **`push.js`** — GitHub Pages deploy helper. Runs production build,
-  stages changes, commits, and pushes. Safe for routine deploys.
-- **`build.js`** — esbuild bundler with version management, static
-  file copying, and dev server.
+- **`push.js`** — argv-safe, current-branch GitHub Pages helper with a clean-tree
+  gate and generated-file allowlist.
+- **`build.js`** — esbuild bundler with version management, explicit static
+  allowlist, checked staging/publish, non-mutating check mode, and dev server.
 
 ### Maintainer shell scripts (`scripts/`)
 
@@ -184,9 +204,9 @@ Thin, run-from-anywhere wrappers around the npm scripts above. Run them as
 `./scripts/<name>.sh` (or `bash scripts/<name>.sh` if the executable bit is
 lost to OneDrive sync). See `scripts/README.md`.
 
-- **`scripts/restart.sh`** — clean restart/boot: stops any running dev server —
-  the port-3000 listener **and** its `node build.js --watch` parent (graceful
-  TERM→KILL), so no watcher is orphaned — then boots `npm run dev` and polls
+- **`scripts/restart.sh`** — clean restart/boot: stops only the process tree
+  recorded for this checkout (graceful TERM→KILL), refuses an unrelated
+  listener on port 3000, then boots `npm run dev` and polls
   until `http://localhost:3000` returns HTTP 200 before reporting ready.
   Foreground; Ctrl-C stops it cleanly. `--hard-reset` also deletes `docs/`
   (regenerated on boot); `--help` for usage. This is the scripted form of the
@@ -212,6 +232,19 @@ lost to OneDrive sync). See `scripts/README.md`.
 
 Do not scatter configuration across service files. If a value might
 need tuning, it belongs in the constants file.
+
+### Imported-project safety budgets
+
+Untrusted project and image ceilings live beside the boundary they protect:
+`PROJECT_MODEL_LIMITS` in `src/app/persistence.js`, archive budgets in
+`ImageAssetService.js`, image budgets in `ImageAsset.js`, and aggregate
+scene/flow/emitter budgets in their model files. Import stages and decodes a
+detached candidate before commit. Keep those limits finite, cover increases
+with adversarial tests, and document user-visible changes in `README.md`.
+
+Autosave is capped at a 4 MiB serialized snapshot. It includes background and
+custom assets only while they fit, reports real storage failures, and flushes
+pending state on `pagehide`; a manual project ZIP remains the durable format.
 
 ---
 

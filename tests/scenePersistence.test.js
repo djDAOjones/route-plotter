@@ -115,21 +115,21 @@ describe('coordVersion 9 scene persistence', () => {
   });
 
   describe('loadAutosave backward compatibility', () => {
-    test('a v7 autosave (no scene block) should load with an empty scene', () => {
+    test('a v7 autosave (no scene block) should load with an empty scene', async () => {
       const app = makeFakeApp();
       app._autosavePayload = { coordVersion: 7, waypoints: [] };
 
-      persistenceMixin.loadAutosave.call(app);
+      await persistenceMixin.loadAutosave.call(app);
 
       expect(app.scene.isEmpty()).toBe(true);
       expect(app._captured.cleared).toBe(false);
     });
 
-    test('a v9 autosave should hydrate the scene', () => {
+    test('a v9 autosave should hydrate the scene', async () => {
       const app = makeFakeApp();
       app._autosavePayload = { coordVersion: 9, waypoints: [], scene: buildSceneData() };
 
-      persistenceMixin.loadAutosave.call(app);
+      await persistenceMixin.loadAutosave.call(app);
 
       expect(app.scene.getFlowLayers()).toHaveLength(1);
       const layer = app.scene.getFlowLayers()[0];
@@ -137,11 +137,11 @@ describe('coordVersion 9 scene persistence', () => {
       expect(layer.emitters[0].seed).toBe(42);
     });
 
-    test('a pre-v6 autosave should still be cleared by the version gate', () => {
+    test('a pre-v6 autosave should still be cleared by the version gate', async () => {
       const app = makeFakeApp();
       app._autosavePayload = { coordVersion: 5 };
 
-      persistenceMixin.loadAutosave.call(app);
+      await persistenceMixin.loadAutosave.call(app);
 
       expect(app._captured.cleared).toBe(true);
       expect(app.scene.isEmpty()).toBe(true);

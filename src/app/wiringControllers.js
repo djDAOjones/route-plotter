@@ -11,6 +11,7 @@ import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { ContextMenu } from '../components/ContextMenu.js';
 import { snapToAngle } from '../utils/snapToAngle.js';
+import { loadBackgroundFile } from './backgroundLoading.js';
 
 /**
  * Reorder waypoints to a new major order, each major carrying its
@@ -55,29 +56,7 @@ export const wiringControllersMixin = {
   setupControllerEventConnections() {
     // Background events from UIController
     this.eventBus.on('background:upload', (file) => {
-      this.loadImageFile(file).then(img => {
-        this.background.image = img;
-        this.updateImageTransform(img);
-        
-        // Set export resolution to match native image dimensions
-        this.exportSettings.resolutionX = img.naturalWidth;
-        this.exportSettings.resolutionY = img.naturalHeight;
-        if (this.elements.exportResX) {
-          this.elements.exportResX.value = img.naturalWidth;
-        }
-        if (this.elements.exportResY) {
-          this.elements.exportResY.value = img.naturalHeight;
-        }
-        console.debug(`📐 [Resolution] Set to image native size: ${img.naturalWidth}×${img.naturalHeight}`);
-        
-        // Resize canvas to match new aspect ratio
-        this.updateCanvasAspectRatio();
-        
-        if (this.waypoints.length >= 2) {
-          this.calculatePath();
-        }
-        this.autoSave();
-      });
+      void loadBackgroundFile(this, file);
     });
     
     this.eventBus.on('background:overlay-change', (value) => {
@@ -156,7 +135,7 @@ export const wiringControllersMixin = {
         this.jklSpeed = 1;
       }
       this.animationEngine.setPlaybackSpeed(-this.jklSpeed);
-      if (!this.animationEngine.state.isPlaying) {
+      if (!this.animationEngine.isPlaying()) {
         this.animationEngine.play();
       }
       console.debug(`⏪ JKL Reverse: ${-this.jklSpeed}x`);
@@ -172,7 +151,7 @@ export const wiringControllersMixin = {
         this.jklSpeed = 1;
       }
       this.animationEngine.setPlaybackSpeed(this.jklSpeed);
-      if (!this.animationEngine.state.isPlaying) {
+      if (!this.animationEngine.isPlaying()) {
         this.animationEngine.play();
       }
       console.debug(`⏩ JKL Forward: ${this.jklSpeed}x`);
@@ -180,7 +159,7 @@ export const wiringControllersMixin = {
     
     // Reset JKL state when animation is toggled via K or space
     this.eventBus.on('ui:animation:toggle', () => {
-      if (this.animationEngine.state.isPlaying) {
+      if (this.animationEngine.isPlaying()) {
         this.animationEngine.pause();
         this.jklDirection = 0;
         this.jklSpeed = 1;
@@ -773,9 +752,8 @@ export const wiringControllersMixin = {
     this.eventBus.on('motion:preview-mode-change', (previewMode) => {
       this.previewMode = previewMode;
       console.debug(`👁️ [Motion] ${previewMode ? 'Preview' : 'Edit'} mode`);
-      // Recalculate duration to add/remove end buffer
-      this.updateAnimationDuration();
-      this.render();
+      this.invalidateAnimationTiming();
+      this.queueRender();
     });
     
     /**
@@ -791,9 +769,10 @@ export const wiringControllersMixin = {
       if (trailControl) {
         trailControl.style.display = (mode === PATH_VISIBILITY.INSTANTANEOUS) ? 'flex' : 'none';
       }
-      
+
+      this.invalidateAnimationTiming();
       this.autoSave();
-      if (this.previewMode) this.render();
+      if (this.previewMode) this.queueRender();
     });
     
     /**
@@ -802,10 +781,9 @@ export const wiringControllersMixin = {
      */
     this.eventBus.on('motion:path-trail-change', (trailFraction) => {
       this.motionSettings.pathTrail = trailFraction;
-      // Recalculate duration since tail time depends on trail
-      this.updateAnimationDuration();
+      this.invalidateAnimationTiming();
       this.autoSave();
-      if (this.previewMode) this.render();
+      if (this.previewMode) this.queueRender();
     });
     
     /**
@@ -826,8 +804,9 @@ export const wiringControllersMixin = {
       if (mode === 'spotlight-reveal' || mode === 'angle-of-view-reveal') {
         this.motionVisibilityService.resetRevealMask();
       }
+      this.invalidateAnimationTiming();
       this.autoSave();
-      if (this.previewMode) this.render();
+      if (this.previewMode) this.queueRender();
     });
     
     /**

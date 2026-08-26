@@ -10,7 +10,8 @@
  * 
  * Sources:
  * - package.json: major.minor (manually updated)
- * - version.json: build number (auto-incremented on every build)
+ * - version.json: build number (incremented once per dev-server session or
+ *   production build; `--check` builds never mutate it)
  * 
  * ## Version Increment Guidelines
  * 
@@ -18,7 +19,7 @@
  * |-----------|-------------------|---------|
  * | **major** | Breaking changes, major rewrites, incompatible API changes | 2.x → 3.x |
  * | **minor** | New features, significant improvements, UI changes | 3.0 → 3.1 |
- * | **build** | Auto-incremented on every build (dev iterations, bug fixes) | 3.1.75 → 3.1.76 |
+ * | **build** | Incremented per dev-server start or production build (not each watch/check rebuild) | 3.1.75 → 3.1.76 |
  * 
  * Examples:
  * - v3.0 → v3.1: Added trail system, new UI controls
@@ -135,11 +136,21 @@ function getVersionForBuild() {
   return { version: sessionVersion, incremented: true };
 }
 
-// Ensure docs directory exists (GitHub Pages convention)
-const distDir = './docs';
-if (!fs.existsSync(distDir)) {
-  fs.mkdirSync(distDir, { recursive: true });
-}
+const isWatchMode = process.argv.includes('--watch');
+const isCheckBuild = process.argv.includes('--check');
+const publishedDistDir = path.resolve('docs');
+const originalVersionContents = fs.existsSync(VERSION_FILE)
+  ? fs.readFileSync(VERSION_FILE)
+  : null;
+
+// Production output is assembled away from docs/ and swapped into place only
+// after every bundle and referenced asset has passed validation. This prevents
+// stale committed files from making an incomplete build look healthy.
+const distDir = isWatchMode
+  ? publishedDistDir
+  : fs.mkdtempSync(path.resolve('.docs-build-'));
+
+fs.mkdirSync(distDir, { recursive: true });
 
 // Static files to copy
 const staticFiles = [
@@ -150,13 +161,12 @@ const staticFiles = [
   'styles/tooltip.css',
   'styles/dropdown.css',
   'styles/context-menu.css',
-  'UoN_map.png',
-  'UoN_map 24-bit.png'
-];
-
-// Static directories to copy (entire folder contents)
-const staticDirs = [
-  'images'
+  'images/Court.png',
+  'images/Garlic.jpg',
+  'images/Nervous_System.jpg',
+  'images/PARM_Aerial.jpg',
+  'images/Rocketry.jpg',
+  'images/UoN_map.png'
 ];
 
 /**
@@ -166,6 +176,10 @@ const staticDirs = [
 function copyStaticFile(file, version = null) {
   const src = path.join('.', file);
   const dest = path.join(distDir, file);
+
+  if (!fs.existsSync(src)) {
+    throw new Error(`Required static asset is missing: ${file}`);
+  }
   
   // Create directory if needed
   const destDir = path.dirname(dest);
@@ -173,69 +187,35 @@ function copyStaticFile(file, version = null) {
     fs.mkdirSync(destDir, { recursive: true });
   }
   
-  // Copy file
-  if (fs.existsSync(src)) {
-    // Special handling for index.html - update version and add cache-busting
-    if (file === 'index.html') {
-      let html = fs.readFileSync(src, 'utf8');
-      
-      if (version) {
-        // Update browser tab title (version visible in tab for debugging)
-        html = html.replace(/<title>Route Plotter[^<]*<\/title>/, `<title>Route Plotter v${version}</title>`);
-        // Add cache-busting to app.js script tag
-        html = html.replace(/src="app\.js[^"]*"/, `src="app.js?v=${version}"`);
-      }
-      
-      // Add no-cache meta tag for development (insert after charset meta)
-      if (!html.includes('http-equiv="Cache-Control"')) {
-        html = html.replace(
-          '<meta charset="UTF-8">',
-          '<meta charset="UTF-8">\n  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n  <meta http-equiv="Pragma" content="no-cache">\n  <meta http-equiv="Expires" content="0">'
-        );
-      }
-      fs.writeFileSync(dest, html);
-    } else {
-      fs.copyFileSync(src, dest);
-    }
-    return true;
-  }
-  return false;
-}
-
-/**
- * Copy a directory recursively to dist
- * @param {string} dir - Directory name to copy
- */
-function copyStaticDir(dir) {
-  const srcDir = path.join('.', dir);
-  const destDir = path.join(distDir, dir);
-  
-  if (!fs.existsSync(srcDir)) {
-    return false;
-  }
-  
-  // Create destination directory
-  if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir, { recursive: true });
-  }
-  
-  // Copy all files in directory
-  const files = fs.readdirSync(srcDir);
-  let count = 0;
-  files.forEach(file => {
-    // Skip hidden files like .DS_Store
-    if (file.startsWith('.')) return;
+  // Special handling for index.html - update version and add cache-busting
+  if (file === 'index.html') {
+    let html = fs.readFileSync(src, 'utf8');
     
-    const srcPath = path.join(srcDir, file);
-    const destPath = path.join(destDir, file);
-    
-    if (fs.statSync(srcPath).isFile()) {
-      fs.copyFileSync(srcPath, destPath);
-      count++;
+    if (version) {
+      // Update browser tab title (version visible in tab for debugging)
+      html = html.replace(/<title>Route Plotter[^<]*<\/title>/, `<title>Route Plotter v${version}</title>`);
+      // Add cache-busting to app.js script tag
+      html = html.replace(/src="app\.js[^"]*"/, `src="app.js?v=${version}"`);
+      // CSS is copied rather than bundled, so it needs the same release
+      // version query or Pages clients can retain an older UI indefinitely.
+      html = html.replace(
+        /href="(styles\/[^"?]+\.css)(?:\?[^\"]*)?"/g,
+        (_match, href) => `href="${href}?v=${version}"`
+      );
     }
-  });
-  
-  return count;
+    
+    // Add no-cache meta tag for development (insert after charset meta)
+    if (!html.includes('http-equiv="Cache-Control"')) {
+      html = html.replace(
+        '<meta charset="UTF-8">',
+        '<meta charset="UTF-8">\n  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n  <meta http-equiv="Pragma" content="no-cache">\n  <meta http-equiv="Expires" content="0">'
+      );
+    }
+    fs.writeFileSync(dest, html);
+  } else {
+    fs.copyFileSync(src, dest);
+  }
+  return true;
 }
 
 /**
@@ -244,18 +224,75 @@ function copyStaticDir(dir) {
  */
 function copyAllStaticFiles(version) {
   staticFiles.forEach(file => {
-    if (copyStaticFile(file, version)) {
-      console.log(`Copied ${file}`);
+    copyStaticFile(file, version);
+    console.log(`Copied ${file}`);
+  });
+}
+
+/**
+ * Verify that every local asset referenced by the generated shell exists.
+ * This is deliberately performed before docs/ is replaced.
+ * @param {string} outputDir
+ */
+function validateBuiltOutput(outputDir, version) {
+  const required = ['index.html', 'app.js', 'app.js.map', 'player.js', 'meta.json'];
+  required.forEach(file => {
+    if (!fs.existsSync(path.join(outputDir, file))) {
+      throw new Error(`Build output is incomplete: ${file}`);
     }
   });
-  
-  // Copy static directories
-  staticDirs.forEach(dir => {
-    const count = copyStaticDir(dir);
-    if (count) {
-      console.log(`Copied ${dir}/ (${count} files)`);
+
+  const html = fs.readFileSync(path.join(outputDir, 'index.html'), 'utf8');
+  const stylesheetVersions = [...html.matchAll(/href="styles\/[^"?]+\.css\?v=([^"]+)"/g)]
+    .map(match => match[1]);
+  if (stylesheetVersions.length === 0 || stylesheetVersions.some(value => value !== version)) {
+    throw new Error(`Generated index does not cache-bust every stylesheet with v=${version}`);
+  }
+  const references = [...html.matchAll(/\b(?:src|href|data-image)="([^"]+)"/g)]
+    .map(match => match[1].split(/[?#]/, 1)[0])
+    .filter(ref => ref && !ref.startsWith('#') && !/^(?:https?:|mailto:|data:)/.test(ref));
+
+  const missing = [...new Set(references)]
+    .filter(ref => !fs.existsSync(path.join(outputDir, ref)));
+  if (missing.length > 0) {
+    throw new Error(`Generated index references missing assets: ${missing.join(', ')}`);
+  }
+}
+
+/**
+ * Replace the Pages directory only after a complete build. The staging and
+ * backup directories share the repository filesystem, so rename is atomic.
+ * @param {string} stagingDir
+ */
+function publishBuiltOutput(stagingDir) {
+  const backupDir = path.resolve(`.docs-backup-${process.pid}`);
+  fs.rmSync(backupDir, { recursive: true, force: true });
+  let previousOutputMoved = false;
+
+  if (fs.existsSync(publishedDistDir)) {
+    fs.renameSync(publishedDistDir, backupDir);
+    previousOutputMoved = true;
+  }
+
+  try {
+    fs.renameSync(stagingDir, publishedDistDir);
+  } catch (error) {
+    if (!fs.existsSync(publishedDistDir) && fs.existsSync(backupDir)) {
+      fs.renameSync(backupDir, publishedDistDir);
     }
-  });
+    throw error;
+  }
+
+  // The rename above is the publish commit point. A cloud-sync lock can make
+  // old-output cleanup fail after the new tree is already live; that must not
+  // roll version.json back underneath the successfully published bundle.
+  if (previousOutputMoved) {
+    try {
+      fs.rmSync(backupDir, { recursive: true, force: true });
+    } catch (error) {
+      console.warn(`Published successfully; stale backup could not be removed: ${backupDir} (${error.message})`);
+    }
+  }
 }
 
 /**
@@ -288,7 +325,7 @@ function createBuildOptions(version) {
     bundle: true,
     minify: process.env.NODE_ENV === 'production',
     sourcemap: true,
-    outfile: 'docs/app.js',
+    outfile: path.join(distDir, 'app.js'),
     format: 'esm',
     target: ['es2022'],
     loader: {
@@ -320,7 +357,7 @@ function createPlayerBuildOptions(version) {
     bundle: true,
     minify: process.env.NODE_ENV === 'production',
     sourcemap: process.env.NODE_ENV !== 'production',
-    outfile: 'docs/player.js',
+    outfile: path.join(distDir, 'player.js'),
     format: 'iife',
     target: ['es2022'],
     define: {
@@ -331,7 +368,7 @@ function createPlayerBuildOptions(version) {
 }
 
 // Development mode with watch
-if (process.argv.includes('--watch')) {
+if (isWatchMode) {
   console.log('Starting development build with watch mode...');
   
   // Increment version once at start of dev session
@@ -392,7 +429,7 @@ if (process.argv.includes('--watch')) {
   if (process.argv.includes('--serve')) {
     // Use esbuild's serve with onRequest to add no-cache headers
     const serveResult = await ctx.serve({
-      servedir: 'docs',
+      servedir: distDir,
       port: 3000,
       host: 'localhost',
       onRequest: (args) => {
@@ -412,8 +449,9 @@ if (process.argv.includes('--watch')) {
 else {
   console.log('Building for production...');
   
-  // Increment version for production build
-  const { version } = getVersionForBuild();
+  // Check builds are non-mutating; release builds increment only when they
+  // are going to publish a fresh docs/ tree.
+  const version = isCheckBuild ? getCurrentVersion() : getVersionForBuild().version;
   console.log(`📦 Building Route Plotter v${version}`);
   
   const buildOptions = createBuildOptions(version);
@@ -430,7 +468,7 @@ else {
     
     // Write build metadata
     fs.writeFileSync(
-      'docs/meta.json',
+      path.join(distDir, 'meta.json'),
       JSON.stringify(result.metafile, null, 2)
     );
     
@@ -441,16 +479,18 @@ else {
     });
 
     // Calculate bundle sizes
-    const stats = fs.statSync('docs/app.js');
+    validateBuiltOutput(distDir, version);
+
+    const stats = fs.statSync(path.join(distDir, 'app.js'));
     const sizeKB = (stats.size / 1024).toFixed(2);
-    const playerStats = fs.statSync('docs/player.js');
+    const playerStats = fs.statSync(path.join(distDir, 'player.js'));
     const playerSizeKB = (playerStats.size / 1024).toFixed(2);
 
     console.log(`✅ Build complete!`);
     console.log(`   Bundle size: ${sizeKB} KB`);
-    console.log(`   Output: docs/app.js`);
+    console.log(`   Output: ${isCheckBuild ? 'temporary validation output' : 'docs/app.js'}`);
     console.log(`   Player bundle: ${playerSizeKB} KB → docs/player.js`);
-    
+
     // Analyze bundle if --analyze flag is present
     if (process.argv.includes('--analyze')) {
       console.log('\nBundle analysis:');
@@ -464,7 +504,33 @@ else {
         console.log(`  ${file}: ${sizeKB} KB`);
       });
     }
+
+    if (isCheckBuild) {
+      fs.rmSync(distDir, { recursive: true, force: true });
+      console.log('   Check build left docs/ and version.json unchanged');
+    } else {
+      publishBuiltOutput(distDir);
+    }
   } catch (error) {
+    // A failed release build must not consume a version number. Restore the
+    // exact pre-build file before best-effort staging cleanup: a cloud-sync
+    // lock on the temporary directory must not prevent version rollback.
+    if (!isCheckBuild) {
+      try {
+        if (originalVersionContents === null) {
+          fs.rmSync(VERSION_FILE, { force: true });
+        } else {
+          fs.writeFileSync(VERSION_FILE, originalVersionContents);
+        }
+      } catch (rollbackError) {
+        console.error('Version rollback also failed:', rollbackError);
+      }
+    }
+    try {
+      fs.rmSync(distDir, { recursive: true, force: true });
+    } catch (cleanupError) {
+      console.warn(`Build failed; temporary output could not be removed: ${distDir} (${cleanupError.message})`);
+    }
     console.error('Build failed:', error);
     process.exit(1);
   }

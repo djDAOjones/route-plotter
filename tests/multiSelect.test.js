@@ -466,7 +466,8 @@ describe('UIController multi-select', () => {
     expect(rows[0].classList.contains('is-selected')).toBe(true);
     expect(rows[1].classList.contains('is-selected')).toBe(false);
     expect(rows[2].classList.contains('is-selected')).toBe(true);
-    expect(rows[0].querySelector('.waypoint-row').getAttribute('aria-selected')).toBe('true');
+    expect(rows[0].querySelector('.waypoint-row').getAttribute('aria-pressed')).toBe('true');
+    expect(listEl.getAttribute('role')).toBeNull();
   });
 
   test('updateWaypointEditor in multi mode announces the count, not a waypoint', () => {

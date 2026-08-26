@@ -162,24 +162,27 @@ export const crowdsMixin = {
     if (!strip) return;
 
     strip.innerHTML = '';
-    strip.setAttribute('role', 'listbox');
+    // Rows contain independent select, visibility, and delete buttons, so
+    // native list semantics are more accurate than a partial ARIA listbox.
+    strip.removeAttribute('role');
     strip.setAttribute('aria-label', 'Layers');
+    strip.removeAttribute('aria-multiselectable');
 
     // Route row — the hero layer; selected whenever no crowd is
     const routeItem = document.createElement('li');
     routeItem.className = 'layer-item';
-    routeItem.setAttribute('role', 'presentation');
     const routeRow = document.createElement('button');
     routeRow.type = 'button';
     routeRow.className = 'layer-row';
-    routeRow.setAttribute('role', 'option');
     const routeSelected = !this.selectedCrowd;
-    routeRow.setAttribute('aria-selected', routeSelected ? 'true' : 'false');
+    routeRow.setAttribute('aria-pressed', routeSelected ? 'true' : 'false');
     if (routeSelected) routeItem.classList.add('selected');
 
     const routeSwatch = document.createElement('span');
     routeSwatch.className = 'layer-swatch layer-swatch-route';
-    routeSwatch.style.background = this.styles?.pathColor || '#D55E00';
+    // Use the colour-only property: imported project strings must never turn
+    // a decorative swatch into a CSS image/network request.
+    routeSwatch.style.backgroundColor = this.styles?.pathColor || '#D55E00';
     const routeTitle = document.createElement('span');
     routeTitle.className = 'layer-title';
     routeTitle.textContent = 'Route';
@@ -220,20 +223,18 @@ export const crowdsMixin = {
   _buildCrowdRow(layer) {
     const item = document.createElement('li');
     item.className = 'layer-item';
-    item.setAttribute('role', 'presentation');
     if (!layer.visible) item.classList.add('layer-hidden');
 
     const row = document.createElement('button');
     row.type = 'button';
     row.className = 'layer-row';
-    row.setAttribute('role', 'option');
     const selected = this.selectedCrowd === layer;
-    row.setAttribute('aria-selected', selected ? 'true' : 'false');
+    row.setAttribute('aria-pressed', selected ? 'true' : 'false');
     if (selected) item.classList.add('selected');
 
     const swatch = document.createElement('span');
     swatch.className = 'layer-swatch';
-    swatch.style.background = layer.emitters[0]?.dotColor || NEW_CROWD_DOT_COLOR;
+    swatch.style.backgroundColor = layer.emitters[0]?.dotColor || NEW_CROWD_DOT_COLOR;
 
     const title = document.createElement('span');
     title.className = 'layer-title';

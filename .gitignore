@@ -8,6 +8,7 @@ Thumbs.db
 # Editor directories and files
 .vscode/
 .idea/
+.claude/
 *.swp
 *~
 *.suo
@@ -18,7 +19,12 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+.docs-build-*
+.docs-backup-*
 # docs/ - NOT ignored (needed for GitHub Pages)
+
+# Local runtime ownership
+.route-plotter-dev.pid
 
 # Environment files
 .env

@@ -124,6 +124,19 @@ describe('CoordinateTransform (extended)', () => {
     expect(t.getImageBounds()).toBe(null);
     expect(t.canvasWidth).toBe(0);
   });
+
+  test('clearImage forgets bitmap bounds but preserves normalized canvas mapping', () => {
+    const t = new CoordinateTransform();
+    t.setCanvasDimensions(800, 600);
+    t.setImageDimensions(1600, 900, 'fit');
+
+    t.clearImage();
+
+    expect(t.getImageBounds()).toBe(null);
+    expect(t.canvasWidth).toBe(800);
+    expect(t.canvasHeight).toBe(600);
+    expect(t.imageToCanvas(0.25, 0.75)).toEqual({ x: 200, y: 450 });
+  });
 });
 
 describe('PathCalculator (extended)', () => {
@@ -211,6 +224,11 @@ describe('Waypoint (extended)', () => {
     major.dotColor = '#56B4E9';
     major.labelMode = 'fade-up';
     major.beaconStyle = 'ripple';
+    major.markerStyle = 'custom';
+    major.customImage = { id: 'decoded-marker' };
+    major.customImageAssetId = 'marker-asset';
+    major.customImageRotation = 'auto';
+    major.customImageRotationOffset = 15;
 
     const minor = Waypoint.createMinor(0.2, 0.2);
     minor.copyPropertiesFrom(major);
@@ -218,6 +236,13 @@ describe('Waypoint (extended)', () => {
     expect(minor.dotColor).toBe('#56B4E9'); // style inherited
     expect(minor.labelMode).toBe('off'); // demoted (minor has no label)
     expect(minor.beaconStyle).toBe('none'); // demoted
+    expect(minor.customImage).toBe(major.customImage);
+
+    const restored = Waypoint.fromJSON(minor.toJSON());
+    expect(restored.customImage).toBeNull();
+    expect(restored.customImageAssetId).toBe('marker-asset');
+    expect(restored.customImageRotation).toBe('auto');
+    expect(restored.customImageRotationOffset).toBe(15);
   });
 
   test('toggleType is reversible and applies type defaults', () => {

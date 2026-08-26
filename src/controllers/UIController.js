@@ -670,6 +670,7 @@ export class UIController {
     
     this.elements.bgUpload?.addEventListener('change', (e) => {
       const file = e.target.files[0];
+      e.target.value = '';
       if (file) {
         this.eventBus.emit('background:upload', file);
       }
@@ -773,23 +774,42 @@ export class UIController {
       }, 50);
     });
     
-    // Clear button — show confirmation modal (N5-1)
-    this.elements.clearBtn?.addEventListener('click', () => {
-      const modal = document.getElementById('clear-confirm-modal');
-      if (!modal) { this.eventBus.emit('waypoints:clear-all'); return; }
-      modal.style.display = 'flex';
-      const confirmBtn = document.getElementById('clear-confirm');
-      const cancelBtn = document.getElementById('clear-cancel');
-      const close = () => { modal.style.display = 'none'; };
-      const handleConfirm = () => { close(); cleanup(); this.eventBus.emit('waypoints:clear-all'); };
-      const handleCancel = () => { close(); cleanup(); };
-      const cleanup = () => {
-        confirmBtn?.removeEventListener('click', handleConfirm);
-        cancelBtn?.removeEventListener('click', handleCancel);
+    // Clear button — destructive confirmation uses the shared modal focus
+    // pattern: safe initial focus, inert background, Escape, and restoration.
+    const clearModal = document.getElementById('clear-confirm-modal');
+    const clearConfirmBtn = document.getElementById('clear-confirm');
+    const clearCancelBtn = document.getElementById('clear-cancel');
+    const clearReturnFocus = document.getElementById('file-dropdown-btn');
+    if (clearModal) {
+      this._clearFocusTrap = createFocusTrap(clearModal);
+      const closeClearModal = () => {
+        clearModal.style.display = 'none';
+        this._clearFocusTrap.deactivate();
       };
-      confirmBtn?.addEventListener('click', handleConfirm);
-      cancelBtn?.addEventListener('click', handleCancel);
-      cancelBtn?.focus();
+      clearConfirmBtn?.addEventListener('click', () => {
+        closeClearModal();
+        this.eventBus.emit('waypoints:clear-all');
+      });
+      clearCancelBtn?.addEventListener('click', closeClearModal);
+      clearModal.addEventListener('click', (e) => {
+        if (e.target === clearModal) closeClearModal();
+      });
+      clearModal.addEventListener('focustrap:escape', closeClearModal);
+    }
+    this.elements.clearBtn?.addEventListener('click', () => {
+      if (!clearModal) {
+        this.eventBus.emit('waypoints:clear-all');
+        return;
+      }
+      clearModal.style.display = 'flex';
+      // Dropdown.js closes the File menu later in this click dispatch. Wait
+      // until that listener has restored the menu trigger, then establish the
+      // modal trap with the stable trigger as its explicit return target.
+      queueMicrotask(() => {
+        if (clearModal.style.display !== 'none') {
+          this._clearFocusTrap.activate(clearCancelBtn, clearReturnFocus);
+        }
+      });
     });
     
     // Help button
@@ -1356,10 +1376,11 @@ export class UIController {
     if (!this.elements.waypointList) return;
     this._listedMajors = waypoints.filter(wp => wp.isMajor);
 
-    // Set ARIA listbox role for proper screen reader semantics
-    this.elements.waypointList.setAttribute('role', 'listbox');
+    // This is an action list, not an ARIA listbox: each row remains a
+    // native button alongside independent reorder/delete actions.
+    this.elements.waypointList.removeAttribute('role');
     this.elements.waypointList.setAttribute('aria-label', 'Waypoints');
-    this.elements.waypointList.setAttribute('aria-multiselectable', 'true');
+    this.elements.waypointList.removeAttribute('aria-multiselectable');
 
     this.elements.waypointList.innerHTML = '';
 
@@ -1370,10 +1391,10 @@ export class UIController {
     // When no waypoints exist, show empty state message
     if (majorWaypoints.length === 0) {
       this.elements.waypointList.innerHTML = `
-        <div class="waypoint-list-empty" role="status" aria-live="polite">
+        <li class="waypoint-list-empty" role="status" aria-live="polite">
           <p>No waypoints yet</p>
           <p class="hint">Click on the map to add waypoints</p>
-        </div>
+        </li>
       `;
       return;
     }
@@ -1410,17 +1431,12 @@ export class UIController {
         item.classList.add('is-selected');
       }
       
-      // Row button - receives focus and handles selection.
-      // role=option: the container is role=listbox, and aria-selected is
-      // only valid on option rows (review 2026-08-18); the li wrapper is
-      // presentational so the option is a direct child of the listbox
-      // in the accessibility tree.
+      // Row button receives focus and exposes its multi-selection state
+      // without replacing native button semantics with a partial listbox.
       const rowBtn = document.createElement('button');
       rowBtn.type = 'button';
       rowBtn.className = 'waypoint-row';
-      rowBtn.setAttribute('role', 'option');
-      rowBtn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-      item.setAttribute('role', 'presentation');
+      rowBtn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
       
       // Colour dot — shows waypoint's marker colour for quick recognition (N6-1)
       const colorDot = document.createElement('span');

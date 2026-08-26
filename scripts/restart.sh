@@ -27,9 +27,15 @@ READY_TIMEOUT=30   # seconds to wait for the first HTTP 200
 # works no matter which directory it is invoked from.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PID_FILE="${ROOT_DIR}/.route-plotter-dev.pid"
 
 HARD_RESET=false
 DEV_PID=""
+DEV_START_TOKEN=""
+DEV_COMMAND=""
+RECORDED_PID=""
+RECORDED_START_TOKEN=""
+RECORDED_COMMAND=""
 
 usage() {
   cat <<EOF
@@ -49,25 +55,161 @@ Notes:
 EOF
 }
 
-for arg in "$@"; do
-  case "${arg}" in
-    --hard-reset) HARD_RESET=true ;;
-    -h|--help) usage; exit 0 ;;
-    *) echo "Unknown option: ${arg}" >&2; usage; exit 1 ;;
-  esac
-done
+parse_args() {
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --hard-reset) HARD_RESET=true ;;
+      -h|--help) usage; exit 0 ;;
+      *) echo "Unknown option: ${arg}" >&2; usage; exit 1 ;;
+    esac
+  done
+}
 
-# Find the dev server's process tree. esbuild binds the port from a child
-# "service" process, so the port listener (lsof) is esbuild, while its parent —
-# `node build.js --watch` — is what `npm run dev` actually launched. Killing only
-# the port listener leaves that node parent orphaned (decision-log 2026-06-17),
-# so we always target both. Scoped to this project's `build.js --watch` — never a
-# broad `pkill node`.
+# Resolve a process's working directory. A matching command line is not enough:
+# several sibling projects use `build.js --watch` in this workspace.
+pid_cwd() {
+  lsof -a -p "$1" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -n1
+}
+
+# `kill -0` proves only that a PID is currently live. Record a stable start
+# token and the exact command line as well, so a later PID reuse cannot make a
+# stale ownership file authorize an unrelated process in the same directory.
+# LC_ALL=C keeps ps's start-time representation comparable across invocations.
+pid_start_token() {
+  LC_ALL=C ps -p "$1" -o lstart= 2>/dev/null | awk '{$1=$1; print}'
+}
+
+pid_command() {
+  LC_ALL=C ps -ww -p "$1" -o command= 2>/dev/null \
+    | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
+}
+
+is_dev_wrapper_command() {
+  local command="$1"
+  [[ "${command}" =~ (^|[[:space:]/])npm[[:space:]]+run[[:space:]]+dev($|[[:space:]]) ]] \
+    || [[ "${command}" =~ npm-cli\.js[[:space:]]+run[[:space:]]+dev($|[[:space:]]) ]]
+}
+
+read_pid_record() {
+  RECORDED_PID=""
+  RECORDED_START_TOKEN=""
+  RECORDED_COMMAND=""
+  [[ -f "${PID_FILE}" ]] || return 1
+
+  IFS=$'\t' read -r RECORDED_PID RECORDED_START_TOKEN RECORDED_COMMAND \
+    < "${PID_FILE}" || return 1
+  [[ "${RECORDED_PID}" =~ ^[0-9]+$ ]] \
+    && [[ -n "${RECORDED_START_TOKEN}" ]] \
+    && [[ -n "${RECORDED_COMMAND}" ]]
+}
+
+pid_record_matches_live_process() {
+  read_pid_record || return 1
+
+  local current_start current_command
+  kill -0 "${RECORDED_PID}" 2>/dev/null || return 1
+  [[ "$(pid_cwd "${RECORDED_PID}")" == "${ROOT_DIR}" ]] || return 1
+
+  current_start="$(pid_start_token "${RECORDED_PID}")"
+  current_command="$(pid_command "${RECORDED_PID}")"
+  [[ -n "${current_start}" && "${current_start}" == "${RECORDED_START_TOKEN}" ]] \
+    && is_dev_wrapper_command "${RECORDED_COMMAND}" \
+    && [[ -n "${current_command}" && "${current_command}" == "${RECORDED_COMMAND}" ]]
+}
+
+write_pid_record() {
+  local pid="$1"
+  local temp_file="${PID_FILE}.tmp.$$"
+  local attempts=40
+
+  # `$!` exists before the forked child necessarily finishes exec'ing npm.
+  # Wait for the expected command identity instead of recording the transient
+  # shell command and invalidating an otherwise legitimate ownership record.
+  DEV_START_TOKEN=""
+  DEV_COMMAND=""
+  while (( attempts > 0 )); do
+    if ! kill -0 "${pid}" 2>/dev/null; then
+      break
+    fi
+    DEV_START_TOKEN="$(pid_start_token "${pid}")"
+    DEV_COMMAND="$(pid_command "${pid}")"
+    if [[ -n "${DEV_START_TOKEN}" ]] && is_dev_wrapper_command "${DEV_COMMAND}"; then
+      break
+    fi
+    DEV_START_TOKEN=""
+    DEV_COMMAND=""
+    sleep 0.05
+    attempts=$(( attempts - 1 ))
+  done
+
+  if [[ -z "${DEV_START_TOKEN}" || -z "${DEV_COMMAND}" \
+      || "${DEV_COMMAND}" == *$'\t'* || "${DEV_COMMAND}" == *$'\n'* ]]; then
+    rm -f "${temp_file}"
+    return 1
+  fi
+
+  if ! printf '%s\t%s\t%s\n' "${pid}" "${DEV_START_TOKEN}" "${DEV_COMMAND}" \
+      > "${temp_file}"; then
+    rm -f "${temp_file}"
+    return 1
+  fi
+  mv -f "${temp_file}" "${PID_FILE}"
+}
+
+# Remove the record only when it is still the one this invocation wrote. This
+# also avoids an older foreground wrapper deleting a newer restart's record.
+remove_owned_pid_file() {
+  [[ -n "${DEV_PID}" && -n "${DEV_START_TOKEN}" && -n "${DEV_COMMAND}" ]] || return 0
+  read_pid_record || return 0
+  if [[ "${RECORDED_PID}" == "${DEV_PID}" \
+      && "${RECORDED_START_TOKEN}" == "${DEV_START_TOKEN}" \
+      && "${RECORDED_COMMAND}" == "${DEV_COMMAND}" ]]; then
+    rm -f "${PID_FILE}"
+  fi
+}
+
+descendant_pids() {
+  local parent="$1"
+  local child
+  while IFS= read -r child; do
+    [[ -z "${child}" ]] && continue
+    echo "${child}"
+    descendant_pids "${child}"
+  done < <(pgrep -P "${parent}" 2>/dev/null || true)
+}
+
+# Find only this project's process tree: the PID recorded by this wrapper and
+# any node watcher whose cwd is this repository. Port ownership alone is never
+# evidence that a process belongs to Route Plotter.
 dev_pids() {
+  local pid
   {
-    lsof -ti :"${PORT}" 2>/dev/null || true
-    pgrep -f 'build\.js --watch' 2>/dev/null || true
+    if pid_record_matches_live_process; then
+      pid="${RECORDED_PID}"
+      echo "${pid}"
+      descendant_pids "${pid}"
+    fi
+
+    while IFS= read -r pid; do
+      [[ -z "${pid}" ]] && continue
+      if [[ "$(pid_cwd "${pid}")" == "${ROOT_DIR}" ]]; then
+        echo "${pid}"
+        descendant_pids "${pid}"
+      fi
+    done < <(pgrep -f '[n]ode build\.js --watch' 2>/dev/null || true)
   } | sort -u
+}
+
+assert_port_available() {
+  local foreign_pids
+  foreign_pids="$(lsof -ti :"${PORT}" 2>/dev/null | sort -u || true)"
+  if [[ -n "${foreign_pids}" ]]; then
+    echo "❌ Port ${PORT} is held by a process this project does not own:" >&2
+    ps -p "$(echo "${foreign_pids}" | paste -sd, -)" -o pid=,command= >&2 || true
+    echo "   Stop it explicitly or choose another port; nothing was killed." >&2
+    exit 1
+  fi
 }
 
 # Stop the dev server: graceful TERM, then KILL only survivors after a grace
@@ -76,6 +218,7 @@ stop_dev() {
   local pids
   pids="$(dev_pids)"
   if [[ -z "${pids}" ]]; then
+    rm -f "${PID_FILE}"
     return 0
   fi
   echo "🛑 Stopping dev server (PIDs: ${pids//$'\n'/ })"
@@ -85,12 +228,14 @@ stop_dev() {
     sleep 0.4
     pids="$(dev_pids)"
     if [[ -z "${pids}" ]]; then
+      rm -f "${PID_FILE}"
       return 0
     fi
   done
   echo "⚠️  Forcing kill of survivors: ${pids//$'\n'/ }" >&2
   # shellcheck disable=SC2086
   kill -9 ${pids} 2>/dev/null || true
+  rm -f "${PID_FILE}"
 }
 
 # On Ctrl-C / TERM, stop the dev server this script owns and exit cleanly.
@@ -101,47 +246,81 @@ cleanup() {
   stop_dev
   exit 0
 }
-trap cleanup INT TERM
 
-cd "${ROOT_DIR}"
-
-stop_dev
-
-if [[ "${HARD_RESET}" == true ]]; then
-  echo "🗑️  Hard reset: removing docs/ (regenerated on boot)"
-  rm -rf "${ROOT_DIR}/docs"
-fi
-
-echo "🚀 Booting dev server (npm run dev)…"
-npm run dev &
-DEV_PID=$!
-
-# Verify readiness: poll until the server answers HTTP 200, not just launches.
-echo "⏳ Waiting for ${URL} to answer (up to ${READY_TIMEOUT}s)…"
-ready=false
-attempts=$(( READY_TIMEOUT * 2 ))   # poll every 0.5s
-while (( attempts > 0 )); do
-  if ! kill -0 "${DEV_PID}" 2>/dev/null; then
-    echo "❌ Dev server exited before becoming ready — check the log above." >&2
-    exit 1
+# Wait without letting `set -e` bypass cleanup, then return the dev process's
+# exact status to the foreground caller.
+wait_for_dev() {
+  local wait_status=0
+  if wait "${DEV_PID}"; then
+    wait_status=0
+  else
+    wait_status=$?
   fi
-  if curl -fsS -o /dev/null "${URL}/" 2>/dev/null; then
-    ready=true
-    break
+  remove_owned_pid_file
+  return "${wait_status}"
+}
+
+main() {
+  parse_args "$@"
+  trap cleanup INT TERM
+
+  cd "${ROOT_DIR}"
+
+  stop_dev
+  assert_port_available
+
+  if [[ "${HARD_RESET}" == true ]]; then
+    echo "🗑️  Hard reset: removing docs/ (regenerated on boot)"
+    rm -rf "${ROOT_DIR}/docs"
   fi
-  sleep 0.5
-  attempts=$(( attempts - 1 ))
-done
 
-if [[ "${ready}" == true ]]; then
-  version="$(curl -fsS "${URL}/" 2>/dev/null \
-    | sed -n 's/.*<title>Route Plotter \(v[0-9.]*\).*/\1/p' | head -n1 || true)"
-  echo "✅ Ready at ${URL} ${version:+(${version})}"
-  echo "💡 Hard-refresh the browser (Cmd+Shift+R) — no hot reload."
-else
-  echo "⚠️  ${URL} did not answer within ${READY_TIMEOUT}s. The server is still" >&2
-  echo "    running below; check the log for errors." >&2
+  echo "🚀 Booting dev server (npm run dev)…"
+  npm run dev &
+  DEV_PID=$!
+  if ! write_pid_record "${DEV_PID}"; then
+    kill "${DEV_PID}" 2>/dev/null || true
+    wait "${DEV_PID}" 2>/dev/null || true
+    echo "❌ Could not record a stable dev-process identity; server stopped." >&2
+    return 1
+  fi
+  trap remove_owned_pid_file EXIT
+
+  # Verify readiness: poll until the server answers HTTP 200, not just launches.
+  echo "⏳ Waiting for ${URL} to answer (up to ${READY_TIMEOUT}s)…"
+  local ready=false
+  local attempts=$(( READY_TIMEOUT * 2 ))   # poll every 0.5s
+  local version=""
+  while (( attempts > 0 )); do
+    if ! kill -0 "${DEV_PID}" 2>/dev/null; then
+      remove_owned_pid_file
+      echo "❌ Dev server exited before becoming ready — check the log above." >&2
+      return 1
+    fi
+    if curl -fsS -o /dev/null "${URL}/" 2>/dev/null; then
+      ready=true
+      break
+    fi
+    sleep 0.5
+    attempts=$(( attempts - 1 ))
+  done
+
+  if [[ "${ready}" == true ]]; then
+    version="$(curl -fsS "${URL}/" 2>/dev/null \
+      | sed -n 's/.*<title>Route Plotter \(v[0-9.]*\).*/\1/p' | head -n1 || true)"
+    echo "✅ Ready at ${URL} ${version:+(${version})}"
+    echo "💡 Hard-refresh the browser (Cmd+Shift+R) — no hot reload."
+  else
+    echo "⚠️  ${URL} did not answer within ${READY_TIMEOUT}s. The server is still" >&2
+    echo "    running below; check the log for errors." >&2
+  fi
+
+  # Stay in the foreground tied to the server; Ctrl-C triggers cleanup above.
+  local wait_status=0
+  wait_for_dev || wait_status=$?
+  trap - EXIT
+  return "${wait_status}"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
 fi
-
-# Stay in the foreground tied to the server; Ctrl-C triggers cleanup above.
-wait "${DEV_PID}"

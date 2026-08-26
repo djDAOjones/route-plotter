@@ -7,13 +7,12 @@
  * 
  * ## Architecture
  * 
- * This service is stateless except for trail state tracking (required to prevent snap-back).
- * All methods are pure functions of their inputs except `_calculateTrailFadeStartWithState`.
+ * Trail and waypoint visibility are pure functions of their inputs. Reveal masks reuse an
+ * off-screen canvas, but rebuild its pixels for each requested timeline instant.
  * 
  * ## Performance Considerations
  * 
  * - Fast paths for static visibility modes (no calculations)
- * - Trail state uses minimal memory (6 numbers + 2 booleans)
  * - No allocations during animation (reuses cached values)
  * - Debug logging is throttled to significant changes only
  * 
@@ -75,32 +74,6 @@ export class MotionVisibilityService {
     this.revealMaskCtx = null;
     this.lastCanvasSize = { width: 0, height: 0 };
     
-    // ========== HYBRID TRAIL STATE MANAGEMENT ==========
-    // Minimal state tracking to prevent trail snap-back after pauses.
-    // The trail tail can only move forward during normal playback.
-    // Memory footprint: 6 numbers + 2 booleans = ~64 bytes
-    
-    /** @type {number} Current tail position (0-1), only moves forward */
-    this._tailProgress = 0;
-    
-    /** @type {number} Last known head position for reset detection */
-    this._lastHeadProgress = 0;
-    
-    /** @type {boolean} Whether we were waiting at a waypoint last frame */
-    this._wasWaiting = false;
-    
-    /** @type {boolean} Whether we were in tail time last frame */
-    this._wasInTailTime = false;
-    
-    /** @type {number} Tail position when waypoint pause started */
-    this._pauseStartTail = 0;
-    
-    /** @type {number} Tail position when tail time started */
-    this._tailTimeStartTail = 0;
-    
-    /** @type {number} Trail fraction cached for consistency within frame */
-    this._trailFraction = 0;
-    
     // ========== AOV REVEAL STATE MANAGEMENT ==========
     /** @type {number} Last progress value for AOV reveal mask (for scrub detection) */
     this._lastAOVProgress = 0;
@@ -113,21 +86,13 @@ export class MotionVisibilityService {
   }
   
   /**
-   * Reset trail state (call on animation reset)
-   * Clears all tracked state so trail starts fresh
+   * Compatibility reset used by playback reset callers. Comet trails are now
+   * stateless; only reveal traversal caches need clearing.
    */
   resetTrailState() {
-    this._tailProgress = 0;
-    this._lastHeadProgress = 0;
-    this._wasWaiting = false;
-    this._wasInTailTime = false;
-    this._pauseStartTail = 0;
-    this._tailTimeStartTail = 0;
-    this._trailFraction = 0;
     this._lastAOVProgress = 0;
     this._lastAOVPointIndex = -1;
     this._lastAOVCone = null;
-    console.debug('🔄 [MotionVisibilityService] Trail state reset');
   }
 
   // ========== PATH VISIBILITY ==========
@@ -135,16 +100,9 @@ export class MotionVisibilityService {
   /**
    * Calculate the visible range of the path based on current progress and settings.
    * 
-   * ## Hybrid State Management
-   * 
-   * This method uses minimal state tracking to prevent trail snap-back:
-   * - Trail tail can only move forward during normal playback
-   * - During pauses, trail shrinks toward head based on elapsed time
-   * - When exiting pause, tail stays at shrunk position until head moves far enough
-   * - Reset detection: if head jumps backward significantly, state is cleared
-   * 
    * Trail length is calculated using pathDuration (excluding pauses) to ensure
-   * consistent trail length regardless of waypoint pauses.
+   * consistent trail length regardless of waypoint pauses. The result depends
+   * only on the requested instant, so direct seeks and sequential playback agree.
    * 
    * @param {number} pathProgress - Current path progress (0-1), pauses during waypoint waits
    * @param {Object} settings - Motion settings with pathVisibility and pathTrail
@@ -152,9 +110,18 @@ export class MotionVisibilityService {
    * @param {boolean} [isWaiting=false] - Whether currently paused at a waypoint
    * @param {number} [pauseElapsed=0] - Time elapsed in current pause (ms)
    * @param {boolean} [isInTailTime=false] - Whether in tail time (path complete, trail fading)
+   * @param {Object|null} [trailContext=null] - Absolute timeline context from AnimationEngine
    * @returns {{startProgress: number, endProgress: number, fadeStartProgress: number}}
    */
-  getPathVisibleRange(pathProgress, settings, pathDuration, isWaiting = false, pauseElapsed = 0, isInTailTime = false) {
+  getPathVisibleRange(
+    pathProgress,
+    settings,
+    pathDuration,
+    isWaiting = false,
+    pauseElapsed = 0,
+    isInTailTime = false,
+    trailContext = null
+  ) {
     const { pathVisibility, pathTrail } = settings;
 
     // Fast paths for static visibility modes (no calculations needed)
@@ -174,10 +141,10 @@ export class MotionVisibilityService {
       return { startProgress: pathProgress, endProgress: 1, fadeStartProgress: pathProgress };
     }
 
-    // Calculate trail fade start position using hybrid state management
+    // Calculate trail fade start position from this timeline instant only
     // Only used for INSTANTANEOUS mode (comet effect with trail)
-    const fadeStart = this._calculateTrailFadeStartWithState(
-      pathProgress, pathTrail, pathDuration, isWaiting, pauseElapsed, isInTailTime
+    const fadeStart = this._calculateTrailFadeStart(
+      pathProgress, pathTrail, pathDuration, isWaiting, pauseElapsed, isInTailTime, trailContext
     );
 
     // Instantaneous: only trail segment visible (comet effect)
@@ -190,36 +157,12 @@ export class MotionVisibilityService {
   }
 
   /**
-   * Calculate trail fade start position using hybrid state management.
-   * 
-   * This is the core trail calculation method. It maintains minimal state to ensure
-   * the trail behaves correctly across pauses and scrubbing.
-   * 
-   * ## Algorithm
-   * 
-   * 1. **Early Exit**: If trail disabled (0) or invalid duration, return pathProgress
-   * 2. **Reset Detection**: If head jumped backward >10%, reset all state
-   * 3. **Trail Fraction**: pathTrail capped at 80% of current progress
-   * 4. **State Machine**:
-   *    - ENTER_PAUSE: Record tail position for shrink calculation
-   *    - SHRINKING_PAUSE: Interpolate tail toward head based on elapsed time
-   *    - ENTER_TAILTIME: Record tail position for final fade
-   *    - SHRINKING_TAILTIME: Interpolate tail toward 100%
-   *    - EXIT_PAUSE: Mark no longer waiting (tail stays put)
-   *    - ADVANCE: Move tail forward to ideal position
-   *    - HOLD: Keep tail at current position (ideal is behind)
-   * 
-   * ## Performance
-   * - O(1) time complexity
-   * - No allocations (reuses instance state)
-   * - Debug logging throttled to significant changes
-   * 
-   * ## Rules Honored
-   * - Rule 1: Don't compute trail purely from pathProgress (uses state)
-   * - Rule 2: Trail cannot move backwards except on explicit reset
-   * - Rule 3: Cap early trail length relative to progress (80% cap)
-   * - Rule 4: Pauses shrink from actual tail position, not recomputed ideal
-   * - Rule 7: Reset trail state on backward jumps
+   * Calculate a comet tail from the requested timeline instant.
+   *
+   * The base tail keeps the established 80% early-progress cap. During a
+   * waypoint wait or final tail period it moves linearly toward the head over
+   * the authored trail duration. No prior render is consulted, which is the
+   * deterministic-timeline requirement for play, scrub and export parity.
    * 
    * @param {number} pathProgress - Current path progress (0-1)
    * @param {number} pathTrail - Trail as fraction of sequence (0=off, 0.04-4.0)
@@ -227,148 +170,65 @@ export class MotionVisibilityService {
    * @param {boolean} isWaiting - Whether paused at a waypoint
    * @param {number} pauseElapsed - Time elapsed in current pause (ms)
    * @param {boolean} isInTailTime - Whether in tail time (path complete)
+   * @param {Object|null} trailContext - Absolute timeline context from AnimationEngine
    * @returns {number} Fade start position (0-1), clamped to [0, pathProgress]
    * @private
    */
-  _calculateTrailFadeStartWithState(pathProgress, pathTrail, pathDuration, isWaiting, pauseElapsed, isInTailTime) {
-    // pathTrail is now a fraction (0-1) of the sequence, not seconds
-    // 0 = OFF (trail disabled)
+  _calculateTrailFadeStart(
+    pathProgress,
+    pathTrail,
+    pathDuration,
+    isWaiting,
+    pauseElapsed,
+    isInTailTime,
+    trailContext
+  ) {
     if (pathTrail <= 0 || pathDuration <= 0) return pathProgress;
-    
-    // Trail fraction with cap at 80% of current progress (prevents full-path flash at start)
-    // pathTrail is already the fraction (0.01-1.0), no conversion needed
-    const progressCap = pathProgress * 0.8;
-    this._trailFraction = Math.min(pathTrail, progressCap);
-    
-    // Calculate trail duration in ms for pause shrinking calculations
+    const head = Math.max(0, Math.min(1, pathProgress));
+    const baseTail = this._calculateBaseTrailTail(head, pathTrail);
     const trailDurationMs = pathTrail * pathDuration;
-    
-    // Reset detection: if head jumped backward significantly, reset state (Rule 7)
-    // BUT: Don't reset when entering a pause - the pathProgress snaps to waypoint position
-    // which can look like a backward jump but isn't a real scrub/reset
-    const headJumpedBack = pathProgress < this._lastHeadProgress - 0.1;
-    const enteringPause = isWaiting && !this._wasWaiting;
-    if (headJumpedBack && !enteringPause) {
-      console.debug(`🔄 [Trail] Reset detected: head ${(this._lastHeadProgress * 100).toFixed(1)}% → ${(pathProgress * 100).toFixed(1)}%`);
-      this.resetTrailState();
+
+    if (trailContext) {
+      const timelineMs = Math.max(0, trailContext.timelineMs || 0);
+      let heldTail = 0;
+
+      // Each completed pause leaves a deterministic held tail. Between pauses,
+      // the normal base tail catches up with it; the maximum recreates the old
+      // no-snap transition without consulting a previously rendered frame.
+      for (const marker of trailContext.pauseMarkers || []) {
+        if (timelineMs < marker.timelineStartMs) break;
+        const pauseHead = Math.max(0, Math.min(1, marker.pathProgress));
+        const pauseStartTail = Math.max(heldTail, this._calculateBaseTrailTail(pauseHead, pathTrail));
+        const pauseElapsedMs = Math.min(marker.duration, Math.max(0, timelineMs - marker.timelineStartMs));
+        const fadeRatio = Math.min(1, pauseElapsedMs / trailDurationMs);
+        const pauseTail = pauseStartTail + (pauseHead - pauseStartTail) * fadeRatio;
+
+        if (timelineMs < marker.timelineEndMs) return pauseTail;
+        heldTail = pauseTail;
+      }
+
+      const currentTail = Math.max(heldTail, baseTail);
+      const hasTailPeriod = trailContext.tailEndMs > trailContext.tailStartMs;
+      if (hasTailPeriod && timelineMs >= trailContext.tailStartMs) {
+        const tailElapsedMs = Math.max(0, timelineMs - trailContext.tailStartMs);
+        const fadeRatio = Math.min(1, tailElapsedMs / trailDurationMs);
+        return currentTail + (head - currentTail) * fadeRatio;
+      }
+
+      return currentTail;
     }
-    
-    const prevHeadProgress = this._lastHeadProgress;
-    this._lastHeadProgress = pathProgress;
-    
-    // Calculate ideal tail position (where it would be without state tracking)
-    const idealTail = Math.max(0, pathProgress - this._trailFraction);
-    
-    // Store previous state for debug
-    const prevTailProgress = this._tailProgress;
-    const prevWasWaiting = this._wasWaiting;
-    const prevWasInTailTime = this._wasInTailTime || false;
-    let stateTransition = 'none';
-    
-    // Handle state transitions
-    if (isWaiting || isInTailTime) {
-      // Entering tail time: record current tail position for tail time shrinking
-      // This is separate from waypoint pause tracking
-      if (isInTailTime && !prevWasInTailTime) {
-        this._tailTimeStartTail = this._tailProgress;
-        stateTransition = 'enter-tailtime';
-      }
-      // Entering waypoint pause (not tail time): record tail position
-      else if (!this._wasWaiting && !isInTailTime) {
-        this._pauseStartTail = this._tailProgress;
-        stateTransition = 'enter-pause';
-      }
-      
-      this._wasWaiting = true;
-      this._wasInTailTime = isInTailTime;
-      
-      // During tail time: shrink from tail time start position
-      if (isInTailTime && pauseElapsed > 0 && trailDurationMs > 0) {
-        const fadeRatio = Math.min(1, pauseElapsed / trailDurationMs);
-        const startTail = this._tailTimeStartTail !== undefined ? this._tailTimeStartTail : this._tailProgress;
-        
-        // Linear interpolation: tail moves from tailTimeStartTail toward head (100%)
-        this._tailProgress = startTail + (pathProgress - startTail) * fadeRatio;
-        this._tailProgress = Math.min(this._tailProgress, pathProgress);
-        
-        if (stateTransition === 'none') stateTransition = 'shrinking-tailtime';
-      }
-      // During waypoint pause: shrink from pause start position
-      else if (!isInTailTime && pauseElapsed > 0 && trailDurationMs > 0) {
-        const fadeRatio = Math.min(1, pauseElapsed / trailDurationMs);
-        
-        // Linear interpolation: tail moves from pauseStartTail toward head
-        this._tailProgress = this._pauseStartTail + (pathProgress - this._pauseStartTail) * fadeRatio;
-        this._tailProgress = Math.min(this._tailProgress, pathProgress);
-        
-        if (stateTransition === 'none') stateTransition = 'shrinking-pause';
-      }
-    } else {
-      // Exiting pause: mark as no longer waiting
-      if (this._wasWaiting) {
-        stateTransition = 'exit-pause';
-      }
-      this._wasWaiting = false;
-      this._wasInTailTime = false;
-      
-      // Normal movement: tail can only move forward (Rule 2)
-      // If ideal tail is ahead of current tail, move to ideal
-      // If ideal tail is behind current tail, keep current (no snap-back)
-      if (idealTail > this._tailProgress) {
-        this._tailProgress = idealTail;
-        if (stateTransition === 'none') stateTransition = 'advance';
-      } else if (stateTransition === 'none') {
-        stateTransition = 'hold';
-      }
-    }
-    
-    // Clamp to valid range [0, pathProgress]
-    const result = Math.max(0, Math.min(this._tailProgress, pathProgress));
-    
-    // Debug logging (throttled to avoid spam - only log on significant changes)
-    const tailChanged = Math.abs(result - prevTailProgress) > 0.001;
-    const headChanged = Math.abs(pathProgress - prevHeadProgress) > 0.001;
-    const stateChanged = prevWasWaiting !== this._wasWaiting;
-    
-    if (tailChanged || stateChanged || (headChanged && (isWaiting || isInTailTime))) {
-      console.debug(`🎯 [Trail] head:${(pathProgress * 100).toFixed(1)}% tail:${(result * 100).toFixed(1)}% ` +
-        `ideal:${(idealTail * 100).toFixed(1)}% frac:${(this._trailFraction * 100).toFixed(1)}% ` +
-        `state:${stateTransition} wait:${isWaiting} tailTime:${isInTailTime} ` +
-        `pauseEl:${pauseElapsed.toFixed(0)}ms trailDur:${trailDurationMs.toFixed(0)}ms`);
-    }
-    
-    return result;
+
+    if (!isWaiting && !isInTailTime) return baseTail;
+
+    const elapsedMs = Number.isFinite(pauseElapsed) ? Math.max(0, pauseElapsed) : 0;
+    const fadeRatio = Math.min(1, elapsedMs / trailDurationMs);
+    return baseTail + (head - baseTail) * fadeRatio;
   }
-  
-  /**
-   * Calculate trail fade start position (stateless version).
-   * Trail length = pathTrail(s) / pathDuration(s). During pauses, shrinks toward head.
-   * 
-   * @deprecated Use _calculateTrailFadeStartWithState for proper snap-back prevention
-   * @param {number} pathProgress - Current path progress (0-1)
-   * @param {number} pathTrail - Trail duration in seconds
-   * @param {number} pathDuration - Path duration in ms (excludes pauses)
-   * @param {boolean} isWaiting - Whether paused at a waypoint
-   * @param {number} pauseElapsed - Time elapsed in current pause (ms)
-   * @returns {number} Fade start position (0-1), clamped to [0, pathProgress]
-   * @private
-   */
-  _calculateTrailFadeStart(pathProgress, pathTrail, pathDuration, isWaiting, pauseElapsed) {
-    if (pathTrail <= 0 || pathDuration <= 0) return pathProgress;
-    
-    // Trail length as fraction of path (pathTrail in seconds, pathDuration in ms)
-    const trailFraction = (pathTrail * 1000) / pathDuration;
-    
-    // Base position: fixed distance behind head
-    let fadeStart = pathProgress - trailFraction;
-    
-    // During pauses, shrink trail toward head based on elapsed time
-    if (isWaiting && pauseElapsed > 0) {
-      fadeStart += pauseElapsed / pathDuration;
-    }
-    
-    // Clamp to valid range [0, pathProgress]
-    return Math.max(0, Math.min(fadeStart, pathProgress));
+
+  /** @private */
+  _calculateBaseTrailTail(pathProgress, pathTrail) {
+    const trailFraction = Math.min(pathTrail, pathProgress * 0.8);
+    return Math.max(0, pathProgress - trailFraction);
   }
 
   /**

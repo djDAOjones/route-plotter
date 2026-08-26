@@ -42,6 +42,7 @@ export class InteractionHandler {
   constructor(canvas, eventBus) {
     this.canvas = canvas;
     this.eventBus = eventBus;
+    this.enabled = true;
     
     // Drag state
     this.isDragging = false;
@@ -688,11 +689,16 @@ export class InteractionHandler {
    * - Del/Backspace: Delete selected waypoint
    */
   handleKeyDown(event) {
-    // Don't interfere with input fields or focused dropdowns — arrows/T/a
-    // were firing global shortcuts while a <select> was open (review
-    // 2026-08-18)
-    const tag = event.target.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target.isContentEditable) {
+    if (this.enabled === false) return;
+    // Native controls and custom widgets own their keyboard interaction.
+    // In particular, plain Tab must always remain a browser focus command.
+    if (event.defaultPrevented) return;
+    const target = event.target;
+    const tag = target?.tagName;
+    const isInteractive = target?.closest?.(
+      'button, a[href], summary, [role="button"], [role="menuitem"], [role="option"]'
+    );
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable || isInteractive) {
       return;
     }
     
@@ -704,7 +710,7 @@ export class InteractionHandler {
     // (its own keys — Esc/Delete/T — are handled by the service on the
     // capture phase; playback, zoom and undo stay live)
     if (this.isEditingNetwork &&
-        (key === 'a' || key === 'tab' || (ctrl && key === 'd'))) {
+        (key === 'a' || (ctrl && key === 'd'))) {
       return;
     }
 
@@ -766,13 +772,6 @@ export class InteractionHandler {
     else if ((key === 'delete' || key === 'backspace') && this.selectedWaypoint) {
       event.preventDefault();
       this.eventBus.emit('waypoint:delete-selected');
-    }
-    
-    // Select next/previous waypoint
-    else if (key === 'tab') {
-      event.preventDefault();
-      const direction = shift ? 'previous' : 'next';
-      this.eventBus.emit('waypoint:select-adjacent', direction);
     }
     
     // Toggle waypoint type
@@ -969,6 +968,11 @@ export class InteractionHandler {
    */
   setSelectedWaypoint(waypoint) {
     this.selectedWaypoint = waypoint;
+  }
+
+  /** Enable or suspend document-level application shortcuts. */
+  setEnabled(enabled) {
+    this.enabled = Boolean(enabled);
   }
   
   /**

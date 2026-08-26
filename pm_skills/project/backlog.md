@@ -10,6 +10,18 @@
      Quarantine at the bottom holds proposed cuts — owner approval
      required before anything is deleted. -->
 
+### Review follow-ups
+
+- [ ] REV-02 [[detail]](tickets/REV-02.md) [sign-off] — Design the non-visual scene representation and keyboard authoring model for networks, polygons, minor waypoints and exported-player meaning. Kept separate because it changes the product's interaction model rather than repairing an isolated defect.
+- [ ] REV-03 — Replace the separate mouse/touch paths with one Pointer Events + capture state machine for route, network and polygon gestures; close on exactly-once automated pointer contracts plus physical iOS/Android tap, drag, cancel, scroll and pinch evidence. Sequence after REV-02 fixes the complete interaction inventory.
+- [ ] REV-04 — Make export strategy selection portable and honest: preload/cache the HTML player, probe every API used by the selected video path, emit exactly the announced frame count, and publish a verified Chromium/Firefox/Safari codec and offline matrix.
+- [ ] REV-05 — Complete accessibility assurance beyond this branch's keyboard/reflow/modal repairs: replace label-intercepting parameter help, run axe plus NVDA/VoiceOver, forced-colours, reduced-motion and 200–400% zoom, and close only when the published support claim matches evidence. Representative pointer-free authoring depends on REV-02.
+- [ ] REV-06 — Sleep the animation/render loop when no playback, transition, export or dirty frame is pending, then profile idle/paused CPU and a representative 500-dot/4K scene before tuning further.
+- [ ] REV-07 — Mature the new read-only CI gate with risk-based coverage thresholds, a supported-Node matrix and dependency-update automation; keep artifact drift and frozen-install checks mandatory.
+- [ ] REV-08 [[detail]](tickets/REV-08.md) [sign-off] — Decide and enforce the publication/privacy boundary for shipped samples, imported image metadata, support logs, CSP and shared project assets; requires owner provenance review before deleting or approving public material.
+- [ ] REV-09 [[detail]](tickets/REV-09.md) [sign-off] — Establish the repository licence, third-party/source notices, security reporting route and maintainer support posture with owner/legal approval; technical implementation must not invent legal terms.
+- [ ] REV-10 — Add reference-aware custom-image asset pruning so repeated marker/head replacements cannot retain unused blobs until the 128-asset/40 MiB project limit is reached. Account for references held by live waypoints, the route head and undo/redo snapshots before deleting anything; close with replacement/undo/save round-trip tests.
+
 ### Wave 0 — Verify & close out (owner, in-browser; no dev work)
 
 - [ ] Consolidated feel-check session: Phase 4 behaviour changes (Cmd+A incl. minors, canvas Cmd+click toggle, leg-click selects, no confirm modal) + the Phase 5 exported player in a real browser + the two segment-speed items below. Closing this closes both [~] items to trajectory.
@@ -34,14 +46,18 @@
 - [ ] Fix: area handle hit-testing misses at viewport zoom > 1 — `area:check-handle` compares screen coords against imageToCanvas (canvas) coords; drag and hover share the miss consistently. — (promoted from wish-list; from: 2026-08-18 Phase 4 canvas affordances)
 - [ ] Fix: editor control values go stale after undo/redo — `_restoreState` restores selection without re-emitting selection events (the chip half was fixed by the Phase 4 multi-select restore sync). — (promoted from wish-list; from: 2026-08-18 Phase 4 canvas affordances, narrowed by fifth slice)
 - [ ] Fix: Clear All should save an undo snapshot like Apply-to-All now does; its modal's "cannot be undone" copy is currently accurate. — (promoted from wish-list; from: 2026-08-18 Phase 3.5)
+- [ ] UX-01 — Add a direct, labelled Route target to the scope chip so a user editing a waypoint can return to route-level controls in one click or keystroke instead of stepping repeatedly through the back arrow. Done when the route action is always visible in waypoint scope, keyboard accessible, and preserves the project while changing only the editing scope.
 
 ### Wave 2 — Inspector completion (finish the Phase 4 story)
 
 <!-- Disclosure first: it defines the card slots the other two land on. -->
 
-- [ ] Two-tier disclosure pass: 2–4 primary controls per card + "More…" for the rest (offsets, rotation offset, ripple thickness, tension) — roughly 20 controls at rest instead of ~45. Also unblocks the wish-list "under More…" items (label colour/bg, camera zoom mode, onsetVariance/intensityRamp).
+- [ ] Two-tier disclosure pass: 2–4 primary controls per card + "More…" for the rest (offsets, rotation offset, ripple thickness, tension) — roughly 20 controls at rest instead of ~45. Also establishes the card space needed by the crowd timing and variation controls below.
 - [ ] Minors in the waypoint list as indented rows under their major — selectable, renameable, reorder-visible. Resolves the last open UI-review sub-decision — present the pattern for owner sign-off before building.
 - [ ] Per-card "Reset to route style" / "Apply onward" — makes copy-at-creation inheritance visible and reversible. Buttons land on the post-disclosure card layout, hence after it.
+- [ ] CROWD-01 — Make competing-route allocation legible and editable at a junction: build on the existing per-edge Traffic weight/share calculation to show all outgoing choices together, let users set their relative shares, normalise them predictably, and preview the resulting percentage of dots per path.
+- [ ] CROWD-02 [[detail]](tickets/CROWD-02.md) — Add a whole-route busyness envelope: a compact timeline line graph with draggable handles and segment controls for sudden or graduated changes, evaluated deterministically and identically in the editor and exports.
+- [ ] CROWD-03 — Expose reproducible dot variation controls for walking-like pace/cadence, uneven release timing, and route-choice sampling, including a seed and explicit re-roll action. Reuse the existing deterministic `speedVariance`, `wobble` and `onsetVariance` foundations; the same project and seed must render the same result.
 
 ### Wave 3 — Route ⇄ crowd composition (the milestone headline)
 
@@ -60,9 +76,8 @@
 
 ### Blocked / needs scoping
 
-- [ ] Reflow breakpoint — avoid horizontal scroll at 200–400% zoom
-  - Blocked / needs scoping (2026-06-17): conflicts with the `<1440px` min-width gate (`#screen-warning`); reconcile zoom-driven reflow with the hard min-width in its own scoping task.
-  - Triage note (2026-08-19): this is the brief's WCAG 2.2 commitment (1.4.10 Reflow), not polish — at 400% zoom the effective width (~360 CSS px) always trips the gate, so the criterion is unreachable as designed. The scoping task itself is small: decide posture (responsive editor vs documented exception) before any implementation is sequenced.
+- [ ] ROUTE-01 [[detail]](tickets/ROUTE-01.md) [sign-off] — Implement split hero routes only after agreeing how branches are authored, timed and played: one chosen branch, all branches, or simultaneous heads. The current hero route is a single ordered waypoint chain, so this changes route, selection, timing, export and player semantics rather than adding an isolated drawing tool.
+
 - [ ] Resolution & scaling design ticket — merged from "Relative sizing for all canvas elements across different canvas sizes" + "Export resolution preservation in zoom modes" (same root: absolute-px element sizing tied to background/canvas resolution). Touches the authored-timeline preservation rules (timingReference; never recompute timing at a new canvas) — highest-blast-radius area in the app. Needs its own design ticket before sequencing.
 
 ### Icebox

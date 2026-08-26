@@ -9,6 +9,12 @@
 import { TEXT_LABEL } from '../config/constants.js';
 import { TextLabelService } from '../services/TextLabelService.js';
 import { CameraService, CAMERA_DEFAULTS } from '../services/CameraService.js';
+import { createFocusTrap } from '../utils/focusTrap.js';
+import { ImageAsset } from '../models/ImageAsset.js';
+import {
+  beginAsyncProjectOperation,
+  isAsyncProjectOperationCurrent,
+} from './operationGeneration.js';
 
 export const wiringDomMixin = {
   
@@ -48,10 +54,35 @@ export const wiringDomMixin = {
     });
     
     // ===== SPLASH SCREEN EVENT LISTENERS =====
+    // Both first-run and Help paths show this dialog by changing its inline
+    // display, so one observer keeps the shared focus trap in sync.
+    if (this.elements.splash) {
+      this._splashFocusTrap = createFocusTrap(this.elements.splash);
+      const syncSplashFocus = () => {
+        const isOpen = !this.elements.splash.hidden && this.elements.splash.style.display !== 'none';
+        if (isOpen) {
+          this._splashFocusTrap.activate();
+        } else {
+          this._splashFocusTrap.deactivate();
+        }
+      };
+      this._splashObserver = new MutationObserver(syncSplashFocus);
+      this._splashObserver.observe(this.elements.splash, {
+        attributes: true,
+        attributeFilter: ['hidden', 'style']
+      });
+      this.elements.splash.addEventListener('focustrap:escape', () => this.hideSplash());
+      syncSplashFocus();
+    }
+
+    const closeSplash = () => {
+      this.hideSplash();
+      this._splashFocusTrap?.deactivate();
+    };
     if (this.elements.splashClose) {
       this.elements.splashClose.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.hideSplash();
+        closeSplash();
       });
     } else {
       console.error('❌ [Splash] Close button element not found!');
@@ -61,14 +92,14 @@ export const wiringDomMixin = {
     if (this.elements.splashCloseX) {
       this.elements.splashCloseX.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.hideSplash();
+        closeSplash();
       });
     }
     
     if (this.elements.splash) {
       this.elements.splash.addEventListener('click', (e) => {
         if (e.target === this.elements.splash) {
-          this.hideSplash();
+          closeSplash();
         }
       });
     } else {
@@ -214,19 +245,28 @@ export const wiringDomMixin = {
     
     this.elements.markerUpload?.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
+      e.target.value = '';
       const targets = this.selectionTargets(true);
       if (file && targets.length > 0) {
+        const token = beginAsyncProjectOperation(this, 'marker-image');
         try {
-          // Add to asset service (handles deduplication)
-          const { asset, isNew, warning } = await this.imageAssetService.addFromFile(file);
+          // Decode outside the live asset collection. Clear/Open or a newer
+          // marker request can then supersede this work without leaving a
+          // late orphan asset behind.
+          const candidate = await ImageAsset.fromFile(file);
+          const image = await candidate.getImageElement();
+          if (!isAsyncProjectOperationCurrent(this, token)) return;
+
+          const liveTargets = targets.filter(wp => this.waypoints.includes(wp));
+          if (liveTargets.length === 0) return;
+          const { asset, isNew, warning } = this.imageAssetService.addAsset(candidate);
 
           if (warning) {
             console.warn(warning);
           }
 
           // Store asset ID on every selected waypoint (shared asset)
-          const image = await asset.getImageElement();
-          for (const wp of targets) {
+          for (const wp of liveTargets) {
             wp.customImageAssetId = asset.id;
             wp.customImage = image;
           }
@@ -243,8 +283,9 @@ export const wiringDomMixin = {
 
           console.log(`📷 Waypoint marker image ${isNew ? 'added' : 'reused'}: ${asset.name} (${asset.getFormattedSize()})`);
         } catch (err) {
+          if (!isAsyncProjectOperationCurrent(this, token)) return;
           console.error('Failed to load marker image:', err);
-          this.announce('Failed to load image');
+          this.announce(err.message || 'Failed to load image');
         }
       }
     });
@@ -500,18 +541,24 @@ export const wiringDomMixin = {
     
     this.elements.headUpload.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
+      e.target.value = '';
       if (file) {
+        const token = beginAsyncProjectOperation(this, 'path-head-image');
+        const pathHead = this.styles.pathHead;
         try {
-          // Add to asset service (handles deduplication)
-          const { asset, isNew, warning } = await this.imageAssetService.addFromFile(file);
+          const candidate = await ImageAsset.fromFile(file);
+          const image = await candidate.getImageElement();
+          if (!isAsyncProjectOperationCurrent(this, token) || this.styles.pathHead !== pathHead) return;
+
+          const { asset, isNew, warning } = this.imageAssetService.addAsset(candidate);
           
           if (warning) {
             console.warn(warning);
           }
           
           // Store asset ID and get cached image element
-          this.styles.pathHead.imageAssetId = asset.id;
-          this.styles.pathHead.image = await asset.getImageElement();
+          pathHead.imageAssetId = asset.id;
+          pathHead.image = image;
           
           // Update preview
           this.elements.headPreview.style.display = 'block';
@@ -524,8 +571,9 @@ export const wiringDomMixin = {
           
           console.log(`📷 Path head image ${isNew ? 'added' : 'reused'}: ${asset.name} (${asset.getFormattedSize()})`);
         } catch (err) {
+          if (!isAsyncProjectOperationCurrent(this, token)) return;
           console.error('Failed to load path head image:', err);
-          this.announce('Failed to load image');
+          this.announce(err.message || 'Failed to load image');
         }
       }
     });
@@ -624,54 +672,9 @@ export const wiringDomMixin = {
     // Animation speed now handled by UIController -> EventBus -> animation:speed-change event
     // Waypoint pause time now handled by UIController -> EventBus -> waypoint:pause-changed event
     
-    // Background controls
-    this.elements.bgUploadBtn.addEventListener('click', () => this.elements.bgUpload.click());
-    this.elements.bgUpload.addEventListener('change', (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        this.loadImageFile(file).then((img) => {
-          this.background.image = img;
-          this.updateImageTransform(img);
-          // Auto-set export resolution to match image
-          this.eventBus.emit('video:resolution-native');
-          if (this.waypoints.length >= 2) {
-            this.calculatePath();
-          }
-          this.render();
-          this.autoSave();
-          this.announce('Background image loaded');
-        });
-      }
-    });
-    this.elements.bgOverlay.addEventListener('input', (e) => {
-      this.background.overlay = parseInt(e.target.value);
-      this.elements.bgOverlayValue.textContent = e.target.value;
-      this.render();
-      this.autoSave();
-    });
-    // Toggle fit/fill button (deferred — element may not exist)
-    this.elements.bgFitToggle?.addEventListener('click', (e) => {
-      const currentMode = this.background.fit;
-      const newMode = currentMode === 'fit' ? 'fill' : 'fit';
-      this.background.fit = newMode;
-      
-      // Update coordinateTransform with new fit mode
-      if (this.background.image) {
-        this.updateImageTransform(this.background.image);
-      }
-      
-      // Update button text and data attribute
-      e.target.textContent = newMode === 'fit' ? 'Fit' : 'Fill';
-      e.target.dataset.mode = newMode;
-      
-      console.debug('Fit mode changed to:', newMode);
-      // Recalculate path since waypoints need to be repositioned
-      if (this.waypoints.length >= 2) {
-        this.calculatePath();
-      }
-      this.render();
-      this.autoSave();
-    });
+    // Background DOM controls are owned exclusively by UIController. It emits
+    // one semantic EventBus command per action; wiringControllers performs the
+    // corresponding state mutation, render, and autosave.
     
     // ===== CAMERA CONTROLS =====
     // "This Zoom" slider - updates current waypoint's camera.zoom (log scale: 0-1 → 1x-16x)

@@ -76,7 +76,7 @@ async function boot() {
 
   const syncTransportUI = (state) => {
     if (playBtn) {
-      playBtn.textContent = state.isPlaying ? 'Pause' : 'Play';
+      playBtn.textContent = app.animationEngine.isPlaying() ? 'Pause' : 'Play';
     }
     if (timeline && !isScrubbing && state.duration > 0) {
       const progress = state.currentTime / state.duration;
@@ -114,7 +114,7 @@ async function boot() {
   const togglePlay = () => {
     const state = app.animationEngine.state;
     // Same rule as the app's play(): playing from the end restarts
-    if (!state.isPlaying && state.progress >= 1.0) {
+    if (!app.animationEngine.isPlaying() && state.progress >= 1.0) {
       app.resetPlayback();
     }
     app.animationEngine.togglePlayPause();
@@ -170,16 +170,15 @@ async function boot() {
         app.animationEngine.seekToProgress(1);
         app.queueRender();
         break;
-      // Seeks go through seekToProgress — seekToTime updates currentTime only
-      // and leaves pathProgress stale (the head, reveal and areas would freeze)
+      // Absolute-time seeks still resolve path/wait state through PlayerCore.
       case 'ArrowLeft':
         e.preventDefault();
-        app.animationEngine.seekToProgress(Math.max(0, state.currentTime - 1000) / state.duration);
+        app.animationEngine.seekToTime(Math.max(0, state.currentTime - 1000));
         app.queueRender();
         break;
       case 'ArrowRight':
         e.preventDefault();
-        app.animationEngine.seekToProgress(Math.min(state.duration, state.currentTime + 1000) / state.duration);
+        app.animationEngine.seekToTime(Math.min(state.duration, state.currentTime + 1000));
         app.queueRender();
         break;
     }

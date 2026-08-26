@@ -104,6 +104,15 @@ export class AnimationEngine {
     
     /** @private @type {{isWaiting: boolean, waypointProgress: number, elapsed: number, total: number}} */
     this._currentPauseState = { isWaiting: false, waypointProgress: 0, elapsed: 0, total: 0 };
+
+    // Reused render input: immutable marker arrays plus the current absolute
+    // scene time let MotionVisibilityService derive comet state without history.
+    this._trailVisibilityContext = {
+      timelineMs: 0,
+      pauseMarkers: this.pauseMarkers,
+      tailStartMs: 0,
+      tailEndMs: 0
+    };
   }
   
   /**
@@ -115,6 +124,22 @@ export class AnimationEngine {
    */
   getPauseState() {
     return this._currentPauseState;
+  }
+
+  /**
+   * Return the deterministic timeline context needed to evaluate a comet tail.
+   * The object is reused per frame; consumers must treat it and marker arrays as
+   * read-only. Times exclude export/start handles and reveal intro, matching the
+   * pause marker domain built by PlayerCore.
+   * @returns {{timelineMs: number, pauseMarkers: Array, tailStartMs: number, tailEndMs: number}}
+   */
+  getTrailVisibilityContext() {
+    const context = this._trailVisibilityContext;
+    context.timelineMs = Math.max(0, this.state.currentTime - this.startHandleTime - this.introTime);
+    context.pauseMarkers = this.pauseMarkers;
+    context.tailStartMs = this.pathDuration + this.totalPauseTime;
+    context.tailEndMs = context.tailStartMs + this.totalTailTime;
+    return context;
   }
   
   /**
@@ -142,7 +167,7 @@ export class AnimationEngine {
         // Adjust for frame interval to prevent lag accumulation
         this.lastFrameTime = timestamp - (elapsed % ANIMATION.FRAME_INTERVAL);
         
-        if (this.state.isPlaying && !this.state.isPaused) {
+        if (this.state.isActivelyPlaying()) {
           // Cap deltaTime to prevent huge jumps
           const deltaTime = Math.min(elapsed, ANIMATION.MAX_DELTA_TIME) * this.state.playbackSpeed;
           
@@ -334,11 +359,35 @@ export class AnimationEngine {
    * Toggle play/pause
    */
   togglePlayPause() {
-    if (this.state.isPlaying && !this.state.isPaused) {
+    if (this.state.isActivelyPlaying()) {
       this.pause();
     } else {
       this.play();
     }
+  }
+
+  /**
+   * Freeze timeline advancement without emitting user-facing pause events or
+   * resetting review speed. Export uses this reversible boundary while it
+   * steps the same engine through deterministic frame seeks.
+   * @returns {{timelineProgress: number, isPlaying: boolean, isPaused: boolean, playbackSpeed: number}}
+   */
+  suspendTransport() {
+    const snapshot = this.state.captureTransportState();
+    this.state.isPaused = true;
+    return snapshot;
+  }
+
+  /**
+   * Restore a suspendTransport() snapshot after the caller has restored the
+   * original timeline shape. Derived path and wait state are evaluated through
+   * PlayerCore, while the active/paused latch and speed return byte-for-byte.
+   * @param {{timelineProgress: number, isPlaying: boolean, isPaused: boolean, playbackSpeed: number}} snapshot
+   */
+  restoreTransportState(snapshot) {
+    this.state.restoreTransportState(snapshot);
+    this.state.pathProgress = this.timelineToPathProgress(this.state.progress);
+    this.emit('seek', this.state.currentTime);
   }
   
   /**
@@ -587,8 +636,8 @@ export class AnimationEngine {
   isInTailTime() {
     if (this.totalTailTime <= 0) return false;
     
-    // Calculate when tail time starts (after start handle + path + pauses complete)
-    const tailTimeStart = this.startHandleTime + this.pathDuration + this.totalPauseTime;
+    // Calculate when tail time starts (after handles, intro, path and pauses)
+    const tailTimeStart = this.startHandleTime + this.introTime + this.pathDuration + this.totalPauseTime;
     const currentTime = this.state.currentTime;
     const tailTimeEnd = tailTimeStart + this.totalTailTime;
     
@@ -602,8 +651,9 @@ export class AnimationEngine {
   isInEndHandle() {
     if (this.endHandleTime <= 0) return false;
     
-    // End handle starts after start handle + path + pauses + tail time
-    const endHandleStart = this.startHandleTime + this.pathDuration + this.totalPauseTime + this.totalTailTime;
+    // End handle starts after start handle + intro + path + pauses + tail time
+    const endHandleStart = this.startHandleTime + this.introTime + this.pathDuration +
+      this.totalPauseTime + this.totalTailTime;
     return this.state.currentTime >= endHandleStart;
   }
   
@@ -614,7 +664,7 @@ export class AnimationEngine {
   getTailTimeElapsed() {
     if (!this.isInTailTime()) return 0;
     
-    const tailTimeStart = this.startHandleTime + this.pathDuration + this.totalPauseTime;
+    const tailTimeStart = this.startHandleTime + this.introTime + this.pathDuration + this.totalPauseTime;
     return Math.max(0, this.state.currentTime - tailTimeStart);
   }
   
@@ -623,7 +673,8 @@ export class AnimationEngine {
    * @returns {number} Total duration in ms
    */
   getTotalTimelineDuration() {
-    return this.startHandleTime + this.pathDuration + this.totalPauseTime + this.totalTailTime + this.endHandleTime;
+    return this.startHandleTime + this.introTime + this.pathDuration + this.totalPauseTime +
+      this.totalTailTime + this.endHandleTime;
   }
   
   /**
@@ -743,7 +794,8 @@ export class AnimationEngine {
    */
   seekToTime(time) {
     this.state.setTime(time);
-    this.emit('seek', time);
+    this.state.pathProgress = this.timelineToPathProgress(this.state.progress);
+    this.emit('seek', this.state.currentTime);
   }
   
   /**
@@ -850,7 +902,7 @@ export class AnimationEngine {
    * @returns {boolean}
    */
   isPlaying() {
-    return this.state.isPlaying && !this.state.isPaused;
+    return this.state.isActivelyPlaying();
   }
   
   /**

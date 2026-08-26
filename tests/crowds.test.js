@@ -92,6 +92,23 @@ describe('layers strip', () => {
     expect(rows[0].textContent).toContain('Route');
     expect(rows[1].textContent).toContain('Crowd 1');
     expect(rows[2].textContent).toContain('Crowd 2');
+    expect(document.getElementById('layers-strip').getAttribute('role')).toBeNull();
+    expect(rows[0].getAttribute('aria-pressed')).toBe('false');
+    expect(rows[2].getAttribute('aria-pressed')).toBe('true');
+    expect(document.querySelector('.layer-swatch').style.backgroundImage).toBe('');
+  });
+
+  test('imported colour strings cannot become CSS image requests', () => {
+    const app = makeApp();
+    app.styles.pathColor = 'url(https://example.invalid/route)';
+    app.addCrowd();
+    app.scene.getFlowLayers()[0].emitters[0].dotColor =
+      'url(https://example.invalid/crowd)';
+    app.updateLayersStrip();
+
+    for (const swatch of document.querySelectorAll('.layer-swatch')) {
+      expect(swatch.style.backgroundImage).toBe('');
+    }
   });
 
   test('selection: crowd row selects the crowd, Route row backs out', () => {

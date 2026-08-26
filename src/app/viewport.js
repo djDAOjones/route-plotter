@@ -45,7 +45,10 @@ export const viewportMixin = {
     
     // Match playbar width to canvas for clean layout
     if (playbar) {
-      playbar.style.width = `${canvasWidth}px`;
+      const isReflowLayout = window.matchMedia?.('(max-width: 64rem)').matches ?? false;
+      // The reflow stylesheet makes the controls span the viewport column.
+      // Clear the desktop canvas-width override so its width:100% can apply.
+      playbar.style.width = isReflowLayout ? '' : `${canvasWidth}px`;
     }
     
     // Update backing store for HiDPI
@@ -154,7 +157,9 @@ export const viewportMixin = {
    */
   updateImageTransform(img) {
     if (!img) {
-      // No image - coordinateTransform will use normalized coordinates
+      // No image: forget the previous bitmap bounds but keep the canvas size
+      // so normalized authoring still spans the whole surface.
+      this.coordinateTransform.clearImage();
       return;
     }
     
