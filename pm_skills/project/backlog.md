@@ -51,16 +51,19 @@
   trusting this line. Also settle GitHub branch-protection and Pages
   permissions, which the review could inspect only from repository files.
 - [ ] **REL-01 Decide the production source-map policy** · Release
-  [ready] [sign-off] — `docs/app.js.map` publishes 3.1 MB carrying the full
-  unminified source of 89 first-party files (`sourcesContent`). The repository
-  is public, so this is a size and tidiness decision rather than a secrecy one:
-  keep it for debuggable production stack traces, or drop it. Review §17
-  Optional.
+  [blocked: settled when the release is called] — `docs/app.js.map` publishes
+  3.1 MB carrying the full unminified source of 89 first-party files
+  (`sourcesContent`). The repository is public, so this is a size and tidiness
+  decision rather than a secrecy one: keep it for debuggable production stack
+  traces, or drop it. **Owner 2026-08-28: decide at release** — carry it into
+  DEPLOY-01 rather than settling it now. Review §17 Optional.
 - [ ] **PERF-01 Benchmark a representative maximum project** · Performance
   [ready] — Hostile inputs are bounded and fixture-covered (RP-09), but no
   *legitimate* large project was ever profiled, so the supported ceiling is a
-  UI limit rather than a measured budget. Profile an agreed maximum — waypoint
-  count, crowd size, image resolution — and record what it costs. Review §18
+  UI limit rather than a measured budget. **Owner 2026-08-28: profile a range**
+  — small, typical, large and extreme across waypoint count, crowd size and
+  image resolution, and deliver a cost curve, so the supported ceiling is a
+  judgement read from data rather than a number agreed up front. Review §18
   "intended project-size ceiling".
 - [ ] **LEGAL-01 Confirm the MPL source-notice posture** · Governance
   [ready] [maintainer] — `mediabunny` (runtime, bundled) and now `axe-core`
@@ -74,13 +77,17 @@
   effect fades out over time". Not currently possible: the mask repaints every
   passed path point at full opacity each frame, so revealed stays revealed.
   Weight each point's alpha by its distance behind the head, keeping the
-  per-frame rebuild that makes scrubbing bidirectional.
+  per-frame rebuild that makes scrubbing bidirectional. **Owner 2026-08-28:
+  authorable control** — the fade is a per-project value the author sets, not a
+  fixed constant, so it needs a persisted property and a Reveal control.
 - [ ] **LABEL-01 Auto-position at the right moments** · Inspector polish
   [ready] — Owner: auto-position itself works well. Three changes: run it when
   a label is first written (it starts hidden), do NOT re-run it after the
   author has moved the label by hand, and surface the control — it is buried
-  in the collapsed "More" disclosure. A fading prompt offering auto-position
-  is the proposed nudge.
+  in the collapsed "More" disclosure. **Owner 2026-08-28: move the button up**
+  into the Label card's primary tier, **and fire the prompt on collision
+  detection** rather than on first write — the nudge should appear when a label
+  actually overlaps something, which is when it is worth offering.
 
 ### Icebox
 

@@ -2,6 +2,32 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-28 — four owner calls set the shape of the remaining work
+
+With everything decision-free shipped, the rest of the queue needed the owner.
+All four answered, and two changed the ticket rather than merely unblocking it.
+
+- **REVEAL-01 — authorable, not a constant.** The fade behind the head is a
+  per-project value the author sets, so this is no longer "pick a good default
+  and ship": it needs a persisted property (default, `toJSON`/`fromJSON`,
+  snapshot inclusion, restore, round-trip test) and a Reveal control, and the
+  exported player has to honour it too.
+- **LABEL-01 — promote the button, and prompt on collision.** The owner moved
+  the nudge's trigger: not "when a label is first written" but *when a label
+  actually collides with something*. That is the moment the offer is worth
+  making; a prompt on every first label would be noise. The control itself
+  moves up into the Label card's primary tier rather than staying behind
+  `More`.
+- **PERF-01 — a curve, not a ceiling.** Rather than agreeing a maximum and
+  measuring it, profile small/typical/large/extreme and deliver the cost curve,
+  so the supported ceiling is read from data. This inverts the ticket: the
+  number is the output, not the input.
+- **REL-01 — decide at release.** The source-map question is carried into
+  DEPLOY-01 rather than settled now, so REL-01 stops being a runnable sign-off
+  and becomes blocked on the same call.
+
+**Link:** REVEAL-01, LABEL-01, PERF-01, REL-01, DEPLOY-01.
+
 ## 2026-08-28 — three upgrades taken, one refused on the Node floor
 
 **DEPS-01 shipped.** Every direct dependency was checked against the registry,
