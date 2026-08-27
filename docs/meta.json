@@ -6,7 +6,7 @@
       "format": "esm"
     },
     "src/models/GraphNode.js": {
-      "bytes": 2370,
+      "bytes": 4287,
       "imports": [],
       "format": "esm"
     },
@@ -41,8 +41,13 @@
       "imports": [],
       "format": "esm"
     },
+    "src/utils/routeAnchors.js": {
+      "bytes": 5481,
+      "imports": [],
+      "format": "esm"
+    },
     "src/models/Emitter.js": {
-      "bytes": 12017,
+      "bytes": 12677,
       "imports": [
         {
           "path": "src/utils/safeColor.js",
@@ -53,6 +58,11 @@
           "path": "src/utils/busynessEnvelope.js",
           "kind": "import-statement",
           "original": "../utils/busynessEnvelope.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
         }
       ],
       "format": "esm"
@@ -270,7 +280,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 103321,
+      "bytes": 103367,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -331,12 +341,17 @@
       "format": "esm"
     },
     "src/services/SwarmEngine.js": {
-      "bytes": 18697,
+      "bytes": 19391,
       "imports": [
         {
           "path": "src/services/PathCalculator.js",
           "kind": "import-statement",
           "original": "./PathCalculator.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
         },
         {
           "path": "src/utils/graphRouting.js",
@@ -2634,7 +2649,7 @@
       "format": "esm"
     },
     "src/services/NetworkEditService.js": {
-      "bytes": 38874,
+      "bytes": 38918,
       "imports": [
         {
           "path": "src/utils/snapToAngle.js",
@@ -2999,7 +3014,7 @@
       "format": "esm"
     },
     "src/app/pathTiming.js": {
-      "bytes": 24333,
+      "bytes": 28214,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -3030,6 +3045,11 @@
           "path": "src/utils/branchTiming.js",
           "kind": "import-statement",
           "original": "../utils/branchTiming.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
         }
       ],
       "format": "esm"
@@ -3231,7 +3251,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 23216,
+      "bytes": 23282,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3367,7 +3387,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 45847,
+      "bytes": 45975,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3614,13 +3634,13 @@
     }
   },
   "outputs": {
-    ".docs-build-CFw4Wf/app.js.map": {
+    ".docs-build-4IHyxE/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3226443
+      "bytes": 3244475
     },
-    ".docs-build-CFw4Wf/app.js": {
+    ".docs-build-4IHyxE/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3632,7 +3652,7 @@
           "bytesInOutput": 3915
         },
         "src/models/GraphNode.js": {
-          "bytesInOutput": 607
+          "bytesInOutput": 1159
         },
         "src/models/GraphEdge.js": {
           "bytesInOutput": 1321
@@ -3646,8 +3666,11 @@
         "src/utils/busynessEnvelope.js": {
           "bytesInOutput": 2763
         },
+        "src/utils/routeAnchors.js": {
+          "bytesInOutput": 1404
+        },
         "src/models/Emitter.js": {
-          "bytesInOutput": 4606
+          "bytesInOutput": 4772
         },
         "src/utils/entityId.js": {
           "bytesInOutput": 245
@@ -3710,13 +3733,13 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 27979
+          "bytesInOutput": 28007
         },
         "src/utils/graphRouting.js": {
           "bytesInOutput": 797
         },
         "src/services/SwarmEngine.js": {
-          "bytesInOutput": 4941
+          "bytesInOutput": 5027
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 998
@@ -3839,7 +3862,7 @@
           "bytesInOutput": 191
         },
         "src/services/NetworkEditService.js": {
-          "bytesInOutput": 16939
+          "bytesInOutput": 16983
         },
         "src/services/AreaEditService.js": {
           "bytesInOutput": 4565
@@ -3917,7 +3940,7 @@
           "bytesInOutput": 4344
         },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 6834
+          "bytesInOutput": 8178
         },
         "src/app/persistence.js": {
           "bytesInOutput": 27673
@@ -3938,7 +3961,7 @@
           "bytesInOutput": 18358
         },
         "src/app/network.js": {
-          "bytesInOutput": 10711
+          "bytesInOutput": 10777
         },
         "src/utils/sceneSemantics.js": {
           "bytesInOutput": 4300
@@ -3962,10 +3985,10 @@
           "bytesInOutput": 1770
         },
         "src/main.js": {
-          "bytesInOutput": 22142
+          "bytesInOutput": 22189
         }
       },
-      "bytes": 1054250
+      "bytes": 1057987
     }
   }
 }

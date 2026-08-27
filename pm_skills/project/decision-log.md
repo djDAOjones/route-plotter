@@ -2,6 +2,51 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — a bound crowd reads the route; the route never reads the crowd
+
+**Decision:** `GraphNode.anchorWaypointId` binds a node's *evaluated* position
+to a waypoint, and `Emitter.releaseAnchor` binds a release window's start to a
+route moment. Both are resolved at evaluation time from live route state, both
+default to null, and both are omitted from `toJSON()` when null so an
+unanchored scene's saved shape is unchanged.
+
+**Authored intent is never rewritten.** A bound node keeps its own `x`/`y`;
+only a derived `position()` follows the waypoint. That is what makes the
+fallback meaningful — when the waypoint is deleted the node returns to where it
+was authored, keeps its binding, and the break is reported. Deleting the node
+or freezing the crowd would both destroy work the author never asked to lose
+(the ticket's open question on fallback).
+
+**Named moments, not a normalised offset** (the ticket's second open question):
+`arrival`, `pause-end` and `route-end`. An author can reason about "when the
+head gets there" and "when it moves off again"; both survive retiming; and an
+offset into a pause means nothing when the pause is zero.
+
+**Determinism and fixture compatibility:** only a bound emitter's window
+*start* moves. The onset arithmetic — slot, hash channels, variance, ramp,
+busyness envelope — is untouched, so every existing unanchored swarm hash is
+byte-for-byte identical, which the suite confirms. `getRouteArrivalMap()`
+composes a linear route's single trunk leg through the same routine a branched
+one uses, so a bound crowd reads the same arithmetic either way.
+
+**Read split:** everything that draws an edge, walks a dot or hit-tests reads
+`node.position()`; the authoring surfaces (semantic outline inputs, node drag,
+validation) keep reading `x`/`y`. `edgeGeometry`'s cache signature includes the
+resolved position, so a route edit invalidates the drawn curve — the drawn
+curve and the curve dots travel must stay the same curve.
+
+**Warning cadence:** the break notice fires once per *change*, not once per
+path rebuild — `calculatePath` runs on every drag frame. Resolution itself runs
+ahead of that function's early returns, because deleting a route down to one
+waypoint breaks every binding and is exactly when a stale resolution is worst.
+
+**Link:** COMPOSE-01. 61 files / 906 tests green. Verified in production
+Chromium on a branched route: the node bound to its waypoint's exact position
+while its authored coordinates stayed put, the emitter released at 2993 ms
+(Waypoint 2's arrival plus its 1500 ms wait) with nothing before it, and
+breaking the binding returned the node to its authored position with the
+binding intact and the break reported. Zero console entries.
+
 ## 2026-08-27 — the exported player inherits branches rather than reimplementing them
 
 **Decision:** ROUTE-01d needed almost no new export code. `PlayerApp` already

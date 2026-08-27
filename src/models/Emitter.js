@@ -22,6 +22,7 @@ import {
   assertValidBusynessEnvelope,
   normalizeBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
+import { normaliseReleaseAnchor } from '../utils/routeAnchors.js';
 
 const VALID_LIFECYCLE_MODES = ['disappear', 'respawn', 'loop', 'collect'];
 const MIN_SPEED = 0.001;
@@ -66,6 +67,11 @@ export class Emitter {
     this.lifecycleMode = Emitter._validateLifecycleMode(options.lifecycleMode);
     this.releaseStart = Emitter._clamp01(options.releaseStart ?? 0);
     this.releaseDuration = Emitter._clamp01(options.releaseDuration ?? 1);
+    // COMPOSE-01: when set, the release window starts at a route moment
+    // instead of the authored fraction. `releaseStart` stays as authored and
+    // is what a broken anchor falls back to.
+    /** @type {{waypointId: string, at: string}|null} */
+    this.releaseAnchor = normaliseReleaseAnchor(options.releaseAnchor);
     this.onsetVariance = Emitter._clamp01(options.onsetVariance ?? 0.2);
     this.intensityRamp = Emitter._clampSigned(options.intensityRamp ?? 0);
     this.busynessEnvelope = normalizeBusynessEnvelope(options.busynessEnvelope);
@@ -87,6 +93,7 @@ export class Emitter {
     if ('lifecycleMode' in partial) this.lifecycleMode = Emitter._validateLifecycleMode(partial.lifecycleMode);
     if ('releaseStart' in partial) this.releaseStart = Emitter._clamp01(partial.releaseStart);
     if ('releaseDuration' in partial) this.releaseDuration = Emitter._clamp01(partial.releaseDuration);
+    if ('releaseAnchor' in partial) this.releaseAnchor = normaliseReleaseAnchor(partial.releaseAnchor);
     if ('onsetVariance' in partial) this.onsetVariance = Emitter._clamp01(partial.onsetVariance);
     if ('intensityRamp' in partial) this.intensityRamp = Emitter._clampSigned(partial.intensityRamp);
     if ('busynessEnvelope' in partial) {
@@ -125,6 +132,8 @@ export class Emitter {
       lifecycleMode: this.lifecycleMode,
       releaseStart: this.releaseStart,
       releaseDuration: this.releaseDuration,
+      // Omitted when null so an unanchored emitter's saved shape is unchanged.
+      ...(this.releaseAnchor ? { releaseAnchor: { ...this.releaseAnchor } } : {}),
       onsetVariance: this.onsetVariance,
       intensityRamp: this.intensityRamp,
       // Handles are cloned so exported/project JSON cannot mutate live model data.

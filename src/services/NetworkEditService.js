@@ -850,7 +850,7 @@ export class NetworkEditService {
     ctx.globalAlpha = 1;
     const r = svc.scaleSizeClamped(7);
     for (const node of nodes) {
-      const p = state.imageToCanvas(node.x, node.y);
+      const p = state.imageToCanvas(node.position().x, node.position().y);
       this._drawNodeGlyph(ctx, p, node.type, r, ink);
     }
 
@@ -904,7 +904,7 @@ export class NetworkEditService {
     if (this.hover?.kind === 'node') {
       const node = graph.getNode(this.hover.id);
       if (node && node.id !== selNode?.id) {
-        const p = state.imageToCanvas(node.x, node.y);
+        const p = state.imageToCanvas(node.position().x, node.position().y);
         ctx.beginPath();
         ctx.arc(p.x, p.y, r + 4, 0, Math.PI * 2);
         ctx.strokeStyle = '#FFFFFF';

@@ -1124,6 +1124,7 @@ export class RenderingService {
           const dots = state.swarmEngine.evaluate(timelineMs, layer, {
             durationMs,
             routePathPoints: state.pathPoints,
+            routeAnchors: state.routeAnchors,
           });
           DotRenderer.render(ctx, dots, state.imageToCanvas, svc);
         }

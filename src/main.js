@@ -872,6 +872,8 @@ class RoutePlotter {
       // stay null/empty on a linear route, so its render path is untouched.
       branchPaths: this.branchPaths,
       branchTimeline: this.getBranchTimeline?.() || null,
+      // Route moments a bound crowd reads (COMPOSE-01), one way only.
+      routeAnchors: this.getRouteArrivalMap?.() || null,
       styles: this.styles,
       selectedWaypoint: this.selectedWaypoint,
       selectedWaypoints: this.selectedWaypoints,

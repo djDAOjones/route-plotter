@@ -30,19 +30,15 @@
 
 ### Next
 
-- [ ] **COMPOSE-01 Route-bound crowd anchors** · Phase 5 composition
-  [[detail]](tickets/COMPOSE-01.md) [ready] — Bind graph nodes
-  and emitter release timing to route waypoints while preserving deterministic
-  hashes and one-way graph→route ownership.
 - [ ] **COMPOSE-03 Trace route into guide network** · Phase 5 composition
   [ready] — Trace the compatible hero route into a one-way
   copied guide network so crowds can follow it and branch.
 - [ ] **COMPOSE-02 Baked last-arrival wait** · Phase 5 composition
-  [gated: COMPOSE-01 impl] — Fit a route wait to the analytically computed
+  [ready] — Fit a route wait to the analytically computed
   last crowd arrival as a baked authored value, never a live timing
   dependency.
 - [ ] **COMPOSE-04 Branch gesture from a bound node** · Phase 5 composition
-  [gated: COMPOSE-01 impl, COMPOSE-03 impl] — Add the waypoint “+” branch
+  [gated: COMPOSE-03 impl] — Add the waypoint “+” branch
   gesture from a bound entry node.
 - [ ] **DEMO-01 Example projects as living fixtures** · Showcase/release
   [gated: COMPOSE-02 impl, COMPOSE-04 impl] — Replace bare example backgrounds

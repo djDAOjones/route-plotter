@@ -1,4 +1,5 @@
 import { PathCalculator } from './PathCalculator.js';
+import { releaseStartFraction } from '../utils/routeAnchors.js';
 import { getGraphDepartures, normalizeGraphWeights } from '../utils/graphRouting.js';
 import {
   compileBusynessEnvelope,
@@ -120,7 +121,7 @@ export class SwarmEngine {
 
     const dots = [];
     for (const emitter of layer.emitters) {
-      this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots);
+      this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots, context.routeAnchors);
     }
     return dots;
   }
@@ -131,13 +132,16 @@ export class SwarmEngine {
    * Append one emitter's live dots to `out`.
    * @private
    */
-  _evaluateEmitter(timelineMs, durationMs, emitter, guide, out) {
+  _evaluateEmitter(timelineMs, durationMs, emitter, guide, out, routeAnchors = null) {
     const { seed, dotCount } = emitter;
 
     // Effective release window, clipped to the timeline (the model keeps
-    // overhanging windows as authored; clipping happens here).
-    const windowStart = Math.min(emitter.releaseStart, 1);
-    const windowEnd = Math.min(emitter.releaseStart + emitter.releaseDuration, 1);
+    // overhanging windows as authored; clipping happens here). A bound
+    // emitter starts at a route moment instead of its authored fraction
+    // (COMPOSE-01); an unbound one returns releaseStart untouched, which is
+    // what keeps every existing swarm hash byte-for-byte identical.
+    const windowStart = Math.min(releaseStartFraction(emitter, routeAnchors || {}), 1);
+    const windowEnd = Math.min(windowStart + emitter.releaseDuration, 1);
     const windowSpan = Math.max(0, windowEnd - windowStart);
     const busynessEnvelope = compileBusynessEnvelope(emitter.busynessEnvelope);
 
@@ -416,8 +420,13 @@ export class SwarmEngine {
   edgeGeometry(graph, edge) {
     const source = graph.getNode(edge.sourceId);
     const target = graph.getNode(edge.targetId);
+    // Resolved positions, so an anchored node's drawn curve is the curve dots
+    // travel (COMPOSE-01). Including them in the signature is what makes a
+    // route edit invalidate the cached geometry.
+    const from = source.position ? source.position() : source;
+    const to = target.position ? target.position() : target;
     const sig = [
-      source.x, source.y, target.x, target.y,
+      from.x, from.y, to.x, to.y,
       ...edge.controlPoints.flatMap(p => [p.x, p.y]),
     ].join(',');
 
@@ -425,9 +434,9 @@ export class SwarmEngine {
     if (!entry || entry.sig !== sig) {
       const calc = entry?.calc || new PathCalculator();
       const pseudoWaypoints = [
-        { x: source.x, y: source.y },
+        { x: from.x, y: from.y },
         ...edge.controlPoints.map(p => ({ x: p.x, y: p.y })),
-        { x: target.x, y: target.y },
+        { x: to.x, y: to.y },
       ];
       const points = calc.calculatePath(pseudoWaypoints);
       entry = { sig, calc, points, length: calc.calculatePathLength(points) };
@@ -462,7 +471,7 @@ export class SwarmEngine {
   _sampleNode(node, wobbleDistance) {
     if (!node) return null;
     return {
-      point: { x: node.x, y: node.y },
+      point: node.position ? node.position() : { x: node.x, y: node.y },
       tangent: null, // parked dots don't wobble — the phase would be frozen anyway
       wobbleDistance,
     };

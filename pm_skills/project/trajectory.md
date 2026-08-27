@@ -17,6 +17,15 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Phase 5 — crowds bound to the route (in progress 2026-08-27)
+
+COMPOSE-01 — A crowd can follow the route: a graph node binds to a waypoint's
+position and an emitter's release binds to a route moment (arrival, pause end
+or route completion), both resolved from live route state. Authored positions
+and windows are never rewritten, a broken binding falls back to them with a
+warning, and unanchored crowds evaluate byte-for-byte as before. (2026-08-27)
+— see decision-log.
+
 ## Phase 5 — split hero routes (in progress 2026-08-27)
 
 ROUTE-01d — A branched route exports: the snapshot carries its branch links,

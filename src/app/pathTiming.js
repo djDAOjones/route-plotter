@@ -12,6 +12,7 @@ import { MotionVisibilityService } from '../services/MotionVisibilityService.js'
 import { CameraService } from '../services/CameraService.js';
 import { resolveRouteBranches, branchPathWaypoints, trunkWaypoints } from '../utils/routeBranches.js';
 import { composeRouteTimeline } from '../utils/branchTiming.js';
+import { resolveGraphAnchors } from '../utils/routeAnchors.js';
 
 /**
  * The waypoints `pathPoints` was built from — `waypoints` itself on a linear
@@ -25,6 +26,49 @@ import { composeRouteTimeline } from '../utils/branchTiming.js';
 function routeOf(app) {
   if (app._trunkWaypoints && app._trunkWaypoints.length) return app._trunkWaypoints;
   return trunkWaypoints(app.waypoints || []);
+}
+
+/**
+ * Tell the author when a crowd binding breaks — once per change, not once per
+ * path rebuild, which runs on every drag frame. The node keeps its binding and
+ * falls back to where it was authored; this is the "explicit fallback and
+ * author-visible warning" half of that rule (COMPOSE-01).
+ *
+ * @param {Object} app RoutePlotter
+ * @param {{broken: Array}} report
+ */
+function announceBrokenAnchors(app, report) {
+  const signature = report.broken.map(item => `${item.layerId}:${item.nodeId}`).sort().join('|');
+  if (signature === app._lastBrokenAnchorSignature) return;
+  app._lastBrokenAnchorSignature = signature;
+  if (report.broken.length === 0) return;
+
+  const layers = [...new Set(report.broken.map(item => item.layerName))];
+  const subject = report.broken.length === 1
+    ? 'A crowd node'
+    : `${report.broken.length} crowd nodes`;
+  app.eventBus?.emit?.('ui:toast', {
+    message: `${subject} lost the waypoint it followed (${layers.join(', ')}) — back at its own position`
+  });
+  app.announce?.(`${subject} lost the waypoint it followed and is back at its own position.`);
+}
+
+/**
+ * Each waypoint's effective wait, read off the legs' own pause markers so a
+ * beacon's early-onset budget is included exactly as the timeline sees it.
+ * @param {Object} legsById
+ * @returns {Object<string, number>}
+ */
+function pauseMsByWaypoint(legsById = {}) {
+  const waits = {};
+  for (const leg of Object.values(legsById)) {
+    for (const pause of leg?.timeline?.pauses || []) {
+      const id = pause.waypoint?.id;
+      if (id === undefined) continue;
+      waits[id] = (waits[id] || 0) + pause.duration;
+    }
+  }
+  return waits;
 }
 
 /** The subset of a waypoint PathCalculator needs to build a spline. */
@@ -52,6 +96,14 @@ export const pathTimingMixin = {
     this.routeStructure = resolveRouteBranches(this.waypoints);
     this.branchPaths = [];
     this.branchTimeline = null;
+
+    // Rebind anchored crowd nodes: the graph follows the route, so a moved or
+    // deleted waypoint must update bound evaluation on the same pass that
+    // rebuilt the geometry (COMPOSE-01). Ahead of the early returns below —
+    // deleting a route down to one waypoint breaks every binding, and that is
+    // exactly when a stale resolution would be worst.
+    this.anchorReport = resolveGraphAnchors(this.scene, this.waypointsById);
+    announceBrokenAnchors(this, this.anchorReport);
 
     if (this.waypoints.length < 2) {
       this.pathPoints = [];
@@ -258,6 +310,51 @@ export const pathTimingMixin = {
     this.branchTimeline = composeRouteTimeline(runs, baseSpeed);
     this._branchTimelineSpeed = baseSpeed;
     return this.branchTimeline;
+  },
+
+  /**
+   * Master-time arrival of every waypoint, plus each one's effective wait and
+   * the route's completion time (COMPOSE-01).
+   *
+   * Works for any route: a branched one reads the composed timeline, a linear
+   * one composes its single trunk leg through the same routine, so a bound
+   * crowd reads the same arithmetic either way. Route timing never depends on
+   * this — it is computed from the route and read by the crowd, one way only.
+   *
+   * @returns {{arrivalMsById: Object<string, number>,
+   *            pauseMsById: Object<string, number>,
+   *            totalDurationMs: number}|null}
+   */
+  getRouteArrivalMap() {
+    const branched = this.getBranchTimeline?.();
+    if (branched) {
+      return {
+        arrivalMsById: branched.arrivalMsById,
+        pauseMsById: pauseMsByWaypoint(branched.legsById),
+        totalDurationMs: branched.totalDurationMs,
+      };
+    }
+
+    const route = routeOf(this);
+    const progressValues = this.getWaypointProgressValues();
+    if (route.length < 2 || !progressValues) return null;
+
+    const baseSpeed = this.animationEngine?.state?.speed || ANIMATION.DEFAULT_SPEED;
+    const canvasPathPoints = this.pathPoints.map(point => this.imageToCanvas(point.x, point.y));
+    const composed = composeRouteTimeline([{
+      id: null,
+      waypoints: route,
+      progressValues,
+      pathLengthPx: this.pathCalculator.calculatePathLength(canvasPathPoints),
+      forkFromId: null,
+      rejoinAtId: null,
+    }], baseSpeed);
+
+    return {
+      arrivalMsById: composed.arrivalMsById,
+      pauseMsById: pauseMsByWaypoint(composed.legsById),
+      totalDurationMs: composed.totalDurationMs,
+    };
   },
 
   getWaypointProgressValues() {

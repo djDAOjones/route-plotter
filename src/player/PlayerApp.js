@@ -340,6 +340,8 @@ export class PlayerApp {
       // export renders through the same code the editor does.
       branchPaths: this.branchPaths,
       branchTimeline: this.getBranchTimeline(),
+      // Route moments a bound crowd reads (COMPOSE-01), one way only.
+      routeAnchors: this.getRouteArrivalMap?.() || null,
       styles: this.styles,
       selectedWaypoint: null,
       selectedWaypoints: [],

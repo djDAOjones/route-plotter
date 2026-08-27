@@ -320,7 +320,7 @@ export const networkMixin = {
     let bestNode = null;
     let bestNodeDist = Infinity;
     for (const node of graph.getNodes()) {
-      const p = this.imageToCanvas(node.x, node.y);
+      const p = this.imageToCanvas(node.position().x, node.position().y);
       const dist = Math.hypot(click.x - p.x, click.y - p.y);
       if (dist <= nodeThreshold && dist < bestNodeDist) {
         bestNode = node;
@@ -349,9 +349,9 @@ export const networkMixin = {
       const source = graph.getNode(bestEdge.sourceId);
       const target = graph.getNode(bestEdge.targetId);
       const chain = [
-        this.imageToCanvas(source.x, source.y),
+        this.imageToCanvas(source.position().x, source.position().y),
         ...bestEdge.controlPoints.map(p => this.imageToCanvas(p.x, p.y)),
-        this.imageToCanvas(target.x, target.y),
+        this.imageToCanvas(target.position().x, target.position().y),
       ];
       const onChain = nearestOnPolyline(chain, click.x, click.y);
       return { kind: 'edge', edge: bestEdge, insertIndex: Math.floor(onChain.index) };

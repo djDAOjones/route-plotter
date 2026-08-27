@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 272 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 274 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -11,9 +11,9 @@
 - `reviews` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
-- `src` — 93 file(s)
+- `src` — 94 file(s)
 - `styles` — 6 file(s)
-- `tests` — 62 file(s)
+- `tests` — 63 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -248,6 +248,9 @@
 - `src/utils/pathHeadPresets.js` — Built-in route-head registry, shared image decoding and custom/preset hydration boundary
 - `src/utils/pathWidthScale.js` — Log-scale thickness slider ↔ width (1–40px) mapping; single source shared by the DOM wiring and UIController bulk edits (Phase 3.5)
 - `src/utils/renderReference.js` — Pure visual-reference migration and current-to-authored short-edge scale calculation
+- `src/utils/routeAnchors.js` — Pure one-way route→crowd binding: resolves
+  anchored graph nodes to waypoint positions and emitter release windows to
+  route moments, reporting broken references instead of repairing them
 - `src/utils/routeBranches.js` — Pure hero-route branch resolution: cuts a
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
@@ -279,8 +282,6 @@
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
-  the snapshot, identical structure and timeline after rehydration, and the
-  timeline extending for a branch that outlives the trunk
 - `tests/branchTiming.test.js` — ROUTE-01b contract: run timing, master
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
@@ -314,6 +315,9 @@
 - `tests/reviewAccessibility.test.js` — Keyboard semantics, modal focus, responsive/support/privacy shell, disclosure, card-action and accessible crowd-variation/busyness UI contracts
 - `tests/reviewPersistence.test.js` — Autosave honesty, transactional load/rollback, save revisions and undo-image restoration regressions
 - `tests/reviewTimeline.test.js` — Stateless comet, canonical transport/export and timing-invalidation review regressions
+- `tests/routeAnchors.test.js` — COMPOSE-01 contract: node/emitter binding,
+  authored-intent preservation, broken-reference fallback and warning
+  cadence, and unanchored swarm determinism
 - `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
 - `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts
