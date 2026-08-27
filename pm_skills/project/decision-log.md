@@ -2,6 +2,52 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-28 — three upgrades taken, one refused on the Node floor
+
+**DEPS-01 shipped.** Every direct dependency was checked against the registry,
+not against the ticket's remembered numbers, and each upgrade was gated
+separately rather than as one batch.
+
+- **vitest 4.1.10 -> 4.1.11** (dev, patch). Green.
+- **mediabunny 1.55.3** (runtime, patch). Its 1.55.2/1.55.3 notes are entirely
+  demux-side — ISOBMFF Annex B, encrypted-file `tenc` fallback, HLS `emsg`
+  segments, `AacAudioSpecificConfig` — plus a custom-Promise compatibility fix.
+  None of it touches the video-only mux path this app uses, which never
+  demuxes and exports no audio. Re-verified anyway, and that re-verification
+  is what turned up BUG-01.
+- **jsdom 27.4.0 -> 29.1.1** (dev, two majors). The 28 resource-loading
+  overhaul and the 29 CSSOM rewrite both have zero surface here: nothing in
+  the suite configures a `ResourceLoader` or reads CSSOM — the CSS tests read
+  file text. Green across all 1033 tests, and it *removed* five transitive
+  packages (157 -> 152) as jsdom replaced legacy CSSOM dependencies.
+- **jszip, esbuild, axe-core** are already at latest.
+
+**jsdom 30 is deliberately not taken.** It requires Node
+`^22.22.2 || ^24.15.0 || >=26.0.0`; this checkout runs Node 24.5.0, which does
+not satisfy `^24.15.0`. The manifest would not need to change — `engines` is
+already `>=24.0.0 <25` and `.nvmrc` is just `24` — only the developer's
+installed Node would. That is a toolchain call for the owner, not something to
+take silently as part of a dependency pass. Recorded on the wish-list.
+
+**A stale registry read is worth noting for the next pass:** `npm outdated`
+reported jsdom's latest as 29.1.1, while `npm view jsdom dist-tags` said
+30.0.1. The per-package check is the one to trust.
+
+**The governance guard did its job.** The dependency ledger in
+`governance.test.js` and the table in `THIRD_PARTY_NOTICES.md` both pin exact
+versions, and the first upgrade failed the gate until both were updated —
+which is the point of the ledger. Licences were re-read from the lockfile
+rather than assumed: vitest MIT, mediabunny MPL-2.0, jsdom MIT, unchanged.
+`npm audit` remains clean at 0 vulnerabilities.
+
+**One side effect worth seeing:** `npm install mediabunny@1.55.3` tightened its
+declared range from `^1.39.2` to `^1.55.3`. That is an improvement — the range
+now records the version actually tested — but it was npm's doing, not a
+deliberate choice, so it is stated rather than buried.
+
+**Link:** DEPS-01 (shipped), LEGAL-01 (same MPL versions), REV-07 (icebox —
+would automate this pass).
+
 ## 2026-08-28 — a branch run must not read the trunk's wait index
 
 **Found while re-verifying export for DEPS-01, not by looking for it.** The

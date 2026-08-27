@@ -26,3 +26,4 @@
 - `npm run dev` leaves `docs/player.js.map` behind: the watch build emits a player sourcemap the production build's 17-file inventory does not, so the generated tree drifts from what is published. — (from: 2026-08-27 ROUTE-01b)
 - Marquee / rubber-band selection on canvas — drag over empty space currently does nothing in edit mode; a selection rectangle is the natural next gesture. — (from: 2026-08-18 Phase 4 multi-select)
 - The Duration slider is not synced to a restored project's speed on load, so the first keyboard nudge jumps the speed instead of nudging it — observed at v3.2.680: console reported 150 px/s while the slider sat at 1446, which measures as 200 px/s. — (from: 2026-08-27 A11Y-01 browser verification)
+- jsdom 30 needs Node >= 24.15.0 and this checkout runs 24.5.0; no manifest change is required (engines already allows it, .nvmrc is just `24`) — only the installed Node. Owner's toolchain call. — (from: 2026-08-28 DEPS-01)

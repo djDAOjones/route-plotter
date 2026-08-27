@@ -20,7 +20,7 @@ const directDependencies = {
     source: 'https://github.com/Stuk/jszip',
   },
   mediabunny: {
-    version: '1.55.1',
+    version: '1.55.3',
     license: 'MPL-2.0',
     source: 'https://github.com/Vanilagy/mediabunny',
   },
@@ -30,12 +30,12 @@ const directDependencies = {
     source: 'https://github.com/evanw/esbuild',
   },
   jsdom: {
-    version: '27.4.0',
+    version: '29.1.1',
     license: 'MIT',
     source: 'https://github.com/jsdom/jsdom',
   },
   vitest: {
-    version: '4.1.10',
+    version: '4.1.11',
     license: 'MIT',
     source: 'https://github.com/vitest-dev/vitest',
   },

@@ -25,6 +25,15 @@ never covered by the RP crosswalk — audited into DEPLOY-01, REL-01, PERF-01,
 LEGAL-01 and ICE-03. The backlog is now the single source of truth for what to
 do next. (2026-08-27) — see decision-log.
 
+## Engineering maturity (shipped 2026-08-28)
+
+DEPS-01 — Dependency pass taken deliberately and gated one upgrade at a time:
+vitest 4.1.11, mediabunny 1.55.3 (export re-verified in Chromium, MP4 and
+WebM), jsdom 27 -> 29 across two majors, which also dropped five transitive
+packages. jszip, esbuild and axe-core were already latest. jsdom 30 refused:
+it needs Node >= 24.15.0 and this checkout runs 24.5.0. (2026-08-28) — see
+decision-log.
+
 ## Branch rendering (shipped 2026-08-28)
 
 BUG-01 — A branched hero route no longer crashes on the trunk's wait index:

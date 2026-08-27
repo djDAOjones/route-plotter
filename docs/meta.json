@@ -280,7 +280,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 104329,
+      "bytes": 104867,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -403,7 +403,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/misc.js": {
-      "bytes": 33521,
+      "bytes": 34457,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/logging.js",
@@ -441,7 +441,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/shared/aac-misc.js": {
-      "bytes": 3993,
+      "bytes": 7173,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
@@ -514,7 +514,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/packet.js": {
-      "bytes": 9562,
+      "bytes": 9583,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/misc.js",
@@ -557,7 +557,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/aes.js": {
-      "bytes": 10947,
+      "bytes": 10952,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/misc.js",
@@ -573,7 +573,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-demuxer.js": {
-      "bytes": 159349,
+      "bytes": 161174,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
@@ -649,7 +649,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/matroska/ebml.js": {
-      "bytes": 25608,
+      "bytes": 25606,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/misc.js",
@@ -670,7 +670,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/matroska/matroska-demuxer.js": {
-      "bytes": 103207,
+      "bytes": 103128,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
@@ -726,12 +726,17 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/mp3/mp3-reader.js": {
-      "bytes": 2098,
+      "bytes": 2132,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/shared/mp3-misc.js",
           "kind": "import-statement",
           "original": "../../shared/mp3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
         },
         {
           "path": "node_modules/mediabunny/dist/modules/src/reader.js",
@@ -742,7 +747,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/mp3/mp3-demuxer.js": {
-      "bytes": 13605,
+      "bytes": 13568,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
@@ -820,7 +825,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/ogg/ogg-demuxer.js": {
-      "bytes": 36456,
+      "bytes": 36412,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/codec.js",
@@ -871,7 +876,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/wave/wave-demuxer.js": {
-      "bytes": 19348,
+      "bytes": 19304,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
@@ -923,7 +928,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/adts/adts-demuxer.js": {
-      "bytes": 10286,
+      "bytes": 10263,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
@@ -990,7 +995,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/flac/flac-demuxer.js": {
-      "bytes": 24950,
+      "bytes": 24913,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
@@ -1046,7 +1051,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-demuxer.js": {
-      "bytes": 102331,
+      "bytes": 102224,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/adts/adts-demuxer.js",
@@ -1147,7 +1152,7 @@
       "imports": []
     },
     "node_modules/mediabunny/dist/modules/src/source.js": {
-      "bytes": 85817,
+      "bytes": 85780,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/misc.js",
@@ -1270,7 +1275,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/input-format.js": {
-      "bytes": 21055,
+      "bytes": 22236,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-demuxer.js",
@@ -1361,6 +1366,11 @@
           "path": "node_modules/mediabunny/dist/modules/src/source.js",
           "kind": "import-statement",
           "original": "./source.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
         }
       ],
       "format": "esm"
@@ -1387,7 +1397,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/sample.js": {
-      "bytes": 110920,
+      "bytes": 110911,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/misc.js",
@@ -1455,7 +1465,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/media-sink.js": {
-      "bytes": 92609,
+      "bytes": 92943,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/codec.js",
@@ -1506,7 +1516,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/input-track.js": {
-      "bytes": 47148,
+      "bytes": 47097,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
@@ -1573,7 +1583,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/reader.js": {
-      "bytes": 10010,
+      "bytes": 10001,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/input.js",
@@ -1786,7 +1796,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-muxer.js": {
-      "bytes": 59012,
+      "bytes": 59054,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-boxes.js",
@@ -1862,7 +1872,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/matroska/matroska-muxer.js": {
-      "bytes": 50675,
+      "bytes": 50717,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
@@ -2124,7 +2134,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/media-source.js": {
-      "bytes": 115223,
+      "bytes": 115296,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
@@ -2307,7 +2317,7 @@
       "format": "esm"
     },
     "node_modules/mediabunny/dist/modules/src/output.js": {
-      "bytes": 28397,
+      "bytes": 28389,
       "imports": [
         {
           "path": "node_modules/mediabunny/dist/modules/src/misc.js",
@@ -3706,13 +3716,13 @@
     }
   },
   "outputs": {
-    ".docs-build-OTzocH/app.js.map": {
+    ".docs-build-VYJC8Z/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3309307
+      "bytes": 3315005
     },
-    ".docs-build-OTzocH/app.js": {
+    ".docs-build-VYJC8Z/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3805,7 +3815,7 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 28249
+          "bytesInOutput": 28264
         },
         "src/utils/crowdArrival.js": {
           "bytesInOutput": 843
@@ -3829,7 +3839,7 @@
           "bytesInOutput": 2060
         },
         "node_modules/mediabunny/dist/modules/src/misc.js": {
-          "bytesInOutput": 3399
+          "bytesInOutput": 3508
         },
         "node_modules/mediabunny/dist/modules/src/logging.js": {
           "bytesInOutput": 779
@@ -3841,7 +3851,7 @@
           "bytesInOutput": 741
         },
         "node_modules/mediabunny/dist/modules/shared/aac-misc.js": {
-          "bytesInOutput": 570
+          "bytesInOutput": 807
         },
         "node_modules/mediabunny/dist/modules/src/codec.js": {
           "bytesInOutput": 13482
@@ -3853,7 +3863,7 @@
           "bytesInOutput": 18394
         },
         "node_modules/mediabunny/dist/modules/src/packet.js": {
-          "bytesInOutput": 4199
+          "bytesInOutput": 4220
         },
         "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-misc.js": {
           "bytesInOutput": 213
@@ -3889,10 +3899,10 @@
           "bytesInOutput": 2366
         },
         "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-muxer.js": {
-          "bytesInOutput": 22647
+          "bytesInOutput": 22659
         },
         "node_modules/mediabunny/dist/modules/src/matroska/matroska-muxer.js": {
-          "bytesInOutput": 18313
+          "bytesInOutput": 18325
         },
         "node_modules/mediabunny/dist/modules/src/media-source.js": {
           "bytesInOutput": 2372
@@ -3901,7 +3911,7 @@
           "bytesInOutput": 4762
         },
         "node_modules/mediabunny/dist/modules/src/output.js": {
-          "bytesInOutput": 11506
+          "bytesInOutput": 11461
         },
         "node_modules/mediabunny/dist/modules/src/index.js": {
           "bytesInOutput": 307
@@ -4069,7 +4079,7 @@
           "bytesInOutput": 22275
         }
       },
-      "bytes": 1072757
+      "bytes": 1073118
     }
   }
 }

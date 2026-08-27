@@ -10,7 +10,7 @@ copyright notices. Versions are the exact direct dependencies resolved by
 | Package | Version | Licence | Source |
 | --- | --- | --- | --- |
 | `jszip` | 3.10.1 | `(MIT OR GPL-3.0-or-later)` | [Stuk/jszip](https://github.com/Stuk/jszip) |
-| `mediabunny` | 1.55.1 | `MPL-2.0` | [Vanilagy/mediabunny](https://github.com/Vanilagy/mediabunny) |
+| `mediabunny` | 1.55.3 | `MPL-2.0` | [Vanilagy/mediabunny](https://github.com/Vanilagy/mediabunny) |
 
 ### JSZip
 
@@ -57,8 +57,8 @@ runtime dependencies by the published application.
 | --- | --- | --- | --- |
 | `axe-core` | 4.13.0 | `MPL-2.0` | [dequelabs/axe-core](https://github.com/dequelabs/axe-core) |
 | `esbuild` | 0.28.2 | `MIT` | [evanw/esbuild](https://github.com/evanw/esbuild) |
-| `jsdom` | 27.4.0 | `MIT` | [jsdom/jsdom](https://github.com/jsdom/jsdom) |
-| `vitest` | 4.1.10 | `MIT` | [vitest-dev/vitest](https://github.com/vitest-dev/vitest/tree/main/packages/vitest) |
+| `jsdom` | 29.1.1 | `MIT` | [jsdom/jsdom](https://github.com/jsdom/jsdom) |
+| `vitest` | 4.1.11 | `MIT` | [vitest-dev/vitest](https://github.com/vitest-dev/vitest/tree/main/packages/vitest) |
 
 ### axe-core
 
