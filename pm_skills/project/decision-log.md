@@ -2,6 +2,19 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — owner sets the prune bar, and holds the merge
+
+Two owner calls following the memory prune. **Pruning must never harm
+development quality**: archive freely once context is closed, but content
+still feeding open work — open-item rationale, the active era's trajectory —
+stays live, and budget/prune-to targets yield to that bar (today's stopping
+points, log at 16/20 entries and trajectory at 91% of budget, are the rule
+applied, not an overrun to fix). Post-prune audit confirmed no open item's
+needed context went cold: REV-03's archived design entry covers implemented,
+green work, with live detail in its ticket. And **review-remediation does
+not merge to main yet** — the live site stays on v3.2.618 until the owner
+calls the release.
+
 ## 2026-08-27 — memory prune, and two owner deferrals
 
 Maintenance Diagnose flagged the decision-log at 51 live entries (budget 20)
