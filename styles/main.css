@@ -2198,6 +2198,66 @@ kbd{
   outline:none;
   min-width:0;
 }
+
+/* ── Minor waypoint rows (UI-02) ───────────────────────────────────────────
+   A minor shapes the leg of the major above it. The row is indented one step
+   with a leader line so the hierarchy reads at a glance; the visible "minor"
+   tag and the row's .sr-only context carry the same fact for anyone who does
+   not perceive the indent (WCAG 2.2 1.3.1). Row height and focus ring are
+   unchanged — a minor is still a 44px tap target. */
+.waypoint-item-minor > .waypoint-row{
+  /* One indent step, and a tighter gap: the sidebar is narrow, and a minor
+     row carries an extra child (the tag) where a major carries none. */
+  padding-left:calc(var(--space-3) + var(--space-4));
+  gap:var(--space-1);
+}
+
+/* Leader line from the owning major down the indent gutter */
+.waypoint-item-minor::after{
+  content:"";
+  position:absolute;
+  left:calc(var(--space-3) + var(--space-2));
+  top:0; bottom:0;
+  width:1px;
+  background:var(--border-quiet);
+  pointer-events:none;
+}
+
+/* Canvas draws minors as small grey shaping dots regardless of dotColor, so
+   the row shows that glyph rather than a swatch the render ignores. */
+.waypoint-minor-dot{
+  width:0.4375rem;
+  height:0.4375rem;
+  border-radius:50%;
+  flex-shrink:0;
+  background:var(--icon-02);
+  opacity:0.5;
+  /* Occupy the same box as .waypoint-color-dot so titles stay on one rhythm */
+  margin:0 calc((0.75rem - 0.4375rem) / 2);
+}
+
+/* Minors do not drag, so the handle slot is dead space in a narrow panel */
+.waypoint-handle.is-fixed{
+  display:none;
+}
+
+.waypoint-minor-tag{
+  flex-shrink:0;
+  margin-left:var(--space-1);
+  padding:0 var(--space-1);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  font-size:var(--type-caption);
+  line-height:1.5;
+  color:var(--text-02);
+  background:var(--ui-02);
+}
+
+@media (forced-colors: active){
+  .waypoint-item-minor::after{ background:CanvasText; }
+  .waypoint-minor-dot{ background:CanvasText; opacity:1; }
+  .waypoint-minor-tag{ border-color:CanvasText; color:CanvasText; background:Canvas; }
+}
 .waypoint-rename-input:focus-visible{
   box-shadow:0 0 0 2px var(--focus);
 }

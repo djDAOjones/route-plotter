@@ -17,6 +17,21 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Inspector foundation (shipped 2026-08-27)
+
+UI-02 — The waypoint list now shows the whole route: minors appear as indented,
+selectable, renameable rows under the leg they shape, numbered `major.minor` by
+the same routine the semantic outline uses, and a major visibly drags and
+reorders as its whole leg block. (2026-08-27) — see decision-log.
+
+UI-02a — Inline rename no longer throws NotFoundError on every successful
+commit: `finish()` detaches its own blur listener before replacing the input.
+(2026-08-27) — see decision-log.
+
+DOC-01 — `AGENTS.md` is one shared Codex/Claude contract with a tiered read
+policy and a minimal `CLAUDE.md` adapter; stale prompt paths and the duplicated
+budget table are gone. (2026-08-26) — see decision-log.
+
 ## Route-head presets (shipped 2026-08-26)
 
 HEAD-01 — A reviewed right-facing quadcopter is now a built-in route head with

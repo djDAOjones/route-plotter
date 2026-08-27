@@ -342,7 +342,7 @@ describe('native scene outline DOM', () => {
     expect(container.querySelectorAll('script, img')).toHaveLength(0);
     expect(container.textContent).toContain('<img src=x onerror=window.outlineInjected=true>');
     expect(container.textContent).toContain('</summary><script>window.outlineInjected=true</script>');
-    expect(container.textContent).toContain('Minor waypoint 2 — Curve point');
+    expect(container.textContent).toContain('Minor waypoint 1.1 — Curve point');
     expect(container.textContent).toContain('Stored custom network — inactive');
     expect(container.textContent).toContain('Bend point 1');
     expect(container.textContent).not.toContain('At route end');

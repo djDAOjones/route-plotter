@@ -2,6 +2,87 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — the route list shows minors, and one numbering serves both views
+
+**Decision:** The sidebar waypoint list renders the whole route. Minors appear
+as indented child rows of the leg they shape, with a visible `minor` tag, a
+grey shaping-dot glyph matching what the canvas actually draws, and an
+`.sr-only` statement of the relationship — indentation alone would leave the
+structure to layout (WCAG 2.2 1.3.1).
+
+**Rationale — one numbering:** `src/utils/waypointNaming.js` now numbers the
+route once (`1`, `1.1`, `1.2`, `2`, …) and both the list and the semantic
+outline read from it. Before this, the outline numbered minors by route
+position, so its "Minor waypoint 7" and the list's "Waypoint 7" named different
+waypoints — a collision a screen-reader user moving between the two surfaces
+would hit directly. Leg 0 is a real case, not a guard: deleting a major strands
+its trailing minors ahead of every remaining major, and they read `0.1`, `0.2`
+rather than borrowing the number of the major that now follows them.
+
+**Rationale — reorder-visible, not reorder-able:** a minor is not draggable and
+owns no ▲/▼. Its place inside a leg is authored on the canvas, and
+`reorderWaypointBlocks` already moves it with its major; giving minors their
+own reorder controls would reopen the 2026-08-18 data bug where rebuilding
+majors in place silently reattached minors to different legs. A major instead
+drags as its whole leg block, so the minors visibly travel to where the model
+will actually put them. The `waypoints:reordered` payload stays majors-only.
+
+**Alternatives rejected:** an ARIA tree (`role="treeitem"` + `aria-level`)
+would have replaced the deliberate action-list semantics — each row is a native
+button beside independent reorder/delete buttons — for hierarchy the `.sr-only`
+line already conveys. Keeping the outline's route-position numbering and giving
+the list its own scheme would have shipped two names per waypoint.
+
+**Link:** UI-02. 56 files / 773 tests green; verified in production Chromium —
+selection, rename, block reorder with minors travelling, autosave round-trip,
+44 px rows, zero console entries. Generated Pages build v3.2.658.
+
+## 2026-08-27 — inline rename detaches its blur listener before touching the DOM
+
+**Decision:** `startRenameFor`'s `finish()` calls
+`input.removeEventListener('blur', onBlur)` as its first statement, and returns
+early when the input is no longer connected.
+
+**Rationale:** replacing the focused input removes it from the tree, and Chrome
+dispatches the resulting `blur` from *inside* that `replaceWith` call. The
+re-entrant pass then replaced a node that no longer had a parent and threw
+`NotFoundError` into the console on every successful Enter-committed rename.
+An `isConnected` guard alone did not close it — the re-entry happens mid-swap,
+while the node's connected flag is still set. Detaching the listener up front
+removes the re-entry entirely, whatever the dispatch ordering. The `isConnected`
+return still covers the other case: an app-side list rebuild (autosave, a
+selection refresh) replacing the row while a rename is open, where the new row
+already carries its own title span.
+
+**Context:** pre-existing since the rename paths were unified, found live during
+UI-02 verification rather than by any test — jsdom does not reproduce Chrome's
+synchronous mid-mutation blur, so the regression test asserts the re-entrant
+`finish()` cannot throw rather than reproducing the browser's exact ordering.
+
+**Link:** UI-02a. `tests/waypointList.test.js`.
+
+## 2026-08-27 — gate vocabulary splits blocking dependencies from evidence debt
+
+**Decision:** Backlog gates now distinguish `[gated: X impl]` — waits on X's
+code landing — from `[verify: …]`, an evidence residual that blocks nothing
+downstream. ROUTE-01 and the COMPOSE chain move to `[ready]`/`[gated: … impl]`;
+REV-05 re-gates onto UI-02 and ROUTE-01. Items also carry a short title and a
+band so the roadmap table reads without cross-referencing.
+
+**Rationale:** REV-03's implementation shipped at `bbc1c3f`; only physical
+iOS/Android evidence is outstanding. Writing that as `[gated: REV-03]` parked
+the entire Phase 5 chain behind evidence none of its successors needs — the
+real dependency is a stable single pointer transaction, which exists. REV-05 is
+the genuine exception: it wants the authoring UI to stop changing shape, and
+the tickets still changing it are UI-02 and ROUTE-01, not REV-03.
+
+**Cost if wrong:** ROUTE-01 builds branch authoring on a pointer layer whose
+physical-device behaviour is unconfirmed. Accepted: the layer is green in
+automation and production Chromium, and REV-03/REV-04 keep their honest
+evidence residuals rather than being closed early.
+
+**Link:** backlog refactor, 2026-08-27.
+
 ## 2026-08-26 — one checked-in contract briefs Codex and Claude Code
 
 **Decision:** Keep `AGENTS.md` as the single shared standing contract and add

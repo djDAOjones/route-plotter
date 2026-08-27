@@ -2514,8 +2514,13 @@
       "imports": [],
       "format": "esm"
     },
+    "src/utils/waypointNaming.js": {
+      "bytes": 2126,
+      "imports": [],
+      "format": "esm"
+    },
     "src/controllers/UIController.js": {
-      "bytes": 87362,
+      "bytes": 92989,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2546,6 +2551,11 @@
           "path": "src/utils/pathWidthScale.js",
           "kind": "import-statement",
           "original": "../utils/pathWidthScale.js"
+        },
+        {
+          "path": "src/utils/waypointNaming.js",
+          "kind": "import-statement",
+          "original": "../utils/waypointNaming.js"
         },
         {
           "path": "src/utils/uiReadouts.js",
@@ -3201,8 +3211,14 @@
       "format": "esm"
     },
     "src/utils/sceneSemantics.js": {
-      "bytes": 9225,
-      "imports": [],
+      "bytes": 9561,
+      "imports": [
+        {
+          "path": "src/utils/waypointNaming.js",
+          "kind": "import-statement",
+          "original": "./waypointNaming.js"
+        }
+      ],
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
@@ -3552,13 +3568,13 @@
     }
   },
   "outputs": {
-    ".docs-build-06G8kK/app.js.map": {
+    ".docs-build-tWysJ3/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3136801
+      "bytes": 3147112
     },
-    ".docs-build-06G8kK/app.js": {
+    ".docs-build-tWysJ3/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3749,8 +3765,11 @@
         "src/utils/pathWidthScale.js": {
           "bytesInOutput": 186
         },
+        "src/utils/waypointNaming.js": {
+          "bytesInOutput": 238
+        },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 35779
+          "bytesInOutput": 37162
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 17118
@@ -3870,7 +3889,7 @@
           "bytesInOutput": 10711
         },
         "src/utils/sceneSemantics.js": {
-          "bytesInOutput": 4105
+          "bytesInOutput": 4195
         },
         "src/controllers/SceneOutlineController.js": {
           "bytesInOutput": 26979
@@ -3894,7 +3913,7 @@
           "bytesInOutput": 22065
         }
       },
-      "bytes": 1035927
+      "bytes": 1037638
     }
   }
 }

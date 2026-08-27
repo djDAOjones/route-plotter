@@ -9,6 +9,7 @@ import { MotionVisibilityService } from '../services/MotionVisibilityService.js'
 import { createFocusTrap } from '../utils/focusTrap.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 import { pathWidthToSlider } from '../utils/pathWidthScale.js';
+import { buildRouteNumbering } from '../utils/waypointNaming.js';
 import {
   formatBackgroundOverlay,
   formatRendererPixels,
@@ -192,6 +193,9 @@ export class UIController {
     
     /** @type {number|null} Last selected waypoint index for shift-click range selection */
     this._lastSelectedIndex = null;
+    this._listedWaypoints = [];
+    this._listedNumbering = [];
+    this._draggingBlock = null;
     
     // Trail and playback state for display updates
     /** @private */
@@ -562,8 +566,10 @@ export class UIController {
   setSelection(waypoints, primary) {
     this.selectedWaypoints = new Set(waypoints);
     this.selectedWaypoint = primary || null;
-    const anchor = primary && primary.isMajor && this._listedMajors
-      ? this._listedMajors.indexOf(primary) : -1;
+    // Anchor into the displayed route, not the majors subset: since UI-02 the
+    // list shows minors too, so a shift-range must start where the row is.
+    const anchor = primary && this._listedWaypoints
+      ? this._listedWaypoints.indexOf(primary) : -1;
     this._lastSelectedIndex = anchor >= 0 ? anchor : null;
   }
 
@@ -1316,27 +1322,28 @@ export class UIController {
   }
   
   /**
-   * Begin inline rename on the list row of a major waypoint.
-   * Looks the row up fresh by index in the current DOM, so it works
+   * Begin inline rename on the list row of any listed waypoint.
+   * Looks the row up fresh by route index in the current DOM, so it works
    * after any list rebuild — selection rebuilds the rows, destroying
    * closures over old elements (which is why the double-click and F2
    * paths used to carry duplicated copies of this logic).
    * Shared by double-click, F2, and the canvas context menu's Rename.
-   * @param {Waypoint} waypoint - Major waypoint to rename
+   * @param {Waypoint} waypoint - Major or minor waypoint to rename
    */
   startRenameFor(waypoint) {
-    const majors = this._listedMajors || [];
-    const index = majors.indexOf(waypoint);
+    const listed = this._listedWaypoints || [];
+    const index = listed.indexOf(waypoint);
     if (index === -1 || !this.elements.waypointList) return;
 
     const item = this.elements.waypointList.querySelector(
-      `.waypoint-item[data-original-index="${index}"]`
+      `.waypoint-item[data-route-index="${index}"]`
     );
     const rowBtn = item?.querySelector('.waypoint-row');
     const currentTitle = item?.querySelector('.waypoint-title');
     if (!item || !rowBtn || !currentTitle) return;
 
-    const defaultName = `Waypoint ${index + 1}`;
+    const entry = this._listedNumbering?.[index];
+    const defaultName = `Waypoint ${entry ? entry.displayNumber : index + 1}`;
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'waypoint-rename-input';
@@ -1348,7 +1355,21 @@ export class UIController {
     input.focus();
     input.select();
 
+    // Declared before finish() so finish() can detach it; committing on blur
+    // is the "clicked away" path.
+    const onBlur = () => finish(true);
+
     const finish = (commit) => {
+      // Detach the blur listener before touching the DOM. Replacing the input
+      // removes the focused node, and Chrome dispatches its blur from inside
+      // that replaceWith call — the re-entrant pass then replaced a node that
+      // no longer had a parent and threw NotFoundError into the console on
+      // every successful rename (found live during UI-02 verification).
+      input.removeEventListener('blur', onBlur);
+      // The row can also be rebuilt out from under an open rename (autosave,
+      // an app-side list refresh). A rebuilt row carries its own title span,
+      // so there is nothing left to restore.
+      if (!input.isConnected) return;
       const trimmed = input.value.trim();
       if (commit) {
         waypoint.name = trimmed; // Empty string = revert to default display
@@ -1362,6 +1383,7 @@ export class UIController {
         this.eventBus.emit('waypoint:name-changed', { waypoint, name: trimmed });
         // The list does not rebuild on rename — refresh the row's labels
         const newDisplay = waypoint.name || defaultName;
+        // Move buttons exist on major rows only; minors reorder with their leg.
         const [moveUpBtn, moveDownBtn] = item.querySelectorAll('.waypoint-move-btn');
         moveUpBtn?.setAttribute('aria-label', `Move ${newDisplay} up`);
         moveDownBtn?.setAttribute('aria-label', `Move ${newDisplay} down`);
@@ -1372,29 +1394,32 @@ export class UIController {
 
     input.addEventListener('keydown', (ke) => {
       if (ke.key === 'Enter') { ke.preventDefault(); finish(true); }
-      if (ke.key === 'Escape') { ke.preventDefault(); input.removeEventListener('blur', onBlur); finish(false); }
+      if (ke.key === 'Escape') { ke.preventDefault(); finish(false); }
       ke.stopPropagation(); // Don't trigger global shortcuts while renaming
     });
-    const onBlur = () => finish(true);
     input.addEventListener('blur', onBlur, { once: true });
   }
 
   /**
    * Update waypoint list UI
    *
+   * ## Structure (UI-02)
+   * Every waypoint in the route gets a row. Majors are top level; minors are
+   * indented under the major whose leg they shape and numbered `major.minor`
+   * by `buildRouteNumbering`, the same routine the semantic outline uses.
+   *
    * ## Features
-   * - Double-click waypoint name to rename
-   * - Drag handle for reordering
-   * - Delete button (×) for removal
-   * - Click to select; Cmd/Ctrl+click toggles, Shift+click ranges
-   *   (Cmd/Ctrl+A selects the whole route, minors included)
+   * - Double-click or F2 on any row to rename
+   * - Drag handle, ▲/▼ on majors — a major reorders as its whole leg block
+   * - Delete button (×) for removal, majors and minors alike
+   * - Click to select; Cmd/Ctrl+click toggles, Shift+click ranges over the
+   *   displayed route (Cmd/Ctrl+A selects the whole route)
    *
    * ## Performance
-   * - O(n) where n = major waypoints
-   * - Uses pre-calculated _displayIndex from main.js
+   * - O(n) where n = route length, plus one indexOf per major row
    * - Event listeners attached per-item (not delegation, for drag/drop support)
    *
-   * @param {Array<Waypoint>} waypoints - Array of Waypoint objects
+   * @param {Array<Waypoint>} waypoints - Full route in order, majors and minors
    */
   updateWaypointList(waypoints) {
     // Cache route order for the scope chip and Leg card header, then
@@ -1408,7 +1433,16 @@ export class UIController {
     );
 
     if (!this.elements.waypointList) return;
-    this._listedMajors = waypoints.filter(wp => wp.isMajor);
+
+    // UI-02: the list shows the whole route. Majors keep their existing row;
+    // minors render as indented child rows of the leg they shape, numbered by
+    // the same routine the semantic outline uses, so both surfaces name the
+    // same waypoint the same way.
+    const routeWaypoints = Array.isArray(waypoints) ? waypoints : [];
+    const numbering = buildRouteNumbering(routeWaypoints);
+    this._listedWaypoints = routeWaypoints;
+    this._listedNumbering = numbering;
+    this._listedMajors = routeWaypoints.filter(wp => wp.isMajor);
 
     // This is an action list, not an ARIA listbox: each row remains a
     // native button alongside independent reorder/delete actions.
@@ -1426,12 +1460,10 @@ export class UIController {
 
     this.elements.waypointList.innerHTML = '';
 
-    // Filter to major waypoints only (O(n) single pass, kept on the
-    // instance so startRenameFor can find a row after any rebuild)
     const majorWaypoints = this._listedMajors;
 
     // When no waypoints exist, show empty state message
-    if (majorWaypoints.length === 0) {
+    if (routeWaypoints.length === 0) {
       this.elements.waypointList.innerHTML = `
         <li class="waypoint-list-empty" role="status" aria-live="polite">
           <p>No waypoints yet</p>
@@ -1444,27 +1476,40 @@ export class UIController {
     // Add Waypoint button - keyboard-accessible way to add waypoints (AAA)
     const addItem = document.createElement('li');
     addItem.className = 'waypoint-item waypoint-item-add';
-    
+
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.className = 'waypoint-row waypoint-add-btn';
     addBtn.innerHTML = '<span class="waypoint-add-icon" aria-hidden="true">+</span><span>Add Waypoint</span>';
     addBtn.setAttribute('aria-label', 'Add new waypoint at center of map');
-    
+
     addBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.eventBus.emit('waypoint:add-at-center');
     });
-    
+
     addItem.appendChild(addBtn);
     this.elements.waypointList.appendChild(addItem);
-    
-    // Add individual waypoint items (first waypoint at top, natural order)
-    // Each item is a <li> with a <button> row for proper keyboard semantics
-    majorWaypoints.forEach((waypoint, index) => {
+
+    // Route order, majors and minors together. A minor is not draggable and
+    // owns no reorder buttons: its place inside the leg is authored on the
+    // canvas, and reorderWaypointBlocks already carries it with its major.
+    // Each item is a <li> with a <button> row for proper keyboard semantics.
+    routeWaypoints.forEach((waypoint, routeIndex) => {
+      const entry = numbering[routeIndex];
+      const isMajor = entry.isMajor;
+      const majorIndex = isMajor ? majorWaypoints.indexOf(waypoint) : -1;
+      const defaultName = `Waypoint ${entry.displayNumber}`;
+      const displayName = waypoint.name || defaultName;
+
       const item = document.createElement('li');
-      item.className = 'waypoint-item';
-      item.draggable = true; // Enable drag and drop
+      item.className = isMajor ? 'waypoint-item' : 'waypoint-item waypoint-item-minor';
+      item.draggable = isMajor;
+      item.dataset.routeIndex = String(routeIndex);
+      // Majors additionally carry their majors-only index: the reorder payload
+      // is still the majors array, so blocks stay intact (review 2026-08-18).
+      if (isMajor) item.dataset.originalIndex = String(majorIndex);
+
       // Check if waypoint is in multi-select set OR is the primary selection
       const isSelected = this.selectedWaypoints.has(waypoint) ||
         (waypoint === this.selectedWaypoint);
@@ -1472,82 +1517,114 @@ export class UIController {
         item.classList.add('selected');
         item.classList.add('is-selected');
       }
-      
+
       // Row button receives focus and exposes its multi-selection state
       // without replacing native button semantics with a partial listbox.
       const rowBtn = document.createElement('button');
       rowBtn.type = 'button';
       rowBtn.className = 'waypoint-row';
       rowBtn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
-      
-      // Colour dot — shows waypoint's marker colour for quick recognition (N6-1)
-      const colorDot = document.createElement('span');
-      colorDot.className = 'waypoint-color-dot'
-        + (waypoint.dotColor === 'transparent' ? ' is-none' : '');
-      colorDot.setAttribute('aria-hidden', 'true');
-      colorDot.style.backgroundColor = waypoint.dotColor === 'transparent'
-        ? '#fff' : (waypoint.dotColor || '');
-      
-      // Drag handle (inside button, aria-hidden)
+
+      if (isMajor) {
+        // Colour dot — shows waypoint's marker colour for quick recognition (N6-1)
+        const colorDot = document.createElement('span');
+        colorDot.className = 'waypoint-color-dot'
+          + (waypoint.dotColor === 'transparent' ? ' is-none' : '');
+        colorDot.setAttribute('aria-hidden', 'true');
+        colorDot.style.backgroundColor = waypoint.dotColor === 'transparent'
+          ? '#fff' : (waypoint.dotColor || '');
+        rowBtn.appendChild(colorDot);
+      } else {
+        // Minors render on canvas as small grey shaping dots regardless of
+        // dotColor, so the row shows that glyph rather than an unused swatch.
+        const minorDot = document.createElement('span');
+        minorDot.className = 'waypoint-minor-dot';
+        minorDot.setAttribute('aria-hidden', 'true');
+        rowBtn.appendChild(minorDot);
+      }
+
+      // Drag handle (inside button, aria-hidden). Minors keep the slot empty
+      // so titles stay on one vertical rhythm without implying a drag target.
       const handle = document.createElement('span');
-      handle.className = 'waypoint-handle';
+      handle.className = isMajor ? 'waypoint-handle' : 'waypoint-handle is-fixed';
       handle.setAttribute('aria-hidden', 'true');
-      handle.textContent = '≡';
-      
+      handle.textContent = isMajor ? '≡' : '';
+
       // Waypoint title — name is independent from canvas label (N6-3)
-      const defaultName = `Waypoint ${index + 1}`;
-      const displayName = waypoint.name || defaultName;
       const title = document.createElement('span');
       title.className = 'waypoint-title';
       title.textContent = displayName;
-      
-      rowBtn.appendChild(colorDot);
+
       rowBtn.appendChild(handle);
       rowBtn.appendChild(title);
-      
-      // Move up/down buttons - keyboard alternative to drag reorder (AAA requirement)
-      const moveContainer = document.createElement('span');
-      moveContainer.className = 'waypoint-move-btns';
-      
-      const moveUpBtn = document.createElement('button');
-      moveUpBtn.type = 'button';
-      moveUpBtn.className = 'waypoint-move-btn';
-      moveUpBtn.innerHTML = '&#x25B2;'; // ▲
-      moveUpBtn.setAttribute('aria-label', `Move ${waypoint.name || defaultName} up`);
-      moveUpBtn.disabled = index === 0;
-      
-      const moveDownBtn = document.createElement('button');
-      moveDownBtn.type = 'button';
-      moveDownBtn.className = 'waypoint-move-btn';
-      moveDownBtn.innerHTML = '&#x25BC;'; // ▼
-      moveDownBtn.setAttribute('aria-label', `Move ${waypoint.name || defaultName} down`);
-      moveDownBtn.disabled = index === majorWaypoints.length - 1;
-      
-      moveContainer.appendChild(moveUpBtn);
-      moveContainer.appendChild(moveDownBtn);
-      
+
+      if (!isMajor) {
+        // Indentation is visual only, so the kind and the leg it shapes are
+        // also written out: a visible tag plus the relationship for AT users
+        // (WCAG 2.2 1.3.1 — structure must not be conveyed by layout alone).
+        const tag = document.createElement('span');
+        tag.className = 'waypoint-minor-tag';
+        tag.textContent = 'minor';
+        rowBtn.appendChild(tag);
+
+        const context = document.createElement('span');
+        context.className = 'sr-only';
+        context.textContent = entry.legNumber > 0
+          ? `, minor waypoint shaping the leg after waypoint ${entry.legNumber}, reorders with it`
+          : ', minor waypoint before waypoint 1, reorders with it';
+        rowBtn.appendChild(context);
+      }
+
+      item.appendChild(rowBtn);
+
+      // Move up/down buttons - keyboard alternative to drag reorder (AAA
+      // requirement). Majors only: the reorder unit is the leg block.
+      let moveUpBtn = null;
+      let moveDownBtn = null;
+      if (isMajor) {
+        const moveContainer = document.createElement('span');
+        moveContainer.className = 'waypoint-move-btns';
+
+        moveUpBtn = document.createElement('button');
+        moveUpBtn.type = 'button';
+        moveUpBtn.className = 'waypoint-move-btn';
+        moveUpBtn.innerHTML = '&#x25B2;'; // ▲
+        moveUpBtn.setAttribute('aria-label', `Move ${displayName} up`);
+        moveUpBtn.disabled = majorIndex === 0;
+
+        moveDownBtn = document.createElement('button');
+        moveDownBtn.type = 'button';
+        moveDownBtn.className = 'waypoint-move-btn';
+        moveDownBtn.innerHTML = '&#x25BC;'; // ▼
+        moveDownBtn.setAttribute('aria-label', `Move ${displayName} down`);
+        moveDownBtn.disabled = majorIndex === majorWaypoints.length - 1;
+
+        moveContainer.appendChild(moveUpBtn);
+        moveContainer.appendChild(moveDownBtn);
+        item.appendChild(moveContainer);
+      }
+
       // Delete button - separate from row button, has own focus ring
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
       delBtn.className = 'waypoint-delete';
       delBtn.textContent = '×';
-      delBtn.setAttribute('aria-label', `Delete ${waypoint.name || defaultName}`);
-      
-      item.appendChild(rowBtn);
-      item.appendChild(moveContainer);
+      delBtn.setAttribute('aria-label', `Delete ${displayName}`);
       item.appendChild(delBtn);
-      
-      // Selection handler - supports shift-click and cmd/ctrl-click
+
+      // Selection handler - supports shift-click and cmd/ctrl-click.
+      // Ranges run over the displayed route, so a shift-click selects exactly
+      // the rows between the two the user clicked, minors included.
       const selectWaypoint = (e) => {
         const isShiftClick = e.shiftKey;
         const isMultiClick = e.metaKey || e.ctrlKey;
-        
+
         if (isShiftClick && this._lastSelectedIndex !== null) {
           // Shift-click: select range
-          const start = Math.min(this._lastSelectedIndex, index);
-          const end = Math.max(this._lastSelectedIndex, index);
+          const start = Math.min(this._lastSelectedIndex, routeIndex);
+          const end = Math.max(this._lastSelectedIndex, routeIndex);
           for (let i = start; i <= end; i++) {
-            this.selectedWaypoints.add(majorWaypoints[i]);
+            this.selectedWaypoints.add(routeWaypoints[i]);
           }
           this.selectedWaypoint = waypoint;
           this.eventBus.emit('waypoint:multi-selected', {
@@ -1559,16 +1636,16 @@ export class UIController {
           if (this.selectedWaypoints.has(waypoint)) {
             this.selectedWaypoints.delete(waypoint);
             if (this.selectedWaypoint === waypoint) {
-              this.selectedWaypoint = this.selectedWaypoints.size > 0 
-                ? Array.from(this.selectedWaypoints)[0] 
+              this.selectedWaypoint = this.selectedWaypoints.size > 0
+                ? Array.from(this.selectedWaypoints)[0]
                 : null;
             }
           } else {
             this.selectedWaypoints.add(waypoint);
             this.selectedWaypoint = waypoint;
           }
-          this._lastSelectedIndex = index;
-          
+          this._lastSelectedIndex = routeIndex;
+
           if (this.selectedWaypoints.size > 1) {
             this.eventBus.emit('waypoint:multi-selected', {
               waypoints: Array.from(this.selectedWaypoints),
@@ -1584,14 +1661,14 @@ export class UIController {
           this.selectedWaypoints.clear();
           this.selectedWaypoints.add(waypoint);
           this.selectedWaypoint = waypoint;
-          this._lastSelectedIndex = index;
+          this._lastSelectedIndex = routeIndex;
           this.eventBus.emit('waypoint:selected', waypoint);
         }
-        
+
         this._switchToWaypointTab();
-        this.updateWaypointList(majorWaypoints);
+        this.updateWaypointList(this._waypointsCache);
       };
-      
+
       // Row button click — selects waypoint, and detects double-click for rename.
       // Standard dblclick events break because selectWaypoint rebuilds the DOM
       // (innerHTML=''), so the element is destroyed before the browser fires dblclick.
@@ -1600,7 +1677,7 @@ export class UIController {
         const now = Date.now();
         const isDblClick = (this._renameLastClickWaypoint === waypoint) &&
                            (now - this._renameLastClickTime < 400);
-        
+
         if (isDblClick) {
           // Double-click detected — select then rename
           this._renameLastClickWaypoint = null;
@@ -1625,78 +1702,90 @@ export class UIController {
           requestAnimationFrame(() => this.startRenameFor(waypoint));
         }
       });
-      
+
       // Delete button
       delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.eventBus.emit('waypoint:delete', waypoint);
       });
-      
-      // Move up button - reorder waypoint
-      moveUpBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (index > 0) {
-          const newOrder = [...majorWaypoints];
-          [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
-          this.eventBus.emit('waypoints:reordered', newOrder);
-          this.announce(`${waypoint.name || defaultName} moved up`);
-        }
-      });
-      
-      // Move down button - reorder waypoint
-      moveDownBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (index < majorWaypoints.length - 1) {
-          const newOrder = [...majorWaypoints];
-          [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-          this.eventBus.emit('waypoints:reordered', newOrder);
-          this.announce(`${waypoint.name || defaultName} moved down`);
-        }
-      });
-      
-      // Drag and drop handlers
-      item.addEventListener('dragstart', (e) => {
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', index.toString());
-        item.classList.add('dragging');
-      });
-      
-      item.addEventListener('dragend', (e) => {
-        item.classList.remove('dragging');
-      });
-      
+
+      if (isMajor) {
+        // Move up button - reorder waypoint
+        moveUpBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (majorIndex > 0) {
+            const newOrder = [...majorWaypoints];
+            [newOrder[majorIndex - 1], newOrder[majorIndex]] =
+              [newOrder[majorIndex], newOrder[majorIndex - 1]];
+            this.eventBus.emit('waypoints:reordered', newOrder);
+            this.announce(`${displayName} moved up`);
+          }
+        });
+
+        // Move down button - reorder waypoint
+        moveDownBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (majorIndex < majorWaypoints.length - 1) {
+            const newOrder = [...majorWaypoints];
+            [newOrder[majorIndex], newOrder[majorIndex + 1]] =
+              [newOrder[majorIndex + 1], newOrder[majorIndex]];
+            this.eventBus.emit('waypoints:reordered', newOrder);
+            this.announce(`${displayName} moved down`);
+          }
+        });
+
+        // Drag and drop handlers. A major drags as its whole leg block so the
+        // minors visibly travel with it, matching where reorderWaypointBlocks
+        // will actually put them.
+        item.addEventListener('dragstart', (e) => {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', String(majorIndex));
+          this._draggingBlock = this._legBlockRows(item);
+          this._draggingBlock.forEach(row => row.classList.add('dragging'));
+        });
+
+        item.addEventListener('dragend', () => {
+          (this._draggingBlock || [item]).forEach(row => row.classList.remove('dragging'));
+          this._draggingBlock = null;
+        });
+      }
+
+      // Every row is a drop target; a drop onto a minor resolves to the major
+      // that owns it, so a block can never land inside another leg.
       item.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        
-        const dragging = this.elements.waypointList.querySelector('.waypoint-item.dragging');
-        if (dragging && dragging !== item) {
-          const rect = item.getBoundingClientRect();
-          const midpoint = rect.top + rect.height / 2;
-          
-          if (e.clientY < midpoint) {
-            item.parentNode.insertBefore(dragging, item);
-          } else {
-            item.parentNode.insertBefore(dragging, item.nextSibling);
-          }
+
+        const block = this._draggingBlock;
+        if (!block || !block.length || block.includes(item)) return;
+
+        const anchor = this._legBlockAnchor(item);
+        if (!anchor || block.includes(anchor)) return;
+
+        const rect = anchor.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+        if (e.clientY < midpoint) {
+          anchor.before(...block);
+        } else {
+          const anchorBlock = this._legBlockRows(anchor);
+          anchorBlock[anchorBlock.length - 1].after(...block);
         }
       });
-      
+
       item.addEventListener('drop', (e) => {
         e.preventDefault();
-        // Emit reorder event with new order
-        const items = Array.from(this.elements.waypointList.querySelectorAll('.waypoint-item'));
-        const newOrder = items.map(el => {
-          return majorWaypoints[parseInt(el.dataset.originalIndex)];
-        }).filter(wp => wp); // Filter out undefined
+        // Emit reorder event with the new majors order read from the DOM
+        const rows = Array.from(
+          this.elements.waypointList.querySelectorAll('.waypoint-item[data-original-index]')
+        );
+        const newOrder = rows
+          .map(el => majorWaypoints[parseInt(el.dataset.originalIndex, 10)])
+          .filter(wp => wp); // Filter out undefined
         this.eventBus.emit('waypoints:reordered', newOrder);
       });
-      
-      // Store original index for reordering
-      item.dataset.originalIndex = index;
-      
+
       this.elements.waypointList.appendChild(item);
-      
+
       // Restore keyboard position only for a rerender initiated from this
       // list. If focus moved elsewhere before the frame runs, leave it there.
       if (waypoint === this.selectedWaypoint && this.selectedWaypoints.size <= 1 &&
@@ -1711,6 +1800,37 @@ export class UIController {
         });
       }
     });
+  }
+
+  /**
+   * The major row that owns `row` — itself when it is a major, otherwise the
+   * nearest preceding major. A minor before the first major has no owner.
+   * @param {HTMLElement} row
+   * @returns {HTMLElement|null}
+   * @private
+   */
+  _legBlockAnchor(row) {
+    let current = row;
+    while (current && current.classList.contains('waypoint-item-minor')) {
+      current = current.previousElementSibling;
+    }
+    return current && current.dataset?.originalIndex !== undefined ? current : null;
+  }
+
+  /**
+   * A major row plus the minor rows that trail it — the unit reordering moves.
+   * @param {HTMLElement} majorRow
+   * @returns {Array<HTMLElement>}
+   * @private
+   */
+  _legBlockRows(majorRow) {
+    const rows = [majorRow];
+    let next = majorRow.nextElementSibling;
+    while (next && next.classList.contains('waypoint-item-minor')) {
+      rows.push(next);
+      next = next.nextElementSibling;
+    }
+    return rows;
   }
   
   /**

@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 263 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 266 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -11,9 +11,9 @@
 - `reviews` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
-- `src` — 90 file(s)
+- `src` — 91 file(s)
 - `styles` — 6 file(s)
-- `tests` — 56 file(s)
+- `tests` — 58 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -253,6 +253,9 @@
 - `src/utils/snapToAngle.js` — Angle-snap geometry for shift-drag waypoint placement (moved out of main.js in the Phase 1 split)
 - `src/utils/uiReadouts.js` — Shared reference-pixel, effective-amplitude and background-overlay readout formatting with accessible range-value synchronisation
 - `src/utils/waypointCardActions.js` — Pure Reset/Apply-onward field ownership, target filtering, semantic no-op comparison and effect metadata for waypoint cards
+- `src/utils/waypointNaming.js` — Shared hierarchical route numbering
+  (`major`/`major.minor`, leg 0 for stranded minors) used by both the
+  sidebar waypoint list and the semantic scene outline
 
 ## styles
 
@@ -320,4 +323,8 @@
 - `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch
 - `tests/videoExporter.test.js` — Endpoint-inclusive frame planning, visibility throttling, cancellation and complete MediaRecorder/WebCodecs cleanup
 - `tests/waypointCardActions.test.js` — Reset/Apply-onward ownership, no-op reasons, content preservation, copy semantics and one-transaction integration contracts
+- `tests/waypointList.test.js` — UI-02 sidebar list contract: whole-route
+  rows, indented minors, selection ranges, rename, reorder-visible blocks
+- `tests/waypointNaming.test.js` — Route numbering and its agreement with
+  the scene-outline snapshot names
 - `tests/wiringBus.test.js` — Waypoint edit event compatibility, card-action refresh and exactly-once undo/render/list/autosave routing

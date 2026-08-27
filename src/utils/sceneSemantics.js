@@ -6,6 +6,8 @@
  * mutates models and never copies image bytes or other private metadata.
  */
 
+import { buildRouteNumbering } from './waypointNaming.js';
+
 const round = (value, places = 3) => {
   const factor = 10 ** places;
   return Math.round(Number(value) * factor) / factor;
@@ -51,13 +53,15 @@ function encodeSceneKeyPart(part) {
   return encoded;
 }
 
-function waypointName(waypoint, majorNumber, routeNumber) {
+// Numbering comes from the shared route numbering so this node and the
+// sidebar row name the same waypoint the same way (UI-02).
+function waypointName(waypoint, numbering) {
   const authored = typeof waypoint.name === 'string' && waypoint.name.trim()
     ? waypoint.name.trim()
     : (typeof waypoint.label === 'string' ? waypoint.label.trim() : '');
-  const base = waypoint.isMajor
-    ? `Major waypoint ${majorNumber}`
-    : `Minor waypoint ${routeNumber}`;
+  const base = numbering.isMajor
+    ? `Major waypoint ${numbering.displayNumber}`
+    : `Minor waypoint ${numbering.displayNumber}`;
   return authored ? `${base} — ${authored}` : base;
 }
 
@@ -183,9 +187,9 @@ export function buildSceneOutlineSnapshot({
   selectionKey = null,
   focusKey = null,
 } = {}) {
-  let majorNumber = 0;
+  const numbering = buildRouteNumbering(waypoints);
   const route = waypoints.map((waypoint, routeIndex) => {
-    if (waypoint.isMajor) majorNumber += 1;
+    const routeNumber = numbering[routeIndex];
     const points = Array.isArray(waypoint.areaHighlight?.points)
       ? waypoint.areaHighlight.points
       : [];
@@ -194,9 +198,12 @@ export function buildSceneOutlineSnapshot({
       key: sceneOutlineKey('waypoint', waypoint.id),
       id: waypoint.id,
       routeIndex,
-      majorNumber: waypoint.isMajor ? majorNumber : null,
+      majorNumber: routeNumber.majorNumber,
+      minorNumber: routeNumber.minorNumber,
+      legNumber: routeNumber.legNumber,
+      displayNumber: routeNumber.displayNumber,
       isMajor: Boolean(waypoint.isMajor),
-      name: waypointName(waypoint, majorNumber, routeIndex + 1),
+      name: waypointName(waypoint, routeNumber),
       x: percent(waypoint.imgX),
       y: percent(waypoint.imgY),
       xLabel: percentLabel(waypoint.imgX),
