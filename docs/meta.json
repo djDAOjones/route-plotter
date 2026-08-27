@@ -232,6 +232,17 @@
       ],
       "format": "esm"
     },
+    "src/utils/branchTiming.js": {
+      "bytes": 7087,
+      "imports": [
+        {
+          "path": "src/core/PlayerCore.js",
+          "kind": "import-statement",
+          "original": "../core/PlayerCore.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/services/DotRenderer.js": {
       "bytes": 1907,
       "imports": [],
@@ -259,7 +270,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 99551,
+      "bytes": 103321,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -285,6 +296,11 @@
           "path": "src/services/AreaHighlightRenderer.js",
           "kind": "import-statement",
           "original": "./AreaHighlightRenderer.js"
+        },
+        {
+          "path": "src/utils/branchTiming.js",
+          "kind": "import-statement",
+          "original": "../utils/branchTiming.js"
         },
         {
           "path": "src/services/DotRenderer.js",
@@ -2962,8 +2978,13 @@
       ],
       "format": "esm"
     },
+    "src/utils/routeBranches.js": {
+      "bytes": 10746,
+      "imports": [],
+      "format": "esm"
+    },
     "src/app/pathTiming.js": {
-      "bytes": 19246,
+      "bytes": 23130,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -2984,6 +3005,16 @@
           "path": "src/services/CameraService.js",
           "kind": "import-statement",
           "original": "../services/CameraService.js"
+        },
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "../utils/routeBranches.js"
+        },
+        {
+          "path": "src/utils/branchTiming.js",
+          "kind": "import-statement",
+          "original": "../utils/branchTiming.js"
         }
       ],
       "format": "esm"
@@ -3321,7 +3352,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 45599,
+      "bytes": 45847,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3568,13 +3599,13 @@
     }
   },
   "outputs": {
-    ".docs-build-c6jr9O/app.js.map": {
+    ".docs-build-37tLWQ/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3158096
+      "bytes": 3195099
     },
-    ".docs-build-c6jr9O/app.js": {
+    ".docs-build-37tLWQ/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3651,6 +3682,9 @@
         "src/services/AreaHighlightRenderer.js": {
           "bytesInOutput": 3833
         },
+        "src/utils/branchTiming.js": {
+          "bytesInOutput": 1671
+        },
         "src/services/DotRenderer.js": {
           "bytesInOutput": 429
         },
@@ -3661,7 +3695,7 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 26702
+          "bytesInOutput": 27979
         },
         "src/utils/graphRouting.js": {
           "bytesInOutput": 797
@@ -3864,8 +3898,11 @@
         "src/app/viewport.js": {
           "bytesInOutput": 4344
         },
+        "src/utils/routeBranches.js": {
+          "bytesInOutput": 3114
+        },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 5194
+          "bytesInOutput": 6599
         },
         "src/app/persistence.js": {
           "bytesInOutput": 27673
@@ -3910,10 +3947,10 @@
           "bytesInOutput": 1770
         },
         "src/main.js": {
-          "bytesInOutput": 22065
+          "bytesInOutput": 22142
         }
       },
-      "bytes": 1039558
+      "bytes": 1047102
     }
   }
 }

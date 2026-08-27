@@ -868,6 +868,10 @@ class RoutePlotter {
       // Core data
       waypoints: this.waypoints,
       pathPoints: this.pathPoints,
+      // Branch geometry and the composed master timeline (ROUTE-01b). Both
+      // stay null/empty on a linear route, so its render path is untouched.
+      branchPaths: this.branchPaths,
+      branchTimeline: this.getBranchTimeline?.() || null,
       styles: this.styles,
       selectedWaypoint: this.selectedWaypoint,
       selectedWaypoints: this.selectedWaypoints,

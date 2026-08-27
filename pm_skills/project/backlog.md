@@ -30,26 +30,18 @@
 
 ### Next
 
-- [ ] **ROUTE-01a Branch model and master-timeline composition** · Phase 5 route
-  composition [[detail]](tickets/ROUTE-01.md) [ready] — Additive branch fields,
-  pure branch resolution/validation, and deterministic fork/latest-arrival
-  rejoin/completion composition. Headless: linear projects keep their exact
-  serialized shape and timeline.
-- [ ] **ROUTE-01b Branch rendering and camera** · Phase 5 route composition
-  [gated: ROUTE-01a impl] — Draw every branch path and head, and decide which
-  head the follow-camera tracks at a fork.
 - [ ] **ROUTE-01c Branch authoring** · Phase 5 route composition
-  [gated: ROUTE-01a impl] [sign-off] — The split/rejoin gesture, list and
+  [[detail]](tickets/ROUTE-01.md) [ready] [sign-off] — The split/rejoin gesture, list and
   semantic-outline representation, selection, deletion and undo.
 - [ ] **ROUTE-01d Branch export parity** · Phase 5 route composition
-  [gated: ROUTE-01b impl] — Standalone player and video export reproduce the
+  [ready] — Standalone player and video export reproduce the
   branched timeline frame-for-frame.
 - [ ] **COMPOSE-01 Route-bound crowd anchors** · Phase 5 composition
-  [[detail]](tickets/COMPOSE-01.md) [gated: ROUTE-01a impl] — Bind graph nodes
+  [[detail]](tickets/COMPOSE-01.md) [ready] — Bind graph nodes
   and emitter release timing to route waypoints while preserving deterministic
   hashes and one-way graph→route ownership.
 - [ ] **COMPOSE-03 Trace route into guide network** · Phase 5 composition
-  [gated: ROUTE-01a impl] — Trace the compatible hero route into a one-way
+  [ready] — Trace the compatible hero route into a one-way
   copied guide network so crowds can follow it and branch.
 - [ ] **COMPOSE-02 Baked last-arrival wait** · Phase 5 composition
   [gated: COMPOSE-01 impl] — Fit a route wait to the analytically computed

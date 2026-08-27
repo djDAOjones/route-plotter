@@ -266,3 +266,36 @@ export function isLinearRoute(waypoints = []) {
   const list = Array.isArray(waypoints) ? waypoints : [];
   return !list.some(waypoint => branchIdOf(waypoint) !== null);
 }
+
+/**
+ * The spline input for one branch: the fork waypoint, the branch's own
+ * waypoints, and the rejoin waypoint when it has one.
+ *
+ * The fork and rejoin anchors are included so the branch's drawn path meets
+ * the trunk at both ends — a branch whose spline started at its own first
+ * waypoint would float, detached from the route it leaves. They are anchors
+ * only: the branch's timing starts at the fork's arrival, so the anchor
+ * contributes geometry, not a second visit.
+ *
+ * @param {RouteStructure} structure
+ * @param {string} branchId
+ * @param {Array<Object>} waypoints The full route, for resolving anchors
+ * @returns {Array<Object>} Waypoints in spline order; empty when unresolvable
+ */
+export function branchPathWaypoints(structure, branchId, waypoints = []) {
+  const branch = structure?.branches?.find(candidate => candidate.id === branchId);
+  if (!branch) return [];
+
+  const byId = new Map();
+  for (const waypoint of waypoints) {
+    if (waypoint && waypoint.id !== undefined) byId.set(waypoint.id, waypoint);
+  }
+
+  const fork = branch.forkFromId === null ? null : byId.get(branch.forkFromId);
+  if (!fork) return [];
+
+  const rejoin = branch.rejoinAtId === null ? null : byId.get(branch.rejoinAtId);
+  return rejoin
+    ? [fork, ...branch.waypoints, rejoin]
+    : [fork, ...branch.waypoints];
+}

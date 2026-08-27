@@ -19,6 +19,11 @@
 
 ## Phase 5 — split hero routes (in progress 2026-08-27)
 
+ROUTE-01b — Branches now draw and animate: each gets its own spline anchored
+at its fork (and rejoin), its own head, and its own progress resolved from
+master timeline time through the same PlayerCore mapping the trunk uses. The
+follow-camera keeps tracking the trunk head. (2026-08-27) — see decision-log.
+
 ROUTE-01a — The hero route can now describe branches: additive, null-defaulting
 branch links on Waypoint, a pure resolver that cuts a route into trunk plus
 contiguous branch runs and reports structural problems instead of repairing

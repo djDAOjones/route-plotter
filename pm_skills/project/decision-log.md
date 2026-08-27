@@ -2,6 +2,56 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — a branch borrows the trunk's transport, never its own
+
+**Decision:** `AnimationEngine` keeps exactly one authoritative transport — the
+trunk's. Branch timing is pure derived data: `branchTiming.js` turns each run's
+geometry into a leg, `PlayerCore.composeBranchTimeline` places the legs, and the
+renderer asks `branchPathProgressAt(masterTimeMs, …)` for a branch's position.
+No branch installs segment markers, holds playback state or accumulates time.
+
+**Rationale:** the deterministic-timeline mandate says the scene is a pure
+function of (timelineMs, projectState, seed). A per-branch transport would have
+given every branch its own accumulating clock and broken that at the first
+scrub. Deriving each branch's position from the master instant keeps play,
+scrub and export agreeing by construction, exactly as they already do for the
+trunk.
+
+**Shared mapping, not a second one:** each leg carries its own `{segments,
+pauses, pathDuration, totalPauseTime, hasVariableSpeed}` in precisely the shape
+`PlayerCore.timelineToPath` consumes, and branches resolve position through
+that same function. A first attempt approximated it (local time minus pause
+time already spent) and drifted the moment a pause sat mid-branch rather than
+at its end. An interleaved pause now holds a branch head still for the same
+reason and by the same arithmetic as the trunk.
+
+**Render seam:** two additive vector layers — `branch-paths` beneath the trunk
+so the trunk still reads as the primary line, `branch-heads` above it, since
+every enabled branch animates simultaneously and so owns a head. `renderPath`
+and `renderPathHead` read a small fixed slice of the engine, so each branch
+passes a facade that differs only in `getPathProgress()` and delegates the
+rest. Branch waypoints, labels, beacons and areas needed no change at all:
+those layers already iterate the whole waypoint array. Both branch layers
+return early when `state.branchPaths` is empty, so a linear route never enters
+the branch pass.
+
+**Assumption at the skipped gate (camera):** the follow-camera keeps tracking
+the trunk head. Trunk timing now reads `routeOf(app)` — the trunk, not the full
+array — and `CameraService.toMajorKeyframes` follows it, so this falls out of
+the model rather than being special-cased. Choosing per-fork which head the
+camera follows, or framing all live heads, is a product decision left to
+ROUTE-01c's sign-off.
+
+**Mixin safety:** `routeOf(app)` is a module helper, not a mixin method,
+because `PlayerApp` borrows only part of `pathTiming`; a `this.trunkRoute()`
+call was undefined there and broke seven export-parity tests.
+
+**Link:** ROUTE-01b. 58 files / 832 tests green. Verified in production
+Chromium on a branched route: trunk and branch splines both start at the fork
+point, two heads advance simultaneously from t=0, the shorter branch completes
+and holds, zero console entries. A linear route reports `isLinear` with no
+branch paths and renders unchanged.
+
 ## 2026-08-27 — branches are runs in the one waypoint array, not a second graph
 
 **Decision:** A hero-route branch is a *contiguous run* of waypoints sharing a

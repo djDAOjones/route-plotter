@@ -54,8 +54,12 @@ describe('RenderingService.VECTOR_LAYERS', () => {
       'network-guide',
       'flow-layers',
       'leg-hover',
+      // ROUTE-01b: branch paths sit beneath the trunk so the trunk still reads
+      // as the primary line; branch heads sit alongside the trunk head.
+      'branch-paths',
       'path',
       'path-head',
+      'branch-heads',
       'beacons',
       'waypoints',
       'area-edit-handles',

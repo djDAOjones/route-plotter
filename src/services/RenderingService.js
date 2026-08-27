@@ -12,6 +12,26 @@ import { Easing } from '../utils/Easing.js';
 import { waypointPointIndices, legMidpointIndex } from '../utils/segmentHitTest.js';
 import { BeaconRenderer } from './BeaconRenderer.js';
 import { AreaHighlightRenderer } from './AreaHighlightRenderer.js';
+import { branchPathProgressAt } from '../utils/branchTiming.js';
+
+/**
+ * A read-only view of the AnimationEngine whose only difference is the path
+ * progress it reports. Everything else delegates, so a branch shares the
+ * trunk's transport, tail and trail behaviour by construction.
+ */
+function branchEngineFacade(engine, pathProgress) {
+  return {
+    state: engine.state,
+    pathDuration: engine.pathDuration,
+    getPathProgress: () => pathProgress,
+    getTime: () => (engine.getTime ? engine.getTime() : 0),
+    isInTailTime: () => (engine.isInTailTime ? engine.isInTailTime() : false),
+    getTailTimeElapsed: () => (engine.getTailTimeElapsed ? engine.getTailTimeElapsed() : 0),
+    getTrailVisibilityContext: () => (engine.getTrailVisibilityContext
+      ? engine.getTrailVisibilityContext()
+      : null),
+  };
+}
 import { DotRenderer } from './DotRenderer.js';
 import { MotionVisibilityService } from './MotionVisibilityService.js';
 import { TextLabelService } from './TextLabelService.js';
@@ -1120,6 +1140,19 @@ export class RenderingService {
       },
     },
     {
+      // Branch paths (ROUTE-01b) — beneath the trunk so the trunk still reads
+      // as the primary line where a branch overlaps it.
+      name: 'branch-paths',
+      draw(svc, ctx, state, frame) {
+        if (!frame.shouldRenderPath || !state.branchPaths?.length) return;
+        for (const branch of svc.activeBranches(state)) {
+          svc.renderPath(ctx, branch.pathPoints, branch.waypoints, state.styles, branch.engine,
+                         frame.applyMotion ? state.motionSettings : null, state.motionVisibilityService,
+                         branch.progressValues, state.imageToCanvas);
+        }
+      },
+    },
+    {
       // The hero route
       name: 'path',
       draw(svc, ctx, state, frame) {
@@ -1134,6 +1167,18 @@ export class RenderingService {
       draw(svc, ctx, state, frame) {
         if (!frame.hasPath || !frame.shouldRenderPath) return;
         svc.renderPathHead(ctx, state.pathPoints, state.styles, state.animationEngine, state.imageToCanvas, state.waypointProgressValues, state.waypoints);
+      },
+    },
+    {
+      // One head per running branch (ROUTE-01b): every enabled branch animates
+      // simultaneously, so every enabled branch has a head of its own.
+      name: 'branch-heads',
+      draw(svc, ctx, state, frame) {
+        if (!frame.shouldRenderPath || !state.branchPaths?.length) return;
+        for (const branch of svc.activeBranches(state)) {
+          svc.renderPathHead(ctx, branch.pathPoints, state.styles, branch.engine,
+                             state.imageToCanvas, branch.progressValues, branch.waypoints);
+        }
       },
     },
     {
@@ -1196,6 +1241,51 @@ export class RenderingService {
       },
     },
   ];
+
+  /**
+   * The branches to draw this frame, each with its own path progress
+   * (ROUTE-01b).
+   *
+   * The engine facade is the point: `renderPath` and `renderPathHead` read a
+   * small, fixed slice of the AnimationEngine, and only `getPathProgress()`
+   * differs per branch. Delegating everything else to the real engine keeps
+   * one authority for transport, tail time and trail context while each
+   * branch resolves its own position from master timeline time — no branch
+   * accumulates state, so the scene stays a pure function of the instant.
+   *
+   * Returns an empty array on a linear route, which is what leaves the
+   * unsplit render path exactly as it was.
+   *
+   * @param {Object} state Render state
+   * @returns {Array<{id, pathPoints, waypoints, progressValues, engine}>}
+   */
+  activeBranches(state) {
+    const timeline = state.branchTimeline;
+    const paths = state.branchPaths;
+    if (!timeline || !paths || paths.length === 0) return [];
+
+    const engine = state.animationEngine;
+    if (!engine) return [];
+    const timelineMs = engine.getTime ? engine.getTime() : 0;
+
+    const active = [];
+    for (const branch of paths) {
+      if (!branch.pathPoints || branch.pathPoints.length < 2) continue;
+      const placement = timeline.legs?.[branch.id];
+      const leg = timeline.legsById?.[branch.id];
+      if (!placement || !leg || placement.enabled === false) continue;
+
+      const progress = branchPathProgressAt(timelineMs, placement, leg);
+      active.push({
+        id: branch.id,
+        pathPoints: branch.pathPoints,
+        waypoints: branch.waypoints,
+        progressValues: branch.progressValues || null,
+        engine: branchEngineFacade(engine, progress),
+      });
+    }
+    return active;
+  }
 
   /**
    * Render complete vector layer (paths, waypoints, labels)
