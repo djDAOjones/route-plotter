@@ -30,5 +30,24 @@
       "path": "images/UoN_map.png",
       "sha256": "2951edd4fd35392948b337224e2820cc6ca64916ebded1f6beb7c789e85d0bea"
     }
-  ]
+  ],
+  "exampleProjects": {
+    "approvedOn": "2026-08-27",
+    "approvedBy": "owner",
+    "scope": "The three generated example project archives listed below may be published as downloadable project saves. Their only third-party content is one of the approved background images above, whose bytes are hash-verified separately; the routes, crowds and metadata are authored in src/examples/index.js and contain no user data.",
+    "archives": [
+      {
+        "id": "parm-aerial-walk",
+        "background": "images/PARM_Aerial.jpg"
+      },
+      {
+        "id": "uon-open-day",
+        "background": "images/UoN_map.png"
+      },
+      {
+        "id": "nervous-system-flow",
+        "background": "images/Nervous_System.jpg"
+      }
+    ]
+  }
 }

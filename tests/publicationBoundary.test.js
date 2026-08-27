@@ -25,6 +25,15 @@ const approvedAssets = [
   ['images/UoN_map.png', '2951edd4fd35392948b337224e2820cc6ca64916ebded1f6beb7c789e85d0bea'],
 ].map(([path, sha256]) => ({ path, sha256 }));
 
+/**
+ * The three example project archives the owner approved for publication on
+ * 2026-08-27 (DEMO-01), recorded in `public-assets.json` → `exampleProjects`.
+ * They are generated, not committed as source, and contain only an approved
+ * background plus authored route/crowd data — no user content.
+ */
+const approvedExampleArchives = (manifest.exampleProjects?.archives || [])
+  .map(archive => `examples/${archive.id}.zip`);
+
 const expectedArtifactInventory = [
   'app.js',
   'app.js.map',
@@ -38,6 +47,7 @@ const expectedArtifactInventory = [
   'styles/tokens.css',
   'styles/tooltip.css',
   ...approvedAssets.map(asset => asset.path),
+  ...approvedExampleArchives,
 ].sort();
 
 function runBuild(args) {
@@ -94,7 +104,7 @@ describe('owner-approved public artifact boundary', () => {
     expect(resourceReferences.some(reference => /^(?:https?:)?\/\//i.test(reference))).toBe(false);
   });
 
-  test('check build verifies the exact Pages inventory and emits no project archive', () => {
+  test('check build verifies the exact Pages inventory and emits only approved archives', () => {
     const result = runBuild(['--check']);
     expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
 
@@ -103,7 +113,23 @@ describe('owner-approved public artifact boundary', () => {
     const inventory = JSON.parse(inventoryMatch[1]);
 
     expect(inventory).toEqual(expectedArtifactInventory);
-    expect(inventory.some(file => /\.zip$/i.test(file))).toBe(false);
+    // Archives may ship only if the manifest names them: the ban on project
+    // ZIPs was never blanket, it was "not without provenance review", and the
+    // manifest is the record of that review (decision-log 2026-08-26/27).
+    const shippedArchives = inventory.filter(file => /\.zip$/i.test(file)).sort();
+    expect(shippedArchives).toEqual([...approvedExampleArchives].sort());
+  });
+
+  test('the approved example archives are exactly the three reviewed ones', () => {
+    expect(approvedExampleArchives.sort()).toEqual([
+      'examples/nervous-system-flow.zip',
+      'examples/parm-aerial-walk.zip',
+      'examples/uon-open-day.zip',
+    ]);
+    for (const archive of manifest.exampleProjects.archives) {
+      // Each archive's only third-party bytes are an already-approved image.
+      expect(approvedAssets.some(asset => asset.path === archive.background)).toBe(true);
+    }
   });
 
   test('verification rejects a manifest whose reviewed hash no longer matches', () => {

@@ -2789,8 +2789,56 @@
       ],
       "format": "esm"
     },
+    "src/models/Waypoint.js": {
+      "bytes": 19543,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/routeTrace.js": {
+      "bytes": 6638,
+      "imports": [
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "./routeBranches.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/examples/index.js": {
+      "bytes": 9299,
+      "imports": [
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "../models/Scene.js"
+        },
+        {
+          "path": "src/utils/routeTrace.js",
+          "kind": "import-statement",
+          "original": "../utils/routeTrace.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/app/wiringDom.js": {
-      "bytes": 40265,
+      "bytes": 41074,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2836,22 +2884,11 @@
           "path": "src/utils/pathHeadPresets.js",
           "kind": "import-statement",
           "original": "../utils/pathHeadPresets.js"
-        }
-      ],
-      "format": "esm"
-    },
-    "src/models/Waypoint.js": {
-      "bytes": 19543,
-      "imports": [
-        {
-          "path": "src/config/constants.js",
-          "kind": "import-statement",
-          "original": "../config/constants.js"
         },
         {
-          "path": "src/services/CameraService.js",
+          "path": "src/examples/index.js",
           "kind": "import-statement",
-          "original": "../services/CameraService.js"
+          "original": "../examples/index.js"
         }
       ],
       "format": "esm"
@@ -3070,7 +3107,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 50628,
+      "bytes": 52136,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3136,6 +3173,11 @@
           "path": "src/utils/pathHeadPresets.js",
           "kind": "import-statement",
           "original": "../utils/pathHeadPresets.js"
+        },
+        {
+          "path": "src/examples/index.js",
+          "kind": "import-statement",
+          "original": "../examples/index.js"
         }
       ],
       "format": "esm"
@@ -3240,17 +3282,6 @@
           "path": "src/utils/segmentHitTest.js",
           "kind": "import-statement",
           "original": "../utils/segmentHitTest.js"
-        }
-      ],
-      "format": "esm"
-    },
-    "src/utils/routeTrace.js": {
-      "bytes": 6638,
-      "imports": [
-        {
-          "path": "src/utils/routeBranches.js",
-          "kind": "import-statement",
-          "original": "./routeBranches.js"
         }
       ],
       "format": "esm"
@@ -3675,13 +3706,13 @@
     }
   },
   "outputs": {
-    ".docs-build-kXgaFI/app.js.map": {
+    ".docs-build-pNOrgu/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3284442
+      "bytes": 3301946
     },
-    ".docs-build-kXgaFI/app.js": {
+    ".docs-build-pNOrgu/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3950,11 +3981,17 @@
         "src/utils/pathHeadPresets.js": {
           "bytesInOutput": 595
         },
-        "src/app/wiringDom.js": {
-          "bytesInOutput": 17028
-        },
         "src/models/Waypoint.js": {
           "bytesInOutput": 7471
+        },
+        "src/utils/routeTrace.js": {
+          "bytesInOutput": 1877
+        },
+        "src/examples/index.js": {
+          "bytesInOutput": 4585
+        },
+        "src/app/wiringDom.js": {
+          "bytesInOutput": 17368
         },
         "src/app/wiringBus.js": {
           "bytesInOutput": 5750
@@ -3987,7 +4024,7 @@
           "bytesInOutput": 8178
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 27673
+          "bytesInOutput": 28312
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5071
@@ -4000,9 +4037,6 @@
         },
         "src/app/pointer.js": {
           "bytesInOutput": 1422
-        },
-        "src/utils/routeTrace.js": {
-          "bytesInOutput": 1877
         },
         "src/app/crowds.js": {
           "bytesInOutput": 20328
@@ -4035,7 +4069,7 @@
           "bytesInOutput": 22275
         }
       },
-      "bytes": 1066370
+      "bytes": 1071934
     }
   }
 }

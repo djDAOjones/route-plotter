@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 279 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 282 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -9,11 +9,11 @@
 - `docs` — 17 file(s)
 - `images` — 6 file(s)
 - `reviews` — 6 file(s)
-- `scripts` — 3 file(s)
+- `scripts` — 4 file(s)
 - `specs` — 15 file(s)
-- `src` — 96 file(s)
+- `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 66 file(s)
+- `tests` — 67 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -140,6 +140,9 @@
 ## scripts
 
 - `scripts/README.md` — usage reference for the maintainer scripts
+- `scripts/build-examples.mjs` — Assembles the downloadable example project
+  archives from a definition plus its approved background, refusing any
+  background not in the public-asset manifest
 - `scripts/build.sh` — maintainer wrapper: `npm run build` into docs/ (`--test`, `--help`)
 - `scripts/restart.sh` — Exact owned-process stop/start/status wrapper: refuse foreign listeners, record process identity and verify HTTP 200
 
@@ -199,6 +202,9 @@
 - `src/controllers/UIController.js` — Sidebar/list/slider sync; stable multi-selection scope and Leg headings; selection gestures; whole-selection pause, speed and area writes
 - `src/core/EventBus.js` — Pub-sub event system
 - `src/core/PlayerCore.js` — Pure timeline math (deterministic-timeline mandate): segment/pause/beacon-schedule builders + timeline↔path mappings; one evaluation path shared by play, scrub, and export
+- `src/examples/index.js` — The three bundled example projects, built from the
+  live models so they cannot rot; named backgrounds and pinned ids/timestamps
+  keep them byte-reproducible
 - `src/handlers/InteractionHandler.js` — One captured Pointer Events transaction for mouse/touch/pen waypoint, area and network taps/drags; keyboard, drop, context-menu and wheel paths stay native
 - `src/main.js` — RoutePlotter class: app entry + orchestrator core (constructor, init, model bookkeeping, render scheduling); attaches the `src/app/*` mixins to its prototype
 - `src/models/AnimationState.js` — Playback state, canonical seek-derived timing/pause state and exact transport snapshots
@@ -283,14 +289,15 @@
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
 - `tests/branchHandle.test.js` — COMPOSE-04 contract: which waypoints are
-  offered a branch handle, its geometry and hit-test, and its reachability
-  without a preceding hover
 - `tests/branchTiming.test.js` — ROUTE-01b contract: run timing, master
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
 - `tests/crowdArrival.test.js` — COMPOSE-02 contract: onset/journey maths,
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
+- `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
+  example rehydrates, times deterministically, resolves its branches and
+  crowd bindings, and demonstrates what its description claims
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding

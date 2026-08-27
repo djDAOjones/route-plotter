@@ -30,10 +30,6 @@
 
 ### Next
 
-- [ ] **DEMO-01 Example projects as living fixtures** · Showcase/release
-  [ready] — Replace bare example backgrounds
-  with approved example projects that demonstrate route, crowd and anchors and
-  double as living fixtures.
 - [ ] **REV-05 Accessibility assurance** · Accessibility assurance
   [ready] [verify: NVDA/VoiceOver] — Complete axe,
   forced colours, reduced motion and 200–400% zoom checks once the authoring

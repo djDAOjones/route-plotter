@@ -25,6 +25,7 @@ import {
   pathHeadStyleUsesImageControls,
   resolvePathHeadImage,
 } from '../utils/pathHeadPresets.js';
+import { buildExampleProjects } from '../examples/index.js';
 
 export const wiringDomMixin = {
   
@@ -55,6 +56,22 @@ export const wiringDomMixin = {
         }
       });
     });
+
+    // Example Projects (DEMO-01) — built from the same list the archives are
+    // generated from, so the menu can never offer one that was not shipped.
+    const exampleProjectsMenu = document.getElementById('example-projects-menu');
+    if (exampleProjectsMenu) {
+      for (const example of buildExampleProjects()) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'dropdown-item dropdown-item-example';
+        item.setAttribute('role', 'menuitem');
+        item.textContent = example.name;
+        item.title = example.description;
+        item.addEventListener('click', () => this.loadExampleProject(example.id));
+        exampleProjectsMenu.appendChild(item);
+      }
+    }
     
     // Sidebar tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {

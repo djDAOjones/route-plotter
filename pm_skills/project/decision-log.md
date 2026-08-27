@@ -2,6 +2,49 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — examples are generated project saves, published under review
+
+**Owner decision:** the examples ship as full `.zip` project saves so people
+can download and re-use them, not as JSON the app alone understands. Asked and
+answered at the DEMO-01 gate.
+
+**Generated, not committed as source.** The repository holds the example
+*definitions* (`src/examples/index.js`) and the already-bundled backgrounds;
+the build pairs them into the archive. This keeps a second copy of a 1–2 MB
+image out of the source tree, and the archives are byte-reproducible — fixed
+entry timestamps and a pinned authoring date, because `Waypoint.toJSON()`
+carries `created`/`modified` — so a rebuild that changed no example produces
+no diff and lands no new blob in history. The archives themselves do go to
+`docs/`, which is how a static site can offer a download at all.
+
+**Built from the live models, which is what makes them fixtures.** Hand-written
+JSON would rot into a shape nobody reads; `toJSON()` output is current by
+definition. `tests/exampleProjects.test.js` rehydrates each one through the
+app's own timing path and asserts it resolves, times deterministically, gives
+every waypoint an arrival and leaves no broken crowd binding. If the save
+format, branch model or timeline maths drift, an example stops resolving and
+the suite says so.
+
+**Publication boundary, honoured rather than bypassed.** The build refused any
+ZIP in its output, because "legacy project ZIPs still require individual
+provenance review" (decision-log 2026-08-26). That rule was never a blanket
+ban on archives — it was a ban on publishing archives nobody had reviewed. So
+`public-assets.json` gained an `exampleProjects` block naming the three
+approved archives and the approved background each contains, the build's guard
+now refuses any ZIP *not* in that record, and `publicationBoundary.test.js`
+asserts the shipped set equals the approved set. A stray user project still
+fails the build.
+
+**Content:** a plain labelled route with a beacon (no crowd); a branching
+campus route whose crowd is traced from it and released at the head's arrival;
+and a weighted network with two dot streams and no hero route — between them
+every Phase 5 capability, and one gentle first-open example.
+
+**Link:** DEMO-01. 65 files / 991 tests green. Verified in production Chromium:
+"Open day route" opened from the File menu with its background, 1 branch, 0
+structural problems, 4 crowd nodes bound and none broken, one join wait and an
+11.65 s timeline. Zero console entries.
+
 ## 2026-08-27 — the branch handle is an offer, and it must survive a tap
 
 **Decision:** A waypoint that a *bound entry* node sits on carries a "+" handle

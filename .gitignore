@@ -48,3 +48,9 @@ Obsolete/
 
 # User project exports are private unless individually reviewed for publication
 *.zip
+# …except the three example project archives the owner approved for publication
+# on 2026-08-27 (public-assets.json -> exampleProjects). Named individually so
+# the blanket rule still catches a stray user project save (DEMO-01).
+!docs/examples/parm-aerial-walk.zip
+!docs/examples/uon-open-day.zip
+!docs/examples/nervous-system-flow.zip

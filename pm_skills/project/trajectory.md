@@ -17,6 +17,14 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Showcase (shipped 2026-08-27)
+
+DEMO-01 — Three example projects ship as downloadable `.zip` project saves and
+open from the File menu: a plain labelled route, a branching campus route with
+a crowd traced from it, and a weighted signal network. Built from the live
+models and loaded through the ordinary project path, so they double as living
+fixtures. (2026-08-27) — see decision-log.
+
 ## Phase 5 — crowds bound to the route (in progress 2026-08-27)
 
 COMPOSE-04 — A waypoint a bound crowd enters from carries a branch "+" handle:

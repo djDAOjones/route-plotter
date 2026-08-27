@@ -32,6 +32,7 @@ import { assertPersistedEntityId, ENTITY_ID_LIMITS } from '../utils/entityId.js'
 import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
+import { buildExampleProjects } from '../examples/index.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -974,6 +975,40 @@ export const persistenceMixin = {
     }
   },
   
+  /**
+   * Open one of the bundled example projects (DEMO-01).
+   *
+   * Fetched as the very archive a user downloads and opened through the same
+   * `loadProject` path their own save takes — no special case anywhere, which
+   * is what makes the examples worth having as fixtures.
+   *
+   * @param {string} exampleId
+   * @returns {Promise<boolean>} True when the project loaded
+   */
+  async loadExampleProject(exampleId) {
+    const example = buildExampleProjects().find(each => each.id === exampleId);
+    if (!example) {
+      this.announce('That example is not available.');
+      return false;
+    }
+    try {
+      this.announce(`Opening ${example.name}…`);
+      const response = await fetch(`examples/${example.id}.zip`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      // Named so the load log and any error name the example, not "undefined".
+      const file = typeof File === 'function'
+        ? new File([blob], `${example.id}.zip`, { type: 'application/zip' })
+        : Object.assign(blob, { name: `${example.id}.zip` });
+      return await this.loadProject(file);
+    } catch (err) {
+      console.error('Failed to open example project:', err);
+      this.announce(`Could not open ${example.name}: ${err.message}`);
+      this.eventBus.emit('ui:toast', { message: `Could not open ${example.name}` });
+      return false;
+    }
+  },
+
   /**
    * Load project from ZIP file
    * @param {File} file - ZIP file to load

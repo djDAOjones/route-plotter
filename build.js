@@ -317,6 +317,23 @@ function copyAllStaticFiles(version) {
 }
 
 /**
+ * Write the downloadable example project archives (DEMO-01).
+ *
+ * Generated rather than committed as source: the repository keeps the small
+ * example definitions and the already-bundled backgrounds, and the archive
+ * that pairs them is assembled here. Reproducible byte-for-byte, so a rebuild
+ * that changed no example produces no diff.
+ */
+async function buildExampleArchivesInto(outputDir) {
+  const { buildExampleArchives } = await import('./scripts/build-examples.mjs');
+  const written = await buildExampleArchives(path.join(outputDir, 'examples'));
+  for (const item of written) {
+    console.log(`Built examples/${item.file} (${(item.bytes / 1024).toFixed(0)} KB)`);
+  }
+  return written;
+}
+
+/**
  * Enumerate ordinary files in a generated output tree using POSIX separators.
  * Generated symlinks or special entries are not valid Pages artifacts.
  * @param {string} root
@@ -390,7 +407,9 @@ function validateBuiltOutput(outputDir, version) {
     'app.js',
     'app.js.map',
     'player.js',
-    'meta.json'
+    'meta.json',
+    ...(publicAssetManifest.exampleProjects?.archives || [])
+      .map(archive => `examples/${archive.id}.zip`)
   ].sort();
   const actualInventory = listOutputFiles(outputDir);
   const expectedSet = new Set(expectedInventory);
@@ -403,8 +422,22 @@ function validateBuiltOutput(outputDir, version) {
       `unexpected: ${unexpectedOutput.join(', ') || 'none'})`
     );
   }
-  if (actualInventory.some(file => /\.zip$/i.test(file))) {
-    throw new Error('Build output contains a project ZIP');
+  // Project ZIPs need individual provenance review before publication
+  // (decision-log 2026-08-26). The ban is therefore not blanket: an archive
+  // may ship only if `public-assets.json` names it as an approved example,
+  // which is the record of that review. Anything else — a stray user project,
+  // a leaked save — still fails the build.
+  const approvedArchives = new Set(
+    (publicAssetManifest.exampleProjects?.archives || [])
+      .map(archive => `examples/${archive.id}.zip`)
+  );
+  const unapprovedArchives = actualInventory
+    .filter(file => /\.zip$/i.test(file))
+    .filter(file => !approvedArchives.has(file));
+  if (unapprovedArchives.length > 0) {
+    throw new Error(
+      `Build output contains an unapproved project ZIP: ${unapprovedArchives.join(', ')}`
+    );
   }
   console.log(`Artifact inventory (${actualInventory.length} files): ${JSON.stringify(actualInventory)}`);
   return actualInventory;
@@ -549,6 +582,11 @@ if (isWatchMode) {
     minify: false
   });
   await playerCtx.watch();
+
+  // The dev server serves docs/, so the examples have to exist there too or a
+  // developer testing "Open example" gets a 404 the production build never has.
+  await buildExampleArchivesInto(distDir);
+
   console.log('Watching for JS changes...');
   
   // Watch static files for changes (HTML, CSS, images)
@@ -633,6 +671,10 @@ else {
       ...createPlayerBuildOptions(version),
       minify: true
     });
+
+    // Downloadable example project saves (DEMO-01) — written before the
+    // inventory check, which expects exactly the approved archives.
+    await buildExampleArchivesInto(distDir);
 
     // Calculate bundle sizes
     validateBuiltOutput(distDir, version);
