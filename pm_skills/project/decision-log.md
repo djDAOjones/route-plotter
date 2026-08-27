@@ -2,6 +2,42 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — the exported player inherits branches rather than reimplementing them
+
+**Decision:** ROUTE-01d needed almost no new export code. `PlayerApp` already
+takes `pathTimingMixin` wholesale, so it builds the same splines and composes
+the same master timeline the editor does; the work was carrying `branchPaths`
+and `branchTimeline` into its render state and proving nothing is lost in
+between. A second, player-local branch implementation was never on the table —
+it is exactly how play, scrub and export would drift apart.
+
+**Timeline length:** a terminal branch can outlive the trunk, so
+`updateAnimationDuration` now takes the max of the trunk-derived duration and
+the composed branch total (plus the same handles, intro and tail, which sit
+outside the composition). Without this the route ended when the trunk did and
+a longer branch was cut off mid-animation. A branch that fits inside the trunk
+changes nothing — it must not pad a route it already fits in.
+
+**Cache correctness:** the composed timeline is a function of geometry *and*
+base speed, so its cache is keyed on both. Keying on geometry alone reported a
+branch's duration at the previous speed after a speed change.
+
+**Partial-mixin hosts, a third time:** `updateAnimationDuration` calling
+`this.getBranchTimeline()` broke the player-parity harness, which
+cherry-picks mixin methods. Fixed on both sides — the harness takes the new
+accessor (it is part of the timing contract it exercises) and the call is
+optional, because a host without the accessor has no branch data either.
+
+**Evidence:** 60 files / 878 tests. Live Chromium: composed total and engine
+duration agree at 7269 ms on a branched route, the coordVersion-9 snapshot
+carries `branchId`/`branchFrom`/`branchRejoin` on exactly the one branch
+waypoint and adds no key to the other five, and the `player.js` bundle inlined
+into every standalone export contains the branch composition and render code.
+Opening an exported file in a browser end-to-end remains REV-04's outstanding,
+owner-run evidence.
+
+**Link:** ROUTE-01d.
+
 ## 2026-08-27 — two gestures author a branch, and both are owner-chosen
 
 **Decision:** Alt+click on an existing waypoint arms a branch; the next plain

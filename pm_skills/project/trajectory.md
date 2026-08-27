@@ -19,6 +19,11 @@
 
 ## Phase 5 — split hero routes (in progress 2026-08-27)
 
+ROUTE-01d — A branched route exports: the snapshot carries its branch links,
+the standalone player rebuilds the identical structure and master timeline, and
+a branch that outlives the trunk extends the timeline instead of being cut off.
+(2026-08-27) — see decision-log.
+
 ROUTE-01c — Branches are authorable: Alt+click a waypoint to fork, click to
 place; drag a branch's end onto a waypoint to rejoin (again to end it there).
 Branch rows read `2·B1`, indented and tagged, with a ⑂ badge on the fork's

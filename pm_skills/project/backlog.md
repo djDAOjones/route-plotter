@@ -30,9 +30,6 @@
 
 ### Next
 
-- [ ] **ROUTE-01d Branch export parity** · Phase 5 route composition
-  [ready] — Standalone player and video export reproduce the
-  branched timeline frame-for-frame.
 - [ ] **COMPOSE-01 Route-bound crowd anchors** · Phase 5 composition
   [[detail]](tickets/COMPOSE-01.md) [ready] — Bind graph nodes
   and emitter release timing to route waypoints while preserving deterministic

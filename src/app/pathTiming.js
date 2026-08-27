@@ -216,10 +216,16 @@ export const pathTimingMixin = {
    */
   getBranchTimeline() {
     if (!this.routeStructure || this.routeStructure.isLinear) return null;
-    if (this.branchTimeline) return this.branchTimeline;
+    // Cached per path recalculation AND per base speed: the composition is a
+    // function of both, and a stale cache would report a branch's duration at
+    // the previous speed.
+    const baseSpeedNow = this.animationEngine?.state?.speed || ANIMATION.DEFAULT_SPEED;
+    if (this.branchTimeline && this._branchTimelineSpeed === baseSpeedNow) {
+      return this.branchTimeline;
+    }
     if (!this.branchPaths || this.branchPaths.length === 0) return null;
 
-    const baseSpeed = this.animationEngine?.state?.speed || ANIMATION.DEFAULT_SPEED;
+    const baseSpeed = baseSpeedNow;
     const lengthOf = points => this.pathCalculator.calculatePathLength(
       points.map(point => this.imageToCanvas(point.x, point.y))
     );
@@ -250,6 +256,7 @@ export const pathTimingMixin = {
     }
 
     this.branchTimeline = composeRouteTimeline(runs, baseSpeed);
+    this._branchTimelineSpeed = baseSpeed;
     return this.branchTimeline;
   },
 
@@ -508,7 +515,23 @@ export const pathTimingMixin = {
     
     // End handle time is only added during export (not in edit/preview mode)
     // This is handled by the export functions which add VIDEO_EXPORT.START_BUFFER_MS
-    
+
+    // A branch that outlives the trunk extends the timeline (ROUTE-01d).
+    // Completion means every terminal endpoint is complete, so cutting the
+    // route at the trunk's end would truncate a longer branch mid-animation.
+    // The composed timeline is computed against the same base duration, so
+    // handles, intro and tail still sit outside it exactly as before.
+    // Optional call: a host that assembles only part of this mixin has no
+    // branch data either, so linear behaviour is the correct degradation.
+    const branchTimeline = this.getBranchTimeline?.();
+    if (branchTimeline && branchTimeline.totalDurationMs > 0) {
+      const branchTotal = branchTimeline.totalDurationMs
+        + startHandleTime
+        + this.animationEngine.introTime
+        + this.animationEngine.totalTailTime;
+      totalDuration = Math.max(totalDuration, branchTotal);
+    }
+
     // Set the final total duration
     this.animationEngine.setDuration(totalDuration);
     

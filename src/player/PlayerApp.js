@@ -335,6 +335,11 @@ export class PlayerApp {
     const renderState = {
       waypoints: this.waypoints,
       pathPoints: this.pathPoints,
+      // Branch geometry and the composed master timeline (ROUTE-01d). Both come
+      // from pathTimingMixin, which the player takes wholesale, so a branched
+      // export renders through the same code the editor does.
+      branchPaths: this.branchPaths,
+      branchTimeline: this.getBranchTimeline(),
       styles: this.styles,
       selectedWaypoint: null,
       selectedWaypoints: [],

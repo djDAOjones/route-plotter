@@ -115,6 +115,7 @@ function makeAuthoredApp({ motionSettings }) {
     getMajorLegData: pathTimingMixin.getMajorLegData,
     hasSegmentSpeedVariations: pathTimingMixin.hasSegmentSpeedVariations,
     calculatePathDuration: pathTimingMixin.calculatePathDuration,
+    getBranchTimeline: pathTimingMixin.getBranchTimeline,
     updateAnimationDuration: pathTimingMixin.updateAnimationDuration,
     imageToCanvas: viewportMixin.imageToCanvas,
     _buildProjectSnapshot: persistenceMixin._buildProjectSnapshot

@@ -2999,7 +2999,7 @@
       "format": "esm"
     },
     "src/app/pathTiming.js": {
-      "bytes": 23130,
+      "bytes": 24333,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -3614,13 +3614,13 @@
     }
   },
   "outputs": {
-    ".docs-build-VsrEgo/app.js.map": {
+    ".docs-build-CFw4Wf/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3224942
+      "bytes": 3226443
     },
-    ".docs-build-VsrEgo/app.js": {
+    ".docs-build-CFw4Wf/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3917,7 +3917,7 @@
           "bytesInOutput": 4344
         },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 6599
+          "bytesInOutput": 6834
         },
         "src/app/persistence.js": {
           "bytesInOutput": 27673
@@ -3965,7 +3965,7 @@
           "bytesInOutput": 22142
         }
       },
-      "bytes": 1054015
+      "bytes": 1054250
     }
   }
 }

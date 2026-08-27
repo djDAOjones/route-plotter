@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 271 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 272 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -13,7 +13,7 @@
 - `specs` — 15 file(s)
 - `src` — 93 file(s)
 - `styles` — 6 file(s)
-- `tests` — 61 file(s)
+- `tests` — 62 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -278,8 +278,9 @@
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
-  insert placement, fork/rejoin validation, branch list rows and the
-  drop hit-test exclusion
+- `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
+  the snapshot, identical structure and timeline after rehydration, and the
+  timeline extending for a branch that outlives the trunk
 - `tests/branchTiming.test.js` — ROUTE-01b contract: run timing, master
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
