@@ -2,6 +2,52 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — the crowd wait is solved, not iterated, and then baked
+
+**Decision:** "Wait here for this crowd" computes the wait a waypoint needs so
+the head is still there when the crowd's last dot arrives, and writes it as an
+ordinary authored `pauseTime`. The route gains no live dependency on the crowd —
+Phase 5 forbids that, and a live one would make the timeline a fixed-point
+problem on every frame.
+
+**Why a difference is wrong.** Adding a wait `P` lengthens the timeline, and
+every dot's onset is a *fraction* of the timeline, so the crowd finishes later
+too. "Last arrival minus arrival" therefore undershoots, and iterating converges
+slowly as onsets approach the end. Solved per dot instead, with `A` the head's
+arrival (unaffected by a wait *at* that waypoint), `f` the onset fraction, `J`
+the journey and `D` the timeline minus the waypoint's current wait:
+
+    A + P ≥ f·(D + P) + J   ⇒   P ≥ (f·D + J − A) / (1 − f)
+
+taking the largest such `P` over the dots. Exact in one pass, and idempotent:
+fitting twice lands on the same number, so a refit never creeps.
+
+**Unsatisfiable cases are reported, not approximated:** a dot with onset
+fraction 1 releases exactly at the end and moves out by however much the route
+is lengthened, so no wait can outlast it; a looping or respawning crowd has no
+arrival at all. Both come back with a reason rather than a wrong number.
+
+**Shared arithmetic:** the onset routine was extracted from `SwarmEngine` into
+`crowdArrival.js` and the engine now imports it, rather than the solve
+restating it. Every swarm fixture stayed byte-for-byte identical through that
+extraction, which is the check that mattered. `scheduleDots` resolves the guide
+the same way `evaluate` does and walks a graph dot's own route to its first
+exit, so per-dot journeys differ on a graph exactly as they do on screen.
+
+**Assumption at the skipped gate:** the wait applies to the selected major
+waypoint when there is one, otherwise the route's last major — the two things
+an author means by "wait here" — rather than introducing a waypoint picker.
+
+**Staleness is honest, not hidden:** the number is a snapshot. Retune the crowd
+and it goes stale; fit it again. That is the cost of baking, and it is the cost
+Phase 5 chose.
+
+**Link:** COMPOSE-02. 63 files / 945 tests green. Verified in production
+Chromium: a crowd finishing at ~25 s against a 7.3 s route solved to a 48215 ms
+wait, after which the head leaves at 53984 ms and the last dot arrives at
+53983 ms. The naive difference would have set ~19 s and still missed. Zero
+console entries.
+
 ## 2026-08-27 — tracing the route makes a copy that still follows it
 
 **Decision:** "Trace route into network" replaces the selected crowd's guide

@@ -51,10 +51,12 @@ export const networkMixin = {
   setupNetworkControls() {
     this._editNetworkBtn = document.getElementById('network-edit-btn');
     this._traceRouteBtn = document.getElementById('crowd-trace-route-btn');
+    this._fitWaitBtn = document.getElementById('crowd-fit-wait-btn');
     this._guideHintEl = document.getElementById('crowd-guide-hint');
 
     this._editNetworkBtn?.addEventListener('click', () => this.enterNetworkEditMode());
     this._traceRouteBtn?.addEventListener('click', () => this.traceRouteIntoCrowd());
+    this._fitWaitBtn?.addEventListener('click', () => this.fitRouteWaitToCrowd());
 
     // ── Guide changes (emitted by the crowds mixin's select wiring) ──
     // Switching an empty-network crowd to Custom network hands the user
@@ -389,6 +391,17 @@ export const networkMixin = {
       this._traceRouteBtn.disabled = !hasRoute;
       this._traceRouteBtn.title = hasRoute
         ? 'Copy the route into this crowd\u2019s network, so its dots follow the same shape and can branch where the route branches'
+        : 'Add at least two route waypoints first';
+    }
+    if (this._fitWaitBtn) {
+      // Applies to route- and graph-guided crowds alike: either way the
+      // question is "when has this crowd finished?" (COMPOSE-02).
+      const hasRoute = (this.waypoints?.length || 0) >= 2;
+      this._fitWaitBtn.hidden = !layer;
+      this._fitWaitBtn.disabled = !hasRoute;
+      const held = this.selectedWaypoint?.isMajor ? (this.selectedWaypoint.name || 'the selected waypoint') : 'the last waypoint';
+      this._fitWaitBtn.title = hasRoute
+        ? `Hold ${held} until this crowd has finished`
         : 'Add at least two route waypoints first';
     }
     if (this._guideHintEl && layer) {

@@ -23,6 +23,7 @@ import {
   normalizeBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
 import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
+import { waitForCrowdMs } from '../utils/crowdArrival.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
@@ -622,6 +623,82 @@ export const crowdsMixin = {
     this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-network-traced', layerId: layer.id });
 
     const message = `Traced the route into ${layer.name} — ${applied.nodes} nodes, ${applied.edges} paths`;
+    this.announce(message);
+    this.eventBus.emit('ui:toast', { message });
+    return true;
+  },
+
+  /**
+   * Hold a route waypoint until this crowd has finished (COMPOSE-02).
+   *
+   * The wait is *baked*: solved once against the current scene and written
+   * into the waypoint as an ordinary authored `pauseTime`. The route does not
+   * acquire a live dependency on the crowd — Phase 5 forbids that outright,
+   * and a live one would make the timeline a fixed-point problem every frame.
+   * Retune the crowd afterwards and the number goes stale, which is the honest
+   * trade: fit it again.
+   *
+   * Applies to the selected waypoint when there is one, otherwise the route's
+   * last major — the two cases an author actually means by "wait here".
+   *
+   * @param {FlowLayer} [layer=this.selectedCrowd]
+   * @param {Object} [waypoint] Waypoint to hold at
+   * @returns {boolean} True when a wait was written
+   */
+  fitRouteWaitToCrowd(layer = this.selectedCrowd, waypoint = null) {
+    if (!layer) {
+      this.eventBus.emit('ui:toast', { message: 'Select a crowd first' });
+      return false;
+    }
+
+    const target = waypoint
+      || (this.selectedWaypoint?.isMajor ? this.selectedWaypoint : null)
+      || [...this.waypoints].reverse().find(each => each.isMajor);
+    if (!target) {
+      this.eventBus.emit('ui:toast', { message: 'Add a major waypoint to hold the route at' });
+      return false;
+    }
+
+    const durationMs = this.animationEngine.state.duration;
+    const routeAnchors = this.getRouteArrivalMap?.();
+    const arrivalMs = routeAnchors?.arrivalMsById?.[target.id];
+    if (!Number.isFinite(arrivalMs) || !(durationMs > 0)) {
+      this.eventBus.emit('ui:toast', { message: 'The route has no timing to fit a wait into yet' });
+      return false;
+    }
+
+    const schedules = this.swarmEngine.scheduleDots(layer, {
+      durationMs,
+      routePathPoints: this.pathPoints,
+      routeAnchors,
+    });
+    const solved = waitForCrowdMs({
+      schedules,
+      arrivalMs,
+      durationMs,
+      currentWaitMs: target.pauseMode === 'timed' ? (target.pauseTime || 0) : 0,
+    });
+    if (!solved.satisfiable) {
+      this.eventBus.emit('ui:toast', { message: solved.reason });
+      return false;
+    }
+
+    const waitMs = Math.ceil(solved.waitMs);
+    target.pauseMode = waitMs > 0 ? 'timed' : 'none';
+    target.pauseTime = waitMs;
+
+    this.calculatePath();
+    this.invalidateAnimationTiming();
+    this.updateWaypointList();
+    this.saveUndoState();
+    this.autoSave();
+    this.queueRender();
+
+    const seconds = (waitMs / 1000).toFixed(1);
+    const name = target.name || 'the waypoint';
+    const message = waitMs > 0
+      ? `${name} now waits ${seconds}s for ${layer.name}`
+      : `${layer.name} already finishes before ${name} — no wait needed`;
     this.announce(message);
     this.eventBus.emit('ui:toast', { message });
     return true;

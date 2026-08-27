@@ -19,6 +19,10 @@
 
 ## Phase 5 — crowds bound to the route (in progress 2026-08-27)
 
+COMPOSE-02 — "Wait here for this crowd" solves, in closed form, the wait a
+waypoint needs so the head does not leave before the last dot arrives, and
+bakes it as an ordinary authored pause. (2026-08-27) — see decision-log.
+
 COMPOSE-03 — A crowd's network can be traced from the route: a node per major,
 an edge per leg carrying that leg's minors as control points, and branches
 traced as edges leaving the fork and returning to the rejoin. The copy is the

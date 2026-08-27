@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 276 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 278 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -11,9 +11,9 @@
 - `reviews` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
-- `src` — 95 file(s)
+- `src` — 96 file(s)
 - `styles` — 6 file(s)
-- `tests` — 64 file(s)
+- `tests` — 65 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -240,6 +240,9 @@
 - `src/utils/assetReferences.js` — Image-ID reachability collector and pure minimum-oldest-history admission planner for count/byte/pixel limits
 - `src/utils/branchTiming.js` — Pure per-run branch timing: builds each run's
 - `src/utils/busynessEnvelope.js` — Pure busyness-handle normalisation/validation, segment-area compilation and inverse-density sampling for seeded release times
+- `src/utils/crowdArrival.js` — Pure crowd-arrival maths shared with
+  SwarmEngine: per-dot onset and journey, last arrival, and the closed-form
+  solve for the route wait that outlasts a crowd
 - `src/utils/entityId.js` — Shared persisted structural-ID length boundary that leaves authored display text untouched
 - `src/utils/focusTrap.js` — Modal inerting, focus containment/wrap, Escape handling and origin-focus restoration
 - `src/utils/graphRouting.js` — Shared directed departures, overflow-safe weight normalisation and stable whole-percentage traffic shares
@@ -251,8 +254,6 @@
 - `src/utils/routeAnchors.js` — Pure one-way route→crowd binding: resolves
 - `src/utils/routeBranches.js` — Pure hero-route branch resolution: cuts a
 - `src/utils/routeTrace.js` — Pure trace of the hero route into a crowd guide
-  network: node per major, edge per leg with minors as control points,
-  branches as fork/rejoin edges, derived entries and exits
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
 - `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers)
@@ -285,6 +286,9 @@
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
 - `tests/branchTiming.test.js` — ROUTE-01b contract: run timing, master
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
+- `tests/crowdArrival.test.js` — COMPOSE-02 contract: onset/journey maths,
+  the self-consistency of the solved wait under its own timeline growth,
+  unsatisfiable cases, and scheduleDots agreeing with evaluate
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
@@ -319,8 +323,6 @@
 - `tests/routeAnchors.test.js` — COMPOSE-01 contract: node/emitter binding,
 - `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
 - `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across
-  linear and branched routes, refusal cases, and the copy's independence
-  from the route it was traced from
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
 - `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts
 - `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts

@@ -1,5 +1,6 @@
 import { PathCalculator } from './PathCalculator.js';
 import { releaseStartFraction } from '../utils/routeAnchors.js';
+import { dotOnsetFraction, dotJourneyMs } from '../utils/crowdArrival.js';
 import { getGraphDepartures, normalizeGraphWeights } from '../utils/graphRouting.js';
 import {
   compileBusynessEnvelope,
@@ -126,6 +127,102 @@ export class SwarmEngine {
     return dots;
   }
 
+  /**
+   * Every dot's release and journey, without evaluating a single frame
+   * (COMPOSE-02).
+   *
+   * Same guide resolution and same onset arithmetic `evaluate` uses, so the
+   * answer describes the dots that will actually be on screen. Journey length
+   * is the dot's own distance to its first exit or dead end — which differs
+   * per dot on a graph, since the walk is hash-driven.
+   *
+   * @param {FlowLayer} layer
+   * @param {Object} context Same shape as evaluate()'s
+   * @returns {Array<{onsetFraction: number, journeyMs: number, finishes: boolean}>}
+   */
+  scheduleDots(layer, context = {}) {
+    const durationMs = context.durationMs;
+    if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return [];
+
+    let guide = null;
+    if (layer.guideType === 'route') {
+      const points = context.routePathPoints;
+      if (!Array.isArray(points) || points.length < 2) return [];
+      guide = { type: 'route', points, length: this._routeLength(points) };
+      if (guide.length <= 0) return [];
+    } else {
+      guide = this._buildGraphGuide(layer.graph);
+      if (!guide) return [];
+    }
+
+    const schedules = [];
+    for (const emitter of layer.emitters) {
+      const { seed, dotCount } = emitter;
+      const windowStart = Math.min(releaseStartFraction(emitter, context.routeAnchors || {}), 1);
+      const windowEnd = Math.min(windowStart + emitter.releaseDuration, 1);
+      const windowSpan = Math.max(0, windowEnd - windowStart);
+      const busynessEnvelope = compileBusynessEnvelope(emitter.busynessEnvelope);
+      // A respawning or looping dot re-enters for ever: it has no arrival to
+      // wait for, and saying so is more useful than inventing one.
+      const finishes = emitter.lifecycleMode === 'disappear' || emitter.lifecycleMode === 'collect';
+
+      for (let i = 0; i < dotCount; i++) {
+        const onsetFraction = dotOnsetFraction({
+          index: i,
+          dotCount,
+          onsetHash: SwarmEngine.hash(seed, i, CHANNEL_ONSET),
+          onsetVariance: emitter.onsetVariance,
+          intensityRamp: emitter.intensityRamp,
+          sampleEnvelope: value => sampleBusynessEnvelope(busynessEnvelope, value),
+          windowStart,
+          windowSpan,
+        });
+        const speedMultiplier = Math.max(
+          MIN_SPEED_MULTIPLIER,
+          1 + emitter.speedVariance * (2 * SwarmEngine.hash(seed, i, CHANNEL_SPEED) - 1)
+        );
+        const length = guide.type === 'route'
+          ? guide.length
+          : this._journeyLength(emitter, i, guide);
+        schedules.push({
+          onsetFraction,
+          journeyMs: dotJourneyMs(length, emitter.speed, speedMultiplier),
+          finishes: finishes && length > 0,
+        });
+      }
+    }
+    return schedules;
+  }
+
+  /**
+   * How far one dot travels through a graph before its first exit or dead
+   * end. Mirrors the walk in `_walkGraph`, summing lengths instead of
+   * stopping at a distance.
+   * @private
+   */
+  _journeyLength(emitter, dotIndex, guide) {
+    const { graph, entries } = guide;
+    const { seed } = emitter;
+
+    let hop = 0;
+    let node = this._pickEntry(entries, seed, dotIndex, hop++);
+    let cameFromEdgeId = null;
+    let total = 0;
+
+    for (let step = 0; step < MAX_HOPS; step++) {
+      const atExit = node.type === 'exit' && step > 0;
+      const candidates = atExit ? [] : this._traversableEdges(graph, node.id, cameFromEdgeId);
+      if (atExit || candidates.length === 0) break;
+
+      const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
+      total += this.edgeGeometry(graph, traversal.edge).length;
+      node = graph.getNode(traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId);
+      cameFromEdgeId = traversal.edge.id;
+      if (!node) break;
+    }
+    return total;
+  }
+
   // ── emitter evaluation ─────────────────────────────────────────
 
   /**
@@ -151,14 +248,18 @@ export class SwarmEngine {
       // the result by intensityRamp (-1 front-loaded … 1 back-loaded), then
       // invert the authored busyness density. A flat envelope is neutral, so
       // historical projects retain the exact founding release schedule.
-      const slot = (i + 0.5) / dotCount;
-      const uniform = SwarmEngine.hash(seed, i, CHANNEL_ONSET);
-      let u = slot + (uniform - slot) * emitter.onsetVariance;
-      const ramp = emitter.intensityRamp;
-      if (ramp > 0) u = Math.pow(u, 1 / (1 + ramp));
-      else if (ramp < 0) u = Math.pow(u, 1 - ramp);
-      u = sampleBusynessEnvelope(busynessEnvelope, u);
-      const onsetMs = (windowStart + u * windowSpan) * durationMs;
+      // Shared with COMPOSE-02's arrival solve, which must agree with the
+      // dots actually on screen rather than restate their arithmetic.
+      const onsetMs = dotOnsetFraction({
+        index: i,
+        dotCount,
+        onsetHash: SwarmEngine.hash(seed, i, CHANNEL_ONSET),
+        onsetVariance: emitter.onsetVariance,
+        intensityRamp: emitter.intensityRamp,
+        sampleEnvelope: value => sampleBusynessEnvelope(busynessEnvelope, value),
+        windowStart,
+        windowSpan,
+      }) * durationMs;
 
       const elapsedSec = (timelineMs - onsetMs) / 1000;
       if (elapsedSec < 0) continue; // not yet released
