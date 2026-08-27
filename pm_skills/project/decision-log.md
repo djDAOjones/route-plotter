@@ -2,6 +2,33 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-26 — one checked-in contract briefs Codex and Claude Code
+
+**Decision:** Keep `AGENTS.md` as the single shared standing contract and add
+one root `CLAUDE.md` that imports it. Codex discovers the contract natively;
+Claude Code and the Code tab in Claude Desktop load the adapter and expand the
+import. `README.md` plus `pm_skills/project/` remain the canonical product and
+evolving project records. The adapter contains only Claude-specific loading
+and auto-memory guidance, so shared facts cannot drift between two copies.
+
+**Context and memory boundary:** Replace the obsolete budget table and broad
+every-task reads in `AGENTS.md` with the current tiered policy. Budget numbers
+live only in `pm_skills/memory-policy.md`; file-map, backlog, and decision-log
+loads are sectional. Codex local memory and Claude auto memory are optional,
+machine-local recall layers, never standing policy or a cross-machine handover.
+`CLAUDE.local.md` is ignored for genuinely personal project preferences, while
+the existing ignored `.claude/` launch configuration stays local.
+
+**Repository boundary and evidence:** The enclosing PARM Maps Encore folder is
+not a Git repository and contains several independent projects. Both tools must
+open the `Route Plotter v3` Git root for startup discovery and worktree sharing.
+The design follows the official Codex
+[AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md) and
+[memories](https://learn.chatgpt.com/docs/customization/memories) guidance, plus
+Claude Code's [memory](https://code.claude.com/docs/en/memory) and
+[Desktop](https://code.claude.com/docs/en/desktop) documentation. No application
+source, runtime configuration, or generated output changed.
+
 ## 2026-08-26 — HEAD-01 bundles one reviewed preset across both runtimes
 
 **Decision:** Ship the approved right-facing, top-down quadcopter as a 512 px

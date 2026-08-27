@@ -1,8 +1,8 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 262 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
-- `(root)` — 13 file(s)
+<!-- 263 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+- `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
 - `_Joe` — 45 file(s)
@@ -19,6 +19,7 @@
 ## (root)
 
 - `AGENTS.md` — Project-wide agent contract: product boundaries, invariants, workflow, documentation and memory rules
+- `CLAUDE.md` — Claude Code adapter importing the shared `AGENTS.md` contract without duplicating project knowledge
 - `DEV-INFRASTRUCTURE.md` — Canonical build, test, version, deployment and owned-runtime lifecycle contract
 - `README.md` — Product overview, user/developer quick start, architecture, persistence/export behaviour and glossary
 - `Route Plotter v3.code-workspace` — VS Code workspace definition for this repository
