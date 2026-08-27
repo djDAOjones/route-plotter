@@ -2,6 +2,49 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-28 — forced colours removes every focus ring, so outline carries it
+
+**A11Y-02 shipped, and it was worse than the ticket knew.** The ticket listed
+selection accent bars, focus rings, the leg "+" and beacon colours as lacking
+`forced-colors` fallbacks. Reading the stylesheet turned the middle item from
+a gap into a defect: forced-colours modes set `box-shadow` to none, and every
+focus ring in this project is a box-shadow drawn over `outline:none` — 22 of
+them in `main.css` alone, plus the dropdown, context-menu and swatch rings.
+In high contrast a keyboard user had **no visible focus anywhere**.
+
+**One global block restores it,** because `outline` *is* repainted with system
+colours while box-shadow is not. It carries `!important` on the outline itself:
+the per-component rules that zero the outline are more specific than any
+selector this block could reasonably wear, and in this mode a single
+consistent system ring is the goal rather than the app's layered blue one.
+
+**A second, quieter defect fell out of the same read.** `var(--focus)` is not
+a token anywhere in the project, so `.waypoint-rename-input:focus-visible`
+resolved to `box-shadow: none` — the inline rename input had no focus ring at
+all, in *any* colour mode, because an invalid custom property does not fall
+back to the cascade. The bespoke override is deleted and the input takes the
+universal ring like every other input. Proved both ways in the live browser:
+re-inserting the old rule returns `none`, removing it returns the two-layer
+white/blue ring.
+
+**Two deliberate non-fixes, both recorded in UI-STANDARDS rather than worked
+around.** The **map canvas** is content: forced colours does not repaint it,
+and neither do we — the Okabe-Ito palette, the hovered leg, its "+" handle and
+the beacons stay as authored and stay legible against each other. Repainting
+them to system colours would destroy the colour-blind-safe palette that exists
+for these very users. **Colour swatches** take `forced-color-adjust: none`,
+the sanctioned colour-picker case: the chip *is* the value, and one flattened
+system colour leaves nothing to choose from.
+
+**What is and is not evidenced.** The rules are proved to ship and parse in
+the live stylesheet — a bad system-colour keyword would simply not be there —
+and the ring fix is measured live. How they *look* under a real high-contrast
+theme still needs devtools emulation this automation cannot drive, which is
+exactly the residual REV-05 already carries. That stays owner-run rather than
+being claimed.
+
+**Link:** A11Y-02 (shipped), REV-05, UI-STANDARDS -> Forced colours.
+
 ## 2026-08-27 — a hint is a description, not a button that does nothing
 
 **A11Y-01 shipped.** `ParamTooltip` gave all 74 `[data-tip]` labels

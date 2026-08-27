@@ -74,11 +74,6 @@
   author has moved the label by hand, and surface the control — it is buried
   in the collapsed "More" disclosure. A fading prompt offering auto-position
   is the proposed nudge.
-- [ ] **A11Y-02 Forced-colours sweep** · Accessibility [ready] — Only the
-  UI-02/ROUTE-01c row affordances declare `forced-colors` fallbacks. Selection
-  accent bars, focus rings, the leg “+” and beacon colours have none. Needs
-  devtools forced-colours emulation to verify, so pair it with REV-05's
-  residual.
 - [ ] **DEPS-01 Consider dependency upgrades across the board** · Engineering
   maturity [ready] — Owner-requested (2026-08-27 maintenance). Evaluate and
   take deliberate upgrades: mediabunny 1.55.1→1.55.3 (runtime — re-verify

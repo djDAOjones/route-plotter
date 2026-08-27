@@ -17,6 +17,7 @@ import { describe, test, expect, beforeEach } from 'vitest';
 
 const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
 const mainCss = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
+const swatchCss = readFileSync(resolve(process.cwd(), 'styles/swatch-picker.css'), 'utf8');
 
 /**
  * Every `@media (forced-colors: active)` block's body, brace-matched rather
@@ -172,9 +173,8 @@ describe('the motion and forced-colours contracts are declared', () => {
   });
 
   test('the affordances that declare forced-colours fallbacks keep them', () => {
-    // Only the row affordances added under UI-02 and ROUTE-01c declare these.
-    // The rest of the UI has none — recorded as A11Y-02, not asserted here,
-    // because a count that implied wider coverage would be a false green.
+    // The row affordances added under UI-02 and ROUTE-01c; A11Y-02 added the
+    // focus and selection rules asserted separately below.
     const blocks = forcedColourBlocks(mainCss).join('\n');
 
     for (const selector of [
@@ -186,5 +186,67 @@ describe('the motion and forced-colours contracts are declared', () => {
     ]) {
       expect(blocks).toContain(selector);
     }
+  });
+});
+
+describe('forced colours keeps focus and selection visible (A11Y-02)', () => {
+  // What a stylesheet read can settle: the rules ship, name system colours,
+  // and use a property forced colours actually repaints. What it cannot
+  // settle is how they look under a real high-contrast theme — that needs
+  // devtools emulation and stays owner-run evidence on REV-05.
+
+  test('every focus ring in the file is a box-shadow, which is why this matters', () => {
+    // The premise of the whole block: forced colours sets box-shadow to none.
+    // If rings ever move to outline, this guard should be revisited, not
+    // silently left asserting something that no longer bites.
+    const ringDeclarations = mainCss.match(/:focus-visible\s*\{[^}]*\}/g) || [];
+    const outsideForcedColours = ringDeclarations.filter(rule => rule.includes('box-shadow'));
+
+    expect(outsideForcedColours.length).toBeGreaterThan(5);
+  });
+
+  test('focus is restored with an outline in a system colour', () => {
+    const blocks = forcedColourBlocks(mainCss).join('\n');
+    const focusRule = blocks.match(/:focus-visible\s*\{[^}]*\}/);
+
+    expect(focusRule).not.toBeNull();
+    // outline is repainted by forced colours; box-shadow is not. The
+    // `!important` has to sit on the outline itself — the per-component rules
+    // that zero the outline are more specific than this selector, and one on
+    // outline-offset alone would restore nothing.
+    expect(focusRule[0]).toMatch(/outline\s*:[^;]*Highlight[^;]*!important/);
+    expect(focusRule[0]).toMatch(/outline-offset\s*:[^;]*!important/);
+  });
+
+  test('selection accent bars are repainted rather than flattened to Canvas', () => {
+    const blocks = forcedColourBlocks(mainCss).join('\n');
+
+    for (const selector of [
+      '.waypoint-item.selected::before',
+      '.waypoint-item.is-selected::before',
+      '.layer-item.selected::before',
+      '.scene-outline-action.is-selected',
+    ]) {
+      expect(blocks).toContain(selector);
+    }
+    expect(blocks).toMatch(/\.layer-item\.selected::before\s*\{\s*background:\s*Highlight/);
+  });
+
+  test('colour swatches opt out, because the chip is the value', () => {
+    // Flattening these to a system colour would leave a palette nobody can
+    // read or choose from. Opting out is the sanctioned colour-picker case.
+    expect(swatchCss).toMatch(/\.swatch-chip\s*\{[^}]*forced-color-adjust:\s*none/);
+  });
+
+  test('no focus ring is left referencing an undefined token', () => {
+    // `var(--focus)` was not a token anywhere, so the declaration computed to
+    // box-shadow:none and that control had no ring at all, in any mode.
+    const tokensCss = readFileSync(resolve(process.cwd(), 'styles/tokens.css'), 'utf8');
+    const referenced = [...mainCss.matchAll(/var\((--focus[\w-]*)\)/g)].map(m => m[1]);
+
+    const undefinedTokens = [...new Set(referenced)]
+      .filter(name => !new RegExp(`${name}\\s*:`).test(tokensCss));
+
+    expect(undefinedTokens).toEqual([]);
   });
 });

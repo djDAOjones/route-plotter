@@ -206,6 +206,30 @@ implementation notes.
 - Form instructions and validation near the relevant control.
 - Visible labels and accessible names must match for speech input.
 
+### Forced colours
+
+- Forced-colours modes (Windows High Contrast and its kin) repaint
+  `color`, `background-color`, `border-color` and `outline-color`, and
+  force `box-shadow` to **none**. Any affordance whose only signal is a
+  box-shadow — every focus ring in this project is one — therefore
+  disappears unless a fallback is declared. `main.css` carries one global
+  `@media (forced-colors: active)` block that restores focus as an
+  `outline` in a system colour and repaints the selection accent bars.
+- Use only the CSS system colour keywords (`Canvas`, `CanvasText`,
+  `Highlight`, `ButtonText`, …) inside those blocks. Do not reach for a
+  design token there — the whole point is to defer to the user's theme.
+- **Documented exception — the map canvas.** Forced colours does not
+  repaint canvas content, and this project does not repaint it either.
+  The canvas is content, like an image: the Okabe-Ito data palette, the
+  hovered leg, its `+` handle and the beacons stay as authored and stay
+  legible against each other. Overriding them with system colours would
+  destroy the colour-blind-safe palette that exists to protect exactly
+  the users this mode serves.
+- Colour swatches are the one control that opts out with
+  `forced-color-adjust: none`: the chip *is* the value, and flattening
+  the palette to a single system colour would leave nothing to choose
+  from. The chip border and the checked outline carry the state.
+
 ### Robust
 
 - Semantic HTML before ARIA. No ARIA is better than bad ARIA.

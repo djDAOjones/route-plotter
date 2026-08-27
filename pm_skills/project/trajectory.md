@@ -27,6 +27,13 @@ do next. (2026-08-27) — see decision-log.
 
 ## Accessibility assurance (in progress 2026-08-27)
 
+A11Y-02 — Forced colours no longer erases the UI: focus is restored as a
+system-colour outline (box-shadow, which every ring here used, is suppressed
+in that mode), selection accent bars are repainted, colour swatches opt out,
+and the map canvas is a documented content exception. Also fixed a focus ring
+that referenced an undefined token and so rendered nothing in any mode.
+(2026-08-28) — see decision-log.
+
 A11Y-01 — The 74 `[data-tip]` hint labels no longer pose as buttons: each
 hint is now its control's appended `aria-describedby` description, and the
 visible tooltip stays reachable by pointer and by keyboard focus. axe now also

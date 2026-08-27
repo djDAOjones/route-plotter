@@ -71,6 +71,11 @@
   border-radius: var(--radius-1, 0.25rem);
   border: 1px solid rgba(0, 0, 0, 0.18); /* CTL-05: needed for yellow/white contrast */
   box-sizing: border-box;
+  /* A11Y-02: the chip IS the value. Forced colours would flatten every swatch
+     to one system colour and leave a palette that cannot be read or chosen
+     from, so this opts out — the sanctioned treatment for a colour picker.
+     The chip's own border and the checked outline keep the swatches apart. */
+  forced-color-adjust: none;
   transition: box-shadow var(--motion-fast, 120ms) var(--ease-out, ease-out);
 }
 

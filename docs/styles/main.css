@@ -2303,10 +2303,6 @@ kbd{
   .waypoint-item-branch .waypoint-minor-tag{ color:CanvasText; border-color:CanvasText; }
   .waypoint-fork-mark{ color:CanvasText; }
 }
-.waypoint-rename-input:focus-visible{
-  box-shadow:0 0 0 2px var(--focus);
-}
-
 /* Delete button: separate focusable control with own focus ring */
 .waypoint-delete{
   width:var(--control-lg);
@@ -3729,4 +3725,39 @@ body[data-mode="preview"]::after {
   min-width:2.5rem;
   font-family:var(--font-mono);
   font-size:var(--text-sm);
+}
+
+/* ── Forced colours (A11Y-02) ──────────────────────────────────────────────
+   Windows High Contrast and its kin force `box-shadow` to none, and every
+   focus ring in this project is a box-shadow drawn over `outline:none`.
+   Left alone, a high-contrast user gets no visible focus anywhere at all.
+   `outline` IS repainted with system colours, so it is the one thing they
+   can actually see: restored here for every focusable element in a single
+   place. `!important` because the per-component rules that zero the outline
+   are more specific than any selector this block could reasonably carry, and
+   in this mode one consistent system ring is the goal anyway.
+
+   Below it, the UI that carries meaning in hue alone is repainted to system
+   colours. The map canvas is deliberately NOT touched: it is content, like an
+   image, and forced colours leaves it as authored — so the Okabe-Ito data
+   palette and the affordances drawn over it (the hovered leg, its "+" handle,
+   beacons) stay legible against each other exactly as before. That exemption
+   is recorded in UI-STANDARDS → Accessibility rather than worked around
+   here, because repainting content to system colours would destroy the
+   colour-blind-safe palette it exists to protect. */
+@media (forced-colors: active){
+  :focus-visible{
+    outline:var(--focus-width) solid Highlight !important;
+    outline-offset:var(--focus-offset) !important;
+  }
+
+  /* Selection accent bars: their fill would otherwise flatten to Canvas and
+     the selected row would lose its only non-text marker. */
+  .waypoint-item.selected::before,
+  .waypoint-item.is-selected::before,
+  .layer-item.selected::before{ background:Highlight; }
+
+  /* This one draws its bar as an inset box-shadow, so only the border can
+     survive — make that border carry the selection. */
+  .scene-outline-action.is-selected{ border-color:Highlight; }
 }
