@@ -39,6 +39,9 @@ const GROW_EARLY_ONSET_MS = BEACON_TIMING.GROW_SCALE_UP_DURATION * 1000;
 /** Early-onset lead for pop/pulse beacons under hide-before (ms). */
 const SCALE_BEACON_EARLY_ONSET_MS = 250;
 
+/** Key the trunk run is stored under while composing a branched timeline. */
+const TRUNK_LEG_KEY = '__trunk__';
+
 export const PlayerCore = {
   /**
    * Build segment timing markers for variable-speed playback.
@@ -478,4 +481,150 @@ export const PlayerCore = {
     const timelineMs = startHandleMs + introMs + pathTime + accumulated;
     return Math.max(0, Math.min(1, durationMs > 0 ? timelineMs / durationMs : 0));
   },
+
+  /**
+   * Compose one master timeline from a trunk and its branches (ROUTE-01a).
+   *
+   * The approved contract, in three rules:
+   * 1. **Simultaneous start.** Every enabled branch starts the instant the head
+   *    reaches its fork. This is route storytelling, not the crowd model's
+   *    weighted choice — no branch is selected over another, they all run.
+   * 2. **Latest arrival wins at a rejoin.** A reconverged continuation begins
+   *    only once the last incoming branch has arrived, and the join waypoint's
+   *    own wait, label and beacon fire once at that moment — not once per
+   *    incoming branch.
+   * 3. **Completion is universal.** The route is finished when every terminal
+   *    endpoint is finished, not when the trunk runs out.
+   *
+   * Pure and order-independent: legs are keyed by id and resolved by
+   * dependency, so the same structure always composes to the same numbers
+   * regardless of the order the caller passes them in. That is what lets
+   * play, scrub and export agree by construction.
+   *
+   * A legs list with no branches composes to `startMs: 0` and
+   * `totalDurationMs === trunk.durationMs` — byte-for-byte the linear
+   * timeline, so an unsplit project is unaffected.
+   *
+   * @param {Array<{id: string|null, durationMs: number, forkFromId: string|null,
+   *                rejoinAtId: string|null, arrivalOffsetsById: Object<string, number>,
+   *                enabled?: boolean}>} legs
+   *   One entry per run. `durationMs` is the run's own local timeline length
+   *   (travel plus its own pauses). `arrivalOffsetsById` maps each waypoint id
+   *   in the run to its arrival offset from that run's start, which is how a
+   *   fork part-way along a run resolves to a master time.
+   * @returns {{legs: Object<string, {startMs, endMs, durationMs, enabled}>,
+   *            arrivalMsById: Object<string, number>,
+   *            joinWaitsById: Object<string, number>,
+   *            totalDurationMs: number,
+   *            unresolved: Array<string>}}
+   */
+  composeBranchTimeline(legs = []) {
+    const byKey = new Map();
+    for (const leg of legs) {
+      const key = leg.id === null || leg.id === undefined ? TRUNK_LEG_KEY : leg.id;
+      byKey.set(key, {
+        key,
+        durationMs: Math.max(0, Number(leg.durationMs) || 0),
+        forkFromId: leg.forkFromId ?? null,
+        rejoinAtId: leg.rejoinAtId ?? null,
+        arrivalOffsetsById: leg.arrivalOffsetsById || {},
+        // A disabled branch keeps its structure but contributes no time: it
+        // must not hold a rejoin open, or hiding a branch would stretch the
+        // route it is hidden from.
+        enabled: leg.enabled !== false,
+      });
+    }
+
+    // Which leg owns a given waypoint id — how a fork or rejoin target
+    // resolves to the run whose start time it depends on.
+    const ownerOf = new Map();
+    for (const leg of byKey.values()) {
+      for (const waypointId of Object.keys(leg.arrivalOffsetsById)) {
+        ownerOf.set(waypointId, leg.key);
+      }
+    }
+
+    const resolved = new Map();
+    const unresolved = [];
+
+    // The trunk anchors the timeline at zero; everything else is resolved by
+    // repeated relaxation. A leg is ready once its fork's owner is placed.
+    // Bounded by legs² relaxations, which cannot loop for ever on a cyclic
+    // structure — the survivors are reported as unresolved instead.
+    const trunk = byKey.get(TRUNK_LEG_KEY);
+    if (trunk) resolved.set(TRUNK_LEG_KEY, { startMs: 0 });
+
+    const pending = [...byKey.values()].filter(leg => !resolved.has(leg.key));
+    let progressed = true;
+    while (pending.length > 0 && progressed) {
+      progressed = false;
+      for (let index = pending.length - 1; index >= 0; index -= 1) {
+        const leg = pending[index];
+        const forkOwnerKey = leg.forkFromId === null ? null : ownerOf.get(leg.forkFromId);
+        if (forkOwnerKey === undefined || forkOwnerKey === null) continue;
+        const forkOwner = resolved.get(forkOwnerKey);
+        if (!forkOwner) continue;
+
+        const forkOffset = byKey.get(forkOwnerKey).arrivalOffsetsById[leg.forkFromId] || 0;
+        resolved.set(leg.key, { startMs: forkOwner.startMs + forkOffset });
+        pending.splice(index, 1);
+        progressed = true;
+      }
+    }
+    for (const leg of pending) unresolved.push(leg.key);
+
+    const legTimes = {};
+    for (const [key, placement] of resolved.entries()) {
+      const leg = byKey.get(key);
+      legTimes[key] = {
+        startMs: placement.startMs,
+        endMs: placement.startMs + (leg.enabled ? leg.durationMs : 0),
+        durationMs: leg.enabled ? leg.durationMs : 0,
+        enabled: leg.enabled,
+      };
+    }
+
+    // Arrival of every waypoint, in master time.
+    const arrivalMsById = {};
+    for (const [key, times] of Object.entries(legTimes)) {
+      const leg = byKey.get(key);
+      if (!leg.enabled) continue;
+      for (const [waypointId, offset] of Object.entries(leg.arrivalOffsetsById)) {
+        arrivalMsById[waypointId] = times.startMs + offset;
+      }
+    }
+
+    // Rule 2: a join waypoint waits for the latest incoming branch. The wait
+    // is recorded rather than folded into the arrival so the caller can show
+    // the author how long the join actually holds, and so the join's own
+    // pause/beacon still fires exactly once, at the resolved arrival.
+    const joinWaitsById = {};
+    for (const leg of byKey.values()) {
+      if (leg.rejoinAtId === null || !leg.enabled) continue;
+      const times = legTimes[leg.key];
+      if (!times) continue;
+      const ownArrival = arrivalMsById[leg.rejoinAtId];
+      if (ownArrival === undefined) continue;
+      if (times.endMs > ownArrival) {
+        const wait = times.endMs - ownArrival;
+        joinWaitsById[leg.rejoinAtId] = Math.max(joinWaitsById[leg.rejoinAtId] || 0, wait);
+      } else if (joinWaitsById[leg.rejoinAtId] === undefined) {
+        joinWaitsById[leg.rejoinAtId] = 0;
+      }
+    }
+
+    // Rule 3: every terminal endpoint counts, trunk included.
+    let totalDurationMs = 0;
+    for (const times of Object.values(legTimes)) {
+      totalDurationMs = Math.max(totalDurationMs, times.endMs);
+    }
+    for (const [waypointId, wait] of Object.entries(joinWaitsById)) {
+      const arrival = arrivalMsById[waypointId];
+      if (arrival !== undefined) totalDurationMs = Math.max(totalDurationMs, arrival + wait);
+    }
+
+    return { legs: legTimes, arrivalMsById, joinWaitsById, totalDurationMs, unresolved };
+  },
 };
+
+export { TRUNK_LEG_KEY };

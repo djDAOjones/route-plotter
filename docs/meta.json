@@ -180,7 +180,7 @@
       "format": "esm"
     },
     "src/core/PlayerCore.js": {
-      "bytes": 19655,
+      "bytes": 26275,
       "imports": [
         {
           "path": "src/services/BeaconRenderer.js",
@@ -2790,7 +2790,7 @@
       "format": "esm"
     },
     "src/models/Waypoint.js": {
-      "bytes": 18358,
+      "bytes": 19543,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3568,13 +3568,13 @@
     }
   },
   "outputs": {
-    ".docs-build-tWysJ3/app.js.map": {
+    ".docs-build-c6jr9O/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3147112
+      "bytes": 3158096
     },
-    ".docs-build-tWysJ3/app.js": {
+    ".docs-build-c6jr9O/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3640,7 +3640,7 @@
           "bytesInOutput": 10271
         },
         "src/core/PlayerCore.js": {
-          "bytesInOutput": 5682
+          "bytesInOutput": 7294
         },
         "src/services/AnimationEngine.js": {
           "bytesInOutput": 12814
@@ -3835,7 +3835,7 @@
           "bytesInOutput": 17028
         },
         "src/models/Waypoint.js": {
-          "bytesInOutput": 7163
+          "bytesInOutput": 7471
         },
         "src/app/wiringBus.js": {
           "bytesInOutput": 5264
@@ -3913,7 +3913,7 @@
           "bytesInOutput": 22065
         }
       },
-      "bytes": 1037638
+      "bytes": 1039558
     }
   }
 }

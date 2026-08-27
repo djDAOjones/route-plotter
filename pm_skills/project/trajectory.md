@@ -17,6 +17,16 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Phase 5 — split hero routes (in progress 2026-08-27)
+
+ROUTE-01a — The hero route can now describe branches: additive, null-defaulting
+branch links on Waypoint, a pure resolver that cuts a route into trunk plus
+contiguous branch runs and reports structural problems instead of repairing
+them, and a deterministic master-timeline composer implementing simultaneous
+fork start, latest-arrival rejoin and universal completion. Headless — linear
+projects keep their exact serialized shape and timeline. (2026-08-27) — see
+decision-log.
+
 ## Inspector foundation (shipped 2026-08-27)
 
 UI-02 — The waypoint list now shows the whole route: minors appear as indented,

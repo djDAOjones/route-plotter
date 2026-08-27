@@ -5,6 +5,11 @@ import { CAMERA_DEFAULTS, ZOOM_MODE } from '../services/CameraService.js';
  * Model representing a waypoint on the route
  * Encapsulates waypoint properties and provides methods for manipulation
  */
+/** Normalise an optional id-like option to a non-empty string or null. */
+function nonEmptyString(value) {
+  return typeof value === 'string' && value !== '' ? value : null;
+}
+
 export class Waypoint {
   constructor(options = {}) {
     // Position (normalized image coordinates 0-1)
@@ -13,6 +18,16 @@ export class Waypoint {
     
     // Type
     this.isMajor = options.isMajor !== undefined ? options.isMajor : true;
+
+    // Hero-route branch membership (ROUTE-01a). All three stay null on a
+    // linear route and are omitted from toJSON() when null, so an unsplit
+    // project keeps the exact serialized shape it has always had.
+    /** @type {string|null} Branch this waypoint belongs to; null = trunk */
+    this.branchId = nonEmptyString(options.branchId);
+    /** @type {string|null} On a branch's FIRST waypoint: the waypoint it forks from */
+    this.branchFrom = nonEmptyString(options.branchFrom);
+    /** @type {string|null} On a branch's LAST waypoint: the waypoint it rejoins; null = terminal */
+    this.branchRejoin = nonEmptyString(options.branchRejoin);
     
     // Property change tracking for performance optimization
     this._dirtyProps = new Set();
@@ -360,6 +375,11 @@ export class Waypoint {
       imgX: this.imgX,
       imgY: this.imgY,
       isMajor: this.isMajor,
+      // Branch links are omitted when null so a linear project's saved shape
+      // is byte-identical to a pre-ROUTE-01 save (approved contract).
+      ...(this.branchId ? { branchId: this.branchId } : {}),
+      ...(this.branchFrom ? { branchFrom: this.branchFrom } : {}),
+      ...(this.branchRejoin ? { branchRejoin: this.branchRejoin } : {}),
       segmentColor: this.segmentColor,
       segmentWidth: this.segmentWidth,
       segmentStyle: this.segmentStyle,

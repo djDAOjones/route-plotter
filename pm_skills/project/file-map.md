@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 266 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 268 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -11,9 +11,9 @@
 - `reviews` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
-- `src` — 91 file(s)
+- `src` — 92 file(s)
 - `styles` — 6 file(s)
-- `tests` — 58 file(s)
+- `tests` — 59 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -247,6 +247,9 @@
 - `src/utils/pathHeadPresets.js` — Built-in route-head registry, shared image decoding and custom/preset hydration boundary
 - `src/utils/pathWidthScale.js` — Log-scale thickness slider ↔ width (1–40px) mapping; single source shared by the DOM wiring and UIController bulk edits (Phase 3.5)
 - `src/utils/renderReference.js` — Pure visual-reference migration and current-to-authored short-edge scale calculation
+- `src/utils/routeBranches.js` — Pure hero-route branch resolution: cuts a
+  waypoint array into trunk plus contiguous branch runs, validates fork and
+  rejoin links and reports structural problems without repairing them
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
 - `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers)
@@ -254,8 +257,6 @@
 - `src/utils/uiReadouts.js` — Shared reference-pixel, effective-amplitude and background-overlay readout formatting with accessible range-value synchronisation
 - `src/utils/waypointCardActions.js` — Pure Reset/Apply-onward field ownership, target filtering, semantic no-op comparison and effect metadata for waypoint cards
 - `src/utils/waypointNaming.js` — Shared hierarchical route numbering
-  (`major`/`major.minor`, leg 0 for stranded minors) used by both the
-  sidebar waypoint list and the semantic scene outline
 
 ## styles
 
@@ -309,6 +310,9 @@
 - `tests/reviewAccessibility.test.js` — Keyboard semantics, modal focus, responsive/support/privacy shell, disclosure, card-action and accessible crowd-variation/busyness UI contracts
 - `tests/reviewPersistence.test.js` — Autosave honesty, transactional load/rollback, save revisions and undo-image restoration regressions
 - `tests/reviewTimeline.test.js` — Stateless comet, canonical transport/export and timing-invalidation review regressions
+- `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
+  problem reporting, master-timeline composition (simultaneous fork,
+  latest-arrival rejoin, universal completion) and linear-shape preservation
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
 - `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts
 - `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts
@@ -324,7 +328,5 @@
 - `tests/videoExporter.test.js` — Endpoint-inclusive frame planning, visibility throttling, cancellation and complete MediaRecorder/WebCodecs cleanup
 - `tests/waypointCardActions.test.js` — Reset/Apply-onward ownership, no-op reasons, content preservation, copy semantics and one-transaction integration contracts
 - `tests/waypointList.test.js` — UI-02 sidebar list contract: whole-route
-  rows, indented minors, selection ranges, rename, reorder-visible blocks
 - `tests/waypointNaming.test.js` — Route numbering and its agreement with
-  the scene-outline snapshot names
 - `tests/wiringBus.test.js` — Waypoint edit event compatibility, card-action refresh and exactly-once undo/render/list/autosave routing

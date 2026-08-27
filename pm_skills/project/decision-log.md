@@ -2,6 +2,46 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — branches are runs in the one waypoint array, not a second graph
+
+**Decision:** A hero-route branch is a *contiguous run* of waypoints sharing a
+`branchId`, stored in the same ordered array the route has always used, with
+`branchFrom` on the run's first waypoint and `branchRejoin` on its last. All
+three default to null and are omitted from `toJSON()` when null, so an unsplit
+project's save is byte-identical to a pre-ROUTE-01 save.
+
+**Alternatives rejected:** a dedicated `RouteGraph` of nodes and edges reads
+cleaner in isolation but forces a migration of every consumer — path,
+rendering, timing, persistence, export, outline — and cannot honour "preserve
+valid linear projects exactly" without carrying the array anyway. Reusing the
+crowd `GraphModel` was rejected outright: it is a weighted directed graph where
+dots *choose* an edge, and importing edge weights and probabilistic selection
+into hero-route storytelling would have made the two models mean the same
+thing when the approved contract says they must not.
+
+**Timeline composition:** `PlayerCore.composeBranchTimeline` resolves leg start
+times by relaxation over fork dependencies, so it is order-independent and
+terminates on a cyclic structure by reporting the survivors as `unresolved`
+rather than looping. Simultaneous start, latest-arrival rejoin recorded as a
+`joinWaitsById` entry (once per join, not once per incoming branch) and
+completion as the max over every terminal endpoint. A disabled branch keeps its
+place but contributes zero duration — otherwise hiding a branch would stretch
+the route it is hidden from.
+
+**Validation, not repair:** `resolveRouteBranches` never throws and never
+fixes a broken structure. A deleted fork target, a split run or a cycle comes
+back in `problems` with the runs still intact, so the route renders and the
+author is told what is wrong. Silent repair during a render would rewrite
+authored intent.
+
+**Scope:** ROUTE-01 was too large for one slice, so it is now ROUTE-01a
+(this: model + composition, headless), ROUTE-01b (rendering + camera),
+ROUTE-01c (authoring, `[sign-off]`) and ROUTE-01d (export parity). COMPOSE-01
+and COMPOSE-03 depend on the model, so they gate on ROUTE-01a; REV-05 needs
+the authoring UI to settle, so it gates on ROUTE-01c.
+
+**Link:** ROUTE-01a. 57 files / 808 tests green; no runtime behaviour change.
+
 ## 2026-08-27 — the route list shows minors, and one numbering serves both views
 
 **Decision:** The sidebar waypoint list renders the whole route. Minors appear
