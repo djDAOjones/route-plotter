@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 289 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 290 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -302,6 +302,9 @@
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding
+- `tests/headDirectionBranchWait.test.js` — BUG-01 contract: a wait indexed
+  past the end of a branch run falls through to that run's own path
+  direction, while an in-range wait still steers waypoint-to-waypoint
 - `tests/htmlExportCache.test.js` — HTML export fetches the standalone player bundle for the exact application build
 - `tests/imageAssetRoundTrip.test.js` — Persistence-safe image IDs and import→export→import asset round-trip contracts
 - `tests/interactionPointer.test.js` — Pointer transaction contracts: exactly-once mouse/touch/pen taps, common threshold, capture/window terminal fallback, cancellation, mode priority, group snapshots and teardown

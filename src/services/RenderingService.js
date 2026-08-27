@@ -665,8 +665,16 @@ export class RenderingService {
     };
     
     // If waiting at a waypoint, use direction from previous waypoint to current waypoint
-    // This prevents the cone from turning before the pause completes
-    if (isWaiting && pauseWaypointIndex >= 0 && waypoints && waypoints.length > 1) {
+    // This prevents the cone from turning before the pause completes.
+    // The bounds check is load-bearing, not defensive: a branched hero route
+    // renders each run with its own waypoint sub-array while
+    // pauseWaypointIndex indexes the whole route, so a wait further along the
+    // trunk lands past the end of a shorter branch run. Out of range means the
+    // wait is not this run's, and the run falls through to its own path-based
+    // direction below — the same contract MotionVisibilityService applies to
+    // this identical calculation.
+    if (isWaiting && pauseWaypointIndex >= 0 && pauseWaypointIndex < (waypoints?.length ?? 0)
+        && waypoints.length > 1) {
       if (pauseWaypointIndex > 0) {
         const prevWp = getWpPos(waypoints[pauseWaypointIndex - 1]);
         const currWp = getWpPos(waypoints[pauseWaypointIndex]);

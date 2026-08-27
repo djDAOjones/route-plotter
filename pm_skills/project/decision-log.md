@@ -2,6 +2,45 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-28 — a branch run must not read the trunk's wait index
+
+**Found while re-verifying export for DEPS-01, not by looking for it.** The
+ticket asks for an export re-verification after the mediabunny bump; the
+export threw instead — `Cannot read properties of undefined (reading 'imgX')`
+— on the autosaved branched project. Video export was broken outright for
+that shape, and scrubbing to the end of the timeline threw the same way.
+
+**Not caused by this session.** The only app source touched here was
+`ParamTooltip.js` and two stylesheets; `RenderingService.js` was untouched
+since the handover baseline. Confirmed by diff before diagnosing further, so
+the bump was never a suspect.
+
+**Root cause, caught live rather than reasoned about.** Instrumenting
+`getHeadDirection` in the browser showed the failing call receiving a
+three-waypoint array — `Trent Building, Sports fields, Library`, the *branch
+run* — while `animationEngine.state.pauseWaypointIndex` was `4`, an index into
+the whole six-waypoint route. `waypoints[4]` was `undefined`, and the guard
+checked only `waypoints.length > 1`, never that the index was in range.
+
+**The fix has an in-repo precedent, which is why it is a one-liner and not a
+redesign.** `MotionVisibilityService` performs the identical calculation and
+already guards it with `pauseWaypointIndex < waypoints.length`; the renderer's
+copy — written explicitly to match it ("same as AOV") — simply missed that
+clause. Out of range means the wait belongs to another run, so the run falls
+through to its own path-based direction, exactly as the AOV path does. The
+comment says why the bounds check is load-bearing rather than defensive, so it
+does not get "simplified" away later.
+
+**Evidence.** A unit test reproduces the crash from the observed shape (a
+three-waypoint run with the wait at index 4) and pins the fall-through, plus
+two tests that the guard does not disable the behaviour it protects — an
+in-range wait still steers waypoint-to-waypoint. In Chromium after the fix,
+export produces a valid 1.78 MB MP4 (`ftyp isom`) and a valid 3.70 MB WebM
+(EBML magic) with nothing thrown. Nothing was written to disk: the blob was
+captured at `URL.createObjectURL` and the anchor click swallowed.
+
+**Link:** DEPS-01 (whose verification surfaced it), ROUTE-01b, REV-04.
+
 ## 2026-08-28 — forced colours removes every focus ring, so outline carries it
 
 **A11Y-02 shipped, and it was worse than the ticket knew.** The ticket listed

@@ -25,6 +25,15 @@ never covered by the RP crosswalk — audited into DEPLOY-01, REL-01, PERF-01,
 LEGAL-01 and ICE-03. The backlog is now the single source of truth for what to
 do next. (2026-08-27) — see decision-log.
 
+## Branch rendering (shipped 2026-08-28)
+
+BUG-01 — A branched hero route no longer crashes on the trunk's wait index:
+each run renders with its own waypoint sub-array, so a wait past the end of a
+shorter branch run now falls through to that run's own path direction instead
+of reading undefined. Fixed a hard failure of video export, and of the final
+preview frame, for any branched project with a late wait. (2026-08-28) — see
+decision-log.
+
 ## Accessibility assurance (in progress 2026-08-27)
 
 A11Y-02 — Forced colours no longer erases the UI: focus is restored as a
