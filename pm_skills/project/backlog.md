@@ -30,11 +30,8 @@
 
 ### Next
 
-- [ ] **COMPOSE-04 Branch gesture from a bound node** · Phase 5 composition
-  [ready] — Add the waypoint “+” branch
-  gesture from a bound entry node.
 - [ ] **DEMO-01 Example projects as living fixtures** · Showcase/release
-  [gated: COMPOSE-04 impl] — Replace bare example backgrounds
+  [ready] — Replace bare example backgrounds
   with approved example projects that demonstrate route, crowd and anchors and
   double as living fixtures.
 - [ ] **REV-05 Accessibility assurance** · Accessibility assurance

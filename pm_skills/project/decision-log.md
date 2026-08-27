@@ -2,6 +2,55 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — the branch handle is an offer, and it must survive a tap
+
+**Decision:** A waypoint that a *bound entry* node sits on carries a "+" handle
+beside its marker. Clicking it emits `route:branch-arm` — the same event
+Alt+click emits — so there is one branch path through the code, not a second
+mechanism that could drift from it. Entry nodes only: a pass-through or exit
+node marks a crowd already moving through, not a moment the story opens at, and
+a broken binding offers nothing.
+
+**Its own hit target, and not hover-gated.** The handle sits clear of the
+marker so it cannot steal the marker's clicks — which also puts it outside the
+marker's hit radius, so a cascade that only looked for handles *after* a
+waypoint hit never reached it. It is now checked ahead of the waypoint, beside
+the area handles.
+
+More importantly, the click path hit-tests the handle itself rather than
+trusting the hover state. Gating on hover left the handle dead on touch and
+pen, where a tap never hovers first — exactly the devices REV-03 unified this
+transaction for. Hover is the visual affordance; it is not the gate. This was
+found because the hover cascade is not reproducible in browser automation, and
+chasing that turned up the real defect underneath it.
+
+**One "+" routine:** the leg-midpoint handle and this one now draw through
+`_drawPlusHandle`, so two offers that mean "add something here" cannot drift
+into looking different.
+
+**Link:** COMPOSE-04. 64 files / 963 tests green. Verified in production
+Chromium: the handle on the crowd's entry waypoint armed the fork with no hover
+beforehand, and the place click created `Waypoint 1·B1` alongside the existing
+`2·B1` — correctly lettered per fork — with no structural problems and zero
+console entries.
+
+## 2026-08-27 — a closed client socket is not a port holder
+
+**Decision:** `scripts/restart.sh` matches `lsof -sTCP:LISTEN` when deciding
+whether the port is held by a foreign process.
+
+**Rationale:** it matched *any* socket on port 3000, including a browser's
+stale CLOSED client connections to the server it had just stopped. The
+documented one-command boot then refused to start — correctly reporting that it
+would not kill a process it does not own, but about sockets that hold nothing.
+The ownership-safety contract is intact and still refuses a genuine foreign
+listener; it just no longer mistakes a hung-up caller for one.
+
+**Found by:** the boot failing after a dev-server restart during COMPOSE-04
+verification, with nothing listening on the port at all.
+
+**Link:** DEV-01. `tests/restartSafety.test.sh` still green.
+
 ## 2026-08-27 — the crowd wait is solved, not iterated, and then baked
 
 **Decision:** "Wait here for this crowd" computes the wait a waypoint needs so

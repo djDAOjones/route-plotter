@@ -339,10 +339,21 @@ export class RenderingService {
   renderHoverAffordances(ctx, state) {
     const { hover, waypoints, styles, imageToCanvas, selectedWaypoint } = state;
 
-    if (hover.type === 'waypoint') {
+    if (hover.type === 'waypoint' || hover.type === 'waypoint-plus') {
       const wp = hover.waypoint;
+      if (!wp || !waypoints.includes(wp)) return;
+
+      // A waypoint a bound crowd enters from carries a branch handle
+      // (COMPOSE-04). Drawn even when the waypoint is selected — the handle
+      // is a separate target, not part of the selection ring.
+      if (state.branchHandleAt && state.branchHandleWaypoints?.has(wp.id)) {
+        const handle = state.branchHandleAt(wp);
+        this._drawPlusHandle(ctx, handle.x, handle.y,
+          handle.radius, hover.type === 'waypoint-plus');
+      }
+
       // Selection already draws its own ring; stale hovers are skipped
-      if (!wp || wp === selectedWaypoint || !waypoints.includes(wp)) return;
+      if (wp === selectedWaypoint) return;
       const rawSize = wp.isMajor
         ? (wp.dotSize || styles.dotSize)
         : (styles.minorDotSize || RENDERING.MINOR_DOT_SIZE);
@@ -375,31 +386,46 @@ export class RenderingService {
       const midImg = state.pathPoints[midIdx];
       if (!midImg) return;
       const pos = imageToCanvas(midImg.x, midImg.y);
-      const active = hover.type === 'leg-plus';
-      const f = this._zoomClampFactor;
-      const r = (active ? 11 : 9) * f;
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = active ? RENDERING.HOVER_ACCENT_COLOR : 'rgba(255, 255, 255, 0.95)';
-      ctx.fill();
-      ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
-      ctx.lineWidth = 1.5 * f;
-      ctx.stroke();
-      // The plus sign
-      const arm = r * 0.5;
-      ctx.beginPath();
-      ctx.moveTo(pos.x - arm, pos.y);
-      ctx.lineTo(pos.x + arm, pos.y);
-      ctx.moveTo(pos.x, pos.y - arm);
-      ctx.lineTo(pos.x, pos.y + arm);
-      ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
-      ctx.lineWidth = 2 * f;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-      ctx.restore();
+      this._drawPlusHandle(ctx, pos.x, pos.y, null, hover.type === 'leg-plus');
     }
+  }
+
+  /**
+   * The "+" insert handle, shared by the leg midpoint and the waypoint branch
+   * handle so both affordances read as the same offer.
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} x
+   * @param {number} y
+   * @param {number|null} radius Explicit radius, or null for the default
+   * @param {boolean} active True while the pointer is on it
+   * @private
+   */
+  _drawPlusHandle(ctx, x, y, radius, active) {
+    const f = this._zoomClampFactor;
+    const r = radius !== null && radius !== undefined
+      ? radius * f
+      : (active ? 11 : 9) * f;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = active ? RENDERING.HOVER_ACCENT_COLOR : 'rgba(255, 255, 255, 0.95)';
+    ctx.fill();
+    ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
+    ctx.lineWidth = 1.5 * f;
+    ctx.stroke();
+    // The plus sign
+    const arm = r * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x - arm, y);
+    ctx.lineTo(x + arm, y);
+    ctx.moveTo(x, y - arm);
+    ctx.lineTo(x, y + arm);
+    ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
+    ctx.lineWidth = 2 * f;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.restore();
   }
 
   /**

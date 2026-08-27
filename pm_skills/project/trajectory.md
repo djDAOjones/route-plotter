@@ -19,6 +19,14 @@
 
 ## Phase 5 — crowds bound to the route (in progress 2026-08-27)
 
+COMPOSE-04 — A waypoint a bound crowd enters from carries a branch "+" handle:
+clicking it arms the same fork gesture Alt+click does, hit-tested directly so a
+touch tap reaches it. (2026-08-27) — see decision-log.
+
+DEV-01 — `restart.sh` no longer refuses to boot because a browser left a closed
+client socket on the port; the check matches listeners only. (2026-08-27) — see
+decision-log.
+
 COMPOSE-02 — "Wait here for this crowd" solves, in closed form, the wait a
 waypoint needs so the head does not leave before the last dot arrives, and
 bakes it as an ordinary authored pause. (2026-08-27) — see decision-log.

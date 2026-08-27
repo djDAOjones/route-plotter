@@ -203,7 +203,11 @@ dev_pids() {
 
 assert_port_available() {
   local foreign_pids
-  foreign_pids="$(lsof -ti :"${PORT}" 2>/dev/null | sort -u || true)"
+  # LISTEN only. A port is held by whatever is listening on it; a browser's
+  # stale CLOSED client socket to the port we just stopped is not a holder,
+  # and matching those made the documented one-command boot refuse to start
+  # until the browser itself was closed (found 2026-08-27).
+  foreign_pids="$(lsof -ti :"${PORT}" -sTCP:LISTEN 2>/dev/null | sort -u || true)"
   if [[ -n "${foreign_pids}" ]]; then
     echo "❌ Port ${PORT} is held by a process this project does not own:" >&2
     ps -p "$(echo "${foreign_pids}" | paste -sd, -)" -o pid=,command= >&2 || true

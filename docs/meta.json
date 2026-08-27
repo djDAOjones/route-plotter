@@ -42,7 +42,7 @@
       "format": "esm"
     },
     "src/utils/routeAnchors.js": {
-      "bytes": 5481,
+      "bytes": 6508,
       "imports": [],
       "format": "esm"
     },
@@ -280,7 +280,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 103367,
+      "bytes": 104329,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2617,7 +2617,7 @@
       "format": "esm"
     },
     "src/handlers/InteractionHandler.js": {
-      "bytes": 40318,
+      "bytes": 41105,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2904,7 +2904,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 51984,
+      "bytes": 52741,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2935,6 +2935,11 @@
           "path": "src/utils/routeBranches.js",
           "kind": "import-statement",
           "original": "../utils/routeBranches.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
         },
         {
           "path": "src/app/backgroundLoading.js",
@@ -3224,7 +3229,7 @@
       "format": "esm"
     },
     "src/app/pointer.js": {
-      "bytes": 8565,
+      "bytes": 10596,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3418,7 +3423,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 45975,
+      "bytes": 46259,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3659,19 +3664,24 @@
           "path": "src/utils/pathHeadPresets.js",
           "kind": "import-statement",
           "original": "./utils/pathHeadPresets.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "./utils/routeAnchors.js"
         }
       ],
       "format": "esm"
     }
   },
   "outputs": {
-    ".docs-build-3iRA6U/app.js.map": {
+    ".docs-build-kXgaFI/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3276518
+      "bytes": 3284442
     },
-    ".docs-build-3iRA6U/app.js": {
+    ".docs-build-kXgaFI/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3698,7 +3708,7 @@
           "bytesInOutput": 2763
         },
         "src/utils/routeAnchors.js": {
-          "bytesInOutput": 1404
+          "bytesInOutput": 1621
         },
         "src/models/Emitter.js": {
           "bytesInOutput": 4772
@@ -3764,7 +3774,7 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 28007
+          "bytesInOutput": 28249
         },
         "src/utils/crowdArrival.js": {
           "bytesInOutput": 843
@@ -3881,7 +3891,7 @@
           "bytesInOutput": 38446
         },
         "src/handlers/InteractionHandler.js": {
-          "bytesInOutput": 17639
+          "bytesInOutput": 17799
         },
         "src/services/UndoService.js": {
           "bytesInOutput": 2379
@@ -3956,7 +3966,7 @@
           "bytesInOutput": 1721
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 21681
+          "bytesInOutput": 21895
         },
         "src/utils/assetReferences.js": {
           "bytesInOutput": 2653
@@ -3989,7 +3999,7 @@
           "bytesInOutput": 19139
         },
         "src/app/pointer.js": {
-          "bytesInOutput": 934
+          "bytesInOutput": 1422
         },
         "src/utils/routeTrace.js": {
           "bytesInOutput": 1877
@@ -4022,10 +4032,10 @@
           "bytesInOutput": 1770
         },
         "src/main.js": {
-          "bytesInOutput": 22189
+          "bytesInOutput": 22275
         }
       },
-      "bytes": 1064963
+      "bytes": 1066370
     }
   }
 }

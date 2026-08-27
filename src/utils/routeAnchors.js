@@ -148,3 +148,30 @@ export function releaseStartFraction(emitter, context = {}) {
   if (total <= 0) return emitter?.releaseStart ?? 0;
   return Math.max(0, Math.min(1, resolved.ms / total));
 }
+
+/**
+ * Waypoints that a crowd enters the scene from (COMPOSE-04).
+ *
+ * A traced or hand-bound `entry` node sitting on a waypoint means "this is
+ * where a crowd joins the story". That is exactly the place an author is most
+ * likely to want the route to fork too — the hero peels off while the crowd
+ * arrives — so those waypoints are the ones offered a branch handle.
+ *
+ * Entry nodes only: a pass-through or exit node marks somewhere a crowd is
+ * already moving through, not a moment the story opens at.
+ *
+ * @param {Object|null} scene
+ * @returns {Set<string>} Waypoint ids
+ */
+export function boundEntryWaypointIds(scene) {
+  const ids = new Set();
+  for (const layer of scene?.getFlowLayers?.() || []) {
+    if (!layer.visible) continue;
+    for (const node of layer.graph?.getNodes?.() || []) {
+      if (node.type !== 'entry' || !node.anchorWaypointId) continue;
+      if (!node.isAnchorResolved?.()) continue; // a broken binding offers nothing
+      ids.add(node.anchorWaypointId);
+    }
+  }
+  return ids;
+}

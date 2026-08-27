@@ -80,6 +80,7 @@ import { restoreStartupProject } from './app/startup.js';
 import { loadExampleBackground } from './app/backgroundLoading.js';
 import { clearProject } from './app/projectReset.js';
 import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
+import { boundEntryWaypointIds } from './utils/routeAnchors.js';
 
 // Main application class for Route Plotter v3
 class RoutePlotter {
@@ -874,6 +875,9 @@ class RoutePlotter {
       branchTimeline: this.getBranchTimeline?.() || null,
       // Route moments a bound crowd reads (COMPOSE-01), one way only.
       routeAnchors: this.getRouteArrivalMap?.() || null,
+      // Waypoints a bound crowd enters from carry a branch handle (COMPOSE-04)
+      branchHandleWaypoints: boundEntryWaypointIds(this.scene),
+      branchHandleAt: (waypoint) => this.waypointBranchHandleAt(waypoint),
       styles: this.styles,
       selectedWaypoint: this.selectedWaypoint,
       selectedWaypoints: this.selectedWaypoints,

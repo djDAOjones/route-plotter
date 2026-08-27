@@ -639,6 +639,23 @@ export class InteractionHandler {
       return;
     }
     
+    // The branch handle beside a crowd-entry waypoint arms the same fork
+    // gesture Alt+click does, so there is one branch path, not two (COMPOSE-04).
+    //
+    // Hit-tested directly rather than gated on the hover state: a touch or pen
+    // tap never hovers first, so trusting `_hoverKind` here would have left the
+    // handle dead on exactly the devices REV-03 unified this transaction for.
+    // Hover stays what it should be — the visual affordance, not the gate.
+    if (!isShiftClick && !isMetaClick) {
+      let armed = false;
+      this.eventBus.emit('waypoint:check-branch-handle', { x, y }, (waypoint) => {
+        if (!waypoint) return;
+        this.eventBus.emit('route:branch-arm', { waypoint });
+        armed = true;
+      });
+      if (armed) return;
+    }
+
     // Check if clicking on existing waypoint
     this.eventBus.emit('waypoint:check-at-position', { x, y }, (waypoint) => {
       if (waypoint) {

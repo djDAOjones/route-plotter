@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 278 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 279 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -13,7 +13,7 @@
 - `specs` — 15 file(s)
 - `src` — 96 file(s)
 - `styles` — 6 file(s)
-- `tests` — 65 file(s)
+- `tests` — 66 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -241,8 +241,6 @@
 - `src/utils/branchTiming.js` — Pure per-run branch timing: builds each run's
 - `src/utils/busynessEnvelope.js` — Pure busyness-handle normalisation/validation, segment-area compilation and inverse-density sampling for seeded release times
 - `src/utils/crowdArrival.js` — Pure crowd-arrival maths shared with
-  SwarmEngine: per-dot onset and journey, last arrival, and the closed-form
-  solve for the route wait that outlasts a crowd
 - `src/utils/entityId.js` — Shared persisted structural-ID length boundary that leaves authored display text untouched
 - `src/utils/focusTrap.js` — Modal inerting, focus containment/wrap, Escape handling and origin-focus restoration
 - `src/utils/graphRouting.js` — Shared directed departures, overflow-safe weight normalisation and stable whole-percentage traffic shares
@@ -284,11 +282,12 @@
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
+- `tests/branchHandle.test.js` — COMPOSE-04 contract: which waypoints are
+  offered a branch handle, its geometry and hit-test, and its reachability
+  without a preceding hover
 - `tests/branchTiming.test.js` — ROUTE-01b contract: run timing, master
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
 - `tests/crowdArrival.test.js` — COMPOSE-02 contract: onset/journey maths,
-  the self-consistency of the solved wait under its own timeline growth,
-  unsatisfiable cases, and scheduleDots agreeing with evaluate
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)

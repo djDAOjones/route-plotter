@@ -14,6 +14,7 @@ import { snapToAngle } from '../utils/snapToAngle.js';
 import {
   branchInsertIndex, canForkFrom, canRejoinBranch, branchEndInfo,
 } from '../utils/routeBranches.js';
+import { boundEntryWaypointIds } from '../utils/routeAnchors.js';
 import { loadBackgroundFile } from './backgroundLoading.js';
 
 /**
@@ -1084,6 +1085,10 @@ export const wiringControllersMixin = {
       if (callback) callback(isWithin);
     });
     
+    this.eventBus.on('waypoint:check-branch-handle', ({ x, y }, callback) => {
+      if (callback) callback(this.findBranchHandleAt(x, y, boundEntryWaypointIds(this.scene)));
+    });
+
     this.eventBus.on('waypoint:check-at-position', (pos, callback) => {
       const waypoint = this.findWaypointAt(pos.x, pos.y);
       if (callback) callback(waypoint);
@@ -1112,6 +1117,15 @@ export const wiringControllersMixin = {
         if (areaHandle) {
           const { waypoint, imageToScreen: _imageToScreen, ...handle } = areaHandle;
           hover = { type: 'area-handle', waypoint, handle };
+        }
+
+        if (!hover) {
+          // The branch handle beside a waypoint a bound crowd enters from
+          // (COMPOSE-04): the hero peels off exactly where the crowd joins.
+          // Checked ahead of the waypoint because it deliberately sits clear
+          // of the marker, and so outside the marker's own hit radius.
+          const forkable = this.findBranchHandleAt(x, y, boundEntryWaypointIds(this.scene));
+          if (forkable) hover = { type: 'waypoint-plus', waypoint: forkable };
         }
 
         if (!hover) {
