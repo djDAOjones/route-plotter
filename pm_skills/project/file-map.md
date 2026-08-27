@@ -283,8 +283,6 @@
 - `tests/GraphNode.test.js` — Graph-node type, normalised-position and serialisation contracts
 - `tests/Scene.test.js` — Ordered flow-layer CRUD, movement, clearing and persistence contracts
 - `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
-  names, ids, heading order, landmarks, and the two AAA rules the live audit
-  caught (skip-link target, Edit/Preview contrast)
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
