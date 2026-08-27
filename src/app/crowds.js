@@ -22,6 +22,7 @@ import {
   MAX_BUSYNESS_HANDLES,
   normalizeBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
+import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
@@ -582,6 +583,48 @@ export const crowdsMixin = {
       // crowd:selected must land first so the network mixin edits this layer.
       this.eventBus.emit('network:guide-changed', layer);
     }
+  },
+
+  /**
+   * Trace the hero route into the selected crowd's guide network (COMPOSE-03).
+   *
+   * A copy, not a view: the traced network is the author's to reshape, and
+   * nothing they do to it moves the route. Each traced node keeps a one-way
+   * binding to the waypoint it came from, so moving that waypoint carries the
+   * node with it rather than stranding the copy.
+   *
+   * @param {FlowLayer} [layer=this.selectedCrowd]
+   * @returns {boolean} True when the network was replaced
+   */
+  traceRouteIntoCrowd(layer = this.selectedCrowd) {
+    if (!layer) {
+      this.eventBus.emit('ui:toast', { message: 'Select a crowd to trace the route into' });
+      return false;
+    }
+
+    const trace = traceRouteIntoGraph(this.waypoints);
+    if (trace.problems.length > 0) {
+      this.eventBus.emit('ui:toast', { message: trace.problems[0].detail });
+      return false;
+    }
+
+    // Put the pen down first: the trace replaces every node, and a half-drawn
+    // edge would be left pointing at one that no longer exists.
+    if (this.networkEditService?.active) this.networkEditService.exit();
+
+    const applied = applyTraceToLayer(layer, trace);
+    // Anchored nodes need their positions resolved before anything renders.
+    this.calculatePath();
+    this.saveUndoState();
+    this.autoSave();
+    this.updateLayersStrip();
+    this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-network-traced', layerId: layer.id });
+
+    const message = `Traced the route into ${layer.name} — ${applied.nodes} nodes, ${applied.edges} paths`;
+    this.announce(message);
+    this.eventBus.emit('ui:toast', { message });
+    return true;
   },
 
   /**

@@ -30,15 +30,12 @@
 
 ### Next
 
-- [ ] **COMPOSE-03 Trace route into guide network** · Phase 5 composition
-  [ready] — Trace the compatible hero route into a one-way
-  copied guide network so crowds can follow it and branch.
 - [ ] **COMPOSE-02 Baked last-arrival wait** · Phase 5 composition
   [ready] — Fit a route wait to the analytically computed
   last crowd arrival as a baked authored value, never a live timing
   dependency.
 - [ ] **COMPOSE-04 Branch gesture from a bound node** · Phase 5 composition
-  [gated: COMPOSE-03 impl] — Add the waypoint “+” branch
+  [ready] — Add the waypoint “+” branch
   gesture from a bound entry node.
 - [ ] **DEMO-01 Example projects as living fixtures** · Showcase/release
   [gated: COMPOSE-02 impl, COMPOSE-04 impl] — Replace bare example backgrounds

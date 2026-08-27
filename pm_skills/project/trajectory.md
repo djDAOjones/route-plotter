@@ -19,6 +19,12 @@
 
 ## Phase 5 — crowds bound to the route (in progress 2026-08-27)
 
+COMPOSE-03 — A crowd's network can be traced from the route: a node per major,
+an edge per leg carrying that leg's minors as control points, and branches
+traced as edges leaving the fork and returning to the rejoin. The copy is the
+author's to reshape and each node stays bound to its waypoint. (2026-08-27) —
+see decision-log.
+
 COMPOSE-01 — A crowd can follow the route: a graph node binds to a waypoint's
 position and an emitter's release binds to a route moment (arrival, pause end
 or route completion), both resolved from live route state. Authored positions

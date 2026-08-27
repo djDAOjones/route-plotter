@@ -3229,8 +3229,19 @@
       ],
       "format": "esm"
     },
+    "src/utils/routeTrace.js": {
+      "bytes": 6638,
+      "imports": [
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "./routeBranches.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/app/crowds.js": {
-      "bytes": 33331,
+      "bytes": 35081,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3246,12 +3257,17 @@
           "path": "src/utils/busynessEnvelope.js",
           "kind": "import-statement",
           "original": "../utils/busynessEnvelope.js"
+        },
+        {
+          "path": "src/utils/routeTrace.js",
+          "kind": "import-statement",
+          "original": "../utils/routeTrace.js"
         }
       ],
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 23282,
+      "bytes": 24229,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3634,13 +3650,13 @@
     }
   },
   "outputs": {
-    ".docs-build-4IHyxE/app.js.map": {
+    ".docs-build-udJHzz/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3244475
+      "bytes": 3258120
     },
-    ".docs-build-4IHyxE/app.js": {
+    ".docs-build-udJHzz/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3957,11 +3973,14 @@
         "src/app/pointer.js": {
           "bytesInOutput": 934
         },
+        "src/utils/routeTrace.js": {
+          "bytesInOutput": 1877
+        },
         "src/app/crowds.js": {
-          "bytesInOutput": 18358
+          "bytesInOutput": 19039
         },
         "src/app/network.js": {
-          "bytesInOutput": 10777
+          "bytesInOutput": 11268
         },
         "src/utils/sceneSemantics.js": {
           "bytesInOutput": 4300
@@ -3988,7 +4007,7 @@
           "bytesInOutput": 22189
         }
       },
-      "bytes": 1057987
+      "bytes": 1061036
     }
   }
 }

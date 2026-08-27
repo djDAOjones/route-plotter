@@ -50,9 +50,11 @@ export const networkMixin = {
    */
   setupNetworkControls() {
     this._editNetworkBtn = document.getElementById('network-edit-btn');
+    this._traceRouteBtn = document.getElementById('crowd-trace-route-btn');
     this._guideHintEl = document.getElementById('crowd-guide-hint');
 
     this._editNetworkBtn?.addEventListener('click', () => this.enterNetworkEditMode());
+    this._traceRouteBtn?.addEventListener('click', () => this.traceRouteIntoCrowd());
 
     // ── Guide changes (emitted by the crowds mixin's select wiring) ──
     // Switching an empty-network crowd to Custom network hands the user
@@ -375,6 +377,19 @@ export const networkMixin = {
       this._editNetworkBtn.disabled = this.networkEditService.active;
       this._editNetworkBtn.textContent =
         this.networkEditService.active ? 'Editing network…' : 'Edit network';
+    }
+    if (this._traceRouteBtn) {
+      // Tracing needs a graph-guided crowd to write into and a route worth
+      // copying. It stays available while the pen is live: switching to a
+      // custom network hands you the pen immediately, which is exactly the
+      // moment "or just trace the route" is most useful (COMPOSE-03).
+      const graphGuided = !!layer && layer.guideType === 'graph';
+      const hasRoute = (this.waypoints?.length || 0) >= 2;
+      this._traceRouteBtn.hidden = !graphGuided;
+      this._traceRouteBtn.disabled = !hasRoute;
+      this._traceRouteBtn.title = hasRoute
+        ? 'Copy the route into this crowd\u2019s network, so its dots follow the same shape and can branch where the route branches'
+        : 'Add at least two route waypoints first';
     }
     if (this._guideHintEl && layer) {
       if (layer.guideType !== 'graph') {

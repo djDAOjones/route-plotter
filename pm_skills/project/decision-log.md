@@ -2,6 +2,46 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — tracing the route makes a copy that still follows it
+
+**Decision:** "Trace route into network" replaces the selected crowd's guide
+network with one mirroring the route: a node per **major** waypoint, an edge
+per leg carrying that leg's **minors as control points**, and `one-way` edges
+throughout. Branches trace as edges leaving the fork node and returning to the
+rejoin node, so a crowd splits exactly where the route splits.
+
+**A copy that still follows.** Every traced node keeps a COMPOSE-01 binding to
+the waypoint it came from, so moving that waypoint carries the node rather than
+stranding the copy — but the network is otherwise the author's: retune weights,
+add shortcuts, draw extra nodes, none of which reaches back into the route.
+That is the one-way rule paying for itself twice.
+
+**Minors are geometry, not junctions.** A node at a minor would be a decision
+point the route does not have, and a crowd would treat it as a place to choose.
+Carrying minors as edge control points keeps the guide curve the route's own
+curve instead of a straight chord between majors.
+
+**Entries and exits are derived, not declared:** a node with no incoming edge
+is an entry, one with no outgoing edge an exit. A branched route therefore
+yields several exits without the caller reasoning about topology.
+
+**Refuse rather than half-build:** a route with fewer than two majors, or one
+whose branch structure has an unresolved fork or rejoin, is refused with a
+reason. A partial trace would leave edges pointing at endpoints that were never
+created.
+
+**Availability:** the button stays enabled while the pen is live — switching a
+crowd to "Custom network" hands you the pen immediately, which is exactly when
+"or just trace the route" is most useful. Clicking it puts the pen down first,
+because the trace replaces every node and a half-drawn edge would be left
+pointing at one that no longer exists.
+
+**Link:** COMPOSE-03. 62 files / 923 tests green. Verified in production
+Chromium on the branched route: 4 bound nodes with the first an entry and the
+last an exit, 4 one-way edges including the fork→branch and branch→rejoin
+pair, and the trunk leg carrying its 2 minors as control points. Zero console
+entries.
+
 ## 2026-08-27 — a bound crowd reads the route; the route never reads the crowd
 
 **Decision:** `GraphNode.anchorWaypointId` binds a node's *evaluated* position

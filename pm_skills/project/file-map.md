@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 274 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 276 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -11,9 +11,9 @@
 - `reviews` — 6 file(s)
 - `scripts` — 3 file(s)
 - `specs` — 15 file(s)
-- `src` — 94 file(s)
+- `src` — 95 file(s)
 - `styles` — 6 file(s)
-- `tests` — 63 file(s)
+- `tests` — 64 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -249,9 +249,10 @@
 - `src/utils/pathWidthScale.js` — Log-scale thickness slider ↔ width (1–40px) mapping; single source shared by the DOM wiring and UIController bulk edits (Phase 3.5)
 - `src/utils/renderReference.js` — Pure visual-reference migration and current-to-authored short-edge scale calculation
 - `src/utils/routeAnchors.js` — Pure one-way route→crowd binding: resolves
-  anchored graph nodes to waypoint positions and emitter release windows to
-  route moments, reporting broken references instead of repairing them
 - `src/utils/routeBranches.js` — Pure hero-route branch resolution: cuts a
+- `src/utils/routeTrace.js` — Pure trace of the hero route into a crowd guide
+  network: node per major, edge per leg with minors as control points,
+  branches as fork/rejoin edges, derived entries and exits
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
 - `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers)
@@ -316,9 +317,10 @@
 - `tests/reviewPersistence.test.js` — Autosave honesty, transactional load/rollback, save revisions and undo-image restoration regressions
 - `tests/reviewTimeline.test.js` — Stateless comet, canonical transport/export and timing-invalidation review regressions
 - `tests/routeAnchors.test.js` — COMPOSE-01 contract: node/emitter binding,
-  authored-intent preservation, broken-reference fallback and warning
-  cadence, and unanchored swarm determinism
 - `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
+- `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across
+  linear and branched routes, refusal cases, and the copy's independence
+  from the route it was traced from
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
 - `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts
 - `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts
