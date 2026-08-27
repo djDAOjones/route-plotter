@@ -60,6 +60,12 @@
   accent bars, focus rings, the leg “+” and beacon colours have none. Needs
   devtools forced-colours emulation to verify, so pair it with REV-05's
   residual.
+- [ ] **DEPS-01 Consider dependency upgrades across the board** · Engineering
+  maturity [ready] — Owner-requested (2026-08-27 maintenance). Evaluate and
+  take deliberate upgrades: mediabunny 1.55.1→1.55.3 (runtime — re-verify
+  export), vitest 4.1.10→4.1.11, jsdom 27→29 (two majors, test env), plus any
+  transitive drift; full gate after each. Relates to REV-07 (icebox), which
+  would automate this recurring pass.
 
 ### Icebox
 
