@@ -6,9 +6,11 @@
 
 ## Active
 
-<!-- Current is the active lane or has a named residual gate. Next is ordered
-     by dependency chain rather than deadline; [ready] marks runnable
-     successors. Quarantine is not schedulable.
+<!-- Current is the active lane or has a named residual gate — today it holds
+     the three assurance items whose only remaining work is owner evidence, so
+     Next reads as the genuinely schedulable queue. Next is ordered by
+     dependency chain rather than deadline; [ready] marks runnable successors.
+     Quarantine is not schedulable.
 
      Gate vocabulary: `[gated: X impl]` waits on X's *code* landing;
      `[verify: …]` is an evidence-only residual that blocks nothing
@@ -27,22 +29,27 @@
   — Unified Pointer Events, captured group drag and cancel/no-op transactions
   are implemented and green in automation plus production Chromium. Record the
   physical mobile pass.
+- [~] **REV-05 Accessibility assurance** · Accessibility assurance
+  [verify: NVDA/VoiceOver + forced-colours emulation] — Everything automatable
+  is done and green: structural audit, AAA contrast sampling, 400%-zoom reflow,
+  and axe over both the static shell and the shell as JavaScript leaves it
+  (48 rules, zero violations, contrast evaluated live in Chromium). A11Y-01 and
+  A11Y-02 closed the two findings this audit spun out, so forced-colours
+  fallbacks now exist and are proved to ship — what remains is *looking* at
+  them under a real high-contrast theme, plus the screen-reader pass. Both stay
+  owner-run.
 
 ### Next
 
-- [~] **REV-05 Accessibility assurance** · Accessibility assurance
-  [verify: NVDA/VoiceOver + forced colours] — Structural audit, AAA contrast
-  sampling, 400%-zoom reflow and axe-core all green in production Chromium
-  (48 rules, zero violations, contrast evaluated live), with two AAA failures
-  fixed and axe now a standing gate. Screen readers stay owner-run; forced
-  colours needs devtools emulation.
 - [ ] **DEPLOY-01 Release the remediation branch** · Release
   [blocked: owner calls the release] — The owner held the merge on 2026-08-27
   (`f1c14b9`): the live site stays on v3.2.618 until they call it. This ticket
   exists so RP-07's residual is tracked rather than forgotten, not to reopen
-  the decision. When called: `review-remediation` is 41 commits ahead of
-  `main`, which is what Pages serves. Also settle GitHub branch-protection and
-  Pages permissions, which the review could inspect only from repository files.
+  the decision. When called: `review-remediation` is 42 commits ahead of
+  `main` as of `c993ea9` — a number that goes stale on every commit, so read it
+  with `git rev-list --count origin/main..review-remediation` rather than
+  trusting this line. Also settle GitHub branch-protection and Pages
+  permissions, which the review could inspect only from repository files.
 - [ ] **REL-01 Decide the production source-map policy** · Release
   [ready] [sign-off] — `docs/app.js.map` publishes 3.1 MB carrying the full
   unminified source of 89 first-party files (`sourcesContent`). The repository
