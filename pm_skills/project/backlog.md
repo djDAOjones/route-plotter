@@ -67,8 +67,8 @@
   (dev-only) are MPL-2.0. Notices and licence text shipped under REV-09, but
   the review flagged that a technical review cannot give legal advice and the
   owner should confirm the redistribution posture is what they intend. Review
-  §18 "MPL/source-notice obligations". Pair with DEPS-01, which moves those
-  same versions.
+  §18 "MPL/source-notice obligations". DEPS-01 has since shipped, so the
+  versions to confirm are settled: mediabunny 1.55.3 and axe-core 4.13.0.
 - [ ] **REVEAL-01 Spotlight reveal that fades behind the head** · Reveal modes
   [ready] — Owner: "the spot reveals the background, but then its revealing
   effect fades out over time". Not currently possible: the mask repaints every
