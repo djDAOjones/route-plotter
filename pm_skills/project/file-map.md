@@ -1,19 +1,19 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 282 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 286 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
 - `_Joe` — 45 file(s)
-- `docs` — 17 file(s)
+- `docs` — 20 file(s)
 - `images` — 6 file(s)
 - `reviews` — 6 file(s)
 - `scripts` — 4 file(s)
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 67 file(s)
+- `tests` — 68 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -96,6 +96,9 @@
 
 - `docs/app.js` — Generated, minified main application bundle served by GitHub Pages
 - `docs/app.js.map` — Generated source map for the Pages application bundle
+- `docs/examples/nervous-system-flow.zip` — Generated downloadable example project save (Pages output)
+- `docs/examples/parm-aerial-walk.zip` — Generated downloadable example project save (Pages output)
+- `docs/examples/uon-open-day.zip` — Generated downloadable example project save (Pages output)
 - `docs/images/Court.png` — Generated Pages copy of the Court example background
 - `docs/images/Garlic.jpg` — Generated Pages copy of the Garlic example background
 - `docs/images/Nervous_System.jpg` — Generated Pages copy of the nervous-system example background
@@ -141,8 +144,6 @@
 
 - `scripts/README.md` — usage reference for the maintainer scripts
 - `scripts/build-examples.mjs` — Assembles the downloadable example project
-  archives from a definition plus its approved background, refusing any
-  background not in the public-asset manifest
 - `scripts/build.sh` — maintainer wrapper: `npm run build` into docs/ (`--test`, `--help`)
 - `scripts/restart.sh` — Exact owned-process stop/start/status wrapper: refuse foreign listeners, record process identity and verify HTTP 200
 
@@ -203,8 +204,6 @@
 - `src/core/EventBus.js` — Pub-sub event system
 - `src/core/PlayerCore.js` — Pure timeline math (deterministic-timeline mandate): segment/pause/beacon-schedule builders + timeline↔path mappings; one evaluation path shared by play, scrub, and export
 - `src/examples/index.js` — The three bundled example projects, built from the
-  live models so they cannot rot; named backgrounds and pinned ids/timestamps
-  keep them byte-reproducible
 - `src/handlers/InteractionHandler.js` — One captured Pointer Events transaction for mouse/touch/pen waypoint, area and network taps/drags; keyboard, drop, context-menu and wheel paths stay native
 - `src/main.js` — RoutePlotter class: app entry + orchestrator core (constructor, init, model bookkeeping, render scheduling); attaches the `src/app/*` mixins to its prototype
 - `src/models/AnimationState.js` — Playback state, canonical seek-derived timing/pause state and exact transport snapshots
@@ -283,6 +282,9 @@
 - `tests/GraphModel.test.js` — Graph CRUD, adjacency, referential-integrity and hydration contracts
 - `tests/GraphNode.test.js` — Graph-node type, normalised-position and serialisation contracts
 - `tests/Scene.test.js` — Ordered flow-layer CRUD, movement, clearing and persistence contracts
+- `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
+  names, ids, heading order, landmarks, and the two AAA rules the live audit
+  caught (skip-link target, Edit/Preview contrast)
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
@@ -296,8 +298,6 @@
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
-  example rehydrates, times deterministically, resolves its branches and
-  crowd bindings, and demonstrates what its description claims
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding

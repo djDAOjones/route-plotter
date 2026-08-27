@@ -17,6 +17,13 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Accessibility assurance (in progress 2026-08-27)
+
+REV-05 — The structural audit, AAA contrast sampling and 400%-zoom reflow ran
+green in production Chromium; two AAA failures found and fixed (a 6.37:1 label
+and a 37px skip link), and the structural half is now a permanent regression
+test. (2026-08-27) — see decision-log.
+
 ## Showcase (shipped 2026-08-27)
 
 DEMO-01 — Three example projects ship as downloadable `.zip` project saves and

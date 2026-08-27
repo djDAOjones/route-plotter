@@ -30,10 +30,21 @@
 
 ### Next
 
-- [ ] **REV-05 Accessibility assurance** · Accessibility assurance
-  [ready] [verify: NVDA/VoiceOver] — Complete axe,
-  forced colours, reduced motion and 200–400% zoom checks once the authoring
-  UI stops changing shape; screen-reader passes stay owner-run evidence.
+- [~] **REV-05 Accessibility assurance** · Accessibility assurance
+  [verify: NVDA/VoiceOver + forced colours + axe] — Structural audit, AAA
+  contrast sampling and 400%-zoom reflow are done and green in production
+  Chromium, with two AAA failures fixed. Screen readers stay owner-run; forced
+  colours needs devtools emulation; axe-core needs a dev-dependency decision.
+- [ ] **A11Y-01 Tooltip triggers should not be buttons** · Accessibility
+  [ready] — `[data-tip]` labels get `role="button"` and `tabindex="0"`, so ~80
+  hint labels announce as buttons that perform no action and owe a 44px target
+  they do not meet. Describe the control instead (`aria-describedby`) and drop
+  the phantom role.
+- [ ] **A11Y-02 Forced-colours sweep** · Accessibility [ready] — Only the
+  UI-02/ROUTE-01c row affordances declare `forced-colors` fallbacks. Selection
+  accent bars, focus rings, the leg “+” and beacon colours have none. Needs
+  devtools forced-colours emulation to verify, so pair it with REV-05's
+  residual.
 
 ### Icebox
 

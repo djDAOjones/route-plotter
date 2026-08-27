@@ -2,6 +2,44 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — the accessibility audit, and what it is honest to claim
+
+**Ran and green in production Chromium:** unique ids, every control named,
+one h1, no heading-rank skips, a main landmark, `lang`, alt text everywhere,
+a polite live region. Contrast measured on every visible text node against its
+effective background at the AAA thresholds. Target size on every rendered
+control. Reflow at 320 CSS px — the WCAG 1.4.10 equivalent of 400% zoom at
+1280 px — with no horizontal document scroll and, after the fix below, no
+undersized control.
+
+**Two AAA failures, found and fixed:**
+- The Edit/Preview label measured 6.37:1. `--text-03` is exactly 7:1 on white,
+  but that label sits on the toggle's own `--ui-02` surface. Moved to
+  `--text-02`, now 19.17:1.
+- The skip link was 37 px tall. It is the first thing a keyboard or switch user
+  reaches, so it now fills the 44 px target.
+
+**Two findings ticketed rather than folded in.** An assurance pass that
+quietly turns into a redesign is exactly the failure this programme warns
+against, so:
+- **A11Y-01** — `ParamTooltip` gives every `[data-tip]` label `role="button"`
+  and `tabindex="0"`. That announces ~80 hint labels as buttons that perform no
+  action, and obliges each to a 44 px target it does not meet at 96×19. The
+  right shape is `aria-describedby` on the control the label describes; that is
+  a semantics change across the sidebar and deserves its own run.
+- **A11Y-02** — only the UI-02 and ROUTE-01c row affordances declare
+  `forced-colors` fallbacks. Selection accent bars, focus rings, the leg "+"
+  and beacon colours have none.
+
+**What is NOT claimed.** axe-core was not run: it would be a new dev
+dependency, and that is an approval, not an assumption. Forced-colours and
+reduced-motion emulation need devtools media overrides this automation cannot
+drive. NVDA and VoiceOver remain owner-run by standing policy. The regression
+test asserts only what static analysis can settle and says so in its header —
+a jsdom "pass" on contrast or a screen reader would be worth less than nothing.
+
+**Link:** REV-05, still `[~]` with a named residual.
+
 ## 2026-08-27 — examples are generated project saves, published under review
 
 **Owner decision:** the examples ship as full `.zip` project saves so people

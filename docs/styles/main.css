@@ -44,6 +44,11 @@ body{
   transform:translateY(-200%);
   background:var(--interactive-01);
   color:var(--text-04);
+  /* Full 44px target: it was 37px tall, and a skip link is the first thing a
+     keyboard or switch user reaches (REV-05). */
+  display:flex;
+  align-items:center;
+  min-height:var(--control-lg);
   padding:var(--space-2) var(--space-3);
   border-radius:var(--radius-2);
   text-decoration:none;
@@ -219,7 +224,10 @@ select{
 .mode-label{
   font-size:var(--control-font);
   font-weight:500;
-  color:var(--text-03);
+  /* --text-03 is exactly 7:1 on white, but this label sits on the toggle's
+     own --ui-02 surface, where it fell to 6.37:1 — under AAA for text this
+     size (REV-05). --text-02 clears 10:1 on both. */
+  color:var(--text-02);
   padding:0.25rem 0.5rem;
   border-radius:999px;
   transition:color var(--motion-fast) var(--ease-out),
