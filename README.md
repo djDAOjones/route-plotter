@@ -76,7 +76,7 @@ src/
     SwatchPicker.js               Okabe-Ito colour-blind safe palette picker
     Dropdown.js                   Accessible dropdown menus
     Tooltip.js                    Tooltip attachment
-    ParamTooltip.js               Click-label parameter tooltips (Carbon pattern)
+    ParamTooltip.js               Parameter hints: each label's tip is its control's aria-describedby description; click or keyboard focus reveals it (Carbon pattern)
   controllers/
     UIController.js               Sidebar controls, waypoint list, slider sync
     SectionController.js          Collapsible settings sections

@@ -160,6 +160,15 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 - Provide contextual help (tooltips, helper text, inline guidance)
   for non-obvious controls and workflows.
 - Help content must be task-focused, concrete, and brief.
+- A hint label is not a control. Help attached to a label describes the
+  control that label names: it reaches assistive technology by appending
+  an `aria-describedby` token to that control, never by giving the label
+  a role or a tab stop. Keep the description node outside the `<label>` —
+  inside, it joins the control's accessible name. Append the token;
+  a slider readout already owns the first one and announces first.
+- Help revealed by pointer must also be reachable by keyboard. Reveal it
+  on the described control's `:focus-visible`, so a mouse user is left
+  alone, and let Escape dismiss it while focus stays there.
 
 ---
 

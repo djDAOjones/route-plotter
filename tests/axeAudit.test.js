@@ -19,6 +19,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, test, expect, beforeEach } from 'vitest';
 import axe from 'axe-core';
+import { initParamTooltips } from '../src/components/ParamTooltip.js';
 
 const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
 
@@ -48,6 +49,44 @@ async function runAxe(options = {}) {
     ...options,
   });
 }
+
+describe('axe-core over the shell as JavaScript leaves it', () => {
+  // A11Y-01 was invisible to the run above: `role="button"` was applied at
+  // init, not authored in index.html, so the static shell was clean while the
+  // running app was not. Anything that decorates the DOM on startup belongs
+  // here as well as there.
+  beforeEach(() => {
+    mountShell();
+    initParamTooltips();
+  });
+
+  test('reports no violations once the hints are wired', async () => {
+    const results = await runAxe();
+    const reported = results.violations.map(violation => ({
+      id: violation.id,
+      impact: violation.impact,
+      nodes: violation.nodes.length,
+      example: violation.nodes[0]?.html.slice(0, 120),
+    }));
+
+    expect(reported).toEqual([]);
+  }, 60000);
+
+  test('no element is given a role its element type forbids', async () => {
+    const results = await runAxe();
+    const roleResults = [...results.violations, ...results.incomplete]
+      .filter(result => result.id === 'aria-allowed-role')
+      .flatMap(result => result.nodes.map(node => node.html.slice(0, 120)));
+
+    expect(roleResults).toEqual([]);
+
+    // Vacuous if axe never ran the rule, so prove it did.
+    const evaluated = new Set([
+      ...results.passes, ...results.violations, ...results.incomplete,
+    ].map(result => result.id));
+    expect(evaluated).toContain('aria-allowed-role');
+  }, 60000);
+});
 
 describe('axe-core over the app shell', () => {
   beforeEach(mountShell);

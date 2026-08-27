@@ -27,6 +27,12 @@ do next. (2026-08-27) — see decision-log.
 
 ## Accessibility assurance (in progress 2026-08-27)
 
+A11Y-01 — The 74 `[data-tip]` hint labels no longer pose as buttons: each
+hint is now its control's appended `aria-describedby` description, and the
+visible tooltip stays reachable by pointer and by keyboard focus. axe now also
+runs over the shell as JavaScript leaves it, where the defect actually lived.
+(2026-08-27) — see decision-log.
+
 REV-05a — axe-core joined the gate (dev dependency, owner-approved): 48 rules,
 zero violations across WCAG 2.0/2.1/2.2 A/AA/AAA and best practice, verified
 live with contrast evaluated for real. (2026-08-27) — see decision-log.

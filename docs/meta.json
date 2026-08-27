@@ -2707,7 +2707,7 @@
       "format": "esm"
     },
     "src/components/ParamTooltip.js": {
-      "bytes": 5323,
+      "bytes": 11074,
       "imports": [],
       "format": "esm"
     },
@@ -3706,13 +3706,13 @@
     }
   },
   "outputs": {
-    ".docs-build-bMT3op/app.js.map": {
+    ".docs-build-wzrOjT/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3301946
+      "bytes": 3309307
     },
-    ".docs-build-bMT3op/app.js": {
+    ".docs-build-wzrOjT/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3952,7 +3952,7 @@
           "bytesInOutput": 2154
         },
         "src/components/ParamTooltip.js": {
-          "bytesInOutput": 1581
+          "bytesInOutput": 2404
         },
         "src/components/Dropdown.js": {
           "bytesInOutput": 2252
@@ -4069,7 +4069,7 @@
           "bytesInOutput": 22275
         }
       },
-      "bytes": 1071934
+      "bytes": 1072757
     }
   }
 }

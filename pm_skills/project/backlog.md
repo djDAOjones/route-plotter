@@ -62,13 +62,6 @@
   owner should confirm the redistribution posture is what they intend. Review
   §18 "MPL/source-notice obligations". Pair with DEPS-01, which moves those
   same versions.
-- [ ] **A11Y-01 Tooltip triggers should not be buttons** · Accessibility
-  [ready] — `[data-tip]` labels get `role="button"` and `tabindex="0"`, so ~80
-  hint labels announce as buttons that perform no action and owe a 44px target
-  they do not meet. axe confirms it is worse than questionable: `role="button"`
-  is *invalid* on a `<label>`, and would be a violation rather than an
-  incomplete once the camera controls are shown. Describe the control instead
-  (`aria-describedby`) and drop the phantom role.
 - [ ] **REVEAL-01 Spotlight reveal that fades behind the head** · Reveal modes
   [ready] — Owner: "the spot reveals the background, but then its revealing
   effect fades out over time". Not currently possible: the mask repaints every

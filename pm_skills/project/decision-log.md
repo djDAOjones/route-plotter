@@ -2,6 +2,53 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — a hint is a description, not a button that does nothing
+
+**A11Y-01 shipped.** `ParamTooltip` gave all 74 `[data-tip]` labels
+`role="button"` and `tabindex="0"`. That announced 74 hint labels as buttons
+that perform no action, put 74 phantom stops in the sidebar tab order, and
+obliged each to a 44 px target it never meets at 96x19. On the two camera
+`<label>`s the role is invalid ARIA outright, which is what axe reported.
+
+**The hint is now what it always was: a description of the control.** Every
+trigger resolves through its enclosing `label[for]` — all 74 do, so no
+fallback path was needed — and the hint text becomes an `.sr-only` node the
+control points at with `aria-describedby`. Three constraints shaped it:
+
+- **The node sits after the `</label>`, never inside it.** Text inside a
+  `<label for>` joins the control's accessible *name*, and the visible label
+  has to keep matching that name for speech input (WCAG 2.5.3).
+- **The token is appended, never replaced.** 23 of these controls are sliders
+  whose readout already owns the first `aria-describedby` token
+  (UI-STANDARDS -> Recognition over recall). The value still announces first,
+  then the hint.
+- **`.sr-only`, not `aria-hidden`.** A directly referenced hidden node does
+  still contribute a description under AccName, but this programme does not
+  claim screen-reader behaviour it has not measured — NVDA/VoiceOver evidence
+  is owner-run under REV-05 — so the hint takes the plainest, best-supported
+  route and accepts being read twice in browse mode.
+
+**Dropping the tab stop must not make the hint mouse-only.** Removing the
+phantom role alone would trade an invalid-ARIA failure for a WCAG 2.1.1 one,
+so keyboard focus on the described control now reveals the same tooltip,
+gated on `:focus-visible` so a mouse user who never asked for it is left
+alone. Escape dismisses it for as long as focus stays there (WCAG 1.4.13),
+which keeps arrow-key editing quiet. Verified live in Chromium at v3.2.680:
+the pointer path, a real Tab arrival, Escape followed by arrow keys, and a
+fresh mouse click that correctly reveals nothing. The interactive
+accessibility tree now lists only real controls.
+
+**The gate could not have caught this, and now can.** `axeAudit.test.js` only
+ever mounted the *static* `index.html`, and the role was applied at init — so
+the shell was clean while the running app was not. There is now a second axe
+run over the shell *as JavaScript leaves it*. Replaying the old enhancement
+under that harness reproduces exactly the two `aria-allowed-role` hits the
+live Chromium audit found, so the new assertion is not vacuous. Anything that
+decorates the DOM on startup belongs in both runs.
+
+**Link:** A11Y-01 (shipped), REV-05, UI-STANDARDS -> Help and contextual
+guidance.
+
 ## 2026-08-27 — owner sets the prune bar, and holds the merge
 
 Two owner calls following the memory prune. **Pruning must never harm
