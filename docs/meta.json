@@ -2531,12 +2531,17 @@
       "format": "esm"
     },
     "src/utils/waypointNaming.js": {
-      "bytes": 2126,
+      "bytes": 5942,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/routeBranches.js": {
+      "bytes": 15124,
       "imports": [],
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 92989,
+      "bytes": 96201,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2574,6 +2579,11 @@
           "original": "../utils/waypointNaming.js"
         },
         {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "../utils/routeBranches.js"
+        },
+        {
           "path": "src/utils/uiReadouts.js",
           "kind": "import-statement",
           "original": "../utils/uiReadouts.js"
@@ -2582,7 +2592,7 @@
       "format": "esm"
     },
     "src/handlers/InteractionHandler.js": {
-      "bytes": 38553,
+      "bytes": 40318,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2822,7 +2832,7 @@
       "format": "esm"
     },
     "src/app/wiringBus.js": {
-      "bytes": 15063,
+      "bytes": 17223,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2838,6 +2848,11 @@
           "path": "src/utils/snapToAngle.js",
           "kind": "import-statement",
           "original": "../utils/snapToAngle.js"
+        },
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "../utils/routeBranches.js"
         }
       ],
       "format": "esm"
@@ -2864,7 +2879,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 47760,
+      "bytes": 51984,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2890,6 +2905,11 @@
           "path": "src/utils/snapToAngle.js",
           "kind": "import-statement",
           "original": "../utils/snapToAngle.js"
+        },
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "../utils/routeBranches.js"
         },
         {
           "path": "src/app/backgroundLoading.js",
@@ -2976,11 +2996,6 @@
           "original": "../utils/renderReference.js"
         }
       ],
-      "format": "esm"
-    },
-    "src/utils/routeBranches.js": {
-      "bytes": 10746,
-      "imports": [],
       "format": "esm"
     },
     "src/app/pathTiming.js": {
@@ -3179,7 +3194,7 @@
       "format": "esm"
     },
     "src/app/pointer.js": {
-      "bytes": 8248,
+      "bytes": 8565,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3242,7 +3257,7 @@
       "format": "esm"
     },
     "src/utils/sceneSemantics.js": {
-      "bytes": 9561,
+      "bytes": 9888,
       "imports": [
         {
           "path": "src/utils/waypointNaming.js",
@@ -3599,13 +3614,13 @@
     }
   },
   "outputs": {
-    ".docs-build-37tLWQ/app.js.map": {
+    ".docs-build-VsrEgo/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3195099
+      "bytes": 3224942
     },
-    ".docs-build-37tLWQ/app.js": {
+    ".docs-build-VsrEgo/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3800,13 +3815,16 @@
           "bytesInOutput": 186
         },
         "src/utils/waypointNaming.js": {
-          "bytesInOutput": 238
+          "bytesInOutput": 1370
+        },
+        "src/utils/routeBranches.js": {
+          "bytesInOutput": 4418
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 37162
+          "bytesInOutput": 38446
         },
         "src/handlers/InteractionHandler.js": {
-          "bytesInOutput": 17118
+          "bytesInOutput": 17639
         },
         "src/services/UndoService.js": {
           "bytesInOutput": 2379
@@ -3872,7 +3890,7 @@
           "bytesInOutput": 7471
         },
         "src/app/wiringBus.js": {
-          "bytesInOutput": 5264
+          "bytesInOutput": 5750
         },
         "src/components/ContextMenu.js": {
           "bytesInOutput": 3100
@@ -3881,7 +3899,7 @@
           "bytesInOutput": 1721
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 19647
+          "bytesInOutput": 21681
         },
         "src/utils/assetReferences.js": {
           "bytesInOutput": 2653
@@ -3897,9 +3915,6 @@
         },
         "src/app/viewport.js": {
           "bytesInOutput": 4344
-        },
-        "src/utils/routeBranches.js": {
-          "bytesInOutput": 3114
         },
         "src/app/pathTiming.js": {
           "bytesInOutput": 6599
@@ -3917,7 +3932,7 @@
           "bytesInOutput": 19139
         },
         "src/app/pointer.js": {
-          "bytesInOutput": 887
+          "bytesInOutput": 934
         },
         "src/app/crowds.js": {
           "bytesInOutput": 18358
@@ -3926,7 +3941,7 @@
           "bytesInOutput": 10711
         },
         "src/utils/sceneSemantics.js": {
-          "bytesInOutput": 4195
+          "bytesInOutput": 4300
         },
         "src/controllers/SceneOutlineController.js": {
           "bytesInOutput": 26979
@@ -3950,7 +3965,7 @@
           "bytesInOutput": 22142
         }
       },
-      "bytes": 1047102
+      "bytes": 1054015
     }
   }
 }

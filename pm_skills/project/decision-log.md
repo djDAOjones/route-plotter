@@ -2,6 +2,53 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — two gestures author a branch, and both are owner-chosen
+
+**Decision:** Alt+click on an existing waypoint arms a branch; the next plain
+canvas click places its first waypoint. Dragging a branch's last waypoint onto
+another waypoint rejoins the branch there; dragging it onto the current target
+again clears the rejoin. Both were picked by the owner at the ROUTE-01c gate
+over a list "+ Branch" button, a canvas ⑂ handle and an inspector dropdown.
+
+**What Alt+click gives up:** Alt+click previously force-added a major *even on
+top of an existing waypoint*, bypassing selection. The hit-test now splits it:
+empty canvas still force-adds, a waypoint hit arms a branch. The one lost case
+is force-adding a major exactly on top of another, and Alt+Cmd still
+force-adds a minor there. Escape unwinds an armed gesture before it unwinds a
+selection — an armed state is the more recent and more surprising one to be
+stuck in.
+
+**Placement:** a branch is inserted after the fork's own leg block, so the flat
+array still reads in route order and the sidebar list needs no reordering pass.
+Numbering is `fork·letter·position` (`2·B1`), lettered from B because the
+trunk's own continuation past the fork is implicitly A — so adding a second
+branch never renumbers the first.
+
+**Validation lives in the model, not the gesture:** `canForkFrom`,
+`canRejoinBranch` and `branchEndInfo` answer every question the gestures ask,
+and `canRejoinBranch` decides by applying the change to a copy and re-resolving
+rather than restating the rules. A gesture that reimplemented them would drift
+from `resolveRouteBranches` the first time either changed.
+
+**Two bugs the live pass found, neither reachable from jsdom:**
+- `findWaypointAt` hit-tested the waypoint being dragged. At drop time it sits
+  under the cursor, on top of the target, so the rejoin never fired. It now
+  takes an exclusion, and the caller excludes the whole drag group.
+- Both branch handlers snapshotted undo *before* mutating. This project's undo
+  stack holds post-action states and `undo()` pops the current one to restore
+  the previous, so a pre-mutation snapshot made undo skip a step. Corrected to
+  match `waypoint:deleted` and `waypoints:reordered`.
+
+**Layout:** the fork ⑂ is badged onto the waypoint's colour dot rather than
+placed in the row's text flow. A major row is already dot + handle + title +
+▲▼ + × inside roughly 140px, and one more inline child wrapped the title.
+
+**Link:** ROUTE-01c. 59 files / 869 tests green. Verified in production
+Chromium: fork armed and placed at the right array index, rejoin set with a
+1203 ms join wait and the dragged point restored rather than moved, the same
+drag toggling back to terminal, undo restoring the rejoin, persistence across
+reload, zero console entries.
+
 ## 2026-08-27 — a branch borrows the trunk's transport, never its own
 
 **Decision:** `AnimationEngine` keeps exactly one authoritative transport — the

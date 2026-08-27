@@ -142,8 +142,9 @@ export const pointerMixin = {
    * @param {number} screenX - X coordinate in screen space (CSS pixels)
    * @param {number} screenY - Y coordinate in screen space (CSS pixels)
    * @returns {Waypoint|undefined} Waypoint at position, or undefined
+     * @param {Object|Set|null} [exclude] Waypoint (or set) the hit-test must skip
    */
-  findWaypointAt(screenX, screenY) {
+  findWaypointAt(screenX, screenY, exclude = null) {
     // Convert screen coords to canvas coords (inverse viewport transform)
     const click = this.screenToCanvas(screenX, screenY);
     
@@ -156,6 +157,9 @@ export const pointerMixin = {
     let closestDist = Infinity;
 
     for (const wp of this.waypoints) {
+      // A drop hit-test runs while the dragged waypoint sits under the
+      // cursor, so it would always find itself (ROUTE-01c).
+      if (exclude && (wp === exclude || (exclude.has && exclude.has(wp)))) continue;
       const wpCanvas = this.imageToCanvas(wp.imgX, wp.imgY);
       const dx = wpCanvas.x - click.x;
       const dy = wpCanvas.y - click.y;

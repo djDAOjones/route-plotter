@@ -10,6 +10,7 @@ import { createFocusTrap } from '../utils/focusTrap.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 import { pathWidthToSlider } from '../utils/pathWidthScale.js';
 import { buildRouteNumbering } from '../utils/waypointNaming.js';
+import { resolveRouteBranches } from '../utils/routeBranches.js';
 import {
   formatBackgroundOverlay,
   formatRendererPixels,
@@ -21,6 +22,21 @@ import {
  * Maps linear slider position (1-4000) to exponential speed values
  * This gives fine control at low speeds while allowing high speeds
  */
+/**
+ * What a branch row says to a screen reader. Indentation and the visible
+ * "branch" tag carry this visually; this carries it for anyone who perceives
+ * neither (WCAG 2.2 1.3.1).
+ */
+function branchRowContext(entry, rejoinName) {
+  const fork = entry.forkNumber && entry.forkNumber !== '?'
+    ? `waypoint ${entry.forkNumber}`
+    : 'an earlier waypoint';
+  const ending = rejoinName
+    ? `, rejoins at ${rejoinName}`
+    : ', ends the branch here';
+  return `, branch ${entry.branchLetter} leaving ${fork}${ending}`;
+}
+
 const SPEED_CURVE = {
   MIN_SLIDER: 1,
   MAX_SLIDER: 4000,
@@ -339,8 +355,20 @@ export class UIController {
    */
   _waypointDisplayName(waypoint) {
     if (!waypoint) return '';
+    // Number through the shared routing so the chip, the list row and the
+    // semantic outline never name the same waypoint differently. `_displayIndex`
+    // counts majors, which called a branch waypoint "Waypoint 3" while its row
+    // read "2·B1" (ROUTE-01c).
+    const index = (this._listedWaypoints || []).indexOf(waypoint);
+    const entry = index === -1 ? null : this._listedNumbering?.[index];
+
+    if (entry?.branchId) {
+      const base = `Waypoint ${entry.displayNumber}`;
+      const name = waypoint.name || waypoint.label;
+      return name ? `${base} '${name}'` : base;
+    }
     if (waypoint.isMajor) {
-      const base = `Waypoint ${waypoint._displayIndex ?? '?'}`;
+      const base = `Waypoint ${entry?.displayNumber ?? waypoint._displayIndex ?? '?'}`;
       const name = waypoint.name || waypoint.label;
       return name ? `${base} '${name}'` : base;
     }
@@ -381,7 +409,11 @@ export class UIController {
       text = `Editing · ${multiSelect.length} waypoints${minors > 0 ? ` (${minors} minor)` : ''}`;
     } else if (waypoint) {
       scope = 'waypoint';
-      const kind = waypoint.isMajor ? ' · major' : '';
+      const chipIndex = (this._listedWaypoints || []).indexOf(waypoint);
+      const chipEntry = chipIndex === -1 ? null : this._listedNumbering?.[chipIndex];
+      const kind = chipEntry?.branchId
+        ? ` · branch ${chipEntry.branchLetter}`
+        : (waypoint.isMajor ? ' · major' : '');
       text = `Editing · ${this._waypointDisplayName(waypoint)}${kind}`;
     } else {
       scope = 'route';
@@ -1442,7 +1474,26 @@ export class UIController {
     const numbering = buildRouteNumbering(routeWaypoints);
     this._listedWaypoints = routeWaypoints;
     this._listedNumbering = numbering;
-    this._listedMajors = routeWaypoints.filter(wp => wp.isMajor);
+    // Only trunk majors carry the reorder payload: a branch member moves with
+    // its branch, never as a top-level leg block.
+    this._listedMajors = routeWaypoints.filter(
+      (wp, index) => wp.isMajor && numbering[index].branchId == null
+    );
+
+    // Fork markers and rejoin names, resolved once per rebuild (ROUTE-01c).
+    const structure = resolveRouteBranches(routeWaypoints);
+    const nameOf = id => {
+      const index = routeWaypoints.findIndex(wp => wp.id === id);
+      if (index === -1) return null;
+      return routeWaypoints[index].name || `Waypoint ${numbering[index].displayNumber}`;
+    };
+    this._listedForkIds = new Set(
+      structure.branches.map(branch => branch.forkFromId).filter(Boolean)
+    );
+    this._listedRejoinNames = {};
+    for (const branch of structure.branches) {
+      this._listedRejoinNames[branch.id] = branch.rejoinAtId ? nameOf(branch.rejoinAtId) : null;
+    }
 
     // This is an action list, not an ARIA listbox: each row remains a
     // native button alongside independent reorder/delete actions.
@@ -1497,13 +1548,18 @@ export class UIController {
     // Each item is a <li> with a <button> row for proper keyboard semantics.
     routeWaypoints.forEach((waypoint, routeIndex) => {
       const entry = numbering[routeIndex];
-      const isMajor = entry.isMajor;
+      const onBranch = entry.branchId !== null && entry.branchId !== undefined;
+      // A branch member is never a trunk major, so it never joins the
+      // majors-only reorder payload even when it is a major of its own run.
+      const isMajor = entry.isMajor && !onBranch;
       const majorIndex = isMajor ? majorWaypoints.indexOf(waypoint) : -1;
       const defaultName = `Waypoint ${entry.displayNumber}`;
       const displayName = waypoint.name || defaultName;
 
       const item = document.createElement('li');
-      item.className = isMajor ? 'waypoint-item' : 'waypoint-item waypoint-item-minor';
+      item.className = 'waypoint-item'
+        + (isMajor ? '' : ' waypoint-item-minor')
+        + (onBranch ? ' waypoint-item-branch' : '');
       item.draggable = isMajor;
       item.dataset.routeIndex = String(routeIndex);
       // Majors additionally carry their majors-only index: the reorder payload
@@ -1558,20 +1614,34 @@ export class UIController {
       rowBtn.appendChild(handle);
       rowBtn.appendChild(title);
 
+      if (this._listedForkIds?.has(waypoint.id)) {
+        const fork = document.createElement('span');
+        fork.className = 'waypoint-fork-mark';
+        fork.setAttribute('aria-hidden', 'true');
+        fork.textContent = '⑂';
+        rowBtn.appendChild(fork);
+        const forkContext = document.createElement('span');
+        forkContext.className = 'sr-only';
+        forkContext.textContent = ', a branch leaves here';
+        rowBtn.appendChild(forkContext);
+      }
+
       if (!isMajor) {
-        // Indentation is visual only, so the kind and the leg it shapes are
-        // also written out: a visible tag plus the relationship for AT users
-        // (WCAG 2.2 1.3.1 — structure must not be conveyed by layout alone).
+        // Indentation is visual only, so the kind and what the row belongs to
+        // are also written out: a visible tag plus the relationship for AT
+        // users (WCAG 2.2 1.3.1 — structure must not be conveyed by layout).
         const tag = document.createElement('span');
         tag.className = 'waypoint-minor-tag';
-        tag.textContent = 'minor';
+        tag.textContent = onBranch ? 'branch' : 'minor';
         rowBtn.appendChild(tag);
 
         const context = document.createElement('span');
         context.className = 'sr-only';
-        context.textContent = entry.legNumber > 0
-          ? `, minor waypoint shaping the leg after waypoint ${entry.legNumber}, reorders with it`
-          : ', minor waypoint before waypoint 1, reorders with it';
+        context.textContent = onBranch
+          ? branchRowContext(entry, this._listedRejoinNames?.[entry.branchId])
+          : (entry.legNumber > 0
+            ? `, minor waypoint shaping the leg after waypoint ${entry.legNumber}, reorders with it`
+            : ', minor waypoint before waypoint 1, reorders with it');
         rowBtn.appendChild(context);
       }
 

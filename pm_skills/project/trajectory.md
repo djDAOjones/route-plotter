@@ -19,6 +19,15 @@
 
 ## Phase 5 — split hero routes (in progress 2026-08-27)
 
+ROUTE-01c — Branches are authorable: Alt+click a waypoint to fork, click to
+place; drag a branch's end onto a waypoint to rejoin (again to end it there).
+Branch rows read `2·B1`, indented and tagged, with a ⑂ badge on the fork's
+marker; the scope chip, the row and the semantic outline all number a branch
+waypoint the same way. (2026-08-27) — see decision-log.
+
+ROUTE-01c-a — `findWaypointAt` takes an exclusion, so a drop hit-test no longer
+finds the waypoint being dragged. (2026-08-27) — see decision-log.
+
 ROUTE-01b — Branches now draw and animate: each gets its own spline anchored
 at its fork (and rejoin), its own head, and its own progress resolved from
 master timeline time through the same PlayerCore mapping the trunk uses. The

@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 270 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 271 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -13,7 +13,7 @@
 - `specs` — 15 file(s)
 - `src` — 93 file(s)
 - `styles` — 6 file(s)
-- `tests` — 60 file(s)
+- `tests` — 61 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -239,8 +239,6 @@
 - `src/utils/Easing.js` — Easing functions (linear, quad, cubic, etc.)
 - `src/utils/assetReferences.js` — Image-ID reachability collector and pure minimum-oldest-history admission planner for count/byte/pixel limits
 - `src/utils/branchTiming.js` — Pure per-run branch timing: builds each run's
-  leg (duration, arrivals, own timeline) and resolves a branch's path
-  progress from master timeline time via PlayerCore's shared mapping
 - `src/utils/busynessEnvelope.js` — Pure busyness-handle normalisation/validation, segment-area compilation and inverse-density sampling for seeded release times
 - `src/utils/entityId.js` — Shared persisted structural-ID length boundary that leaves authored display text untouched
 - `src/utils/focusTrap.js` — Modal inerting, focus containment/wrap, Escape handling and origin-focus restoration
@@ -279,9 +277,10 @@
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
+- `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
+  insert placement, fork/rejoin validation, branch list rows and the
+  drop hit-test exclusion
 - `tests/branchTiming.test.js` — ROUTE-01b contract: run timing, master
-  composition, branch progress under interleaved pauses, branch spline
-  anchoring and the branch render pass
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts

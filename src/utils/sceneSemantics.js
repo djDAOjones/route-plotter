@@ -59,9 +59,12 @@ function waypointName(waypoint, numbering) {
   const authored = typeof waypoint.name === 'string' && waypoint.name.trim()
     ? waypoint.name.trim()
     : (typeof waypoint.label === 'string' ? waypoint.label.trim() : '');
-  const base = numbering.isMajor
-    ? `Major waypoint ${numbering.displayNumber}`
-    : `Minor waypoint ${numbering.displayNumber}`;
+  // A branch waypoint says so: its number alone ("2·B1") would leave a
+  // screen-reader user to decode the notation (ROUTE-01c).
+  const kind = numbering.branchId
+    ? `Branch ${numbering.branchLetter} waypoint`
+    : (numbering.isMajor ? 'Major waypoint' : 'Minor waypoint');
+  const base = `${kind} ${numbering.displayNumber}`;
   return authored ? `${base} — ${authored}` : base;
 }
 
@@ -200,6 +203,9 @@ export function buildSceneOutlineSnapshot({
       routeIndex,
       majorNumber: routeNumber.majorNumber,
       minorNumber: routeNumber.minorNumber,
+      branchId: routeNumber.branchId,
+      branchLetter: routeNumber.branchLetter,
+      forkNumber: routeNumber.forkNumber,
       legNumber: routeNumber.legNumber,
       displayNumber: routeNumber.displayNumber,
       isMajor: Boolean(waypoint.isMajor),

@@ -11,6 +11,9 @@ import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { ContextMenu } from '../components/ContextMenu.js';
 import { snapToAngle } from '../utils/snapToAngle.js';
+import {
+  branchInsertIndex, canForkFrom, canRejoinBranch, branchEndInfo,
+} from '../utils/routeBranches.js';
 import { loadBackgroundFile } from './backgroundLoading.js';
 
 /**
@@ -333,6 +336,109 @@ export const wiringControllersMixin = {
       this.eventBus.emit('waypoint:added', waypoint);
     });
     
+    // ========== BRANCH AUTHORING (ROUTE-01c) ==========
+
+    /**
+     * route:branch-arm — Alt+click landed on a waypoint. Arm the gesture and
+     * say so; the next plain canvas click places the branch's first waypoint.
+     */
+    this.eventBus.on('route:branch-arm', ({ waypoint }) => {
+      const verdict = canForkFrom(waypoint);
+      if (!verdict.ok) {
+        this.eventBus.emit('ui:toast', { message: verdict.reason });
+        return;
+      }
+      this.interactionHandler.branchArmed = waypoint;
+      const label = waypoint.name || 'this waypoint';
+      this.announce(`Branching from ${label}. Click where the branch should go.`);
+      this.eventBus.emit('ui:toast', {
+        message: `Branch from ${label} — click where it should go (Esc to cancel)`
+      });
+    });
+
+    this.eventBus.on('route:branch-cancel', () => {
+      if (!this.interactionHandler.branchArmed) return;
+      this.interactionHandler.branchArmed = null;
+      this.announce('Branch cancelled.');
+      this.eventBus.emit('ui:toast', { message: 'Branch cancelled' });
+    });
+
+    /**
+     * route:branch-place — Place the branch's first waypoint.
+     *
+     * The branch run is inserted after the fork's own leg block so the array
+     * still reads in route order (branchInsertIndex). A branch waypoint is a
+     * major: it carries timing of its own, which is what makes the branch
+     * animate rather than merely bend a leg.
+     */
+    this.eventBus.on('route:branch-place', ({ imgX, imgY }) => {
+      const fork = this.interactionHandler.branchArmed;
+      this.interactionHandler.branchArmed = null;
+      if (!fork || !this.waypointsById?.has?.(fork.id)) {
+        this.eventBus.emit('ui:toast', { message: 'That waypoint is no longer on the route' });
+        return;
+      }
+
+      const waypoint = Waypoint.createMajor(imgX, imgY);
+      waypoint.copyPropertiesFrom(fork);
+      waypoint.branchId = `br_${waypoint.id}`;
+      waypoint.branchFrom = fork.id;
+
+      this.waypoints.splice(branchInsertIndex(this.waypoints, fork.id), 0, waypoint);
+      this._addWaypointToMap(waypoint);
+      this._majorWaypointsCache = null;
+      // Snapshot AFTER the mutation: the stack holds post-action states, and
+      // undo() pops the current one to restore the previous.
+      this.saveUndoState();
+
+      this.selectedWaypoint = waypoint;
+      this.selectedWaypoints = [waypoint];
+      this.uiController?.setSelection([waypoint], waypoint);
+      this.interactionHandler?.setSelection?.([waypoint], waypoint);
+
+      this.calculatePath();
+      this.updateAnimationDuration();
+      this.updateWaypointList();
+      this.eventBus.emit('waypoint:added', waypoint);
+      this.autoSave();
+      this.queueRender();
+      this.announce(`Branch added from ${fork.name || 'the waypoint'}.`);
+    });
+
+    /**
+     * route:branch-rejoin — A branch's last waypoint was dropped on another
+     * waypoint. Dropping on the current target clears the rejoin, so the same
+     * gesture both makes and unmakes it; there is no separate "end here"
+     * control to find.
+     */
+    this.eventBus.on('route:branch-rejoin', ({ waypoint, targetId }) => {
+      const info = branchEndInfo(this.waypoints, waypoint);
+      if (!info || !info.isEnd) return;
+
+      const current = waypoint.branchRejoin || null;
+      const next = current === targetId ? null : targetId;
+      const verdict = canRejoinBranch(this.waypoints, info.branchId, next);
+      if (!verdict.ok) {
+        this.eventBus.emit('ui:toast', { message: verdict.reason });
+        return;
+      }
+
+      waypoint.branchRejoin = next;
+      this.saveUndoState(); // after the mutation, per the undo-stack contract
+      this.calculatePath();
+      this.updateAnimationDuration();
+      this.updateWaypointList();
+      this.autoSave();
+      this.queueRender();
+
+      const targetName = next
+        ? (this.waypointsById.get(next)?.name || 'that waypoint')
+        : null;
+      const message = next ? `Branch rejoins at ${targetName}` : 'Branch now ends here';
+      this.announce(message);
+      this.eventBus.emit('ui:toast', { message });
+    });
+
     // Note: waypoint:position-changed is handled in _setupEventBusListeners()
     // which applies position, recalculates path, and manages undo saves.
     

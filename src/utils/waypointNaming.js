@@ -11,6 +11,12 @@
  * Leg 0 is real, not a guard. Deleting a major leaves its trailing minors in
  * front of every remaining major; those read `0.1`, `0.2` rather than silently
  * borrowing the number of the major that now follows them.
+ *
+ * A branch waypoint numbers `<fork>·<letter><position>` — `2·B1` is the first
+ * waypoint of the first branch leaving waypoint 2 (ROUTE-01c). Letters start
+ * at B because the trunk's own continuation past the fork is implicitly A, so
+ * a second branch off the same fork reads `2·C1` without renumbering the
+ * first. A minor inside a branch appends its own position: `2·B1.1`.
  */
 
 /**
@@ -29,31 +35,115 @@
  * @returns {Array<RouteNumberEntry>} One entry per waypoint, same order
  */
 export function buildRouteNumbering(waypoints = []) {
+  const list = Array.isArray(waypoints) ? waypoints : [];
+
+  // Pass one: the trunk's own numbering, so a branch can name its fork.
   let majorNumber = 0;
   let minorNumber = 0;
-
-  return waypoints.map(waypoint => {
+  const trunkNumberById = new Map();
+  for (const waypoint of list) {
+    if (branchIdOf(waypoint) !== null) continue;
     if (waypoint?.isMajor) {
       majorNumber += 1;
       minorNumber = 0;
+      trunkNumberById.set(waypoint.id, String(majorNumber));
+    } else {
+      minorNumber += 1;
+      trunkNumberById.set(waypoint.id, `${majorNumber}.${minorNumber}`);
+    }
+  }
+
+  // Letters are assigned per fork, in the order branches appear in the array,
+  // so adding a second branch never renumbers the first. Only a branch's FIRST
+  // waypoint carries branchFrom, so the fork is resolved once per branch and
+  // reused — reading it per waypoint left later members unable to name it.
+  const letterByBranchId = new Map();
+  const forkIdByBranchId = new Map();
+  const branchesPerFork = new Map();
+  for (const waypoint of list) {
+    const branchId = branchIdOf(waypoint);
+    if (branchId === null || letterByBranchId.has(branchId)) continue;
+    const forkId = typeof waypoint.branchFrom === 'string' ? waypoint.branchFrom : '';
+    forkIdByBranchId.set(branchId, forkId);
+    const taken = branchesPerFork.get(forkId) || 0;
+    branchesPerFork.set(forkId, taken + 1);
+    letterByBranchId.set(branchId, String.fromCharCode(66 + Math.min(taken, 23))); // B, C, D…
+  }
+
+  majorNumber = 0;
+  minorNumber = 0;
+  let branchMajor = 0;
+  let branchMinor = 0;
+  let currentBranchId = null;
+
+  return list.map(waypoint => {
+    const branchId = branchIdOf(waypoint);
+
+    if (branchId === null) {
+      if (waypoint?.isMajor) {
+        majorNumber += 1;
+        minorNumber = 0;
+        currentBranchId = null;
+        return {
+          isMajor: true, majorNumber, minorNumber: null, legNumber: majorNumber,
+          branchId: null, branchLetter: null, forkNumber: null,
+          displayNumber: String(majorNumber),
+        };
+      }
+      minorNumber += 1;
+      currentBranchId = null;
       return {
-        isMajor: true,
-        majorNumber,
-        minorNumber: null,
-        legNumber: majorNumber,
-        displayNumber: String(majorNumber),
+        isMajor: false, majorNumber: null, minorNumber, legNumber: majorNumber,
+        branchId: null, branchLetter: null, forkNumber: null,
+        displayNumber: `${majorNumber}.${minorNumber}`,
       };
     }
 
-    minorNumber += 1;
+    if (branchId !== currentBranchId) {
+      currentBranchId = branchId;
+      branchMajor = 0;
+      branchMinor = 0;
+    }
+    const letter = letterByBranchId.get(branchId) || 'B';
+    const forkId = forkIdByBranchId.get(branchId);
+    const forkNumber = trunkNumberById.get(forkId)
+      ?? branchNumberFallback(list, forkId, letterByBranchId, trunkNumberById);
+
+    if (waypoint?.isMajor) {
+      branchMajor += 1;
+      branchMinor = 0;
+      return {
+        isMajor: true, majorNumber: null, minorNumber: null, legNumber: majorNumber,
+        branchId, branchLetter: letter, forkNumber,
+        displayNumber: `${forkNumber}·${letter}${branchMajor}`,
+      };
+    }
+    branchMinor += 1;
     return {
-      isMajor: false,
-      majorNumber: null,
-      minorNumber,
-      legNumber: majorNumber,
-      displayNumber: `${majorNumber}.${minorNumber}`,
+      isMajor: false, majorNumber: null, minorNumber: branchMinor, legNumber: majorNumber,
+      branchId, branchLetter: letter, forkNumber,
+      displayNumber: `${forkNumber}·${letter}${branchMajor}.${branchMinor}`,
     };
   });
+}
+
+function branchIdOf(waypoint) {
+  const value = waypoint && waypoint.branchId;
+  return typeof value === 'string' && value !== '' ? value : null;
+}
+
+/**
+ * A branch may fork from another branch's waypoint, which has no trunk number.
+ * Name that fork by its own branch letter so the chain stays readable rather
+ * than collapsing to an anonymous "?".
+ */
+function branchNumberFallback(list, forkId, letterByBranchId, trunkNumberById) {
+  if (!forkId) return '?';
+  const owner = list.find(waypoint => waypoint.id === forkId);
+  if (!owner) return '?';
+  const ownerBranch = branchIdOf(owner);
+  if (ownerBranch === null) return trunkNumberById.get(forkId) ?? '?';
+  return letterByBranchId.get(ownerBranch) ?? '?';
 }
 
 /**

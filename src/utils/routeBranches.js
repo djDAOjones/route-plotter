@@ -299,3 +299,112 @@ export function branchPathWaypoints(structure, branchId, waypoints = []) {
     ? [fork, ...branch.waypoints, rejoin]
     : [fork, ...branch.waypoints];
 }
+
+/**
+ * Where a new branch's waypoints belong in the array (ROUTE-01c).
+ *
+ * A branch is a contiguous run, so it is inserted immediately after the fork's
+ * own leg block — the fork plus its trailing minors — and after any branches
+ * already leaving that fork. The array then reads in route order, which is
+ * what the sidebar list shows.
+ *
+ * @param {Array<Object>} waypoints
+ * @param {string} forkId
+ * @returns {number} Insert index; waypoints.length when the fork is unknown
+ */
+export function branchInsertIndex(waypoints = [], forkId) {
+  const list = Array.isArray(waypoints) ? waypoints : [];
+  const forkIndex = list.findIndex(waypoint => waypoint?.id === forkId);
+  if (forkIndex === -1) return list.length;
+
+  let index = forkIndex + 1;
+  // Skip the fork's own trailing minors: they shape its leg, not the branch.
+  while (index < list.length
+         && list[index]?.isMajor === false
+         && branchIdOf(list[index]) === null) {
+    index += 1;
+  }
+  // Skip branches already leaving this fork so letters stay in array order.
+  while (index < list.length && branchIdOf(list[index]) !== null) {
+    index += 1;
+  }
+  return index;
+}
+
+/**
+ * Whether `branchId`'s last waypoint may rejoin at `targetId`.
+ *
+ * Applies the change to a shallow copy and re-resolves: a rejoin is allowed
+ * exactly when it introduces no structural problem. Reusing the resolver
+ * rather than restating its rules is what keeps the gesture and the model
+ * from drifting apart.
+ *
+ * @param {Array<Object>} waypoints
+ * @param {string} branchId
+ * @param {string|null} targetId Waypoint to rejoin at; null clears the rejoin
+ * @returns {{ok: boolean, reason: string|null}}
+ */
+export function canRejoinBranch(waypoints = [], branchId, targetId) {
+  const list = Array.isArray(waypoints) ? waypoints : [];
+  const structure = resolveRouteBranches(list);
+  const branch = structure.branches.find(candidate => candidate.id === branchId);
+  if (!branch) return { ok: false, reason: 'That branch no longer exists' };
+
+  if (targetId === null) return { ok: true, reason: null };
+
+  const target = list.find(waypoint => waypoint?.id === targetId);
+  if (!target) return { ok: false, reason: 'That waypoint no longer exists' };
+  if (branch.waypoints.some(waypoint => waypoint.id === targetId)) {
+    return { ok: false, reason: 'A branch cannot rejoin one of its own waypoints' };
+  }
+  if (target.isMajor === false) {
+    return { ok: false, reason: 'Rejoin at a major waypoint — minors carry no timing' };
+  }
+
+  const last = branch.waypoints[branch.waypoints.length - 1];
+  const probe = list.map(waypoint => (
+    waypoint === last ? { ...waypoint, branchRejoin: targetId } : waypoint
+  ));
+  const probed = resolveRouteBranches(probe);
+  const introduced = probed.problems.filter(problem => problem.branchId === branchId);
+  if (introduced.length > structure.problems.filter(p => p.branchId === branchId).length) {
+    return { ok: false, reason: introduced[introduced.length - 1].detail };
+  }
+  return { ok: true, reason: null };
+}
+
+/**
+ * Whether `waypoint` may be the fork of a new branch.
+ *
+ * Majors only: a fork is a story moment on the timeline, and a minor carries
+ * no timing of its own for a branch to start from.
+ *
+ * @param {Object|null} waypoint
+ * @returns {{ok: boolean, reason: string|null}}
+ */
+export function canForkFrom(waypoint) {
+  if (!waypoint) return { ok: false, reason: 'Select a waypoint to branch from' };
+  if (waypoint.isMajor === false) {
+    return { ok: false, reason: 'Branch from a major waypoint — minors only shape a leg' };
+  }
+  return { ok: true, reason: null };
+}
+
+/**
+ * The last waypoint of the branch `waypoint` belongs to, or null when it is
+ * not a branch member or not that branch's end. Only a branch's end carries
+ * the rejoin link, so only it can be dragged onto a rejoin target.
+ *
+ * @param {Array<Object>} waypoints
+ * @param {Object} waypoint
+ * @returns {{branchId: string, isEnd: boolean}|null}
+ */
+export function branchEndInfo(waypoints = [], waypoint) {
+  const branchId = branchIdOf(waypoint);
+  if (branchId === null) return null;
+  const structure = resolveRouteBranches(waypoints);
+  const branch = structure.branches.find(candidate => candidate.id === branchId);
+  if (!branch) return null;
+  const last = branch.waypoints[branch.waypoints.length - 1];
+  return { branchId, isEnd: last === waypoint };
+}

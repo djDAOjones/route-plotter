@@ -48,6 +48,8 @@ export class InteractionHandler {
     this.isDragging = false;
     this.selectedWaypoint = null;
     this.selectedWaypoints = [];
+    /** @type {Object|null} Fork waypoint while a branch gesture is armed (ROUTE-01c) */
+    this.branchArmed = null;
 
     /** @type {Object|null} The one captured primary-pointer transaction. */
     this.activePointer = null;
@@ -468,9 +470,13 @@ export class InteractionHandler {
       }
     } else if (active.phase === 'dragging') {
       if (active.mode === 'waypoint') {
+        // Carry the drop point so the app can resolve a branch-end drop onto
+        // another waypoint as a rejoin rather than an ordinary move (ROUTE-01c).
         this.eventBus.emit('waypoint:drag-ended', {
           waypoint: active.hit,
-          dragGroup: active.dragGroup
+          dragGroup: active.dragGroup,
+          dropX: upPoint.x,
+          dropY: upPoint.y
         });
       } else if (active.mode === 'area-edit') {
         this.eventBus.emit('area:edit-end');
@@ -602,9 +608,34 @@ export class InteractionHandler {
       return;
     }
     
-    // Alt+click: force add major waypoint (bypass selection)
+    // Alt+click: branch from a waypoint, or force-add a major on empty canvas.
+    // The hit-test decides (ROUTE-01c): force-add exists so a major can be
+    // placed without selecting, and on empty canvas that is unchanged. Landing
+    // on a waypoint now arms a branch instead — the one case force-add loses,
+    // and Alt+Cmd still force-adds a minor there.
     if (isAltClick && !isShiftClick && !isMetaClick) {
-      this._addWaypointAtPosition(x, y, true, false); // Major
+      this.eventBus.emit('waypoint:check-at-position', { x, y }, (waypoint) => {
+        if (waypoint) {
+          this.eventBus.emit('route:branch-arm', { waypoint });
+        } else {
+          this._addWaypointAtPosition(x, y, true, false); // Major
+        }
+      });
+      return;
+    }
+
+    // An armed branch consumes the next plain click as its placement, so the
+    // gesture is click-to-choose-a-fork then click-to-place, never a drag.
+    if (this.branchArmed && !isShiftClick && !isMetaClick) {
+      this.eventBus.emit('coordinate:check-bounds', { canvasX: x, canvasY: y }, (inBounds) => {
+        if (!inBounds) {
+          this.eventBus.emit('route:branch-cancel');
+          return;
+        }
+        this.eventBus.emit('coordinate:canvas-to-image', { canvasX: x, canvasY: y }, (imgPos) => {
+          this.eventBus.emit('route:branch-place', { imgX: imgPos.x, imgY: imgPos.y });
+        });
+      });
       return;
     }
     
@@ -972,10 +1003,16 @@ export class InteractionHandler {
       this.eventBus.emit('ui:animation:skip-end');
     }
     
-    // Escape: deselect waypoint
+    // Escape: cancel an armed branch first, else deselect the waypoint.
+    // An armed gesture is the more recent, more surprising state to be stuck
+    // in, so it is the one Escape unwinds.
     else if (key === 'escape') {
       event.preventDefault();
-      this.eventBus.emit('waypoint:deselect');
+      if (this.branchArmed) {
+        this.eventBus.emit('route:branch-cancel');
+      } else {
+        this.eventBus.emit('waypoint:deselect');
+      }
     }
     
     // Duplicate waypoint (Cmd/Ctrl+D)

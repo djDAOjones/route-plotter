@@ -2258,6 +2258,43 @@ kbd{
   .waypoint-minor-dot{ background:CanvasText; opacity:1; }
   .waypoint-minor-tag{ border-color:CanvasText; color:CanvasText; background:Canvas; }
 }
+/* ── Branch rows (ROUTE-01c) ───────────────────────────────────────────────
+   A branch reuses the minor row's indent and leader so hierarchy reads the
+   same way, but carries the route's own colour rather than the grey shaping
+   glyph: a branch waypoint IS a route waypoint, it just runs in parallel. */
+.waypoint-item-branch > .waypoint-row .waypoint-minor-dot{
+  background:var(--interactive-01);
+  opacity:1;
+}
+.waypoint-item-branch::after{
+  background:var(--interactive-01);
+  opacity:0.4;
+}
+.waypoint-item-branch .waypoint-minor-tag{
+  color:var(--interactive-01);
+  border-color:var(--interactive-01);
+}
+
+/* The row a branch leaves. Badged onto the waypoint's own colour dot rather
+   than placed in the text flow: a major row is already dot + handle + title +
+   ▲▼ + × in a ~140px column, and one more inline child wrapped the title. The
+   mark belongs to the marker anyway. Aria-hidden — the row's .sr-only says it. */
+.waypoint-fork-mark{
+  position:absolute;
+  left:calc(var(--space-3) + 0.4rem);
+  top:0.5rem;
+  line-height:1;
+  color:var(--interactive-01);
+  font-size:var(--type-caption);
+  pointer-events:none;
+}
+
+@media (forced-colors: active){
+  .waypoint-item-branch > .waypoint-row .waypoint-minor-dot,
+  .waypoint-item-branch::after{ background:Highlight; opacity:1; }
+  .waypoint-item-branch .waypoint-minor-tag{ color:CanvasText; border-color:CanvasText; }
+  .waypoint-fork-mark{ color:CanvasText; }
+}
 .waypoint-rename-input:focus-visible{
   box-shadow:0 0 0 2px var(--focus);
 }

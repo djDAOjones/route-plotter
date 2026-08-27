@@ -9,8 +9,56 @@
 import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { snapToAngle } from '../utils/snapToAngle.js';
+import { branchEndInfo } from '../utils/routeBranches.js';
+
+/**
+ * Resolve a drag that ended on top of another waypoint as a branch rejoin.
+ *
+ * Only a branch's LAST waypoint carries the rejoin link, so only it can make
+ * the gesture. The drop restores the dragged waypoint's start position — the
+ * author was pointing at a target, not moving a point — and hands the link
+ * change to `route:branch-rejoin`, which owns the validation and the undo
+ * entry. Dropping on the current target clears the rejoin, so one gesture both
+ * makes and unmakes it.
+ *
+ * A module helper rather than a mixin method: test harnesses and PlayerApp
+ * host only part of this mixin, and a `this._method()` call is undefined there
+ * (the same lesson as `routeOf` in pathTiming).
+ *
+ * @param {Object} app RoutePlotter
+ * @param {Object} data `waypoint:drag-ended` payload
+ * @returns {boolean} True when the drop was consumed as a rejoin
+ */
+function resolveBranchRejoinDrop(app, data) {
+  const waypoint = data?.waypoint;
+  if (!waypoint || data.dropX === undefined || data.dropY === undefined) return false;
+  if (typeof app.findWaypointAt !== 'function') return false;
+
+  const info = branchEndInfo(app.waypoints, waypoint);
+  if (!info || !info.isEnd) return false;
+
+  // Skip the whole drag group, not just the dragged point: a group drag lands
+  // several waypoints under the cursor at once.
+  const dragged = new Set(
+    (data.dragGroup || []).map(item => item?.waypoint).filter(Boolean)
+  );
+  dragged.add(waypoint);
+  const target = app.findWaypointAt(data.dropX, data.dropY, dragged);
+  if (!target) return false;
+
+  // Put it back: this gesture aimed at a target, it did not move a point.
+  const start = (data.dragGroup || []).find(item => item?.waypoint === waypoint);
+  if (start) {
+    waypoint.imgX = start.imgX;
+    waypoint.imgY = start.imgY;
+  }
+
+  app.eventBus.emit('route:branch-rejoin', { waypoint, targetId: target.id });
+  return true;
+}
 
 export const wiringBusMixin = {
+
   
   /**
    * Set up EventBus listeners for decoupled component communication
@@ -163,6 +211,10 @@ export const wiringBusMixin = {
      * Saves undo state once for the entire drag operation.
      */
     this.eventBus.on('waypoint:drag-ended', (data) => {
+      // A branch END dropped on another waypoint is a rejoin gesture, not a
+      // move: restore where it was and set the link instead (ROUTE-01c).
+      if (resolveBranchRejoinDrop(this, data)) return;
+
       const dragGroup = Array.isArray(data?.dragGroup) ? data.dragGroup : null;
       if (dragGroup && !dragGroup.some(item =>
         item?.waypoint && (item.waypoint.imgX !== item.imgX || item.waypoint.imgY !== item.imgY)

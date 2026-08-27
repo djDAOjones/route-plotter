@@ -30,9 +30,6 @@
 
 ### Next
 
-- [ ] **ROUTE-01c Branch authoring** · Phase 5 route composition
-  [[detail]](tickets/ROUTE-01.md) [ready] [sign-off] — The split/rejoin gesture, list and
-  semantic-outline representation, selection, deletion and undo.
 - [ ] **ROUTE-01d Branch export parity** · Phase 5 route composition
   [ready] — Standalone player and video export reproduce the
   branched timeline frame-for-frame.
@@ -55,7 +52,7 @@
   with approved example projects that demonstrate route, crowd and anchors and
   double as living fixtures.
 - [ ] **REV-05 Accessibility assurance** · Accessibility assurance
-  [gated: ROUTE-01c impl] [verify: NVDA/VoiceOver] — Complete axe,
+  [ready] [verify: NVDA/VoiceOver] — Complete axe,
   forced colours, reduced motion and 200–400% zoom checks once the authoring
   UI stops changing shape; screen-reader passes stay owner-run evidence.
 
