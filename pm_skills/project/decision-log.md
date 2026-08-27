@@ -30,6 +30,60 @@ player sourcemap). Owner calls this session: **stay on PM-Skills 4.7.0**
 deferred into new ticket DEPS-01** (consider upgrades across the board).
 Gate context: 67 files / 1006 tests green, `npm audit` clean.
 
+## 2026-08-27 — the original review is fully dispositioned into the backlog
+
+**Question asked:** is everything from the original review and its report now
+effective in the backlog? **Audited rather than assumed**, against all three
+layers of the report, not just the headline findings.
+
+**RP-01…RP-18:** all shipped or carrying a named ticket. The crosswalk was
+already accurate for the findings themselves and has been refreshed with
+current dispositions.
+
+**The gap was everything that was not a numbered finding.** Section 17's
+*Optional* roadmap and section 18's *unresolved uncertainties* never entered
+the backlog, because the crosswalk only ever bridged RP-01…RP-18. Five items
+were still open and are now ticketed:
+
+- **DEPLOY-01** — RP-07's stated residual plus §18's "GitHub branch
+  protection/Pages permissions". Written as an open sign-off, then corrected
+  on reading `f1c14b9`: a parallel maintenance session had already put the
+  question to the owner, who **held the merge** — the live site stays on
+  v3.2.618 until they call the release. The ticket is now `[blocked: owner
+  calls the release]`, so the residual is tracked without reopening a settled
+  decision.
+- **REL-01** — `docs/app.js.map` publishes 3.1 MB carrying `sourcesContent`
+  for 89 first-party files. The repository is public, so this is a size and
+  tidiness decision, not a secrecy one; saying otherwise would overstate it.
+  `[sign-off]`.
+- **PERF-01** — RP-09 bounded *hostile* inputs, but no *legitimate* maximum
+  project was ever profiled, so the supported ceiling is a UI limit rather than
+  a measured budget.
+- **LEGAL-01** — MPL-2.0 posture for mediabunny (bundled) and now axe-core
+  (dev-only). Notices shipped under REV-09; the review was explicit that a
+  technical review cannot give legal advice. `[maintainer]`.
+- **ICE-03** — a visual/performance benchmark corpus, Icebox with a trigger.
+
+Seven further §17/§18 items were checked and are genuinely closed: structured
+diagnostics, Clear All semantics, content sensitivity, public-ZIP intent,
+supported browsers, the coverage floor, and the AAA audit. Each is recorded in
+the crosswalk with where it landed, so the next audit does not repeat this one.
+
+**Crosswalk extended** with a second table covering the non-finding items, and
+the dossier index now points at the current continuation prompt. The old
+prompt is kept as provenance for the run it briefed rather than deleted.
+
+**Parallel session reconciled.** Two commits (`ea3e27a`, `f1c14b9`) landed on
+the branch from a maintenance session while this audit ran: the memory prune
+happened, with an owner-set quality bar that pruning must never harm
+development, and DEPS-01 was added. This session's edits applied cleanly on top
+(additions only, nothing clobbered), DEPLOY-01 was corrected as above, and
+LEGAL-01 now points at DEPS-01, which moves the same MPL-licensed versions.
+The trajectory and decision-log budget warnings this session had been
+preserving are therefore resolved, not deferred.
+
+**Link:** DEPLOY-01, REL-01, PERF-01, LEGAL-01, ICE-03.
+
 ## 2026-08-27 — owner verdicts clear quarantine, and axe joins the gate
 
 **Quarantine is empty.** All four parked items got an owner verdict:

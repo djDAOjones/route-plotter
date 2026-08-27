@@ -36,6 +36,32 @@
   (48 rules, zero violations, contrast evaluated live), with two AAA failures
   fixed and axe now a standing gate. Screen readers stay owner-run; forced
   colours needs devtools emulation.
+- [ ] **DEPLOY-01 Release the remediation branch** · Release
+  [blocked: owner calls the release] — The owner held the merge on 2026-08-27
+  (`f1c14b9`): the live site stays on v3.2.618 until they call it. This ticket
+  exists so RP-07's residual is tracked rather than forgotten, not to reopen
+  the decision. When called: `review-remediation` is 41 commits ahead of
+  `main`, which is what Pages serves. Also settle GitHub branch-protection and
+  Pages permissions, which the review could inspect only from repository files.
+- [ ] **REL-01 Decide the production source-map policy** · Release
+  [ready] [sign-off] — `docs/app.js.map` publishes 3.1 MB carrying the full
+  unminified source of 89 first-party files (`sourcesContent`). The repository
+  is public, so this is a size and tidiness decision rather than a secrecy one:
+  keep it for debuggable production stack traces, or drop it. Review §17
+  Optional.
+- [ ] **PERF-01 Benchmark a representative maximum project** · Performance
+  [ready] — Hostile inputs are bounded and fixture-covered (RP-09), but no
+  *legitimate* large project was ever profiled, so the supported ceiling is a
+  UI limit rather than a measured budget. Profile an agreed maximum — waypoint
+  count, crowd size, image resolution — and record what it costs. Review §18
+  "intended project-size ceiling".
+- [ ] **LEGAL-01 Confirm the MPL source-notice posture** · Governance
+  [ready] [maintainer] — `mediabunny` (runtime, bundled) and now `axe-core`
+  (dev-only) are MPL-2.0. Notices and licence text shipped under REV-09, but
+  the review flagged that a technical review cannot give legal advice and the
+  owner should confirm the redistribution posture is what they intend. Review
+  §18 "MPL/source-notice obligations". Pair with DEPS-01, which moves those
+  same versions.
 - [ ] **A11Y-01 Tooltip triggers should not be buttons** · Accessibility
   [ready] — `[data-tip]` labels get `role="button"` and `tabindex="0"`, so ~80
   hint labels announce as buttons that perform no action and owe a 44px target
@@ -77,6 +103,11 @@
   contains secondary area palettes under More while keeping Marker colour
   visible for novices; promote only if observed palette height becomes a real
   navigation problem.
+- [ ] **ICE-03 Visual and performance benchmark corpus** · QA [deferred] —
+  Golden-frame fixtures catch timeline regressions, but there is no repeatable
+  benchmark for subtle visual or performance drift, so optimisation decisions
+  stay anecdotal. Review §17 Optional. Promote if a visual regression escapes
+  the golden frames, or alongside PERF-01.
 - [ ] **ICE-02 Import-time palette conversion** · Import/colour [deferred] —
   Import-time Okabe-Ito/UoN palette conversion. Promote only on user demand;
   photo posterisation/dithering needs separate quality work.

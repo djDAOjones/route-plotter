@@ -17,6 +17,14 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Programme close-out (2026-08-27)
+
+PM — The original review is fully dispositioned: RP-01…RP-18 all shipped or
+ticketed, and the review's Optional roadmap and unresolved uncertainties —
+never covered by the RP crosswalk — audited into DEPLOY-01, REL-01, PERF-01,
+LEGAL-01 and ICE-03. The backlog is now the single source of truth for what to
+do next. (2026-08-27) — see decision-log.
+
 ## Accessibility assurance (in progress 2026-08-27)
 
 REV-05a — axe-core joined the gate (dev dependency, owner-approved): 48 rules,

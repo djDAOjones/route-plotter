@@ -10,9 +10,10 @@ hand-edited under `docs/`.
 
 | File | Role |
 | --- | --- |
-| `route-plotter-review-remediation-continuation-prompt-2026-08-26.md` | Paste-ready prompt for the next development chat. It contains the objective, permissions, completed work, current roadmap, verification baseline and operating rules. |
+| `route-plotter-continuation-prompt-2026-08-27.md` | **Current** paste-ready prompt for the next development chat. Work is now driven by the PM-Skills backlog; every review finding has been dispositioned into it. |
+| `route-plotter-review-remediation-continuation-prompt-2026-08-26.md` | Superseded. Historical provenance for the remediation run it briefed. |
 | `route-plotter-v3-comprehensive-repository-review-2026-08-26.md` | Full read-only review of Route Plotter at commit `cec0191`. This is historical evidence, not a description of the remediated branch's present health. |
-| `route-plotter-review-finding-crosswalk-2026-08-26.md` | Maps every original `RP-01`–`RP-18` finding to the implemented work and any residual assurance ticket. |
+| `route-plotter-review-finding-crosswalk-2026-08-26.md` | Maps every original `RP-01`–`RP-18` finding to the implemented work and any residual ticket, plus an audit of the review's Optional roadmap and unresolved uncertainties (updated 2026-08-27). |
 | `route-plotter-review-headlines-for-novices-2026-08-26.md` | Plain-language summary of the original review, clearly labelled as a pre-remediation snapshot. |
 | `read-only-comprehensive-repository-review-prompt.md` | The original review brief. It records provenance only; its read-only instruction does not govern later remediation work. |
 

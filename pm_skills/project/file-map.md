@@ -1,14 +1,14 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 287 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 288 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
 - `_Joe` — 45 file(s)
 - `docs` — 20 file(s)
 - `images` — 6 file(s)
-- `reviews` — 6 file(s)
+- `reviews` — 7 file(s)
 - `scripts` — 4 file(s)
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
@@ -139,6 +139,8 @@
   — Paste-ready, path-based continuation contract for the next development chat
 - `reviews/route-plotter-v3-comprehensive-repository-review-2026-08-26.md` —
   Full historical Route Plotter review at commit cec0191, public-path sanitised
+- `reviews/route-plotter-continuation-prompt-2026-08-27.md` — Current
+  paste-ready continuation prompt; work is driven by the PM-Skills backlog
 
 ## scripts
 
@@ -287,8 +289,6 @@
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
 - `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
-  WCAG 2.0/2.1/2.2 A/AA/AAA and best practice; colour contrast is measured
-  live instead, since jsdom cannot paint
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
 - `tests/branchHandle.test.js` — COMPOSE-04 contract: which waypoints are
