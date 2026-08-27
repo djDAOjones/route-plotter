@@ -25,6 +25,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "axe-core": "^4.13.0",
     "esbuild": "^0.28.1",
     "jsdom": "^27.2.0",
     "vitest": "^4.0.8"

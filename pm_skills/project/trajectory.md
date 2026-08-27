@@ -19,6 +19,15 @@
 
 ## Accessibility assurance (in progress 2026-08-27)
 
+REV-05a — axe-core joined the gate (dev dependency, owner-approved): 48 rules,
+zero violations across WCAG 2.0/2.1/2.2 A/AA/AAA and best practice, verified
+live with contrast evaluated for real. (2026-08-27) — see decision-log.
+
+PM — Quarantine cleared on owner verdicts: two cut, two recovered as REVEAL-01
+(spotlight reveal that fades behind the head — investigated and confirmed not
+currently possible) and LABEL-01 (auto-position timing and discoverability).
+(2026-08-27) — see decision-log.
+
 REV-05 — The structural audit, AAA contrast sampling and 400%-zoom reflow ran
 green in production Chromium; two AAA failures found and fixed (a 6.37:1 label
 and a 37px skip link), and the structural half is now a permanent regression

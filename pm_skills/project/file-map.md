@@ -1,19 +1,19 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 286 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 288 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
 - `_Joe` — 45 file(s)
-- `docs` — 20 file(s)
+- `docs` — 21 file(s)
 - `images` — 6 file(s)
 - `reviews` — 6 file(s)
 - `scripts` — 4 file(s)
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 68 file(s)
+- `tests` — 69 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -108,6 +108,7 @@
 - `docs/index.html` — Generated, version-injected Pages application shell
 - `docs/meta.json` — Generated build/version metadata used for readiness and artifact checks
 - `docs/player.js` — Generated standalone-export player bundle fetched and inlined by the app
+- `docs/player.js.map` — (role needed)
 - `docs/styles/context-menu.css` — Generated Pages copy of context-menu styles
 - `docs/styles/dropdown.css` — Generated Pages copy of dropdown styles
 - `docs/styles/main.css` — Generated Pages copy of the core application styles
@@ -286,6 +287,9 @@
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
+- `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
+  WCAG 2.0/2.1/2.2 A/AA/AAA and best practice; colour contrast is measured
+  live instead, since jsdom cannot paint
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
 - `tests/branchHandle.test.js` — COMPOSE-04 contract: which waypoints are

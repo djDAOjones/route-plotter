@@ -7,6 +7,13 @@ const packageJson = JSON.parse(read('package.json'));
 const packageLock = JSON.parse(read('package-lock.json'));
 
 const directDependencies = {
+  // Dev-only accessibility engine, owner-approved 2026-08-27 (REV-05). Never
+  // imported by application code; nothing of it reaches the published bundle.
+  'axe-core': {
+    version: '4.13.0',
+    license: 'MPL-2.0',
+    source: 'https://github.com/dequelabs/axe-core',
+  },
   jszip: {
     version: '3.10.1',
     license: '(MIT OR GPL-3.0-or-later)',

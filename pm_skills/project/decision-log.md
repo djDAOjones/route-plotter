@@ -2,6 +2,56 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-27 — owner verdicts clear quarantine, and axe joins the gate
+
+**Quarantine is empty.** All four parked items got an owner verdict:
+- **QUAR-01** import/export custom keybindings — **cut**.
+- **QUAR-04** randomised path-shape frequency — **cut**; the owner judges it
+  already done.
+- **QUAR-02** → promoted as **REVEAL-01**. The owner's intent, recovered:
+  the spotlight reveals the background, and that reveal then *fades out over
+  time* behind the head. Investigated rather than guessed — it is **not**
+  currently possible. `buildSpotlightRevealMask` repaints every passed path
+  point at full opacity on every frame, so revealed stays revealed, uniformly
+  and permanently. The fix is tractable and fits the architecture: weight each
+  point's alpha by its distance behind the head, keeping the per-frame rebuild
+  that is what makes scrubbing bidirectional.
+- **QUAR-03** → promoted as **LABEL-01**. The owner confirms auto-position
+  works well; the ask is *when* it runs and how findable it is. Run it when a
+  label is first written, never after the author has moved it by hand, and
+  surface the control — it sits inside the collapsed "More" disclosure today.
+
+Two of four were genuinely recoverable intent, which is the argument for
+quarantining rather than cutting on an agent's judgement.
+
+**axe-core added as a dev dependency**, owner-approved. Runtime dependencies
+are unchanged: jszip and mediabunny. `tests/axeAudit.test.js` is now a standing
+gate over the app shell across WCAG 2.0/2.1/2.2 A/AA/AAA and best-practice.
+
+**Result: 48 rules, zero violations** — run twice in production Chromium, once
+on the empty shell and once with the "Open day route" example loaded, with
+`color-contrast` genuinely evaluated (confirmed, not assumed). The jsdom gate
+disables `color-contrast` because jsdom has no painting; a pass there would be
+a false green, so contrast stays a live measurement.
+
+**Four incompletes, triaged, none a defect:**
+- `aria-allowed-role` on two camera `<label>`s — axe's independent
+  confirmation of **A11Y-01**, and stricter than the original finding:
+  `role="button"` is *invalid* on a `<label>`, and becomes a violation rather
+  than an incomplete once those controls are shown. Ticket updated to say so.
+- `aria-valid-attr-value` on the File and Export dropdowns — the referenced
+  menus exist with `role="menu"`; axe cannot resolve a `display:none` target.
+  Markup is correct.
+- `color-contrast` / `color-contrast-enhanced` on `.waypoint-fork-mark` — axe
+  skips glyph-only content. The mark is `aria-hidden`, decorative, and its
+  meaning is carried by the row's `.sr-only` text.
+
+**Deferred by the owner:** the `trajectory.md` and `decision-log.md` size
+warnings, to a maintenance session shortly. Not pruned.
+
+**Link:** REV-05 (residual now NVDA/VoiceOver and forced colours only),
+REVEAL-01, LABEL-01, A11Y-01.
+
 ## 2026-08-27 — the accessibility audit, and what it is honest to claim
 
 **Ran and green in production Chromium:** unique ids, every control named,

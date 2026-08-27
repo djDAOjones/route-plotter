@@ -55,9 +55,19 @@ runtime dependencies by the published application.
 
 | Package | Version | Licence | Source |
 | --- | --- | --- | --- |
+| `axe-core` | 4.13.0 | `MPL-2.0` | [dequelabs/axe-core](https://github.com/dequelabs/axe-core) |
 | `esbuild` | 0.28.2 | `MIT` | [evanw/esbuild](https://github.com/evanw/esbuild) |
 | `jsdom` | 27.4.0 | `MIT` | [jsdom/jsdom](https://github.com/jsdom/jsdom) |
 | `vitest` | 4.1.10 | `MIT` | [vitest-dev/vitest](https://github.com/vitest-dev/vitest/tree/main/packages/vitest) |
+
+### axe-core
+
+axe-core is licensed under the Mozilla Public License 2.0. Its source is
+available from the [upstream repository](https://github.com/dequelabs/axe-core),
+and the full licence is available from
+[mozilla.org/MPL/2.0](https://www.mozilla.org/MPL/2.0/). It is a test-time
+accessibility engine only: it is never imported by application code and no part
+of it reaches the published bundle or the generated `docs/` output.
 
 ## Dependency inventory
 
