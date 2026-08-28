@@ -57,14 +57,6 @@
   decision rather than a secrecy one: keep it for debuggable production stack
   traces, or drop it. **Owner 2026-08-28: decide at release** — carry it into
   DEPLOY-01 rather than settling it now. Review §17 Optional.
-- [ ] **ICE-03 Visual and performance benchmark corpus** · QA [ready] —
-  **Promoted 2026-08-28: its own trigger fired alongside PERF-01.** That pass
-  measured the cost curve by hand in a browser console; the numbers are in the
-  decision-log but nothing re-runs them, so the next optimisation decision is
-  anecdotal again. Make the harness repeatable — fixed render surface, the same
-  deterministic timeline instants, the waypoint/crowd/image sweeps — and pin a
-  regression threshold. Golden-frame fixtures already cover timeline drift;
-  this covers visual and performance drift.
 - [ ] **LEGAL-01 Confirm the MPL source-notice posture** · Governance
   [ready] [maintainer] — `mediabunny` (runtime, bundled) and now `axe-core`
   (dev-only) are MPL-2.0. Notices and licence text shipped under REV-09, but

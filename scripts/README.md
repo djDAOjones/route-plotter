@@ -36,5 +36,21 @@ An unrelated process listening on port 3000 is reported and left untouched.
 ./scripts/build.sh --help
 ```
 
+## `perf-harness.js` — performance cost curve
+
+Not a shell script and not wired into any npm script: paste it into the
+browser console against a running dev server, then call
+`await routePlotterBenchmark()`.
+
+It prints how render cost scales with waypoint count, crowd size and image
+resolution. **There is no pass/fail threshold and it is not part of the
+quality gate** — timings are machine-dependent, so compare your own before and
+after rather than trusting an absolute number.
+
+It backs up the open project, measures on synthetic ones, restores the backup
+and disables autosave until you reload. Reload before authoring again.
+
+See `DEV-INFRASTRUCTURE.md` → "Performance harness" for the recorded baseline.
+
 See `DEV-INFRASTRUCTURE.md` (project root) for the full build / run / deploy
 reference and the canonical npm scripts these wrap.

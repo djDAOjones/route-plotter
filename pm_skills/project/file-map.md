@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 292 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 294 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -146,6 +146,8 @@
 
 - `scripts/README.md` — usage reference for the maintainer scripts
 - `scripts/build-examples.mjs` — Assembles the downloadable example project
+- `scripts/perf-harness.js` — Console-pasted performance cost curve (waypoints,
+  crowd size, image resolution); no threshold, outside the quality gate
 - `scripts/build.sh` — maintainer wrapper: `npm run build` into docs/ (`--test`, `--help`)
 - `scripts/restart.sh` — Exact owned-process stop/start/status wrapper: refuse foreign listeners, record process identity and verify HTTP 200
 
@@ -322,6 +324,9 @@
   or tab stop, each hint reaches its control as an appended
   `aria-describedby` description outside the label, and the visible
   tooltip stays reachable by pointer and by keyboard focus
+- `tests/perfHarness.test.js` — ICE-03 contract: the harness still loads and
+  refuses safely, autosave suppression outlives the run, the restore sits in a
+  `finally`, and no pass/fail timing threshold has crept in
 - `tests/pathHeadPresets.test.js` — Drone preset metadata, native control, loader ownership and renderer-transform contracts
 - `tests/performanceScheduling.test.js` — Manual-rAF scheduler contract: idle sleep, transport wake/coalescing, camera keepalive and export suspension/restore
 - `tests/playerAccessibility.test.js` — Aggregate-summary privacy/counting and discrete/coalesced transport-announcement contracts

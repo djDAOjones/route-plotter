@@ -36,6 +36,13 @@ decision-log.
 
 ## Performance (shipped 2026-08-28)
 
+ICE-03 — The cost curve is repeatable: `scripts/perf-harness.js` prints it on
+demand with no pass/fail threshold and no place in the quality gate, because
+frame timings are machine-dependent. Its first version let the running app
+autosave the synthetic benchmark project over the author's; autosave is now
+suppressed for the rest of the page's life. (2026-08-28) — see decision-log.
+
+
 PERF-01 — The supported ceiling is now measured, not assumed: waypoint count is
 the only dimension that costs frame time (comfortable to ~200, borderline at
 500, not interactive by 1,000), while 5,000 dots cost ~1 ms and image

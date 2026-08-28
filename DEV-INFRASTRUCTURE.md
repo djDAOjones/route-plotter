@@ -214,6 +214,35 @@ lost to OneDrive sync). See `scripts/README.md`.
 - **`scripts/build.sh`** — one-shot `npm run build` into `docs/`; `--test`
   also runs the suite; `--help` for usage.
 
+### Performance harness (`scripts/perf-harness.js`)
+
+Re-runs the PERF-01 cost curve on demand. **It has no pass/fail threshold and
+is not part of the quality gate**: frame timings depend on the machine, the
+browser and the render surface, so a committed threshold would fail on one
+laptop and pass on another with identical code. Run it before and after an
+optimisation and compare the two tables yourself.
+
+1. `npm run dev`, open <http://localhost:3000>, and open a project.
+2. Paste the whole file into the browser console.
+3. `await routePlotterBenchmark()`.
+
+It backs up the project, measures on synthetic ones, restores the backup and
+**disables autosave until you reload** — reload before authoring again. That
+suppression is load-bearing: without it the still-running app saves the
+synthetic benchmark project straight over the real one.
+
+`medianMs` is the typical cost of one `render()`; `p95Ms` is the slow tail,
+which is what actually breaks the feel of dragging a waypoint. 16.7 ms is a
+60fps frame budget.
+
+**Baseline (2026-08-28, production Chromium, 1280x720):** waypoint count is
+the only dimension that costs frame time — 200 waypoints 1.9/3.7 ms, 500
+7.2/15.6 ms, 1,000 18.1/56.6 ms, 2,000 (`MAX_WAYPOINTS`) 65.2/195.8 ms.
+5,000 dots (the per-emitter maximum) cost ~1 ms. Image resolution costs no
+frame time at all — 1 MP and 48 MP both render in ~0.2 ms — only memory
+(48 MP is 183 MiB decoded) and import time. Full tables in the decision log,
+2026-08-28.
+
 ---
 
 ## Configuration strategy

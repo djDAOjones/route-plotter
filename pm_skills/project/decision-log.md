@@ -2,6 +2,40 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-28 — a benchmark with no threshold, and the restore that wasn't
+
+**ICE-03 shipped as a harness, not a gate**, on the owner's call. A committed
+frame-time threshold would pass on one machine and fail on another with
+identical code, and a red that means nothing is worse than no check at all. So
+`scripts/perf-harness.js` prints the cost curve on demand and asserts nothing
+about timings; you compare your own before and after. It reproduced PERF-01's
+figures on re-run (2,000 waypoints: 65.2 ms against 64.6 ms measured by hand),
+which is the point — the numbers move a little run to run, which is exactly
+why none of them is committed as a threshold.
+
+**Its first version destroyed the project it was protecting.** The harness
+backed up the autosave and restored it in a `finally` — and the still-running
+app then autosaved the synthetic 2,000-waypoint benchmark project straight
+over the restore. Caught because the restore was *verified* after a reload
+rather than assumed; the scratch project on the dev server was lost and had to
+be rebuilt from the shipped `uon-open-day` example, which it had come from.
+
+The fix is not a bigger backup: autosave is **suppressed for the rest of the
+page's life**, so the synthetic projects can never reach storage at all, and
+the closing warning insists on a reload. Verified by running a destructive
+benchmark and confirming the project survived a reload intact. The regression
+test pins the suppression, its ordering before the restore, that nothing puts
+the real `autoSave` back, and that the `finally` exists — the safety contract,
+not the speed.
+
+**What the test does and does not judge.** It guards the ways a console tool
+silently rots — it still loads, exposes one entry point, refuses clearly with
+no app and with no project — and pins the safety behaviour. It asserts nothing
+about milliseconds, and asserts that the harness carries no threshold, so a
+future well-meaning addition of one has to be a deliberate conversation.
+
+**Link:** ICE-03 (shipped), PERF-01 (its baseline), REV-07 (icebox).
+
 ## 2026-08-28 — the ceiling is waypoints; crowds and image size are not it
 
 **PERF-01 measured rather than agreed**, per the owner's call: profile a range
