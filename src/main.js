@@ -128,6 +128,7 @@ class RoutePlotter {
       backgroundVisibility: BACKGROUND_VISIBILITY.ALWAYS_SHOW,
       revealSize: MOTION.SPOTLIGHT_SIZE_DEFAULT,
       revealFeather: MOTION.SPOTLIGHT_FEATHER_DEFAULT,
+      revealTrail: MOTION.SPOTLIGHT_TRAIL_DEFAULT,
       // Angle of View settings
       aovAngle: MOTION.AOV_ANGLE_DEFAULT,
       aovDistance: MOTION.AOV_DISTANCE_DEFAULT,
@@ -368,6 +369,8 @@ class RoutePlotter {
       revealSizeValue: document.getElementById('reveal-size-value'),
       revealFeather: document.getElementById('reveal-feather'),
       revealFeatherValue: document.getElementById('reveal-feather-value'),
+      revealTrail: document.getElementById('reveal-trail'),
+      revealTrailValue: document.getElementById('reveal-trail-value'),
       // Angle of View elements
       aovAngle: document.getElementById('aov-angle'),
       aovAngleValue: document.getElementById('aov-angle-value'),
@@ -673,6 +676,9 @@ class RoutePlotter {
     
     // Sync the comet-only trail control and its Pacing explanation.
     this.uiController?.updateTrailControlVisibility?.(this.motionSettings.pathVisibility);
+    
+    // Reveal sliders and their containers, which follow backgroundVisibility.
+    this.uiController?.syncRevealControls?.(this.motionSettings);
     
     console.debug(`🎛️ [Init] UI synced: previewMode=${this.previewMode}, pathVisibility=${this.motionSettings.pathVisibility}`);
   }

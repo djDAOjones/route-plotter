@@ -652,6 +652,9 @@ describe('transactional project loading', () => {
     });
     expect(app.exportSettings.frameRate).toBe(25);
     expect(app.motionSettings.aovAngle).toBe(60);
+    // REVEAL-01: a project authored before the trail control existed must come
+    // back with the sentinel, so it still renders as a reveal that never fades.
+    expect(app.motionSettings.revealTrail).toBe(100);
     expect(app.imageAssetService.getAssetIds()).toEqual([]);
     expect(app.updateImageTransform).toHaveBeenCalledWith(null);
   });

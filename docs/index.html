@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.685</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.685">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.685">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.685">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.685">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.685">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.685">
+  <title>Route Plotter v3.2.687</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.687">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.687">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.687">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.687">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.687">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.687">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -789,6 +789,12 @@
                   <input type="range" id="reveal-feather" min="0" max="1000" value="500" step="1">
                   <span id="reveal-feather-value">25%</span>
                 </label>
+                <label for="reveal-trail" id="reveal-trail-control" hidden>
+                  <span data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades">Reveal trail</span>
+                  <input type="range" id="reveal-trail" min="0" max="1000" value="1000" step="1"
+                         aria-describedby="reveal-trail-value" aria-valuetext="Whole path">
+                  <span id="reveal-trail-value">Whole path</span>
+                </label>
               </div>
               
               <!-- Angle of View Settings (only shown when background = angle-of-view or angle-of-view-reveal) -->
@@ -1320,6 +1326,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.685"></script>
+  <script src="app.js?v=3.2.687"></script>
 </body>
 </html>

@@ -213,6 +213,14 @@ export const MOTION = {
   SPOTLIGHT_FEATHER_DEFAULT: 0,    // Default feather as % of spotlight size (0 = hard edge)
   SPOTLIGHT_FEATHER_MIN: 1,        // Minimum feather (nearly hard edge)
   SPOTLIGHT_FEATHER_MAX: 100,      // Maximum feather (100% of spotlight size)
+
+  // REVEAL-01: how much of the path behind the head stays revealed, as a % of
+  // the whole path. The MAX is a deliberate sentinel meaning "no fade at all",
+  // which is both the default and exactly what every project authored before
+  // this control existed already looks like.
+  SPOTLIGHT_TRAIL_DEFAULT: 100,    // Whole path stays revealed (no fade)
+  SPOTLIGHT_TRAIL_MIN: 1,          // Shortest trail: only the head's immediate wake
+  SPOTLIGHT_TRAIL_MAX: 100,        // Sentinel: reveal never fades
   
   // Background tint settings (log2 scaled for fine control near 0)
   TINT_MIN: 1,                     // Minimum tint magnitude (log2 scale starts here)

@@ -73,6 +73,7 @@ export class PlayerApp {
       backgroundVisibility: BACKGROUND_VISIBILITY.ALWAYS_SHOW,
       revealSize: MOTION.SPOTLIGHT_SIZE_DEFAULT,
       revealFeather: MOTION.SPOTLIGHT_FEATHER_DEFAULT,
+      revealTrail: MOTION.SPOTLIGHT_TRAIL_DEFAULT,
       aovAngle: MOTION.AOV_ANGLE_DEFAULT,
       aovDistance: MOTION.AOV_DISTANCE_DEFAULT,
       aovDropoff: MOTION.AOV_DROPOFF_DEFAULT

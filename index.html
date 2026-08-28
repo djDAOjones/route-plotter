@@ -786,6 +786,12 @@
                   <input type="range" id="reveal-feather" min="0" max="1000" value="500" step="1">
                   <span id="reveal-feather-value">25%</span>
                 </label>
+                <label for="reveal-trail" id="reveal-trail-control" hidden>
+                  <span data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades">Reveal trail</span>
+                  <input type="range" id="reveal-trail" min="0" max="1000" value="1000" step="1"
+                         aria-describedby="reveal-trail-value" aria-valuetext="Whole path">
+                  <span id="reveal-trail-value">Whole path</span>
+                </label>
               </div>
               
               <!-- Angle of View Settings (only shown when background = angle-of-view or angle-of-view-reveal) -->

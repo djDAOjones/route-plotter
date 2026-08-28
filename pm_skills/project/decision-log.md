@@ -2,6 +2,57 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-28 — the reveal fades on a trail, and the hard edge was invisible
+
+**REVEAL-01 shipped as an authorable property**, per the owner's call. The
+mask still repaints every passed path point on every frame — that full rebuild
+is precisely what makes scrubbing bidirectional — but each point is now
+weighted by how far behind the head it sits.
+
+- **Weighted as a fraction of the whole path**, not a point count, so the fade
+  reads identically whatever the path's length or point density. A test pins
+  that a sparse path and a dense one fade the same.
+- **A pure function of position, never an accumulated decay.** Tested by
+  arriving at the same instant forwards and backwards and demanding the same
+  answer. An accumulator would have broken scrubbing and split preview from
+  export.
+- **`revealTrail` = 100 is a sentinel meaning "never fades"**, and it is the
+  default, so every project authored before this control existed renders
+  exactly as it did. That rule lives in `revealTrailAlpha` rather than in its
+  caller: the caller keeps only a fast path that skips per-point work. Putting
+  one copy of a rule in two places is what caused BUG-01 the same day.
+- **The snapshot defaults the value rather than copying it through.** A caller
+  whose live settings predate the property would otherwise write an explicit
+  `undefined`, which the snapshot validator reads as present-but-invalid and
+  refuses to load. The persistence suite caught exactly that.
+
+**The reveal sliders were never synced on load.** A restored project rendered
+its authored spotlight size and feather while the sliders sat at their markup
+defaults, and the spotlight controls stayed hidden until the mode dropdown was
+touched. Adding a third unsynced control would have compounded that, so
+`syncRevealControls` now places all three and their containers at load.
+
+**BUG-02, found while verifying REVEAL-01 in the browser: the default feather
+made the spotlight invisible.** A radial gradient whose two radii are equal
+paints nothing, and `SPOTLIGHT_FEATHER_DEFAULT` is 0 — so `innerRadius`
+equalled `radius` and every new project's spotlight, in both the accumulating
+and non-accumulating modes, rendered *nothing at all*. Measured in Chromium:
+peak mask alpha 0 at feather 0, 255 at feather 1. This mattered beyond its own
+severity — an owner switching on the reveal to try REVEAL-01 would have seen a
+blank canvas and concluded the new feature was broken. The inner circle is now
+kept a sub-pixel inside the outer one, so a zero feather is the hard edge the
+default always claimed to be, shared by both call sites.
+
+**Evidence.** In Chromium at the shipped default feather: no-fade paints the
+whole travelled path (alpha 255 at start, middle and head); a 50% trail gives
+255 at the head, 129 mid-path, 0 at the start; a 20% trail gives 255 only near
+the head. The control shows for spotlight-reveal, hides for plain spotlight,
+and carries `aria-valuetext` in step with its readout — the slider runs a log2
+scale, so its raw position would mean nothing announced.
+
+**Link:** REVEAL-01 (shipped), BUG-02, BUG-01 (same one-rule-two-places
+lesson), REV-04.
+
 ## 2026-08-28 — four owner calls set the shape of the remaining work
 
 With everything decision-free shipped, the rest of the queue needed the owner.

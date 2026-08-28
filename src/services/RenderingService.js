@@ -869,7 +869,9 @@ export class RenderingService {
     const radius = baseRadius * introScale; // Scale from 0 to full during intro
     // Feather is % of spotlight radius, not canvas
     const feather = (revealFeather / 100) * radius;
-    const innerRadius = Math.max(0, radius - feather);
+    // BUG-02: equal radii paint nothing, so a zero feather must still leave a
+    // sub-pixel gap. Shared with the accumulating reveal so both edges agree.
+    const innerRadius = MotionVisibilityService.spotlightInnerRadius(radius, feather);
     
     ctx.save();
     

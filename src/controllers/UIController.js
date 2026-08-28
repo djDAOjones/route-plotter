@@ -3,7 +3,7 @@
  * Handles waypoint list, editor controls, tabs, and animation controls
  */
 
-import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT, PATH_VISIBILITY } from '../config/constants.js';
+import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT, PATH_VISIBILITY, BACKGROUND_VISIBILITY } from '../config/constants.js';
 import { getInlineHelpHTML, getSplashHelpHTML } from '../config/helpContent.js';
 import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
@@ -1067,6 +1067,7 @@ export class UIController {
       const isAOV = mode === 'angle-of-view' || mode === 'angle-of-view-reveal';
       if (spotlightControls) spotlightControls.style.display = isSpotlight ? 'block' : 'none';
       if (aovControls) aovControls.style.display = isAOV ? 'block' : 'none';
+      this.updateRevealTrailVisibility(mode);
       e.target.blur();
     });
     
@@ -1092,6 +1093,19 @@ export class UIController {
       );
       this.elements.revealFeatherValue.textContent = MotionVisibilityService.formatUIValue(featherPercent, '%');
       this.eventBus.emit('motion:reveal-feather-change', featherPercent);
+    });
+
+    // REVEAL-01 — reveal trail (log2 scale, % of the whole path). At the top of
+    // the range the reveal never fades, so the readout says so in words rather
+    // than showing a bare 100% that reads like "almost, but not quite".
+    this.elements.revealTrail?.addEventListener('input', (e) => {
+      const trailPercent = MotionVisibilityService.sliderToLog2Value(
+        parseInt(e.target.value),
+        MOTION.SPOTLIGHT_TRAIL_MIN,
+        MOTION.SPOTLIGHT_TRAIL_MAX
+      );
+      this.setRevealTrailReadout(trailPercent);
+      this.eventBus.emit('motion:reveal-trail-change', trailPercent);
     });
     
     // Angle of View - angle (tan-based curve for perceptual smoothness)
@@ -1149,6 +1163,74 @@ export class UIController {
       }
     }
     if (pacingHint) pacingHint.hidden = !showTrail;
+  }
+
+  /**
+   * REVEAL-01 — the reveal trail only means anything where the reveal
+   * accumulates. Plain spotlight paints the head and nothing else, so a trail
+   * control there would be a control that does nothing.
+   * @param {string} backgroundVisibility - Current background visibility mode
+   */
+  updateRevealTrailVisibility(backgroundVisibility) {
+    const control = document.getElementById('reveal-trail-control');
+    if (!control) return;
+    const applies = backgroundVisibility === BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL;
+    control.hidden = !applies;
+  }
+
+  /**
+   * REVEAL-01 — write the trail readout and keep `aria-valuetext` with it.
+   * The slider runs on a log2 scale, so its raw position is meaningless to a
+   * screen reader; the announced value has to be the one the renderer uses.
+   * At the top of the range the reveal never fades, and saying "100%" would
+   * read as "almost", so that end is named in words.
+   * @param {number} trailPercent - Trail length as a % of the whole path
+   */
+  setRevealTrailReadout(trailPercent) {
+    const text = trailPercent >= MOTION.SPOTLIGHT_TRAIL_MAX
+      ? 'Whole path'
+      : `${MotionVisibilityService.formatUIValue(trailPercent, '%')} of path`;
+    if (this.elements.revealTrailValue) this.elements.revealTrailValue.textContent = text;
+    if (this.elements.revealTrail) this.elements.revealTrail.setAttribute('aria-valuetext', text);
+  }
+
+  /**
+   * REVEAL-01 — put the reveal sliders where the loaded project says they are.
+   * These controls were never synced on load, so a restored project showed its
+   * authored values in the render while the sliders sat at their markup
+   * defaults. Adding a third unsynced control would have made that worse, so
+   * all three are synced together here.
+   * @param {Object} motionSettings - The project's motion settings
+   */
+  syncRevealControls(motionSettings) {
+    const pairs = [
+      [this.elements.revealSize, this.elements.revealSizeValue, motionSettings.revealSize,
+        MOTION.SPOTLIGHT_SIZE_MIN, MOTION.SPOTLIGHT_SIZE_MAX],
+      [this.elements.revealFeather, this.elements.revealFeatherValue, motionSettings.revealFeather,
+        MOTION.SPOTLIGHT_FEATHER_MIN, MOTION.SPOTLIGHT_FEATHER_MAX],
+    ];
+    for (const [slider, readout, value, min, max] of pairs) {
+      if (!slider || !Number.isFinite(value)) continue;
+      slider.value = String(MotionVisibilityService.log2ValueToSlider(value, min, max));
+      if (readout) readout.textContent = MotionVisibilityService.formatUIValue(value, '%');
+    }
+
+    const trail = motionSettings.revealTrail;
+    if (this.elements.revealTrail && Number.isFinite(trail)) {
+      this.elements.revealTrail.value = String(MotionVisibilityService.log2ValueToSlider(
+        trail, MOTION.SPOTLIGHT_TRAIL_MIN, MOTION.SPOTLIGHT_TRAIL_MAX));
+      this.setRevealTrailReadout(trail);
+    }
+
+    const spotlightControls = document.getElementById('spotlight-controls');
+    const aovControls = document.getElementById('aov-controls');
+    const mode = motionSettings.backgroundVisibility;
+    const isSpotlight = mode === BACKGROUND_VISIBILITY.SPOTLIGHT ||
+                        mode === BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL;
+    const isAOV = mode === 'angle-of-view' || mode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW_REVEAL;
+    if (spotlightControls) spotlightControls.style.display = isSpotlight ? 'block' : 'none';
+    if (aovControls) aovControls.style.display = isAOV ? 'block' : 'none';
+    this.updateRevealTrailVisibility(mode);
   }
   
   /**

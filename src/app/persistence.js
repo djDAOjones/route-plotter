@@ -94,6 +94,7 @@ const CANONICAL_PROJECT_DEFAULTS = Object.freeze({
     backgroundVisibility: BACKGROUND_VISIBILITY.ALWAYS_SHOW,
     revealSize: MOTION.SPOTLIGHT_SIZE_DEFAULT,
     revealFeather: MOTION.SPOTLIGHT_FEATHER_DEFAULT,
+    revealTrail: MOTION.SPOTLIGHT_TRAIL_DEFAULT,
     aovAngle: MOTION.AOV_ANGLE_DEFAULT,
     aovDistance: MOTION.AOV_DISTANCE_DEFAULT,
     aovDropoff: MOTION.AOV_DROPOFF_DEFAULT,
@@ -362,7 +363,8 @@ function assertProjectSettings(data) {
     throw new Error('Invalid graphics scale');
   }
   assertFiniteFields(data.motionSettings, [
-    'pathTrail', 'revealSize', 'revealFeather', 'aovAngle', 'aovDistance', 'aovDropoff'
+    'pathTrail', 'revealSize', 'revealFeather', 'revealTrail',
+    'aovAngle', 'aovDistance', 'aovDropoff'
   ], 'motion setting');
 
   for (const [value, label] of [
@@ -473,7 +475,8 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
     if (field in exportSettingsData) exportSettingsData[field] = Number(exportSettingsData[field]);
   }
   const motionSettingsData = safeClone(projectData.motionSettings || {});
-  for (const field of ['pathTrail', 'revealSize', 'revealFeather', 'aovAngle', 'aovDistance', 'aovDropoff']) {
+  for (const field of ['pathTrail', 'revealSize', 'revealFeather', 'revealTrail',
+    'aovAngle', 'aovDistance', 'aovDropoff']) {
     if (field in motionSettingsData) motionSettingsData[field] = Number(motionSettingsData[field]);
   }
 
@@ -1145,6 +1148,11 @@ export const persistenceMixin = {
         backgroundVisibility: this.motionSettings.backgroundVisibility,
         revealSize: this.motionSettings.revealSize,
         revealFeather: this.motionSettings.revealFeather,
+        // Defaulted rather than copied through: a caller whose live settings
+        // predate this property would otherwise write an explicit `undefined`,
+        // which the snapshot validator reads as a present-but-invalid field
+        // and refuses to load.
+        revealTrail: this.motionSettings.revealTrail ?? MOTION.SPOTLIGHT_TRAIL_DEFAULT,
         aovAngle: this.motionSettings.aovAngle,
         aovDistance: this.motionSettings.aovDistance,
         aovDropoff: this.motionSettings.aovDropoff

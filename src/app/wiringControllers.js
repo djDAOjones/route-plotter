@@ -1004,6 +1004,16 @@ export const wiringControllersMixin = {
     });
     
     /**
+     * motion:reveal-trail-change - REVEAL-01: how much of the path behind the
+     * head stays revealed before the reveal fades out
+     */
+    this.eventBus.on('motion:reveal-trail-change', (trailPercent) => {
+      this.motionSettings.revealTrail = trailPercent;
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
      * motion:aov-angle-change - Update angle of view cone angle
      */
     this.eventBus.on('motion:aov-angle-change', (angleDegrees) => {

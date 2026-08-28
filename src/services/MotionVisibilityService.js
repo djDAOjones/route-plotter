@@ -679,12 +679,17 @@ export class MotionVisibilityService {
    * @param {Object} settings - Motion settings
    * @param {number} settings.revealSize - Reveal radius as % of canvas
    * @param {number} settings.revealFeather - Feather width as % of spotlight radius
+   * @param {number} [settings.revealTrail] - REVEAL-01: how much of the path
+   *   behind the head stays revealed, as a % of the whole path. At
+   *   SPOTLIGHT_TRAIL_MAX the reveal never fades, which is the pre-REVEAL-01
+   *   behaviour and the default.
    * @param {Function} imageToCanvas - Coordinate transform function (imgX, imgY) => {x, y}
    * @param {number} currentTimeMs - Current animation time in milliseconds (for intro animation)
    * @returns {HTMLCanvasElement} The reveal mask canvas
    */
   buildSpotlightRevealMask(pathPoints, progress, canvasWidth, canvasHeight, settings, imageToCanvas = null, currentTimeMs = Infinity) {
     const { revealSize, revealFeather } = settings;
+    const revealTrail = settings.revealTrail ?? MOTION.SPOTLIGHT_TRAIL_DEFAULT;
     
     // Apply intro animation scale (0→1 over first second)
     const introScale = MotionVisibilityService.getIntroScale(currentTimeMs);
@@ -708,7 +713,7 @@ export class MotionVisibilityService {
     const baseRadius = (revealSize / 100) * avgSize;
     const radius = baseRadius * introScale; // Scale from 0 to full during intro
     const feather = (revealFeather / 100) * radius;
-    const innerRadius = Math.max(0, radius - feather);
+    const innerRadius = MotionVisibilityService.spotlightInnerRadius(radius, feather);
 
     const ctx = this.revealMaskCtx;
     ctx.globalCompositeOperation = 'source-over';
@@ -720,8 +725,27 @@ export class MotionVisibilityService {
     // Sample rate: draw at every point for smooth coverage (no stepping)
     const sampleRate = 1;
 
+    // REVEAL-01: the reveal fades out behind the head rather than staying lit
+    // for good. Each passed point is weighted by how far behind the head it
+    // is, measured as a fraction of the whole path so the fade reads the same
+    // regardless of path length or point density. The mask is still rebuilt
+    // from scratch every frame — that full rebuild is what makes scrubbing
+    // bidirectional, so the fade must stay a pure function of position, never
+    // an accumulated decay.
+    const headIndex = totalPoints * progress;
+    // Pure fast path: at the sentinel every point is fully lit, so skip the
+    // per-point weighting entirely rather than calling it 1,000 times to be
+    // told 1. The sentinel's meaning itself lives in revealTrailAlpha.
+    const fades = revealTrail < MOTION.SPOTLIGHT_TRAIL_MAX;
+
     // Walk the path and draw reveals at every point for smooth coverage
     for (let i = 0; i <= endIndex; i += sampleRate) {
+      const alpha = fades
+        ? MotionVisibilityService.revealTrailAlpha(i, headIndex, totalPoints, revealTrail)
+        : 1;
+      // Fully faded points contribute nothing; skip the draw entirely.
+      if (alpha <= 0) continue;
+
       const pointRaw = pathPoints[i];
       // Transform from normalized to canvas coords
       const point = imageToCanvas ? imageToCanvas(pointRaw.x, pointRaw.y) : pointRaw;
@@ -731,7 +755,7 @@ export class MotionVisibilityService {
         point.x, point.y, innerRadius,
         point.x, point.y, radius
       );
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
       gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
       ctx.fillStyle = gradient;
@@ -1427,6 +1451,57 @@ export class MotionVisibilityService {
   }
 
   // ========== UTILITY METHODS ==========
+
+  /**
+   * BUG-02 — the inner radius of a spotlight's feather gradient.
+   *
+   * A radial gradient whose two radii are equal paints *nothing*, so a feather
+   * of 0 — which is `SPOTLIGHT_FEATHER_DEFAULT`, and therefore what every new
+   * project starts with — made the whole spotlight invisible rather than
+   * hard-edged. Keeping the inner circle strictly inside the outer one gives
+   * the hard edge the default always claimed to mean.
+   *
+   * @param {number} radius - Outer spotlight radius in px
+   * @param {number} feather - Feather width in px (0 = hard edge)
+   * @returns {number} Inner radius, always strictly less than `radius`
+   */
+  static spotlightInnerRadius(radius, feather) {
+    if (!(radius > 0)) return 0;
+    const HARD_EDGE_PX = 0.5; // sub-pixel: reads as hard, still paints
+    const inner = radius - Math.max(feather, 0);
+    return Math.max(0, Math.min(inner, radius - HARD_EDGE_PX));
+  }
+
+  /**
+   * REVEAL-01 — how strongly a passed path point is still revealed.
+   *
+   * Weighted purely by how far behind the head the point sits, as a fraction
+   * of the whole path, so the fade reads the same whatever the path's length
+   * or point density. It is a pure function of position and never an
+   * accumulated decay: the mask is rebuilt from scratch every frame, and that
+   * rebuild is exactly what lets the reveal scrub backwards as well as
+   * forwards.
+   *
+   * @param {number} pointIndex - Index of the path point being drawn
+   * @param {number} headIndex - Fractional index of the head (totalPoints * progress)
+   * @param {number} totalPoints - Number of points in the path
+   * @param {number} revealTrail - Trail length as a % of the whole path.
+   *   SPOTLIGHT_TRAIL_MAX is the sentinel for "never fades"; that rule lives
+   *   here rather than in the caller so there is exactly one copy of it.
+   * @returns {number} Alpha in 0..1; 0 means fully faded, skip the draw
+   */
+  static revealTrailAlpha(pointIndex, headIndex, totalPoints, revealTrail) {
+    if (!(totalPoints > 0)) return 0;
+    if (revealTrail >= MOTION.SPOTLIGHT_TRAIL_MAX) return 1;
+    const trailFraction = revealTrail / 100;
+    if (!(trailFraction > 0)) return 0;
+    const behindFraction = (headIndex - pointIndex) / totalPoints;
+    // A point at or ahead of the head is fully lit; nothing is "negatively"
+    // behind, and clamping here keeps the caller free of edge handling.
+    if (behindFraction <= 0) return 1;
+    const alpha = 1 - (behindFraction / trailFraction);
+    return alpha > 0 ? Math.min(alpha, 1) : 0;
+  }
 
   /**
    * Convert linear slider value (0-1000) to log2 scaled value

@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 15763,
+      "bytes": 16273,
       "imports": [],
       "format": "esm"
     },
@@ -105,7 +105,7 @@
       "format": "esm"
     },
     "src/services/MotionVisibilityService.js": {
-      "bytes": 70482,
+      "bytes": 74485,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -280,7 +280,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 104867,
+      "bytes": 105057,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2576,7 +2576,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 96201,
+      "bytes": 100400,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2951,7 +2951,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 52741,
+      "bytes": 53095,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3117,7 +3117,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 52136,
+      "bytes": 52578,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3464,7 +3464,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 46259,
+      "bytes": 46591,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3716,13 +3716,13 @@
     }
   },
   "outputs": {
-    ".docs-build-VYJC8Z/app.js.map": {
+    ".docs-build-Vd4kWD/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3315005
+      "bytes": 3327995
     },
-    ".docs-build-VYJC8Z/app.js": {
+    ".docs-build-Vd4kWD/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3731,7 +3731,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 3915
+          "bytesInOutput": 3989
         },
         "src/models/GraphNode.js": {
           "bytesInOutput": 1159
@@ -3764,7 +3764,7 @@
           "bytesInOutput": 2238
         },
         "src/services/MotionVisibilityService.js": {
-          "bytesInOutput": 13391
+          "bytesInOutput": 13843
         },
         "src/utils/uiReadouts.js": {
           "bytesInOutput": 418
@@ -3815,7 +3815,7 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 28264
+          "bytesInOutput": 28277
         },
         "src/utils/crowdArrival.js": {
           "bytesInOutput": 843
@@ -3929,7 +3929,7 @@
           "bytesInOutput": 4418
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 38446
+          "bytesInOutput": 40077
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 17799
@@ -4013,7 +4013,7 @@
           "bytesInOutput": 1721
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 21895
+          "bytesInOutput": 22029
         },
         "src/utils/assetReferences.js": {
           "bytesInOutput": 2653
@@ -4034,7 +4034,7 @@
           "bytesInOutput": 8178
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 28312
+          "bytesInOutput": 28451
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5071
@@ -4076,10 +4076,10 @@
           "bytesInOutput": 1770
         },
         "src/main.js": {
-          "bytesInOutput": 22275
+          "bytesInOutput": 22490
         }
       },
-      "bytes": 1073118
+      "bytes": 1075776
     }
   }
 }

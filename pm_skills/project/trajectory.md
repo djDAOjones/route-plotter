@@ -34,6 +34,18 @@ packages. jszip, esbuild and axe-core were already latest. jsdom 30 refused:
 it needs Node >= 24.15.0 and this checkout runs 24.5.0. (2026-08-28) — see
 decision-log.
 
+## Reveal modes (shipped 2026-08-28)
+
+REVEAL-01 — The spotlight reveal now fades out behind the head over an
+authorable per-project trail, persisted and carried into the exported player;
+the maximum is a sentinel meaning "never fades", so older projects are
+untouched. The reveal sliders are also synced on load for the first time.
+(2026-08-28) — see decision-log.
+
+BUG-02 — A zero feather no longer makes the spotlight invisible: equal gradient
+radii paint nothing, so the shipped default rendered nothing at all in both
+spotlight modes. (2026-08-28) — see decision-log.
+
 ## Branch rendering (shipped 2026-08-28)
 
 BUG-01 — A branched hero route no longer crashes on the trunk's wait index:

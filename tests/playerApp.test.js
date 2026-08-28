@@ -8,6 +8,7 @@ import { AnimationEngine } from '../src/services/AnimationEngine.js';
 import { PathCalculator } from '../src/services/PathCalculator.js';
 import { CoordinateTransform } from '../src/services/CoordinateTransform.js';
 import { CameraService } from '../src/services/CameraService.js';
+import { MOTION } from '../src/config/constants.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import { Scene } from '../src/models/Scene.js';
 
@@ -164,12 +165,36 @@ const BASE_MOTION = {
   backgroundVisibility: 'always-show',
   revealSize: 20,
   revealFeather: 50,
+  revealTrail: 35,
   aovAngle: 60,
   aovDistance: 25,
   aovDropoff: 50
 };
 
 describe('PlayerApp export parity (golden cross-check)', () => {
+
+  test('an authored reveal trail reaches the exported player', async () => {
+    // REVEAL-01 is authorable, so the value has to survive the snapshot and be
+    // adopted by the player. If it fell back to the default the export would
+    // silently render a reveal that never fades while the editor faded it.
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    const snapshot = app._buildProjectSnapshot();
+    expect(snapshot.motionSettings.revealTrail).toBe(35);
+
+    const player = await makePlayerFromSnapshot(snapshot);
+    expect(player.motionSettings.revealTrail).toBe(35);
+  });
+
+  test('a snapshot without a reveal trail falls back to never fading', async () => {
+    // Projects authored before the control existed carry no value; they must
+    // keep looking exactly as they did.
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    const snapshot = app._buildProjectSnapshot();
+    delete snapshot.motionSettings.revealTrail;
+
+    const player = await makePlayerFromSnapshot(snapshot);
+    expect(player.motionSettings.revealTrail).toBe(MOTION.SPOTLIGHT_TRAIL_MAX);
+  });
 
   test('snapshot → PlayerApp reproduces the app timeline exactly', async () => {
     const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
