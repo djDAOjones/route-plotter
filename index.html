@@ -332,6 +332,12 @@
                 <input type="range" id="label-size" min="16" max="48" value="16" step="1" aria-describedby="label-size-value" aria-valuetext="16 reference px">
                 <span id="label-size-value">16 reference px</span>
               </label>
+
+              <!-- LABEL-01: promoted out of More. It is the shortest route to a
+                   readable label, so burying it made the whole feature invisible. -->
+              <div class="control-row">
+                <button id="label-auto-position" class="btn btn-secondary" style="width:100%;" title="Move the label to avoid overlapping the path, markers and other labels">Auto-position</button>
+              </div>
               </div>
 
               <details class="section-more">
@@ -384,10 +390,6 @@
                 <span id="label-offset-y-value">-5%</span>
               </label>
               
-              <!-- Auto-Position Button (moved to bottom per spec §6.2) -->
-              <div class="control-row">
-                <button id="label-auto-position" class="btn btn-secondary" style="width:100%;" title="Auto-position text to avoid collisions">Auto-position</button>
-              </div>
                 </div>
               </details>
               <div class="waypoint-card-actions" role="group" aria-label="Label actions">

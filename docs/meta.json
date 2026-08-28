@@ -259,7 +259,7 @@
       "format": "esm"
     },
     "src/services/TextLabelService.js": {
-      "bytes": 13490,
+      "bytes": 15096,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2800,7 +2800,7 @@
       "format": "esm"
     },
     "src/models/Waypoint.js": {
-      "bytes": 19543,
+      "bytes": 20150,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2848,7 +2848,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 41074,
+      "bytes": 43953,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3464,7 +3464,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 46591,
+      "bytes": 47225,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3716,13 +3716,13 @@
     }
   },
   "outputs": {
-    ".docs-build-Vd4kWD/app.js.map": {
+    ".docs-build-TIX1c1/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3327995
+      "bytes": 3335385
     },
-    ".docs-build-Vd4kWD/app.js": {
+    ".docs-build-TIX1c1/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3809,7 +3809,7 @@
           "bytesInOutput": 429
         },
         "src/services/TextLabelService.js": {
-          "bytesInOutput": 3381
+          "bytesInOutput": 3863
         },
         "src/utils/renderReference.js": {
           "bytesInOutput": 342
@@ -3992,7 +3992,7 @@
           "bytesInOutput": 595
         },
         "src/models/Waypoint.js": {
-          "bytesInOutput": 7471
+          "bytesInOutput": 7560
         },
         "src/utils/routeTrace.js": {
           "bytesInOutput": 1877
@@ -4001,7 +4001,7 @@
           "bytesInOutput": 4585
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 17368
+          "bytesInOutput": 18168
         },
         "src/app/wiringBus.js": {
           "bytesInOutput": 5750
@@ -4076,10 +4076,10 @@
           "bytesInOutput": 1770
         },
         "src/main.js": {
-          "bytesInOutput": 22490
+          "bytesInOutput": 22705
         }
       },
-      "bytes": 1075776
+      "bytes": 1077362
     }
   }
 }

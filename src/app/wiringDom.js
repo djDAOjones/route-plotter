@@ -457,7 +457,16 @@ export const wiringDomMixin = {
     this.elements.waypointLabel.addEventListener('input', (e) => {
       if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
         const text = e.target.value;
+        const wasEmpty = !this.selectedWaypoint.label;
         this.selectedWaypoint.label = text;
+
+        // LABEL-01: a new label starts at the default offset, which frequently
+        // sits under its own marker — so it is written and then invisible.
+        // Place it the moment it first has text, unless the author has already
+        // positioned this label themselves.
+        if (wasEmpty && text && !this.selectedWaypoint.labelPlacedByHand) {
+          this.applyAutoPosition([this.selectedWaypoint]);
+        }
         // Auto-name: populate waypoint name from label text when no custom name exists
         if (!this.selectedWaypoint.name) {
           this.selectedWaypoint._autoNamed = true;
@@ -553,7 +562,9 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         const offset = parseInt(e.target.value);
-        for (const wp of targets) wp.labelOffsetX = offset;
+        // LABEL-01: moving it by hand settles it — auto-position stops
+        // volunteering for this label from here on.
+        for (const wp of targets) { wp.labelOffsetX = offset; wp.labelPlacedByHand = true; }
         this.elements.labelOffsetXValue.textContent = `${offset}%`;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
@@ -564,7 +575,7 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         const offset = parseInt(e.target.value);
-        for (const wp of targets) wp.labelOffsetY = offset;
+        for (const wp of targets) { wp.labelOffsetY = offset; wp.labelPlacedByHand = true; }
         this.elements.labelOffsetYValue.textContent = `${offset}%`;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
@@ -573,34 +584,16 @@ export const wiringDomMixin = {
     // Label auto-position button — each selected label gets its own
     // computed position (auto-position is inherently per-waypoint)
     this.elements.labelAutoPosition?.addEventListener('click', () => {
-      const targets = this.selectionTargets(true).filter(wp => wp.label);
-      if (targets.length > 0) {
-        for (const wp of targets) {
-          const waypointIndex = this.waypoints.indexOf(wp);
-          const result = TextLabelService.autoPosition({
-            waypoint: wp,
-            waypointIndex,
-            waypoints: this.waypoints,
-            pathPoints: this.pathPoints,
-            canvasWidth: this.canvas.width,
-            canvasHeight: this.canvas.height,
-            imageToCanvas: (x, y) => this.coordinateTransform.imageToCanvas(x, y)
-          });
-          wp.labelOffsetX = Math.round(result.offsetX);
-          wp.labelOffsetY = Math.round(result.offsetY);
-          console.debug(`Auto-positioned label to (${result.offsetX.toFixed(1)}%, ${result.offsetY.toFixed(1)}%)`);
-        }
+      // Asking for it explicitly is not the same as it happening to you, so
+      // the button ignores labelPlacedByHand and always runs.
+      this.applyAutoPosition(this.selectionTargets(true).filter(wp => wp.label));
+    });
 
-        // Offset sliders show the primary's result
-        if (this.selectedWaypoint && targets.includes(this.selectedWaypoint)) {
-          this.elements.labelOffsetX.value = this.selectedWaypoint.labelOffsetX;
-          this.elements.labelOffsetXValue.textContent = `${this.selectedWaypoint.labelOffsetX}%`;
-          this.elements.labelOffsetY.value = this.selectedWaypoint.labelOffsetY;
-          this.elements.labelOffsetYValue.textContent = `${this.selectedWaypoint.labelOffsetY}%`;
-        }
-
-        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
-      }
+    // LABEL-01: once the text is committed the box has its final size, which
+    // is the moment a collision is worth mentioning. Offering it while they
+    // are still typing would nag at every keystroke.
+    this.elements.waypointLabel.addEventListener('change', () => {
+      this.offerAutoPositionIfColliding(this.selectedWaypoint);
     });
     
     // Label colour/background/opacity have model + rendering support but
@@ -985,5 +978,81 @@ export const wiringDomMixin = {
       }
     });
     */
+  },
+
+  /**
+   * LABEL-01 — place each label where auto-position judges best.
+   *
+   * Shared by the explicit button and the automatic first-write placement so
+   * the two can never drift apart. It does NOT set `labelPlacedByHand`: the
+   * algorithm placing a label is not the author placing it, and treating it as
+   * such would silence the very offer this ticket exists to make.
+   *
+   * @param {Array<Object>} targets - Waypoints whose labels to place
+   */
+  applyAutoPosition(targets) {
+    if (!targets || targets.length === 0) return;
+
+    for (const wp of targets) {
+      const result = TextLabelService.autoPosition({
+        waypoint: wp,
+        waypointIndex: this.waypoints.indexOf(wp),
+        waypoints: this.waypoints,
+        pathPoints: this.pathPoints,
+        canvasWidth: this.canvas.width,
+        canvasHeight: this.canvas.height,
+        imageToCanvas: (x, y) => this.coordinateTransform.imageToCanvas(x, y)
+      });
+      wp.labelOffsetX = Math.round(result.offsetX);
+      wp.labelOffsetY = Math.round(result.offsetY);
+    }
+
+    // Offset sliders show the primary's result
+    if (this.selectedWaypoint && targets.includes(this.selectedWaypoint)) {
+      if (this.elements.labelOffsetX) {
+        this.elements.labelOffsetX.value = this.selectedWaypoint.labelOffsetX;
+        this.elements.labelOffsetXValue.textContent = `${this.selectedWaypoint.labelOffsetX}%`;
+      }
+      if (this.elements.labelOffsetY) {
+        this.elements.labelOffsetY.value = this.selectedWaypoint.labelOffsetY;
+        this.elements.labelOffsetYValue.textContent = `${this.selectedWaypoint.labelOffsetY}%`;
+      }
+    }
+
+    this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+  },
+
+  /**
+   * LABEL-01 — offer to move a label that has ended up overlapping something.
+   *
+   * An offer, never an action: a label the author placed by hand is left
+   * exactly where they put it, and the prompt fades on its own. It is
+   * deliberately not the only route to auto-position — the button sits in the
+   * Label card's primary tier — so nothing is lost if the prompt is missed or
+   * never seen.
+   *
+   * @param {Object|null} waypoint - The waypoint whose label was just edited
+   * @returns {boolean} Whether an offer was made
+   */
+  offerAutoPositionIfColliding(waypoint) {
+    if (!waypoint || !waypoint.label || !waypoint.isMajor) return false;
+    if (!this.pathPoints || this.pathPoints.length === 0) return false;
+
+    const collides = TextLabelService.collidesAtCurrentPosition({
+      waypoint,
+      waypointIndex: this.waypoints.indexOf(waypoint),
+      waypoints: this.waypoints,
+      pathPoints: this.pathPoints,
+      canvasWidth: this.canvas.width,
+      canvasHeight: this.canvas.height,
+      imageToCanvas: (x, y) => this.coordinateTransform.imageToCanvas(x, y)
+    });
+    if (!collides) return false;
+
+    this.showToast('This label overlaps something.', 8000, {
+      label: 'Auto-position',
+      onClick: () => this.applyAutoPosition([waypoint])
+    });
+    return true;
   }
 };

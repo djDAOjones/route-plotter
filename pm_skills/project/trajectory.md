@@ -34,6 +34,14 @@ packages. jszip, esbuild and axe-core were already latest. jsdom 30 refused:
 it needs Node >= 24.15.0 and this checkout runs 24.5.0. (2026-08-28) — see
 decision-log.
 
+## Inspector polish (shipped 2026-08-28)
+
+LABEL-01 — Auto-position now runs when a label is first written, never again
+once the author has placed it by hand (a new persisted flag), and the button
+sits in the Label card's primary tier instead of behind More. A colliding label
+raises one fading offer to re-place it, reusing the toast. (2026-08-28) — see
+decision-log.
+
 ## Reveal modes (shipped 2026-08-28)
 
 REVEAL-01 — The spotlight reveal now fades out behind the head over an

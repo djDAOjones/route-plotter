@@ -2,6 +2,52 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-28 — a label the author placed is never moved out from under them
+
+**LABEL-01 shipped.** The owner's judgement was that auto-position itself works
+well; what was wrong was *when* it ran and how findable it was. Three contracts
+came out of that, and they pull against each other, so each is pinned:
+
+- **It runs when a label is first written.** A new label starts at the default
+  offset, which frequently sits under its own marker — written, then invisible.
+  It is placed the moment it first has text.
+- **It never runs again once the author has placed the label.** A new persisted
+  `labelPlacedByHand` flag is set by the offset sliders, the only route by
+  which a label can be moved by hand. Absent on older saves, which restore as
+  *not* placed — so they stay eligible rather than being frozen where they are.
+  It is deliberately excluded from the style-propagation lists: where a label
+  sits is per-waypoint authoring state, not a style to apply onward.
+- **Asking for it explicitly always works.** The button ignores the flag. Being
+  asked for is not the same as happening to you, and the distinction is the
+  whole reason the flag can be safe.
+
+**The offer fires on collision, which is the owner's change to the ticket.**
+The original plan prompted on first write; the owner moved it to "when a
+collision is detected", which is better — a prompt on every first label is
+noise, and a collision is the moment the offer is actually worth making. It is
+checked when the text is *committed*, not per keystroke: only then does the
+box have its final size. `collidesAtCurrentPosition` reuses the very scoring
+auto-position optimises against, so "colliding" means exactly what
+auto-position would try to escape.
+
+**The prompt reuses the existing toast rather than inventing a component**,
+gaining one optional action button. That keeps it in the established polite
+live region and out of the focus order. It is an offer that fades, so it is
+never the only route: the button now sits in the Label card's primary tier,
+which is the other half of the owner's call. Four primary controls is the top
+of the 2-4 budget, and the tier guard in `reviewAccessibility.test.js` was
+updated to say so — the old expectation encoded a design decision the owner has
+now overridden, so the expectation moved rather than the check being weakened.
+
+**Evidence.** Verified live in Chromium: a first write moves the label off the
+default; dragging an offset slider sets the flag; rewriting the label
+afterwards leaves it exactly where the author put it; a colliding label raises
+one toast whose 44px action actually re-places it; a label that fits raises
+nothing. The example ZIPs changed because `Waypoint.toJSON` now carries the
+flag. The working project was backed up and restored byte-for-byte.
+
+**Link:** LABEL-01 (shipped), UI-01 (tier budget), REV-05.
+
 ## 2026-08-28 — the reveal fades on a trail, and the hard edge was invisible
 
 **REVEAL-01 shipped as an authorable property**, per the owner's call. The

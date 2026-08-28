@@ -72,14 +72,6 @@
   owner should confirm the redistribution posture is what they intend. Review
   §18 "MPL/source-notice obligations". DEPS-01 has since shipped, so the
   versions to confirm are settled: mediabunny 1.55.3 and axe-core 4.13.0.
-- [ ] **LABEL-01 Auto-position at the right moments** · Inspector polish
-  [ready] — Owner: auto-position itself works well. Three changes: run it when
-  a label is first written (it starts hidden), do NOT re-run it after the
-  author has moved the label by hand, and surface the control — it is buried
-  in the collapsed "More" disclosure. **Owner 2026-08-28: move the button up**
-  into the Label card's primary tier, **and fire the prompt on collision
-  detection** rather than on first write — the nudge should appear when a label
-  actually overlaps something, which is when it is worth offering.
 
 ### Icebox
 

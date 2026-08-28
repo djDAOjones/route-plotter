@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 291 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 292 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -308,6 +308,10 @@
 - `tests/htmlExportCache.test.js` — HTML export fetches the standalone player bundle for the exact application build
 - `tests/imageAssetRoundTrip.test.js` — Persistence-safe image IDs and import→export→import asset round-trip contracts
 - `tests/interactionPointer.test.js` — Pointer transaction contracts: exactly-once mouse/touch/pen taps, common threshold, capture/window terminal fallback, cancellation, mode priority, group snapshots and teardown
+- `tests/labelAutoPosition.test.js` — LABEL-01 contract: the hand-placed flag's
+  default, round-trip and exclusion from style propagation; auto-position
+  leaving a label still eligible; and the collision offer firing only when the
+  label actually overlaps
 - `tests/mixedControlState.test.js` — Mixed comparison, accessible control presentation and user-input reset contracts
 - `tests/mixins.test.js` — Mixin split guards: cross-mixin name-collision check, cluster spot-checks, snapToAngle unit tests
 - `tests/modelBoundary.test.js` — Strict graph-endpoint and persisted emitter integer boundary contracts

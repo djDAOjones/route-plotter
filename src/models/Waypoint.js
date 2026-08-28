@@ -86,6 +86,16 @@ export class Waypoint {
     this.labelOffsetX = options.labelOffsetX !== undefined ? options.labelOffsetX : TEXT_LABEL.OFFSET_DEFAULT_X;
     /** @type {number} Y offset from marker center (percentage of canvas height, -50 to 50) */
     this.labelOffsetY = options.labelOffsetY !== undefined ? options.labelOffsetY : TEXT_LABEL.OFFSET_DEFAULT_Y;
+    /**
+     * LABEL-01: set once the author positions this label themselves. Auto-
+     * position then never runs on its own again for this waypoint — the
+     * author's placement outranks the algorithm's. The explicit button still
+     * works, because asking for it is not the same as it happening to you.
+     * Deliberately absent from the style-propagation lists: where a label sits
+     * is per-waypoint authoring state, not a style to apply onward.
+     * @type {boolean}
+     */
+    this.labelPlacedByHand = options.labelPlacedByHand === true;
     /** @type {number} Text area width (percentage of canvas width, 5-50) */
     this.labelWidth = options.labelWidth !== undefined ? options.labelWidth : TEXT_LABEL.WIDTH_DEFAULT;
     /** @type {number} Font size in pixels (10-48, WCAG minimum 14) */
@@ -401,6 +411,7 @@ export class Waypoint {
       labelMode: this.labelMode,
       labelOffsetX: this.labelOffsetX,
       labelOffsetY: this.labelOffsetY,
+      labelPlacedByHand: this.labelPlacedByHand,
       labelWidth: this.labelWidth,
       labelSize: this.labelSize,
       labelColor: this.labelColor,

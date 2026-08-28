@@ -344,6 +344,26 @@ select{
   transform:translateY(0);
 }
 
+/* LABEL-01: a toast may carry one offer. It is a real control on a dark
+   surface, so it takes the full 44px target and states its own affordance —
+   white on --ui-05 is ~21:1, well clear of AAA. */
+.toast-action{
+  flex-shrink:0;
+  min-height:var(--control-lg);
+  padding:0 var(--space-3);
+  background:transparent;
+  color:inherit;
+  border:1px solid currentColor;
+  border-radius:var(--radius-1);
+  font-size:var(--type-caption);
+  font-weight:600;
+  cursor:pointer;
+}
+
+.toast-action:hover{
+  background:rgba(255,255,255,0.12);
+}
+
 .toast-dismiss{
   flex-shrink:0;
   width:1.25rem;

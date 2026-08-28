@@ -123,6 +123,55 @@ export class TextLabelService {
   }
   
   /**
+   * LABEL-01 — does this label collide where the author has actually put it?
+   *
+   * Reuses the same scoring auto-position optimises against, so "colliding"
+   * means exactly what auto-position would try to escape. A score of 0 is a
+   * clean position; anything above it overlaps the path, a marker or another
+   * label.
+   *
+   * @param {Object} params - Same shape as autoPosition's parameters
+   * @returns {boolean} True when the label's current offset collides
+   */
+  static collidesAtCurrentPosition({
+    waypoint,
+    waypointIndex,
+    waypoints,
+    pathPoints,
+    canvasWidth,
+    canvasHeight,
+    imageToCanvas
+  }) {
+    if (!waypoint || !waypoint.label || !imageToCanvas) return false;
+
+    const markerPos = imageToCanvas(waypoint.imgX, waypoint.imgY);
+    const textWidth = (waypoint.labelWidth / 100) * canvasWidth;
+    const textHeight = this.estimateTextHeight(waypoint.label, textWidth, waypoint.labelSize);
+
+    // The authored offsets are percentages of the canvas, the same space
+    // autoPosition converts its result back into.
+    const centreX = markerPos.x + (waypoint.labelOffsetX / 100) * canvasWidth;
+    const centreY = markerPos.y + (waypoint.labelOffsetY / 100) * canvasHeight;
+
+    const score = this.scorePosition({
+      textBox: {
+        left: centreX - textWidth / 2,
+        right: centreX + textWidth / 2,
+        top: centreY - textHeight / 2,
+        bottom: centreY + textHeight / 2
+      },
+      waypointIndex,
+      waypoints,
+      pathPoints,
+      canvasWidth,
+      canvasHeight,
+      imageToCanvas
+    });
+
+    return score > 0;
+  }
+
+  /**
    * Score a text position based on collisions
    * Lower score = better position
    * 

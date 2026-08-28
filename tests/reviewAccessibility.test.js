@@ -415,10 +415,14 @@ describe('render and static UI regressions', () => {
         ],
       },
       label: {
-        primary: ['waypoint-label', 'label-mode', 'label-size'],
+        // LABEL-01 (owner, 2026-08-28): Auto-position moved up out of More.
+        // It is the shortest route to a readable label, and burying it made
+        // the feature effectively invisible. Four primary controls is the top
+        // of the 2-4 budget, which is why nothing else may join them here.
+        primary: ['waypoint-label', 'label-mode', 'label-size', 'label-auto-position'],
         more: [
           'label-color', 'label-bg-color', 'label-bg-opacity',
-          'label-width', 'label-offset-x', 'label-offset-y', 'label-auto-position',
+          'label-width', 'label-offset-x', 'label-offset-y',
         ],
       },
       leg: {
@@ -431,7 +435,8 @@ describe('render and static UI regressions', () => {
       },
       reveal: {
         primary: ['waypoint-visibility', 'path-visibility', 'background-visibility'],
-        more: ['path-trail', 'reveal-size', 'reveal-feather', 'aov-angle', 'aov-distance', 'aov-dropoff'],
+        more: ['path-trail', 'reveal-size', 'reveal-feather', 'reveal-trail',
+          'aov-angle', 'aov-distance', 'aov-dropoff'],
       },
       video: {
         primary: ['export-res-x', 'export-res-y', 'preset-native', 'preset-16-9', 'preset-1-1', 'preset-9-16', 'export-frame-rate'],

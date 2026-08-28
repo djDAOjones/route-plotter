@@ -753,14 +753,29 @@ class RoutePlotter {
    * Show a toast notification that auto-dismisses
    * @param {string} message - Text to display
    * @param {number} [duration=5000] - Time in ms before auto-dismiss
+   * @param {{label: string, onClick: Function}} [action] - Optional offer the
+   *   toast carries (LABEL-01). It is only ever an offer: the same action must
+   *   remain reachable elsewhere, because a toast fades and can be missed.
    */
-  showToast(message, duration = 5000) {
+  showToast(message, duration = 5000, action = null) {
     const container = this.elements.toastContainer;
     if (!container) return;
     
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.textContent = message;
+    
+    if (action && typeof action.onClick === 'function') {
+      const actionBtn = document.createElement('button');
+      actionBtn.className = 'toast-action';
+      actionBtn.type = 'button';
+      actionBtn.textContent = action.label;
+      actionBtn.addEventListener('click', () => {
+        action.onClick();
+        remove();
+      });
+      toast.appendChild(actionBtn);
+    }
     
     const dismiss = document.createElement('button');
     dismiss.className = 'toast-dismiss';
@@ -773,12 +788,12 @@ class RoutePlotter {
     // Trigger enter animation on next frame
     requestAnimationFrame(() => toast.classList.add('is-visible'));
     
-    const remove = () => {
+    function remove() {
       toast.classList.remove('is-visible');
       toast.addEventListener('transitionend', () => toast.remove(), { once: true });
       // Fallback removal if transition doesn't fire
       setTimeout(() => { if (toast.parentNode) toast.remove(); }, 500);
-    };
+    }
     
     dismiss.addEventListener('click', remove);
     if (duration > 0) setTimeout(remove, duration);
