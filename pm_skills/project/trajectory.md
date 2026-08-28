@@ -34,6 +34,14 @@ packages. jszip, esbuild and axe-core were already latest. jsdom 30 refused:
 it needs Node >= 24.15.0 and this checkout runs 24.5.0. (2026-08-28) — see
 decision-log.
 
+## Performance (shipped 2026-08-28)
+
+PERF-01 — The supported ceiling is now measured, not assumed: waypoint count is
+the only dimension that costs frame time (comfortable to ~200, borderline at
+500, not interactive by 1,000), while 5,000 dots cost ~1 ms and image
+resolution costs no frame time at all — only memory. (2026-08-28) — see
+decision-log.
+
 ## Inspector polish (shipped 2026-08-28)
 
 LABEL-01 — Auto-position now runs when a label is first written, never again

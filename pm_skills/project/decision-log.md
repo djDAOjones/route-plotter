@@ -2,6 +2,61 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-08-28 — the ceiling is waypoints; crowds and image size are not it
+
+**PERF-01 measured rather than agreed**, per the owner's call: profile a range
+and read the ceiling off the data. Measured in production Chromium at a fixed
+1280x720 render surface, median and p95 of `render()` over 25 deterministic
+timeline instants — the same pure evaluation play, scrub and export share, so
+the numbers are not a sampling artefact.
+
+**Waypoint count is the only dimension that costs real frame time.**
+
+| Waypoints | Path points | Median | p95 | Verdict |
+| --- | --- | --- | --- | --- |
+| 5-50 | 451-4,902 | 0.2-0.6 ms | <1 ms | free |
+| 100 | 9,902 | 1.2 ms | 1.6 ms | free |
+| 200 | 19,902 | 1.8 ms | 3.3 ms | comfortable |
+| 500 | 49,902 | 6.4 ms | 15.6 ms | borderline |
+| 1,000 | 99,902 | 18.1 ms | 51.7 ms | not interactive |
+| 2,000 (the enforced limit) | 199,902 | 64.6 ms | 222 ms | unusable |
+
+**Crowd size is close to free.** Holding a 12-waypoint route, 5,000 dots — the
+per-emitter maximum — costs 1.2 ms median against 0.3 ms for none. The whole
+range from 0 to the limit spans about one millisecond.
+
+**Image resolution costs no frame time at all.** 1 MP and 48 MP both render in
+0.3 ms: the destination surface is fixed, so the downscale is effectively
+constant-cost. What a large image costs is *memory and import*, not rendering
+— 48 MP is 183 MiB decoded. Worth saying plainly, because the admission limits
+(48 MP / 40 MiB) read like performance limits and are not.
+
+**Combined profiles**, each with route, crowd and image together:
+
+| Profile | Waypoints | Dots | Image | Median | p95 | Holds 60fps |
+| --- | --- | --- | --- | --- | --- | --- |
+| Small | 8 | 100 | 1 MP | 0.3 ms | 0.6 ms | yes |
+| Typical | 25 | 500 | 4 MP | 0.7 ms | 1.0 ms | yes |
+| Large | 100 | 2,000 | 12 MP | 1.5 ms | 2.5 ms | yes |
+| Extreme | 500 | 5,000 | 24 MP | 7.4 ms | 18.4 ms | no |
+| At every limit | 2,000 | 5,000 | 48 MP | 75.8 ms | 210 ms | no |
+
+**What the data says the ceiling is.** Expressed as "stays interactive at
+60fps including p95": comfortably **200 waypoints**, borderline at 500, gone by
+1,000. Crowd size and image resolution should not appear in a stated ceiling at
+all — neither is the binding constraint. The enforced `MAX_WAYPOINTS` of 2,000
+is roughly ten times the comfortable figure; that is a *safety* bound against
+hostile input (RP-09), and this measurement does not argue for lowering it, but
+it does mean the UI limit was never a performance statement.
+
+**Caveats, stated rather than buried.** One machine, one browser, one surface
+size; a larger canvas or a slower machine moves every number. Render cost is
+not export cost — export adds encoding per frame. These are the figures to
+re-run against, not universal constants, which is exactly what ICE-03 exists
+to make repeatable; its stated trigger ("alongside PERF-01") has now fired.
+
+**Link:** PERF-01 (shipped), ICE-03 (promoted), RP-09.
+
 ## 2026-08-28 — a label the author placed is never moved out from under them
 
 **LABEL-01 shipped.** The owner's judgement was that auto-position itself works

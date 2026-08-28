@@ -57,14 +57,14 @@
   decision rather than a secrecy one: keep it for debuggable production stack
   traces, or drop it. **Owner 2026-08-28: decide at release** — carry it into
   DEPLOY-01 rather than settling it now. Review §17 Optional.
-- [ ] **PERF-01 Benchmark a representative maximum project** · Performance
-  [ready] — Hostile inputs are bounded and fixture-covered (RP-09), but no
-  *legitimate* large project was ever profiled, so the supported ceiling is a
-  UI limit rather than a measured budget. **Owner 2026-08-28: profile a range**
-  — small, typical, large and extreme across waypoint count, crowd size and
-  image resolution, and deliver a cost curve, so the supported ceiling is a
-  judgement read from data rather than a number agreed up front. Review §18
-  "intended project-size ceiling".
+- [ ] **ICE-03 Visual and performance benchmark corpus** · QA [ready] —
+  **Promoted 2026-08-28: its own trigger fired alongside PERF-01.** That pass
+  measured the cost curve by hand in a browser console; the numbers are in the
+  decision-log but nothing re-runs them, so the next optimisation decision is
+  anecdotal again. Make the harness repeatable — fixed render surface, the same
+  deterministic timeline instants, the waypoint/crowd/image sweeps — and pin a
+  regression threshold. Golden-frame fixtures already cover timeline drift;
+  this covers visual and performance drift.
 - [ ] **LEGAL-01 Confirm the MPL source-notice posture** · Governance
   [ready] [maintainer] — `mediabunny` (runtime, bundled) and now `axe-core`
   (dev-only) are MPL-2.0. Notices and licence text shipped under REV-09, but
@@ -83,11 +83,6 @@
   contains secondary area palettes under More while keeping Marker colour
   visible for novices; promote only if observed palette height becomes a real
   navigation problem.
-- [ ] **ICE-03 Visual and performance benchmark corpus** · QA [deferred] —
-  Golden-frame fixtures catch timeline regressions, but there is no repeatable
-  benchmark for subtle visual or performance drift, so optimisation decisions
-  stay anecdotal. Review §17 Optional. Promote if a visual regression escapes
-  the golden frames, or alongside PERF-01.
 - [ ] **ICE-02 Import-time palette conversion** · Import/colour [deferred] —
   Import-time Okabe-Ito/UoN palette conversion. Promote only on user demand;
   photo posterisation/dithering needs separate quality work.
