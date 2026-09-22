@@ -9,6 +9,7 @@ import { STORAGE_LIMITS, StorageService } from '../src/services/StorageService.j
 import { UndoService } from '../src/services/UndoService.js';
 import { invalidateProjectOperations } from '../src/app/operationGeneration.js';
 import { localStorageMock } from './setup.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 
 const PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
@@ -228,6 +229,7 @@ afterEach(() => {
 
 describe('StorageService autosave honesty and lifecycle', () => {
   test('a failed delayed write is neither cached nor logged as success and can be retried', () => {
+    allowConsole(/^Failed to save to localStorage/);
     vi.useFakeTimers();
     const service = new StorageService();
     const results = [];
@@ -295,6 +297,9 @@ describe('StorageService autosave honesty and lifecycle', () => {
 });
 
 describe('transactional project loading', () => {
+  // Every load here is meant to be rejected, and a rejection is reported.
+  beforeEach(() => allowConsole(/^Failed to load project:/));
+
   test('Open Project resolving after Clear cannot replace the cleared baseline', async () => {
     const app = makeApp();
     const imported = deferred();
@@ -1040,6 +1045,7 @@ describe('project save revision tracking', () => {
   });
 
   test('ZIP save fails clearly when live background source bytes are unavailable', async () => {
+    allowConsole(/^Failed to save project:/);
     const app = makeApp();
     app.background.image = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
     app._autosaveBackgroundCache = null;

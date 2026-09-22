@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, test, expect, vi, afterEach } from 'vitest';
+import { describe, test, expect, vi, afterEach, beforeEach } from 'vitest';
 import { InteractionHandler } from '../src/handlers/InteractionHandler.js';
 import { setupDocumentCommands } from '../src/app/wiringControllers.js';
 import { playbackMixin } from '../src/app/playback.js';
@@ -18,6 +18,7 @@ import {
   formatShapeAmplitude,
   setRangeReadout,
 } from '../src/utils/uiReadouts.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 
 const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
 const mainCss = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
@@ -31,6 +32,10 @@ afterEach(() => {
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
 });
+
+// This fixture builds part of the sidebar, so the visibility registry warns
+// about the controls it leaves out.
+beforeEach(() => allowConsole(/^\[Visibility\] Element not found: /));
 
 describe('review remediation keyboard path', () => {
   test('plain Tab remains a browser focus command and Space emits once from non-controls', () => {

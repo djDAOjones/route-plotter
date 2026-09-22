@@ -5,6 +5,8 @@
 
 import { vi } from 'vitest';
 
+import { installConsoleGuard } from './helpers/consoleGuard.js';
+
 /**
  * jsdom 27 exposes several globals (performance, localStorage, Image, URL)
  * as getter-only properties. Plain assignment (`global.x = ...`) throws
@@ -247,3 +249,6 @@ export {
   createRecordingContext,
   contextFor
 };
+
+// Unexpected console.error/warn fails the test that produced it (TST-10).
+installConsoleGuard();

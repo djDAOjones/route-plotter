@@ -25,6 +25,7 @@ import { wiringControllersMixin } from '../src/app/wiringControllers.js';
 import { undoRedoMixin } from '../src/app/undoRedo.js';
 import { UIController } from '../src/controllers/UIController.js';
 import { attachSwatchPickers } from '../src/components/SwatchPicker.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 
 // ── Stub waypoints ──────────────────────────────────────────────────
 
@@ -106,6 +107,10 @@ function makeApp({ waypoints = [] } = {}) {
 }
 
 // ── selectionTargets ────────────────────────────────────────────────
+
+// This fixture builds part of the sidebar, so the visibility registry warns
+// about the controls it leaves out.
+beforeEach(() => allowConsole(/^\[Visibility\] Element not found: /));
 
 describe('selectionTargets', () => {
   test('empty selection yields no targets', () => {

@@ -20,9 +20,14 @@ import { EventBus } from '../src/core/EventBus.js';
 import { UIController } from '../src/controllers/UIController.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import { pointerMixin } from '../src/app/pointer.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 
 const major = (id, extra = {}) => Object.assign(Waypoint.createMajor(0.5, 0.5), { id }, extra);
 const minor = (id, extra = {}) => Object.assign(Waypoint.createMinor(0.5, 0.5), { id }, extra);
+
+// This fixture builds part of the sidebar, so the visibility registry warns
+// about the controls it leaves out.
+beforeEach(() => allowConsole(/^\[Visibility\] Element not found: /));
 
 describe('branch numbering', () => {
   test('a branch waypoint numbers fork·letter·position', () => {

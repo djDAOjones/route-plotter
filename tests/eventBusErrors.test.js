@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { EventBus } from '../src/core/EventBus.js';
+import { allowConsole, recordedConsole } from './helpers/consoleGuard.js';
 
 /**
  * ISO-02 — a swallowed listener error should be observable.
@@ -10,12 +11,9 @@ import { EventBus } from '../src/core/EventBus.js';
  * is what lets tests fail on an error the app would only have logged.
  */
 describe('EventBus listener errors (ISO-02)', () => {
-  // Restore spies even when an assertion fails, or a console spy outlives its
-  // test: clearing mock history does not restore an implementation.
-  afterEach(() => vi.restoreAllMocks());
 
   test('by default a throwing listener is logged and the others still run', () => {
-    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    allowConsole(/^Error in event listener for waypoint:add:/);
     const bus = new EventBus();
     const failure = new Error('boom');
     const after = vi.fn();
@@ -25,14 +23,12 @@ describe('EventBus listener errors (ISO-02)', () => {
     bus.emit('waypoint:add', { imgX: 0.5 });
 
     expect(after).toHaveBeenCalledWith({ imgX: 0.5 });
-    expect(logged).toHaveBeenCalledTimes(1);
-    expect(logged.mock.calls[0]).toEqual(['Error in event listener for waypoint:add:', failure]);
+    expect(recordedConsole()).toEqual(['error: Error in event listener for waypoint:add: Error: boom']);
     expect(bus.listenerErrorCount).toBe(1);
   });
 
   test('a handler receives the error, its event and its arguments instead', () => {
     const onListenerError = vi.fn();
-    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     const bus = new EventBus({ onListenerError });
     const failure = new Error('boom');
     const after = vi.fn();
@@ -47,7 +43,7 @@ describe('EventBus listener errors (ISO-02)', () => {
     });
     // A handler that returns leaves the rest of the emit as it was.
     expect(after).toHaveBeenCalledWith({ waypoint: 'wp_1' }, 'extra');
-    expect(logged).not.toHaveBeenCalled();
+    expect(recordedConsole()).toEqual([]);
     expect(bus.listenerErrorCount).toBe(1);
   });
 

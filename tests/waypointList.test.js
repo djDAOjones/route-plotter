@@ -19,6 +19,7 @@ import { describe, test, expect, beforeEach } from 'vitest';
 import { EventBus } from '../src/core/EventBus.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import { UIController } from '../src/controllers/UIController.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 
 function inspectorMarkup() {
   document.body.innerHTML = `
@@ -35,6 +36,10 @@ function inspectorMarkup() {
 
 const major = name => Object.assign(Waypoint.createMajor(0.5, 0.5), name ? { name } : {});
 const minor = name => Object.assign(Waypoint.createMinor(0.5, 0.5), name ? { name } : {});
+
+// This fixture builds part of the sidebar, so the visibility registry warns
+// about the controls it leaves out.
+beforeEach(() => allowConsole(/^\[Visibility\] Element not found: /));
 
 describe('UI-02 waypoint list', () => {
   let listEl;
