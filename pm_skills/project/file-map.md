@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 301 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 302 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 77 file(s)
+- `tests` — 78 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -311,6 +311,7 @@
 - `tests/crowdArrival.test.js` — COMPOSE-02 contract: onset/journey maths,
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
+- `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
