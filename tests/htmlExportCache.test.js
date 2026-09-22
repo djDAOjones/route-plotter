@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 
 const PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
@@ -120,6 +121,7 @@ describe('HTML export player cache correctness', () => {
   });
 
   test('fails clearly when original HTML background source bytes are missing or invalid', async () => {
+    allowConsole(/^HTML export background source is invalid:/);
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       text: vi.fn().mockResolvedValue('window.playerReady = true;'),

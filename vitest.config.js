@@ -4,6 +4,8 @@
 
 import { defineConfig } from 'vite';
 
+import MinCountReporter from './tests/helpers/minCountReporter.js';
+
 export default defineConfig({
   test: {
     // Test environment
@@ -41,8 +43,17 @@ export default defineConfig({
     // Watch mode
     watchExclude: ['node_modules', 'dist'],
     
-    // Reporters
-    reporters: ['verbose'],
+    // Reporters. The min-count reporter fails a run that is too small to be
+    // the real suite (TST-10).
+    reporters: ['verbose', new MinCountReporter()],
+
+    // The app narrates itself to the console, which buried real signal in
+    // hundreds of lines a run. Its own debug output is dropped; anything a
+    // test prints is kept, and console.error/warn are judged by the guard in
+    // tests/helpers/consoleGuard.js (TST-10).
+    onConsoleLog(log) {
+      return !/^\s*(📐|🎬|🚀|✅|📦|📥|🔧|🛤️|📍|⏱️|🏃|🎛️|📷|💾|🧭|🎚️|🖼️|↩️|⏭️|🔁)/u.test(log);
+    },
     
     // Test timeout
     testTimeout: 10000,

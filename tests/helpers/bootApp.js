@@ -11,9 +11,45 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+/**
+ * A booted app keeps working after its test ends — a queued render, the
+ * autosave debounce, the transport — and anything it logs then races the
+ * environment's teardown. Every boot is stopped when its test finishes.
+ */
+const booted = new Set();
+
+afterEach(() => {
+  const failures = [];
+  for (const app of booted) failures.push(...stopApp(app));
+  booted.clear();
+  delete window.app;
+  // Each step is attempted, and a failure is reported rather than swallowed:
+  // a throwing listener during teardown is exactly what the strict bus is for.
+  if (failures.length === 1) throw failures[0];
+  if (failures.length > 1) throw new AggregateError(failures, 'The booted app could not be stopped');
+});
+
+function stopApp(app) {
+  const failures = [];
+  const attempt = (step) => {
+    try {
+      step();
+    } catch (error) {
+      failures.push(error);
+    }
+  };
+
+  attempt(() => { if (app._renderRafId) cancelAnimationFrame(app._renderRafId); });
+  attempt(() => { app.renderQueued = false; });
+  attempt(() => app.animationEngine?.stop?.() ?? app.animationEngine?.pause?.());
+  attempt(() => app.storageService?.cancelAutoSave?.());
+  attempt(() => app.eventBus?.removeAllListeners?.());
+  return failures;
+}
 
 /** The shipped shell's body, without the script tags that load the bundle. */
 function appShellBody() {
@@ -94,16 +130,33 @@ function installBrowserStubs(viewport) {
  * The class is not exported: `main.js` assigns `window.app` on
  * `DOMContentLoaded`, which is the only way the app is ever constructed.
  */
+let entryPromise = null;
+
+/** The app entry module, imported once per worker. */
+function entryModule() {
+  entryPromise ??= import('../../src/main.js');
+  return entryPromise;
+}
+
 export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
   document.body.innerHTML = shellBody;
   installBrowserStubs({ ...DEFAULT_VIEWPORT, ...viewport });
 
-  vi.resetModules();
   delete window.app;
-  await import('../../src/main.js');
+  // Imported once per worker on purpose: a fresh import would register another
+  // DOMContentLoaded listener, and the next boot would build an app per
+  // listener, leaving untracked apps running.
+  await entryModule();
   document.dispatchEvent(new Event('DOMContentLoaded'));
 
   const app = window.app;
   if (!app) throw new Error('The app did not boot: window.app is unset');
+  booted.add(app);
+
+  // The bus swallows listener errors by design (ISO-02), which in a test means
+  // a broken handler passes silently. Here they are failures.
+  app.eventBus.onListenerError = (error, { eventName }) => {
+    throw new Error(`Listener for "${eventName}" threw: ${error.message}`, { cause: error });
+  };
   return app;
 }

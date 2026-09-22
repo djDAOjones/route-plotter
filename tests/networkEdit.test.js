@@ -18,6 +18,7 @@ import { Scene } from '../src/models/Scene.js';
 import { EventBus } from '../src/core/EventBus.js';
 import { SectionController } from '../src/controllers/SectionController.js';
 import { UIController } from '../src/controllers/UIController.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 
 const SCALE = 1000;
 
@@ -133,6 +134,10 @@ beforeEach(() => {
   app = makeApp();
   svc = app.networkEditService;
 });
+
+// This fixture builds part of the sidebar, so the visibility registry warns
+// about the controls it leaves out.
+beforeEach(() => allowConsole(/^\[Visibility\] Element not found: /));
 
 describe('mode lifecycle', () => {
   test('enter binds the layer, shows the banner, announces the mode', () => {

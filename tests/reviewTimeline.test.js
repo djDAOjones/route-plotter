@@ -9,6 +9,7 @@ import { pathTimingMixin } from '../src/app/pathTiming.js';
 import { exportingMixin } from '../src/app/exporting.js';
 import { wiringControllersMixin } from '../src/app/wiringControllers.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 
 function makeLinearEngine(duration = 10000) {
   const engine = new AnimationEngine(new EventBus());
@@ -252,7 +253,7 @@ describe('REV-01 canonical transport state', () => {
   test('failed video export still restores the exact transport snapshot', async () => {
     vi.spyOn(VideoExporter, 'checkSupport').mockReturnValue({ supported: true });
     vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    allowConsole(/export/i);
     vi.stubGlobal('alert', vi.fn());
     const transport = { isPlaying: true, isPaused: false, playbackSpeed: -2 };
     const { app, engine } = makeExportApp(transport);

@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi, beforeEach } from 'vitest';
 
 import { undoRedoMixin } from '../src/app/undoRedo.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
@@ -8,6 +8,7 @@ import {
 } from '../src/services/ImageAssetService.js';
 import { UndoService } from '../src/services/UndoService.js';
 import { collectImageAssetReferences } from '../src/utils/assetReferences.js';
+import { allowConsole, recordedConsole } from './helpers/consoleGuard.js';
 
 const PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
@@ -25,6 +26,10 @@ function makeAsset(id) {
   asset._imageElement = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
   return asset;
 }
+
+// This fixture builds part of the sidebar, so the visibility registry warns
+// about the controls it leaves out.
+beforeEach(() => allowConsole(/^\[Visibility\] Element not found: /));
 
 describe('image asset reference collection', () => {
   test('collects live and serialized history references but ignores asset inventories', () => {
@@ -276,7 +281,7 @@ describe('transactional interactive image admission', () => {
   });
 
   test('attempts history restoration even when asset rollback itself fails', () => {
-    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    allowConsole(/^Image asset rollback failed:/);
     const { app, imageAssetService, live, undoService } =
       makeAdmissionApp(['older'], 'older');
     live.revision = 1;
@@ -297,11 +302,11 @@ describe('transactional interactive image admission', () => {
       .toThrow('Image edit failed and rollback was incomplete');
     expect(historyRestore).toHaveBeenCalledWith(historyBefore);
     expect(undoService.createSnapshot()).toEqual(historyBefore);
-    expect(errorLog).toHaveBeenCalledWith('Image asset rollback failed:', expect.any(Error));
+    expect(recordedConsole().some(line => line.startsWith('error: Image asset rollback failed:'))).toBe(true);
   });
 
   test('surfaces a live-model rollback failure after restoring assets and history', () => {
-    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    allowConsole(/^Image reference rollback failed:/);
     const { app, imageAssetService, live, undoService } =
       makeAdmissionApp(['older'], 'older');
     live.revision = 1;
@@ -321,6 +326,6 @@ describe('transactional interactive image admission', () => {
     })).toThrow('Image edit failed and rollback was incomplete');
     expect(imageAssetService.getAssets()).toEqual(assetsBefore);
     expect(undoService.createSnapshot()).toEqual(historyBefore);
-    expect(errorLog).toHaveBeenCalledWith('Image reference rollback failed:', expect.any(Error));
+    expect(recordedConsole().some(line => line.startsWith('error: Image reference rollback failed:'))).toBe(true);
   });
 });

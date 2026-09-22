@@ -30,6 +30,14 @@ describe('the whole app boots (TST-01)', () => {
     await vi.waitFor(() => expect(app.background.image).toBeTruthy());
   });
 
+  test('a listener that throws fails the test instead of being swallowed', async () => {
+    const app = await bootApp();
+    app.eventBus.on('ui:toast', () => { throw new Error('handler is broken'); });
+
+    // In the app this would only reach the console (ISO-02); here it is loud.
+    expect(() => app.eventBus.emit('ui:toast', 'hello')).toThrow(/handler is broken/);
+  });
+
   test('an authoring intent on the bus reaches the model and the canvas', async () => {
     const app = await bootApp();
     const ctx = contextFor(app.canvas);

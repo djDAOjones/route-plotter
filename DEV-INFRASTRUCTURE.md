@@ -59,6 +59,10 @@ The one-command gate is `npm run check`: the Vitest suite, the restart-script
 shell contract, then `build:check` (rows in Canonical scripts above). It is
 non-mutating, so run it after every change and at task close.
 
+- The suite fails a run in which fewer than 72 test files or 1,000 tests ran,
+  because a setup mistake once disabled it silently and still exited 0. It
+  also fails any test that logs an unexpected `console.error` or `console.warn`
+  — a test declares the output it provokes with `allowConsole`.
 - `build:check` builds production output into a temporary directory,
   validates it (file inventory, local references, stylesheet version stamps)
   and discards it. It never writes `docs/` or `version.json`.
