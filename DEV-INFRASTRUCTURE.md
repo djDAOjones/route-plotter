@@ -37,7 +37,7 @@ Package manager: **npm**
 | `test:shell` | `bash tests/restartSafety.test.sh` | Project-scoped dev-server PID/cleanup contract | After restart-script changes / in CI |
 | `test:watch` | `vitest watch --pool=threads --no-file-parallelism` | Tests in watch mode | During development |
 | `push:dry-run` | `node push.js --dry-run` | Show deployment commands without changing files or Git | Before deploy |
-| `push` | `node push.js` | From a clean source commit: test, build, stage generated files, commit, push current branch | When ready to ship |
+| `push` | `node push.js` | From a clean source commit: check, build, stage generated files, commit, push current branch | When ready to ship |
 
 Do not add scripts without updating this table.
 
@@ -187,18 +187,19 @@ breaking change.
   `gh api repos/djDAOjones/route-plotter/pages/builds/latest --jq .commit`.
   Selecting a review branch for a preview makes that branch the public site.
 - **Pipeline:** first commit all source changes, then run `npm run push`. The
-  helper requires a clean tree, runs tests, creates and validates a fresh
-  production output, permits only `docs/` and `version.json` to change, commits
-  those generated files, and pushes the current branch to the same remote ref.
+  helper refuses unknown options, requires a clean tree, runs `npm run check`,
+  creates and validates a fresh production output, permits only `docs/` and
+  `version.json` to change, commits those generated files, and pushes the
+  current branch to the same remote ref.
 - **Custom message:** `npm run push -- "custom msg"`
 - **Dry run:** `npm run push:dry-run`
 - **Releasing a line into main** (DEPLOY-01, 2026-09-22): tag the currently
   live build as the rollback point; `git merge --no-ff` into main; run the full
   gate; `npm run push` on main; wait for the **Verify** workflow to pass on the
-  deploy commit itself, because the helper runs only `npm test`; only then
-  switch or confirm the Pages source; confirm the `github-pages` deployment
-  reached that SHA; compare published files by SHA-256 against `docs/`; then
-  tag the deploy commit with the build number `version.json` actually records.
+  deploy commit itself; only then switch or confirm the Pages source; confirm
+  the `github-pages` deployment reached that SHA; compare published files by
+  SHA-256 against `docs/`; then tag the deploy commit with the build number
+  `version.json` actually records.
 - **Changing the Pages source does not trigger a build.** Switching it through
   the API left the old artefact live; `gh api -X POST
   repos/djDAOjones/route-plotter/pages/builds` requested one. Pushes to the

@@ -35,7 +35,7 @@ npm run build:check    # Validate a production build without changing docs/ or t
 npm test               # Vitest (jsdom)
 npm run check          # Tests + non-mutating production build
 npm run push:dry-run   # Preview the clean-tree deployment commands
-npm run push           # Test, build, commit docs/, push the current branch
+npm run push           # Check, build, commit docs/, push the current branch
 ```
 
 Maintainer shortcuts — wrappers around the above, runnable from any directory (see `scripts/README.md`):
