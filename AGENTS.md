@@ -85,6 +85,23 @@ Load only the tier the task needs so startup context stays useful.
    procedure in `pm_skills/prompts/session-start.md` and
    `pm_skills/memory-policy.md`.
 
+## Commit, push and release
+
+`main` is the live site (`DEV-INFRASTRUCTURE.md` → Deployment), so:
+
+- Work on a short-lived branch from `main`, one concern per branch, and open a
+  pull request. Every task and memory-only (`PM:`) commit belongs on that
+  branch.
+- Never commit to or push `main` except in two owner-authorised cases:
+  merging a pull request the owner has told you to merge, and running
+  `npm run push` for a release the owner has called. Approving a merge does
+  not call a release.
+- These rules hold in every workflow and mode. The commit-and-push close in
+  `pm_skills/integrations/task.md` step 11 commits to the working branch and
+  pushes only that branch.
+- Only `npm run push` commits `docs/` and `version.json`. Never commit the
+  copies that `npm run dev` or `npm run build` rewrite locally.
+
 ## Hard rules and invariants
 
 - Waypoints store normalised `imgX` and `imgY` values (0–1). Convert through
