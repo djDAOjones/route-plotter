@@ -104,10 +104,10 @@ Current exceptions, and what removes them:
 - NetworkEditService edits at once, outside an active edit session, while the
   scene outline or the network inspector has bound it for inspection: node and
   edge deletion, node type, edge direction and reversal. Each commits through
-  `network:changed`. No plan item yet.
+  `network:changed`. CON-01 routes them through app-side wiring.
 - AreaEditService calls an app-supplied coordinate callback (`imageToScreen`),
-  which InteractionHandler carries in the `area:edit-start` payload. No plan
-  item yet.
+  which InteractionHandler carries in the `area:edit-start` payload. CON-01
+  replaces it with a bus query or a value in the payload.
 - Private cross-module calls: UIController →
   `VideoExporter._testWebCodecsConfig` (DEP-04), HTMLExportService →
   `ImageAsset._hasExpectedSignature` (DEP-05), and `editorPanel` →

@@ -36,9 +36,10 @@ them, including two blockers in GOV-01 and two in DOC-03.
 DOC-06 (all 12 references, not 3–4), GOV-01 (a branch per concern; releases
 called separately), DOC-02, DOC-03, and W0's status.
 
-**Open for the owner:** DOC-03 found two exceptions with no plan item —
-NetworkEditService edits the model while only bound for inspection, and
-AreaEditService calls an app-supplied coordinate callback. Also logged as
+**Owner call, same day:** the two exceptions DOC-03 found — NetworkEditService
+editing the model while only bound for inspection, and AreaEditService calling
+an app-supplied coordinate callback — belong to **CON-01** (W9), which already
+removes UIController's writes. The plan row and `architecture.md` say so. Also logged as
 ideas: `restart.sh` proves only that the server answers; `serve` is broken;
 CI could refuse a pull request that touches `docs/`.
 
