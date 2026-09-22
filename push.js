@@ -12,12 +12,16 @@
  *   npm run push
  *   npm run push -- "Custom message"
  *   npm run push:dry-run
+ *
+ * Any other option is refused before anything runs (DEF-18).
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const STAGE_TARGETS = ['docs', 'version.json'];
+const DRY_RUN_OPTION = '--dry-run';
+const NPM_SETTING_PREFIX = 'npm_config_';
 
 function run(command, args, options = {}) {
   const output = execFileSync(command, args, {
@@ -79,9 +83,65 @@ function isGeneratedPath(file) {
   return file === 'version.json' || file.startsWith('docs/');
 }
 
+/**
+ * Read the helper's one option, refusing anything it would otherwise ignore.
+ *
+ * A mistyped dry run used to fall through to a real deploy, which on `main` is
+ * a live release (DEF-18). A typo reaches the helper in one of two ways:
+ * `npm run push -- --dryrun` passes it as an argument, while
+ * `npm run push --dryrun` (no `--`) makes npm keep it as its own setting, so
+ * the helper sees only an `npm_config_*` variable. npm also exports .npmrc
+ * values that way, so npm settings are screened by name, not by an allowlist.
+ * npm matches setting names case-insensitively and passes environment values
+ * through as written (`NPM_CONFIG_DRY_RUN=1`), so the dry-run setting is read
+ * the same way, and a value that is neither yes nor no is refused.
+ */
+function readOptions(args, env) {
+  const unknownOption = args.find(arg => arg.startsWith('-') && arg !== DRY_RUN_OPTION);
+  if (unknownOption) {
+    throw new Error(`Unknown option: ${unknownOption}. The only option is ${DRY_RUN_OPTION}; nothing was run.`);
+  }
+
+  const npmSettings = Object.entries(env)
+    .filter(([key]) => key.toLowerCase().startsWith(NPM_SETTING_PREFIX))
+    .map(([key, value]) => ({
+      key,
+      name: key.slice(NPM_SETTING_PREFIX.length).toLowerCase(),
+      value: String(value).trim().toLowerCase()
+    }));
+
+  const mistyped = npmSettings.find(({ name }) => name !== 'dry_run' && /dry|run/.test(name));
+  if (mistyped) {
+    throw new Error(
+      `npm passed a setting this helper does not honour (${mistyped.key}), probably a mistyped ` +
+      `${DRY_RUN_OPTION}. For a dry run use npm run push:dry-run; nothing was run.`
+    );
+  }
+
+  // `-n` means "dry run" in many tools, but npm reads it as --no-yes and exports
+  // an empty `yes`. `yes=false` in an .npmrc looks the same, so the refusal
+  // names the bypass: run the helper directly, outside npm's settings.
+  if (npmSettings.some(({ name, value }) => name === 'yes' && value === '')) {
+    throw new Error(
+      'npm passed an empty yes setting, which is how it reads -n. For a dry run use npm run push:dry-run. ' +
+      'If yes=false is in your npm config, run node push.js instead; nothing was run.'
+    );
+  }
+
+  const dryRunValues = npmSettings.filter(({ name }) => name === 'dry_run').map(({ value }) => value);
+  const unreadable = dryRunValues.find(value => !['true', '1', 'false', '0', ''].includes(value));
+  if (unreadable !== undefined) {
+    throw new Error(`npm's dry-run setting "${unreadable}" is neither yes nor no; nothing was run.`);
+  }
+
+  return {
+    dryRun: args.includes(DRY_RUN_OPTION) || dryRunValues.some(value => value === 'true' || value === '1')
+  };
+}
+
 function main() {
   const args = process.argv.slice(2);
-  const dryRun = args.includes('--dry-run') || process.env.npm_config_dry_run === 'true';
+  const { dryRun } = readOptions(args, process.env);
   const customMessage = args.find(arg => !arg.startsWith('--'));
   const branch = getCurrentBranch();
 
@@ -89,7 +149,7 @@ function main() {
   assertCleanTree();
 
   if (dryRun) {
-    console.log('[dry-run] npm test');
+    console.log('[dry-run] npm run check');
     console.log('[dry-run] npm run build:deploy');
     console.log('[dry-run] verify only docs/ and version.json changed');
     console.log('[dry-run] git add docs version.json');
@@ -101,8 +161,9 @@ function main() {
     return;
   }
 
-  console.log('🧪 Running tests ...');
-  run('npm', ['test']);
+  // The full gate (tests, shell contract, check build), matching CI.
+  console.log('🧪 Running the quality gate (npm run check) ...');
+  run('npm', ['run', 'check']);
 
   console.log('\n📦 Building a fresh production bundle → docs/ ...');
   run('npm', ['run', 'build:deploy']);
