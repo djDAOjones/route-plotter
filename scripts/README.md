@@ -14,7 +14,7 @@ Stopping targets the recorded process tree, so no watcher is left orphaned.
 An unrelated process listening on port 3000 is reported and left untouched.
 
 ```bash
-./scripts/restart.sh              # stop dev server, boot, verify readiness
+./scripts/restart.sh              # stop dev server, boot, wait until it answers
 ./scripts/restart.sh --hard-reset # also delete docs/ (regenerated on boot)
 ./scripts/restart.sh --help
 ```
@@ -23,8 +23,10 @@ An unrelated process listening on port 3000 is reported and left untouched.
   never a process merely because it owns port 3000.
 - Records ownership in ignored `.route-plotter-dev.pid` and removes the file on
   shutdown.
-- `--hard-reset` deletes only `docs/` (build output). Source files,
-  `version.json`, and `_Joe/` are never touched.
+- `--hard-reset` deletes only `docs/` (build output); it never deletes source
+  files, `version.json` or `_Joe/`. The dev build that follows rewrites
+  `docs/` and increments `version.json`, like any boot
+  (`DEV-INFRASTRUCTURE.md` → Runtime lifecycle).
 - Runs in the foreground; Ctrl-C stops the server cleanly.
 - No hot reload — hard-refresh the browser (Cmd+Shift+R) after it boots.
 
