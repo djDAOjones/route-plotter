@@ -17,6 +17,31 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Abstraction programme W0 — safe setup (closed 2026-09-22)
+
+Outcome: agents can no longer release by accident, and the root docs match
+the code. Six pull requests, no shipped-code change, so no release.
+
+DOC-06 — `AGENTS.md` forbids committing to or pushing `main` outside an
+owner-called merge or release (#1), and the root docs meet the vendored
+workflows: a Quality gate section, aliases for all 12 dangling section
+references, the refactor and prune-bar clauses (#3). (2026-09-22) — see
+decision-log.
+
+DEF-18 — `push.js` refuses unknown options and mistyped dry runs before
+anything runs, reads npm's dry-run setting as npm does, and runs
+`npm run check` (#2). (2026-09-22) — see decision-log.
+
+GOV-01 — DEV-INFRASTRUCTURE gives the fresh-clone, branch-and-PR working
+setup and checked release steps; a merge releases no source (#4).
+(2026-09-22) — see decision-log.
+
+DOC-02 — The canonical docs' drift against the code is corrected, with
+restated copies replaced by links (#5). (2026-09-22) — see decision-log.
+
+DOC-03 — The communication rule is the owner's Q15 rule, with every current
+exception listed (#6). (2026-09-22) — see decision-log.
+
 ## Release v3.2.690 (shipped 2026-09-22)
 
 DEPLOY-01 — The remediation line is released from `main`: v3.2.690
