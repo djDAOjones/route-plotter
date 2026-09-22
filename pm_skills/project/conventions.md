@@ -63,7 +63,7 @@ discipline. This section captures how they apply to this project:
 
 ## Patterns to follow
 
-- EventBus for all cross-component communication
+- The communication rule in `architecture.md` → Communication patterns
 - `queueRender()` for deferred rendering (never call `render()`
   directly)
 - `autoSave()` at end of state-mutating event handlers
@@ -74,7 +74,7 @@ discipline. This section captures how they apply to this project:
 
 ## Patterns to avoid
 
-- Direct method calls between components (use EventBus)
+- Anything that rule forbids (see its list of current exceptions)
 - Storing pixel coordinates on Waypoint (use normalised 0–1)
 - Setting slider `.value` directly (use `ui:slider:update-speed` event)
 - Mid-file imports (esbuild requires all imports at top)

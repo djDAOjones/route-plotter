@@ -65,7 +65,7 @@ scene description and discrete transport announcements.
 
 | Module | Path | Responsibility |
 | --- | --- | --- |
-| RoutePlotter | `src/main.js` + `src/app/*` | Sole orchestrator: owns all services, handles all events, manages state. Method groups live as prototype mixins in `src/app/*` (Object.assign; names unique across mixins) |
+| RoutePlotter | `src/main.js` + `src/app/*` | Sole orchestrator: owns all services, handles app-level intents and durable commits, manages state. Method groups live as prototype mixins in `src/app/*` (Object.assign; names unique across mixins) |
 | Waypoint | `src/models/Waypoint.js` | Data model for waypoints (position, style, camera, area, etc.) |
 | AnimationEngine | `src/services/AnimationEngine.js` | Demand-driven preview scheduler, transport, timing, segment speed and pause markers |
 | PathCalculator | `src/services/PathCalculator.js` | Catmull-Rom spline, reparameterisation, curvature |
@@ -78,11 +78,44 @@ scene description and discrete transport announcements.
 
 ## Communication patterns
 
-**EventBus (pub-sub)** is the only communication channel between
-components. UIController, SceneOutlineController and InteractionHandler emit
-events; `main.js` handles them. No direct method calls between components.
+The rule (the owner's answer to the abstraction plan's §20 Q15, 2026-09-22;
+stated as a hard rule in `AGENTS.md`):
 
-Exceptions: none. This is a hard rule.
+- **Components → app: through the EventBus.** UIController,
+  SectionController, SceneOutlineController, InteractionHandler and the modal
+  tools (NetworkEditService, AreaDrawingService, AreaEditService) receive the
+  bus but no app instance. The bus carries their intents, notifications to
+  them, and synchronous callback queries such as `coordinate:canvas-to-image`.
+  UI widgets (`src/components/`) are outside this rule: they use DOM events
+  and callbacks their owner supplies.
+- **App → components: named public methods.** RoutePlotter and its mixins
+  call components directly, for example to refresh the waypoint list or start
+  a tool, but never through an underscore-private member.
+- **Modal tools: provisional edits, committed by event.** While active, the
+  tools change the model provisionally; `network:changed` (with `commit`) and
+  `area:changed` are where the app records undo history and autosaves.
+- **Durable model changes belong to the app.**
+
+Current exceptions, and what removes them:
+
+- UIController writes the model itself: pause, segment speed and
+  area-highlight settings from the inspector, and names (with `_autoNamed`)
+  from the waypoint list. CON-01 moves those writes app-side.
+- NetworkEditService edits at once, outside an active edit session, while the
+  scene outline or the network inspector has bound it for inspection: node and
+  edge deletion, node type, edge direction and reversal. Each commits through
+  `network:changed`. No plan item yet.
+- AreaEditService calls an app-supplied coordinate callback (`imageToScreen`),
+  which InteractionHandler carries in the `area:edit-start` payload. No plan
+  item yet.
+- Private cross-module calls: UIController →
+  `VideoExporter._testWebCodecsConfig` (DEP-04), HTMLExportService →
+  `ImageAsset._hasExpectedSignature` (DEP-05), and `editorPanel` →
+  `uiController._updateAreaSubControls` (no plan item yet; GOV-03's
+  private-call check will detect it).
+- Kept on purpose, to be revisited in SPL-05: `renderState` carries the
+  editor tools into RenderingService, which calls their public rendering
+  methods, and NetworkEditService uses the renderer's sizing methods.
 
 Canvas authoring uses one primary-pointer transaction owned by
 `InteractionHandler`: hit-test and immutable geometry snapshot on down, a
