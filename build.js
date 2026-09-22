@@ -253,6 +253,17 @@ const staticShellFiles = [
 ];
 const staticFiles = [...staticShellFiles, ...approvedPublicImageFiles];
 
+// LEGAL-01: the licence and third-party notices ship with the application
+// itself, so anyone who receives the bundled components from the live site —
+// not only someone who browses the repository — can see what they are and
+// where their exact source is. Published as .txt because Pages runs Jekyll
+// over docs/, which would render a .md file to HTML under a different name;
+// plain text is copied byte for byte, so the link in index.html stays true.
+const publishedNoticeFiles = [
+  { from: 'THIRD_PARTY_NOTICES.md', to: 'THIRD_PARTY_NOTICES.txt' },
+  { from: 'LICENSE', to: 'LICENSE.txt' },
+];
+
 /**
  * Copy a single static file to dist
  * For index.html, also updates version references and adds cache-busting
@@ -314,6 +325,13 @@ function copyAllStaticFiles(version) {
     copyStaticFile(file, version);
     console.log(`Copied ${file}`);
   });
+  for (const { from, to } of publishedNoticeFiles) {
+    if (!fs.existsSync(from)) {
+      throw new Error(`Required notice file is missing: ${from}`);
+    }
+    fs.copyFileSync(from, path.join(distDir, to));
+    console.log(`Copied ${from} as ${to}`);
+  }
 }
 
 /**
@@ -404,6 +422,7 @@ function validateBuiltOutput(outputDir, version) {
 
   const expectedInventory = [
     ...staticFiles,
+    ...publishedNoticeFiles.map(notice => notice.to),
     'app.js',
     'app.js.map',
     'player.js',

@@ -5,12 +5,16 @@ Route Plotter's first-party source is licensed under the MIT License in
 copyright notices. Versions are the exact direct dependencies resolved by
 `package-lock.json` for this release.
 
+This file and the licence are published with the application itself, as
+`THIRD_PARTY_NOTICES.txt` and `LICENSE.txt` alongside it, and are linked from
+the app's Help screen.
+
 ## Runtime dependencies
 
 | Package | Version | Licence | Source |
 | --- | --- | --- | --- |
-| `jszip` | 3.10.1 | `(MIT OR GPL-3.0-or-later)` | [Stuk/jszip](https://github.com/Stuk/jszip) |
-| `mediabunny` | 1.55.3 | `MPL-2.0` | [Vanilagy/mediabunny](https://github.com/Vanilagy/mediabunny) |
+| `jszip` | 3.10.1 | `(MIT OR GPL-3.0-or-later)` | [Stuk/jszip at v3.10.1](https://github.com/Stuk/jszip/tree/v3.10.1) |
+| `mediabunny` | 1.55.3 | `MPL-2.0` | [Vanilagy/mediabunny at v1.55.3](https://github.com/Vanilagy/mediabunny/tree/v1.55.3) |
 
 ### JSZip
 
@@ -38,13 +42,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 The upstream dual-licence text is available in the
-[JSZip repository](https://github.com/Stuk/jszip/blob/main/LICENSE.markdown).
+[JSZip repository at v3.10.1](https://github.com/Stuk/jszip/blob/v3.10.1/LICENSE.markdown).
+JSZip's own bundled notice, which also credits its pako dependency (MIT), is
+preserved in the generated application bundle.
 
 ### Mediabunny
 
-Mediabunny is licensed under the Mozilla Public License 2.0. Its source is
-available from the [upstream repository](https://github.com/Vanilagy/mediabunny),
-and the full licence is available from
+Mediabunny is licensed under the Mozilla Public License 2.0. Route Plotter
+includes version 1.55.3 **unmodified**, bundled and minified from the published
+npm package. The corresponding source for exactly that version is the upstream
+tag [`v1.55.3`](https://github.com/Vanilagy/mediabunny/tree/v1.55.3), commit
+`16f8889e144f2bbeaa6a6788009abb4ecef19847` — the commit the npm package itself
+records as its source. The full licence is available from
 [mozilla.org/MPL/2.0](https://www.mozilla.org/MPL/2.0/). Licence comments from
 Mediabunny are preserved in the generated application bundle.
 

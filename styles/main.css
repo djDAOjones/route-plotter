@@ -3391,6 +3391,16 @@ a.btn-primary:visited{
   margin-bottom:0!important;
 }
 
+/* LEGAL-01: the licence line sits under the CTA as secondary text. It must
+   never compete with Get Started, but it is still body copy, so it keeps the
+   AAA text token rather than a lighter one. */
+.splash-legal{
+  margin:var(--space-4) 0 0;
+  font-size:var(--type-caption);
+  line-height:1.5;
+  color:var(--text-02);
+}
+
 /* Beacon Animation */
 @keyframes beacon-pulse{
   0%,100%{transform:scale(1);opacity:1;}

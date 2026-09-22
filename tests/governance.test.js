@@ -73,6 +73,35 @@ describe('repository governance contract', () => {
     expect(notices).toMatch(/does not publish a per-release software bill of materials \(SBOM\)/i);
   });
 
+  test('the bundled MPL component names the exact source of the locked version', () => {
+    // LEGAL-01: MPL-2.0 code ships minified inside docs/app.js, so the notice
+    // has to say where the corresponding source for *that* version lives. A
+    // link to the repository homepage drifts the moment a dependency bump
+    // lands; pinning it to the locked tag makes the next bump fail here until
+    // the notice is updated with it.
+    const notices = read('THIRD_PARTY_NOTICES.md');
+    const locked = packageLock.packages['node_modules/mediabunny'].version;
+
+    expect(notices).toContain(`https://github.com/Vanilagy/mediabunny/tree/v${locked}`);
+    expect(notices).toMatch(/unmodified/i);
+  });
+
+  test('the notices and licence are published with the application and linked from it', () => {
+    // A notice only the repository browser can see does not reach someone who
+    // received the bundled code from the live site.
+    const build = read('build.js');
+    expect(build).toMatch(/from:\s*'THIRD_PARTY_NOTICES\.md',\s*to:\s*'THIRD_PARTY_NOTICES\.txt'/);
+    expect(build).toMatch(/from:\s*'LICENSE',\s*to:\s*'LICENSE\.txt'/);
+
+    const html = read('index.html');
+    const link = html.match(/<a href="THIRD_PARTY_NOTICES\.txt"[^>]*>([^<]+)<\/a>/);
+    expect(link, 'the Help screen links to the published notices').not.toBeNull();
+    // It leaves the editor, so it says so in its visible text (WCAG G201).
+    expect(link[0]).toContain('target="_blank"');
+    expect(link[0]).toContain('rel="noopener"');
+    expect(link[1]).toMatch(/opens in a new tab/i);
+  });
+
   test('security reports use the private GitHub route', () => {
     const security = read('.github/SECURITY.md');
 

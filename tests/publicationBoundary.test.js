@@ -35,6 +35,11 @@ const approvedExampleArchives = (manifest.exampleProjects?.archives || [])
   .map(archive => `examples/${archive.id}.zip`);
 
 const expectedArtifactInventory = [
+  // LEGAL-01 (owner-approved 2026-09-22): the licence and third-party notices
+  // are published with the application so recipients of the bundled
+  // components can find them — see build.js → publishedNoticeFiles.
+  'LICENSE.txt',
+  'THIRD_PARTY_NOTICES.txt',
   'app.js',
   'app.js.map',
   'index.html',
