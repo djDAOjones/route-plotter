@@ -40,7 +40,7 @@ describe('the performance harness', () => {
     await expect(fn()).rejects.toThrow(/not loaded/i);
   });
 
-  test('it refuses before touching storage when there is no project', async () => {
+  test('it refuses an empty project and leaves the recovery point alone', async () => {
     const fn = loadHarness();
     globalThis.app = {
       waypoints: [],
@@ -50,6 +50,10 @@ describe('the performance harness', () => {
     };
 
     await expect(fn()).rejects.toThrow(/at least one waypoint/i);
+    // It reads the recovery point to back it up, but must never write: an
+    // early return here used to restore an `undefined` over the real save.
+    expect(localStorage.setItem).not.toHaveBeenCalled();
+    expect(localStorage.removeItem).not.toHaveBeenCalled();
   });
 
   test('it silences autosave, and keeps it silenced afterwards', () => {
