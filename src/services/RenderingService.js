@@ -508,9 +508,6 @@ export class RenderingService {
         state.waypoints, state.waypointProgressValues, state.animationEngine, state.imageToCanvas, currentTimeMs
       );
       this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, state.cameraState);
-      
-      // DEBUG: Draw background mode info on main canvas for visualization
-      motionVisibilityService.drawDebugOverlay(ctx, motionSettings);
     } else {
       // Always Show (default): render background normally
       // Pass camera state for zoom/pan effect centered on path head

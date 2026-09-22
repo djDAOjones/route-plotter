@@ -14,7 +14,6 @@
  * 
  * - Fast paths for static visibility modes (no calculations)
  * - No allocations during animation (reuses cached values)
- * - Debug logging is throttled to significant changes only
  * 
  * ## Key Concepts
  * 
@@ -838,24 +837,11 @@ export class MotionVisibilityService {
       introScale = MotionVisibilityService.getIntroScale(currentTimeMs);
     }
     
-    // DEBUG: Log intro animation state (throttled to avoid spam)
-    if (introScale < 1 && Math.floor(currentTimeMs / 100) !== this._lastIntroLogTime) {
-      this._lastIntroLogTime = Math.floor(currentTimeMs / 100);
-      console.debug(`🎬 [AOV Intro] time=${currentTimeMs.toFixed(0)}ms, scale=${introScale.toFixed(3)}, progress=${progress.toFixed(4)}, sequential=${animationEngine?.introTime > 0}`);
-    }
-    
-    // DEBUG: Set to true to store cone info for visualization on main canvas
-    const DEBUG_DRAW_CONE_OUTLINES = true;
-    
-    // Store debug cone info for rendering on main canvas (not the mask)
-    this._debugCurrentCone = null;
-
     // Initialize or resize mask if needed
     if (!this.revealMaskCanvas || 
         this.lastCanvasSize.width !== canvasWidth ||
         this.lastCanvasSize.height !== canvasHeight) {
       this.initRevealMask(canvasWidth, canvasHeight);
-      console.debug(`🔧 [AOV] Initialized mask: ${canvasWidth}x${canvasHeight}`);
     }
     
     // FULL REBUILD APPROACH: Clear and rebuild every frame
@@ -884,12 +870,6 @@ export class MotionVisibilityService {
     // The cone geometry always uses full distance; dropoff only affects the gradient
     const featherFraction = aovDropoff / 100; // 0 = hard edge, 1 = full feather
     
-    // DEBUG: Log dropoff values (throttled)
-    if (!this._lastDropoffLogTime || Date.now() - this._lastDropoffLogTime > 500) {
-      this._lastDropoffLogTime = Date.now();
-      console.debug(`🎚️ [AOV Dropoff] aovDropoff=${aovDropoff}, featherFraction=${featherFraction}, isNaN=${isNaN(featherFraction)}`);
-    }
-
     const ctx = this.revealMaskCtx;
     // Use 'source-over' (default) to paint cones on top of each other
     // This ensures consistent coverage without over-saturation from 'lighter' mode
@@ -918,7 +898,7 @@ export class MotionVisibilityService {
 
     // Helper to draw a single cone with gradient based on dropoff
     // Uses arc() for smooth curved outer edge instead of straight line
-    const drawCone = (cone, isCurrentCone = false) => {
+    const drawCone = (cone) => {
       // Use radial gradient from tip for proper cone coverage
       // featherFraction controls where the fade starts:
       // 0% = hard edge (solid white, no fade)
@@ -955,12 +935,6 @@ export class MotionVisibilityService {
       ctx.arc(cone.tip.x, cone.tip.y, effectiveDistance, startAngle, endAngle);
       ctx.closePath();
       ctx.fill();
-      
-      // DEBUG: Store cone info for rendering on main canvas (not the mask)
-      if (DEBUG_DRAW_CONE_OUTLINES && isCurrentCone) {
-        // Store for external rendering - don't draw on mask canvas
-        this._debugCurrentCone = { ...cone };
-      }
     };
 
     // Helper to draw the swept area between two consecutive cones
@@ -1396,7 +1370,7 @@ export class MotionVisibilityService {
     const rateLimitedFinalDirection = applyTurnRateLimit(direction, rateLimitedDirection);
     
     const finalCone = getConeVertices(currentPos.x, currentPos.y, rateLimitedFinalDirection);
-    drawCone(finalCone, true); // true = current cone, show debug
+    drawCone(finalCone);
     if (prevCone) {
       drawInterpolatedCones(prevCone, finalCone);
     }
@@ -1420,34 +1394,6 @@ export class MotionVisibilityService {
   shouldApplyRevealMask(settings) {
     return settings.backgroundVisibility === 'spotlight-reveal' || 
            settings.backgroundVisibility === 'angle-of-view-reveal';
-  }
-
-  /**
-   * Draw debug visualization showing background mode info
-   * Call this AFTER applying the reveal mask
-   * @param {CanvasRenderingContext2D} ctx - The main canvas context to draw on
-   * @param {Object} settings - Motion settings containing backgroundVisibility
-   */
-  drawDebugOverlay(ctx, settings) {
-    if (!settings) return;
-    
-    const mode = settings.backgroundVisibility || 'unknown';
-    const dropdownEl = document.getElementById('background-visibility');
-    const dropdownValue = dropdownEl?.value || 'not found';
-    const dropdownDisabled = dropdownEl?.disabled ? 'YES' : 'no';
-    
-    // Draw semi-transparent background for readability
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(10, 10, 280, 80);
-    
-    // Draw debug info
-    ctx.fillStyle = 'rgba(255, 255, 0, 1)';
-    ctx.font = '12px monospace';
-    ctx.fillText(`Background Mode Debug`, 20, 28);
-    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-    ctx.fillText(`Settings value: ${mode}`, 20, 45);
-    ctx.fillText(`Dropdown value: ${dropdownValue}`, 20, 60);
-    ctx.fillText(`Dropdown disabled: ${dropdownDisabled}`, 20, 75);
   }
 
   // ========== UTILITY METHODS ==========
