@@ -130,8 +130,9 @@ Load only the tier the task needs so startup context stays useful.
   single explicit synchronous frame loop.
 - Runtime recovery must remain one documented, ownership-safe command that
   verifies readiness, not merely process launch.
-- Do not invent synonyms for existing EventBus events. Use the event catalogue
-  in `README.md` and the relevant source definitions.
+- Do not invent synonyms for existing EventBus events. Search the `emit` and
+  `on` call sites in `src/`; `README.md` → Main event prefixes names only
+  the main prefixes.
 
 ## Minimal change and documentation discipline
 

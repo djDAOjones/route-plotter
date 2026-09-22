@@ -49,105 +49,19 @@ Maintainer shortcuts — wrappers around the above, runnable from any directory 
 
 ## Project structure
 
-```text
-index.html                        Single-page app shell (sidebar + canvas + controls)
-.nvmrc                            Supported local Node major
-build.js                          esbuild bundler, version management, dev server
-version.json                      Auto-incremented build number
-push.js                           Clean-tree, current-branch GitHub Pages deploy helper
+The maintained index of file roles is
+[`pm_skills/project/file-map.md`](pm_skills/project/file-map.md). At the top
+level:
 
-scripts/                          Maintainer convenience wrappers (run from anywhere)
-  restart.sh                      Owned-process restart/boot — refuse foreign port holders, verify HTTP 200
-  build.sh                        Production build into docs/ (--test also runs tests)
-  README.md                       Usage reference for these scripts
-
-src/
-  main.js                         RoutePlotter class — app entry point and orchestrator core
-  app/                            RoutePlotter prototype mixins (method groups moved out of main.js;
-                                  attached via Object.assign — wiring, playback, undo/redo, camera,
-                                  viewport, path timing, persistence, exporting, editor panel, pointer,
-                                  semantic scene-outline integration)
-  config/
-    constants.js                  All tuneable values (animation, rendering, path, etc.)
-    keybindings.js                Mouse + keyboard bindings (customisable via localStorage)
-    helpContent.js                Welcome modal and inline help HTML generators
-    tooltips.js                   Tooltip definitions
-  components/
-    SwatchPicker.js               Okabe-Ito colour-blind safe palette picker
-    Dropdown.js                   Accessible dropdown menus
-    Tooltip.js                    Tooltip attachment
-    ParamTooltip.js               Parameter hints: each label's tip is its control's aria-describedby description; click or keyboard focus reveals it (Carbon pattern)
-  controllers/
-    UIController.js               Sidebar controls, waypoint list, slider sync
-    SectionController.js          Collapsible settings sections
-    SceneOutlineController.js     Native lazy scene outline, authoring forms, focus and draft state
-  core/
-    EventBus.js                   Pub-sub event system
-    PlayerCore.js                 Pure timeline math — segments, pause budgets, beacon schedules,
-                                  timeline↔path mapping; play/scrub/export share this one evaluation path
-  player/
-    PlayerApp.js                  Headless app core for exported HTML files (real render stack,
-                                  adopts the app's own timing mixins)
-    playerEntry.js                Exported-page boot + transport controls (bundled → docs/player.js)
-    playerAccessibility.js        Static scene summary and discrete transport announcements
-  handlers/
-    InteractionHandler.js         Captured Pointer Events, keyboard, and drag-and-drop input
-  models/
-    Waypoint.js                   Waypoint data model (position, style, camera, area, etc.)
-    AnimationState.js             Playback state (progress, timing, pause tracking)
-    ImageAsset.js                 Custom image references (marker, path head)
-    GraphNode.js                  Active flow-network node model
-    GraphEdge.js                  Active weighted directed edge with control points
-    GraphModel.js                 Active network collection (CRUD, adjacency)
-  services/
-    AnimationEngine.js            Demand-driven preview scheduler and transport timing
-    PathCalculator.js             Catmull-Rom spline, reparameterisation, curvature
-    RenderingService.js           Canvas drawing — path, markers, labels, overlays
-    BeaconRenderer.js             Animated waypoint effects (ripple, glow, pop, grow, pulse)
-    TextLabelService.js           Text label layout, fade, auto-positioning
-    MotionVisibilityService.js    Path/waypoint/background visibility calculations
-    CameraService.js              Per-waypoint zoom with target-aware interpolation
-    CoordinateTransform.js        Image ↔ canvas coordinate conversion
-    VideoExporter.js              MP4/WebM export (WebCodecs primary, MediaRecorder fallback)
-    HTMLExportService.js           Self-contained HTML export with embedded player
-    ImageAssetService.js          Custom image management and deduplication
-    StorageService.js             localStorage with debounce and change detection
-    UndoService.js                150-step undo/redo history
-    AreaDrawingService.js         Polygon area drawing mode
-    AreaEditService.js            Area highlight repositioning and vertex editing
-    AreaHighlightRenderer.js      Per-waypoint area highlight rendering
-  utils/
-    CatmullRom.js                 Catmull-Rom spline interpolation
-    Easing.js                     Easing functions (linear, quad, cubic, etc.)
-    entityId.js                   Persisted structural-ID boundary
-    focusTrap.js                  Modal focus trapping for accessibility
-    sceneSemantics.js             Pure canonical-project projection for the scene outline
-
-styles/
-  tokens.css                      Design tokens — UoN palette, semantic colours, spacing
-  main.css                        Core layout, sidebar, canvas, controls, modals
-  swatch-picker.css               Swatch picker grid (5×2, 44px AAA touch targets)
-  dropdown.css                    Dropdown component styles
-  tooltip.css                     Tooltip styles
-
-tests/
-  *.test.js                       Unit, integration, golden-frame, persistence, safety, and UI contracts
-  review*.test.js                 Regression contracts added from repository reviews
-  projectLimits.test.js           Adversarial project/model resource ceilings
-  releaseSafety.test.js           Build/deployment argument and dry-run safety
-  setup.js                        Vitest jsdom setup
-
-reviews/                          Historical review evidence and continuation dossier
-  README.md                       Index, provenance and cross-project filename guard
-  route-plotter-v3-comprehensive-repository-review-2026-08-26.md
-                                  Full pre-remediation review at commit cec0191
-  route-plotter-review-finding-crosswalk-2026-08-26.md
-                                  RP-01–RP-18 remediation and residual-ticket map
-  route-plotter-review-remediation-continuation-prompt-2026-08-26.md
-                                  Paste-ready next-chat development handover
-
-docs/                             Build output served by GitHub Pages
-```
+- `src/` — application source. `src/main.js` is the entry point and
+  orchestrator core; `src/player/` is the player inlined into HTML exports.
+- `index.html`, `styles/` — the app shell and its stylesheets.
+- `tests/` — Vitest suites (jsdom) and the restart-script shell contract.
+- `build.js`, `push.js`, `scripts/` — the esbuild build, the deployment
+  helper and maintainer scripts (`DEV-INFRASTRUCTURE.md`).
+- `docs/` — generated build output served by GitHub Pages; never hand-edit.
+- `reviews/`, `specs/`, `pm_skills/` — review dossiers, the archived crowd
+  spec, and project memory with its vendored workflow framework.
 
 ---
 
@@ -165,35 +79,43 @@ Components talk through `EventBus` (pub-sub), not direct method calls:
 
 ```text
 Captured canvas gesture → InteractionHandler emits one terminal event
-    → main.js handles event, updates Waypoint model
-    → main.js calls queueRender()
+    → a RoutePlotter handler (src/app/*) updates the Waypoint model
+    → it calls queueRender()
     → RenderingService draws the frame
 ```
 
 ```text
 User moves slider → UIController emits event
-    → main.js handles event, updates state
-    → main.js recalculates timing / path
-    → main.js calls queueRender()
+    → a RoutePlotter handler (src/app/*) updates state
+    → it recalculates timing / path
+    → it calls queueRender()
 ```
 
-### Key event categories
+Subscriptions live in the `src/app/*` mixins, controllers, services,
+`InteractionHandler` and `playerEntry`; search `eventBus.on` in `src/`.
+`main.js` itself subscribes to nothing.
 
-| Event prefix | Source | Purpose |
+### Main event prefixes
+
+This table names 7 of the 26 prefixes in use, so it is not the event
+catalogue. The `emit`/`on` call sites in `src/` are authoritative: search
+them before naming an event.
+
+| Event prefix | Example sources | Purpose |
 | --- | --- | --- |
 | `waypoint:*` | InteractionHandler, UIController | Add, delete, select, move, restyle waypoints |
-| `animation:*` | AnimationEngine, UIController | Play, pause, reset, speed, seek |
-| `ui:*` | UIController | Slider sync, mode changes, export triggers |
+| `animation:*` | AnimationEngine, UIController | Play, pause, reset, speed, completion |
+| `ui:*` | UIController, RoutePlotter | Transport commands (`ui:animation:*`), slider sync, toasts |
 | `video:*` | VideoExporter | Export lifecycle (started, progress, complete, error) |
 | `area:*` | AreaDrawingService, AreaEditService | Area highlight draw/edit |
-| `undo:*` | UndoService | State snapshot/restore |
+| `undo:*` | UndoService | Undo/redo availability; the commands are `history:undo` / `history:redo` |
 | `scene-outline:*` | SceneOutlineController, RoutePlotter | Semantic snapshots, stable-ID authoring commands, validation feedback |
 
 ### Rendering pipeline
 
 1. `queueRender()` coalesces editor mutations, while `AnimationEngine` schedules preview frames only for active transport or visible camera settling; a stable paused view leaves no frame queued.
 2. `render()` builds a `renderState` object from current waypoints, animation progress, motion settings, camera, and preview mode.
-3. `RenderingService` draws layers in order: background → tint overlay → area highlights → path → waypoints → labels → path head → beacons.
+3. `RenderingService` draws the background (per background visibility mode), then the tint overlay, then the vector layers in the order of `RenderingService.VECTOR_LAYERS`.
 4. `MotionVisibilityService` computes per-frame visibility/opacity for path, waypoints, and background based on animation progress and the active visibility mode.
 5. `CameraService` applies zoom/pan transforms from per-waypoint camera keyframes.
 
@@ -219,9 +141,14 @@ path-head references are replaced with loadable built-in fallbacks in the
 recovery snapshot, while the live project remains unchanged. **Save Project**
 is the durable option for preserving images. Pending recovery is flushed on
 `pagehide`, and **Clear All** also removes the old recovery point so cleared
-work cannot return on reload.
+work cannot return on reload. The serialized snapshot is capped at 4 MiB
+(`STORAGE_LIMITS` in `StorageService.js`): above it, an ordinary autosave
+cancels its pending write, warns, and keeps the previous recovery point, while
+the immediate replacement after opening a project file or restoring recovery
+at startup clears the old point if the new one cannot be written. Real storage failures are
+reported.
 
-Other localStorage keys: `routePlotter_preferences`, `routePlotter_splashShown`, `routePlotter_customKeybindings`.
+Other localStorage keys: `routePlotter_splashShown`, `routePlotter_previewTipDismissed`, `routePlotter_sectionState` and `routePlotter_lastSection`. `routePlotter_customKeybindings` is read only by the help panel (Keybindings below); `routePlotter_preferences` has read/write helpers in `StorageService` with no callers.
 
 ### Project save/load (ZIP)
 
@@ -260,15 +187,11 @@ Self-contained HTML file with embedded base64 background image, the full project
 
 ## Versioning
 
-Format: `major.minor.build` (e.g. `3.1.530`).
+Format: `major.minor.build` (e.g. `3.2.690`), injected at build time as
+`APP_VERSION`. When the build number increments, and when it does not, is in
+[`DEV-INFRASTRUCTURE.md`](DEV-INFRASTRUCTURE.md) → Version management.
 
-- **major.minor** — set manually in `package.json`.
-- **build** — auto-incremented in `version.json` once per dev-server start or production build.
-
-The combined string is injected at build time via esbuild's `define` as `APP_VERSION`.
-
-| Change | Version bumps? |
-| --- | --- |
+--- | --- |
 | Edit JS in `src/` | Build increments on next `npm run dev` restart or `npm run build` |
 | Edit CSS/HTML only | No (static files are copied, not rebuilt) |
 | Force bump after CSS | Restart the dev server, or run a production build |
@@ -277,13 +200,15 @@ The combined string is injected at build time via esbuild's `define` as `APP_VER
 
 ## Keybindings
 
-All shortcuts live in `src/config/keybindings.js`. User overrides are stored in `routePlotter_customKeybindings` localStorage key and merged at load time.
+Shortcuts are handled in `src/handlers/InteractionHandler.js`.
+`src/config/keybindings.js` is the table the in-app help panel (press `?`)
+renders; it does not drive handling, so the two can disagree. There is no
+customisation UI: a `routePlotter_customKeybindings` value in localStorage
+changes only what the help panel shows.
 
-Each binding specifies: `key`, `modifiers` (meta/alt/shift), `action` (EventBus event name), `description`, and `category`.
+Each help entry specifies: `key`, `modifiers` (meta/alt/shift), `action`, `description`, and `category`.
 
 `meta` maps to **Cmd** on macOS, **Ctrl** on Windows/Linux.
-
-The in-app help panel (press `?`) renders all bindings dynamically from this config.
 
 ---
 
@@ -323,22 +248,23 @@ All tuneable values are in `src/config/constants.js`, grouped by concern:
 2. Include it in `toJSON()` and handle it in `fromJSON()`.
 3. Add a UI control in the appropriate `index.html` settings section.
 4. Wire the control in `UIController.js` to emit an EventBus event.
-5. Handle the event in `main.js` (update waypoint, call `queueRender()`).
+5. Handle the event in the owning `src/app/*` mixin (update the waypoint, call `queueRender()`).
+6. Meet the persistence rule in `AGENTS.md` → Testing and persistence (canonical snapshot, restore and a round-trip test).
 
 ### Add a new global setting
 
 1. Add the value to the relevant state object in `RoutePlotter` constructor (`motionSettings`, `exportSettings`, `styles`).
 2. Add a constant/default in `constants.js`.
 3. Add UI control in `index.html`, wire in `UIController.js`.
-4. Handle in `main.js`, persist in auto-save and project save/load.
+4. Handle it in the owning `src/app/*` mixin, and persist it through `_buildProjectSnapshot()` in `src/app/persistence.js` (`AGENTS.md` → Testing and persistence).
 
 ### Modify canvas rendering
 
-Edit `RenderingService.js`. Drawing methods follow the naming pattern `render*()`. The rendering order is defined in the `LAYERS` constants.
+Edit `RenderingService.js`. Drawing methods follow the naming pattern `render*()`. The vector draw order is `RenderingService.VECTOR_LAYERS`; the `LAYERS` object in `constants.js` is unused.
 
 ### Debug issues
 
-- **Console**: The app intercepts `console.log/warn/error` into a 500-entry ring buffer. Use **Export → Download Debug Log** or **Copy Debug Log** to capture it as markdown.
+- **Diagnostics**: **Report a bug** and **Export → Download / Copy diagnostics…** preview a redacted environment snapshot. The app does not capture the console (`DEV-INFRASTRUCTURE.md` → Framework section aliases).
 - **Browser DevTools**: Check the Console tab and Network tab.
 - **Version**: Shown in the header tooltip and page title.
 

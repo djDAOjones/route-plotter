@@ -8,30 +8,16 @@
 | Canvas 2D | Direct pixel manipulation for path rendering and animation |
 | esbuild | Fast bundling, simple config, ESM output |
 | Vitest + jsdom | Unit testing with DOM simulation |
+| axe-core | Automated accessibility audit in the test suite |
 | mediabunny | MP4/WebM mux layer |
 | jszip | Project ZIP import/export |
 | CSS custom properties | Design tokens for theming (UoN + Okabe-Ito) |
 
 ## Project structure
 
-```text
-src/
-  main.js              — RoutePlotter class: app entry point and orchestrator core
-  app/                 — RoutePlotter prototype mixins (wiring, playback, undo/redo, camera,
-                         viewport, path timing, persistence, exporting, editor panel, pointer,
-                         synchronized scene-outline integration)
-  config/              — constants, keybindings, help content, tooltips
-  core/                — EventBus (pub-sub), PlayerCore (pure timeline math)
-  models/              — Waypoint, AnimationState, ImageAsset + scene model (Scene → FlowLayer → GraphModel/GraphNode/GraphEdge + Emitter)
-  services/            — single-responsibility services (18 modules)
-  controllers/         — UIController, SectionController, SceneOutlineController
-  components/          — SwatchPicker, Dropdown, Tooltip, ParamTooltip
-  handlers/            — InteractionHandler (Pointer Events transactions, keyboard, DnD)
-  utils/               — CatmullRom, Easing, focusTrap
-styles/                — tokens.css, main.css, swatch-picker.css, dropdown.css, tooltip.css
-specs/                 — archived dot-crowd-navigator material (spec, memory, salvaged tests/src) for Phases 2–4
-tests/                 — Vitest unit tests
-```
+`file-map.md` is the maintained index of file roles.
+`src/main.js` is the entry point and orchestrator core; its method groups are
+prototype mixins in `src/app/`.
 
 (The former `workers/` layer was deleted 2026-06-18 — it never initialised
 under the old esbuild targets; see the v2 decision-log entry. es2022 targets
@@ -110,7 +96,8 @@ this boundary; a selected waypoint group moves by one shared bounds-safe delta.
 - **Two bundled runtime dependencies: mediabunny and jszip** (jszip
   bundled 2026-08-17, replacing a runtime CDN load). No new runtime
   packages without explicit approval.
-- Dev dependencies (esbuild, vitest, jsdom) are established.
+- Dev dependencies are those in `package.json` (`DEV-INFRASTRUCTURE.md` →
+  Package management).
 
 ## Dev workflow
 
@@ -119,4 +106,5 @@ this boundary; a selected waypoint group moves by one shared bounds-safe delta.
 - Build: `npm run build` → output in `docs/`
 - Check: `npm run check` (Vitest + restart-script safety contract +
   non-mutating production build)
-- Deploy: commit source, run `npm run push:dry-run`, then `npm run push`
+- Deploy: `DEV-INFRASTRUCTURE.md` → Deployment (pull requests; the owner
+  calls each release)

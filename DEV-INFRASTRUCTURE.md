@@ -15,7 +15,8 @@ Package manager: **npm**
 - **Runtime dependencies:** `jszip` (project archives) and `mediabunny`
   (MP4/WebM mux layer). Do not add runtime packages without explicit
   approval.
-- **Dev dependencies** (esbuild, vitest, jsdom) are established.
+- **Dev dependencies** (`devDependencies` in `package.json`: the build, test
+  and accessibility-audit tools) are established.
   New dev dependencies can be added when justified.
 - Supported Node versions are declared in `package.json`; `.nvmrc` pins
   Node 24 for maintainers and `packageManager` records the expected npm
@@ -29,6 +30,7 @@ Package manager: **npm**
 | Script | Command | Purpose | When to use |
 | --- | --- | --- | --- |
 | `dev` | `node build.js --watch --serve` | Dev server with watch | Day-to-day development |
+| `start` | `node build.js --watch --serve` | Same as `dev` | — |
 | `build` | `NODE_ENV=production node build.js` | Production build (minified, sourcemap) | Before deploy |
 | `build:deploy` | `npm run build` | Alias of `build` — outputs straight to `docs/` (the GitHub Pages dir) | When deploying |
 | `build:check` | `NODE_ENV=production node build.js --check` | Validate a temporary production build without changing `docs/` or `version.json` | CI / close-out |
@@ -38,6 +40,8 @@ Package manager: **npm**
 | `test:watch` | `vitest watch --pool=threads --no-file-parallelism` | Tests in watch mode | During development |
 | `push:dry-run` | `node push.js --dry-run` | Show deployment commands without changing files or Git | Before deploy |
 | `push` | `node push.js` | From a clean source commit: check, build, stage generated files, commit, push current branch | When ready to ship |
+| `serve` | `python3 -m http.server 3000` | Static server of the whole repository, no build or watch: `/` is the source shell, which lacks the app bundle; `/docs/` is the built app (needs a working `python3`) | Not in use |
+| `serve:dist` | `cd docs && python3 -m http.server 3000` | Static server of the built `docs/`, no watch (needs a working `python3`) | Viewing a built copy |
 
 Do not add scripts without updating this table.
 
@@ -101,7 +105,7 @@ serving `docs/` over HTTP. Reaching a known-good state is one command
 | Verb | Command | Does |
 | --- | --- | --- |
 | Boot | `npm run dev` | Build, watch `src/`, serve `docs/` at the dev URL. The canonical run command. |
-| Reboot | `./scripts/restart.sh` (or `Ctrl-C`, then `npm run dev`) | Stop this checkout's recorded watcher tree and start fresh (also bumps the build number); refuse to kill an unrelated port holder; verify readiness. |
+| Reboot | `./scripts/restart.sh` (or `Ctrl-C`, then `npm run dev`) | Stop this checkout's recorded watcher tree and start fresh (also bumps the build number); refuse to kill an unrelated port holder; wait for HTTP 200. |
 | Build | `npm run build` (or `./scripts/build.sh`) | One-off production build into `docs/` (no server). |
 | Test | `npm test` | Run the vitest suite once. |
 
@@ -117,12 +121,18 @@ serving `docs/` over HTTP. Reaching a known-good state is one command
   watcher is orphaned (see decision-log 2026-06-17).
 - **Env / secrets:** none. No `.env`, no API keys — the app runs
   entirely in the browser.
-- **Generated output (safe to delete and rebuild):** `docs/` and the
-  `version.json` build field, both produced by `build.js`. Never
-  hand-edit them (see Files agents must not hand-edit below).
+- **Generated output:** `docs/` and the `version.json` build field, both
+  produced by `build.js`. Never hand-edit them (see Files agents must not
+  hand-edit below). A deleted `docs/` is recovered with
+  `git restore docs`; a dev build does not recreate the committed release
+  output. Never delete `version.json`: the counter would restart, and the next
+  build would write build 1.
 - **Health / readiness:** the app is *ready* — not merely launched —
   when `http://localhost:3000` loads with no console errors and the
   version stamp renders. A blank page or console error means not-ready.
+  `./scripts/restart.sh` proves only that the server answers (its `curl -f`
+  request succeeds) and prints the served title's version when it finds one;
+  the console and the rendered stamp need a browser.
 - **Close-out boot check** (`pm_skills/prompts/end-of-task.md` step 2): run
   `npm run check`. Its `build:check` proves the production build without
   touching tracked files, but not readiness: when a task changed what the app
@@ -136,14 +146,14 @@ serving `docs/` over HTTP. Reaching a known-good state is one command
   running dev server, reboots, and waits for HTTP 200:
 
 ```bash
-./scripts/restart.sh             # stop dev server, reboot, verify readiness
+./scripts/restart.sh             # stop dev server, reboot, wait for HTTP 200
 ```
 
   Manual equivalent for a server you launched in the current terminal:
 
 ```bash
 Ctrl-C                           # stop that foreground server tree
-npm run dev                      # reboot to a ready state
+npm run dev                      # reboot; then check readiness as above
 # then hard-refresh the browser (Cmd+Shift+R) — no HMR
 ```
 
@@ -166,7 +176,8 @@ npm run dev                      # reboot to a ready state
   watch and production modes.
 - **Output directory:** `docs/` (also serves as GitHub Pages root)
 - **Format:** ESM
-- **Source maps:** Enabled in both dev and production
+- **Source maps:** the app bundle in dev and production; the player bundle in
+  dev only (the untracked `docs/player.js.map`)
 - **Minification:** Production builds only
 - **Static files:** an explicit allowlist in `build.js` copies `index.html`,
   the six shipped stylesheets, and the six built-in example images. Production
@@ -342,8 +353,8 @@ frame time at all — 1 MP and 48 MP both render in ~0.2 ms — only memory
   this file before adding any new hard-coded value.
 - **Design tokens:** `styles/tokens.css` — CSS custom properties for
   colours, spacing, and theming (UoN palette + Okabe-Ito map palette).
-- **Keybindings:** `src/config/keybindings.js` — all mouse and
-  keyboard shortcuts. Customisable at runtime via localStorage.
+- **Keybindings:** `src/config/keybindings.js` — see `README.md` →
+  Keybindings for what it does and does not control.
 - **Help content:** `src/config/helpContent.js` — welcome modal and
   inline help HTML generators.
 - **Tooltips:** `src/config/tooltips.js` — tooltip definitions.
@@ -360,9 +371,8 @@ scene/flow/emitter budgets in their model files. Import stages and decodes a
 detached candidate before commit. Keep those limits finite, cover increases
 with adversarial tests, and document user-visible changes in `README.md`.
 
-Autosave is capped at a 4 MiB serialized snapshot. It includes background and
-custom assets only while they fit, reports real storage failures, and flushes
-pending state on `pagehide`; a manual project ZIP remains the durable format.
+Autosave's contents, 4 MiB cap and failure behaviour are in `README.md` →
+Auto-save; a manual project ZIP remains the durable format.
 
 ---
 
