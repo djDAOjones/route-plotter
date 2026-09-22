@@ -9,8 +9,56 @@
 import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { snapToAngle } from '../utils/snapToAngle.js';
+import { branchEndInfo } from '../utils/routeBranches.js';
+
+/**
+ * Resolve a drag that ended on top of another waypoint as a branch rejoin.
+ *
+ * Only a branch's LAST waypoint carries the rejoin link, so only it can make
+ * the gesture. The drop restores the dragged waypoint's start position — the
+ * author was pointing at a target, not moving a point — and hands the link
+ * change to `route:branch-rejoin`, which owns the validation and the undo
+ * entry. Dropping on the current target clears the rejoin, so one gesture both
+ * makes and unmakes it.
+ *
+ * A module helper rather than a mixin method: test harnesses and PlayerApp
+ * host only part of this mixin, and a `this._method()` call is undefined there
+ * (the same lesson as `routeOf` in pathTiming).
+ *
+ * @param {Object} app RoutePlotter
+ * @param {Object} data `waypoint:drag-ended` payload
+ * @returns {boolean} True when the drop was consumed as a rejoin
+ */
+function resolveBranchRejoinDrop(app, data) {
+  const waypoint = data?.waypoint;
+  if (!waypoint || data.dropX === undefined || data.dropY === undefined) return false;
+  if (typeof app.findWaypointAt !== 'function') return false;
+
+  const info = branchEndInfo(app.waypoints, waypoint);
+  if (!info || !info.isEnd) return false;
+
+  // Skip the whole drag group, not just the dragged point: a group drag lands
+  // several waypoints under the cursor at once.
+  const dragged = new Set(
+    (data.dragGroup || []).map(item => item?.waypoint).filter(Boolean)
+  );
+  dragged.add(waypoint);
+  const target = app.findWaypointAt(data.dropX, data.dropY, dragged);
+  if (!target) return false;
+
+  // Put it back: this gesture aimed at a target, it did not move a point.
+  const start = (data.dragGroup || []).find(item => item?.waypoint === waypoint);
+  if (start) {
+    waypoint.imgX = start.imgX;
+    waypoint.imgY = start.imgY;
+  }
+
+  app.eventBus.emit('route:branch-rejoin', { waypoint, targetId: target.id });
+  return true;
+}
 
 export const wiringBusMixin = {
+
   
   /**
    * Set up EventBus listeners for decoupled component communication
@@ -85,13 +133,15 @@ export const wiringBusMixin = {
     /**
      * waypoint:position-changed - Waypoint moved/dragged
      * MOST EXPENSIVE: Requires full path recalculation
-     * Fired on every mousemove during drag (with isDragging=true) and
+     * Fired on every pointermove during drag (with isDragging=true) and
      * on each arrow key nudge. Undo is NOT saved here — instead:
      * - Drag completion: saved by waypoint:drag-ended (immediate)
      * - Arrow key nudge: saved by debounced timer (groups key repeats)
      */
     this.eventBus.on('waypoint:position-changed', (data) => {
-      // InteractionHandler passes {waypoint, imgX, imgY, isDragging}
+      // InteractionHandler passes {waypoint, imgX, imgY, dragGroup,
+      // isDragging}. dragGroup holds immutable gesture-start coordinates so
+      // all selected points can be derived from one shared delta per frame.
       const waypoint = data?.waypoint || data;
       const isDragging = data?.isDragging || false;
       
@@ -112,14 +162,36 @@ export const wiringBusMixin = {
         }
         
         const zoom = this.exportSettings.backgroundZoom / 100;
-        if (zoom < 1) {
-          // Zoomed out: allow waypoints outside image bounds (coords outside 0-1)
-          waypoint.imgX = newX;
-          waypoint.imgY = newY;
-        } else {
-          // Zoomed in or 100%: clamp to image bounds
-          waypoint.imgX = Math.max(0, Math.min(1, newX));
-          waypoint.imgY = Math.max(0, Math.min(1, newY));
+        const dragGroup = Array.isArray(data.dragGroup)
+          ? data.dragGroup.filter(item => item?.waypoint && this.waypoints.includes(item.waypoint))
+          : [];
+        const primaryStart = dragGroup.find(item => item.waypoint === waypoint);
+
+        if (primaryStart && dragGroup.length > 0) {
+          let dx = newX - primaryStart.imgX;
+          let dy = newY - primaryStart.imgY;
+          if (zoom >= 1) {
+            const minDx = Math.max(...dragGroup.map(item => -item.imgX));
+            const maxDx = Math.min(...dragGroup.map(item => 1 - item.imgX));
+            const minDy = Math.max(...dragGroup.map(item => -item.imgY));
+            const maxDy = Math.min(...dragGroup.map(item => 1 - item.imgY));
+            dx = minDx <= maxDx ? Math.max(minDx, Math.min(maxDx, dx)) : 0;
+            dy = minDy <= maxDy ? Math.max(minDy, Math.min(maxDy, dy)) : 0;
+          }
+          for (const item of dragGroup) {
+            item.waypoint.imgX = item.imgX + dx;
+            item.waypoint.imgY = item.imgY + dy;
+          }
+        } else if (this.waypoints.includes(waypoint)) {
+          if (zoom < 1) {
+            // Zoomed out: allow waypoints outside image bounds (coords outside 0-1)
+            waypoint.imgX = newX;
+            waypoint.imgY = newY;
+          } else {
+            // Zoomed in or 100%: clamp to image bounds
+            waypoint.imgX = Math.max(0, Math.min(1, newX));
+            waypoint.imgY = Math.max(0, Math.min(1, newY));
+          }
         }
       }
       
@@ -138,10 +210,36 @@ export const wiringBusMixin = {
      * waypoint:drag-ended - Drag operation completed (mouseup)
      * Saves undo state once for the entire drag operation.
      */
-    this.eventBus.on('waypoint:drag-ended', (waypoint) => {
+    this.eventBus.on('waypoint:drag-ended', (data) => {
+      // A branch END dropped on another waypoint is a rejoin gesture, not a
+      // move: restore where it was and set the link instead (ROUTE-01c).
+      if (resolveBranchRejoinDrop(this, data)) return;
+
+      const dragGroup = Array.isArray(data?.dragGroup) ? data.dragGroup : null;
+      if (dragGroup && !dragGroup.some(item =>
+        item?.waypoint && (item.waypoint.imgX !== item.imgX || item.waypoint.imgY !== item.imgY)
+      )) {
+        return;
+      }
       this.saveUndoState(); // Immediate — one entry per drag
       this.updateWaypointList();
       this.autoSave();
+    });
+
+    /** Restore a cancelled single/group drag without creating history. */
+    this.eventBus.on('waypoint:drag-cancelled', ({ positions } = {}) => {
+      const restored = (positions || []).filter(item =>
+        item?.waypoint && this.waypoints.includes(item.waypoint)
+      );
+      if (restored.length === 0) return;
+      for (const item of restored) {
+        item.waypoint.imgX = item.imgX;
+        item.waypoint.imgY = item.imgY;
+      }
+      this.calculatePath();
+      this.updateWaypointList();
+      this.updateWaypointEditor();
+      this.queueRender();
     });
     
     /**
@@ -149,10 +247,13 @@ export const wiringBusMixin = {
      * LEAST EXPENSIVE: Only re-render, no path calculation needed
      * Examples: dot color, dot size, marker style, beacon color, label
      */
-    this.eventBus.on('waypoint:style-changed', (waypoint) => {
+    this.eventBus.on('waypoint:style-changed', (_waypoint, { historyAlreadySaved = false } = {}) => {
       this.queueRender(); // Visual update only
       this.uiController.updateWaypointList(this.waypoints); // Sync sidebar dots/labels
-      this.saveUndoStateDebounced(); // Groups slider drags into single undo entry
+      this._syncWaypointCardActions?.();
+      if (!historyAlreadySaved) {
+        this.saveUndoStateDebounced(); // Groups slider drags into single undo entry
+      }
       this.autoSave();
     });
     
@@ -217,6 +318,7 @@ export const wiringBusMixin = {
      */
     this.eventBus.on('waypoint:path-property-changed', (waypoint) => {
       this.calculatePath(); // Path appearance changed
+      this._syncWaypointCardActions?.();
       this.saveUndoStateDebounced(); // Groups slider drags into single undo entry
       this.autoSave();
       this.queueRender();
@@ -232,6 +334,7 @@ export const wiringBusMixin = {
       
       // Use unified duration update (accounts for segment speeds and pauses)
       this.updateAnimationDuration();
+      this._syncWaypointCardActions?.();
       this.saveUndoStateDebounced();
       this.autoSave();
     });
@@ -251,6 +354,7 @@ export const wiringBusMixin = {
         // Dump full segment state after recalculation
         this.animationEngine.dumpSegmentState();
       }
+      this._syncWaypointCardActions?.();
       
       this.saveUndoStateDebounced();
       this.autoSave();

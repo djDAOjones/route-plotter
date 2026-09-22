@@ -33,8 +33,12 @@ export class AnimationEngine {
     this.eventBus = eventBus;
     this.state = new AnimationState();
     this.animationFrameId = null;
-    this.lastFrameTime = 0;
+    this.lastFrameTime = null;
     this.onUpdate = null; // Callback for animation updates
+    this._started = false;
+    this._keepAlive = false;
+    this._loop = null;
+    this._transportSuspended = false;
 
     // Timeline-based waypoint pauses
     // Pauses are baked into the timeline - total duration includes pause times
@@ -104,6 +108,15 @@ export class AnimationEngine {
     
     /** @private @type {{isWaiting: boolean, waypointProgress: number, elapsed: number, total: number}} */
     this._currentPauseState = { isWaiting: false, waypointProgress: 0, elapsed: 0, total: 0 };
+
+    // Reused render input: immutable marker arrays plus the current absolute
+    // scene time let MotionVisibilityService derive comet state without history.
+    this._trailVisibilityContext = {
+      timelineMs: 0,
+      pauseMarkers: this.pauseMarkers,
+      tailStartMs: 0,
+      tailEndMs: 0
+    };
   }
   
   /**
@@ -116,24 +129,51 @@ export class AnimationEngine {
   getPauseState() {
     return this._currentPauseState;
   }
+
+  /**
+   * Return the deterministic timeline context needed to evaluate a comet tail.
+   * The object is reused per frame; consumers must treat it and marker arrays as
+   * read-only. Times exclude export/start handles and reveal intro, matching the
+   * pause marker domain built by PlayerCore.
+   * @returns {{timelineMs: number, pauseMarkers: Array, tailStartMs: number, tailEndMs: number}}
+   */
+  getTrailVisibilityContext() {
+    const context = this._trailVisibilityContext;
+    context.timelineMs = Math.max(0, this.state.currentTime - this.startHandleTime - this.introTime);
+    context.pauseMarkers = this.pauseMarkers;
+    context.tailStartMs = this.pathDuration + this.totalPauseTime;
+    context.tailEndMs = context.tailStartMs + this.totalTailTime;
+    return context;
+  }
   
   /**
    * Start the animation render loop (does not start playback)
    * Call play() separately to begin animation playback
-   * @param {Function} onUpdate - Callback function called on each frame
+   * The loop sleeps after one idle update. Returning true from onUpdate keeps
+   * it awake for visual work outside timeline playback, such as camera settling.
+   * @param {Function} onUpdate - Callback called on updates; true keeps the loop awake
    */
   start(onUpdate) {
-    if (this.animationFrameId) {
+    if (this._started || this.animationFrameId !== null) {
       this.stop();
     }
     
     this.onUpdate = onUpdate;
     // Don't auto-play - let user explicitly call play()
-    this.lastFrameTime = 0;
+    this.lastFrameTime = null;
+    this._started = true;
+    this._transportSuspended = false;
     
-    const loop = (timestamp) => {
-      this.animationFrameId = requestAnimationFrame(loop);
-      
+    this._loop = (timestamp) => {
+      this.animationFrameId = null;
+      if (!this._started) return;
+
+      if (this.lastFrameTime === null) {
+        // Anchor resumed playback to the browser clock so an idle interval can
+        // never become one large first-frame jump.
+        this.lastFrameTime = timestamp - ANIMATION.FRAME_INTERVAL - 0.01;
+      }
+
       // Calculate time since last frame
       const elapsed = timestamp - this.lastFrameTime;
       
@@ -142,7 +182,7 @@ export class AnimationEngine {
         // Adjust for frame interval to prevent lag accumulation
         this.lastFrameTime = timestamp - (elapsed % ANIMATION.FRAME_INTERVAL);
         
-        if (this.state.isPlaying && !this.state.isPaused) {
+        if (this.state.isActivelyPlaying()) {
           // Cap deltaTime to prevent huge jumps
           const deltaTime = Math.min(elapsed, ANIMATION.MAX_DELTA_TIME) * this.state.playbackSpeed;
           
@@ -151,16 +191,46 @@ export class AnimationEngine {
         }
         
         // Call update callback
-        if (this.onUpdate) {
-          this.onUpdate(this.state);
-        }
+        this._keepAlive = this.onUpdate?.(this.state) === true;
         
         // Emit update event
         this.emit('update', this.state);
       }
+
+      if (this.state.isActivelyPlaying() || this._keepAlive) {
+        this._scheduleFrame();
+      }
     };
     
-    requestAnimationFrame(loop);
+    // One initial update preserves the old startup callback contract; a stable
+    // paused project then leaves no animation frame queued.
+    this.requestUpdate();
+  }
+
+  /**
+   * Request one engine update without starting permanent idle polling.
+   * State-mutating controls use this so their existing render/UI callback runs
+   * even while playback is paused.
+   */
+  requestUpdate() {
+    if (!this._started || this._transportSuspended) return;
+    this._keepAlive = true;
+    this._scheduleFrame();
+  }
+
+  /** @private */
+  _scheduleFrame() {
+    if (!this._started || this.animationFrameId !== null || !this._loop) return;
+    this.animationFrameId = requestAnimationFrame(this._loop);
+  }
+
+  /** @private */
+  _cancelFrame() {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+    this._keepAlive = false;
   }
   
   /**
@@ -313,8 +383,10 @@ export class AnimationEngine {
    */
   pause() {
     this.state.pause();
+    this.lastFrameTime = null;
     this._resetPlaybackSpeed();
     this.emit('pause');
+    this.requestUpdate();
   }
   
   /**
@@ -322,23 +394,54 @@ export class AnimationEngine {
    */
   play() {
     this.state.play();
+    this.lastFrameTime = null;
     // Debug: dump segment state on play if variable speed is active
     if (this.hasVariableSpeed) {
       console.debug(`▶️ [Play] Starting with variable speed. currentTime=${(this.state.currentTime/1000).toFixed(3)}s pathProgress=${this.state.pathProgress.toFixed(4)}`);
       this.dumpSegmentState();
     }
     this.emit('play');
+    this.requestUpdate();
   }
   
   /**
    * Toggle play/pause
    */
   togglePlayPause() {
-    if (this.state.isPlaying && !this.state.isPaused) {
+    if (this.state.isActivelyPlaying()) {
       this.pause();
     } else {
       this.play();
     }
+  }
+
+  /**
+   * Freeze timeline advancement without emitting user-facing pause events or
+   * resetting review speed. Export uses this reversible boundary while it
+   * steps the same engine through deterministic frame seeks.
+   * @returns {{timelineProgress: number, isPlaying: boolean, isPaused: boolean, playbackSpeed: number}}
+   */
+  suspendTransport() {
+    const snapshot = this.state.captureTransportState();
+    this.state.isPaused = true;
+    this._transportSuspended = true;
+    this._cancelFrame();
+    return snapshot;
+  }
+
+  /**
+   * Restore a suspendTransport() snapshot after the caller has restored the
+   * original timeline shape. Derived path and wait state are evaluated through
+   * PlayerCore, while the active/paused latch and speed return byte-for-byte.
+   * @param {{timelineProgress: number, isPlaying: boolean, isPaused: boolean, playbackSpeed: number}} snapshot
+   */
+  restoreTransportState(snapshot) {
+    this.state.restoreTransportState(snapshot);
+    this.state.pathProgress = this.timelineToPathProgress(this.state.progress);
+    this.emit('seek', this.state.currentTime);
+    this._transportSuspended = false;
+    this.lastFrameTime = null;
+    this.requestUpdate();
   }
   
   /**
@@ -346,10 +449,11 @@ export class AnimationEngine {
    * Resets playback speed to 1x (JKL speeds are temporary review aids)
    */
   stop() {
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
+    this._started = false;
+    this._cancelFrame();
+    this._loop = null;
+    this._transportSuspended = false;
+    this.lastFrameTime = null;
     this.state.stop();
     this._resetPlaybackSpeed();
     this.emit('stop');
@@ -362,9 +466,11 @@ export class AnimationEngine {
    */
   reset() {
     this.state.reset();
+    this.lastFrameTime = null;
     this.nextPauseIndex = 0; // Reset to check all pause markers again
     this._resetPlaybackSpeed();
     this.emit('reset');
+    this.requestUpdate();
   }
   
   /**
@@ -587,8 +693,8 @@ export class AnimationEngine {
   isInTailTime() {
     if (this.totalTailTime <= 0) return false;
     
-    // Calculate when tail time starts (after start handle + path + pauses complete)
-    const tailTimeStart = this.startHandleTime + this.pathDuration + this.totalPauseTime;
+    // Calculate when tail time starts (after handles, intro, path and pauses)
+    const tailTimeStart = this.startHandleTime + this.introTime + this.pathDuration + this.totalPauseTime;
     const currentTime = this.state.currentTime;
     const tailTimeEnd = tailTimeStart + this.totalTailTime;
     
@@ -602,8 +708,9 @@ export class AnimationEngine {
   isInEndHandle() {
     if (this.endHandleTime <= 0) return false;
     
-    // End handle starts after start handle + path + pauses + tail time
-    const endHandleStart = this.startHandleTime + this.pathDuration + this.totalPauseTime + this.totalTailTime;
+    // End handle starts after start handle + intro + path + pauses + tail time
+    const endHandleStart = this.startHandleTime + this.introTime + this.pathDuration +
+      this.totalPauseTime + this.totalTailTime;
     return this.state.currentTime >= endHandleStart;
   }
   
@@ -614,7 +721,7 @@ export class AnimationEngine {
   getTailTimeElapsed() {
     if (!this.isInTailTime()) return 0;
     
-    const tailTimeStart = this.startHandleTime + this.pathDuration + this.totalPauseTime;
+    const tailTimeStart = this.startHandleTime + this.introTime + this.pathDuration + this.totalPauseTime;
     return Math.max(0, this.state.currentTime - tailTimeStart);
   }
   
@@ -623,7 +730,8 @@ export class AnimationEngine {
    * @returns {number} Total duration in ms
    */
   getTotalTimelineDuration() {
-    return this.startHandleTime + this.pathDuration + this.totalPauseTime + this.totalTailTime + this.endHandleTime;
+    return this.startHandleTime + this.introTime + this.pathDuration + this.totalPauseTime +
+      this.totalTailTime + this.endHandleTime;
   }
   
   /**
@@ -681,34 +789,6 @@ export class AnimationEngine {
   }
   
   /**
-   * Calculate total path duration accounting for per-segment speed multipliers
-   * 
-   * @param {Array} segmentLengths - Length of each segment in pixels (from PathCalculator)
-   * @param {Array} waypoints - Waypoints with segmentSpeed property
-   * @param {number} baseSpeed - Base animation speed in pixels/second
-   * @returns {number} Total path duration in milliseconds
-   * @deprecated Use setSegmentMarkers() instead - this method doesn't set up timing markers
-   */
-  calculateDurationWithSegmentSpeeds(segmentLengths, waypoints, baseSpeed) {
-    if (!segmentLengths || segmentLengths.length === 0 || !waypoints || waypoints.length < 2) {
-      return 0;
-    }
-    
-    let totalDuration = 0;
-    
-    for (let i = 0; i < segmentLengths.length; i++) {
-      const segmentLength = segmentLengths[i];
-      const segmentSpeed = waypoints[i]?.segmentSpeed || 1.0;
-      
-      // Duration = length / (baseSpeed * segmentSpeed)
-      const segmentDuration = (segmentLength / (baseSpeed * segmentSpeed)) * 1000;
-      totalDuration += segmentDuration;
-    }
-    
-    return totalDuration;
-  }
-  
-  /**
    * Convert path time (ms) to path progress (0-1) using segment markers
    * 
    * This handles the non-linear mapping when segments have different speeds.
@@ -743,7 +823,9 @@ export class AnimationEngine {
    */
   seekToTime(time) {
     this.state.setTime(time);
-    this.emit('seek', time);
+    this.state.pathProgress = this.timelineToPathProgress(this.state.progress);
+    this.emit('seek', this.state.currentTime);
+    this.requestUpdate();
   }
   
   /**
@@ -755,6 +837,7 @@ export class AnimationEngine {
     // Also update pathProgress
     this.state.pathProgress = this.timelineToPathProgress(progress);
     this.emit('seek', progress * this.state.duration);
+    this.requestUpdate();
   }
   
   /**
@@ -768,6 +851,7 @@ export class AnimationEngine {
     this.state.setProgress(timelineProgress);
     this.state.pathProgress = pathProgress;
     this.emit('seek', timelineProgress * this.state.duration);
+    this.requestUpdate();
   }
   
   /**
@@ -796,6 +880,7 @@ export class AnimationEngine {
     this.state.duration = duration;
     this.state.setProgress(currentProgress); // Maintain progress
     this.emit('durationChange', duration);
+    this.requestUpdate();
   }
   
   /**
@@ -850,7 +935,7 @@ export class AnimationEngine {
    * @returns {boolean}
    */
   isPlaying() {
-    return this.state.isPlaying && !this.state.isPaused;
+    return this.state.isActivelyPlaying();
   }
   
   /**

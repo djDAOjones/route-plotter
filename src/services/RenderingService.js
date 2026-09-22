@@ -12,9 +12,30 @@ import { Easing } from '../utils/Easing.js';
 import { waypointPointIndices, legMidpointIndex } from '../utils/segmentHitTest.js';
 import { BeaconRenderer } from './BeaconRenderer.js';
 import { AreaHighlightRenderer } from './AreaHighlightRenderer.js';
+import { branchPathProgressAt } from '../utils/branchTiming.js';
+
+/**
+ * A read-only view of the AnimationEngine whose only difference is the path
+ * progress it reports. Everything else delegates, so a branch shares the
+ * trunk's transport, tail and trail behaviour by construction.
+ */
+function branchEngineFacade(engine, pathProgress) {
+  return {
+    state: engine.state,
+    pathDuration: engine.pathDuration,
+    getPathProgress: () => pathProgress,
+    getTime: () => (engine.getTime ? engine.getTime() : 0),
+    isInTailTime: () => (engine.isInTailTime ? engine.isInTailTime() : false),
+    getTailTimeElapsed: () => (engine.getTailTimeElapsed ? engine.getTailTimeElapsed() : 0),
+    getTrailVisibilityContext: () => (engine.getTrailVisibilityContext
+      ? engine.getTrailVisibilityContext()
+      : null),
+  };
+}
 import { DotRenderer } from './DotRenderer.js';
 import { MotionVisibilityService } from './MotionVisibilityService.js';
 import { TextLabelService } from './TextLabelService.js';
+import { renderReferenceScale, resolveRenderReference } from '../utils/renderReference.js';
 
 export class RenderingService {
   constructor() {
@@ -37,12 +58,11 @@ export class RenderingService {
      */
     this.INTRO_DURATION_MS = 1000;
     
-    /**
-     * Current coordinate transform for relative sizing
-     * Set during render() for use by helper methods
-     * @type {Object|null}
-     */
-    this._coordinateTransform = null;
+    /** Current reference-pixel to render-pixel ratio. */
+    this._renderReferenceScale = 1;
+
+    /** Whether label output should use editor-only legibility clamps. */
+    this._interactiveLabels = false;
     
     /**
      * Zoom clamp factor for vector-layer elements.
@@ -77,20 +97,9 @@ export class RenderingService {
     return 1 - Math.pow(1 - t, 3);
   }
   
-  /**
-   * Scale a size value based on the current image dimensions
-   * Sizes are scaled relative to a reference diagonal (1414px = ~1000x1000 image)
-   * This ensures consistent visual appearance across different image sizes
-   * 
-   * @param {number} size - Size in "reference pixels" (calibrated for 1414px diagonal)
-   * @returns {number} Scaled size in canvas pixels
-   */
+  /** Scale an authored reference-pixel value into the current render space. */
   scaleSize(size) {
-    if (!this._coordinateTransform) return size; // Fallback to raw value
-    const refDiagonal = RENDERING.REFERENCE_DIAGONAL || 1414;
-    const currentDiagonal = this._coordinateTransform.getReferenceDimension();
-    if (currentDiagonal <= 0) return size;
-    return size * (currentDiagonal / refDiagonal);
+    return size * this._renderReferenceScale;
   }
 
   /**
@@ -103,6 +112,26 @@ export class RenderingService {
    */
   scaleSizeClamped(size) {
     return this.scaleSize(size) * this._zoomClampFactor * this._graphicsScale;
+  }
+
+  /**
+   * Configure visual scaling without changing coordinate or timeline state.
+   * Public for deterministic fixtures and non-canvas layout helpers.
+   */
+  configureRenderReference(reference, width, height, { interactiveLabels = false } = {}) {
+    const resolved = resolveRenderReference(reference, { width, height });
+    this._renderReferenceScale = renderReferenceScale(resolved, width, height);
+    this._interactiveLabels = interactiveLabels === true;
+  }
+
+  /** Scale label type, with editor-only physical-pixel legibility clamps. */
+  scaleLabelSize(size) {
+    const scaled = this.scaleSizeClamped(size);
+    if (!this._interactiveLabels) return scaled;
+    return Math.max(
+      TEXT_LABEL.EDITOR_RENDER_PX_MIN,
+      Math.min(TEXT_LABEL.EDITOR_RENDER_PX_MAX, scaled)
+    );
   }
   
   /**
@@ -310,10 +339,21 @@ export class RenderingService {
   renderHoverAffordances(ctx, state) {
     const { hover, waypoints, styles, imageToCanvas, selectedWaypoint } = state;
 
-    if (hover.type === 'waypoint') {
+    if (hover.type === 'waypoint' || hover.type === 'waypoint-plus') {
       const wp = hover.waypoint;
+      if (!wp || !waypoints.includes(wp)) return;
+
+      // A waypoint a bound crowd enters from carries a branch handle
+      // (COMPOSE-04). Drawn even when the waypoint is selected — the handle
+      // is a separate target, not part of the selection ring.
+      if (state.branchHandleAt && state.branchHandleWaypoints?.has(wp.id)) {
+        const handle = state.branchHandleAt(wp);
+        this._drawPlusHandle(ctx, handle.x, handle.y,
+          handle.radius, hover.type === 'waypoint-plus');
+      }
+
       // Selection already draws its own ring; stale hovers are skipped
-      if (!wp || wp === selectedWaypoint || !waypoints.includes(wp)) return;
+      if (wp === selectedWaypoint) return;
       const rawSize = wp.isMajor
         ? (wp.dotSize || styles.dotSize)
         : (styles.minorDotSize || RENDERING.MINOR_DOT_SIZE);
@@ -346,31 +386,46 @@ export class RenderingService {
       const midImg = state.pathPoints[midIdx];
       if (!midImg) return;
       const pos = imageToCanvas(midImg.x, midImg.y);
-      const active = hover.type === 'leg-plus';
-      const f = this._zoomClampFactor;
-      const r = (active ? 11 : 9) * f;
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = active ? RENDERING.HOVER_ACCENT_COLOR : 'rgba(255, 255, 255, 0.95)';
-      ctx.fill();
-      ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
-      ctx.lineWidth = 1.5 * f;
-      ctx.stroke();
-      // The plus sign
-      const arm = r * 0.5;
-      ctx.beginPath();
-      ctx.moveTo(pos.x - arm, pos.y);
-      ctx.lineTo(pos.x + arm, pos.y);
-      ctx.moveTo(pos.x, pos.y - arm);
-      ctx.lineTo(pos.x, pos.y + arm);
-      ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
-      ctx.lineWidth = 2 * f;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-      ctx.restore();
+      this._drawPlusHandle(ctx, pos.x, pos.y, null, hover.type === 'leg-plus');
     }
+  }
+
+  /**
+   * The "+" insert handle, shared by the leg midpoint and the waypoint branch
+   * handle so both affordances read as the same offer.
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} x
+   * @param {number} y
+   * @param {number|null} radius Explicit radius, or null for the default
+   * @param {boolean} active True while the pointer is on it
+   * @private
+   */
+  _drawPlusHandle(ctx, x, y, radius, active) {
+    const f = this._zoomClampFactor;
+    const r = radius !== null && radius !== undefined
+      ? radius * f
+      : (active ? 11 : 9) * f;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = active ? RENDERING.HOVER_ACCENT_COLOR : 'rgba(255, 255, 255, 0.95)';
+    ctx.fill();
+    ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
+    ctx.lineWidth = 1.5 * f;
+    ctx.stroke();
+    // The plus sign
+    const arm = r * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x - arm, y);
+    ctx.lineTo(x + arm, y);
+    ctx.moveTo(x, y - arm);
+    ctx.lineTo(x, y + arm);
+    ctx.strokeStyle = active ? '#ffffff' : RENDERING.HOVER_ACCENT_COLOR;
+    ctx.lineWidth = 2 * f;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.restore();
   }
 
   /**
@@ -389,8 +444,11 @@ export class RenderingService {
       return; // Skip rendering
     }
     
-    // Store coordinate transform for relative sizing (used by scaleSize helper)
-    this._coordinateTransform = state.coordinateTransform || null;
+    // Visual scale is project-owned and intentionally separate from the
+    // coordinate transform and authored-timeline reference.
+    this.configureRenderReference(state.renderReference, cw, ch, {
+      interactiveLabels: state.interactiveLabels,
+    });
     
     // Extract motion visibility state
     const { previewMode, motionSettings, motionVisibilityService } = state;
@@ -607,8 +665,16 @@ export class RenderingService {
     };
     
     // If waiting at a waypoint, use direction from previous waypoint to current waypoint
-    // This prevents the cone from turning before the pause completes
-    if (isWaiting && pauseWaypointIndex >= 0 && waypoints && waypoints.length > 1) {
+    // This prevents the cone from turning before the pause completes.
+    // The bounds check is load-bearing, not defensive: a branched hero route
+    // renders each run with its own waypoint sub-array while
+    // pauseWaypointIndex indexes the whole route, so a wait further along the
+    // trunk lands past the end of a shorter branch run. Out of range means the
+    // wait is not this run's, and the run falls through to its own path-based
+    // direction below — the same contract MotionVisibilityService applies to
+    // this identical calculation.
+    if (isWaiting && pauseWaypointIndex >= 0 && pauseWaypointIndex < (waypoints?.length ?? 0)
+        && waypoints.length > 1) {
       if (pauseWaypointIndex > 0) {
         const prevWp = getWpPos(waypoints[pauseWaypointIndex - 1]);
         const currWp = getWpPos(waypoints[pauseWaypointIndex]);
@@ -803,7 +869,9 @@ export class RenderingService {
     const radius = baseRadius * introScale; // Scale from 0 to full during intro
     // Feather is % of spotlight radius, not canvas
     const feather = (revealFeather / 100) * radius;
-    const innerRadius = Math.max(0, radius - feather);
+    // BUG-02: equal radii paint nothing, so a zero feather must still leave a
+    // sub-pixel gap. Shared with the accumulating reveal so both edges agree.
+    const innerRadius = MotionVisibilityService.spotlightInnerRadius(radius, feather);
     
     ctx.save();
     
@@ -1028,7 +1096,10 @@ export class RenderingService {
     // Fill mode: image covers entire canvas, no change needed
     
     ctx.save();
-    ctx.globalAlpha = Math.min(Math.abs(overlayValue) / 100, 0.6);
+    ctx.globalAlpha = Math.min(
+      Math.abs(overlayValue),
+      MOTION.TINT_OPACITY_MAX
+    ) / 100;
     ctx.fillStyle = overlayValue < 0 ? '#000' : '#fff';
     ctx.fillRect(dx, dy, dw, dh);
     ctx.restore();
@@ -1051,9 +1122,9 @@ export class RenderingService {
       draw(svc, ctx, state, frame) {
         const { waypoints, imageToCanvas, displayWidth, displayHeight } = state;
         if (state.previewMode) {
-          AreaHighlightRenderer.render(ctx, waypoints, imageToCanvas, state.animationEngine, state.waypointProgressValues, state.motionSettings, displayWidth, displayHeight, state.previewMode);
+          AreaHighlightRenderer.render(ctx, waypoints, imageToCanvas, state.animationEngine, state.waypointProgressValues, state.motionSettings, displayWidth, displayHeight, state.previewMode, svc.scaleSizeClamped(1));
         } else {
-          AreaHighlightRenderer.renderEditMode(ctx, waypoints, imageToCanvas, displayWidth, displayHeight, state.selectedWaypoint);
+          AreaHighlightRenderer.renderEditMode(ctx, waypoints, imageToCanvas, displayWidth, displayHeight, state.selectedWaypoint, svc.scaleSizeClamped(1));
         }
       },
     },
@@ -1089,6 +1160,7 @@ export class RenderingService {
           const dots = state.swarmEngine.evaluate(timelineMs, layer, {
             durationMs,
             routePathPoints: state.pathPoints,
+            routeAnchors: state.routeAnchors,
           });
           DotRenderer.render(ctx, dots, state.imageToCanvas, svc);
         }
@@ -1102,6 +1174,19 @@ export class RenderingService {
         if (state.previewMode || !frame.hasPath) return;
         if (state.hover?.type !== 'leg' && state.hover?.type !== 'leg-plus') return;
         svc.renderLegHover(ctx, state);
+      },
+    },
+    {
+      // Branch paths (ROUTE-01b) — beneath the trunk so the trunk still reads
+      // as the primary line where a branch overlaps it.
+      name: 'branch-paths',
+      draw(svc, ctx, state, frame) {
+        if (!frame.shouldRenderPath || !state.branchPaths?.length) return;
+        for (const branch of svc.activeBranches(state)) {
+          svc.renderPath(ctx, branch.pathPoints, branch.waypoints, state.styles, branch.engine,
+                         frame.applyMotion ? state.motionSettings : null, state.motionVisibilityService,
+                         branch.progressValues, state.imageToCanvas);
+        }
       },
     },
     {
@@ -1119,6 +1204,18 @@ export class RenderingService {
       draw(svc, ctx, state, frame) {
         if (!frame.hasPath || !frame.shouldRenderPath) return;
         svc.renderPathHead(ctx, state.pathPoints, state.styles, state.animationEngine, state.imageToCanvas, state.waypointProgressValues, state.waypoints);
+      },
+    },
+    {
+      // One head per running branch (ROUTE-01b): every enabled branch animates
+      // simultaneously, so every enabled branch has a head of its own.
+      name: 'branch-heads',
+      draw(svc, ctx, state, frame) {
+        if (!frame.shouldRenderPath || !state.branchPaths?.length) return;
+        for (const branch of svc.activeBranches(state)) {
+          svc.renderPathHead(ctx, branch.pathPoints, state.styles, branch.engine,
+                             state.imageToCanvas, branch.progressValues, branch.waypoints);
+        }
       },
     },
     {
@@ -1181,6 +1278,51 @@ export class RenderingService {
       },
     },
   ];
+
+  /**
+   * The branches to draw this frame, each with its own path progress
+   * (ROUTE-01b).
+   *
+   * The engine facade is the point: `renderPath` and `renderPathHead` read a
+   * small, fixed slice of the AnimationEngine, and only `getPathProgress()`
+   * differs per branch. Delegating everything else to the real engine keeps
+   * one authority for transport, tail time and trail context while each
+   * branch resolves its own position from master timeline time — no branch
+   * accumulates state, so the scene stays a pure function of the instant.
+   *
+   * Returns an empty array on a linear route, which is what leaves the
+   * unsplit render path exactly as it was.
+   *
+   * @param {Object} state Render state
+   * @returns {Array<{id, pathPoints, waypoints, progressValues, engine}>}
+   */
+  activeBranches(state) {
+    const timeline = state.branchTimeline;
+    const paths = state.branchPaths;
+    if (!timeline || !paths || paths.length === 0) return [];
+
+    const engine = state.animationEngine;
+    if (!engine) return [];
+    const timelineMs = engine.getTime ? engine.getTime() : 0;
+
+    const active = [];
+    for (const branch of paths) {
+      if (!branch.pathPoints || branch.pathPoints.length < 2) continue;
+      const placement = timeline.legs?.[branch.id];
+      const leg = timeline.legsById?.[branch.id];
+      if (!placement || !leg || placement.enabled === false) continue;
+
+      const progress = branchPathProgressAt(timelineMs, placement, leg);
+      active.push({
+        id: branch.id,
+        pathPoints: branch.pathPoints,
+        waypoints: branch.waypoints,
+        progressValues: branch.progressValues || null,
+        engine: branchEngineFacade(engine, progress),
+      });
+    }
+    return active;
+  }
 
   /**
    * Render complete vector layer (paths, waypoints, labels)
@@ -1271,9 +1413,15 @@ export class RenderingService {
       } else if (isWaiting) {
         pauseElapsed = this._getPauseElapsed(animationEngine);
       }
-      
+
+      // Absolute marker/time context preserves the post-pause held tail while
+      // keeping comet evaluation independent of which frames rendered before.
+      const trailContext = animationEngine.getTrailVisibilityContext
+        ? animationEngine.getTrailVisibilityContext()
+        : null;
+
       visibleRange = motionVisibilityService.getPathVisibleRange(
-        progress, motionSettings, pathDuration, isWaiting, pauseElapsed, isInTailTime
+        progress, motionSettings, pathDuration, isWaiting, pauseElapsed, isInTailTime, trailContext
       );
       trailProgress = motionSettings.pathTrail > 0 && pathDuration > 0 
         ? (motionSettings.pathTrail * 1000) / pathDuration 
@@ -1357,7 +1505,7 @@ export class RenderingService {
       const scaledWidth = this.scaleSizeClamped(controller.segmentWidth);
       if (isCasing) {
         ctx.strokeStyle = RENDERING.PATH_CASING_COLOR;
-        ctx.lineWidth = scaledWidth + RENDERING.PATH_CASING_EXTRA_WIDTH * this._zoomClampFactor * this._graphicsScale; // scaled casing each side
+        ctx.lineWidth = scaledWidth + this.scaleSizeClamped(RENDERING.PATH_CASING_EXTRA_WIDTH);
         ctx.setLineDash([]); // Casing is always solid
       } else {
         ctx.strokeStyle = controller.segmentColor;
@@ -1430,7 +1578,7 @@ export class RenderingService {
           const scaledControllerWidth = this.scaleSizeClamped(currentController.segmentWidth);
           if (isCasing) {
             ctx.strokeStyle = RENDERING.PATH_CASING_COLOR;
-            ctx.lineWidth = scaledControllerWidth + RENDERING.PATH_CASING_EXTRA_WIDTH * this._zoomClampFactor * this._graphicsScale;
+            ctx.lineWidth = scaledControllerWidth + this.scaleSizeClamped(RENDERING.PATH_CASING_EXTRA_WIDTH);
             ctx.setLineDash([]);
           } else {
             ctx.strokeStyle = currentController.segmentColor;
@@ -1471,7 +1619,7 @@ export class RenderingService {
     // several widening, translucent layers (additive) → a soft bloom. Solid + dash-free.
     const drawContinuousGlow = () => {
       const intensity = styles.pathGlow?.intensity ?? RENDERING.PATH_GLOW_DEFAULT_INTENSITY;
-      const extraScale = this._zoomClampFactor * this._graphicsScale;
+      const extraScale = this.scaleSizeClamped(1);
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
       ctx.lineCap = 'round';
@@ -1592,7 +1740,7 @@ export class RenderingService {
       const drawPartialSegment = (isCasing) => {
         if (isCasing) {
           ctx.strokeStyle = RENDERING.PATH_CASING_COLOR;
-          ctx.lineWidth = scaledPartialWidth + RENDERING.PATH_CASING_EXTRA_WIDTH * this._zoomClampFactor * this._graphicsScale;
+          ctx.lineWidth = scaledPartialWidth + this.scaleSizeClamped(RENDERING.PATH_CASING_EXTRA_WIDTH);
           ctx.setLineDash([]);
         } else {
           ctx.strokeStyle = controller.segmentColor;
@@ -1621,7 +1769,7 @@ export class RenderingService {
       // Glow pass for the partial (animated head) segment — beneath casing.
       const drawPartialGlow = () => {
         const intensity = styles.pathGlow?.intensity ?? RENDERING.PATH_GLOW_DEFAULT_INTENSITY;
-        const extraScale = this._zoomClampFactor * this._graphicsScale;
+        const extraScale = this.scaleSizeClamped(1);
         const layers = RenderingService.glowLayers(scaledPartialWidth, intensity, extraScale);
         if (layers.length === 0) return;
         ctx.save();
@@ -1794,8 +1942,9 @@ export class RenderingService {
         ctx.fill();
         break;
         
+      case 'drone':
       case 'custom':
-        // Custom image
+        // Bundled presets and uploaded custom heads share the same transform.
         if (pathHead.image) {
           const imgSize = size * 2; // Make image slightly larger for better visibility
           // Draw the image centered and rotated
@@ -1870,9 +2019,7 @@ export class RenderingService {
       const markerSize = this.scaleSizeClamped(rawMarkerSize);
       
       // Calculate size scale factor for beacon thickness (clamped at high zoom, scaled)
-      const sizeScale = (this._coordinateTransform 
-        ? this._coordinateTransform.getReferenceDimension() / (RENDERING.REFERENCE_DIAGONAL || 1414)
-        : 1) * this._zoomClampFactor * this._graphicsScale;
+      const sizeScale = this.scaleSizeClamped(1);
       
       // Render beacon effect (may return scale override)
       const scaleOverride = this.beaconRenderer.renderBeacon(
@@ -2038,7 +2185,7 @@ export class RenderingService {
         // NOTE: Beacon scale REPLACES visibility scale, not multiplies, because
         // beacons like Pop/Grow/Pulse handle the full scale animation themselves
         // (including hide-before/hide-after behavior)
-        const isAnimationPlaying = animationEngine?.state?.isPlaying === true;
+        const isAnimationPlaying = animationEngine?.isPlaying?.() === true;
         if (isAnimationPlaying) {
           const beaconOverride = this.getBeaconScaleOverride(waypoint);
           if (beaconOverride && beaconOverride.scale !== undefined) {
@@ -2075,7 +2222,7 @@ export class RenderingService {
         
         ctx.fillStyle = markerColor;
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2 * this._zoomClampFactor * this._graphicsScale;
+        ctx.lineWidth = this.scaleSizeClamped(2);
         
         // Draw different marker types
         if (markerStyle === 'custom' && waypoint.customImage) {
@@ -2175,7 +2322,7 @@ export class RenderingService {
         ctx.globalAlpha = RENDERING.MINOR_DOT_OPACITY;
         ctx.fillStyle = RENDERING.MINOR_DOT_COLOR;
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1 * this._zoomClampFactor * this._graphicsScale;
+        ctx.lineWidth = this.scaleSizeClamped(1);
         
         ctx.beginPath();
         ctx.arc(wpCanvas.x, wpCanvas.y, size, 0, Math.PI * 2);
@@ -2228,9 +2375,10 @@ export class RenderingService {
     
     if (!visible || opacity <= 0) return;
     
-    // Get label properties with defaults - scale font size based on image dimensions (clamped at high zoom)
+    // Label type is authored in reference pixels. Only the interactive editor
+    // applies physical-pixel legibility clamps; HTML/video output is exact.
     const rawFontSize = waypoint.labelSize || TEXT_LABEL.SIZE_DEFAULT;
-    const fontSize = this.scaleSizeClamped(rawFontSize);
+    const fontSize = this.scaleLabelSize(rawFontSize);
     const textColor = waypoint.labelColor || TEXT_LABEL.COLOR_DEFAULT;
     const bgColor = waypoint.labelBgColor || TEXT_LABEL.BG_COLOR_DEFAULT;
     const bgOpacity = waypoint.labelBgOpacity !== undefined ? waypoint.labelBgOpacity : TEXT_LABEL.BG_OPACITY_DEFAULT;
@@ -2272,7 +2420,8 @@ export class RenderingService {
     // Calculate text box dimensions
     const lineHeight = fontSize * 1.3;
     const textHeight = lines.length * lineHeight;
-    const padding = TEXT_LABEL.BG_PADDING;
+    const labelChromeScale = rawFontSize > 0 ? fontSize / rawFontSize : 1;
+    const padding = TEXT_LABEL.BG_PADDING * labelChromeScale;
     
     // Find max line width for background - background must cover all text
     let maxLineWidth = 0;
@@ -2293,7 +2442,7 @@ export class RenderingService {
       ctx.globalAlpha = opacity * bgOpacity;
       ctx.fillStyle = bgColor;
       ctx.beginPath();
-      const r = TEXT_LABEL.BG_BORDER_RADIUS;
+      const r = TEXT_LABEL.BG_BORDER_RADIUS * labelChromeScale;
       ctx.moveTo(boxX + r, boxY);
       ctx.lineTo(boxX + boxWidth - r, boxY);
       ctx.quadraticCurveTo(boxX + boxWidth, boxY, boxX + boxWidth, boxY + r);
@@ -2325,14 +2474,14 @@ export class RenderingService {
   applyLineStyle(ctx, style) {
     switch (style) {
       case 'dotted':
-        ctx.setLineDash([2, 6]);
+        ctx.setLineDash([this.scaleSizeClamped(2), this.scaleSizeClamped(6)]);
         break;
       case 'dashed':
-        ctx.setLineDash([10, 5]);
+        ctx.setLineDash([this.scaleSizeClamped(10), this.scaleSizeClamped(5)]);
         break;
       case 'squiggle':
         // Approximated with dashed pattern - true squiggle would need complex path manipulation
-        ctx.setLineDash([5, 3, 2, 3]);
+        ctx.setLineDash([5, 3, 2, 3].map(value => this.scaleSizeClamped(value)));
         break;
       case 'solid':
       default:

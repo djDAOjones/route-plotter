@@ -369,43 +369,6 @@ export class PathCalculator {
   }
   
   /**
-   * Calculate the length of each segment between waypoints
-   * 
-   * @param {Array} pathPoints - Array of path points in canvas coordinates
-   * @param {Array} waypointProgressValues - Progress values (0-1) for each waypoint
-   * @returns {Array} Array of segment lengths in pixels
-   */
-  calculateSegmentLengths(pathPoints, waypointProgressValues) {
-    if (!pathPoints || pathPoints.length < 2 || !waypointProgressValues || waypointProgressValues.length < 2) {
-      return [];
-    }
-    
-    const segmentLengths = [];
-    const totalPoints = pathPoints.length;
-    
-    for (let i = 0; i < waypointProgressValues.length - 1; i++) {
-      const startProgress = waypointProgressValues[i];
-      const endProgress = waypointProgressValues[i + 1];
-      
-      const startIndex = Math.floor(startProgress * (totalPoints - 1));
-      const endIndex = Math.floor(endProgress * (totalPoints - 1));
-      
-      let segmentLength = 0;
-      for (let j = startIndex; j < endIndex && j < totalPoints - 1; j++) {
-        const p1 = pathPoints[j];
-        const p2 = pathPoints[j + 1];
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
-        segmentLength += Math.sqrt(dx * dx + dy * dy);
-      }
-      
-      segmentLengths.push(segmentLength);
-    }
-    
-    return segmentLengths;
-  }
-  
-  /**
    * Compute per-leg "timing lengths" for major-to-major legs.
    *
    * Timing is keyframed on major waypoints only: minors shape the path

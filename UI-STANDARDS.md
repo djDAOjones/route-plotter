@@ -104,6 +104,24 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 
 - Keep key controls visible. Show current selection, mode, and state
   explicitly. Surface context near the point of action.
+- Slider readouts show the value the renderer or timeline consumes, never an
+  internal slider coordinate. Name the unit or direction in the visible
+  readout, connect that readout with `aria-describedby`, and keep
+  `aria-valuetext` synchronized when the control uses a translated scale.
+- Map-bound size controls use `reference px` readouts and say in contextual
+  help that exports scale them from the project's stable reference short edge.
+  Normalised geometry and timeline values do not use this scale. Label type is
+  clamped to 14–72 physical pixels only in the interactive editor for
+  legibility; HTML and video output use the exact reference scale.
+- Palette controls identify the exact current colour in text. A custom or
+  imported value that does not match a preset leaves every preset unselected;
+  the UI must never imply that a different colour is active.
+- Multi-edit controls compare the entities they will actually write. When
+  those values disagree, selects show a disabled `Mixed` option, range
+  readouts and `aria-valuetext` say `Mixed`, native checkboxes are
+  indeterminate, and palette controls clear every swatch and show `Mixed` in
+  text. The retained source value is only an interaction starting point, never
+  a claim about the whole selection; a real edit clears the transient state.
 
 ### Flexibility and efficiency
 
@@ -115,6 +133,21 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 
 - Keep interfaces lean and task-relevant. No decorative chrome,
   redundant copy, or competing calls to action.
+- Complex inspector cards keep 2–4 conceptual controls for the shortest
+  complete task visible in `.section-primary`. Secondary refinements use one
+  native `details.section-more` disclosure labelled `More`; compact cards do
+  not render an empty tier, and prerequisites never move behind it.
+- Repeated waypoint-card actions use one compact final row. `Reset` applies
+  route/default values to the card's actual selected targets; `Apply onward`
+  requires one source and follows route order. Disable no-op, ambiguous and
+  unavailable actions with a specific accessible reason. Treat the action as
+  one undoable transaction, and never propagate authored content that the card
+  does not explicitly style (for example label text or polygon geometry).
+- Seeded variation controls expose the exact persisted seed and make Re-roll a
+  discrete, undoable authoring action that changes the seed only. They use
+  plain effect names and directional readouts instead of internal signed
+  parameters, and must never introduce wall-clock randomness into playback,
+  scrubbing or export.
 
 ### Motion discipline
 
@@ -127,6 +160,15 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 - Provide contextual help (tooltips, helper text, inline guidance)
   for non-obvious controls and workflows.
 - Help content must be task-focused, concrete, and brief.
+- A hint label is not a control. Help attached to a label describes the
+  control that label names: it reaches assistive technology by appending
+  an `aria-describedby` token to that control, never by giving the label
+  a role or a tab stop. Keep the description node outside the `<label>` —
+  inside, it joins the control's accessible name. Append the token;
+  a slider readout already owns the first one and announces first.
+- Help revealed by pointer must also be reachable by keyboard. Reveal it
+  on the described control's `:focus-visible`, so a mouse user is left
+  alone, and let Escape dismiss it while focus stays there.
 
 ---
 
@@ -163,6 +205,30 @@ implementation notes.
   input.
 - Form instructions and validation near the relevant control.
 - Visible labels and accessible names must match for speech input.
+
+### Forced colours
+
+- Forced-colours modes (Windows High Contrast and its kin) repaint
+  `color`, `background-color`, `border-color` and `outline-color`, and
+  force `box-shadow` to **none**. Any affordance whose only signal is a
+  box-shadow — every focus ring in this project is one — therefore
+  disappears unless a fallback is declared. `main.css` carries one global
+  `@media (forced-colors: active)` block that restores focus as an
+  `outline` in a system colour and repaints the selection accent bars.
+- Use only the CSS system colour keywords (`Canvas`, `CanvasText`,
+  `Highlight`, `ButtonText`, …) inside those blocks. Do not reach for a
+  design token there — the whole point is to defer to the user's theme.
+- **Documented exception — the map canvas.** Forced colours does not
+  repaint canvas content, and this project does not repaint it either.
+  The canvas is content, like an image: the Okabe-Ito data palette, the
+  hovered leg, its `+` handle and the beacons stay as authored and stay
+  legible against each other. Overriding them with system colours would
+  destroy the colour-blind-safe palette that exists to protect exactly
+  the users this mode serves.
+- Colour swatches are the one control that opts out with
+  `forced-color-adjust: none`: the chip *is* the value, and flattening
+  the palette to a single system colour would leave nothing to choose
+  from. The chip border and the checked outline carry the state.
 
 ### Robust
 

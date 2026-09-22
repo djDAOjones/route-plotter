@@ -18,7 +18,19 @@ function buildSceneData() {
   const entry = layer.graph.addNode({ x: 0.1, y: 0.5, type: 'entry' });
   const exit = layer.graph.addNode({ x: 0.9, y: 0.5, type: 'exit' });
   layer.graph.addEdge({ sourceId: entry.id, targetId: exit.id });
-  layer.addEmitter({ seed: 42, dotCount: 30 });
+  layer.addEmitter({
+    seed: 42,
+    dotCount: 30,
+    speedVariance: 0.75,
+    onsetVariance: 0.8,
+    intensityRamp: -0.4,
+    busynessEnvelope: [
+      { time: 0, value: 0.1, transition: 'step' },
+      { time: 0.5, value: 1, transition: 'gradual' },
+      { time: 1, value: 0.2, transition: 'gradual' },
+    ],
+    wobble: 0.6,
+  });
   return scene.toJSON();
 }
 
@@ -36,6 +48,9 @@ function makeFakeApp() {
       backgroundZoom: 100, includeCamera: true, includeText: true,
     },
     motionSettings: {},
+    displayWidth: 1000,
+    displayHeight: 600,
+    renderReference: { width: 1000, height: 600 },
     elements: {},
     selectedWaypoint: null,
     animationEngine: {
@@ -87,10 +102,21 @@ describe('coordVersion 9 scene persistence', () => {
       const data = app._captured.autosaved;
       expect(data.coordVersion).toBe(9);
       expect(data.scene.flowLayers).toHaveLength(1);
-      expect(data.scene.flowLayers[0].emitters[0].seed).toBe(42);
+      expect(data.scene.flowLayers[0].emitters[0]).toMatchObject({
+        seed: 42,
+        speedVariance: 0.75,
+        onsetVariance: 0.8,
+        intensityRamp: -0.4,
+        busynessEnvelope: [
+          { time: 0, value: 0.1, transition: 'step' },
+          { time: 0.5, value: 1, transition: 'gradual' },
+          { time: 1, value: 0.2, transition: 'gradual' },
+        ],
+        wobble: 0.6,
+      });
       // Additive: every v7 top-level key survives
       for (const key of ['waypoints', 'styles', 'animationState', 'background',
-        'exportSettings', 'motionSettings', 'imageAssets']) {
+        'exportSettings', 'motionSettings', 'imageAssets', 'renderReference', 'timingReference']) {
         expect(data).toHaveProperty(key);
       }
     });
@@ -111,37 +137,50 @@ describe('coordVersion 9 scene persistence', () => {
 
       expect(app._captured.zipped.coordVersion).toBe(9);
       expect(app._captured.zipped.scene.flowLayers[0].name).toBe('Crowd');
+      expect(app._captured.zipped.renderReference).toEqual({ width: 1000, height: 600 });
+      expect(app._captured.zipped.timingReference).toEqual({ width: 1000, height: 600 });
     });
   });
 
   describe('loadAutosave backward compatibility', () => {
-    test('a v7 autosave (no scene block) should load with an empty scene', () => {
+    test('a v7 autosave (no scene block) should load with an empty scene', async () => {
       const app = makeFakeApp();
       app._autosavePayload = { coordVersion: 7, waypoints: [] };
 
-      persistenceMixin.loadAutosave.call(app);
+      await persistenceMixin.loadAutosave.call(app);
 
       expect(app.scene.isEmpty()).toBe(true);
       expect(app._captured.cleared).toBe(false);
     });
 
-    test('a v9 autosave should hydrate the scene', () => {
+    test('a v9 autosave should hydrate the scene', async () => {
       const app = makeFakeApp();
       app._autosavePayload = { coordVersion: 9, waypoints: [], scene: buildSceneData() };
 
-      persistenceMixin.loadAutosave.call(app);
+      await persistenceMixin.loadAutosave.call(app);
 
       expect(app.scene.getFlowLayers()).toHaveLength(1);
       const layer = app.scene.getFlowLayers()[0];
       expect(layer.graph.getNodes()).toHaveLength(2);
-      expect(layer.emitters[0].seed).toBe(42);
+      expect(layer.emitters[0]).toMatchObject({
+        seed: 42,
+        speedVariance: 0.75,
+        onsetVariance: 0.8,
+        intensityRamp: -0.4,
+        busynessEnvelope: [
+          { time: 0, value: 0.1, transition: 'step' },
+          { time: 0.5, value: 1, transition: 'gradual' },
+          { time: 1, value: 0.2, transition: 'gradual' },
+        ],
+        wobble: 0.6,
+      });
     });
 
-    test('a pre-v6 autosave should still be cleared by the version gate', () => {
+    test('a pre-v6 autosave should still be cleared by the version gate', async () => {
       const app = makeFakeApp();
       app._autosavePayload = { coordVersion: 5 };
 
-      persistenceMixin.loadAutosave.call(app);
+      await persistenceMixin.loadAutosave.call(app);
 
       expect(app._captured.cleared).toBe(true);
       expect(app.scene.isEmpty()).toBe(true);

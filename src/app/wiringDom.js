@@ -8,11 +8,36 @@
  */
 import { TEXT_LABEL } from '../config/constants.js';
 import { TextLabelService } from '../services/TextLabelService.js';
-import { CameraService, CAMERA_DEFAULTS } from '../services/CameraService.js';
+import { CameraService, CAMERA_DEFAULTS, ZOOM_MODE } from '../services/CameraService.js';
+import { createFocusTrap } from '../utils/focusTrap.js';
+import { ImageAsset } from '../models/ImageAsset.js';
+import {
+  beginAsyncProjectOperation,
+  isAsyncProjectOperationCurrent,
+} from './operationGeneration.js';
+import {
+  formatRendererPixels,
+  formatShapeAmplitude,
+  setRangeReadout,
+} from '../utils/uiReadouts.js';
+import { bindMixedControlReset } from '../utils/mixedControlState.js';
+import {
+  pathHeadStyleUsesImageControls,
+  resolvePathHeadImage,
+} from '../utils/pathHeadPresets.js';
+import { buildExampleProjects } from '../examples/index.js';
 
 export const wiringDomMixin = {
   
   setupEventListeners() {
+    const waypointScope = document.getElementById('waypoint-scope');
+    bindMixedControlReset(waypointScope);
+    waypointScope?.addEventListener('click', event => {
+      const button = event.target.closest?.('[data-card-action][data-card]');
+      if (!button || !waypointScope.contains(button)) return;
+      this._handleWaypointCardAction(button.dataset.card, button.dataset.cardAction);
+    });
+
     // Mode switch toggle (header)
     this.elements.modeToggleBtn?.addEventListener('click', () => {
       this._togglePreviewMode();
@@ -31,6 +56,22 @@ export const wiringDomMixin = {
         }
       });
     });
+
+    // Example Projects (DEMO-01) — built from the same list the archives are
+    // generated from, so the menu can never offer one that was not shipped.
+    const exampleProjectsMenu = document.getElementById('example-projects-menu');
+    if (exampleProjectsMenu) {
+      for (const example of buildExampleProjects()) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'dropdown-item dropdown-item-example';
+        item.setAttribute('role', 'menuitem');
+        item.textContent = example.name;
+        item.title = example.description;
+        item.addEventListener('click', () => this.loadExampleProject(example.id));
+        exampleProjectsMenu.appendChild(item);
+      }
+    }
     
     // Sidebar tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -48,10 +89,35 @@ export const wiringDomMixin = {
     });
     
     // ===== SPLASH SCREEN EVENT LISTENERS =====
+    // Both first-run and Help paths show this dialog by changing its inline
+    // display, so one observer keeps the shared focus trap in sync.
+    if (this.elements.splash) {
+      this._splashFocusTrap = createFocusTrap(this.elements.splash);
+      const syncSplashFocus = () => {
+        const isOpen = !this.elements.splash.hidden && this.elements.splash.style.display !== 'none';
+        if (isOpen) {
+          this._splashFocusTrap.activate();
+        } else {
+          this._splashFocusTrap.deactivate();
+        }
+      };
+      this._splashObserver = new MutationObserver(syncSplashFocus);
+      this._splashObserver.observe(this.elements.splash, {
+        attributes: true,
+        attributeFilter: ['hidden', 'style']
+      });
+      this.elements.splash.addEventListener('focustrap:escape', () => this.hideSplash());
+      syncSplashFocus();
+    }
+
+    const closeSplash = () => {
+      this.hideSplash();
+      this._splashFocusTrap?.deactivate();
+    };
     if (this.elements.splashClose) {
       this.elements.splashClose.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.hideSplash();
+        closeSplash();
       });
     } else {
       console.error('❌ [Splash] Close button element not found!');
@@ -61,14 +127,14 @@ export const wiringDomMixin = {
     if (this.elements.splashCloseX) {
       this.elements.splashCloseX.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.hideSplash();
+        closeSplash();
       });
     }
     
     if (this.elements.splash) {
       this.elements.splash.addEventListener('click', (e) => {
         if (e.target === this.elements.splash) {
-          this.hideSplash();
+          closeSplash();
         }
       });
     } else {
@@ -146,7 +212,11 @@ export const wiringDomMixin = {
       if (targets.length > 0) {
         const width = this._sliderToPathWidth(parseFloat(e.target.value));
         for (const wp of targets) wp.segmentWidth = width;
-        this.elements.segmentWidthValue.textContent = width.toFixed(1);
+        setRangeReadout(
+          this.elements.segmentWidth,
+          this.elements.segmentWidthValue,
+          formatRendererPixels(width, 1)
+        );
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
@@ -176,7 +246,11 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets();
       if (targets.length > 0) {
         for (const wp of targets) wp.shapeAmplitude = parseInt(e.target.value);
-        this.elements.shapeAmplitudeValue.textContent = e.target.value;
+        setRangeReadout(
+          this.elements.shapeAmplitude,
+          this.elements.shapeAmplitudeValue,
+          formatShapeAmplitude(e.target.value)
+        );
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
@@ -214,21 +288,43 @@ export const wiringDomMixin = {
     
     this.elements.markerUpload?.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
+      e.target.value = '';
       const targets = this.selectionTargets(true);
       if (file && targets.length > 0) {
+        const token = beginAsyncProjectOperation(this, 'marker-image');
         try {
-          // Add to asset service (handles deduplication)
-          const { asset, isNew, warning } = await this.imageAssetService.addFromFile(file);
+          // Decode outside the live asset collection. Clear/Open or a newer
+          // marker request can then supersede this work without leaving a
+          // late orphan asset behind.
+          const candidate = await ImageAsset.fromFile(file);
+          const image = await candidate.getImageElement();
+          if (!isAsyncProjectOperationCurrent(this, token)) return;
+
+          const liveTargets = targets.filter(wp => this.waypoints.includes(wp));
+          if (liveTargets.length === 0) return;
+          const previousTargets = liveTargets.map(waypoint => ({
+            waypoint,
+            customImageAssetId: waypoint.customImageAssetId,
+            customImage: waypoint.customImage,
+          }));
+          const { asset, isNew, warning } = this.commitImageAssetEdit({
+            candidate,
+            apply: nextAsset => {
+              for (const wp of liveTargets) {
+                wp.customImageAssetId = nextAsset.id;
+                wp.customImage = image;
+              }
+            },
+            rollback: () => {
+              for (const previous of previousTargets) {
+                previous.waypoint.customImageAssetId = previous.customImageAssetId;
+                previous.waypoint.customImage = previous.customImage;
+              }
+            },
+          });
 
           if (warning) {
             console.warn(warning);
-          }
-
-          // Store asset ID on every selected waypoint (shared asset)
-          const image = await asset.getImageElement();
-          for (const wp of targets) {
-            wp.customImageAssetId = asset.id;
-            wp.customImage = image;
           }
 
           // Update preview
@@ -238,13 +334,17 @@ export const wiringDomMixin = {
             this.elements.markerPreviewImg.src = asset.base64;
           }
 
-          this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
-          this.autoSave();
+          this.eventBus.emit(
+            'waypoint:style-changed',
+            this.selectedWaypoint,
+            { historyAlreadySaved: true }
+          );
 
           console.log(`📷 Waypoint marker image ${isNew ? 'added' : 'reused'}: ${asset.name} (${asset.getFormattedSize()})`);
         } catch (err) {
+          if (!isAsyncProjectOperationCurrent(this, token)) return;
           console.error('Failed to load marker image:', err);
-          this.announce('Failed to load image');
+          this.announce(err.message || 'Failed to load image');
         }
       }
     });
@@ -292,7 +392,11 @@ export const wiringDomMixin = {
     // Ripple thickness control
     this.elements.rippleThickness?.addEventListener('input', (e) => {
       const value = parseFloat(e.target.value);
-      this.elements.rippleThicknessValue.textContent = `${value}px`;
+      setRangeReadout(
+        this.elements.rippleThickness,
+        this.elements.rippleThicknessValue,
+        formatRendererPixels(value, Number.isInteger(value) ? 0 : 1)
+      );
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         for (const wp of targets) wp.rippleThickness = value;
@@ -353,7 +457,16 @@ export const wiringDomMixin = {
     this.elements.waypointLabel.addEventListener('input', (e) => {
       if (this.selectedWaypoint && this.selectedWaypoint.isMajor) {
         const text = e.target.value;
+        const wasEmpty = !this.selectedWaypoint.label;
         this.selectedWaypoint.label = text;
+
+        // LABEL-01: a new label starts at the default offset, which frequently
+        // sits under its own marker — so it is written and then invisible.
+        // Place it the moment it first has text, unless the author has already
+        // positioned this label themselves.
+        if (wasEmpty && text && !this.selectedWaypoint.labelPlacedByHand) {
+          this.applyAutoPosition([this.selectedWaypoint]);
+        }
         // Auto-name: populate waypoint name from label text when no custom name exists
         if (!this.selectedWaypoint.name) {
           this.selectedWaypoint._autoNamed = true;
@@ -361,6 +474,10 @@ export const wiringDomMixin = {
         if (this.selectedWaypoint._autoNamed) {
           this.selectedWaypoint.name = text;
         }
+        this.eventBus.emit('scene:semantic-changed', {
+          kind: 'waypoint-label',
+          waypointId: this.selectedWaypoint.id,
+        });
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -369,6 +486,35 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         for (const wp of targets) wp.labelMode = e.target.value;
+        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+      }
+    });
+    // Label appearance is persisted already; the inspector now exposes the
+    // exact model values without introducing a parallel UI state.
+    this.elements.labelColor?.addEventListener('input', (e) => {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.labelColor = e.target.value;
+        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+      }
+    });
+    this.elements.labelBgColor?.addEventListener('input', (e) => {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) wp.labelBgColor = e.target.value;
+        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+      }
+    });
+    this.elements.labelBgOpacity?.addEventListener('input', (e) => {
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        const opacityPct = Math.max(0, Math.min(100, parseInt(e.target.value)));
+        for (const wp of targets) wp.labelBgOpacity = opacityPct / 100;
+        setRangeReadout(
+          this.elements.labelBgOpacity,
+          this.elements.labelBgOpacityValue,
+          `${opacityPct}%`
+        );
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -382,15 +528,20 @@ export const wiringDomMixin = {
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
-    // Label size with WCAG warning
+    // Label size: the control edits the model's renderer-pixel value directly.
     this.elements.labelSize?.addEventListener('input', (e) => {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
-        const scale = parseInt(e.target.value);
-        // Convert 1-10 scale to 16-48px: size = 16 + (scale - 1) * (48 - 16) / 9
-        const sizePx = Math.round(TEXT_LABEL.SIZE_PX_MIN + (scale - 1) * (TEXT_LABEL.SIZE_PX_MAX - TEXT_LABEL.SIZE_PX_MIN) / 9);
+        const sizePx = Math.max(
+          TEXT_LABEL.SIZE_PX_MIN,
+          Math.min(TEXT_LABEL.SIZE_PX_MAX, parseInt(e.target.value))
+        );
         for (const wp of targets) wp.labelSize = sizePx;
-        this.elements.labelSizeValue.textContent = scale;
+        setRangeReadout(
+          this.elements.labelSize,
+          this.elements.labelSizeValue,
+          formatRendererPixels(sizePx)
+        );
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -411,7 +562,9 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         const offset = parseInt(e.target.value);
-        for (const wp of targets) wp.labelOffsetX = offset;
+        // LABEL-01: moving it by hand settles it — auto-position stops
+        // volunteering for this label from here on.
+        for (const wp of targets) { wp.labelOffsetX = offset; wp.labelPlacedByHand = true; }
         this.elements.labelOffsetXValue.textContent = `${offset}%`;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
@@ -422,7 +575,7 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         const offset = parseInt(e.target.value);
-        for (const wp of targets) wp.labelOffsetY = offset;
+        for (const wp of targets) { wp.labelOffsetY = offset; wp.labelPlacedByHand = true; }
         this.elements.labelOffsetYValue.textContent = `${offset}%`;
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
@@ -431,34 +584,16 @@ export const wiringDomMixin = {
     // Label auto-position button — each selected label gets its own
     // computed position (auto-position is inherently per-waypoint)
     this.elements.labelAutoPosition?.addEventListener('click', () => {
-      const targets = this.selectionTargets(true).filter(wp => wp.label);
-      if (targets.length > 0) {
-        for (const wp of targets) {
-          const waypointIndex = this.waypoints.indexOf(wp);
-          const result = TextLabelService.autoPosition({
-            waypoint: wp,
-            waypointIndex,
-            waypoints: this.waypoints,
-            pathPoints: this.pathPoints,
-            canvasWidth: this.canvas.width,
-            canvasHeight: this.canvas.height,
-            imageToCanvas: (x, y) => this.coordinateTransform.imageToCanvas(x, y)
-          });
-          wp.labelOffsetX = Math.round(result.offsetX);
-          wp.labelOffsetY = Math.round(result.offsetY);
-          console.debug(`Auto-positioned label to (${result.offsetX.toFixed(1)}%, ${result.offsetY.toFixed(1)}%)`);
-        }
+      // Asking for it explicitly is not the same as it happening to you, so
+      // the button ignores labelPlacedByHand and always runs.
+      this.applyAutoPosition(this.selectionTargets(true).filter(wp => wp.label));
+    });
 
-        // Offset sliders show the primary's result
-        if (this.selectedWaypoint && targets.includes(this.selectedWaypoint)) {
-          this.elements.labelOffsetX.value = this.selectedWaypoint.labelOffsetX;
-          this.elements.labelOffsetXValue.textContent = `${this.selectedWaypoint.labelOffsetX}%`;
-          this.elements.labelOffsetY.value = this.selectedWaypoint.labelOffsetY;
-          this.elements.labelOffsetYValue.textContent = `${this.selectedWaypoint.labelOffsetY}%`;
-        }
-
-        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
-      }
+    // LABEL-01: once the text is committed the box has its final size, which
+    // is the moment a collision is worth mentioning. Offering it while they
+    // are still typing would nag at every keystroke.
+    this.elements.waypointLabel.addEventListener('change', () => {
+      this.offerAutoPositionIfColliding(this.selectedWaypoint);
     });
     
     // Label colour/background/opacity have model + rendering support but
@@ -467,15 +602,38 @@ export const wiringDomMixin = {
 
     // Path Head Style Controls - global settings (not per-waypoint)
     this.elements.pathHeadStyle.addEventListener('change', (e) => {
-      this.styles.pathHead.style = e.target.value;
+      const pathHead = this.styles.pathHead;
+      const selectedStyle = e.target.value;
+      const selectedAssetId = pathHead.imageAssetId;
+      pathHead.style = selectedStyle;
+      pathHead.image = null;
       
-      // Show/hide custom image controls based on style selection
-      this.elements.customHeadControls.style.display = 
-        e.target.value === 'custom' ? 'block' : 'none';
+      // Presets share rotation controls with custom images, but do not expose
+      // an upload affordance that would imply the preset itself is editable.
+      this.elements.customHeadControls.style.display =
+        pathHeadStyleUsesImageControls(selectedStyle) ? 'block' : 'none';
+      if (this.elements.customHeadUploadControls) {
+        this.elements.customHeadUploadControls.style.display =
+          selectedStyle === 'custom' ? 'block' : 'none';
+      }
       
       this.queueRender();
       this.saveUndoStateDebounced();
       this.autoSave();
+
+      resolvePathHeadImage(
+        pathHead,
+        assetId => this.imageAssetService.getImageElement(assetId)
+      ).then(image => {
+        if (this.styles.pathHead !== pathHead || pathHead.style !== selectedStyle) return;
+        if (selectedStyle === 'custom' && pathHead.imageAssetId !== selectedAssetId) return;
+        pathHead.image = image;
+        this.queueRender();
+      }).catch(error => {
+        if (this.styles.pathHead !== pathHead || pathHead.style !== selectedStyle) return;
+        console.error('Failed to load path head image:', error);
+        this.announce(error.message || 'Failed to load path head image');
+      });
     });
     
     this.elements.pathHeadColor.addEventListener('input', (e) => {
@@ -487,7 +645,11 @@ export const wiringDomMixin = {
     
     this.elements.pathHeadSize.addEventListener('input', (e) => {
       this.styles.pathHead.size = parseInt(e.target.value);
-      this.elements.pathHeadSizeValue.textContent = e.target.value;
+      setRangeReadout(
+        this.elements.pathHeadSize,
+        this.elements.pathHeadSizeValue,
+        formatRendererPixels(e.target.value)
+      );
       this.queueRender();
       this.saveUndoStateDebounced();
       this.autoSave();
@@ -500,18 +662,32 @@ export const wiringDomMixin = {
     
     this.elements.headUpload.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
+      e.target.value = '';
       if (file) {
+        const token = beginAsyncProjectOperation(this, 'path-head-image');
+        const pathHead = this.styles.pathHead;
         try {
-          // Add to asset service (handles deduplication)
-          const { asset, isNew, warning } = await this.imageAssetService.addFromFile(file);
+          const candidate = await ImageAsset.fromFile(file);
+          const image = await candidate.getImageElement();
+          if (!isAsyncProjectOperationCurrent(this, token) || this.styles.pathHead !== pathHead) return;
+
+          const previousAssetId = pathHead.imageAssetId;
+          const previousImage = pathHead.image;
+          const { asset, isNew, warning } = this.commitImageAssetEdit({
+            candidate,
+            apply: nextAsset => {
+              pathHead.imageAssetId = nextAsset.id;
+              pathHead.image = image;
+            },
+            rollback: () => {
+              pathHead.imageAssetId = previousAssetId;
+              pathHead.image = previousImage;
+            },
+          });
           
           if (warning) {
             console.warn(warning);
           }
-          
-          // Store asset ID and get cached image element
-          this.styles.pathHead.imageAssetId = asset.id;
-          this.styles.pathHead.image = await asset.getImageElement();
           
           // Update preview
           this.elements.headPreview.style.display = 'block';
@@ -519,13 +695,13 @@ export const wiringDomMixin = {
           this.elements.headPreviewImg.src = asset.base64;
           
           this.queueRender();
-          this.saveUndoState(); // Discrete action — immediate save
           this.autoSave();
           
           console.log(`📷 Path head image ${isNew ? 'added' : 'reused'}: ${asset.name} (${asset.getFormattedSize()})`);
         } catch (err) {
+          if (!isAsyncProjectOperationCurrent(this, token)) return;
           console.error('Failed to load path head image:', err);
-          this.announce('Failed to load image');
+          this.announce(err.message || 'Failed to load image');
         }
       }
     });
@@ -615,7 +791,11 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         for (const wp of targets) wp.dotSize = parseInt(e.target.value);
-        this.elements.dotSizeValue.textContent = e.target.value;
+        setRangeReadout(
+          this.elements.dotSize,
+          this.elements.dotSizeValue,
+          formatRendererPixels(e.target.value)
+        );
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -624,54 +804,9 @@ export const wiringDomMixin = {
     // Animation speed now handled by UIController -> EventBus -> animation:speed-change event
     // Waypoint pause time now handled by UIController -> EventBus -> waypoint:pause-changed event
     
-    // Background controls
-    this.elements.bgUploadBtn.addEventListener('click', () => this.elements.bgUpload.click());
-    this.elements.bgUpload.addEventListener('change', (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        this.loadImageFile(file).then((img) => {
-          this.background.image = img;
-          this.updateImageTransform(img);
-          // Auto-set export resolution to match image
-          this.eventBus.emit('video:resolution-native');
-          if (this.waypoints.length >= 2) {
-            this.calculatePath();
-          }
-          this.render();
-          this.autoSave();
-          this.announce('Background image loaded');
-        });
-      }
-    });
-    this.elements.bgOverlay.addEventListener('input', (e) => {
-      this.background.overlay = parseInt(e.target.value);
-      this.elements.bgOverlayValue.textContent = e.target.value;
-      this.render();
-      this.autoSave();
-    });
-    // Toggle fit/fill button (deferred — element may not exist)
-    this.elements.bgFitToggle?.addEventListener('click', (e) => {
-      const currentMode = this.background.fit;
-      const newMode = currentMode === 'fit' ? 'fill' : 'fit';
-      this.background.fit = newMode;
-      
-      // Update coordinateTransform with new fit mode
-      if (this.background.image) {
-        this.updateImageTransform(this.background.image);
-      }
-      
-      // Update button text and data attribute
-      e.target.textContent = newMode === 'fit' ? 'Fit' : 'Fill';
-      e.target.dataset.mode = newMode;
-      
-      console.debug('Fit mode changed to:', newMode);
-      // Recalculate path since waypoints need to be repositioned
-      if (this.waypoints.length >= 2) {
-        this.calculatePath();
-      }
-      this.render();
-      this.autoSave();
-    });
+    // Background DOM controls are owned exclusively by UIController. It emits
+    // one semantic EventBus command per action; wiringControllers performs the
+    // corresponding state mutation, render, and autosave.
     
     // ===== CAMERA CONTROLS =====
     // "This Zoom" slider - updates current waypoint's camera.zoom (log scale: 0-1 → 1x-16x)
@@ -681,9 +816,11 @@ export const wiringDomMixin = {
       const zoom = CameraService.sliderToZoom(sliderValue);
 
       // Update display immediately for responsive feel
+      const formattedZoom = CameraService.formatZoom(zoom);
       if (this.elements.cameraZoomValue) {
-        this.elements.cameraZoomValue.textContent = CameraService.formatZoom(zoom);
+        this.elements.cameraZoomValue.textContent = formattedZoom;
       }
+      e.target.setAttribute('aria-valuetext', formattedZoom);
 
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
@@ -698,11 +835,23 @@ export const wiringDomMixin = {
         if (this.previewMode) this.render();
       }
     });
-    
-    // Camera zoom-mode UI (hidden select + a toggle that never existed in
-    // the DOM) was removed 2026-08-18. camera.zoomMode stays in the model
-    // and CameraService — old saves with 'immediate' still play correctly
-    // (wish-list: surface zoom mode in the Phase 4 "On arrival" card).
+
+    // The transition belongs to the destination waypoint: it describes how
+    // CameraService reaches this waypoint's zoom over the incoming leg.
+    this.elements.cameraZoomMode?.addEventListener('change', (e) => {
+      if (!Object.values(ZOOM_MODE).includes(e.target.value)) return;
+      const targets = this.selectionTargets(true);
+      if (targets.length > 0) {
+        for (const wp of targets) {
+          if (!wp.camera) {
+            wp.camera = { zoom: CAMERA_DEFAULTS.ZOOM, zoomMode: CAMERA_DEFAULTS.ZOOM_MODE };
+          }
+          wp.camera.zoomMode = e.target.value;
+        }
+        this.validateZoomTransitions();
+        this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+      }
+    });
 
 
     /**
@@ -714,9 +863,11 @@ export const wiringDomMixin = {
       const zoom = CameraService.sliderToZoom(sliderValue);
 
       // Update display immediately
+      const formattedZoom = CameraService.formatZoom(zoom);
       if (this.elements.cameraSelectedZoomValue) {
-        this.elements.cameraSelectedZoomValue.textContent = CameraService.formatZoom(zoom);
+        this.elements.cameraSelectedZoomValue.textContent = formattedZoom;
       }
+      e.target.setAttribute('aria-valuetext', formattedZoom);
 
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
@@ -827,5 +978,81 @@ export const wiringDomMixin = {
       }
     });
     */
+  },
+
+  /**
+   * LABEL-01 — place each label where auto-position judges best.
+   *
+   * Shared by the explicit button and the automatic first-write placement so
+   * the two can never drift apart. It does NOT set `labelPlacedByHand`: the
+   * algorithm placing a label is not the author placing it, and treating it as
+   * such would silence the very offer this ticket exists to make.
+   *
+   * @param {Array<Object>} targets - Waypoints whose labels to place
+   */
+  applyAutoPosition(targets) {
+    if (!targets || targets.length === 0) return;
+
+    for (const wp of targets) {
+      const result = TextLabelService.autoPosition({
+        waypoint: wp,
+        waypointIndex: this.waypoints.indexOf(wp),
+        waypoints: this.waypoints,
+        pathPoints: this.pathPoints,
+        canvasWidth: this.canvas.width,
+        canvasHeight: this.canvas.height,
+        imageToCanvas: (x, y) => this.coordinateTransform.imageToCanvas(x, y)
+      });
+      wp.labelOffsetX = Math.round(result.offsetX);
+      wp.labelOffsetY = Math.round(result.offsetY);
+    }
+
+    // Offset sliders show the primary's result
+    if (this.selectedWaypoint && targets.includes(this.selectedWaypoint)) {
+      if (this.elements.labelOffsetX) {
+        this.elements.labelOffsetX.value = this.selectedWaypoint.labelOffsetX;
+        this.elements.labelOffsetXValue.textContent = `${this.selectedWaypoint.labelOffsetX}%`;
+      }
+      if (this.elements.labelOffsetY) {
+        this.elements.labelOffsetY.value = this.selectedWaypoint.labelOffsetY;
+        this.elements.labelOffsetYValue.textContent = `${this.selectedWaypoint.labelOffsetY}%`;
+      }
+    }
+
+    this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
+  },
+
+  /**
+   * LABEL-01 — offer to move a label that has ended up overlapping something.
+   *
+   * An offer, never an action: a label the author placed by hand is left
+   * exactly where they put it, and the prompt fades on its own. It is
+   * deliberately not the only route to auto-position — the button sits in the
+   * Label card's primary tier — so nothing is lost if the prompt is missed or
+   * never seen.
+   *
+   * @param {Object|null} waypoint - The waypoint whose label was just edited
+   * @returns {boolean} Whether an offer was made
+   */
+  offerAutoPositionIfColliding(waypoint) {
+    if (!waypoint || !waypoint.label || !waypoint.isMajor) return false;
+    if (!this.pathPoints || this.pathPoints.length === 0) return false;
+
+    const collides = TextLabelService.collidesAtCurrentPosition({
+      waypoint,
+      waypointIndex: this.waypoints.indexOf(waypoint),
+      waypoints: this.waypoints,
+      pathPoints: this.pathPoints,
+      canvasWidth: this.canvas.width,
+      canvasHeight: this.canvas.height,
+      imageToCanvas: (x, y) => this.coordinateTransform.imageToCanvas(x, y)
+    });
+    if (!collides) return false;
+
+    this.showToast('This label overlaps something.', 8000, {
+      label: 'Auto-position',
+      onClick: () => this.applyAutoPosition([waypoint])
+    });
+    return true;
   }
 };

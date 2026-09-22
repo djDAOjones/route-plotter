@@ -8,6 +8,7 @@
  */
 import { VIDEO_EXPORT } from '../config/constants.js';
 import { VideoExporter } from '../services/VideoExporter.js';
+import { getRetainedBackgroundDataURL } from './persistence.js';
 
 export const exportingMixin = {
   
@@ -81,7 +82,7 @@ export const exportingMixin = {
    * Uses frame-by-frame capture for consistent output regardless of system performance
    * 
    * Process:
-   * 1. Check browser support
+   * 1. Validate the export request
    * 2. Pause current playback
    * 3. Resize canvas to export resolution
    * 4. Initialize VideoExporter
@@ -91,41 +92,22 @@ export const exportingMixin = {
    * 8. Restore canvas to display resolution
    */
   async exportVideo() {
-    // Check browser support first
-    const support = VideoExporter.checkSupport();
-    if (!support.supported) {
-      alert(`Video export not supported in this browser: ${support.reason}`);
-      return;
-    }
-    
     // Validate we have something to export
     if (this.waypoints.length < 2) {
       alert('Please add at least 2 waypoints before exporting.');
       return;
     }
     
-    const duration = this.animationEngine.state.duration;
-    if (duration <= 0) {
-      alert('Animation duration is zero. Please check your waypoints.');
-      return;
-    }
-    
-    // Show warning if exporting in Edit mode (non-blocking)
-    if (!this.previewMode) {
-      this.showExportModeWarning();
-    }
-    
     // Initialize exporter if needed
     if (!this.videoExporter) {
       this.videoExporter = new VideoExporter(this.canvas, this.eventBus);
     }
-    
-    // Pause playback during export
-    const wasPlaying = this.animationEngine.state.isPlaying;
-    this.animationEngine.pause();
-    
-    // Store original state to restore after export
-    const originalProgress = this.animationEngine.getPathProgress();
+
+    // Export steps the shared engine, so suspend it without changing the
+    // user's latched play/pause state or temporary review speed. Progress is
+    // captured in timeline space and restored only after the old mode returns.
+    const transportState = this.animationEngine.suspendTransport();
+    const wasPreviewMode = this.previewMode;
     
     // Disable all export buttons and show progress on the dropdown toggle
     const exportDropdownBtn = document.getElementById('export-dropdown-btn');
@@ -164,25 +146,31 @@ export const exportingMixin = {
     
     // Store original background state for path-only export
     const pathOnly = this.exportSettings.pathOnly;
-    const originalBackgroundImage = pathOnly ? this.background.image : null;
-    
-    if (pathOnly) {
-      // Temporarily hide background for transparent export
-      this.background.image = null;
-    }
-    
-    // Force preview mode during export to apply motion visibility settings
-    const wasPreviewMode = this.previewMode;
-    this.previewMode = true;
-    
-    // Reset reveal mask for fresh export
-    this.motionVisibilityService.resetRevealMask();
-    
-    // Resize canvas to export resolution so captureStream captures at the
-    // correct pixel dimensions (not screen size × DPR)
-    this._enterExportMode(this.exportSettings.resolutionX, this.exportSettings.resolutionY);
+    const originalBackgroundImage = this.background.image;
 
     try {
+      // Use the same mode transition as the UI. Its event chain rebuilds the
+      // preview timeline; the explicit invalidation also covers exports that
+      // begin while Preview is already selected.
+      this._setPreviewMode(true);
+      const duration = this.invalidateAnimationTiming();
+      if (duration <= 0) {
+        alert('Animation duration is zero. Please check your waypoints.');
+        return;
+      }
+
+      if (pathOnly) {
+        // Temporarily hide background for transparent export
+        this.background.image = null;
+      }
+
+      // Reset reveal mask for fresh export
+      this.motionVisibilityService.resetRevealMask();
+
+      // Resize canvas to export resolution so captureStream captures at the
+      // correct pixel dimensions (not screen size × DPR)
+      this._enterExportMode(this.exportSettings.resolutionX, this.exportSettings.resolutionY);
+
       const blob = await this.videoExporter.export({
         frameRate: this.exportSettings.frameRate,
         duration: duration,
@@ -227,27 +215,23 @@ export const exportingMixin = {
       this._exitExportMode();
       
       // Restore background if it was hidden for path-only export
-      if (pathOnly && originalBackgroundImage) {
+      if (pathOnly) {
         this.background.image = originalBackgroundImage;
       }
-      
-      // Restore preview mode
-      this.previewMode = wasPreviewMode;
-      
+
+      // Restore the original timeline shape before feeding its timeline
+      // progress back into the engine, then restore transport flags and speed.
+      this._setPreviewMode(wasPreviewMode);
+      this.animationEngine.restoreTransportState(transportState);
+
       // Restore button state
       exportDropdownBtn.disabled = false;
       exportDropdownBtn.textContent = originalText;
       if (this.elements.exportMp4Btn) this.elements.exportMp4Btn.disabled = false;
       if (this.elements.exportWebmBtn) this.elements.exportWebmBtn.disabled = false;
       if (this.elements.exportHtmlBtn) this.elements.exportHtmlBtn.disabled = false;
-      
-      // Restore original animation state
-      this.animationEngine.seekToProgress(originalProgress);
-      this.render();
-      
-      if (wasPlaying) {
-        this.animationEngine.play();
-      }
+
+      this.queueRender();
     }
   },
   
@@ -282,8 +266,12 @@ export const exportingMixin = {
     this.announce('Starting HTML export');
     
     try {
+      // Standalone exports preserve the exact validated source data URL. Never
+      // draw the live image to a canvas or silently change its format/bytes.
+      const backgroundDataURL = getRetainedBackgroundDataURL(this, 'exporting HTML');
+
       // Estimate file size first
-      const sizeEstimate = await this.htmlExportService.estimateSize(this.background.image);
+      const sizeEstimate = await this.htmlExportService.estimateSize(backgroundDataURL);
       console.log(`📦 Estimated HTML export size: ${sizeEstimate.formatted}`);
 
       // Phase 5: embed the canonical project snapshot (persistence mixin's
@@ -292,7 +280,7 @@ export const exportingMixin = {
       // modules. includeCamera/includeText travel inside exportSettings.
       const blob = await this.htmlExportService.exportHTML({
         projectData: this._buildProjectSnapshot(),
-        backgroundImage: this.background.image,
+        backgroundDataURL,
         title: 'Route animation'
       });
       
@@ -320,34 +308,6 @@ export const exportingMixin = {
       exportBtn.disabled = false;
       exportBtn.textContent = originalText;
     }
-  },
-  
-  /**
-   * Show export mode warning tooltip when exporting in Edit mode
-   * Warning appears near the Edit/Preview toggle and can be dismissed by clicking anywhere
-   */
-  showExportModeWarning() {
-    const warning = document.getElementById('export-mode-warning');
-    const modeSwitch = document.getElementById('mode-switch');
-    if (!warning || !modeSwitch) return;
-    
-    // Show warning and highlight mode switch
-    warning.classList.add('visible');
-    modeSwitch.classList.add('highlight-warning');
-    
-    // Dismiss handler - click anywhere to dismiss
-    const dismissWarning = () => {
-      warning.classList.remove('visible');
-      modeSwitch.classList.remove('highlight-warning');
-      document.removeEventListener('click', dismissWarning);
-    };
-    
-    // Add dismiss listener after a brief delay (so the export click doesn't immediately dismiss)
-    setTimeout(() => {
-      document.addEventListener('click', dismissWarning);
-    }, 100);
-    
-    console.debug('⚠️ [Export] Showing Edit mode warning');
   },
   
   /**

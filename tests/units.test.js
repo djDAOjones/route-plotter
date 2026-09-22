@@ -16,6 +16,7 @@ import { ImageAsset } from '../src/models/ImageAsset.js';
 import { CameraService } from '../src/services/CameraService.js';
 import { RenderingService } from '../src/services/RenderingService.js';
 import { RENDERING } from '../src/config/constants.js';
+import { cameraMixin } from '../src/app/camera.js';
 
 describe('AnimationState (extended)', () => {
   test('setTime clamps to [0, duration] and derives progress', () => {
@@ -124,6 +125,19 @@ describe('CoordinateTransform (extended)', () => {
     expect(t.getImageBounds()).toBe(null);
     expect(t.canvasWidth).toBe(0);
   });
+
+  test('clearImage forgets bitmap bounds but preserves normalized canvas mapping', () => {
+    const t = new CoordinateTransform();
+    t.setCanvasDimensions(800, 600);
+    t.setImageDimensions(1600, 900, 'fit');
+
+    t.clearImage();
+
+    expect(t.getImageBounds()).toBe(null);
+    expect(t.canvasWidth).toBe(800);
+    expect(t.canvasHeight).toBe(600);
+    expect(t.imageToCanvas(0.25, 0.75)).toEqual({ x: 200, y: 450 });
+  });
 });
 
 describe('PathCalculator (extended)', () => {
@@ -135,12 +149,10 @@ describe('PathCalculator (extended)', () => {
     expect(calc.getPointAtProgress(pts, 0.5).x).toBeCloseTo(5);
   });
 
-  test('calculateSegmentLengths sums per-segment distances', () => {
+  test('calculatePathLength sums successive point distances', () => {
     const calc = new PathCalculator();
     const pts = [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }, { x: 4, y: 0 }];
-    const lengths = calc.calculateSegmentLengths(pts, [0, 1]);
-    expect(lengths.length).toBe(1);
-    expect(lengths[0]).toBeCloseTo(4);
+    expect(calc.calculatePathLength(pts)).toBeCloseTo(4);
   });
 
   test('legTimingLengths weights legs by progress span and sums to total length', () => {
@@ -211,6 +223,11 @@ describe('Waypoint (extended)', () => {
     major.dotColor = '#56B4E9';
     major.labelMode = 'fade-up';
     major.beaconStyle = 'ripple';
+    major.markerStyle = 'custom';
+    major.customImage = { id: 'decoded-marker' };
+    major.customImageAssetId = 'marker-asset';
+    major.customImageRotation = 'auto';
+    major.customImageRotationOffset = 15;
 
     const minor = Waypoint.createMinor(0.2, 0.2);
     minor.copyPropertiesFrom(major);
@@ -218,6 +235,13 @@ describe('Waypoint (extended)', () => {
     expect(minor.dotColor).toBe('#56B4E9'); // style inherited
     expect(minor.labelMode).toBe('off'); // demoted (minor has no label)
     expect(minor.beaconStyle).toBe('none'); // demoted
+    expect(minor.customImage).toBe(major.customImage);
+
+    const restored = Waypoint.fromJSON(minor.toJSON());
+    expect(restored.customImage).toBeNull();
+    expect(restored.customImageAssetId).toBe('marker-asset');
+    expect(restored.customImageRotation).toBe('auto');
+    expect(restored.customImageRotationOffset).toBe(15);
   });
 
   test('toggleType is reversible and applies type defaults', () => {
@@ -413,6 +437,60 @@ describe('CameraService — major-only zoom keyframes', () => {
       waypointProgressValues: progressValues
     });
     expect(held.zoom).toBeCloseTo(4, 5);
+  });
+
+  test('destination zoom mode keeps gradual and quick transition semantics distinct', () => {
+    const continuous = [zoomed(1), zoomed(4)];
+    const immediate = [
+      zoomed(1),
+      { isMajor: true, camera: { zoom: 4, zoomMode: 'immediate' } },
+    ];
+    const service = new CameraService();
+
+    const gradualZoom = service._calculateTargetZoom(0.5, continuous, [0, 1], 10000);
+    const quickZoom = service._calculateTargetZoom(0.5, immediate, [0, 1], 10000);
+
+    expect(gradualZoom).toBeGreaterThan(1);
+    expect(gradualZoom).toBeLessThan(4);
+    expect(quickZoom).toBeCloseTo(4, 5);
+  });
+});
+
+describe('camera inspector mixed values', () => {
+  test('uses selected majors and presents differing zoom and transition values as Mixed', () => {
+    document.body.innerHTML = `
+      <input id="selected-zoom" type="range"><span id="selected-zoom-value"></span>
+      <select id="zoom-mode">
+        <option value="continuous">Gradual</option>
+        <option value="immediate">Quick</option>
+      </select>`;
+    const a = Waypoint.createMajor(0.1, 0.1);
+    const minor = Waypoint.createMinor(0.5, 0.5);
+    const b = Waypoint.createMajor(0.9, 0.9);
+    a.camera = { zoom: 2, zoomMode: 'continuous' };
+    b.camera = { zoom: 8, zoomMode: 'immediate' };
+    const app = {
+      waypoints: [a, minor, b],
+      selectedWaypoint: minor,
+      selectedWaypoints: [a, minor, b],
+      elements: {
+        cameraSelectedZoom: document.getElementById('selected-zoom'),
+        cameraSelectedZoomValue: document.getElementById('selected-zoom-value'),
+        cameraZoomMode: document.getElementById('zoom-mode'),
+      },
+      selectionTargets(majorsOnly) {
+        return majorsOnly ? [a, b] : [a, minor, b];
+      },
+    };
+
+    cameraMixin._updateCameraControls.call(app, minor);
+
+    expect(app.elements.cameraSelectedZoomValue.textContent).toBe('Mixed');
+    expect(app.elements.cameraSelectedZoom.getAttribute('aria-valuetext')).toBe('Mixed');
+    expect(app.elements.cameraZoomMode.value).toBe('__mixed__');
+    expect(app.elements.cameraZoomMode.selectedOptions[0].textContent).toBe('Mixed');
+    expect(a.camera).toEqual({ zoom: 2, zoomMode: 'continuous' });
+    expect(b.camera).toEqual({ zoom: 8, zoomMode: 'immediate' });
   });
 });
 

@@ -8,7 +8,8 @@
 | Canvas 2D | Direct pixel manipulation for path rendering and animation |
 | esbuild | Fast bundling, simple config, ESM output |
 | Vitest + jsdom | Unit testing with DOM simulation |
-| mediabunny | MP4/WebM mux layer (only runtime dependency) |
+| mediabunny | MP4/WebM mux layer |
+| jszip | Project ZIP import/export |
 | CSS custom properties | Design tokens for theming (UoN + Okabe-Ito) |
 
 ## Project structure
@@ -17,14 +18,15 @@
 src/
   main.js              — RoutePlotter class: app entry point and orchestrator core
   app/                 — RoutePlotter prototype mixins (wiring, playback, undo/redo, camera,
-                         viewport, path timing, persistence, exporting, editor panel, pointer)
+                         viewport, path timing, persistence, exporting, editor panel, pointer,
+                         synchronized scene-outline integration)
   config/              — constants, keybindings, help content, tooltips
   core/                — EventBus (pub-sub), PlayerCore (pure timeline math)
   models/              — Waypoint, AnimationState, ImageAsset + scene model (Scene → FlowLayer → GraphModel/GraphNode/GraphEdge + Emitter)
   services/            — single-responsibility services (18 modules)
-  controllers/         — UIController, SectionController
+  controllers/         — UIController, SectionController, SceneOutlineController
   components/          — SwatchPicker, Dropdown, Tooltip, ParamTooltip
-  handlers/            — InteractionHandler (mouse, keyboard, touch, DnD)
+  handlers/            — InteractionHandler (Pointer Events transactions, keyboard, DnD)
   utils/               — CatmullRom, Easing, focusTrap
 styles/                — tokens.css, main.css, swatch-picker.css, dropdown.css, tooltip.css
 specs/                 — archived dot-crowd-navigator material (spec, memory, salvaged tests/src) for Phases 2–4
@@ -44,19 +46,34 @@ add crowd/particle animation. Everything renders as a pure function of
 implemented since Phase 1 (2026-08-17) by **`src/core/PlayerCore.js`**: it
 builds the timeline (segments, exact pause budgets, beacon schedules) and
 evaluates any instant with no wall-clock reads or mutation. AnimationEngine
-is transport + events; beacons are closed-form in timeline time; play,
-scrub, and export share the one evaluation path (golden harness:
+is demand-driven transport + events: play and visible camera settling keep its
+preview frame alive, while stable paused views leave no frame queued; export
+keeps its explicit synchronous frame loop. Beacons are closed-form in timeline
+time; play, scrub, and export share the one evaluation path (golden harness:
 `tests/goldenFrames.test.js`). Since Phase 5 (2026-08-19) the HTML
 export runs the same stack: `src/player/PlayerApp.js` (bundled to
 `docs/player.js`, inlined into exports) hydrates the coordVersion-9
 snapshot, recomputes timing in the snapshot's `timingReference` space
-to preserve the authored timeline, and renders at export resolution
-with the app's own services (cross-check: `tests/playerApp.test.js`).
+to preserve the authored timeline, and renders at export resolution with the
+app's own services. A separate stable `renderReference` supplies the visual
+short-edge scale for map-bound reference-pixel values; it never participates
+in coordinate or timeline calculations. Older snapshots migrate additively
+from `timingReference` or the authored canvas (cross-check:
+`tests/playerApp.test.js` and `tests/renderReference.test.js`).
 The scene data model landed in Phase 2 (2026-08-18): `Scene` →
 `FlowLayer` (guide graph or hero route + `Emitter`s with per-emitter
-seeds and normalised release windows), persisted additively as the
+seeds, normalised release windows and two-to-eight-handle busyness envelopes),
+persisted additively as the
 coordVersion 9 `scene` block. Phases and rationale: backlog +
 decision-log 2026-08-17/18.
+
+REV-02 adds an equivalent non-canvas authoring path without changing that
+ownership: `src/utils/sceneSemantics.js` projects the canonical model into a
+plain semantic snapshot, `src/controllers/SceneOutlineController.js` renders
+lazy native DOM and emits stable-ID commands, and `src/app/sceneOutline.js`
+resolves those commands back into the existing mutation/undo/autosave paths.
+The exported player uses `src/player/playerAccessibility.js` for an aggregate
+scene description and discrete transport announcements.
 
 ## Key modules
 
@@ -64,21 +81,29 @@ decision-log 2026-08-17/18.
 | --- | --- | --- |
 | RoutePlotter | `src/main.js` + `src/app/*` | Sole orchestrator: owns all services, handles all events, manages state. Method groups live as prototype mixins in `src/app/*` (Object.assign; names unique across mixins) |
 | Waypoint | `src/models/Waypoint.js` | Data model for waypoints (position, style, camera, area, etc.) |
-| AnimationEngine | `src/services/AnimationEngine.js` | Playback loop, timing, segment speed, pause markers |
+| AnimationEngine | `src/services/AnimationEngine.js` | Demand-driven preview scheduler, transport, timing, segment speed and pause markers |
 | PathCalculator | `src/services/PathCalculator.js` | Catmull-Rom spline, reparameterisation, curvature |
-| RenderingService | `src/services/RenderingService.js` | Canvas drawing: path, markers, labels, overlays |
+| RenderingService | `src/services/RenderingService.js` | Canvas drawing plus project-reference scaling for path, markers, labels, effects and area borders |
 | UIController | `src/controllers/UIController.js` | Sidebar controls, waypoint list, slider sync |
-| InteractionHandler | `src/handlers/InteractionHandler.js` | Mouse, keyboard, touch, drag-and-drop input |
+| SceneOutlineController | `src/controllers/SceneOutlineController.js` | Lazy native semantic outline, authoring forms, focus and draft state |
+| InteractionHandler | `src/handlers/InteractionHandler.js` | Captured mouse/touch/pen transactions, keyboard and drag-and-drop input |
 | CoordinateTransform | `src/services/CoordinateTransform.js` | Image ↔ canvas coordinate conversion |
 | VideoExporter | `src/services/VideoExporter.js` | MP4/WebM export via WebCodecs |
 
 ## Communication patterns
 
 **EventBus (pub-sub)** is the only communication channel between
-components. UIController and InteractionHandler emit events; `main.js`
-handles them. No direct method calls between components.
+components. UIController, SceneOutlineController and InteractionHandler emit
+events; `main.js` handles them. No direct method calls between components.
 
 Exceptions: none. This is a hard rule.
+
+Canvas authoring uses one primary-pointer transaction owned by
+`InteractionHandler`: hit-test and immutable geometry snapshot on down, a
+shared 3 CSS px tap/drag threshold, captured movement, then exactly one commit
+or restoring cancellation. Window terminal-event fallbacks are deliberately
+idempotent with captured canvas events. Area, network and waypoint drags share
+this boundary; a selected waypoint group moves by one shared bounds-safe delta.
 
 ## Dependency policy
 
@@ -89,8 +114,9 @@ Exceptions: none. This is a hard rule.
 
 ## Dev workflow
 
-- Install: `npm install`
+- Install: `npm ci` (Node 24 is pinned in `.nvmrc`)
 - Dev: `npm run dev` → http://localhost:3000
 - Build: `npm run build` → output in `docs/`
-- Test: `npm test` (Vitest)
-- Deploy: `npm run push`
+- Check: `npm run check` (Vitest + restart-script safety contract +
+  non-mutating production build)
+- Deploy: commit source, run `npm run push:dry-run`, then `npm run push`

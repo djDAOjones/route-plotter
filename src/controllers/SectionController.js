@@ -135,6 +135,7 @@ export class SectionController {
     });
     
     this._bindSectionHeaders();
+    this._bindMoreDisclosures();
     this._bindLastInteractedListeners();
     this._subscribeToEvents();
     
@@ -252,6 +253,27 @@ export class SectionController {
       });
     });
   }
+
+  /**
+   * Give the native details element a deterministic keyboard path. Chromium's
+   * default summary activation varies across embedded/automation surfaces, so
+   * Enter and Space explicitly toggle the native `open` state while pointer
+   * activation remains browser-owned.
+   * @private
+   */
+  _bindMoreDisclosures() {
+    const summaries = this.sectionsContainer.querySelectorAll('.section-more > summary');
+    summaries.forEach(summary => {
+      summary.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        const disclosure = summary.parentElement;
+        if (disclosure instanceof HTMLDetailsElement) {
+          disclosure.open = !disclosure.open;
+        }
+      });
+    });
+  }
   
   /**
    * Bind focusin and input listeners for last-interacted tracking
@@ -325,8 +347,8 @@ export class SectionController {
       this._updateUIState();
     });
 
-    // Network node/edge selection (Phase 4 network editing) — one more
-    // scope on the same skeleton, shown only while the mode is active
+    // Network node/edge selection — one more scope on the same skeleton,
+    // available from either passive scene inspection or drawing mode.
     this.eventBus.on('network:node-selected', () => {
       this.networkSelection = 'node';
       this._updateUIState();
@@ -343,8 +365,18 @@ export class SectionController {
       if (this.networkSelection === 'edge') this.networkSelection = null;
       this._updateUIState();
     });
-    this.eventBus.on('network:edit-mode-changed', ({ active }) => {
-      if (!active) this.networkSelection = null;
+    this.eventBus.on('network:edit-mode-changed', () => {
+      // exit() emits the matching node/edge deselection itself. Keeping
+      // selection ownership on those events also supports passive inspection.
+      this._updateUIState();
+    });
+
+    this.eventBus.on('project:replaced', () => {
+      // The commit replaced every selectable object. Failed project loads do
+      // not emit this event, so their still-live inspector state is preserved.
+      this.hasSelection = false;
+      this.hasCrowdSelection = false;
+      this.networkSelection = null;
       this._updateUIState();
     });
 
@@ -482,7 +514,7 @@ export class SectionController {
     this.helpPlaceholder.style.display = this.hasWaypoints ? 'none' : 'block';
 
     // Scope switch — the panel edits what's selected: a network node or
-    // edge (while network editing), a crowd layer, a waypoint, or
+    // edge (passively inspected or in drawing mode), a crowd, a waypoint, or
     // (nothing selected) the route
     const nodeScope = this.networkSelection === 'node';
     const edgeScope = this.networkSelection === 'edge';
@@ -509,6 +541,16 @@ export class SectionController {
     if (this.helpPlaceholder) {
       this.helpPlaceholder.innerHTML = html;
     }
+  }
+
+  /**
+   * Synchronize waypoint-scope visibility after state is restored without
+   * replaying selection events (which would mutate the restored selection).
+   * @param {boolean} hasSelection - Whether the restored state selects a waypoint
+   */
+  setWaypointSelectionState(hasSelection) {
+    this.hasSelection = Boolean(hasSelection);
+    this._updateUIState();
   }
   
   /**

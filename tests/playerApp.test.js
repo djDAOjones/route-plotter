@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { afterEach, describe, test, expect, vi } from 'vitest';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { pathTimingMixin } from '../src/app/pathTiming.js';
 import { viewportMixin } from '../src/app/viewport.js';
@@ -8,6 +8,7 @@ import { AnimationEngine } from '../src/services/AnimationEngine.js';
 import { PathCalculator } from '../src/services/PathCalculator.js';
 import { CoordinateTransform } from '../src/services/CoordinateTransform.js';
 import { CameraService } from '../src/services/CameraService.js';
+import { MOTION } from '../src/config/constants.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import { Scene } from '../src/models/Scene.js';
 
@@ -30,6 +31,10 @@ import { Scene } from '../src/models/Scene.js';
 const CANVAS_W = 1000;
 const CANVAS_H = 800;
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 /** Authored fixture: pauses, a minor, variable leg speed, beacons, a crowd. */
 function buildAuthoredWaypoints() {
   const a = Waypoint.createMajor(0.1, 0.1);
@@ -47,7 +52,17 @@ function buildAuthoredWaypoints() {
 function buildAuthoredScene() {
   const scene = new Scene();
   const routeLayer = scene.addFlowLayer({ name: 'Crowd 1', guideType: 'route' });
-  routeLayer.addEmitter({ seed: 42, dotCount: 24, releaseStart: 0.2, releaseDuration: 0.5 });
+  routeLayer.addEmitter({
+    seed: 42,
+    dotCount: 24,
+    releaseStart: 0.2,
+    releaseDuration: 0.5,
+    busynessEnvelope: [
+      { time: 0, value: 0.1, transition: 'step' },
+      { time: 0.5, value: 1, transition: 'gradual' },
+      { time: 1, value: 0.2, transition: 'gradual' },
+    ],
+  });
   const graphLayer = scene.addFlowLayer({ name: 'Crowd 2', guideType: 'graph' });
   const entry = graphLayer.graph.addNode({ x: 0.2, y: 0.3, type: 'entry' });
   const exit = graphLayer.graph.addNode({ x: 0.8, y: 0.7, type: 'exit' });
@@ -77,8 +92,8 @@ function makeAuthoredApp({ motionSettings }) {
     elements: {},
     displayWidth: CANVAS_W,
     displayHeight: CANVAS_H,
+    renderReference: { width: CANVAS_W, height: CANVAS_H },
     _waypointProgressCache: null,
-    _segmentLengthsCache: null,
     _majorWaypointsCache: null,
     _durationUpdateTimeout: null,
     queueRender() {},
@@ -101,6 +116,7 @@ function makeAuthoredApp({ motionSettings }) {
     getMajorLegData: pathTimingMixin.getMajorLegData,
     hasSegmentSpeedVariations: pathTimingMixin.hasSegmentSpeedVariations,
     calculatePathDuration: pathTimingMixin.calculatePathDuration,
+    getBranchTimeline: pathTimingMixin.getBranchTimeline,
     updateAnimationDuration: pathTimingMixin.updateAnimationDuration,
     imageToCanvas: viewportMixin.imageToCanvas,
     _buildProjectSnapshot: persistenceMixin._buildProjectSnapshot
@@ -149,6 +165,7 @@ const BASE_MOTION = {
   backgroundVisibility: 'always-show',
   revealSize: 20,
   revealFeather: 50,
+  revealTrail: 35,
   aovAngle: 60,
   aovDistance: 25,
   aovDropoff: 50
@@ -156,10 +173,34 @@ const BASE_MOTION = {
 
 describe('PlayerApp export parity (golden cross-check)', () => {
 
+  test('an authored reveal trail reaches the exported player', async () => {
+    // REVEAL-01 is authorable, so the value has to survive the snapshot and be
+    // adopted by the player. If it fell back to the default the export would
+    // silently render a reveal that never fades while the editor faded it.
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    const snapshot = app._buildProjectSnapshot();
+    expect(snapshot.motionSettings.revealTrail).toBe(35);
+
+    const player = await makePlayerFromSnapshot(snapshot);
+    expect(player.motionSettings.revealTrail).toBe(35);
+  });
+
+  test('a snapshot without a reveal trail falls back to never fading', async () => {
+    // Projects authored before the control existed carry no value; they must
+    // keep looking exactly as they did.
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    const snapshot = app._buildProjectSnapshot();
+    delete snapshot.motionSettings.revealTrail;
+
+    const player = await makePlayerFromSnapshot(snapshot);
+    expect(player.motionSettings.revealTrail).toBe(MOTION.SPOTLIGHT_TRAIL_MAX);
+  });
+
   test('snapshot → PlayerApp reproduces the app timeline exactly', async () => {
     const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
     const snapshot = app._buildProjectSnapshot();
     expect(snapshot.timingReference).toEqual({ width: CANVAS_W, height: CANVAS_H });
+    expect(snapshot.renderReference).toEqual({ width: CANVAS_W, height: CANVAS_H });
 
     const player = await makePlayerFromSnapshot(snapshot);
 
@@ -175,6 +216,7 @@ describe('PlayerApp export parity (golden cross-check)', () => {
 
     // Timing derived in the authored space; rendering lives in export-resolution space
     expect(player._timingRef).toEqual({ width: CANVAS_W, height: CANVAS_H });
+    expect(player.renderReference).toEqual({ width: CANVAS_W, height: CANVAS_H });
     expect(player.displayWidth).toBe(snapshot.exportSettings.resolutionX);
     expect(player.displayHeight).toBe(snapshot.exportSettings.resolutionY);
   });
@@ -215,6 +257,7 @@ describe('PlayerApp export parity (golden cross-check)', () => {
     const layers1 = player1.scene.getFlowLayers();
     expect(layers1).toHaveLength(2);
     expect(layers1[0].emitters[0].seed).toBe(42);
+    expect(layers1[0].emitters[0].busynessEnvelope).toHaveLength(3);
     expect(layers1[1].emitters[0].seed).toBe(7);
 
     const context1 = {
@@ -240,5 +283,36 @@ describe('PlayerApp export parity (golden cross-check)', () => {
     app.exportSettings.includeText = false;
     const player = await makePlayerFromSnapshot(app._buildProjectSnapshot());
     expect(player.exportSettings.includeText).toBe(false);
+  });
+
+  test('bundled drone heads hydrate in the standalone player without a project asset', async () => {
+    class LoadedImage {
+      set src(value) {
+        this.source = value;
+        queueMicrotask(() => this.onload());
+      }
+    }
+    vi.stubGlobal('Image', LoadedImage);
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    app.styles.pathHead.style = 'drone';
+    const snapshot = app._buildProjectSnapshot();
+
+    expect(snapshot.imageAssets).toEqual([]);
+    const player = await makePlayerFromSnapshot(snapshot);
+
+    expect(player.styles.pathHead.style).toBe('drone');
+    expect(player.styles.pathHead.image).toBeInstanceOf(LoadedImage);
+    expect(player.styles.pathHead.image.source).toBeTruthy();
+  });
+
+  test('legacy HTML snapshots seed visual sizing from timingReference without changing timing', async () => {
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    const snapshot = app._buildProjectSnapshot();
+    delete snapshot.renderReference;
+
+    const player = await makePlayerFromSnapshot(snapshot);
+
+    expect(player.renderReference).toEqual(snapshot.timingReference);
+    expect(timelineFingerprint(player.animationEngine)).toEqual(timelineFingerprint(app.animationEngine));
   });
 });

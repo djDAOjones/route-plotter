@@ -1,5 +1,13 @@
 import { FlowLayer } from './FlowLayer.js';
 
+export const SCENE_LIMITS = Object.freeze({
+  MAX_FLOW_LAYERS: 32,
+  MAX_EMITTERS_TOTAL: 256,
+  MAX_DOTS_TOTAL: 20000,
+  MAX_GRAPH_NODES_TOTAL: 10000,
+  MAX_GRAPH_EDGES_TOTAL: 20000,
+});
+
 /**
  * Model owning the ordered flow layers of the layered scene. Pure data
  * model — no EventBus dependency.
@@ -25,6 +33,9 @@ export class Scene {
    * @returns {FlowLayer} The created layer.
    */
   addFlowLayer(options = {}) {
+    if (this.flowLayers.length >= SCENE_LIMITS.MAX_FLOW_LAYERS) {
+      throw new Error(`A scene supports at most ${SCENE_LIMITS.MAX_FLOW_LAYERS} flow layers`);
+    }
     const layer = new FlowLayer(options);
     this.flowLayers.push(layer);
     return layer;
@@ -106,11 +117,13 @@ export class Scene {
    * @param {Object} data — `{ flowLayers: [...] }`
    */
   fromJSON(data = {}) {
-    this.clear();
     const layers = Array.isArray(data.flowLayers) ? data.flowLayers : [];
-    for (const ld of layers) {
-      this.addFlowLayer(ld);
-    }
+    Scene.assertValidJSON({ flowLayers: layers });
+
+    // Hydrate into a detached array first. A bad later layer must not leave an
+    // existing Scene partially cleared or replaced.
+    const stagedLayers = layers.map(ld => FlowLayer.fromJSON(ld));
+    this.flowLayers = stagedLayers;
   }
 
   /**
@@ -122,5 +135,59 @@ export class Scene {
     const scene = new Scene();
     scene.fromJSON(data);
     return scene;
+  }
+
+  /**
+   * Validate aggregate per-project scene budgets.
+   * @param {Object} data
+   * @throws {Error} If the scene is invalid or too expensive to render.
+   */
+  static assertValidJSON(data = {}) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('Invalid scene: expected an object');
+    }
+    const layers = data.flowLayers ?? [];
+    if (!Array.isArray(layers)) {
+      throw new Error('Invalid scene flowLayers: expected an array');
+    }
+    if (layers.length > SCENE_LIMITS.MAX_FLOW_LAYERS) {
+      throw new Error(`Scene flow-layer limit is ${SCENE_LIMITS.MAX_FLOW_LAYERS}`);
+    }
+
+    const layerIds = new Set();
+    let emitterCount = 0;
+    let dotCount = 0;
+    let nodeCount = 0;
+    let edgeCount = 0;
+
+    for (const layer of layers) {
+      FlowLayer.assertValidJSON(layer);
+      if (layer.id != null) {
+        if (typeof layer.id !== 'string' || layer.id.length === 0 || layerIds.has(layer.id)) {
+          throw new Error('Invalid flow layer id: expected a unique non-empty string');
+        }
+        layerIds.add(layer.id);
+      }
+      const emitters = layer.emitters ?? [];
+      emitterCount += emitters.length;
+      for (const emitter of emitters) {
+        dotCount += Number(emitter.dotCount ?? 50);
+      }
+      nodeCount += (layer.graph?.nodes ?? []).length;
+      edgeCount += (layer.graph?.edges ?? []).length;
+    }
+
+    if (emitterCount > SCENE_LIMITS.MAX_EMITTERS_TOTAL) {
+      throw new Error(`Scene emitter limit is ${SCENE_LIMITS.MAX_EMITTERS_TOTAL}`);
+    }
+    if (dotCount > SCENE_LIMITS.MAX_DOTS_TOTAL) {
+      throw new Error(`Scene dot budget is ${SCENE_LIMITS.MAX_DOTS_TOTAL}`);
+    }
+    if (nodeCount > SCENE_LIMITS.MAX_GRAPH_NODES_TOTAL) {
+      throw new Error(`Scene graph-node limit is ${SCENE_LIMITS.MAX_GRAPH_NODES_TOTAL}`);
+    }
+    if (edgeCount > SCENE_LIMITS.MAX_GRAPH_EDGES_TOTAL) {
+      throw new Error(`Scene graph-edge limit is ${SCENE_LIMITS.MAX_GRAPH_EDGES_TOTAL}`);
+    }
   }
 }

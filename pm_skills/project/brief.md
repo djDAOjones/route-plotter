@@ -50,7 +50,9 @@ frozen v2 line remains served from
   evaluation path. See decision-log 2026-08-17.
 - npm + esbuild for bundling (target es2022; lockfile committed),
   Vitest for testing.
-- WCAG 2.2 AAA accessibility.
+- WCAG 2.2 AAA is the product target; the semantic authoring model now ships,
+  while REV-03/REV-05 track the remaining pointer-parity and assurance evidence
+  before it can be claimed as verified support.
 - IBM Carbon Design System for UI patterns (implemented, not installed).
 - Okabe-Ito colour-blind safe palette for map data.
 - UoN semantic design tokens for UI chrome.
@@ -62,6 +64,14 @@ frozen v2 line remains served from
 - GIS integration or georeferencing
 - Mobile-native apps
 
-## Open questions
+## Decided foundations
 
-- None currently blocking.
+- Split hero routes animate simultaneous branches on one master timeline;
+  reconvergence waits for the latest branch and shared join effects fire once.
+- Projects own a shipped reference render size: map-bound graphics scale from
+  its short edge while normalised geometry and authored timing remain
+  unchanged. Interactive label clamps protect editor legibility; exports use
+  the exact reference scale.
+- Public/share/support boundaries retain original project image bytes only in
+  explicit saves/exports, use previewable redacted diagnostics, and publish
+  under MIT with third-party notices and best-effort GitHub support.

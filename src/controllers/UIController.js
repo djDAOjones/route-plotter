@@ -3,17 +3,40 @@
  * Handles waypoint list, editor controls, tabs, and animation controls
  */
 
-import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT } from '../config/constants.js';
+import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT, PATH_VISIBILITY, BACKGROUND_VISIBILITY } from '../config/constants.js';
 import { getInlineHelpHTML, getSplashHelpHTML } from '../config/helpContent.js';
 import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
 import { VideoExporter } from '../services/VideoExporter.js';
+import { pathWidthToSlider } from '../utils/pathWidthScale.js';
+import { buildRouteNumbering } from '../utils/waypointNaming.js';
+import { resolveRouteBranches } from '../utils/routeBranches.js';
+import {
+  formatBackgroundOverlay,
+  formatRendererPixels,
+  setRangeReadout,
+} from '../utils/uiReadouts.js';
 
 /**
  * Logarithmic speed curve for perceptually uniform slider control
  * Maps linear slider position (1-4000) to exponential speed values
  * This gives fine control at low speeds while allowing high speeds
  */
+/**
+ * What a branch row says to a screen reader. Indentation and the visible
+ * "branch" tag carry this visually; this carries it for anyone who perceives
+ * neither (WCAG 2.2 1.3.1).
+ */
+function branchRowContext(entry, rejoinName) {
+  const fork = entry.forkNumber && entry.forkNumber !== '?'
+    ? `waypoint ${entry.forkNumber}`
+    : 'an earlier waypoint';
+  const ending = rejoinName
+    ? `, rejoins at ${rejoinName}`
+    : ', ends the branch here';
+  return `, branch ${entry.branchLetter} leaving ${fork}${ending}`;
+}
+
 const SPEED_CURVE = {
   MIN_SLIDER: 1,
   MAX_SLIDER: 4000,
@@ -186,6 +209,9 @@ export class UIController {
     
     /** @type {number|null} Last selected waypoint index for shift-click range selection */
     this._lastSelectedIndex = null;
+    this._listedWaypoints = [];
+    this._listedNumbering = [];
+    this._draggingBlock = null;
     
     // Trail and playback state for display updates
     /** @private */
@@ -228,9 +254,15 @@ export class UIController {
   _setupScopeChip() {
     this._scopeChip = document.getElementById('scope-chip');
     this._scopeChipText = document.getElementById('scope-chip-text');
+    this._scopeRouteBtn = document.getElementById('scope-route-btn');
     this._scopePrevBtn = document.getElementById('scope-prev-btn');
     this._scopeNextBtn = document.getElementById('scope-next-btn');
 
+    this._scopeRouteBtn?.addEventListener('click', () => {
+      if (this.selectedWaypoint || this.selectedWaypoints.size > 0) {
+        this.eventBus.emit('waypoint:deselected');
+      }
+    });
     this._scopePrevBtn?.addEventListener('click', () => this._navigateScope(-1));
     this._scopeNextBtn?.addEventListener('click', () => this._navigateScope(1));
 
@@ -248,8 +280,8 @@ export class UIController {
       chipRefresh();
     });
 
-    // Network node/edge scopes (Phase 4 network editing) — the crowd
-    // family's green, with the chip naming what the pen has selected
+    // Network node/edge scopes — the crowd family's green, with the chip
+    // naming either a passively inspected item or what the pen selected.
     this._networkSelection = null;
     this.eventBus.on('network:node-selected', ({ node }) => {
       this._networkSelection = { kind: 'node', node };
@@ -267,8 +299,17 @@ export class UIController {
       if (this._networkSelection?.kind === 'edge') this._networkSelection = null;
       chipRefresh();
     });
-    this.eventBus.on('network:edit-mode-changed', ({ active }) => {
-      if (!active) this._networkSelection = null;
+    this.eventBus.on('network:edit-mode-changed', () => {
+      // exit() publishes a node/edge deselection first; passive inspection
+      // must not otherwise be coupled to the drawing mode flag.
+      chipRefresh();
+    });
+    this.eventBus.on('project:replaced', () => {
+      // A successful load replaces every canonical object. Discard transient
+      // references from the previous project only after that commit boundary.
+      this._selectedCrowd = null;
+      this._networkSelection = null;
+      this.setSelection([], null);
       chipRefresh();
     });
   }
@@ -314,8 +355,20 @@ export class UIController {
    */
   _waypointDisplayName(waypoint) {
     if (!waypoint) return '';
+    // Number through the shared routing so the chip, the list row and the
+    // semantic outline never name the same waypoint differently. `_displayIndex`
+    // counts majors, which called a branch waypoint "Waypoint 3" while its row
+    // read "2·B1" (ROUTE-01c).
+    const index = (this._listedWaypoints || []).indexOf(waypoint);
+    const entry = index === -1 ? null : this._listedNumbering?.[index];
+
+    if (entry?.branchId) {
+      const base = `Waypoint ${entry.displayNumber}`;
+      const name = waypoint.name || waypoint.label;
+      return name ? `${base} '${name}'` : base;
+    }
     if (waypoint.isMajor) {
-      const base = `Waypoint ${waypoint._displayIndex ?? '?'}`;
+      const base = `Waypoint ${entry?.displayNumber ?? waypoint._displayIndex ?? '?'}`;
       const name = waypoint.name || waypoint.label;
       return name ? `${base} '${name}'` : base;
     }
@@ -356,7 +409,11 @@ export class UIController {
       text = `Editing · ${multiSelect.length} waypoints${minors > 0 ? ` (${minors} minor)` : ''}`;
     } else if (waypoint) {
       scope = 'waypoint';
-      const kind = waypoint.isMajor ? ' · major' : '';
+      const chipIndex = (this._listedWaypoints || []).indexOf(waypoint);
+      const chipEntry = chipIndex === -1 ? null : this._listedNumbering?.[chipIndex];
+      const kind = chipEntry?.branchId
+        ? ` · branch ${chipEntry.branchLetter}`
+        : (waypoint.isMajor ? ' · major' : '');
       text = `Editing · ${this._waypointDisplayName(waypoint)}${kind}`;
     } else {
       scope = 'route';
@@ -365,6 +422,9 @@ export class UIController {
 
     this._scopeChip.dataset.scope = scope;
     if (this._scopeChipText) this._scopeChipText.textContent = text;
+    if (this._scopeRouteBtn) {
+      this._scopeRouteBtn.disabled = scope !== 'waypoint' && scope !== 'multi';
+    }
 
     // Prev/next stepping: only meaningful in single-selection or route
     // scope — crowds sit outside the step cycle
@@ -538,8 +598,10 @@ export class UIController {
   setSelection(waypoints, primary) {
     this.selectedWaypoints = new Set(waypoints);
     this.selectedWaypoint = primary || null;
-    const anchor = primary && primary.isMajor && this._listedMajors
-      ? this._listedMajors.indexOf(primary) : -1;
+    // Anchor into the displayed route, not the majors subset: since UI-02 the
+    // list shows minors too, so a shift-range must start where the row is.
+    const anchor = primary && this._listedWaypoints
+      ? this._listedWaypoints.indexOf(primary) : -1;
     this._lastSelectedIndex = anchor >= 0 ? anchor : null;
   }
 
@@ -670,6 +732,7 @@ export class UIController {
     
     this.elements.bgUpload?.addEventListener('change', (e) => {
       const file = e.target.files[0];
+      e.target.value = '';
       if (file) {
         this.eventBus.emit('background:upload', file);
       }
@@ -683,7 +746,11 @@ export class UIController {
         MOTION.TINT_MIN,
         MOTION.TINT_MAX
       );
-      this.elements.bgOverlayValue.textContent = MotionVisibilityService.formatUIValue(tintValue);
+      setRangeReadout(
+        this.elements.bgOverlay,
+        this.elements.bgOverlayValue,
+        formatBackgroundOverlay(tintValue)
+      );
       this.eventBus.emit('background:overlay-change', tintValue);
     });
     
@@ -773,23 +840,42 @@ export class UIController {
       }, 50);
     });
     
-    // Clear button — show confirmation modal (N5-1)
-    this.elements.clearBtn?.addEventListener('click', () => {
-      const modal = document.getElementById('clear-confirm-modal');
-      if (!modal) { this.eventBus.emit('waypoints:clear-all'); return; }
-      modal.style.display = 'flex';
-      const confirmBtn = document.getElementById('clear-confirm');
-      const cancelBtn = document.getElementById('clear-cancel');
-      const close = () => { modal.style.display = 'none'; };
-      const handleConfirm = () => { close(); cleanup(); this.eventBus.emit('waypoints:clear-all'); };
-      const handleCancel = () => { close(); cleanup(); };
-      const cleanup = () => {
-        confirmBtn?.removeEventListener('click', handleConfirm);
-        cancelBtn?.removeEventListener('click', handleCancel);
+    // Clear button — destructive confirmation uses the shared modal focus
+    // pattern: safe initial focus, inert background, Escape, and restoration.
+    const clearModal = document.getElementById('clear-confirm-modal');
+    const clearConfirmBtn = document.getElementById('clear-confirm');
+    const clearCancelBtn = document.getElementById('clear-cancel');
+    const clearReturnFocus = document.getElementById('file-dropdown-btn');
+    if (clearModal) {
+      this._clearFocusTrap = createFocusTrap(clearModal);
+      const closeClearModal = () => {
+        clearModal.style.display = 'none';
+        this._clearFocusTrap.deactivate();
       };
-      confirmBtn?.addEventListener('click', handleConfirm);
-      cancelBtn?.addEventListener('click', handleCancel);
-      cancelBtn?.focus();
+      clearConfirmBtn?.addEventListener('click', () => {
+        closeClearModal();
+        this.eventBus.emit('waypoints:clear-all');
+      });
+      clearCancelBtn?.addEventListener('click', closeClearModal);
+      clearModal.addEventListener('click', (e) => {
+        if (e.target === clearModal) closeClearModal();
+      });
+      clearModal.addEventListener('focustrap:escape', closeClearModal);
+    }
+    this.elements.clearBtn?.addEventListener('click', () => {
+      if (!clearModal) {
+        this.eventBus.emit('waypoints:clear-all');
+        return;
+      }
+      clearModal.style.display = 'flex';
+      // Dropdown.js closes the File menu later in this click dispatch. Wait
+      // until that listener has restored the menu trigger, then establish the
+      // modal trap with the stable trigger as its explicit return target.
+      queueMicrotask(() => {
+        if (clearModal.style.display !== 'none') {
+          this._clearFocusTrap.activate(clearCancelBtn, clearReturnFocus);
+        }
+      });
     });
     
     // Help button
@@ -945,8 +1031,6 @@ export class UIController {
     // Path visibility
     this.elements.pathVisibility?.addEventListener('change', (e) => {
       this.eventBus.emit('motion:path-visibility-change', e.target.value);
-      // Show/hide trail control based on mode
-      this.updateTrailControlVisibility(e.target.value);
       // Blur to prevent keyboard shortcuts from changing the dropdown
       e.target.blur();
     });
@@ -983,6 +1067,7 @@ export class UIController {
       const isAOV = mode === 'angle-of-view' || mode === 'angle-of-view-reveal';
       if (spotlightControls) spotlightControls.style.display = isSpotlight ? 'block' : 'none';
       if (aovControls) aovControls.style.display = isAOV ? 'block' : 'none';
+      this.updateRevealTrailVisibility(mode);
       e.target.blur();
     });
     
@@ -1008,6 +1093,19 @@ export class UIController {
       );
       this.elements.revealFeatherValue.textContent = MotionVisibilityService.formatUIValue(featherPercent, '%');
       this.eventBus.emit('motion:reveal-feather-change', featherPercent);
+    });
+
+    // REVEAL-01 — reveal trail (log2 scale, % of the whole path). At the top of
+    // the range the reveal never fades, so the readout says so in words rather
+    // than showing a bare 100% that reads like "almost, but not quite".
+    this.elements.revealTrail?.addEventListener('input', (e) => {
+      const trailPercent = MotionVisibilityService.sliderToLog2Value(
+        parseInt(e.target.value),
+        MOTION.SPOTLIGHT_TRAIL_MIN,
+        MOTION.SPOTLIGHT_TRAIL_MAX
+      );
+      this.setRevealTrailReadout(trailPercent);
+      this.eventBus.emit('motion:reveal-trail-change', trailPercent);
     });
     
     // Angle of View - angle (tan-based curve for perceptual smoothness)
@@ -1054,15 +1152,85 @@ export class UIController {
    */
   updateTrailControlVisibility(pathVisibility) {
     const trailControl = document.getElementById('path-trail-control');
+    const pacingHint = document.getElementById('pacing-comet-hint');
+    const showTrail = pathVisibility === PATH_VISIBILITY.INSTANTANEOUS;
     if (trailControl) {
-      // Trail only applies to instantaneous mode (comet effect)
-      const showTrail = pathVisibility === 'instantaneous';
+      trailControl.style.display = showTrail ? 'flex' : 'none';
       trailControl.style.opacity = showTrail ? '1' : '0.5';
       const input = trailControl.querySelector('input');
       if (input) {
         input.disabled = !showTrail;
       }
     }
+    if (pacingHint) pacingHint.hidden = !showTrail;
+  }
+
+  /**
+   * REVEAL-01 — the reveal trail only means anything where the reveal
+   * accumulates. Plain spotlight paints the head and nothing else, so a trail
+   * control there would be a control that does nothing.
+   * @param {string} backgroundVisibility - Current background visibility mode
+   */
+  updateRevealTrailVisibility(backgroundVisibility) {
+    const control = document.getElementById('reveal-trail-control');
+    if (!control) return;
+    const applies = backgroundVisibility === BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL;
+    control.hidden = !applies;
+  }
+
+  /**
+   * REVEAL-01 — write the trail readout and keep `aria-valuetext` with it.
+   * The slider runs on a log2 scale, so its raw position is meaningless to a
+   * screen reader; the announced value has to be the one the renderer uses.
+   * At the top of the range the reveal never fades, and saying "100%" would
+   * read as "almost", so that end is named in words.
+   * @param {number} trailPercent - Trail length as a % of the whole path
+   */
+  setRevealTrailReadout(trailPercent) {
+    const text = trailPercent >= MOTION.SPOTLIGHT_TRAIL_MAX
+      ? 'Whole path'
+      : `${MotionVisibilityService.formatUIValue(trailPercent, '%')} of path`;
+    if (this.elements.revealTrailValue) this.elements.revealTrailValue.textContent = text;
+    if (this.elements.revealTrail) this.elements.revealTrail.setAttribute('aria-valuetext', text);
+  }
+
+  /**
+   * REVEAL-01 — put the reveal sliders where the loaded project says they are.
+   * These controls were never synced on load, so a restored project showed its
+   * authored values in the render while the sliders sat at their markup
+   * defaults. Adding a third unsynced control would have made that worse, so
+   * all three are synced together here.
+   * @param {Object} motionSettings - The project's motion settings
+   */
+  syncRevealControls(motionSettings) {
+    const pairs = [
+      [this.elements.revealSize, this.elements.revealSizeValue, motionSettings.revealSize,
+        MOTION.SPOTLIGHT_SIZE_MIN, MOTION.SPOTLIGHT_SIZE_MAX],
+      [this.elements.revealFeather, this.elements.revealFeatherValue, motionSettings.revealFeather,
+        MOTION.SPOTLIGHT_FEATHER_MIN, MOTION.SPOTLIGHT_FEATHER_MAX],
+    ];
+    for (const [slider, readout, value, min, max] of pairs) {
+      if (!slider || !Number.isFinite(value)) continue;
+      slider.value = String(MotionVisibilityService.log2ValueToSlider(value, min, max));
+      if (readout) readout.textContent = MotionVisibilityService.formatUIValue(value, '%');
+    }
+
+    const trail = motionSettings.revealTrail;
+    if (this.elements.revealTrail && Number.isFinite(trail)) {
+      this.elements.revealTrail.value = String(MotionVisibilityService.log2ValueToSlider(
+        trail, MOTION.SPOTLIGHT_TRAIL_MIN, MOTION.SPOTLIGHT_TRAIL_MAX));
+      this.setRevealTrailReadout(trail);
+    }
+
+    const spotlightControls = document.getElementById('spotlight-controls');
+    const aovControls = document.getElementById('aov-controls');
+    const mode = motionSettings.backgroundVisibility;
+    const isSpotlight = mode === BACKGROUND_VISIBILITY.SPOTLIGHT ||
+                        mode === BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL;
+    const isAOV = mode === 'angle-of-view' || mode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW_REVEAL;
+    if (spotlightControls) spotlightControls.style.display = isSpotlight ? 'block' : 'none';
+    if (aovControls) aovControls.style.display = isAOV ? 'block' : 'none';
+    this.updateRevealTrailVisibility(mode);
   }
   
   /**
@@ -1218,7 +1386,11 @@ export class UIController {
     // Border width slider
     this.elements.areaBorderWidth?.addEventListener('input', (e) => {
       const width = parseInt(e.target.value);
-      this.elements.areaBorderWidthValue.textContent = `${width}px`;
+      setRangeReadout(
+        this.elements.areaBorderWidth,
+        this.elements.areaBorderWidthValue,
+        formatRendererPixels(width)
+      );
       applyAreaChange((ah) => { ah.borderWidth = width; });
     });
 
@@ -1264,27 +1436,28 @@ export class UIController {
   }
   
   /**
-   * Begin inline rename on the list row of a major waypoint.
-   * Looks the row up fresh by index in the current DOM, so it works
+   * Begin inline rename on the list row of any listed waypoint.
+   * Looks the row up fresh by route index in the current DOM, so it works
    * after any list rebuild — selection rebuilds the rows, destroying
    * closures over old elements (which is why the double-click and F2
    * paths used to carry duplicated copies of this logic).
    * Shared by double-click, F2, and the canvas context menu's Rename.
-   * @param {Waypoint} waypoint - Major waypoint to rename
+   * @param {Waypoint} waypoint - Major or minor waypoint to rename
    */
   startRenameFor(waypoint) {
-    const majors = this._listedMajors || [];
-    const index = majors.indexOf(waypoint);
+    const listed = this._listedWaypoints || [];
+    const index = listed.indexOf(waypoint);
     if (index === -1 || !this.elements.waypointList) return;
 
     const item = this.elements.waypointList.querySelector(
-      `.waypoint-item[data-original-index="${index}"]`
+      `.waypoint-item[data-route-index="${index}"]`
     );
     const rowBtn = item?.querySelector('.waypoint-row');
     const currentTitle = item?.querySelector('.waypoint-title');
     if (!item || !rowBtn || !currentTitle) return;
 
-    const defaultName = `Waypoint ${index + 1}`;
+    const entry = this._listedNumbering?.[index];
+    const defaultName = `Waypoint ${entry ? entry.displayNumber : index + 1}`;
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'waypoint-rename-input';
@@ -1296,7 +1469,21 @@ export class UIController {
     input.focus();
     input.select();
 
+    // Declared before finish() so finish() can detach it; committing on blur
+    // is the "clicked away" path.
+    const onBlur = () => finish(true);
+
     const finish = (commit) => {
+      // Detach the blur listener before touching the DOM. Replacing the input
+      // removes the focused node, and Chrome dispatches its blur from inside
+      // that replaceWith call — the re-entrant pass then replaced a node that
+      // no longer had a parent and threw NotFoundError into the console on
+      // every successful rename (found live during UI-02 verification).
+      input.removeEventListener('blur', onBlur);
+      // The row can also be rebuilt out from under an open rename (autosave,
+      // an app-side list refresh). A rebuilt row carries its own title span,
+      // so there is nothing left to restore.
+      if (!input.isConnected) return;
       const trimmed = input.value.trim();
       if (commit) {
         waypoint.name = trimmed; // Empty string = revert to default display
@@ -1310,6 +1497,7 @@ export class UIController {
         this.eventBus.emit('waypoint:name-changed', { waypoint, name: trimmed });
         // The list does not rebuild on rename — refresh the row's labels
         const newDisplay = waypoint.name || defaultName;
+        // Move buttons exist on major rows only; minors reorder with their leg.
         const [moveUpBtn, moveDownBtn] = item.querySelectorAll('.waypoint-move-btn');
         moveUpBtn?.setAttribute('aria-label', `Move ${newDisplay} up`);
         moveDownBtn?.setAttribute('aria-label', `Move ${newDisplay} down`);
@@ -1320,29 +1508,32 @@ export class UIController {
 
     input.addEventListener('keydown', (ke) => {
       if (ke.key === 'Enter') { ke.preventDefault(); finish(true); }
-      if (ke.key === 'Escape') { ke.preventDefault(); input.removeEventListener('blur', onBlur); finish(false); }
+      if (ke.key === 'Escape') { ke.preventDefault(); finish(false); }
       ke.stopPropagation(); // Don't trigger global shortcuts while renaming
     });
-    const onBlur = () => finish(true);
     input.addEventListener('blur', onBlur, { once: true });
   }
 
   /**
    * Update waypoint list UI
    *
+   * ## Structure (UI-02)
+   * Every waypoint in the route gets a row. Majors are top level; minors are
+   * indented under the major whose leg they shape and numbered `major.minor`
+   * by `buildRouteNumbering`, the same routine the semantic outline uses.
+   *
    * ## Features
-   * - Double-click waypoint name to rename
-   * - Drag handle for reordering
-   * - Delete button (×) for removal
-   * - Click to select; Cmd/Ctrl+click toggles, Shift+click ranges
-   *   (Cmd/Ctrl+A selects the whole route, minors included)
+   * - Double-click or F2 on any row to rename
+   * - Drag handle, ▲/▼ on majors — a major reorders as its whole leg block
+   * - Delete button (×) for removal, majors and minors alike
+   * - Click to select; Cmd/Ctrl+click toggles, Shift+click ranges over the
+   *   displayed route (Cmd/Ctrl+A selects the whole route)
    *
    * ## Performance
-   * - O(n) where n = major waypoints
-   * - Uses pre-calculated _displayIndex from main.js
+   * - O(n) where n = route length, plus one indexOf per major row
    * - Event listeners attached per-item (not delegation, for drag/drop support)
    *
-   * @param {Array<Waypoint>} waypoints - Array of Waypoint objects
+   * @param {Array<Waypoint>} waypoints - Full route in order, majors and minors
    */
   updateWaypointList(waypoints) {
     // Cache route order for the scope chip and Leg card header, then
@@ -1351,29 +1542,66 @@ export class UIController {
     this._waypointsCache = waypoints;
     this._updateScopeChip(this.selectedWaypoint,
       this.selectedWaypoints.size > 1 ? [...this.selectedWaypoints] : null);
-    this._updateLegSectionTitle(this.selectedWaypoint);
+    this._updateLegSectionTitle(
+      this.selectedWaypoints.size > 1 ? null : this.selectedWaypoint
+    );
 
     if (!this.elements.waypointList) return;
-    this._listedMajors = waypoints.filter(wp => wp.isMajor);
 
-    // Set ARIA listbox role for proper screen reader semantics
-    this.elements.waypointList.setAttribute('role', 'listbox');
+    // UI-02: the list shows the whole route. Majors keep their existing row;
+    // minors render as indented child rows of the leg they shape, numbered by
+    // the same routine the semantic outline uses, so both surfaces name the
+    // same waypoint the same way.
+    const routeWaypoints = Array.isArray(waypoints) ? waypoints : [];
+    const numbering = buildRouteNumbering(routeWaypoints);
+    this._listedWaypoints = routeWaypoints;
+    this._listedNumbering = numbering;
+    // Only trunk majors carry the reorder payload: a branch member moves with
+    // its branch, never as a top-level leg block.
+    this._listedMajors = routeWaypoints.filter(
+      (wp, index) => wp.isMajor && numbering[index].branchId == null
+    );
+
+    // Fork markers and rejoin names, resolved once per rebuild (ROUTE-01c).
+    const structure = resolveRouteBranches(routeWaypoints);
+    const nameOf = id => {
+      const index = routeWaypoints.findIndex(wp => wp.id === id);
+      if (index === -1) return null;
+      return routeWaypoints[index].name || `Waypoint ${numbering[index].displayNumber}`;
+    };
+    this._listedForkIds = new Set(
+      structure.branches.map(branch => branch.forkFromId).filter(Boolean)
+    );
+    this._listedRejoinNames = {};
+    for (const branch of structure.branches) {
+      this._listedRejoinNames[branch.id] = branch.rejoinAtId ? nameOf(branch.rejoinAtId) : null;
+    }
+
+    // This is an action list, not an ARIA listbox: each row remains a
+    // native button alongside independent reorder/delete actions.
+    this.elements.waypointList.removeAttribute('role');
     this.elements.waypointList.setAttribute('aria-label', 'Waypoints');
-    this.elements.waypointList.setAttribute('aria-multiselectable', 'true');
+    this.elements.waypointList.removeAttribute('aria-multiselectable');
+
+    // Rebuilding removes the focused row from the DOM. Only restore focus
+    // to its replacement when focus belonged to this list beforehand;
+    // semantic-outline and inspector interactions must retain their focus.
+    const focusedBeforeRebuild = document.activeElement;
+    const focusWasInWaypointList = this.elements.waypointList.contains(focusedBeforeRebuild);
+    const focusedControlWasEditing = focusWasInWaypointList &&
+      ['INPUT', 'TEXTAREA', 'SELECT'].includes(focusedBeforeRebuild?.tagName);
 
     this.elements.waypointList.innerHTML = '';
 
-    // Filter to major waypoints only (O(n) single pass, kept on the
-    // instance so startRenameFor can find a row after any rebuild)
     const majorWaypoints = this._listedMajors;
 
     // When no waypoints exist, show empty state message
-    if (majorWaypoints.length === 0) {
+    if (routeWaypoints.length === 0) {
       this.elements.waypointList.innerHTML = `
-        <div class="waypoint-list-empty" role="status" aria-live="polite">
+        <li class="waypoint-list-empty" role="status" aria-live="polite">
           <p>No waypoints yet</p>
           <p class="hint">Click on the map to add waypoints</p>
-        </div>
+        </li>
       `;
       return;
     }
@@ -1381,27 +1609,45 @@ export class UIController {
     // Add Waypoint button - keyboard-accessible way to add waypoints (AAA)
     const addItem = document.createElement('li');
     addItem.className = 'waypoint-item waypoint-item-add';
-    
+
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.className = 'waypoint-row waypoint-add-btn';
     addBtn.innerHTML = '<span class="waypoint-add-icon" aria-hidden="true">+</span><span>Add Waypoint</span>';
     addBtn.setAttribute('aria-label', 'Add new waypoint at center of map');
-    
+
     addBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.eventBus.emit('waypoint:add-at-center');
     });
-    
+
     addItem.appendChild(addBtn);
     this.elements.waypointList.appendChild(addItem);
-    
-    // Add individual waypoint items (first waypoint at top, natural order)
-    // Each item is a <li> with a <button> row for proper keyboard semantics
-    majorWaypoints.forEach((waypoint, index) => {
+
+    // Route order, majors and minors together. A minor is not draggable and
+    // owns no reorder buttons: its place inside the leg is authored on the
+    // canvas, and reorderWaypointBlocks already carries it with its major.
+    // Each item is a <li> with a <button> row for proper keyboard semantics.
+    routeWaypoints.forEach((waypoint, routeIndex) => {
+      const entry = numbering[routeIndex];
+      const onBranch = entry.branchId !== null && entry.branchId !== undefined;
+      // A branch member is never a trunk major, so it never joins the
+      // majors-only reorder payload even when it is a major of its own run.
+      const isMajor = entry.isMajor && !onBranch;
+      const majorIndex = isMajor ? majorWaypoints.indexOf(waypoint) : -1;
+      const defaultName = `Waypoint ${entry.displayNumber}`;
+      const displayName = waypoint.name || defaultName;
+
       const item = document.createElement('li');
-      item.className = 'waypoint-item';
-      item.draggable = true; // Enable drag and drop
+      item.className = 'waypoint-item'
+        + (isMajor ? '' : ' waypoint-item-minor')
+        + (onBranch ? ' waypoint-item-branch' : '');
+      item.draggable = isMajor;
+      item.dataset.routeIndex = String(routeIndex);
+      // Majors additionally carry their majors-only index: the reorder payload
+      // is still the majors array, so blocks stay intact (review 2026-08-18).
+      if (isMajor) item.dataset.originalIndex = String(majorIndex);
+
       // Check if waypoint is in multi-select set OR is the primary selection
       const isSelected = this.selectedWaypoints.has(waypoint) ||
         (waypoint === this.selectedWaypoint);
@@ -1409,87 +1655,128 @@ export class UIController {
         item.classList.add('selected');
         item.classList.add('is-selected');
       }
-      
-      // Row button - receives focus and handles selection.
-      // role=option: the container is role=listbox, and aria-selected is
-      // only valid on option rows (review 2026-08-18); the li wrapper is
-      // presentational so the option is a direct child of the listbox
-      // in the accessibility tree.
+
+      // Row button receives focus and exposes its multi-selection state
+      // without replacing native button semantics with a partial listbox.
       const rowBtn = document.createElement('button');
       rowBtn.type = 'button';
       rowBtn.className = 'waypoint-row';
-      rowBtn.setAttribute('role', 'option');
-      rowBtn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-      item.setAttribute('role', 'presentation');
-      
-      // Colour dot — shows waypoint's marker colour for quick recognition (N6-1)
-      const colorDot = document.createElement('span');
-      colorDot.className = 'waypoint-color-dot'
-        + (waypoint.dotColor === 'transparent' ? ' is-none' : '');
-      colorDot.setAttribute('aria-hidden', 'true');
-      colorDot.style.backgroundColor = waypoint.dotColor === 'transparent'
-        ? '#fff' : (waypoint.dotColor || '');
-      
-      // Drag handle (inside button, aria-hidden)
+      rowBtn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+
+      if (isMajor) {
+        // Colour dot — shows waypoint's marker colour for quick recognition (N6-1)
+        const colorDot = document.createElement('span');
+        colorDot.className = 'waypoint-color-dot'
+          + (waypoint.dotColor === 'transparent' ? ' is-none' : '');
+        colorDot.setAttribute('aria-hidden', 'true');
+        colorDot.style.backgroundColor = waypoint.dotColor === 'transparent'
+          ? '#fff' : (waypoint.dotColor || '');
+        rowBtn.appendChild(colorDot);
+      } else {
+        // Minors render on canvas as small grey shaping dots regardless of
+        // dotColor, so the row shows that glyph rather than an unused swatch.
+        const minorDot = document.createElement('span');
+        minorDot.className = 'waypoint-minor-dot';
+        minorDot.setAttribute('aria-hidden', 'true');
+        rowBtn.appendChild(minorDot);
+      }
+
+      // Drag handle (inside button, aria-hidden). Minors keep the slot empty
+      // so titles stay on one vertical rhythm without implying a drag target.
       const handle = document.createElement('span');
-      handle.className = 'waypoint-handle';
+      handle.className = isMajor ? 'waypoint-handle' : 'waypoint-handle is-fixed';
       handle.setAttribute('aria-hidden', 'true');
-      handle.textContent = '≡';
-      
+      handle.textContent = isMajor ? '≡' : '';
+
       // Waypoint title — name is independent from canvas label (N6-3)
-      const defaultName = `Waypoint ${index + 1}`;
-      const displayName = waypoint.name || defaultName;
       const title = document.createElement('span');
       title.className = 'waypoint-title';
       title.textContent = displayName;
-      
-      rowBtn.appendChild(colorDot);
+
       rowBtn.appendChild(handle);
       rowBtn.appendChild(title);
-      
-      // Move up/down buttons - keyboard alternative to drag reorder (AAA requirement)
-      const moveContainer = document.createElement('span');
-      moveContainer.className = 'waypoint-move-btns';
-      
-      const moveUpBtn = document.createElement('button');
-      moveUpBtn.type = 'button';
-      moveUpBtn.className = 'waypoint-move-btn';
-      moveUpBtn.innerHTML = '&#x25B2;'; // ▲
-      moveUpBtn.setAttribute('aria-label', `Move ${waypoint.name || defaultName} up`);
-      moveUpBtn.disabled = index === 0;
-      
-      const moveDownBtn = document.createElement('button');
-      moveDownBtn.type = 'button';
-      moveDownBtn.className = 'waypoint-move-btn';
-      moveDownBtn.innerHTML = '&#x25BC;'; // ▼
-      moveDownBtn.setAttribute('aria-label', `Move ${waypoint.name || defaultName} down`);
-      moveDownBtn.disabled = index === majorWaypoints.length - 1;
-      
-      moveContainer.appendChild(moveUpBtn);
-      moveContainer.appendChild(moveDownBtn);
-      
+
+      if (this._listedForkIds?.has(waypoint.id)) {
+        const fork = document.createElement('span');
+        fork.className = 'waypoint-fork-mark';
+        fork.setAttribute('aria-hidden', 'true');
+        fork.textContent = '⑂';
+        rowBtn.appendChild(fork);
+        const forkContext = document.createElement('span');
+        forkContext.className = 'sr-only';
+        forkContext.textContent = ', a branch leaves here';
+        rowBtn.appendChild(forkContext);
+      }
+
+      if (!isMajor) {
+        // Indentation is visual only, so the kind and what the row belongs to
+        // are also written out: a visible tag plus the relationship for AT
+        // users (WCAG 2.2 1.3.1 — structure must not be conveyed by layout).
+        const tag = document.createElement('span');
+        tag.className = 'waypoint-minor-tag';
+        tag.textContent = onBranch ? 'branch' : 'minor';
+        rowBtn.appendChild(tag);
+
+        const context = document.createElement('span');
+        context.className = 'sr-only';
+        context.textContent = onBranch
+          ? branchRowContext(entry, this._listedRejoinNames?.[entry.branchId])
+          : (entry.legNumber > 0
+            ? `, minor waypoint shaping the leg after waypoint ${entry.legNumber}, reorders with it`
+            : ', minor waypoint before waypoint 1, reorders with it');
+        rowBtn.appendChild(context);
+      }
+
+      item.appendChild(rowBtn);
+
+      // Move up/down buttons - keyboard alternative to drag reorder (AAA
+      // requirement). Majors only: the reorder unit is the leg block.
+      let moveUpBtn = null;
+      let moveDownBtn = null;
+      if (isMajor) {
+        const moveContainer = document.createElement('span');
+        moveContainer.className = 'waypoint-move-btns';
+
+        moveUpBtn = document.createElement('button');
+        moveUpBtn.type = 'button';
+        moveUpBtn.className = 'waypoint-move-btn';
+        moveUpBtn.innerHTML = '&#x25B2;'; // ▲
+        moveUpBtn.setAttribute('aria-label', `Move ${displayName} up`);
+        moveUpBtn.disabled = majorIndex === 0;
+
+        moveDownBtn = document.createElement('button');
+        moveDownBtn.type = 'button';
+        moveDownBtn.className = 'waypoint-move-btn';
+        moveDownBtn.innerHTML = '&#x25BC;'; // ▼
+        moveDownBtn.setAttribute('aria-label', `Move ${displayName} down`);
+        moveDownBtn.disabled = majorIndex === majorWaypoints.length - 1;
+
+        moveContainer.appendChild(moveUpBtn);
+        moveContainer.appendChild(moveDownBtn);
+        item.appendChild(moveContainer);
+      }
+
       // Delete button - separate from row button, has own focus ring
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
       delBtn.className = 'waypoint-delete';
       delBtn.textContent = '×';
-      delBtn.setAttribute('aria-label', `Delete ${waypoint.name || defaultName}`);
-      
-      item.appendChild(rowBtn);
-      item.appendChild(moveContainer);
+      delBtn.setAttribute('aria-label', `Delete ${displayName}`);
       item.appendChild(delBtn);
-      
-      // Selection handler - supports shift-click and cmd/ctrl-click
+
+      // Selection handler - supports shift-click and cmd/ctrl-click.
+      // Ranges run over the displayed route, so a shift-click selects exactly
+      // the rows between the two the user clicked, minors included.
       const selectWaypoint = (e) => {
         const isShiftClick = e.shiftKey;
         const isMultiClick = e.metaKey || e.ctrlKey;
-        
+
         if (isShiftClick && this._lastSelectedIndex !== null) {
           // Shift-click: select range
-          const start = Math.min(this._lastSelectedIndex, index);
-          const end = Math.max(this._lastSelectedIndex, index);
+          const start = Math.min(this._lastSelectedIndex, routeIndex);
+          const end = Math.max(this._lastSelectedIndex, routeIndex);
           for (let i = start; i <= end; i++) {
-            this.selectedWaypoints.add(majorWaypoints[i]);
+            this.selectedWaypoints.add(routeWaypoints[i]);
           }
           this.selectedWaypoint = waypoint;
           this.eventBus.emit('waypoint:multi-selected', {
@@ -1501,16 +1788,16 @@ export class UIController {
           if (this.selectedWaypoints.has(waypoint)) {
             this.selectedWaypoints.delete(waypoint);
             if (this.selectedWaypoint === waypoint) {
-              this.selectedWaypoint = this.selectedWaypoints.size > 0 
-                ? Array.from(this.selectedWaypoints)[0] 
+              this.selectedWaypoint = this.selectedWaypoints.size > 0
+                ? Array.from(this.selectedWaypoints)[0]
                 : null;
             }
           } else {
             this.selectedWaypoints.add(waypoint);
             this.selectedWaypoint = waypoint;
           }
-          this._lastSelectedIndex = index;
-          
+          this._lastSelectedIndex = routeIndex;
+
           if (this.selectedWaypoints.size > 1) {
             this.eventBus.emit('waypoint:multi-selected', {
               waypoints: Array.from(this.selectedWaypoints),
@@ -1526,14 +1813,14 @@ export class UIController {
           this.selectedWaypoints.clear();
           this.selectedWaypoints.add(waypoint);
           this.selectedWaypoint = waypoint;
-          this._lastSelectedIndex = index;
+          this._lastSelectedIndex = routeIndex;
           this.eventBus.emit('waypoint:selected', waypoint);
         }
-        
+
         this._switchToWaypointTab();
-        this.updateWaypointList(majorWaypoints);
+        this.updateWaypointList(this._waypointsCache);
       };
-      
+
       // Row button click — selects waypoint, and detects double-click for rename.
       // Standard dblclick events break because selectWaypoint rebuilds the DOM
       // (innerHTML=''), so the element is destroyed before the browser fires dblclick.
@@ -1542,7 +1829,7 @@ export class UIController {
         const now = Date.now();
         const isDblClick = (this._renameLastClickWaypoint === waypoint) &&
                            (now - this._renameLastClickTime < 400);
-        
+
         if (isDblClick) {
           // Double-click detected — select then rename
           this._renameLastClickWaypoint = null;
@@ -1567,88 +1854,135 @@ export class UIController {
           requestAnimationFrame(() => this.startRenameFor(waypoint));
         }
       });
-      
+
       // Delete button
       delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.eventBus.emit('waypoint:delete', waypoint);
       });
-      
-      // Move up button - reorder waypoint
-      moveUpBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (index > 0) {
-          const newOrder = [...majorWaypoints];
-          [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
-          this.eventBus.emit('waypoints:reordered', newOrder);
-          this.announce(`${waypoint.name || defaultName} moved up`);
-        }
-      });
-      
-      // Move down button - reorder waypoint
-      moveDownBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (index < majorWaypoints.length - 1) {
-          const newOrder = [...majorWaypoints];
-          [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-          this.eventBus.emit('waypoints:reordered', newOrder);
-          this.announce(`${waypoint.name || defaultName} moved down`);
-        }
-      });
-      
-      // Drag and drop handlers
-      item.addEventListener('dragstart', (e) => {
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', index.toString());
-        item.classList.add('dragging');
-      });
-      
-      item.addEventListener('dragend', (e) => {
-        item.classList.remove('dragging');
-      });
-      
+
+      if (isMajor) {
+        // Move up button - reorder waypoint
+        moveUpBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (majorIndex > 0) {
+            const newOrder = [...majorWaypoints];
+            [newOrder[majorIndex - 1], newOrder[majorIndex]] =
+              [newOrder[majorIndex], newOrder[majorIndex - 1]];
+            this.eventBus.emit('waypoints:reordered', newOrder);
+            this.announce(`${displayName} moved up`);
+          }
+        });
+
+        // Move down button - reorder waypoint
+        moveDownBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (majorIndex < majorWaypoints.length - 1) {
+            const newOrder = [...majorWaypoints];
+            [newOrder[majorIndex], newOrder[majorIndex + 1]] =
+              [newOrder[majorIndex + 1], newOrder[majorIndex]];
+            this.eventBus.emit('waypoints:reordered', newOrder);
+            this.announce(`${displayName} moved down`);
+          }
+        });
+
+        // Drag and drop handlers. A major drags as its whole leg block so the
+        // minors visibly travel with it, matching where reorderWaypointBlocks
+        // will actually put them.
+        item.addEventListener('dragstart', (e) => {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', String(majorIndex));
+          this._draggingBlock = this._legBlockRows(item);
+          this._draggingBlock.forEach(row => row.classList.add('dragging'));
+        });
+
+        item.addEventListener('dragend', () => {
+          (this._draggingBlock || [item]).forEach(row => row.classList.remove('dragging'));
+          this._draggingBlock = null;
+        });
+      }
+
+      // Every row is a drop target; a drop onto a minor resolves to the major
+      // that owns it, so a block can never land inside another leg.
       item.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        
-        const dragging = this.elements.waypointList.querySelector('.waypoint-item.dragging');
-        if (dragging && dragging !== item) {
-          const rect = item.getBoundingClientRect();
-          const midpoint = rect.top + rect.height / 2;
-          
-          if (e.clientY < midpoint) {
-            item.parentNode.insertBefore(dragging, item);
-          } else {
-            item.parentNode.insertBefore(dragging, item.nextSibling);
-          }
+
+        const block = this._draggingBlock;
+        if (!block || !block.length || block.includes(item)) return;
+
+        const anchor = this._legBlockAnchor(item);
+        if (!anchor || block.includes(anchor)) return;
+
+        const rect = anchor.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+        if (e.clientY < midpoint) {
+          anchor.before(...block);
+        } else {
+          const anchorBlock = this._legBlockRows(anchor);
+          anchorBlock[anchorBlock.length - 1].after(...block);
         }
       });
-      
+
       item.addEventListener('drop', (e) => {
         e.preventDefault();
-        // Emit reorder event with new order
-        const items = Array.from(this.elements.waypointList.querySelectorAll('.waypoint-item'));
-        const newOrder = items.map(el => {
-          return majorWaypoints[parseInt(el.dataset.originalIndex)];
-        }).filter(wp => wp); // Filter out undefined
+        // Emit reorder event with the new majors order read from the DOM
+        const rows = Array.from(
+          this.elements.waypointList.querySelectorAll('.waypoint-item[data-original-index]')
+        );
+        const newOrder = rows
+          .map(el => majorWaypoints[parseInt(el.dataset.originalIndex, 10)])
+          .filter(wp => wp); // Filter out undefined
         this.eventBus.emit('waypoints:reordered', newOrder);
       });
-      
-      // Store original index for reordering
-      item.dataset.originalIndex = index;
-      
+
       this.elements.waypointList.appendChild(item);
-      
-      // Focus the row button if this is the primary selected waypoint (for keyboard navigation).
-      // Skip when an input/textarea/select has focus — avoids stealing focus during typing (e.g. label text).
-      if (waypoint === this.selectedWaypoint && this.selectedWaypoints.size <= 1) {
-        const active = document.activeElement;
-        const isEditing = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
-        if (!isEditing) {
-          requestAnimationFrame(() => rowBtn.focus());
-        }
+
+      // Restore keyboard position only for a rerender initiated from this
+      // list. If focus moved elsewhere before the frame runs, leave it there.
+      if (waypoint === this.selectedWaypoint && this.selectedWaypoints.size <= 1 &&
+          focusWasInWaypointList && !focusedControlWasEditing) {
+        requestAnimationFrame(() => {
+          const active = document.activeElement;
+          const rebuildDroppedFocus = !active || active === document.body || active === document.documentElement;
+          if (rowBtn.isConnected &&
+              (rebuildDroppedFocus || this.elements.waypointList.contains(active))) {
+            rowBtn.focus();
+          }
+        });
       }
     });
+  }
+
+  /**
+   * The major row that owns `row` — itself when it is a major, otherwise the
+   * nearest preceding major. A minor before the first major has no owner.
+   * @param {HTMLElement} row
+   * @returns {HTMLElement|null}
+   * @private
+   */
+  _legBlockAnchor(row) {
+    let current = row;
+    while (current && current.classList.contains('waypoint-item-minor')) {
+      current = current.previousElementSibling;
+    }
+    return current && current.dataset?.originalIndex !== undefined ? current : null;
+  }
+
+  /**
+   * A major row plus the minor rows that trail it — the unit reordering moves.
+   * @param {HTMLElement} majorRow
+   * @returns {Array<HTMLElement>}
+   * @private
+   */
+  _legBlockRows(majorRow) {
+    const rows = [majorRow];
+    let next = majorRow.nextElementSibling;
+    while (next && next.classList.contains('waypoint-item-minor')) {
+      rows.push(next);
+      next = next.nextElementSibling;
+    }
+    return rows;
   }
   
   /**
@@ -1703,7 +2037,11 @@ export class UIController {
     
     if (this.elements.dotSize) {
       this.elements.dotSize.value = waypoint.dotSize || 8;
-      this.elements.dotSizeValue.textContent = waypoint.dotSize || 8;
+      setRangeReadout(
+        this.elements.dotSize,
+        this.elements.dotSizeValue,
+        formatRendererPixels(waypoint.dotSize || 8)
+      );
     }
     
     if (this.elements.segmentColor) {
@@ -1711,8 +2049,13 @@ export class UIController {
     }
     
     if (this.elements.segmentWidth) {
-      this.elements.segmentWidth.value = waypoint.segmentWidth || 3;
-      this.elements.segmentWidthValue.textContent = waypoint.segmentWidth || 3;
+      const width = waypoint.segmentWidth || 3;
+      this.elements.segmentWidth.value = pathWidthToSlider(width);
+      setRangeReadout(
+        this.elements.segmentWidth,
+        this.elements.segmentWidthValue,
+        formatRendererPixels(width, 1)
+      );
     }
     
     if (this.elements.segmentStyle) {
@@ -1734,7 +2077,11 @@ export class UIController {
       const thickness = waypoint.rippleThickness || 2;
       this.elements.rippleThickness.value = thickness;
       if (this.elements.rippleThicknessValue) {
-        this.elements.rippleThicknessValue.textContent = `${thickness}px`;
+        setRangeReadout(
+          this.elements.rippleThickness,
+          this.elements.rippleThicknessValue,
+          formatRendererPixels(thickness, Number.isInteger(thickness) ? 0 : 1)
+        );
       }
     }
     
@@ -1861,7 +2208,11 @@ export class UIController {
     if (this.elements.areaBorderWidth) {
       this.elements.areaBorderWidth.value = ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT;
       if (this.elements.areaBorderWidthValue) {
-        this.elements.areaBorderWidthValue.textContent = `${ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT}px`;
+        setRangeReadout(
+          this.elements.areaBorderWidth,
+          this.elements.areaBorderWidthValue,
+          formatRendererPixels(ah.borderWidth || AREA_HIGHLIGHT.BORDER_WIDTH_DEFAULT)
+        );
       }
     }
     

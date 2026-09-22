@@ -19,83 +19,6 @@
  */
 console.log(`🚀 Route Plotter v${APP_VERSION} loaded`);
 
-// ========== DEBUG LOG BUFFER ==========
-// Captures console.log, .warn, .error for easy copying to clipboard
-const DEBUG_LOG_BUFFER = [];
-const DEBUG_LOG_MAX_SIZE = 500; // Keep last 500 log entries
-
-// Intercept console methods to capture debug messages
-['log', 'warn', 'error'].forEach(method => {
-  const original = console[method].bind(console);
-  console[method] = function(...args) {
-    original(...args);
-    const tag = method === 'log' ? 'LOG' : method === 'warn' ? 'WRN' : 'ERR';
-    const message = args.map(arg => {
-      if (arg instanceof Error) return `${arg.message}\n${arg.stack}`;
-      if (typeof arg === 'object') try { return JSON.stringify(arg); } catch { return String(arg); }
-      return String(arg);
-    }).join(' ');
-    DEBUG_LOG_BUFFER.push(`[${new Date().toISOString().slice(11, 23)}] [${tag}] ${message}`);
-    if (DEBUG_LOG_BUFFER.length > DEBUG_LOG_MAX_SIZE) {
-      DEBUG_LOG_BUFFER.shift();
-    }
-  };
-});
-
-/**
- * Build the debug log content as a markdown string.
- * Shared by download and copy functions.
- * @returns {string} Formatted markdown debug log
- */
-function buildDebugLogContent() {
-  const now = new Date();
-  const header = [
-    `# Route Plotter v${APP_VERSION} — Debug Log`,
-    '',
-    `| Field | Value |`,
-    `|-------|-------|`,
-    `| Generated | ${now.toISOString()} |`,
-    `| User Agent | ${navigator.userAgent} |`,
-    `| Screen | ${screen.width}\u00d7${screen.height} @ ${devicePixelRatio}x |`,
-    `| WebCodecs | ${typeof VideoEncoder !== 'undefined' ? 'available' : 'unavailable'} |`,
-    '',
-    '## Console Log',
-    '',
-    '```',
-  ].join('\n');
-  const footer = '\n```\n';
-  return header + '\n' + DEBUG_LOG_BUFFER.join('\n') + footer;
-}
-
-/**
- * Download debug logs as a .md file with markdown-formatted system info.
- */
-function downloadDebugLog() {
-  const logText = buildDebugLogContent();
-  const blob = new Blob([logText], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  const ts = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-  a.download = `route-plotter-debug-${ts}.md`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/**
- * Copy debug logs to clipboard as markdown.
- * @returns {Promise<boolean>} True if successful
- */
-async function copyDebugLog() {
-  try {
-    await navigator.clipboard.writeText(buildDebugLogContent());
-    return true;
-  } catch (err) {
-    console.error('Failed to copy debug log:', err);
-    return false;
-  }
-}
-
 // Update page title and header with version on load
 document.addEventListener('DOMContentLoaded', () => {
   document.title = `Route Plotter v${APP_VERSION}`;
@@ -104,40 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
     h1.textContent = 'Route Plotter';
     h1.title = `Version ${APP_VERSION}`;
   }
-  
-  // Min-width warning dismiss handler (R-3)
-  const screenWarning = document.getElementById('screen-warning');
-  const screenWidthDisplay = document.getElementById('screen-width-display');
-  const screenWarningDismiss = document.getElementById('screen-warning-dismiss');
-  if (screenWidthDisplay) screenWidthDisplay.textContent = window.innerWidth;
-  if (screenWarningDismiss) {
-    screenWarningDismiss.addEventListener('click', () => {
-      screenWarning?.classList.add('dismissed');
-    });
-  }
-  
-  // Setup debug log download button
-  const debugBtn = document.getElementById('download-debug-btn');
-  if (debugBtn) {
-    debugBtn.addEventListener('click', () => downloadDebugLog());
-  }
-  
-  // Setup debug log copy button
-  const copyDebugBtn = document.getElementById('copy-debug-btn');
-  if (copyDebugBtn) {
-    copyDebugBtn.addEventListener('click', async () => {
-      const ok = await copyDebugLog();
-      const orig = copyDebugBtn.textContent;
-      copyDebugBtn.textContent = ok ? 'Copied!' : 'Failed';
-      setTimeout(() => { copyDebugBtn.textContent = orig; }, 2000);
-    });
-  }
 });
 
 // Import modular utilities
 import { RENDERING, ANIMATION, VIDEO_EXPORT, MOTION, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUND_VISIBILITY } from './config/constants.js';
 import { Scene } from './models/Scene.js';
 import { MotionVisibilityService } from './services/MotionVisibilityService.js';
+import { formatRendererPixels, setRangeReadout } from './utils/uiReadouts.js';
 import { StorageService } from './services/StorageService.js';
 import { CoordinateTransform } from './services/CoordinateTransform.js';
 import { PathCalculator } from './services/PathCalculator.js';
@@ -160,6 +56,7 @@ import { initParamTooltips } from './components/ParamTooltip.js';
 import { initAllDropdowns } from './components/Dropdown.js';
 import { CameraService } from './services/CameraService.js';
 import { ImageAssetService } from './services/ImageAssetService.js';
+import { ImageAsset } from './models/ImageAsset.js';
 import { HTMLExportService } from './services/HTMLExportService.js';
 
 // RoutePlotter prototype mixins (Phase 1 split) — attached below the class.
@@ -177,12 +74,22 @@ import { editorPanelMixin } from './app/editorPanel.js';
 import { pointerMixin } from './app/pointer.js';
 import { crowdsMixin } from './app/crowds.js';
 import { networkMixin } from './app/network.js';
+import { sceneOutlineMixin } from './app/sceneOutline.js';
+import { privacyMixin } from './app/privacy.js';
+import { restoreStartupProject } from './app/startup.js';
+import { loadExampleBackground } from './app/backgroundLoading.js';
+import { clearProject } from './app/projectReset.js';
+import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
+import { boundEntryWaypointIds } from './utils/routeAnchors.js';
 
 // Main application class for Route Plotter v3
 class RoutePlotter {
   constructor() {
+    this.appVersion = APP_VERSION;
+
     // Services
     this.storageService = new StorageService();
+    this.storageService.attachLifecycle(window);
     this.coordinateTransform = new CoordinateTransform();
     this.pathCalculator = new PathCalculator(); // Catmull-Rom + corner-slowing reparam, main thread
     this.renderingService = new RenderingService();
@@ -221,6 +128,7 @@ class RoutePlotter {
       backgroundVisibility: BACKGROUND_VISIBILITY.ALWAYS_SHOW,
       revealSize: MOTION.SPOTLIGHT_SIZE_DEFAULT,
       revealFeather: MOTION.SPOTLIGHT_FEATHER_DEFAULT,
+      revealTrail: MOTION.SPOTLIGHT_TRAIL_DEFAULT,
       // Angle of View settings
       aovAngle: MOTION.AOV_ANGLE_DEFAULT,
       aovDistance: MOTION.AOV_DISTANCE_DEFAULT,
@@ -233,6 +141,9 @@ class RoutePlotter {
     
     // Unsaved changes indicator (per UI spec §2.1)
     this._isDirty = false;
+    this._editRevision = 0;
+    this._projectGeneration = 0;
+    this._asyncProjectOperations = new Map();
     
     // Render optimization - batch multiple render requests into single frame
     this.renderQueued = false;
@@ -255,6 +166,9 @@ class RoutePlotter {
     this.scene = new Scene(); // Flow layers (guide graphs + emitters), drawn beneath the hero route
     this.swarmEngine = new SwarmEngine(); // Deterministic dot evaluator — pure fn(timelineMs, layer, seed)
     this.pathPoints = [];
+    // Stable project-owned visual sizing space. Seeded from the first authored
+    // canvas, or replaced transactionally when an existing project loads.
+    this.renderReference = null;
     this.selectedWaypoint = null; // Primary selection (last interacted)
     this.selectedWaypoints = []; // Full selection in route order — [wp] when single, [] when none
     this.canvasHover = null; // Idle-hover target for canvas affordances (edit mode)
@@ -279,10 +193,10 @@ class RoutePlotter {
       // Note: beaconColor removed - beacons now use marker color (dotColor)
       labelMode: 'fade-up', // off, on, fade-up, fade-up-down
       pathHead: {
-        style: 'arrow', // dot, arrow, custom, none
+        style: 'arrow', // dot, arrow, drone, custom, none
         color: '#111111',
         size: 8,
-        image: null, // For custom image
+        image: null, // Decoded built-in preset or custom image
         imageAssetId: null, // Asset ID for deduplication
         rotationMode: 'auto', // 'auto' follows path direction, 'fixed' stays upright
         rotationOffset: 0 // Degrees offset added to rotation
@@ -385,6 +299,10 @@ class RoutePlotter {
       labelSize: document.getElementById('label-size'),
       labelSizeValue: document.getElementById('label-size-value'),
       labelSizeWarning: document.getElementById('label-size-warning'),
+      labelColor: document.getElementById('label-color'),
+      labelBgColor: document.getElementById('label-bg-color'),
+      labelBgOpacity: document.getElementById('label-bg-opacity'),
+      labelBgOpacityValue: document.getElementById('label-bg-opacity-value'),
       labelWidth: document.getElementById('label-width'),
       labelWidthValue: document.getElementById('label-width-value'),
       labelOffsetX: document.getElementById('label-offset-x'),
@@ -414,6 +332,7 @@ class RoutePlotter {
       // Camera controls
       cameraZoom: document.getElementById('camera-zoom'),
       cameraZoomValue: document.getElementById('camera-zoom-value'),
+      cameraZoomMode: document.getElementById('camera-zoom-mode'),
       cameraPrevZoomValue: document.getElementById('camera-prev-zoom-value'),
       cameraNextZoomValue: document.getElementById('camera-next-zoom-value'),
       // Camera multi-select controls
@@ -450,6 +369,8 @@ class RoutePlotter {
       revealSizeValue: document.getElementById('reveal-size-value'),
       revealFeather: document.getElementById('reveal-feather'),
       revealFeatherValue: document.getElementById('reveal-feather-value'),
+      revealTrail: document.getElementById('reveal-trail'),
+      revealTrailValue: document.getElementById('reveal-trail-value'),
       // Angle of View elements
       aovAngle: document.getElementById('aov-angle'),
       aovAngleValue: document.getElementById('aov-angle-value'),
@@ -464,6 +385,7 @@ class RoutePlotter {
       pathHeadSize: document.getElementById('path-head-size'),
       pathHeadSizeValue: document.getElementById('path-head-size-value'),
       customHeadControls: document.getElementById('custom-head-controls'),
+      customHeadUploadControls: document.getElementById('custom-head-upload-controls'),
       headUploadBtn: document.getElementById('head-upload-btn'),
       headUpload: document.getElementById('head-upload'),
       headPreview: document.getElementById('head-preview'),
@@ -528,10 +450,24 @@ class RoutePlotter {
       areaDeleteBtn: document.getElementById('area-delete-btn')
     };
     
-    this.init();
+    this.ready = this.init().catch(error => {
+      const appRoot = document.getElementById('app');
+      appRoot?.removeAttribute('inert');
+      appRoot?.removeAttribute('aria-busy');
+      console.error('Route Plotter failed to initialize:', error);
+      this.announce?.('Route Plotter could not finish starting. Reload the page and check the console.');
+      return false;
+    });
   }
   
-  init() {
+  async init() {
+    // Persistence hydration may decode several bitmaps. Keep the editor inert
+    // until that transaction finishes so a late restore cannot replace edits
+    // made during startup.
+    const appRoot = document.getElementById('app');
+    appRoot?.setAttribute('inert', '');
+    appRoot?.setAttribute('aria-busy', 'true');
+
     // Set up canvas with contain-fit sizing
     this.updateCanvasAspectRatio();
     
@@ -576,10 +512,16 @@ class RoutePlotter {
     this.elements.pathHeadStyle.value = this.styles.pathHead.style;
     this.elements.pathHeadColor.value = this.styles.pathHead.color;
     this.elements.pathHeadSize.value = this.styles.pathHead.size;
-    this.elements.pathHeadSizeValue.textContent = this.styles.pathHead.size;
+    setRangeReadout(
+      this.elements.pathHeadSize,
+      this.elements.pathHeadSizeValue,
+      formatRendererPixels(this.styles.pathHead.size)
+    );
     
     // Show/hide custom image controls based on initial style
-    this.elements.customHeadControls.style.display = 
+    this.elements.customHeadControls.style.display =
+      pathHeadStyleUsesImageControls(this.styles.pathHead.style) ? 'block' : 'none';
+    this.elements.customHeadUploadControls.style.display =
       this.styles.pathHead.style === 'custom' ? 'block' : 'none';
     
     // Initialize animation speed display (right sidebar only - left sidebar Duration removed)
@@ -603,6 +545,7 @@ class RoutePlotter {
     // Initialize UI Controller and Interaction Handler
     this.uiController = new UIController(this.elements, this.eventBus);
     this.interactionHandler = new InteractionHandler(this.canvas, this.eventBus);
+    this.interactionHandler.setEnabled(false);
     
     // Initialize Area Drawing Service for polygon draw mode
     this.areaDrawingService = new AreaDrawingService(this.eventBus);
@@ -639,6 +582,9 @@ class RoutePlotter {
 
     // Network edit mode wiring (Phase 4)
     this.setupNetworkControls();
+
+    // Complete keyboard/non-visual view of the canonical route + scene.
+    this.setupSceneOutline();
     
     // Initialize tooltips for all elements with data-tooltip attribute
     attachAllTooltips();
@@ -648,6 +594,9 @@ class RoutePlotter {
     
     // Initialize dropdown menus
     initAllDropdowns();
+
+    // Manual file and diagnostics sharing pauses at a disclosure/preview.
+    this.setupPrivacyControls();
     
     // Initialize waypoint list (shows getting started instructions when empty)
     this.updateWaypointList();
@@ -659,18 +608,10 @@ class RoutePlotter {
     // Set up controller event connections
     this.setupControllerEventConnections();
     
-    // Show splash on first load
-    if (this.storageService.shouldShowSplash()) {
-      this.showSplash();
-    }
-    
-    // Load autosave if present
-    this.loadAutosave();
-    
-    // Load default image if no background image is present (for dev testing)
-    if (!this.background.image) {
-      this.loadDefaultImage();
-    }
+    // Finish recovery before choosing a default image or opening interaction.
+    // This prevents the default image's later onload from replacing a restored
+    // background, and prevents user edits from being overwritten by hydration.
+    await restoreStartupProject(this);
     
     // Set up AnimationEngine event listeners
     this.setupAnimationEngineListeners();
@@ -691,8 +632,19 @@ class RoutePlotter {
     
     // Start animation loop (runs continuously for rendering)
     this.startRenderLoop();
+
+    this.interactionHandler.setEnabled(true);
+    appRoot?.removeAttribute('aria-busy');
+    appRoot?.removeAttribute('inert');
+
+    // First-run help opens only after the application transaction has reached
+    // a stable state; its focus trap will inert the app again while visible.
+    if (this.storageService.shouldShowSplash()) {
+      this.showSplash();
+    }
     
     console.log(`✅ Route Plotter v${APP_VERSION} initialized`);
+    return true;
   }
   
   /**
@@ -722,11 +674,11 @@ class RoutePlotter {
       this.elements.backgroundVisibility.value = this.motionSettings.backgroundVisibility;
     }
     
-    // Sync Trail Size visibility (only shown for comet/instantaneous mode)
-    const trailControl = document.getElementById('path-trail-control');
-    if (trailControl) {
-      trailControl.style.display = (this.motionSettings.pathVisibility === PATH_VISIBILITY.INSTANTANEOUS) ? 'flex' : 'none';
-    }
+    // Sync the comet-only trail control and its Pacing explanation.
+    this.uiController?.updateTrailControlVisibility?.(this.motionSettings.pathVisibility);
+    
+    // Reveal sliders and their containers, which follow backgroundVisibility.
+    this.uiController?.syncRevealControls?.(this.motionSettings);
     
     console.debug(`🎛️ [Init] UI synced: previewMode=${this.previewMode}, pathVisibility=${this.motionSettings.pathVisibility}`);
   }
@@ -801,14 +753,29 @@ class RoutePlotter {
    * Show a toast notification that auto-dismisses
    * @param {string} message - Text to display
    * @param {number} [duration=5000] - Time in ms before auto-dismiss
+   * @param {{label: string, onClick: Function}} [action] - Optional offer the
+   *   toast carries (LABEL-01). It is only ever an offer: the same action must
+   *   remain reachable elsewhere, because a toast fades and can be missed.
    */
-  showToast(message, duration = 5000) {
+  showToast(message, duration = 5000, action = null) {
     const container = this.elements.toastContainer;
     if (!container) return;
     
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.textContent = message;
+    
+    if (action && typeof action.onClick === 'function') {
+      const actionBtn = document.createElement('button');
+      actionBtn.className = 'toast-action';
+      actionBtn.type = 'button';
+      actionBtn.textContent = action.label;
+      actionBtn.addEventListener('click', () => {
+        action.onClick();
+        remove();
+      });
+      toast.appendChild(actionBtn);
+    }
     
     const dismiss = document.createElement('button');
     dismiss.className = 'toast-dismiss';
@@ -821,12 +788,12 @@ class RoutePlotter {
     // Trigger enter animation on next frame
     requestAnimationFrame(() => toast.classList.add('is-visible'));
     
-    const remove = () => {
+    function remove() {
       toast.classList.remove('is-visible');
       toast.addEventListener('transitionend', () => toast.remove(), { once: true });
       // Fallback removal if transition doesn't fire
       setTimeout(() => { if (toast.parentNode) toast.remove(); }, 500);
-    };
+    }
     
     dismiss.addEventListener('click', remove);
     if (duration > 0) setTimeout(remove, duration);
@@ -850,7 +817,11 @@ class RoutePlotter {
           : null;
       }
       this.uiController?.setSelection(this.selectedWaypoints, this.selectedWaypoint);
-      this.interactionHandler?.setSelectedWaypoint(this.selectedWaypoint);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection(this.selectedWaypoints, this.selectedWaypoint);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(this.selectedWaypoint);
+      }
       
       // Emit waypoint deleted event (triggers path recalc, UI update, save)
       // Event-driven approach ensures consistent update sequence
@@ -865,45 +836,7 @@ class RoutePlotter {
    * Resets animation state, clears path data, and triggers a re-render
    */
   clearAll() {
-    this.waypoints = []; // Clear Waypoint instances
-    this.waypointsById.clear(); // Clear ID lookup map
-    this.scene.clear(); // Clear flow layers
-    this.pathPoints = [];
-    this.selectedWaypoint = null;
-    this.selectedWaypoints = [];
-    this.uiController?.setSelection([], null);
-    if (this.selectedCrowd) {
-      this.selectedCrowd = null;
-      this.eventBus.emit('crowd:deselected');
-    }
-    this.updateLayersStrip();
-    
-    // Reset animation state via AnimationEngine
-    this.animationEngine.reset();
-    this.animationEngine.setDuration(0);
-    
-    this.pause();
-    this.updateTimeDisplay();
-    this.updateWaypointList();
-    
-    // Switch to edit mode
-    if (this.previewMode) {
-      this.previewMode = false;
-      this.eventBus.emit('mode:changed', { previewMode: false });
-    }
-    
-    // Emit app:cleared event for SectionController to show help
-    this.eventBus.emit('app:cleared');
-    
-    // Update waypoint editor to show no selection
-    if (this.uiController) {
-      this.uiController.updateWaypointEditor(null);
-    }
-    
-    // Re-render canvas to clear waypoints visually
-    this.render();
-    
-    console.log('Cleared all waypoints and path');
+    clearProject(this);
   }
   
   showSplash() {
@@ -957,6 +890,15 @@ class RoutePlotter {
       // Core data
       waypoints: this.waypoints,
       pathPoints: this.pathPoints,
+      // Branch geometry and the composed master timeline (ROUTE-01b). Both
+      // stay null/empty on a linear route, so its render path is untouched.
+      branchPaths: this.branchPaths,
+      branchTimeline: this.getBranchTimeline?.() || null,
+      // Route moments a bound crowd reads (COMPOSE-01), one way only.
+      routeAnchors: this.getRouteArrivalMap?.() || null,
+      // Waypoints a bound crowd enters from carry a branch handle (COMPOSE-04)
+      branchHandleWaypoints: boundEntryWaypointIds(this.scene),
+      branchHandleAt: (waypoint) => this.waypointBranchHandleAt(waypoint),
       styles: this.styles,
       selectedWaypoint: this.selectedWaypoint,
       selectedWaypoints: this.selectedWaypoints,
@@ -986,6 +928,10 @@ class RoutePlotter {
       
       // Coordinate transform service for relative sizing
       coordinateTransform: this.coordinateTransform,
+
+      // Stable visual sizing reference, separate from timingReference.
+      renderReference: this.renderReference,
+      interactiveLabels: !this._isExportMode,
       
       // Visible bounds for clipping (normalized 0-1 coordinates)
       visibleBounds: this.getVisibleBounds(),
@@ -1023,59 +969,30 @@ class RoutePlotter {
   }
 
   // ----- Assets -----
-  loadImageFile(file) {
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-      img.onerror = reject;
-      img.src = url;
-    });
+  async loadImageFileAsset(file) {
+    return ImageAsset.fromFile(file);
+  }
+
+  async loadImageFile(file) {
+    const validated = await this.loadImageFileAsset(file);
+    return validated.getImageElement();
   }
   
   loadDefaultImage() {
-    const img = new Image();
-    img.onload = () => {
-      this.background.image = img;
-      this.updateImageTransform(img);
-      // Auto-set export resolution to match image
-      this.eventBus.emit('video:resolution-native');
-      if (this.waypoints.length >= 2) {
-        this.calculatePath();
-      }
-      this.render();
-      console.debug('Default image (UoN_map.png) loaded for dev testing');
-    };
-    img.onerror = (err) => {
-      console.warn('Could not load default image:', err);
-      // Continue rendering even without image
-      this.render();
-    };
-    img.src = './UoN_map.png';
+    return loadExampleBackground(this, './images/UoN_map.png', { autoSave: false })
+      .then(loaded => {
+        if (loaded) console.debug('Default image (images/UoN_map.png) loaded for dev testing');
+        else this.render();
+        return loaded ? this.background.image : null;
+      });
   }
   
   /**
    * Load an example background image from the images folder
-   * @param {string} imagePath - Path to the image (e.g., 'images/Courts.jpg')
+   * @param {string} imagePath - Path to the image (e.g., 'images/Court.png')
    */
   loadExampleImage(imagePath) {
-    const img = new Image();
-    img.onload = () => {
-      this.background.image = img;
-      this.updateImageTransform(img);
-      // Auto-set export resolution to match image
-      this.eventBus.emit('video:resolution-native');
-      if (this.waypoints.length >= 2) {
-        this.calculatePath();
-      }
-      this.render();
-      this.autoSave();
-      console.log(`Example image loaded: ${imagePath}`);
-    };
-    img.onerror = (err) => {
-      console.error(`Failed to load example image: ${imagePath}`, err);
-    };
-    img.src = imagePath;
+    return loadExampleBackground(this, imagePath);
   }
 
   /**
@@ -1084,9 +1001,15 @@ class RoutePlotter {
   destroy() {
     // Stop animation
     this.animationEngine?.stop();
+    this.storageService?.detachLifecycle();
     
     // Clean up controllers
     this.interactionHandler?.destroy();
+    this.sceneOutlineController?.destroy();
+    if (this._sceneOutlineDeferredRefreshTimer !== null) {
+      clearTimeout(this._sceneOutlineDeferredRefreshTimer);
+      this._sceneOutlineDeferredRefreshTimer = null;
+    }
     this.pathCalculator?.clearCache(); // PathCalculator exposes clearCache(), not destroy()
     
     // Remove all event listeners
@@ -1143,6 +1066,8 @@ Object.assign(
   pointerMixin,
   crowdsMixin,
   networkMixin,
+  sceneOutlineMixin,
+  privacyMixin,
 );
 
 // Initialize app when DOM is ready

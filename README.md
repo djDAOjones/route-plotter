@@ -24,21 +24,24 @@ An animated route editor for maps and images. Drop in a background, click to pla
 ```bash
 git clone https://github.com/djDAOjones/route-plotter.git
 cd route-plotter
-npm install
+nvm use            # Node version is pinned in .nvmrc
+npm ci
 npm run dev        # Dev server with watch → http://localhost:3000
 ```
 
 ```bash
 npm run build          # Production bundle → docs/
-npm run build:deploy   # Production build → docs/ (alias of build, for GitHub Pages)
+npm run build:check    # Validate a production build without changing docs/ or the version
 npm test               # Vitest (jsdom)
-npm run push           # Build, commit docs/, push to origin/main
+npm run check          # Tests + non-mutating production build
+npm run push:dry-run   # Preview the clean-tree deployment commands
+npm run push           # Test, build, commit docs/, push the current branch
 ```
 
 Maintainer shortcuts — wrappers around the above, runnable from any directory (see `scripts/README.md`):
 
 ```bash
-./scripts/restart.sh   # free port 3000, reboot dev, wait for HTTP 200
+./scripts/restart.sh   # restart this repo's server, then wait for HTTP 200
 ./scripts/build.sh     # production build into docs/ (add --test to run tests)
 ```
 
@@ -48,12 +51,13 @@ Maintainer shortcuts — wrappers around the above, runnable from any directory 
 
 ```text
 index.html                        Single-page app shell (sidebar + canvas + controls)
+.nvmrc                            Supported local Node major
 build.js                          esbuild bundler, version management, dev server
 version.json                      Auto-incremented build number
-push.js                           GitHub Pages deploy helper
+push.js                           Clean-tree, current-branch GitHub Pages deploy helper
 
 scripts/                          Maintainer convenience wrappers (run from anywhere)
-  restart.sh                      Clean restart/boot — free port 3000, reboot dev, verify HTTP 200
+  restart.sh                      Owned-process restart/boot — refuse foreign port holders, verify HTTP 200
   build.sh                        Production build into docs/ (--test also runs tests)
   README.md                       Usage reference for these scripts
 
@@ -61,7 +65,8 @@ src/
   main.js                         RoutePlotter class — app entry point and orchestrator core
   app/                            RoutePlotter prototype mixins (method groups moved out of main.js;
                                   attached via Object.assign — wiring, playback, undo/redo, camera,
-                                  viewport, path timing, persistence, exporting, editor panel, pointer)
+                                  viewport, path timing, persistence, exporting, editor panel, pointer,
+                                  semantic scene-outline integration)
   config/
     constants.js                  All tuneable values (animation, rendering, path, etc.)
     keybindings.js                Mouse + keyboard bindings (customisable via localStorage)
@@ -71,10 +76,11 @@ src/
     SwatchPicker.js               Okabe-Ito colour-blind safe palette picker
     Dropdown.js                   Accessible dropdown menus
     Tooltip.js                    Tooltip attachment
-    ParamTooltip.js               Click-label parameter tooltips (Carbon pattern)
+    ParamTooltip.js               Parameter hints: each label's tip is its control's aria-describedby description; click or keyboard focus reveals it (Carbon pattern)
   controllers/
     UIController.js               Sidebar controls, waypoint list, slider sync
     SectionController.js          Collapsible settings sections
+    SceneOutlineController.js     Native lazy scene outline, authoring forms, focus and draft state
   core/
     EventBus.js                   Pub-sub event system
     PlayerCore.js                 Pure timeline math — segments, pause budgets, beacon schedules,
@@ -83,23 +89,24 @@ src/
     PlayerApp.js                  Headless app core for exported HTML files (real render stack,
                                   adopts the app's own timing mixins)
     playerEntry.js                Exported-page boot + transport controls (bundled → docs/player.js)
+    playerAccessibility.js        Static scene summary and discrete transport announcements
   handlers/
-    InteractionHandler.js         Mouse, keyboard, touch, and drag-and-drop input
+    InteractionHandler.js         Captured Pointer Events, keyboard, and drag-and-drop input
   models/
     Waypoint.js                   Waypoint data model (position, style, camera, area, etc.)
     AnimationState.js             Playback state (progress, timing, pause tracking)
     ImageAsset.js                 Custom image references (marker, path head)
-    GraphNode.js                  Flow-network node — unwired until Phase 2
-    GraphEdge.js                  Weighted directed edge with control points — unwired until Phase 2
-    GraphModel.js                 Node/edge collection (CRUD, adjacency) — unwired until Phase 2
+    GraphNode.js                  Active flow-network node model
+    GraphEdge.js                  Active weighted directed edge with control points
+    GraphModel.js                 Active network collection (CRUD, adjacency)
   services/
-    AnimationEngine.js            Playback loop, timing, segment speed, pause markers
+    AnimationEngine.js            Demand-driven preview scheduler and transport timing
     PathCalculator.js             Catmull-Rom spline, reparameterisation, curvature
     RenderingService.js           Canvas drawing — path, markers, labels, overlays
     BeaconRenderer.js             Animated waypoint effects (ripple, glow, pop, grow, pulse)
     TextLabelService.js           Text label layout, fade, auto-positioning
     MotionVisibilityService.js    Path/waypoint/background visibility calculations
-    CameraService.js              Per-waypoint zoom with continuous interpolation
+    CameraService.js              Per-waypoint zoom with target-aware interpolation
     CoordinateTransform.js        Image ↔ canvas coordinate conversion
     VideoExporter.js              MP4/WebM export (WebCodecs primary, MediaRecorder fallback)
     HTMLExportService.js           Self-contained HTML export with embedded player
@@ -112,7 +119,9 @@ src/
   utils/
     CatmullRom.js                 Catmull-Rom spline interpolation
     Easing.js                     Easing functions (linear, quad, cubic, etc.)
+    entityId.js                   Persisted structural-ID boundary
     focusTrap.js                  Modal focus trapping for accessibility
+    sceneSemantics.js             Pure canonical-project projection for the scene outline
 
 styles/
   tokens.css                      Design tokens — UoN palette, semantic colours, spacing
@@ -122,9 +131,20 @@ styles/
   tooltip.css                     Tooltip styles
 
 tests/
-  example.test.js                 Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
-  units.test.js                   Extended unit coverage (state, coordinates, path maths, serialisation)
+  *.test.js                       Unit, integration, golden-frame, persistence, safety, and UI contracts
+  review*.test.js                 Regression contracts added from repository reviews
+  projectLimits.test.js           Adversarial project/model resource ceilings
+  releaseSafety.test.js           Build/deployment argument and dry-run safety
   setup.js                        Vitest jsdom setup
+
+reviews/                          Historical review evidence and continuation dossier
+  README.md                       Index, provenance and cross-project filename guard
+  route-plotter-v3-comprehensive-repository-review-2026-08-26.md
+                                  Full pre-remediation review at commit cec0191
+  route-plotter-review-finding-crosswalk-2026-08-26.md
+                                  RP-01–RP-18 remediation and residual-ticket map
+  route-plotter-review-remediation-continuation-prompt-2026-08-26.md
+                                  Paste-ready next-chat development handover
 
 docs/                             Build output served by GitHub Pages
 ```
@@ -144,7 +164,7 @@ There is no framework. The app is pure JavaScript with Canvas 2D rendering and v
 Components talk through `EventBus` (pub-sub), not direct method calls:
 
 ```text
-User clicks canvas → InteractionHandler emits event
+Captured canvas gesture → InteractionHandler emits one terminal event
     → main.js handles event, updates Waypoint model
     → main.js calls queueRender()
     → RenderingService draws the frame
@@ -167,10 +187,11 @@ User moves slider → UIController emits event
 | `video:*` | VideoExporter | Export lifecycle (started, progress, complete, error) |
 | `area:*` | AreaDrawingService, AreaEditService | Area highlight draw/edit |
 | `undo:*` | UndoService | State snapshot/restore |
+| `scene-outline:*` | SceneOutlineController, RoutePlotter | Semantic snapshots, stable-ID authoring commands, validation feedback |
 
 ### Rendering pipeline
 
-1. `queueRender()` batches requests via `requestAnimationFrame` (one frame per tick).
+1. `queueRender()` coalesces editor mutations, while `AnimationEngine` schedules preview frames only for active transport or visible camera settling; a stable paused view leaves no frame queued.
 2. `render()` builds a `renderState` object from current waypoints, animation progress, motion settings, camera, and preview mode.
 3. `RenderingService` draws layers in order: background → tint overlay → area highlights → path → waypoints → labels → path head → beacons.
 4. `MotionVisibilityService` computes per-frame visibility/opacity for path, waypoints, and background based on animation progress and the active visibility mode.
@@ -191,18 +212,44 @@ Zoom, pan, and fit/fill mode are handled inside the transform. Path points are r
 
 ### Auto-save (localStorage)
 
-State is debounce-saved to `routePlotter_autosave` on every change. Loaded on startup. Includes waypoints, styles, motion settings, background reference, animation state, and export settings.
+State is debounce-saved to `routePlotter_autosave` on every change and loaded
+on startup. Recovery is deliberately model-only: it never stores original
+background/custom-image bytes or their original filenames. Custom marker and
+path-head references are replaced with loadable built-in fallbacks in the
+recovery snapshot, while the live project remains unchanged. **Save Project**
+is the durable option for preserving images. Pending recovery is flushed on
+`pagehide`, and **Clear All** also removes the old recovery point so cleared
+work cannot return on reload.
 
 Other localStorage keys: `routePlotter_preferences`, `routePlotter_splashShown`, `routePlotter_customKeybindings`.
 
 ### Project save/load (ZIP)
 
-Save Project packages all state (including the background image) into a `.zip` file. Open Project restores from a `.zip`.
+Save Project packages all state (including the background image) into a `.zip`
+file. Open Project validates and decodes a detached candidate before replacing
+the current project; any failure leaves the live project, assets, history, and
+autosave unchanged. ZIP and standalone HTML exports embed the retained original
+PNG, JPEG, or WebP data URL without canvas/JPEG re-encoding; export stops with a
+clear error if those source bytes are unavailable. Explicitly shared exports
+may contain original custom-image filenames and asset metadata.
+
+### Import safety limits
+
+Imported images must be PNG, JPEG, or WebP and are limited to 16 MiB, 8,192 px
+on either axis, and 24 megapixels each. A project ZIP is limited to 50 MiB
+compressed, 256 entries, 64 MiB decompressed, 2 MiB of project JSON, 128 image
+assets, 40 MiB of asset bytes, and 48 megapixels across those assets. Model
+ceilings include 2,000 waypoints, 32 flow layers, 256 emitters, 20,000 dots,
+10,000 graph nodes, 20,000 graph edges, and 10,000 polygon points. Files above
+these ceilings are rejected before live state changes. Persisted waypoint,
+flow-layer, emitter, graph-node and graph-edge IDs are limited to 256
+characters so high-cardinality projects cannot amplify one structural value;
+display names and labels retain their separate text budget.
 
 ### Video export
 
-- **MP4**: H.264 via WebCodecs + [mediabunny](https://www.npmjs.com/package/mediabunny) muxer. Hardware-accelerated, immune to background-tab throttling. Requires even dimensions (auto-rounded).
-- **WebM**: VP8 via WebCodecs + mediabunny. Falls back to MediaRecorder on browsers without WebCodecs (Firefox, older Safari).
+- **MP4**: H.264 via WebCodecs + [mediabunny](https://www.npmjs.com/package/mediabunny) muxer. Explicit frame timestamps avoid background-timer stretching; hardware acceleration is requested but capability-probed at runtime. Requires even dimensions (auto-rounded).
+- **WebM**: VP8 via WebCodecs + mediabunny, with a manually clocked MediaRecorder fallback when the exact required APIs pass runtime probes. Browser/version support remains release-tested rather than assumed.
 - Configurable resolution (up to 7680×4320), frame rate (10–60 fps), aspect ratio presets, and path-only (transparent) mode.
 
 ### HTML export
@@ -224,7 +271,7 @@ The combined string is injected at build time via esbuild's `define` as `APP_VER
 | --- | --- |
 | Edit JS in `src/` | Build increments on next `npm run dev` restart or `npm run build` |
 | Edit CSS/HTML only | No (static files are copied, not rebuilt) |
-| Force bump after CSS | Restart dev server, or `touch src/main.js` |
+| Force bump after CSS | Restart the dev server, or run a production build |
 
 ---
 
@@ -302,10 +349,15 @@ Edit `RenderingService.js`. Drawing methods follow the naming pattern `render*()
 - **Don't edit `docs/`** — it is generated by the build. Edit source files in `src/`, `styles/`, or `index.html`.
 - **Imports at top only** — esbuild bundles from `src/main.js`. Never import mid-file.
 - **Coordinate transform** — always use `CoordinateTransform.canvasToImage()` / `imageToCanvas()` when converting between screen and storage positions.
-- **Autosave can get stuck** — if the app enters a bad state, clear `routePlotter_autosave` in browser DevTools → Application → Local Storage.
+- **Autosave is model-only recovery, not a project file** — backgrounds, custom
+  image bytes, original image filenames, and unusable custom-image references
+  are deliberately excluded; use **Save Project** for durable work.
 - **Slider feedback loops** — programmatic slider updates must go through `ui:slider:update-speed` to avoid re-triggering input event handlers. Check `isUpdatingSlider` flag in `UIController`.
 - **H.264 even dimensions** — MP4 export requires even width and height. The exporter auto-rounds, but custom resolution inputs can produce odd values.
-- **Two runtime dependencies, both bundled** — mediabunny (MP4/WebM mux) and jszip (project save/load). Nothing loads from a CDN; the app works fully offline. Everything else is vanilla JS.
+- **Two runtime dependencies, both bundled** — mediabunny (MP4/WebM mux) and
+  jszip (project save/load). Nothing loads from a CDN. Creating the first HTML
+  export still reads the same-origin `player.js`; offline-first export is
+  tracked as follow-up work. Everything else is vanilla JS.
 
 ---
 
@@ -337,7 +389,9 @@ Precise terms used across the codebase.
 
 ## License
 
-MIT
+Route Plotter's first-party source is available under the [MIT License](LICENSE).
+Third-party components retain their own terms; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Author
 
@@ -349,3 +403,5 @@ Joe Bell — University of Nottingham
 - [Live demo](https://djdaojones.github.io/route-plotter/)
 - [Live demo (frozen v2 line)](https://djdaojones.github.io/router-plotter-02/)
 - [Issues](https://github.com/djDAOjones/route-plotter/issues)
+- [Support policy](.github/SUPPORT.md)
+- [Security policy](.github/SECURITY.md)

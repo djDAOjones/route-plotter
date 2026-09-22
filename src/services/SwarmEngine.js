@@ -1,4 +1,11 @@
 import { PathCalculator } from './PathCalculator.js';
+import { releaseStartFraction } from '../utils/routeAnchors.js';
+import { dotOnsetFraction, dotJourneyMs } from '../utils/crowdArrival.js';
+import { getGraphDepartures, normalizeGraphWeights } from '../utils/graphRouting.js';
+import {
+  compileBusynessEnvelope,
+  sampleBusynessEnvelope,
+} from '../utils/busynessEnvelope.js';
 
 /**
  * Deterministic swarm evaluator for flow layers (Phase 3).
@@ -115,9 +122,105 @@ export class SwarmEngine {
 
     const dots = [];
     for (const emitter of layer.emitters) {
-      this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots);
+      this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots, context.routeAnchors);
     }
     return dots;
+  }
+
+  /**
+   * Every dot's release and journey, without evaluating a single frame
+   * (COMPOSE-02).
+   *
+   * Same guide resolution and same onset arithmetic `evaluate` uses, so the
+   * answer describes the dots that will actually be on screen. Journey length
+   * is the dot's own distance to its first exit or dead end — which differs
+   * per dot on a graph, since the walk is hash-driven.
+   *
+   * @param {FlowLayer} layer
+   * @param {Object} context Same shape as evaluate()'s
+   * @returns {Array<{onsetFraction: number, journeyMs: number, finishes: boolean}>}
+   */
+  scheduleDots(layer, context = {}) {
+    const durationMs = context.durationMs;
+    if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return [];
+
+    let guide = null;
+    if (layer.guideType === 'route') {
+      const points = context.routePathPoints;
+      if (!Array.isArray(points) || points.length < 2) return [];
+      guide = { type: 'route', points, length: this._routeLength(points) };
+      if (guide.length <= 0) return [];
+    } else {
+      guide = this._buildGraphGuide(layer.graph);
+      if (!guide) return [];
+    }
+
+    const schedules = [];
+    for (const emitter of layer.emitters) {
+      const { seed, dotCount } = emitter;
+      const windowStart = Math.min(releaseStartFraction(emitter, context.routeAnchors || {}), 1);
+      const windowEnd = Math.min(windowStart + emitter.releaseDuration, 1);
+      const windowSpan = Math.max(0, windowEnd - windowStart);
+      const busynessEnvelope = compileBusynessEnvelope(emitter.busynessEnvelope);
+      // A respawning or looping dot re-enters for ever: it has no arrival to
+      // wait for, and saying so is more useful than inventing one.
+      const finishes = emitter.lifecycleMode === 'disappear' || emitter.lifecycleMode === 'collect';
+
+      for (let i = 0; i < dotCount; i++) {
+        const onsetFraction = dotOnsetFraction({
+          index: i,
+          dotCount,
+          onsetHash: SwarmEngine.hash(seed, i, CHANNEL_ONSET),
+          onsetVariance: emitter.onsetVariance,
+          intensityRamp: emitter.intensityRamp,
+          sampleEnvelope: value => sampleBusynessEnvelope(busynessEnvelope, value),
+          windowStart,
+          windowSpan,
+        });
+        const speedMultiplier = Math.max(
+          MIN_SPEED_MULTIPLIER,
+          1 + emitter.speedVariance * (2 * SwarmEngine.hash(seed, i, CHANNEL_SPEED) - 1)
+        );
+        const length = guide.type === 'route'
+          ? guide.length
+          : this._journeyLength(emitter, i, guide);
+        schedules.push({
+          onsetFraction,
+          journeyMs: dotJourneyMs(length, emitter.speed, speedMultiplier),
+          finishes: finishes && length > 0,
+        });
+      }
+    }
+    return schedules;
+  }
+
+  /**
+   * How far one dot travels through a graph before its first exit or dead
+   * end. Mirrors the walk in `_walkGraph`, summing lengths instead of
+   * stopping at a distance.
+   * @private
+   */
+  _journeyLength(emitter, dotIndex, guide) {
+    const { graph, entries } = guide;
+    const { seed } = emitter;
+
+    let hop = 0;
+    let node = this._pickEntry(entries, seed, dotIndex, hop++);
+    let cameFromEdgeId = null;
+    let total = 0;
+
+    for (let step = 0; step < MAX_HOPS; step++) {
+      const atExit = node.type === 'exit' && step > 0;
+      const candidates = atExit ? [] : this._traversableEdges(graph, node.id, cameFromEdgeId);
+      if (atExit || candidates.length === 0) break;
+
+      const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
+      total += this.edgeGeometry(graph, traversal.edge).length;
+      node = graph.getNode(traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId);
+      cameFromEdgeId = traversal.edge.id;
+      if (!node) break;
+    }
+    return total;
   }
 
   // ── emitter evaluation ─────────────────────────────────────────
@@ -126,26 +229,37 @@ export class SwarmEngine {
    * Append one emitter's live dots to `out`.
    * @private
    */
-  _evaluateEmitter(timelineMs, durationMs, emitter, guide, out) {
+  _evaluateEmitter(timelineMs, durationMs, emitter, guide, out, routeAnchors = null) {
     const { seed, dotCount } = emitter;
 
     // Effective release window, clipped to the timeline (the model keeps
-    // overhanging windows as authored; clipping happens here).
-    const windowStart = Math.min(emitter.releaseStart, 1);
-    const windowEnd = Math.min(emitter.releaseStart + emitter.releaseDuration, 1);
+    // overhanging windows as authored; clipping happens here). A bound
+    // emitter starts at a route moment instead of its authored fraction
+    // (COMPOSE-01); an unbound one returns releaseStart untouched, which is
+    // what keeps every existing swarm hash byte-for-byte identical.
+    const windowStart = Math.min(releaseStartFraction(emitter, routeAnchors || {}), 1);
+    const windowEnd = Math.min(windowStart + emitter.releaseDuration, 1);
     const windowSpan = Math.max(0, windowEnd - windowStart);
+    const busynessEnvelope = compileBusynessEnvelope(emitter.busynessEnvelope);
 
     for (let i = 0; i < dotCount; i++) {
       // Onset: blend the dot's even-spread slot with a uniform draw by
       // onsetVariance (0 = metronome-even, 1 = fully random), then bias
-      // the result by intensityRamp (-1 front-loaded … 1 back-loaded).
-      const slot = (i + 0.5) / dotCount;
-      const uniform = SwarmEngine.hash(seed, i, CHANNEL_ONSET);
-      let u = slot + (uniform - slot) * emitter.onsetVariance;
-      const ramp = emitter.intensityRamp;
-      if (ramp > 0) u = Math.pow(u, 1 / (1 + ramp));
-      else if (ramp < 0) u = Math.pow(u, 1 - ramp);
-      const onsetMs = (windowStart + u * windowSpan) * durationMs;
+      // the result by intensityRamp (-1 front-loaded … 1 back-loaded), then
+      // invert the authored busyness density. A flat envelope is neutral, so
+      // historical projects retain the exact founding release schedule.
+      // Shared with COMPOSE-02's arrival solve, which must agree with the
+      // dots actually on screen rather than restate their arithmetic.
+      const onsetMs = dotOnsetFraction({
+        index: i,
+        dotCount,
+        onsetHash: SwarmEngine.hash(seed, i, CHANNEL_ONSET),
+        onsetVariance: emitter.onsetVariance,
+        intensityRamp: emitter.intensityRamp,
+        sampleEnvelope: value => sampleBusynessEnvelope(busynessEnvelope, value),
+        windowStart,
+        windowSpan,
+      }) * durationMs;
 
       const elapsedSec = (timelineMs - onsetMs) / 1000;
       if (elapsedSec < 0) continue; // not yet released
@@ -380,26 +494,16 @@ export class SwarmEngine {
    * @returns {Array<{edge, reversed:boolean}>}
    */
   _traversableEdges(graph, nodeId, cameFromEdgeId) {
-    const all = [];
-    for (const edge of graph.getEdgesForNode(nodeId)) {
-      if (edge.sourceId === nodeId) {
-        all.push({ edge, reversed: false });
-      } else if (edge.direction === 'two-way') {
-        all.push({ edge, reversed: true });
-      }
-    }
-    const onward = all.filter(t => t.edge.id !== cameFromEdgeId);
-    return onward.length > 0 ? onward : all;
+    return getGraphDepartures(graph, nodeId, { cameFromEdgeId });
   }
 
   /** Weight-proportional traversal choice via one hash draw. @private */
   _pickWeighted(candidates, seed, dotIndex, hopIndex) {
-    let total = 0;
-    for (const c of candidates) total += c.edge.weight;
-    let target = SwarmEngine.hash(seed, dotIndex, hopIndex) * total;
-    for (const c of candidates) {
-      target -= c.edge.weight;
-      if (target < 0) return c;
+    const shares = normalizeGraphWeights(candidates.map(candidate => candidate.edge.weight));
+    let target = SwarmEngine.hash(seed, dotIndex, hopIndex);
+    for (let index = 0; index < candidates.length; index++) {
+      target -= shares[index];
+      if (target < 0) return candidates[index];
     }
     return candidates[candidates.length - 1];
   }
@@ -417,8 +521,13 @@ export class SwarmEngine {
   edgeGeometry(graph, edge) {
     const source = graph.getNode(edge.sourceId);
     const target = graph.getNode(edge.targetId);
+    // Resolved positions, so an anchored node's drawn curve is the curve dots
+    // travel (COMPOSE-01). Including them in the signature is what makes a
+    // route edit invalidate the cached geometry.
+    const from = source.position ? source.position() : source;
+    const to = target.position ? target.position() : target;
     const sig = [
-      source.x, source.y, target.x, target.y,
+      from.x, from.y, to.x, to.y,
       ...edge.controlPoints.flatMap(p => [p.x, p.y]),
     ].join(',');
 
@@ -426,9 +535,9 @@ export class SwarmEngine {
     if (!entry || entry.sig !== sig) {
       const calc = entry?.calc || new PathCalculator();
       const pseudoWaypoints = [
-        { x: source.x, y: source.y },
+        { x: from.x, y: from.y },
         ...edge.controlPoints.map(p => ({ x: p.x, y: p.y })),
-        { x: target.x, y: target.y },
+        { x: to.x, y: to.y },
       ];
       const points = calc.calculatePath(pseudoWaypoints);
       entry = { sig, calc, points, length: calc.calculatePathLength(points) };
@@ -463,7 +572,7 @@ export class SwarmEngine {
   _sampleNode(node, wobbleDistance) {
     if (!node) return null;
     return {
-      point: { x: node.x, y: node.y },
+      point: node.position ? node.position() : { x: node.x, y: node.y },
       tangent: null, // parked dots don't wobble — the phase would be frozen anyway
       wobbleDistance,
     };

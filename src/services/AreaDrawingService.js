@@ -76,6 +76,12 @@ export class AreaDrawingService {
       this.cursorPosition = { x: imgX, y: imgY };
       this.eventBus.emit('render:request');
     });
+
+    // A successful project replacement or Clear All invalidates every model
+    // reference owned by the modal tool. Failed loads emit neither event and
+    // deliberately leave the in-progress drawing untouched.
+    this.eventBus.on('project:replaced', () => this.cancelDrawing());
+    this.eventBus.on('app:cleared', () => this.cancelDrawing());
   }
   
   /**

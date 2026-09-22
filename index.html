@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
   <title>Route Plotter</title>
   <link rel="stylesheet" href="styles/tokens.css?v=470">
   <link rel="stylesheet" href="styles/main.css?v=470">
@@ -13,16 +14,7 @@
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
-  <!-- Min-width warning for small screens (R-3) -->
-  <div id="screen-warning" class="screen-warning" role="alert">
-    <div class="screen-warning-content">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="14"/><line x1="16" y1="10" x2="16" y2="18"/><circle cx="16" cy="22" r="1" fill="currentColor" stroke="none"/></svg>
-      <h2>Screen too narrow</h2>
-      <p>Route Plotter requires a screen width of at least 1440px for the full editing experience.</p>
-      <p class="screen-warning-hint">Current width: <span id="screen-width-display"></span>px</p>
-      <button id="screen-warning-dismiss" class="btn btn-secondary">Continue anyway</button>
-    </div>
-  </div>
+  <a class="skip-link skip-link-outline" href="#scene-outline-title">Skip to scene outline</a>
   <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <!-- Application Container -->
   <div id="app">
@@ -33,7 +25,7 @@
         <!-- Mode Switch (Edit/Preview toggle) -->
         <div class="mode-switch" id="mode-switch">
           <span class="mode-label mode-label-edit active">Edit</span>
-          <button class="mode-toggle" id="mode-toggle-btn" role="switch" aria-checked="false" aria-label="Toggle preview mode">
+          <button class="mode-toggle" id="mode-toggle-btn" type="button" role="switch" aria-checked="false" aria-label="Toggle preview mode">
             <span class="mode-toggle-thumb"></span>
           </button>
           <span class="mode-label mode-label-preview">Preview</span>
@@ -59,9 +51,12 @@
             </button>
             <input id="load-project-input" type="file" accept=".zip" style="display:none" aria-label="Load project file" />
             <div class="dropdown-separator" role="separator"></div>
+            <div class="dropdown-submenu-label" aria-hidden="true">Example Projects</div>
+            <div id="example-projects-menu" role="group" aria-label="Example projects"></div>
+            <div class="dropdown-separator" role="separator"></div>
             <div class="dropdown-submenu-label" aria-hidden="true">Example Backgrounds</div>
             <div id="example-backgrounds-menu" role="group" aria-label="Example backgrounds">
-              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Courts.jpg">Courts</button>
+              <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Court.png">Courts</button>
               <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Garlic.jpg">Garlic</button>
               <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Nervous_System.jpg">Nervous System</button>
               <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/PARM_Aerial.jpg">PARM Aerial</button>
@@ -82,11 +77,12 @@
             <button id="export-webm-btn" class="dropdown-item" role="menuitem" type="button">Export WebM</button>
             <button id="export-html-btn" class="dropdown-item" role="menuitem" type="button">Export HTML</button>
             <div class="dropdown-separator" role="separator"></div>
-            <button id="download-debug-btn" class="dropdown-item" role="menuitem" type="button">Download Debug Log</button>
-            <button id="copy-debug-btn" class="dropdown-item" role="menuitem" type="button">Copy Debug Log</button>
+            <button id="download-debug-btn" class="dropdown-item" role="menuitem" type="button">Download diagnostics…</button>
+            <button id="copy-debug-btn" class="dropdown-item" role="menuitem" type="button">Copy diagnostics…</button>
           </div>
         </div>
         <!-- Support (ghost style per spec) -->
+        <button id="report-bug-btn" class="btn btn-ghost" type="button" title="Preview diagnostics and report a bug">Report a bug</button>
         <button id="help-btn" class="btn btn-ghost" title="Show help and keyboard shortcuts">Help</button>
       </div>
     </header>
@@ -102,6 +98,7 @@
              with prev/next stepping through Route → Waypoint 1 → … → last -->
         <div class="sidebar-header sidebar-header-compact">
           <div id="scope-chip" class="scope-chip" data-scope="route">
+            <button id="scope-route-btn" class="scope-route-btn" type="button" disabled>Route</button>
             <button id="scope-prev-btn" class="scope-nav-btn" type="button" aria-label="Edit previous waypoint" disabled><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 2L3.5 6L7.5 10"/></svg></button>
             <span id="scope-chip-text" class="scope-chip-text" role="status" aria-live="polite">Editing · Route</span>
             <button id="scope-next-btn" class="scope-nav-btn" type="button" aria-label="Edit next waypoint" disabled><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2L8.5 6L4.5 10"/></svg></button>
@@ -156,7 +153,7 @@
               <div id="custom-marker-controls" style="display:none;">
                 <div class="upload-row">
                   <button id="marker-upload-btn" class="btn btn-secondary" aria-label="Upload custom marker image">Upload Image</button>
-                  <input id="marker-upload" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style="display:none" aria-label="Upload custom marker image" />
+                  <input id="marker-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom marker image" />
                 </div>
                 <div id="marker-preview" style="display:none; margin-bottom:0.5rem;">
                   <span id="marker-filename" style="font-size:0.75rem; opacity:0.7;"></span>
@@ -166,11 +163,15 @@
               
               <!-- Size (was Marker Size) -->
               <label for="dot-size">
-                <span data-tip="Diameter of the waypoint marker in pixels">Size</span>
-                <input type="range" id="dot-size" min="4" max="16" value="8" step="1">
-                <span id="dot-size-value">8</span>
+                <span data-tip="Waypoint marker diameter in project reference pixels; exports scale from the reference short edge">Size</span>
+                <input type="range" id="dot-size" min="4" max="16" value="8" step="1" aria-describedby="dot-size-value" aria-valuetext="8 reference px">
+                <span id="dot-size-value">8 reference px</span>
               </label>
-              
+
+              <div class="waypoint-card-actions" role="group" aria-label="Marker actions">
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="marker" aria-label="Reset Marker to route style">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" aria-label="Apply Marker onward">Apply onward</button>
+              </div>
             </div>
           </div>
 
@@ -184,6 +185,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-on-arrival-content" class="section-content">
+              <div class="section-primary">
               <!-- Beacon Effect -->
               <label for="editor-beacon-style">
                 <span data-tip="Animation effect played when the path reaches this waypoint">Beacon</span>
@@ -196,39 +198,6 @@
                   <option value="pulse">Pulse</option>
                 </select>
               </label>
-
-              <!-- Ripple-specific controls (hidden unless ripple selected) -->
-              <div id="ripple-controls" style="display: none;">
-                <label for="ripple-thickness">
-                  <span data-tip="Line thickness of the ripple rings">Thickness</span>
-                  <input type="range" id="ripple-thickness" min="1" max="10" value="2" step="0.5" aria-describedby="ripple-thickness-value">
-                  <span id="ripple-thickness-value">2px</span>
-                </label>
-                <label for="ripple-max-scale">
-                  <span data-tip="Maximum expansion radius of the ripple effect">Size</span>
-                  <input type="range" id="ripple-max-scale" min="500" max="4000" value="1000" step="100" aria-describedby="ripple-max-scale-value">
-                  <span id="ripple-max-scale-value">1000%</span>
-                </label>
-                <label class="checkbox-label" for="ripple-wait">
-                  <input type="checkbox" id="ripple-wait" checked>
-                  <span>Wait during ripple</span>
-                </label>
-              </div>
-
-              <!-- Pulse-specific controls (hidden unless pulse selected) -->
-              <div id="pulse-controls" class="beacon-sub-controls" role="group" aria-labelledby="pulse-controls-label" style="display: none;">
-                <span id="pulse-controls-label" class="sub-controls-label">Pulse Settings</span>
-                <label for="pulse-amplitude">
-                  <span data-tip="How much the marker grows and shrinks during pulse">Amplitude</span>
-                  <input type="range" id="pulse-amplitude" min="0" max="3" value="1" step="0.1" aria-describedby="pulse-amplitude-value">
-                  <span id="pulse-amplitude-value">1.0</span>
-                </label>
-                <label for="pulse-cycle-speed">
-                  <span data-tip="Duration of one complete pulse cycle">Cycle Speed</span>
-                  <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value">
-                  <span id="pulse-cycle-speed-value">4s</span>
-                </label>
-              </div>
 
               <!-- Wait Time -->
               <label id="pause-time-control" for="waypoint-pause-time">
@@ -252,7 +221,8 @@
                   <!-- Current Waypoint Zoom -->
                   <div class="control-row control-row-inline">
                     <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Smoothly transitions between waypoints">This Zoom</label>
-                    <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0">
+                    <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0"
+                           aria-describedby="camera-zoom-value" aria-valuetext="1.0x">
                     <span id="camera-zoom-value" class="slider-value">1.0x</span>
                   </div>
 
@@ -267,10 +237,64 @@
                 <div id="camera-multi-controls" style="display: none;">
                   <div class="control-row control-row-inline">
                     <label class="control-label control-label-short" for="camera-selected-zoom" data-tip="Set zoom level for all selected waypoints at once">Selected Zooms</label>
-                    <input type="range" id="camera-selected-zoom" min="0" max="1" step="0.01" value="0">
+                    <input type="range" id="camera-selected-zoom" min="0" max="1" step="0.01" value="0"
+                           aria-describedby="camera-selected-zoom-value" aria-valuetext="1.0x">
                     <span id="camera-selected-zoom-value" class="slider-value">1.0x</span>
                   </div>
                 </div>
+              </div>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
+                  <label for="camera-zoom-mode">
+                    <span data-tip="How the camera reaches this waypoint's zoom: gradually over the incoming leg or quickly on arrival">
+                      Zoom transition
+                    </span>
+                    <select id="camera-zoom-mode">
+                      <option value="continuous">Gradual — over the leg</option>
+                      <option value="immediate">Quick — on arrival</option>
+                    </select>
+                  </label>
+
+                  <!-- Ripple-specific controls (hidden unless ripple selected) -->
+                  <div id="ripple-controls" style="display: none;">
+                    <label for="ripple-thickness">
+                      <span data-tip="Line thickness of the ripple rings">Thickness</span>
+                      <input type="range" id="ripple-thickness" min="1" max="10" value="2" step="0.5" aria-describedby="ripple-thickness-value" aria-valuetext="2 reference px">
+                      <span id="ripple-thickness-value">2 reference px</span>
+                    </label>
+                    <label for="ripple-max-scale">
+                      <span data-tip="Maximum expansion radius of the ripple effect">Size</span>
+                      <input type="range" id="ripple-max-scale" min="500" max="4000" value="1000" step="100" aria-describedby="ripple-max-scale-value">
+                      <span id="ripple-max-scale-value">1000%</span>
+                    </label>
+                    <label class="checkbox-label" for="ripple-wait">
+                      <input type="checkbox" id="ripple-wait" checked>
+                      <span>Wait during ripple</span>
+                    </label>
+                  </div>
+
+                  <!-- Pulse-specific controls (hidden unless pulse selected) -->
+                  <div id="pulse-controls" class="beacon-sub-controls" role="group" aria-labelledby="pulse-controls-label" style="display: none;">
+                    <span id="pulse-controls-label" class="sub-controls-label">Pulse settings</span>
+                    <label for="pulse-amplitude">
+                      <span data-tip="How much the marker grows and shrinks during pulse">Amplitude</span>
+                      <input type="range" id="pulse-amplitude" min="0" max="3" value="1" step="0.1" aria-describedby="pulse-amplitude-value">
+                      <span id="pulse-amplitude-value">1.0</span>
+                    </label>
+                    <label for="pulse-cycle-speed">
+                      <span data-tip="Duration of one complete pulse cycle">Cycle duration</span>
+                      <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value">
+                      <span id="pulse-cycle-speed-value">4s</span>
+                    </label>
+                  </div>
+                </div>
+              </details>
+              <div class="waypoint-card-actions" role="group" aria-label="On arrival actions">
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" aria-label="Reset On arrival to route style">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" aria-label="Apply On arrival onward">Apply onward</button>
               </div>
             </div>
           </div>
@@ -284,6 +308,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-label-content" class="section-content">
+              <div class="section-primary">
               <!-- Text Input -->
               <label for="waypoint-label">
                 <span data-tip="Label text displayed near this waypoint">Text</span>
@@ -301,11 +326,47 @@
                 </select>
               </label>
               
-              <!-- Text Size (1-10 scale, maps to 16-48px) -->
+              <!-- Text size is stored and rendered in reference pixels -->
               <label for="label-size">
-                <span data-tip="Font size of the label text">Size</span>
-                <input type="range" id="label-size" min="1" max="10" value="1" step="1">
-                <span id="label-size-value">1</span>
+                <span data-tip="Font size in project reference pixels. The editor keeps rendered labels between 14 and 72 screen pixels for legibility; exports use the exact scale">Size</span>
+                <input type="range" id="label-size" min="16" max="48" value="16" step="1" aria-describedby="label-size-value" aria-valuetext="16 reference px">
+                <span id="label-size-value">16 reference px</span>
+              </label>
+
+              <!-- LABEL-01: promoted out of More. It is the shortest route to a
+                   readable label, so burying it made the whole feature invisible. -->
+              <div class="control-row">
+                <button id="label-auto-position" class="btn btn-secondary" style="width:100%;" title="Move the label to avoid overlapping the path, markers and other labels">Auto-position</button>
+              </div>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
+
+              <!-- Label colours use map-neutral presets while retaining exact
+                   custom/imported values through the established disclosure. -->
+              <input type="hidden" id="label-color" value="#1a1a1a">
+              <div class="swatch-picker"
+                   data-target-input="#label-color"
+                   data-mode="neutral-ink"
+                   data-label="Text colour"
+                   data-allow-custom="true">
+              </div>
+
+              <input type="hidden" id="label-bg-color" value="#FFFFFF">
+              <div class="swatch-picker"
+                   data-target-input="#label-bg-color"
+                   data-mode="neutral-ink"
+                   data-label="Background colour"
+                   data-allow-custom="true">
+              </div>
+
+              <label for="label-bg-opacity">
+                <span data-tip="Opacity of the background behind the label text">Background opacity</span>
+                <input type="range" id="label-bg-opacity" min="0" max="100" value="85" step="1"
+                       aria-describedby="label-bg-opacity-value" aria-valuetext="85%">
+                <span id="label-bg-opacity-value">85%</span>
               </label>
               
               <!-- Text Width (for wrapping) -->
@@ -329,9 +390,11 @@
                 <span id="label-offset-y-value">-5%</span>
               </label>
               
-              <!-- Auto-Position Button (moved to bottom per spec §6.2) -->
-              <div class="control-row">
-                <button id="label-auto-position" class="btn btn-secondary" style="width:100%;" title="Auto-position text to avoid collisions">Auto-Position</button>
+                </div>
+              </details>
+              <div class="waypoint-card-actions" role="group" aria-label="Label actions">
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="label" aria-label="Reset Label to route style">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" aria-label="Apply Label style onward">Apply onward</button>
               </div>
             </div>
           </div>
@@ -347,6 +410,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-leg-content" class="section-content">
+              <div class="section-primary">
               <!-- Colour (Okabe-Ito swatch picker) -->
               <input type="hidden" id="segment-color" value="#D55E00">
               <div class="swatch-picker"
@@ -358,9 +422,9 @@
 
               <!-- Thickness - increased range to 4x with log scale -->
               <label for="segment-width">
-                <span data-tip="Width of the path line in pixels">Thickness</span>
-                <input type="range" id="segment-width" min="0" max="1000" value="333" step="1">
-                <span id="segment-width-value">3</span>
+                <span data-tip="Path-line width in project reference pixels; exports scale from the reference short edge">Thickness</span>
+                <input type="range" id="segment-width" min="0" max="1000" value="333" step="1" aria-describedby="segment-width-value" aria-valuetext="3.0 reference px">
+                <span id="segment-width-value">3.0 reference px</span>
               </label>
               
               <!-- Shape (was Path Shape) -->
@@ -372,13 +436,25 @@
                   <option value="randomised">Randomised</option>
                 </select>
               </label>
+
+              <!-- Segment Speed -->
+              <label id="segment-speed-control" for="waypoint-segment-speed">
+                <span data-tip="Speed multiplier for this path segment relative to base duration">Segment speed</span>
+                <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1">
+                <span id="waypoint-segment-speed-value">1.0x</span>
+              </label>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
               
               <!-- Shape Parameters (shown for squiggle/randomised) -->
               <div id="shape-params-controls" style="display: none;">
                 <label for="shape-amplitude">
-                  <span data-tip="Height of squiggle waves">Amplitude</span>
-                  <input type="range" id="shape-amplitude" min="1" max="50" value="10" step="1">
-                  <span id="shape-amplitude-value">10</span>
+                  <span data-tip="Peak sideways displacement as a percentage of the source-image coordinate scale">Amplitude</span>
+                  <input type="range" id="shape-amplitude" min="1" max="50" value="10" step="1" aria-describedby="shape-amplitude-value" aria-valuetext="2%">
+                  <span id="shape-amplitude-value">2%</span>
                 </label>
                 <label for="shape-frequency">
                   <span data-tip="Number of squiggle waves per path segment">Frequency</span>
@@ -396,13 +472,12 @@
                   <option value="dotted">Dotted</option>
                 </select>
               </label>
-              
-              <!-- Segment Speed -->
-              <label id="segment-speed-control" for="waypoint-segment-speed">
-                <span data-tip="Speed multiplier for this path segment relative to base duration">Segment Speed</span>
-                <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1">
-                <span id="waypoint-segment-speed-value">1.0x</span>
-              </label>
+                </div>
+              </details>
+              <div class="waypoint-card-actions" role="group" aria-label="Leg actions">
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="leg" aria-label="Reset Leg to route style">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" aria-label="Apply Leg onward">Apply onward</button>
+              </div>
             </div>
           </div>
           
@@ -415,6 +490,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-area-highlight-content" class="section-content">
+              <div class="section-primary">
               <!-- Shape type -->
               <label for="area-shape">
                 <span data-tip="Shape of the highlighted area attached to this waypoint">Shape</span>
@@ -453,6 +529,16 @@
                   <span id="area-rect-height-value">10%</span>
                 </label>
               </div>
+
+              <!-- Delete Area button -->
+              <div id="area-delete-controls" style="display: none;">
+                <button id="area-delete-btn" class="btn btn-secondary btn-danger" style="width:100%;" aria-label="Delete area">Delete area</button>
+              </div>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
               
               <!-- Fill Colour (Okabe-Ito swatch picker with None/transparent) -->
               <div id="area-fill-controls" style="display: none;">
@@ -496,9 +582,9 @@
                 
                 <!-- Border Width -->
                 <label for="area-border-width">
-                  <span data-tip="Thickness of the area border in pixels">Border Width</span>
-                  <input type="range" id="area-border-width" min="1" max="10" value="2" step="1">
-                  <span id="area-border-width-value">2px</span>
+                  <span data-tip="Thickness of the area border in project reference pixels">Border Width</span>
+                  <input type="range" id="area-border-width" min="1" max="10" value="2" step="1" aria-describedby="area-border-width-value" aria-valuetext="2 reference px">
+                  <span id="area-border-width-value">2 reference px</span>
                 </label>
               </div>
               
@@ -530,10 +616,8 @@
                 </label>
               </div>
               
-              <!-- Delete Area button -->
-              <div id="area-delete-controls" style="display: none;">
-                <button id="area-delete-btn" class="btn btn-secondary btn-danger" style="width:100%;" aria-label="Remove area highlight from this waypoint">Delete Area</button>
-              </div>
+                </div>
+              </details>
             </div>
           </div>
           
@@ -564,23 +648,26 @@
                 <select id="path-head-style">
                   <option value="arrow">Arrow</option>
                   <option value="dot">Dot</option>
+                  <option value="drone">Drone</option>
                   <option value="custom">Custom</option>
                   <option value="none">None</option>
                 </select>
               </label>
 
-              <!-- Custom Head Upload Controls -->
+              <!-- Image Head Controls -->
               <div id="custom-head-controls" style="display:none;">
-                <div class="upload-row">
-                  <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
-                  <input id="head-upload" type="file" accept="image/png,image/jpeg,image/svg+xml" style="display:none" aria-label="Upload custom path head image" />
-                </div>
-                <div id="head-preview" class="preview-box" style="display:none;">
-                  <p id="head-filename">No image selected</p>
-                  <img id="head-preview-img" style="max-width:100%; max-height:100px; margin:0.5rem 0;" alt="Custom path head preview">
+                <div id="custom-head-upload-controls">
+                  <div class="upload-row">
+                    <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
+                    <input id="head-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom path head image" />
+                  </div>
+                  <div id="head-preview" class="preview-box" style="display:none;">
+                    <p id="head-filename">No image selected</p>
+                    <img id="head-preview-img" style="max-width:100%; max-height:100px; margin:0.5rem 0;" alt="Custom path head preview">
+                  </div>
                 </div>
                 <label for="head-rotation-mode">
-                  <span data-tip="Whether the custom image rotates to follow the path direction">Rotation</span>
+                  <span data-tip="Whether the image rotates to follow the path direction">Rotation</span>
                   <select id="head-rotation-mode">
                     <option value="auto">Follow Path</option>
                     <option value="fixed">Fixed</option>
@@ -595,9 +682,9 @@
 
               <!-- Head Size -->
               <label for="path-head-size">
-                <span data-tip="Size of the path head indicator">Size</span>
-                <input type="range" id="path-head-size" min="4" max="24" value="8" step="1">
-                <span id="path-head-size-value">8</span>
+                <span data-tip="Path-head size in project reference pixels; exports scale from the reference short edge">Size</span>
+                <input type="range" id="path-head-size" min="4" max="24" value="8" step="1" aria-describedby="path-head-size-value" aria-valuetext="8 reference px">
+                <span id="path-head-size-value">8 reference px</span>
               </label>
             </div>
           </div>
@@ -617,6 +704,9 @@
                 <input type="range" id="animation-speed-right" min="1" max="4000" step="5">
                 <span id="animation-speed-value-right" class="slider-value">10s</span>
               </label>
+              <p id="pacing-comet-hint" class="section-hint" hidden>
+                In Preview, a non-zero Comet trail extends Duration while the tail clears after the route head reaches the end.
+              </p>
               <!-- Graphics Scale — global multiplier for all vector element sizes -->
               <div id="graphics-scale-control" style="margin-top:0.5rem;">
                 <label class="sidebar-control-row" for="graphics-scale">
@@ -637,6 +727,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-reveal-content" class="section-content">
+              <div class="section-primary">
               <!-- Marker Mode (renamed from Waypoint Mode per spec) -->
               <label for="waypoint-visibility">
                 <span data-tip="When waypoint markers are visible during animation">Marker Mode</span>
@@ -661,13 +752,6 @@
                 </select>
               </label>
               
-              <!-- Trail Size (for instantaneous/comet mode) - hidden unless comet selected -->
-              <label id="path-trail-control" for="path-trail" style="display: none;">
-                <span data-tip="Length of the visible path trail in comet mode">Trail Size</span>
-                <input type="range" id="path-trail" min="0" max="1000" value="590" step="1">
-                <span id="path-trail-value">15%</span>
-              </label>
-              
               <!-- Background Mode -->
               <label for="background-visibility">
                 <span data-tip="Visibility effect applied to the background during animation">Background Mode</span>
@@ -679,6 +763,17 @@
                   <option value="angle-of-view-reveal">Angle of View Reveal</option>
                   <option value="always-hide">Hide</option>
                 </select>
+              </label>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
+              <!-- Trail Size (for instantaneous/comet mode) - hidden unless comet selected -->
+              <label id="path-trail-control" for="path-trail" style="display: none;">
+                <span data-tip="Length of the visible path trail in comet mode">Trail size</span>
+                <input type="range" id="path-trail" min="0" max="1000" value="590" step="1">
+                <span id="path-trail-value">15%</span>
               </label>
               
               <!-- Spotlight Settings (only shown when background = spotlight or spotlight-reveal) -->
@@ -692,6 +787,12 @@
                   <span data-tip="Softness of the spotlight edge">Spotlight Feather</span>
                   <input type="range" id="reveal-feather" min="0" max="1000" value="500" step="1">
                   <span id="reveal-feather-value">25%</span>
+                </label>
+                <label for="reveal-trail" id="reveal-trail-control" hidden>
+                  <span data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades">Reveal trail</span>
+                  <input type="range" id="reveal-trail" min="0" max="1000" value="1000" step="1"
+                         aria-describedby="reveal-trail-value" aria-valuetext="Whole path">
+                  <span id="reveal-trail-value">Whole path</span>
                 </label>
               </div>
               
@@ -713,6 +814,8 @@
                   <span id="aov-dropoff-value">25%</span>
                 </label>
               </div>
+                </div>
+              </details>
             </div>
           </div>
           
@@ -753,11 +856,11 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-background-content" class="section-content">
-              <!-- Tint (was Background Tint/Overlay) - log2 scaled for fine control near 0 -->
+              <!-- Darken/lighten overlay - log2 scaled for fine control near 0 -->
               <label for="bg-overlay">
-                <span data-tip="Darkens (left) or lightens (right) the background image">Tint</span>
-                <input type="range" id="bg-overlay" min="-1000" max="1000" step="1" value="0">
-                <span id="bg-overlay-value">0</span>
+                <span data-tip="Adds a black (left) or white (right) overlay; rendered opacity is capped at 60%">Darken / lighten</span>
+                <input type="range" id="bg-overlay" min="-1000" max="1000" step="1" value="0" aria-describedby="bg-overlay-value" aria-valuetext="None">
+                <span id="bg-overlay-value">None</span>
               </label>
 
               <!-- Zoom -->
@@ -771,7 +874,7 @@
               <div class="upload-row">
                 <span>Upload</span>
                 <button id="bg-upload-btn" class="btn btn-secondary" aria-label="Upload background image">Choose Image</button>
-                <input id="bg-upload" type="file" accept="image/png,image/jpeg" style="display:none" aria-label="Upload background image" />
+                <input id="bg-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload background image" />
               </div>
               <p class="sr-only" id="bg-drop-hint">Tip: Drag an image onto the canvas to set the background.</p>
             </div>
@@ -787,6 +890,7 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-video-content" class="section-content">
+              <div class="section-primary">
               <!-- Resolution Controls - vertical block per spec §L -->
               <label for="export-res-x">
                 <span data-tip="Horizontal resolution of exported video in pixels">Width</span>
@@ -816,6 +920,11 @@
                 <input type="number" id="export-frame-rate" min="10" max="60" step="1" value="25">
                 <span>fps</span>
               </label>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
               
               <!-- Include in export - consolidated checkbox group (image / camera / text) -->
               <fieldset class="export-include-group">
@@ -833,6 +942,8 @@
                   <span data-tip="Include waypoint text labels in the export. Uncheck to hide all labels.">Text labels</span>
                 </label>
               </fieldset>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -860,6 +971,10 @@
               </label>
               <button id="network-edit-btn" class="btn btn-secondary" type="button" hidden
                       title="Draw the network this crowd walks: nodes joined by edges">Edit network</button>
+              <button id="crowd-trace-route-btn" class="btn btn-secondary" type="button" hidden
+                      title="Copy the route into this crowd's network, so its dots follow the same shape and can branch where the route branches">Trace route into network</button>
+              <button id="crowd-fit-wait-btn" class="btn btn-secondary" type="button"
+                      title="Set a wait on the selected waypoint (or the last one) long enough for this crowd to finish">Wait here for this crowd</button>
               <p class="section-hint" id="crowd-guide-hint">Dots follow your route. Custom network lets you draw paths of their own.</p>
             </div>
           </div>
@@ -881,13 +996,13 @@
 
               <label for="crowd-dot-size">
                 <span data-tip="Dot size factor, scaled with the image like other elements">Size</span>
-                <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5">
+                <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5" aria-describedby="crowd-dot-size-value" aria-valuetext="0.40×">
                 <span id="crowd-dot-size-value">0.40×</span>
               </label>
 
               <label for="crowd-wobble">
-                <span data-tip="Sideways wander as dots travel — 0% walks the line exactly">Wobble</span>
-                <input type="range" id="crowd-wobble" min="0" max="100" value="0" step="1">
+                <span data-tip="Sideways walking variation as dots travel — 0% follows the line exactly">Walking variation</span>
+                <input type="range" id="crowd-wobble" min="0" max="100" value="0" step="1" aria-describedby="crowd-wobble-value" aria-valuetext="0%">
                 <span id="crowd-wobble-value">0%</span>
               </label>
             </div>
@@ -900,23 +1015,65 @@
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-release-content" class="section-content">
+              <div class="section-primary">
               <label for="crowd-count">
                 <span data-tip="Total dots released across the window">Count</span>
-                <input type="range" id="crowd-count" min="1" max="500" value="50" step="1">
+                <input type="range" id="crowd-count" min="1" max="500" value="50" step="1" aria-describedby="crowd-count-value" aria-valuetext="50">
                 <span id="crowd-count-value">50</span>
               </label>
 
               <label for="crowd-release-start">
                 <span data-tip="When the first dots set off, as a position in the timeline">Window start</span>
-                <input type="range" id="crowd-release-start" min="0" max="100" value="0" step="1">
+                <input type="range" id="crowd-release-start" min="0" max="100" value="0" step="1" aria-describedby="crowd-release-start-value" aria-valuetext="0%">
                 <span id="crowd-release-start-value">0%</span>
               </label>
 
               <label for="crowd-release-duration">
                 <span data-tip="How much of the timeline the release is spread across">Window length</span>
-                <input type="range" id="crowd-release-duration" min="0" max="100" value="100" step="1">
+                <input type="range" id="crowd-release-duration" min="0" max="100" value="100" step="1" aria-describedby="crowd-release-duration-value" aria-valuetext="100%">
                 <span id="crowd-release-duration-value">100%</span>
               </label>
+              </div>
+
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
+                  <label class="crowd-variation-control" for="crowd-onset-variance">
+                    <span data-tip="How unevenly individual dots set off within the release window">Release timing</span>
+                    <input type="range" id="crowd-onset-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-onset-variance-value" aria-valuetext="20% uneven">
+                    <span id="crowd-onset-variance-value">20% uneven</span>
+                  </label>
+
+                  <label class="crowd-variation-control" for="crowd-intensity-ramp">
+                    <span data-tip="Bias all set-offs toward the start or end before applying the busyness graph">Release bias</span>
+                    <input type="range" id="crowd-intensity-ramp" min="-100" max="100" value="0" step="1" aria-describedby="crowd-intensity-ramp-value" aria-valuetext="Even">
+                    <span id="crowd-intensity-ramp-value">Even</span>
+                  </label>
+
+                  <div class="crowd-busyness-editor" role="group" aria-labelledby="crowd-busyness-label" aria-describedby="crowd-busyness-hint">
+                    <div class="crowd-busyness-heading">
+                      <span id="crowd-busyness-label">Busyness over time</span>
+                      <output id="crowd-busyness-summary" aria-labelledby="crowd-busyness-label">Even</output>
+                    </div>
+                    <p id="crowd-busyness-hint" class="section-hint">Higher handles release more dots. Drag a handle, or use the exact controls below. Each span can change gradually or suddenly.</p>
+                    <svg id="crowd-busyness-graph" class="crowd-busyness-graph" viewBox="0 0 300 140" role="img" aria-label="Even busyness across the release window"></svg>
+                    <div id="crowd-busyness-handles" class="crowd-busyness-handles" aria-label="Busyness handles"></div>
+                    <div class="crowd-busyness-actions">
+                      <button id="crowd-busyness-add" class="btn btn-secondary" type="button">Add handle</button>
+                      <button id="crowd-busyness-reset" class="btn btn-ghost" type="button">Reset to even</button>
+                    </div>
+                  </div>
+
+                  <div class="crowd-pattern-controls" role="group" aria-labelledby="crowd-seed-label" aria-describedby="crowd-pattern-hint">
+                    <div class="crowd-seed-row">
+                      <span id="crowd-seed-label">Pattern seed</span>
+                      <output id="crowd-seed-value" aria-labelledby="crowd-seed-label">0</output>
+                    </div>
+                    <button id="crowd-reroll-btn" class="btn btn-secondary" type="button">Re-roll pattern</button>
+                    <p id="crowd-pattern-hint" class="section-hint">Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path.</p>
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -929,23 +1086,23 @@
             <div id="section-motion-content" class="section-content">
               <label for="crowd-speed">
                 <span data-tip="Dot travel speed in image-widths per second">Speed</span>
-                <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1">
+                <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1" aria-describedby="crowd-speed-value" aria-valuetext="0.15 img/s">
                 <span id="crowd-speed-value">0.15 img/s</span>
               </label>
 
               <label for="crowd-speed-variance">
-                <span data-tip="Per-dot speed jitter — 0% moves every dot at the same speed">Variance</span>
-                <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1">
+                <span data-tip="Per-dot pace variation — 0% moves every dot at the same speed">Pace variation</span>
+                <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-speed-variance-value" aria-valuetext="20%">
                 <span id="crowd-speed-variance-value">20%</span>
               </label>
 
               <label for="crowd-lifecycle">
-                <span data-tip="What a dot does when it reaches the end of the route">At route end</span>
+                <span data-tip="What a dot does when it reaches the end of its journey">At journey end</span>
                 <select id="crowd-lifecycle">
-                  <option value="respawn">Respawn at start</option>
-                  <option value="loop">Loop around</option>
+                  <option value="respawn">Respawn at entry</option>
+                  <option value="loop">Repeat journey</option>
                   <option value="disappear">Disappear</option>
-                  <option value="collect">Collect at end</option>
+                  <option value="collect">Collect at exit</option>
                 </select>
               </label>
             </div>
@@ -954,8 +1111,8 @@
           </div><!-- /crowd-scope -->
 
           <!-- ============================================================
-               NODE SCOPE (Phase 4) - shown while network editing when a
-               network node is selected. One card: what this node does.
+               NODE SCOPE - shown when a network node is selected through
+               passive inspection or active network editing.
                ============================================================ -->
           <div id="node-scope" class="scope-group" hidden>
 
@@ -973,7 +1130,15 @@
                   <option value="exit">Exit</option>
                 </select>
               </label>
-              <p class="section-hint">Dots appear at entries and finish at exits. T cycles the type; drag to move; Shift-click deletes.</p>
+              <p id="network-node-hint" class="section-hint">Dots appear at entries and finish at exits. Use Type to change this node, or Delete node to remove it. Choose Edit network to move nodes.</p>
+              <fieldset id="network-path-weights" class="network-path-weights" hidden>
+                <legend>Path weights</legend>
+                <p id="network-path-weights-help" class="section-hint">
+                  Relative weights set each path's configured share. Actual choices avoid an immediate U-turn when
+                  another path is available.
+                </p>
+                <div id="network-path-weight-rows" class="network-path-weight-rows"></div>
+              </fieldset>
               <button id="network-node-delete" class="btn btn-secondary" type="button">Delete node</button>
             </div>
           </div>
@@ -981,8 +1146,8 @@
           </div><!-- /node-scope -->
 
           <!-- ============================================================
-               EDGE SCOPE (Phase 4) - shown while network editing when a
-               network edge is selected: direction and traffic share.
+               EDGE SCOPE - shown when a network edge or bend point is
+               selected through passive inspection or active editing.
                ============================================================ -->
           <div id="edge-scope" class="scope-group" hidden>
 
@@ -1005,9 +1170,12 @@
               <label for="network-edge-weight">
                 <span data-tip="How strongly dots prefer this edge at a junction, shown as the share of departures that pick it">Traffic</span>
                 <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1">
-                <span id="network-edge-weight-value">100% of departures</span>
+                <span id="network-edge-weight-value">100% configured share</span>
               </label>
-              <p class="section-hint">Share of dots leaving each end that choose this edge. Drag the edge to bend it; Shift-click deletes.</p>
+              <p id="network-edge-hint" class="section-hint">
+                Configured share among paths leaving each end. Use Direction and Traffic to edit this edge, or Delete
+                edge to remove it. Choose Edit network to bend paths.
+              </p>
               <button id="network-edge-delete" class="btn btn-secondary" type="button">Delete edge</button>
             </div>
           </div>
@@ -1024,10 +1192,10 @@
         <!-- Controls Panel -->
         <div class="controls">
           <div class="transport-controls">
-            <button id="skip-start-btn" class="btn btn-icon" title="Skip to Start">⏮</button>
-            <button id="play-btn" class="btn btn-icon btn-primary" title="Play">▶</button>
-            <button id="pause-btn" class="btn btn-icon btn-primary" style="display:none" title="Pause">⏸</button>
-            <button id="skip-end-btn" class="btn btn-icon" title="Skip to End">⏭</button>
+            <button id="skip-start-btn" class="btn btn-icon" type="button" title="Skip to start" aria-label="Skip to start">⏮</button>
+            <button id="play-btn" class="btn btn-icon btn-primary" type="button" title="Play" aria-label="Play">▶</button>
+            <button id="pause-btn" class="btn btn-icon btn-primary" type="button" style="display:none" title="Pause" aria-label="Pause">⏸</button>
+            <button id="skip-end-btn" class="btn btn-icon" type="button" title="Skip to end" aria-label="Skip to end">⏭</button>
           </div>
           
           <div class="timeline">
@@ -1050,7 +1218,18 @@
         <div class="control-group" style="padding: 0.75rem;">
           <h2 style="margin-bottom:0.5rem;">Waypoints</h2>
           <!-- Waypoint list container - instructions shown inside when empty -->
-          <div id="waypoint-list" class="waypoint-list"></div>
+          <ul id="waypoint-list" class="waypoint-list" aria-label="Waypoints"></ul>
+        </div>
+        <div class="control-group scene-outline-shell">
+          <details id="scene-outline-panel" open>
+            <summary id="scene-outline-title" class="scene-outline-title">Full scene outline</summary>
+            <p id="scene-outline-help" class="section-hint">
+              Inspect and author route geometry, every crowd and emitter, custom networks,
+              edge bends, and polygon vertices without using the canvas.
+            </p>
+            <div id="scene-outline" class="scene-outline" role="region"
+                 aria-labelledby="scene-outline-title" aria-describedby="scene-outline-help"></div>
+          </details>
         </div>
       </aside>
     </main>
@@ -1061,13 +1240,13 @@
   <div id="splash" class="splash-screen" role="dialog" aria-modal="true" aria-labelledby="splash-title" style="display: none;">
     <div class="splash-content">
       <!-- MOD-01: Close button in top-right corner -->
-      <button id="splash-close-x" class="modal-close-x" aria-label="Close" title="Close">×</button>
+      <button id="splash-close-x" class="modal-close-x" type="button" aria-label="Close" title="Close">×</button>
       <h2 id="splash-title">Welcome to Route Plotter v3</h2>
       
       <!-- Help content injected here by main.js -->
       <div id="splash-help"></div>
 
-      <button id="splash-close" class="btn btn-primary">Get Started</button>
+      <button id="splash-close" class="btn btn-primary" type="button">Get Started</button>
       
       <label class="checkbox-label" for="splash-dont-show">
         <input type="checkbox" id="splash-dont-show">
@@ -1096,8 +1275,52 @@
       <h3 id="modal-title-clear">Clear all waypoints?</h3>
       <p>This will remove all waypoints and reset the canvas. This action cannot be undone.</p>
       <div class="modal-buttons">
-        <button id="clear-cancel" class="btn btn-secondary">Cancel</button>
-        <button id="clear-confirm" class="btn btn-danger">Clear</button>
+        <button id="clear-cancel" class="btn btn-secondary" type="button">Cancel</button>
+        <button id="clear-confirm" class="btn btn-danger" type="button">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual file sharing disclosure — no export begins until confirmed. -->
+  <div id="share-disclosure-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="share-disclosure-title" aria-describedby="share-disclosure-description" style="display: none;">
+    <div class="modal-content">
+      <button class="modal-close-x" type="button" aria-label="Close" title="Close" data-share-disclosure-close>×</button>
+      <h3 id="share-disclosure-title">Share file?</h3>
+      <p id="share-disclosure-description"></p>
+      <div class="modal-buttons">
+        <button id="share-disclosure-cancel" class="btn btn-secondary" type="button">Cancel</button>
+        <button id="share-disclosure-confirm" class="btn btn-primary" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy-first technical diagnostics: the exact payload is visible first. -->
+  <div id="diagnostics-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="diagnostics-title" aria-describedby="diagnostics-description" style="display: none;">
+    <div class="modal-content diagnostics-modal-content">
+      <button class="modal-close-x" type="button" aria-label="Close" title="Close" data-diagnostics-close>×</button>
+      <h3 id="diagnostics-title">Preview diagnostics</h3>
+      <p id="diagnostics-description">
+        Review the exact technical information below. It excludes project content, images, filenames, browser storage,
+        console logs, URLs and paths. Nothing is sent automatically.
+      </p>
+      <p id="diagnostics-public-warning" class="diagnostics-public-warning" hidden>
+        GitHub Issues are public. Do not include confidential projects, personal data, credentials or other sensitive
+        information. Support is best effort, with no guaranteed response time. Report suspected vulnerabilities through
+        <a id="diagnostics-open-security" class="diagnostics-inline-action" target="_blank" rel="noopener noreferrer" hidden>private vulnerability reporting (new tab)</a>, not public Issues.
+      </p>
+      <label class="diagnostics-preview-label" for="diagnostics-preview">Technical information</label>
+      <textarea id="diagnostics-preview" class="diagnostics-preview" rows="15" readonly spellcheck="false"></textarea>
+      <p id="diagnostics-status" class="diagnostics-status" role="status" aria-live="polite"></p>
+      <p id="diagnostics-issues-note" class="diagnostics-issues-note" hidden>
+        The Issues link opens a new tab without sending the preview. If it does not open, copy this address:
+        <code id="diagnostics-issues-address"></code>
+        <button id="diagnostics-copy-issues-address" class="diagnostics-inline-action" type="button" hidden>Copy Issues address</button>
+      </p>
+      <div class="modal-buttons diagnostics-actions">
+        <button id="diagnostics-cancel" class="btn btn-secondary" type="button">Cancel</button>
+        <button id="diagnostics-copy" class="btn btn-secondary" type="button">Copy</button>
+        <button id="diagnostics-download" class="btn btn-secondary" type="button">Download</button>
+        <a id="diagnostics-open-issues" class="btn btn-primary" target="_blank" rel="noopener noreferrer" hidden>Open GitHub Issues in new tab</a>
       </div>
     </div>
   </div>

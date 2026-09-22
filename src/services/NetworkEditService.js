@@ -32,9 +32,12 @@
  */
 
 import { snapToAngle } from '../utils/snapToAngle.js';
+import { getGraphDepartureShares } from '../utils/graphRouting.js';
 
 /** Node types in T-key cycle order; 'normal' is user-facing "pass-through". */
 const NODE_TYPE_CYCLE = ['normal', 'entry', 'exit'];
+const SELECTION_OUTER = '#FFFFFF';
+const SELECTION_INNER = '#111111';
 
 export class NetworkEditService {
   /**
@@ -47,13 +50,13 @@ export class NetworkEditService {
     /** @type {boolean} Whether network edit mode is active */
     this.active = false;
 
-    /** @type {import('../models/FlowLayer.js').FlowLayer|null} Layer being edited */
+    /** @type {import('../models/FlowLayer.js').FlowLayer|null} Layer bound for editing or passive inspection */
     this.layer = null;
 
     /** @type {string|null} Pen node id — the node the next placed node links from (null = pen up) */
     this.penNodeId = null;
 
-    /** @type {{kind: 'node'|'edge', id: string}|null} Inspector selection */
+    /** @type {{kind: 'node'|'edge', id: string, controlIndex?: number}|null} Inspector selection */
     this.selection = null;
 
     /** @type {{kind: string, id: string, controlIndex?: number}|null} Hover target (idle pointer) */
@@ -87,6 +90,7 @@ export class NetworkEditService {
   enter(layer) {
     if (!layer) return;
     if (this.active) this.exit();
+    else if (this.layer) this.clearInspection();
 
     this.active = true;
     this.layer = layer;
@@ -106,13 +110,79 @@ export class NetworkEditService {
   }
 
   /**
+   * Bind a layer for passive node/edge inspection without entering the
+   * drawing tool. This deliberately does not show the banner, install the
+   * capture-phase key handler, change Preview, or announce edit-mode state.
+   * The scene outline calls this before selectNode/selectEdge.
+   *
+   * @param {import('../models/FlowLayer.js').FlowLayer} layer
+   */
+  bindForInspection(layer) {
+    if (!layer) return;
+
+    // A direct context switch away from an actively edited layer must still
+    // perform the full mode cleanup. Re-binding the active layer is a no-op.
+    if (this.active) {
+      if (this.layer === layer) return;
+      this.exit();
+    }
+
+    if (this.layer === layer) return;
+
+    const hadSelection = this.selection;
+    const previousLayer = this.layer;
+    this.layer = layer;
+    this.penNodeId = null;
+    this.selection = null;
+    this.hover = null;
+    this.cursorImg = null;
+    this.drag = null;
+
+    if (hadSelection) this._emitDeselected(hadSelection, previousLayer);
+    this.eventBus.emit('render:request');
+  }
+
+  /**
+   * Clear passive inspection state. While the drawing tool is active this
+   * only clears its inspector selection, preserving the established pen
+   * mode lifecycle; context changes continue to call exit().
+   */
+  clearInspection() {
+    if (this.active) {
+      if (!this.selection) return;
+      this.clearSelection();
+      this.eventBus.emit('render:request');
+      return;
+    }
+
+    const previousLayer = this.layer;
+    const hadBinding = !!previousLayer;
+    const hadSelection = this.selection;
+    this.layer = null;
+    this.penNodeId = null;
+    this.selection = null;
+    this.hover = null;
+    this.cursorImg = null;
+    this.drag = null;
+
+    if (hadSelection) this._emitDeselected(hadSelection, previousLayer);
+    if (hadBinding || hadSelection) this.eventBus.emit('render:request');
+  }
+
+  /**
    * Exit the mode. Model state stays as authored (every gesture already
    * committed through network:changed); only tool state is discarded.
    */
   exit() {
     if (!this.active) return;
 
+    // Mode changes can precede the outer pointer handler's cancellation.
+    // Restore the model while the bound layer is still available; a later
+    // network:drag-cancel is then an idempotent no-op.
+    if (this.drag) this.cancelDrag();
+
     const hadSelection = this.selection;
+    const previousLayer = this.layer;
     this.active = false;
     this.layer = null;
     this.penNodeId = null;
@@ -128,7 +198,7 @@ export class NetworkEditService {
       this._keyHandler = null;
     }
 
-    if (hadSelection) this._emitDeselected(hadSelection.kind);
+    if (hadSelection) this._emitDeselected(hadSelection, previousLayer);
     this.eventBus.emit('network:edit-mode-changed', { active: false, layer: null });
     this.eventBus.emit('render:request');
   }
@@ -137,14 +207,25 @@ export class NetworkEditService {
 
   /** @returns {import('../models/GraphNode.js').GraphNode|null} */
   selectedNode() {
-    if (!this.active || this.selection?.kind !== 'node') return null;
+    if (!this.layer || this.selection?.kind !== 'node') return null;
     return this.layer.graph.getNode(this.selection.id) || null;
   }
 
   /** @returns {import('../models/GraphEdge.js').GraphEdge|null} */
   selectedEdge() {
-    if (!this.active || this.selection?.kind !== 'edge') return null;
+    if (!this.layer || this.selection?.kind !== 'edge') return null;
     return this.layer.graph.getEdge(this.selection.id) || null;
+  }
+
+  /**
+   * Resolve the individually selected bend point, if any.
+   * @returns {{edge: import('../models/GraphEdge.js').GraphEdge, index: number, point: {x: number, y: number}}|null}
+   */
+  selectedControlPoint() {
+    const edge = this.selectedEdge();
+    const index = this.selection?.controlIndex;
+    if (!edge || !Number.isInteger(index) || !edge.controlPoints[index]) return null;
+    return { edge, index, point: edge.controlPoints[index] };
   }
 
   /**
@@ -152,10 +233,12 @@ export class NetworkEditService {
    * @param {import('../models/GraphNode.js').GraphNode} node
    */
   selectNode(node) {
+    if (!this.layer || !node || !this.layer.graph.getNode(node.id)) return;
     if (this.selection?.kind === 'node' && this.selection.id === node.id) return;
-    if (this.selection?.kind === 'edge') this._emitDeselected('edge');
+    if (this.selection?.kind === 'edge') this._emitDeselected(this.selection);
     this.selection = { kind: 'node', id: node.id };
     this.eventBus.emit('network:node-selected', { node });
+    if (!this.active) this.eventBus.emit('render:request');
   }
 
   /**
@@ -163,24 +246,62 @@ export class NetworkEditService {
    * @param {import('../models/GraphEdge.js').GraphEdge} edge
    */
   selectEdge(edge) {
-    if (this.selection?.kind === 'edge' && this.selection.id === edge.id) return;
-    if (this.selection?.kind === 'node') this._emitDeselected('node');
+    if (!this.layer || !edge || !this.layer.graph.getEdge(edge.id)) return;
+    if (this.selection?.kind === 'edge' && this.selection.id === edge.id) {
+      if (!Number.isInteger(this.selection.controlIndex)) return;
+      const previous = this.selection;
+      this.selection = { kind: 'edge', id: edge.id };
+      this._emitControlDeselected(previous);
+      this.eventBus.emit('render:request');
+      return;
+    }
+    if (this.selection) this._emitDeselected(this.selection);
     this.selection = { kind: 'edge', id: edge.id };
     this.penNodeId = null;
     this.eventBus.emit('network:edge-selected', { edge });
+    if (!this.active) this.eventBus.emit('render:request');
+  }
+
+  /**
+   * Select one edge control point while retaining Edge-card scope.
+   * Scene-outline inspection calls this after bindForInspection().
+   * @param {import('../models/GraphEdge.js').GraphEdge} edge
+   * @param {number} index
+   */
+  selectControlPoint(edge, index) {
+    if (!this.layer || !edge || !Number.isInteger(index) ||
+        !this.layer.graph.getEdge(edge.id)?.controlPoints[index]) return;
+    if (this.selection?.kind === 'edge' && this.selection.id === edge.id &&
+        this.selection.controlIndex === index) return;
+
+    this.selectEdge(edge);
+    this.selection = { kind: 'edge', id: edge.id, controlIndex: index };
+    this.eventBus.emit('network:control-selected', { edge, index });
+    this.eventBus.emit('render:request');
   }
 
   /** Clear any node/edge selection (back to Crowd scope). */
   clearSelection() {
     if (!this.selection) return;
-    const kind = this.selection.kind;
+    const previous = this.selection;
     this.selection = null;
-    this._emitDeselected(kind);
+    this._emitDeselected(previous);
   }
 
   /** @private */
-  _emitDeselected(kind) {
+  _emitDeselected(selection, layer = this.layer) {
+    const kind = typeof selection === 'string' ? selection : selection.kind;
+    if (typeof selection !== 'string') this._emitControlDeselected(selection, layer);
     this.eventBus.emit(kind === 'node' ? 'network:node-deselected' : 'network:edge-deselected');
+  }
+
+  /** @private */
+  _emitControlDeselected(selection, layer = this.layer) {
+    if (!Number.isInteger(selection?.controlIndex)) return;
+    const edge = layer?.graph.getEdge(selection.id);
+    this.eventBus.emit('network:control-deselected', edge
+      ? { edge, index: selection.controlIndex }
+      : { index: selection.controlIndex });
   }
 
   // ── pen clicks ──────────────────────────────────────────
@@ -244,9 +365,15 @@ export class NetworkEditService {
    * @param {import('../models/GraphNode.js').GraphNode} node
    */
   deleteNode(node) {
-    if (!this.active || !this.layer.graph.removeNode(node.id)) return;
+    if (!this.layer || !node || !this.layer.graph.getNode(node.id)) return;
+    const incidentEdgeIds = new Set(
+      this.layer.graph.getEdgesForNode(node.id).map(edge => edge.id)
+    );
+    const selectionRemoved = (this.selection?.kind === 'node' && this.selection.id === node.id)
+      || (this.selection?.kind === 'edge' && incidentEdgeIds.has(this.selection.id));
+    if (selectionRemoved) this.clearSelection();
+    if (!this.layer.graph.removeNode(node.id)) return;
     if (this.penNodeId === node.id) this.penNodeId = null;
-    if (this.selection?.kind === 'node' && this.selection.id === node.id) this.clearSelection();
     this.hover = null;
     this._updateBannerCount();
     this.eventBus.emit('network:changed', { commit: true });
@@ -257,7 +384,7 @@ export class NetworkEditService {
    * @param {import('../models/GraphEdge.js').GraphEdge} edge
    */
   deleteEdge(edge) {
-    if (!this.active || !this.layer.graph.removeEdge(edge.id)) return;
+    if (!this.layer || !edge || !this.layer.graph.removeEdge(edge.id)) return;
     if (this.selection?.kind === 'edge' && this.selection.id === edge.id) this.clearSelection();
     this.hover = null;
     this._updateBannerCount();
@@ -271,6 +398,19 @@ export class NetworkEditService {
    */
   deleteControlPoint(edge, index) {
     if (!this.active || !edge.removeControlPoint(index)) return;
+    if (this.selection?.kind === 'edge' && this.selection.id === edge.id &&
+        Number.isInteger(this.selection.controlIndex)) {
+      if (this.selection.controlIndex === index) {
+        const previous = this.selection;
+        this.selection = { kind: 'edge', id: edge.id };
+        this._emitControlDeselected(previous);
+      } else if (this.selection.controlIndex > index) {
+        this.selection.controlIndex--;
+        this.eventBus.emit('network:control-selected', {
+          edge, index: this.selection.controlIndex
+        });
+      }
+    }
     this.hover = null;
     this.eventBus.emit('network:changed', { commit: true });
   }
@@ -323,6 +463,10 @@ export class NetworkEditService {
     this.eventBus.emit('network:changed', { commit: true });
     // Re-announce so the chip's kind text follows the direction
     this.eventBus.emit('network:edge-selected', { edge });
+    const control = this.selectedControlPoint();
+    if (control) {
+      this.eventBus.emit('network:control-selected', { edge, index: control.index });
+    }
   }
 
   /** Reverse a one-way edge by swapping its endpoints. */
@@ -333,17 +477,24 @@ export class NetworkEditService {
     edge.sourceId = edge.targetId;
     edge.targetId = source;
     edge.controlPoints.reverse();
+    if (this.selection?.kind === 'edge' && this.selection.id === edge.id &&
+        Number.isInteger(this.selection.controlIndex)) {
+      this.selection.controlIndex = edge.controlPoints.length - 1 - this.selection.controlIndex;
+      this.eventBus.emit('network:control-selected', {
+        edge, index: this.selection.controlIndex
+      });
+    }
     this.eventBus.emit('network:changed', { commit: true });
   }
 
   /**
    * Re-bind after a restore rebuilt the scene: adopt the fresh layer
-   * object, keep whatever selection/pen survived (by id), and re-emit
-   * the selection so cards and chip track the fresh model objects.
+   * object, preserve active or passive state and whatever selection/pen
+   * survived (by id), then re-emit selection with fresh model objects.
    * @param {import('../models/FlowLayer.js').FlowLayer} layer
    */
   rebind(layer) {
-    if (!this.active || !layer) return;
+    if (!this.layer || !layer) return;
     this.layer = layer;
     this.drag = null;
     this.hover = null;
@@ -353,7 +504,7 @@ export class NetworkEditService {
     }
 
     if (this.selection) {
-      const { kind, id } = this.selection;
+      const { kind, id, controlIndex } = this.selection;
       const fresh = kind === 'node' ? layer.graph.getNode(id) : layer.graph.getEdge(id);
       if (!fresh) {
         this.clearSelection();
@@ -361,6 +512,15 @@ export class NetworkEditService {
         this.eventBus.emit('network:node-selected', { node: fresh });
       } else {
         this.eventBus.emit('network:edge-selected', { edge: fresh });
+        if (Number.isInteger(controlIndex)) {
+          if (fresh.controlPoints[controlIndex]) {
+            this.eventBus.emit('network:control-selected', { edge: fresh, index: controlIndex });
+          } else {
+            const previous = this.selection;
+            this.selection = { kind: 'edge', id };
+            this._emitControlDeselected(previous);
+          }
+        }
       }
     }
 
@@ -390,8 +550,11 @@ export class NetworkEditService {
     if (!this.active) return;
     const p = edge.controlPoints[controlIndex];
     if (!p) return;
-    this.drag = { kind: 'control', edgeId: edge.id, controlIndex, origX: p.x, origY: p.y, moved: false };
-    this.selectEdge(edge);
+    this.drag = {
+      kind: 'control', edgeId: edge.id, controlIndex,
+      origX: p.x, origY: p.y, moved: false, inserted: false,
+    };
+    this.selectControlPoint(edge, controlIndex);
   }
 
   /**
@@ -405,8 +568,11 @@ export class NetworkEditService {
     if (!this.active) return;
     const index = Math.max(0, Math.min(edge.controlPoints.length, insertIndex));
     edge.controlPoints.splice(index, 0, { x: img.x, y: img.y });
-    this.drag = { kind: 'control', edgeId: edge.id, controlIndex: index, origX: img.x, origY: img.y, moved: false };
-    this.selectEdge(edge);
+    this.drag = {
+      kind: 'control', edgeId: edge.id, controlIndex: index,
+      origX: img.x, origY: img.y, moved: false, inserted: true,
+    };
+    this.selectControlPoint(edge, index);
     this.eventBus.emit('network:changed', { commit: false });
   }
 
@@ -417,7 +583,6 @@ export class NetworkEditService {
    */
   moveDrag(img, shift = false) {
     if (!this.active || !this.drag) return;
-    this.drag.moved = true;
 
     if (this.drag.kind === 'node') {
       const node = this.layer.graph.getNode(this.drag.nodeId);
@@ -430,12 +595,14 @@ export class NetworkEditService {
         if (ref) ({ x, y } = snapToAngle(ref.x, ref.y, x, y));
       }
       node.moveTo(x, y);
+      this.drag.moved = node.x !== this.drag.origX || node.y !== this.drag.origY;
     } else {
       const edge = this.layer.graph.getEdge(this.drag.edgeId);
       const p = edge?.controlPoints[this.drag.controlIndex];
       if (!p) { this.drag = null; return; }
       p.x = Math.max(0, Math.min(1, img.x));
       p.y = Math.max(0, Math.min(1, img.y));
+      this.drag.moved = p.x !== this.drag.origX || p.y !== this.drag.origY;
     }
     this.eventBus.emit('network:changed', { commit: false });
   }
@@ -447,9 +614,9 @@ export class NetworkEditService {
   endDrag() {
     if (!this.active || !this.drag) return;
     const moved = this.drag.moved;
-    const wasBend = this.drag.kind === 'control';
+    const inserted = this.drag.inserted === true;
     this.drag = null;
-    if (moved || wasBend) {
+    if (moved || inserted) {
       this.eventBus.emit('network:changed', { commit: true });
     }
   }
@@ -460,9 +627,22 @@ export class NetworkEditService {
     if (this.drag.kind === 'node') {
       const node = this.layer.graph.getNode(this.drag.nodeId);
       if (node) node.moveTo(this.drag.origX, this.drag.origY);
-    } else {
+    } else if (this.drag.inserted) {
       const edge = this.layer.graph.getEdge(this.drag.edgeId);
       if (edge) edge.removeControlPoint(this.drag.controlIndex);
+      if (edge && this.selection?.kind === 'edge' && this.selection.id === edge.id &&
+          this.selection.controlIndex === this.drag.controlIndex) {
+        const previous = this.selection;
+        this.selection = { kind: 'edge', id: edge.id };
+        this._emitControlDeselected(previous);
+      }
+    } else {
+      const edge = this.layer.graph.getEdge(this.drag.edgeId);
+      const point = edge?.controlPoints[this.drag.controlIndex];
+      if (point) {
+        point.x = this.drag.origX;
+        point.y = this.drag.origY;
+      }
     }
     this.drag = null;
     this.eventBus.emit('render:request');
@@ -616,7 +796,8 @@ export class NetworkEditService {
    * geometry cache (the drawn curve IS the travelled curve), one-way
    * arrows, and typed node glyphs — triangle in, circle through,
    * square out. Shown whenever a graph-guided crowd is selected, in
-   * the crowd's dot colour; edit mode only (gated by the caller).
+   * the crowd's dot colour. Passive inspector selections are emphasised
+   * here because the separate pen overlay remains active-mode-only.
    *
    * @param {RenderingService} svc - For scaleSizeClamped sizing
    * @param {CanvasRenderingContext2D} ctx
@@ -630,6 +811,15 @@ export class NetworkEditService {
 
     const ink = layer.emitters[0]?.dotColor || '#56B4E9';
     const lineWidth = svc.scaleSizeClamped(2);
+    const selectedNodeId = this.layer === layer && this.selection?.kind === 'node'
+      ? this.selection.id
+      : null;
+    const selectedShares = selectedNodeId
+      ? getGraphDepartureShares(graph, selectedNodeId)
+      : [];
+    const shareByEdgeId = selectedShares.length >= 2
+      ? new Map(selectedShares.map(({ edge, share }) => [edge.id, share]))
+      : new Map();
 
     ctx.save();
 
@@ -642,6 +832,10 @@ export class NetworkEditService {
     for (const edge of graph.getEdges()) {
       const pts = this._edgeCanvasPoints(state, graph, edge);
       if (pts.length < 2) continue;
+      const share = shareByEdgeId.get(edge.id);
+      ctx.lineWidth = share === undefined
+        ? lineWidth
+        : svc.scaleSizeClamped(2 + 6 * Math.sqrt(share));
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
@@ -656,25 +850,28 @@ export class NetworkEditService {
     ctx.globalAlpha = 1;
     const r = svc.scaleSizeClamped(7);
     for (const node of nodes) {
-      const p = state.imageToCanvas(node.x, node.y);
+      const p = state.imageToCanvas(node.position().x, node.position().y);
       this._drawNodeGlyph(ctx, p, node.type, r, ink);
+    }
+
+    if (!this.active && this.layer === layer) {
+      this._drawSelectionAffordances(svc, ctx, state, graph, ink, r);
     }
 
     ctx.restore();
   }
 
   /**
-   * Draw the mode's affordances: pen ring + dashed preview line,
-   * hover ring/glow, selection ring, and the selected edge's control
-   * handles. Hover/selection ids are validated against the current
-   * graph, so stale targets after an undo draw nothing.
+   * Draw active-mode affordances: pen ring + dashed preview line, hover,
+   * drag handles, and selection. Passive selection is drawn by renderGuide;
+   * this guard ensures pen/hover/drag language can never leak into it.
    *
    * @param {RenderingService} svc
    * @param {CanvasRenderingContext2D} ctx
    * @param {Object} state - renderState
    */
   renderOverlay(svc, ctx, state) {
-    if (!this.layer) return;
+    if (!this.active || !this.layer) return;
     const graph = this.layer.graph;
     const ink = this.layer.emitters[0]?.dotColor || '#56B4E9';
     const r = svc.scaleSizeClamped(7);
@@ -700,54 +897,14 @@ export class NetworkEditService {
       }
     }
 
-    // Selected edge: emphasis stroke + its control handles
-    const selEdge = this.selectedEdge();
-    if (selEdge) {
-      const pts = this._edgeCanvasPoints(state, graph, selEdge);
-      if (pts.length >= 2) {
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = svc.scaleSizeClamped(4.5);
-        ctx.globalAlpha = 0.85;
-        ctx.stroke();
-        ctx.strokeStyle = ink;
-        ctx.lineWidth = svc.scaleSizeClamped(2.5);
-        ctx.globalAlpha = 1;
-        ctx.stroke();
-      }
-      // Control handles: small squares, white fill + ink border (area
-      // vertex handle language)
-      const s = 5;
-      for (const p of selEdge.controlPoints) {
-        const c = state.imageToCanvas(p.x, p.y);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.strokeStyle = ink;
-        ctx.lineWidth = 1.5;
-        ctx.fillRect(c.x - s, c.y - s, s * 2, s * 2);
-        ctx.strokeRect(c.x - s, c.y - s, s * 2, s * 2);
-      }
-    }
-
-    // Selected node: dashed ring (waypoint selection language, static)
+    this._drawSelectionAffordances(svc, ctx, state, graph, ink, r);
     const selNode = this.selectedNode();
-    if (selNode) {
-      const p = state.imageToCanvas(selNode.x, selNode.y);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r + 5, 0, Math.PI * 2);
-      ctx.strokeStyle = ink;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 3]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
 
     // Hovered node: solid two-tone ring (hover-affordance language)
     if (this.hover?.kind === 'node') {
       const node = graph.getNode(this.hover.id);
       if (node && node.id !== selNode?.id) {
-        const p = state.imageToCanvas(node.x, node.y);
+        const p = state.imageToCanvas(node.position().x, node.position().y);
         ctx.beginPath();
         ctx.arc(p.x, p.y, r + 4, 0, Math.PI * 2);
         ctx.strokeStyle = '#FFFFFF';
@@ -783,6 +940,74 @@ export class NetworkEditService {
         ctx.stroke();
         ctx.setLineDash([]);
       }
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Draw selection-only emphasis shared by active authoring and passive
+   * semantic inspection. The selected control point receives a larger,
+   * two-tone square while sibling bend points retain ordinary handles.
+   * @private
+   */
+  _drawSelectionAffordances(svc, ctx, state, graph, ink, r) {
+    ctx.save();
+
+    const selEdge = this.selectedEdge();
+    if (selEdge) {
+      const pts = this._edgeCanvasPoints(state, graph, selEdge);
+      if (pts.length >= 2) {
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.strokeStyle = SELECTION_OUTER;
+        ctx.lineWidth = svc.scaleSizeClamped(4.5);
+        ctx.globalAlpha = 0.85;
+        ctx.stroke();
+        ctx.strokeStyle = SELECTION_INNER;
+        ctx.lineWidth = svc.scaleSizeClamped(2.5);
+        ctx.globalAlpha = 1;
+        ctx.stroke();
+      }
+
+      const selectedControl = this.selectedControlPoint();
+      for (let index = 0; index < selEdge.controlPoints.length; index++) {
+        const p = selEdge.controlPoints[index];
+        const c = state.imageToCanvas(p.x, p.y);
+        const isSelected = selectedControl?.index === index;
+        // Ordinary handles imply drag capability, so passive inspection
+        // draws only the specifically selected bend point.
+        if (!this.active && !isSelected) continue;
+        const size = isSelected ? 7 : 5;
+        ctx.fillStyle = SELECTION_OUTER;
+        ctx.fillRect(c.x - size, c.y - size, size * 2, size * 2);
+        ctx.strokeStyle = isSelected ? SELECTION_OUTER : ink;
+        ctx.lineWidth = isSelected ? 4 : 1.5;
+        ctx.strokeRect(c.x - size, c.y - size, size * 2, size * 2);
+        if (isSelected) {
+          ctx.strokeStyle = SELECTION_INNER;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(c.x - size, c.y - size, size * 2, size * 2);
+        }
+      }
+    }
+
+    const selNode = this.selectedNode();
+    if (selNode) {
+      const p = state.imageToCanvas(selNode.x, selNode.y);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = SELECTION_OUTER;
+      ctx.lineWidth = 5;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = SELECTION_INNER;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
 
     ctx.restore();

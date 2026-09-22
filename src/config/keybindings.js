@@ -130,20 +130,6 @@ const DEFAULT_BINDINGS = {
       description: 'Deselect',
       category: 'waypoint'
     },
-    selectNextWaypoint: {
-      key: 'Tab',
-      modifiers: [],
-      action: 'waypoint:select-next',
-      description: 'Select next waypoint',
-      category: 'waypoint'
-    },
-    selectPrevWaypoint: {
-      key: 'Tab',
-      modifiers: ['shift'],
-      action: 'waypoint:select-prev',
-      description: 'Select previous waypoint',
-      category: 'waypoint'
-    },
     selectAllWaypoints: {
       key: 'a',
       modifiers: ['meta'],

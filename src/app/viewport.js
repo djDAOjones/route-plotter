@@ -1,3 +1,5 @@
+import { resolveRenderReference } from '../utils/renderReference.js';
+
 /**
  * Canvas viewport: aspect ratio, visible bounds, screen/canvas/image coordinate conversion, manual zoom.
  *
@@ -45,7 +47,10 @@ export const viewportMixin = {
     
     // Match playbar width to canvas for clean layout
     if (playbar) {
-      playbar.style.width = `${canvasWidth}px`;
+      const isReflowLayout = window.matchMedia?.('(max-width: 64rem)').matches ?? false;
+      // The reflow stylesheet makes the controls span the viewport column.
+      // Clear the desktop canvas-width override so its width:100% can apply.
+      playbar.style.width = isReflowLayout ? '' : `${canvasWidth}px`;
     }
     
     // Update backing store for HiDPI
@@ -66,6 +71,15 @@ export const viewportMixin = {
     // Update display dimensions
     this.displayWidth = canvasWidth;
     this.displayHeight = canvasHeight;
+
+    // A new project adopts its first authored canvas as a stable visual
+    // reference. Later viewport/export changes must never rewrite it.
+    if (!resolveRenderReference(this.renderReference)) {
+      this.renderReference = resolveRenderReference({
+        width: this.displayWidth,
+        height: this.displayHeight,
+      });
+    }
     
     // Update coordinate transform service
     this.coordinateTransform.setCanvasDimensions(this.displayWidth, this.displayHeight);
@@ -154,7 +168,9 @@ export const viewportMixin = {
    */
   updateImageTransform(img) {
     if (!img) {
-      // No image - coordinateTransform will use normalized coordinates
+      // No image: forget the previous bitmap bounds but keep the canvas size
+      // so normalized authoring still spans the whole surface.
+      this.coordinateTransform.clearImage();
       return;
     }
     

@@ -8,6 +8,8 @@ Thumbs.db
 # Editor directories and files
 .vscode/
 .idea/
+.claude/
+CLAUDE.local.md
 *.swp
 *~
 *.suo
@@ -18,7 +20,12 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+.docs-build-*
+.docs-backup-*
 # docs/ - NOT ignored (needed for GitHub Pages)
+
+# Local runtime ownership
+.route-plotter-dev.pid
 
 # Environment files
 .env
@@ -38,3 +45,12 @@ Thumbs.db
 
 # Archive folders
 Obsolete/
+
+# User project exports are private unless individually reviewed for publication
+*.zip
+# …except the three example project archives the owner approved for publication
+# on 2026-08-27 (public-assets.json -> exampleProjects). Named individually so
+# the blanket rule still catches a stray user project save (DEMO-01).
+!docs/examples/parm-aerial-walk.zip
+!docs/examples/uon-open-day.zip
+!docs/examples/nervous-system-flow.zip

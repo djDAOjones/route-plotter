@@ -5,6 +5,11 @@ import { CAMERA_DEFAULTS, ZOOM_MODE } from '../services/CameraService.js';
  * Model representing a waypoint on the route
  * Encapsulates waypoint properties and provides methods for manipulation
  */
+/** Normalise an optional id-like option to a non-empty string or null. */
+function nonEmptyString(value) {
+  return typeof value === 'string' && value !== '' ? value : null;
+}
+
 export class Waypoint {
   constructor(options = {}) {
     // Position (normalized image coordinates 0-1)
@@ -13,6 +18,16 @@ export class Waypoint {
     
     // Type
     this.isMajor = options.isMajor !== undefined ? options.isMajor : true;
+
+    // Hero-route branch membership (ROUTE-01a). All three stay null on a
+    // linear route and are omitted from toJSON() when null, so an unsplit
+    // project keeps the exact serialized shape it has always had.
+    /** @type {string|null} Branch this waypoint belongs to; null = trunk */
+    this.branchId = nonEmptyString(options.branchId);
+    /** @type {string|null} On a branch's FIRST waypoint: the waypoint it forks from */
+    this.branchFrom = nonEmptyString(options.branchFrom);
+    /** @type {string|null} On a branch's LAST waypoint: the waypoint it rejoins; null = terminal */
+    this.branchRejoin = nonEmptyString(options.branchRejoin);
     
     // Property change tracking for performance optimization
     this._dirtyProps = new Set();
@@ -29,7 +44,8 @@ export class Waypoint {
     this.pathShape = options.pathShape || 'line'; // line, squiggle, randomised
     
     // Squiggle/Random shape parameters
-    // Amplitude: perpendicular displacement as percentage of segment length (0-100)
+    // Amplitude: legacy stored units; renderer divides by 500, so 5 = 1%
+    // of the normalized source-image coordinate scale.
     this.shapeAmplitude = options.shapeAmplitude !== undefined ? options.shapeAmplitude : 10;
     // Frequency: number of wave cycles per 100 path points (1-20)
     this.shapeFrequency = options.shapeFrequency !== undefined ? options.shapeFrequency : 5;
@@ -70,6 +86,16 @@ export class Waypoint {
     this.labelOffsetX = options.labelOffsetX !== undefined ? options.labelOffsetX : TEXT_LABEL.OFFSET_DEFAULT_X;
     /** @type {number} Y offset from marker center (percentage of canvas height, -50 to 50) */
     this.labelOffsetY = options.labelOffsetY !== undefined ? options.labelOffsetY : TEXT_LABEL.OFFSET_DEFAULT_Y;
+    /**
+     * LABEL-01: set once the author positions this label themselves. Auto-
+     * position then never runs on its own again for this waypoint — the
+     * author's placement outranks the algorithm's. The explicit button still
+     * works, because asking for it is not the same as it happening to you.
+     * Deliberately absent from the style-propagation lists: where a label sits
+     * is per-waypoint authoring state, not a style to apply onward.
+     * @type {boolean}
+     */
+    this.labelPlacedByHand = options.labelPlacedByHand === true;
     /** @type {number} Text area width (percentage of canvas width, 5-50) */
     this.labelWidth = options.labelWidth !== undefined ? options.labelWidth : TEXT_LABEL.WIDTH_DEFAULT;
     /** @type {number} Font size in pixels (10-48, WCAG minimum 14) */
@@ -276,7 +302,8 @@ export class Waypoint {
       'beaconStyle', 'labelMode',
       'labelOffsetX', 'labelOffsetY', 'labelWidth', 'labelSize',
       'labelColor', 'labelBgColor', 'labelBgOpacity',
-      'customImage'
+      'customImage', 'customImageAssetId',
+      'customImageRotation', 'customImageRotationOffset'
     ];
     
     copyProps.forEach(prop => {
@@ -358,6 +385,11 @@ export class Waypoint {
       imgX: this.imgX,
       imgY: this.imgY,
       isMajor: this.isMajor,
+      // Branch links are omitted when null so a linear project's saved shape
+      // is byte-identical to a pre-ROUTE-01 save (approved contract).
+      ...(this.branchId ? { branchId: this.branchId } : {}),
+      ...(this.branchFrom ? { branchFrom: this.branchFrom } : {}),
+      ...(this.branchRejoin ? { branchRejoin: this.branchRejoin } : {}),
       segmentColor: this.segmentColor,
       segmentWidth: this.segmentWidth,
       segmentStyle: this.segmentStyle,
@@ -379,6 +411,7 @@ export class Waypoint {
       labelMode: this.labelMode,
       labelOffsetX: this.labelOffsetX,
       labelOffsetY: this.labelOffsetY,
+      labelPlacedByHand: this.labelPlacedByHand,
       labelWidth: this.labelWidth,
       labelSize: this.labelSize,
       labelColor: this.labelColor,

@@ -156,6 +156,29 @@ describe('SwarmEngine.evaluate — determinism', () => {
     emitter.update({ seed: 42 });
     expect(evaluate(layer, 5000)).toEqual(before);
   });
+
+  test('a serialized clone gives editor, reload, and export consumers identical frames', () => {
+    const { layer } = forkLayer(3, 1, {
+      dotCount: 40,
+      speed: 0.2,
+      speedVariance: 1,
+      onsetVariance: 1,
+      intensityRamp: -0.6,
+      busynessEnvelope: [
+        { time: 0, value: 0.1, transition: 'step' },
+        { time: 0.4, value: 1, transition: 'gradual' },
+        { time: 1, value: 0.2, transition: 'gradual' },
+      ],
+      wobble: 1,
+      releaseDuration: 1,
+      lifecycleMode: 'respawn',
+    });
+    const restored = FlowLayer.fromJSON(JSON.parse(JSON.stringify(layer.toJSON())));
+
+    for (const timelineMs of [0, 1750, 5000, 10000]) {
+      expect(evaluate(restored, timelineMs)).toEqual(evaluate(layer, timelineMs));
+    }
+  });
 });
 
 describe('SwarmEngine.evaluate — release window', () => {
@@ -197,6 +220,33 @@ describe('SwarmEngine.evaluate — release window', () => {
     expect(midway).toBeGreaterThan(5);
     expect(midway).toBeLessThan(35); // scattered, not slotted
     expect(evaluate(layer, DURATION_MS).length).toBe(40);
+  });
+
+  test('quiet-busy-quiet envelope concentrates deterministic releases around the middle', () => {
+    const busynessEnvelope = [
+      { time: 0, value: 0, transition: 'gradual' },
+      { time: 0.5, value: 1, transition: 'gradual' },
+      { time: 1, value: 0, transition: 'gradual' },
+    ];
+    const even = lineLayer({ dotCount: 100, releaseDuration: 1 }).layer;
+    const shaped = lineLayer({ dotCount: 100, releaseDuration: 1, busynessEnvelope }).layer;
+    expect(evaluate(shaped, 2500).length).toBeLessThan(evaluate(even, 2500).length);
+    expect(evaluate(shaped, 7500).length).toBeGreaterThan(evaluate(even, 7500).length);
+    expect(evaluate(shaped, DURATION_MS).length).toBe(100);
+  });
+
+  test('sudden spans hold the earlier busyness until their boundary', () => {
+    const gradual = lineLayer({ dotCount: 100, releaseDuration: 1, busynessEnvelope: [
+      { time: 0, value: 0.1, transition: 'gradual' },
+      { time: 0.5, value: 1, transition: 'gradual' },
+      { time: 1, value: 1, transition: 'gradual' },
+    ] }).layer;
+    const sudden = lineLayer({ dotCount: 100, releaseDuration: 1, busynessEnvelope: [
+      { time: 0, value: 0.1, transition: 'step' },
+      { time: 0.5, value: 1, transition: 'gradual' },
+      { time: 1, value: 1, transition: 'gradual' },
+    ] }).layer;
+    expect(evaluate(sudden, 4900).length).toBeLessThan(evaluate(gradual, 4900).length);
   });
 });
 
@@ -279,6 +329,15 @@ describe('SwarmEngine.evaluate — graph routing', () => {
     const ratio = atA / atB;
     expect(ratio).toBeGreaterThan(2.2); // ~3:1 with hash noise
     expect(ratio).toBeLessThan(4.0);
+  });
+
+  test('junction choices stay distributed when finite weights overflow a direct sum', () => {
+    const { layer, exitA, exitB } = forkLayer(1e308, 1e308, { dotCount: 400, speed: 5 });
+    const dots = evaluate(layer, 9000);
+    const atA = dots.filter(d => Math.abs(d.y - exitA.y) < 0.01).length;
+    const atB = dots.filter(d => Math.abs(d.y - exitB.y) < 0.01).length;
+    expect(atA).toBeGreaterThan(150);
+    expect(atB).toBeGreaterThan(150);
   });
 
   test('one-way edges are never traversed backwards', () => {

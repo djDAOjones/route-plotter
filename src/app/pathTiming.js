@@ -10,6 +10,76 @@ import { Easing } from '../utils/Easing.js';
 import { ANIMATION, PATH_VISIBILITY } from '../config/constants.js';
 import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
 import { CameraService } from '../services/CameraService.js';
+import { resolveRouteBranches, branchPathWaypoints, trunkWaypoints } from '../utils/routeBranches.js';
+import { composeRouteTimeline } from '../utils/branchTiming.js';
+import { resolveGraphAnchors } from '../utils/routeAnchors.js';
+
+/**
+ * The waypoints `pathPoints` was built from — `waypoints` itself on a linear
+ * route, the trunk once the route has been split (ROUTE-01b).
+ *
+ * A module helper rather than a mixin method because PlayerApp borrows only
+ * part of this mixin: a `routeOf(this)` call would be undefined there.
+ * @param {Object} app RoutePlotter or PlayerApp
+ * @returns {Array<Object>}
+ */
+function routeOf(app) {
+  if (app._trunkWaypoints && app._trunkWaypoints.length) return app._trunkWaypoints;
+  return trunkWaypoints(app.waypoints || []);
+}
+
+/**
+ * Tell the author when a crowd binding breaks — once per change, not once per
+ * path rebuild, which runs on every drag frame. The node keeps its binding and
+ * falls back to where it was authored; this is the "explicit fallback and
+ * author-visible warning" half of that rule (COMPOSE-01).
+ *
+ * @param {Object} app RoutePlotter
+ * @param {{broken: Array}} report
+ */
+function announceBrokenAnchors(app, report) {
+  const signature = report.broken.map(item => `${item.layerId}:${item.nodeId}`).sort().join('|');
+  if (signature === app._lastBrokenAnchorSignature) return;
+  app._lastBrokenAnchorSignature = signature;
+  if (report.broken.length === 0) return;
+
+  const layers = [...new Set(report.broken.map(item => item.layerName))];
+  const subject = report.broken.length === 1
+    ? 'A crowd node'
+    : `${report.broken.length} crowd nodes`;
+  app.eventBus?.emit?.('ui:toast', {
+    message: `${subject} lost the waypoint it followed (${layers.join(', ')}) — back at its own position`
+  });
+  app.announce?.(`${subject} lost the waypoint it followed and is back at its own position.`);
+}
+
+/**
+ * Each waypoint's effective wait, read off the legs' own pause markers so a
+ * beacon's early-onset budget is included exactly as the timeline sees it.
+ * @param {Object} legsById
+ * @returns {Object<string, number>}
+ */
+function pauseMsByWaypoint(legsById = {}) {
+  const waits = {};
+  for (const leg of Object.values(legsById)) {
+    for (const pause of leg?.timeline?.pauses || []) {
+      const id = pause.waypoint?.id;
+      if (id === undefined) continue;
+      waits[id] = (waits[id] || 0) + pause.duration;
+    }
+  }
+  return waits;
+}
+
+/** The subset of a waypoint PathCalculator needs to build a spline. */
+const splineInput = wp => ({
+  x: wp.imgX,
+  y: wp.imgY,
+  isMajor: wp.isMajor,
+  pathShape: wp.pathShape,
+  shapeAmplitude: wp.shapeAmplitude,
+  shapeFrequency: wp.shapeFrequency,
+});
 
 export const pathTimingMixin = {
   
@@ -21,29 +91,63 @@ export const pathTimingMixin = {
     // pathPoints is reassigned atomically below, so we never expose an empty
     // array mid-update.
     
-    // Invalidate caches - will be recalculated on next access
+    // Invalidate cached waypoint progress; it is recalculated on next access.
     this._waypointProgressCache = null;
-    this._segmentLengthsCache = null;
-    
+    this.routeStructure = resolveRouteBranches(this.waypoints);
+    this.branchPaths = [];
+    this.branchTimeline = null;
+
+    // Rebind anchored crowd nodes: the graph follows the route, so a moved or
+    // deleted waypoint must update bound evaluation on the same pass that
+    // rebuilt the geometry (COMPOSE-01). Ahead of the early returns below —
+    // deleting a route down to one waypoint breaks every binding, and that is
+    // exactly when a stale resolution would be worst.
+    this.anchorReport = resolveGraphAnchors(this.scene, this.waypointsById);
+    announceBrokenAnchors(this, this.anchorReport);
+
     if (this.waypoints.length < 2) {
       this.pathPoints = [];
       return;
     }
-    
+
+    // The trunk owns `pathPoints` and the AnimationEngine's transport. On a
+    // linear route trunkWaypoints() returns the same array, so nothing about
+    // an unsplit project changes (ROUTE-01b).
+    const trunkRoute = trunkWaypoints(this.waypoints);
+    if (trunkRoute.length < 2) {
+      this.pathPoints = [];
+      return;
+    }
+
     // Use normalized image coordinates (0-1) for path calculation
     // Path points will be transformed to canvas coords during rendering via imageToCanvas
     // Note: Don't spread wp as Waypoint class may have getters that don't spread correctly
     // Just pass the essential properties needed by PathCalculator
-    const normalizedWaypoints = this.waypoints.map(wp => ({
-      x: wp.imgX,
-      y: wp.imgY,
-      isMajor: wp.isMajor,
-      pathShape: wp.pathShape,
-      shapeAmplitude: wp.shapeAmplitude,
-      shapeFrequency: wp.shapeFrequency
-    }));
-    
+    const normalizedWaypoints = trunkRoute.map(splineInput);
+
     this.pathPoints = this.pathCalculator.calculatePath(normalizedWaypoints);
+    this._trunkWaypoints = trunkRoute;
+
+    // Each branch gets its own spline, anchored at its fork (and rejoin) so it
+    // visibly meets the trunk at both ends.
+    for (const branch of this.routeStructure.branches) {
+      const runWaypoints = branchPathWaypoints(this.routeStructure, branch.id, this.waypoints);
+      if (runWaypoints.length < 2) continue;
+      const pathPoints = this.pathCalculator.calculatePath(runWaypoints.map(splineInput));
+      this.branchPaths.push({
+        id: branch.id,
+        waypoints: runWaypoints,
+        anchorIds: [branch.forkFromId, branch.rejoinAtId].filter(Boolean),
+        forkFromId: branch.forkFromId,
+        rejoinAtId: branch.rejoinAtId,
+        pathPoints,
+        progressValues: pathPoints.length
+          ? this.pathCalculator.calculateWaypointProgress(
+              pathPoints, runWaypoints.map(wp => ({ x: wp.imgX, y: wp.imgY }))
+            )
+          : [],
+      });
+    }
     
     // Some callers invoke calculatePath() without a following render(), so queue
     // one here to keep the vector layer current.
@@ -77,7 +181,8 @@ export const pathTimingMixin = {
    * Reduces ~99% of waypoint position calculations (was every frame → once per change)
    */
   getMajorWaypointPositions() {
-    if (this.waypoints.length < 2) return [];
+    const route = routeOf(this);
+    if (route.length < 2) return [];
     
     // Return cached result if available (99% of calls hit cache)
     if (this._majorWaypointsCache) {
@@ -86,16 +191,16 @@ export const pathTimingMixin = {
     
     // Calculate fresh (only when waypoints change)
     const majorWaypoints = [];
-    let totalSegments = this.waypoints.length - 1;
+    let totalSegments = route.length - 1;
     
-    for (let i = 0; i < this.waypoints.length; i++) {
-      if (this.waypoints[i].isMajor) {
+    for (let i = 0; i < route.length; i++) {
+      if (route[i].isMajor) {
         // Calculate position as progress (0-1) along the path
         const progress = i / totalSegments;
         majorWaypoints.push({ 
           index: i, 
           progress: progress,
-          waypoint: this.waypoints[i]
+          waypoint: route[i]
         });
       }
     }
@@ -125,9 +230,10 @@ export const pathTimingMixin = {
   
   // Find which segment of the path we're currently in based on progress
   findSegmentIndexForProgress(progress) {
-    if (this.waypoints.length < 2) return -1;
+    const route = routeOf(this);
+    if (route.length < 2) return -1;
     
-    const totalSegments = this.waypoints.length - 1;
+    const totalSegments = route.length - 1;
     // Clamp progress between 0 and 1
     const clampedProgress = Math.max(0, Math.min(1, progress));
     
@@ -151,8 +257,109 @@ export const pathTimingMixin = {
    * 
    * @returns {Array} Array of progress values (0-1) for each waypoint, or null if invalid
    */
+  /**
+   * Compose the branched master timeline from current geometry (ROUTE-01b).
+   *
+   * Derived data, cached per path recalculation. Returns null on a linear
+   * route so every existing caller keeps its single-transport fast path — the
+   * AnimationEngine remains the sole authority for an unsplit project.
+   *
+   * @returns {Object|null} Composed timeline plus `legsById`, or null
+   */
+  getBranchTimeline() {
+    if (!this.routeStructure || this.routeStructure.isLinear) return null;
+    // Cached per path recalculation AND per base speed: the composition is a
+    // function of both, and a stale cache would report a branch's duration at
+    // the previous speed.
+    const baseSpeedNow = this.animationEngine?.state?.speed || ANIMATION.DEFAULT_SPEED;
+    if (this.branchTimeline && this._branchTimelineSpeed === baseSpeedNow) {
+      return this.branchTimeline;
+    }
+    if (!this.branchPaths || this.branchPaths.length === 0) return null;
+
+    const baseSpeed = baseSpeedNow;
+    const lengthOf = points => this.pathCalculator.calculatePathLength(
+      points.map(point => this.imageToCanvas(point.x, point.y))
+    );
+
+    const trunkProgress = this.getWaypointProgressValues();
+    if (!trunkProgress) return null;
+
+    const runs = [{
+      id: null,
+      waypoints: routeOf(this),
+      progressValues: trunkProgress,
+      pathLengthPx: lengthOf(this.pathPoints),
+      forkFromId: null,
+      rejoinAtId: null,
+    }];
+
+    for (const branch of this.branchPaths) {
+      if (!branch.pathPoints || branch.pathPoints.length === 0) continue;
+      runs.push({
+        id: branch.id,
+        waypoints: branch.waypoints,
+        progressValues: branch.progressValues,
+        pathLengthPx: lengthOf(branch.pathPoints),
+        forkFromId: branch.forkFromId,
+        rejoinAtId: branch.rejoinAtId,
+        anchorIds: branch.anchorIds,
+      });
+    }
+
+    this.branchTimeline = composeRouteTimeline(runs, baseSpeed);
+    this._branchTimelineSpeed = baseSpeed;
+    return this.branchTimeline;
+  },
+
+  /**
+   * Master-time arrival of every waypoint, plus each one's effective wait and
+   * the route's completion time (COMPOSE-01).
+   *
+   * Works for any route: a branched one reads the composed timeline, a linear
+   * one composes its single trunk leg through the same routine, so a bound
+   * crowd reads the same arithmetic either way. Route timing never depends on
+   * this — it is computed from the route and read by the crowd, one way only.
+   *
+   * @returns {{arrivalMsById: Object<string, number>,
+   *            pauseMsById: Object<string, number>,
+   *            totalDurationMs: number}|null}
+   */
+  getRouteArrivalMap() {
+    const branched = this.getBranchTimeline?.();
+    if (branched) {
+      return {
+        arrivalMsById: branched.arrivalMsById,
+        pauseMsById: pauseMsByWaypoint(branched.legsById),
+        totalDurationMs: branched.totalDurationMs,
+      };
+    }
+
+    const route = routeOf(this);
+    const progressValues = this.getWaypointProgressValues();
+    if (route.length < 2 || !progressValues) return null;
+
+    const baseSpeed = this.animationEngine?.state?.speed || ANIMATION.DEFAULT_SPEED;
+    const canvasPathPoints = this.pathPoints.map(point => this.imageToCanvas(point.x, point.y));
+    const composed = composeRouteTimeline([{
+      id: null,
+      waypoints: route,
+      progressValues,
+      pathLengthPx: this.pathCalculator.calculatePathLength(canvasPathPoints),
+      forkFromId: null,
+      rejoinAtId: null,
+    }], baseSpeed);
+
+    return {
+      arrivalMsById: composed.arrivalMsById,
+      pauseMsById: pauseMsByWaypoint(composed.legsById),
+      totalDurationMs: composed.totalDurationMs,
+    };
+  },
+
   getWaypointProgressValues() {
-    if (!this.pathPoints || this.pathPoints.length === 0 || !this.waypoints || this.waypoints.length < 2) {
+    const route = routeOf(this);
+    if (!this.pathPoints || this.pathPoints.length === 0 || route.length < 2) {
       return null;
     }
     
@@ -163,7 +370,7 @@ export const pathTimingMixin = {
     
     // Use normalized image coordinates (0-1) to match path points
     // Path points are stored in normalized coords, so waypoints must match
-    const normalizedWaypoints = this.waypoints.map(wp => ({
+    const normalizedWaypoints = route.map(wp => ({
       x: wp.imgX,
       y: wp.imgY
     }));
@@ -171,33 +378,6 @@ export const pathTimingMixin = {
     // Calculate and cache the result
     this._waypointProgressCache = this.pathCalculator.calculateWaypointProgress(this.pathPoints, normalizedWaypoints);
     return this._waypointProgressCache;
-  },
-  
-  /**
-   * Get cached segment lengths, calculating if needed
-   * Cache is invalidated when path changes (in calculatePath)
-   * 
-   * @returns {Array} Array of segment lengths in pixels, or null if invalid
-   */
-  getSegmentLengths() {
-    if (!this.pathPoints || this.pathPoints.length < 2 || !this.waypoints || this.waypoints.length < 2) {
-      return null;
-    }
-    
-    // Return cached values if available
-    if (this._segmentLengthsCache) {
-      return this._segmentLengthsCache;
-    }
-    
-    const waypointProgress = this.getWaypointProgressValues();
-    if (!waypointProgress) return null;
-    
-    // Convert normalized path points to canvas coords for length calculation
-    const canvasPathPoints = this.pathPoints.map(p => this.imageToCanvas(p.x, p.y));
-    
-    // Delegate to PathCalculator for segment length calculation
-    this._segmentLengthsCache = this.pathCalculator.calculateSegmentLengths(canvasPathPoints, waypointProgress);
-    return this._segmentLengthsCache;
   },
   
   /**
@@ -218,7 +398,7 @@ export const pathTimingMixin = {
     if (!waypointProgress) return null;
     
     const { waypoints: majorWaypoints, progressValues: majorProgress } =
-      CameraService.toMajorKeyframes(this.waypoints, waypointProgress);
+      CameraService.toMajorKeyframes(routeOf(this), waypointProgress);
     if (majorWaypoints.length < 2) return null;
     
     // Progress-span timing basis (not summed pixel lengths) preserves
@@ -240,7 +420,7 @@ export const pathTimingMixin = {
    * @returns {boolean} True if any major leg has speed != 1.0
    */
   hasSegmentSpeedVariations() {
-    return this.waypoints.some(wp =>
+    return routeOf(this).some(wp =>
       wp.isMajor !== false && wp.segmentSpeed !== undefined && wp.segmentSpeed !== 1.0
     );
   },
@@ -265,9 +445,10 @@ export const pathTimingMixin = {
     // the current leg's speed. validateZoomTransitions() re-aggregates these
     // into major→major totals, so this stays per-global-segment.
     const durations = [];
+    const route = routeOf(this);
     let currentLegSpeed = 1.0;
     for (let i = 0; i < waypointProgress.length - 1; i++) {
-      const wp = this.waypoints[i];
+      const wp = route[i];
       if (wp && wp.isMajor !== false) {
         currentLegSpeed = wp.segmentSpeed ?? 1.0;
       }
@@ -323,6 +504,22 @@ export const pathTimingMixin = {
       baseSpeed
     );
   },
+
+  /**
+   * Immediately rebuild every derived timeline field after a setting that
+   * changes intro or comet-tail time. Clearing the path debounce prevents an
+   * older scheduled calculation from overwriting the canonical result later.
+   * @param {number|null} baseSpeed - Optional px/s override
+   * @returns {number} Current total timeline duration in milliseconds
+   */
+  invalidateAnimationTiming(baseSpeed = null) {
+    if (this._durationUpdateTimeout) {
+      clearTimeout(this._durationUpdateTimeout);
+      this._durationUpdateTimeout = null;
+    }
+    this.updateAnimationDuration(baseSpeed);
+    return this.animationEngine.state.duration;
+  },
   
   /**
    * Update animation duration, segment markers, pause markers, and tail time
@@ -344,6 +541,7 @@ export const pathTimingMixin = {
    * - Total tail time = trail duration + handle
    * 
    * @param {number} baseSpeed - Base animation speed in px/s (optional, uses current if not provided)
+   * @returns {number|undefined} Total timeline duration, or undefined when no path exists
    */
   updateAnimationDuration(baseSpeed = null) {
     if (!this.pathPoints || this.pathPoints.length < 2) return;
@@ -383,7 +581,7 @@ export const pathTimingMixin = {
     
     // Set pause markers (this calculates total pause time)
     const waypointProgress = this.getWaypointProgressValues();
-    this.animationEngine.setPauseMarkers(this.waypoints, pathDuration, waypointProgress, 0); // No intro in pause markers
+    this.animationEngine.setPauseMarkers(routeOf(this), pathDuration, waypointProgress, 0); // No intro in pause markers
     totalDuration += this.animationEngine.totalPauseTime;
     
     // Set tail time for trail fade-out (preview mode only)
@@ -414,7 +612,23 @@ export const pathTimingMixin = {
     
     // End handle time is only added during export (not in edit/preview mode)
     // This is handled by the export functions which add VIDEO_EXPORT.START_BUFFER_MS
-    
+
+    // A branch that outlives the trunk extends the timeline (ROUTE-01d).
+    // Completion means every terminal endpoint is complete, so cutting the
+    // route at the trunk's end would truncate a longer branch mid-animation.
+    // The composed timeline is computed against the same base duration, so
+    // handles, intro and tail still sit outside it exactly as before.
+    // Optional call: a host that assembles only part of this mixin has no
+    // branch data either, so linear behaviour is the correct degradation.
+    const branchTimeline = this.getBranchTimeline?.();
+    if (branchTimeline && branchTimeline.totalDurationMs > 0) {
+      const branchTotal = branchTimeline.totalDurationMs
+        + startHandleTime
+        + this.animationEngine.introTime
+        + this.animationEngine.totalTailTime;
+      totalDuration = Math.max(totalDuration, branchTotal);
+    }
+
     // Set the final total duration
     this.animationEngine.setDuration(totalDuration);
     
@@ -437,6 +651,7 @@ export const pathTimingMixin = {
       this.elements.animationSpeedValueRight.textContent = durationSec + 's';
     }
     this.updateTimeDisplay();
+    return finalDuration;
   },
   
   /**

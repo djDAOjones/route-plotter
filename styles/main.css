@@ -44,6 +44,11 @@ body{
   transform:translateY(-200%);
   background:var(--interactive-01);
   color:var(--text-04);
+  /* Full 44px target: it was 37px tall, and a skip link is the first thing a
+     keyboard or switch user reaches (REV-05). */
+  display:flex;
+  align-items:center;
+  min-height:var(--control-lg);
   padding:var(--space-2) var(--space-3);
   border-radius:var(--radius-2);
   text-decoration:none;
@@ -58,6 +63,10 @@ body{
   box-shadow:
     0 0 0 2px var(--focus-inner),
     0 0 0 5px var(--focus-outer);
+}
+
+.skip-link-outline{
+  left:var(--space-4);
 }
 
 /* Links: always underlined */
@@ -215,7 +224,10 @@ select{
 .mode-label{
   font-size:var(--control-font);
   font-weight:500;
-  color:var(--text-03);
+  /* --text-03 is exactly 7:1 on white, but this label sits on the toggle's
+     own --ui-02 surface, where it fell to 6.37:1 — under AAA for text this
+     size (REV-05). --text-02 clears 10:1 on both. */
+  color:var(--text-02);
   padding:0.25rem 0.5rem;
   border-radius:999px;
   transition:color var(--motion-fast) var(--ease-out),
@@ -234,18 +246,31 @@ select{
 .mode-toggle{
   position:relative;
   width:2.75rem;
-  height:1.5rem;
-  min-height:1.5rem;
-  background:var(--ui-03);
-  border:1px solid var(--border-interactive); /* B1: visible 3:1 boundary for the OFF state (WCAG 1.4.11) */
-  border-radius:999rem;
+  height:2.75rem;
+  min-width:2.75rem;
+  min-height:2.75rem;
+  background:transparent;
+  border:none;
   cursor:pointer;
-  transition:background var(--motion-fast) var(--ease-out);
   padding:0;
   box-sizing:border-box;
 }
 
-.mode-toggle:hover{
+.mode-toggle::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:50%;
+  width:2.75rem;
+  height:1.5rem;
+  transform:translateY(-50%);
+  background:var(--ui-03);
+  border:1px solid var(--border-interactive); /* B1: visible 3:1 boundary for the OFF state (WCAG 1.4.11) */
+  border-radius:999rem;
+  transition:background var(--motion-fast) var(--ease-out);
+}
+
+.mode-toggle:hover::before{
   background:var(--hover-ui);
 }
 
@@ -256,21 +281,22 @@ select{
     0 0 0 5px var(--focus-outer);
 }
 
-.mode-toggle[aria-checked="true"]{
+.mode-toggle[aria-checked="true"]::before{
   background:var(--control-accent);
   border-color:transparent; /* navy fill is 11.7:1 on white — boundary not needed when ON */
 }
 
-.mode-toggle[aria-checked="true"]:hover{
+.mode-toggle[aria-checked="true"]:hover::before{
   background:var(--control-accent-hover);
 }
 
 .mode-toggle-thumb{
   position:absolute;
-  top:0.125rem;
+  top:50%;
   left:0.125rem;
   width:1.125rem;
   height:1.125rem;
+  transform:translateY(-50%);
   background:var(--ui-00);
   border-radius:50%;
   box-shadow:var(--elev-1);
@@ -279,7 +305,7 @@ select{
 }
 
 .mode-toggle[aria-checked="true"] .mode-toggle-thumb{
-  transform:translateX(1.25rem);
+  transform:translate(1.25rem,-50%);
 }
 
 /* Toast notification — replaces tip banner, auto-dismisses */
@@ -316,6 +342,26 @@ select{
 .toast.is-visible{
   opacity:1;
   transform:translateY(0);
+}
+
+/* LABEL-01: a toast may carry one offer. It is a real control on a dark
+   surface, so it takes the full 44px target and states its own affordance —
+   white on --ui-05 is ~21:1, well clear of AAA. */
+.toast-action{
+  flex-shrink:0;
+  min-height:var(--control-lg);
+  padding:0 var(--space-3);
+  background:transparent;
+  color:inherit;
+  border:1px solid currentColor;
+  border-radius:var(--radius-1);
+  font-size:var(--type-caption);
+  font-weight:600;
+  cursor:pointer;
+}
+
+.toast-action:hover{
+  background:rgba(255,255,255,0.12);
 }
 
 .toast-dismiss{
@@ -535,6 +581,30 @@ kbd{
   overflow-wrap:anywhere;
 }
 
+.scope-route-btn{
+  flex:none;
+  min-width:3.5rem;
+  min-height:2.75rem;
+  padding:0 var(--space-2);
+  border:1px solid currentColor;
+  border-radius:var(--radius-2);
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.scope-route-btn:hover:not(:disabled){
+  background:rgba(0,0,0,0.06);
+}
+
+.scope-route-btn:disabled{
+  border-color:transparent;
+  opacity:0.55;
+  cursor:default;
+}
+
 .scope-nav-btn{
   flex:none;
   min-width:2.75rem;
@@ -740,6 +810,7 @@ kbd{
   display:flex;
   align-items:center;
   justify-content:space-between;
+  min-height:var(--touch-target-min);
   padding:0.5rem 0.75rem; /* 8px 12px per spec */
   background:var(--cap-system); /* default cap color */
   cursor:pointer;
@@ -805,6 +876,223 @@ kbd{
 
 .settings-section.expanded .section-content{
   display:block;
+}
+
+/* Carbon-style progressive disclosure inside complex inspector cards. Native
+   details/summary keeps keyboard and assistive-technology state semantics; the
+   project styling supplies a full-size productive target and visible focus. */
+.section-more{
+  margin-top:var(--space-2);
+  border-top:1px solid var(--border-interactive);
+}
+
+.section-more > summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:var(--touch-target-min);
+  padding:0 var(--space-1);
+  color:var(--text-01);
+  font-size:var(--type-body);
+  font-weight:600;
+  cursor:pointer;
+  list-style:none;
+}
+
+.section-more > summary::-webkit-details-marker{
+  display:none;
+}
+
+.section-more > summary::after{
+  content:"";
+  width:0.5rem;
+  height:0.5rem;
+  margin-right:var(--space-1);
+  border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;
+  transform:rotate(45deg);
+  transition:transform var(--motion-med) var(--ease-out);
+}
+
+.section-more[open] > summary::after{
+  transform:rotate(225deg);
+}
+
+.section-more > summary:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 2px var(--focus-inner), 0 0 0 5px var(--focus-outer);
+}
+
+.section-more-content{
+  padding-top:var(--space-2);
+}
+
+.waypoint-card-actions{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:var(--space-2);
+  margin-top:var(--space-2);
+  padding-top:var(--space-2);
+  border-top:1px solid var(--border-interactive);
+}
+
+.waypoint-card-actions .btn{
+  min-width:0;
+  min-height:var(--touch-target-min);
+  padding-inline:var(--space-2);
+}
+
+.crowd-pattern-controls{
+  display:grid;
+  gap:var(--space-2);
+  margin-top:var(--space-2);
+  padding-top:var(--space-2);
+  border-top:1px solid var(--border-interactive);
+}
+
+.crowd-seed-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-2);
+  min-height:var(--touch-target-min);
+}
+
+#crowd-seed-value{
+  overflow-wrap:anywhere;
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+}
+
+#crowd-reroll-btn{
+  width:100%;
+  min-height:var(--touch-target-min);
+}
+
+.crowd-busyness-editor{
+  display:grid;
+  gap:var(--space-2);
+  margin-top:var(--space-3);
+  padding-top:var(--space-3);
+  border-top:1px solid var(--border-interactive);
+}
+
+.crowd-busyness-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-2);
+  font-size:var(--type-body);
+  font-weight:600;
+}
+
+#crowd-busyness-summary{
+  color:var(--text-02);
+  font-size:var(--type-caption);
+  font-weight:400;
+}
+
+.crowd-busyness-graph{
+  display:block;
+  width:100%;
+  min-height:8.75rem;
+  border:1px solid var(--border-interactive);
+  border-radius:var(--radius-1);
+  background:var(--ui-01);
+  touch-action:none;
+}
+
+.crowd-busyness-axis{
+  fill:none;
+  stroke:var(--border-strong);
+  stroke-width:1.5;
+}
+
+.crowd-busyness-line{
+  fill:none;
+  stroke:var(--interactive-01);
+  stroke-width:4;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.crowd-busyness-handle{
+  fill:var(--ui-01);
+  stroke:var(--interactive-01);
+  stroke-width:4;
+  cursor:grab;
+  pointer-events:none;
+}
+
+.crowd-busyness-handle-target{
+  fill:transparent;
+  stroke:transparent;
+  cursor:grab;
+}
+
+.crowd-busyness-handle-target:active{
+  cursor:grabbing;
+}
+
+.crowd-busyness-handles{
+  display:grid;
+  gap:var(--space-2);
+}
+
+.crowd-busyness-handle-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-2);
+  padding:var(--space-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  background:var(--ui-01);
+}
+
+.crowd-busyness-handle-title{
+  grid-column:1 / -1;
+  color:var(--text-01);
+  font-size:var(--type-caption);
+  font-weight:600;
+}
+
+.section-content .crowd-busyness-handle-row label{
+  display:grid;
+  grid-template-columns:1fr auto;
+  margin:0;
+  gap:var(--space-1);
+  color:var(--text-02);
+  font-size:var(--type-caption);
+}
+
+.crowd-busyness-handle-row input,
+.crowd-busyness-handle-row select{
+  grid-column:1 / -1;
+  width:100%;
+  min-width:0;
+  min-height:var(--touch-target-min);
+}
+
+.crowd-busyness-handle-row input[readonly]{
+  color:var(--text-02);
+  background:var(--ui-02);
+}
+
+.crowd-busyness-remove{
+  grid-column:1 / -1;
+  min-height:var(--touch-target-min);
+}
+
+.crowd-busyness-actions{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:var(--space-2);
+}
+
+.crowd-busyness-actions .btn{
+  min-width:0;
+  min-height:var(--touch-target-min);
+  padding-inline:var(--space-2);
 }
 
 /* Section tints and cap bands per spec v3.1.241 §5.1 */
@@ -938,6 +1226,12 @@ kbd{
   box-shadow:0 0 0 2px var(--focus-inner), 0 0 0 5px var(--focus-outer);
 }
 
+/* The thumb remains an available replacement value; the adjacent readout and
+   aria-valuetext carry the authoritative mixed-state claim. */
+.section-content input[type="range"][data-mixed="true"]{
+  opacity:.72;
+}
+
 .section-content label span:last-child{
   min-width:2.5rem; /* Consistent value width per spec §I */
   text-align:right;
@@ -949,7 +1243,7 @@ kbd{
 
 .section-content select{
   flex:1;
-  min-height:var(--control-minh); /* 2.5rem per spec §B */
+  min-height:var(--control-minh); /* 44px target */
   padding:var(--space-1) var(--space-2);
   padding-right:2rem;
   border:1px solid var(--border-strong);
@@ -970,7 +1264,7 @@ kbd{
 .section-content input[type="text"]{
   flex:1;
   width:100%; /* full width per spec v3.1.241 §9 */
-  min-height:var(--control-minh); /* 2.5rem per spec */
+  min-height:var(--control-minh); /* 44px target */
   padding:var(--space-1) var(--space-2);
   border:1px solid var(--border-strong);
   border-radius:var(--radius-1);
@@ -980,7 +1274,7 @@ kbd{
 }
 
 .section-content input[type="number"]{
-  min-height:var(--control-minh); /* 2.5rem per spec §B */
+  min-height:var(--control-minh); /* 44px target */
   padding:var(--space-1) var(--space-2);
   border:1px solid var(--border-strong);
   border-radius:var(--radius-1);
@@ -1474,8 +1768,8 @@ kbd{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-width:2rem;
-  min-height:2rem;
+  min-width:var(--touch-target-min);
+  min-height:var(--touch-target-min);
   background:transparent;
   border:none;
   border-radius:var(--radius-2);
@@ -1520,6 +1814,298 @@ kbd{
   line-height:var(--lh-caption);
   color:var(--text-02);
   margin:var(--space-1) 0 0;
+}
+
+/* Complete semantic scene outline (REV-02).
+   The canvas remains the visual renderer; this native details/list/form view
+   keeps every persisted route, crowd, graph and polygon entity operable with
+   ordinary browser keyboard behaviour. Indentation is deliberately shallow
+   so deep graph/polygon structures still reflow in the narrow sidebar. */
+.scene-outline-shell{
+  min-width:0;
+  margin:0;
+  padding:0.75rem;
+  border-top:1px solid var(--border-subtle);
+}
+
+.scene-outline-shell > details,
+.scene-outline,
+.scene-outline-details,
+.scene-outline-content,
+.scene-outline-subgroup,
+.scene-outline-form{
+  min-width:0;
+  max-width:100%;
+}
+
+.scene-outline-title,
+.scene-outline-summary{
+  min-height:var(--touch-target-min);
+  padding:var(--space-2);
+  color:var(--text-01);
+  font-weight:600;
+  line-height:var(--lh-body);
+  cursor:pointer;
+  overflow-wrap:anywhere;
+}
+
+.scene-outline-title{
+  font-size:var(--type-h2);
+}
+
+.scene-outline-summary{
+  border-radius:var(--radius-2);
+  font-size:var(--type-body);
+}
+
+.scene-outline-title:hover,
+.scene-outline-summary:hover{
+  background:var(--hover-ui);
+}
+
+.scene-outline-title:focus-visible,
+.scene-outline-summary:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.scene-outline{
+  margin-top:var(--space-3);
+  font-size:var(--type-caption);
+}
+
+.scene-outline > .scene-outline-details{
+  margin-bottom:var(--space-3);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-2);
+  background:var(--ui-02);
+}
+
+.scene-outline-content{
+  display:grid;
+  gap:var(--space-2);
+  padding:var(--space-2);
+}
+
+.scene-outline-list{
+  display:grid;
+  gap:var(--space-2);
+  min-width:0;
+  margin:0;
+  padding:0 0 0 var(--space-2);
+  border-left:2px solid var(--border-subtle);
+  list-style:none;
+}
+
+.scene-outline-item{
+  min-width:0;
+}
+
+.scene-outline-item > .scene-outline-details,
+.scene-outline-subgroup.scene-outline-details,
+.scene-outline-content > .scene-outline-network{
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+  background:var(--ui-01);
+}
+
+.scene-outline-hint,
+.scene-outline-empty{
+  margin:0;
+  color:var(--text-02);
+  line-height:var(--lh-caption);
+  overflow-wrap:anywhere;
+}
+
+.scene-outline-empty{
+  padding:var(--space-2);
+  font-style:italic;
+}
+
+.scene-outline-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:var(--space-2);
+}
+
+.scene-outline-action,
+.scene-outline-submit{
+  min-height:var(--touch-target-min);
+  white-space:normal;
+}
+
+.scene-outline-action{
+  flex:1 1 8rem;
+}
+
+.scene-outline-action.is-selected{
+  border-color:var(--interactive-01);
+  background:var(--selected-ui);
+  box-shadow:inset var(--border-width-focus) 0 0 var(--interactive-01);
+  font-weight:600;
+}
+
+.scene-outline-danger{
+  border-color:var(--support-01);
+}
+
+.scene-outline-form{
+  display:grid;
+  gap:var(--space-2);
+  padding:var(--space-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+  background:var(--ui-02);
+}
+
+.scene-outline-field-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(8.5rem,100%),1fr));
+  gap:var(--space-2);
+  min-width:0;
+}
+
+.control-group .scene-outline-field{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:var(--space-1);
+  min-width:0;
+  margin:0;
+}
+
+.control-group .scene-outline-field > span:first-child{
+  flex:none;
+  color:var(--text-02);
+  font-size:var(--type-caption);
+  font-weight:600;
+}
+
+.scene-outline-field input,
+.scene-outline-field select{
+  width:100%;
+  min-width:0;
+  min-height:var(--touch-target-min);
+  padding:var(--space-2);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-2);
+  background:var(--ui-01);
+  color:var(--text-01);
+  font:inherit;
+  font-size:max(1rem,var(--type-body));
+}
+
+.control-group .scene-outline-field input[type="color"]{
+  width:100%;
+  height:var(--touch-target-min);
+  padding:var(--space-1);
+}
+
+.scene-outline-submit{
+  justify-self:stretch;
+  width:100%;
+}
+
+.scene-outline-error{
+  margin:0;
+  padding:var(--space-2);
+  border-left:var(--border-width-focus) solid var(--support-01);
+  background:var(--ui-01);
+  color:var(--text-01);
+  font-weight:600;
+  line-height:var(--lh-caption);
+}
+
+.scene-outline-field [aria-invalid="true"]{
+  border-color:var(--support-01);
+  box-shadow:0 0 0 1px var(--support-01);
+}
+
+.scene-outline-readonly{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:var(--space-1) var(--space-2);
+  min-width:0;
+  margin:0;
+  padding:var(--space-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+}
+
+.scene-outline-readonly dt{
+  color:var(--text-02);
+  font-weight:600;
+}
+
+.scene-outline-readonly dd{
+  min-width:0;
+  margin:0;
+  overflow-wrap:anywhere;
+}
+
+/* Junction path-choice fieldset: native number inputs keep exact weights
+   keyboard-editable; read-only percentages explain the resulting split. */
+.network-path-weights{
+  border:0;
+  min-inline-size:0;
+  margin:var(--space-4) 0;
+  padding:0;
+}
+
+.network-path-weights[hidden]{
+  display:none;
+}
+
+.network-path-weights legend{
+  padding:0;
+  color:var(--text-01);
+  font-size:var(--type-label);
+  font-weight:var(--w-label);
+}
+
+.network-path-weights > .section-hint{
+  margin-bottom:var(--space-2);
+}
+
+.network-path-weight-rows{
+  display:grid;
+  gap:var(--space-2);
+}
+
+.section-content .network-path-weight-row{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) 5rem;
+  align-items:center;
+  gap:var(--space-1) var(--space-2);
+  min-height:var(--touch-target-min);
+  margin:0;
+}
+
+.section-content .network-path-weight-row .network-path-weight-name{
+  min-width:0;
+  flex:none;
+  color:var(--text-01);
+  font-size:var(--type-caption);
+  font-weight:500;
+}
+
+.section-content .network-path-weight-row input[type="number"]{
+  width:5rem;
+  min-height:var(--touch-target-min);
+  box-sizing:border-box;
+  background:var(--ui-00);
+}
+
+.section-content .network-path-weight-row .network-path-weight-value{
+  grid-column:1 / -1;
+  min-width:0;
+  text-align:left;
+  color:var(--text-02);
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  font-weight:var(--w-mono);
 }
 
 .waypoint-item{
@@ -1640,10 +2226,103 @@ kbd{
   outline:none;
   min-width:0;
 }
-.waypoint-rename-input:focus-visible{
-  box-shadow:0 0 0 2px var(--focus);
+
+/* ── Minor waypoint rows (UI-02) ───────────────────────────────────────────
+   A minor shapes the leg of the major above it. The row is indented one step
+   with a leader line so the hierarchy reads at a glance; the visible "minor"
+   tag and the row's .sr-only context carry the same fact for anyone who does
+   not perceive the indent (WCAG 2.2 1.3.1). Row height and focus ring are
+   unchanged — a minor is still a 44px tap target. */
+.waypoint-item-minor > .waypoint-row{
+  /* One indent step, and a tighter gap: the sidebar is narrow, and a minor
+     row carries an extra child (the tag) where a major carries none. */
+  padding-left:calc(var(--space-3) + var(--space-4));
+  gap:var(--space-1);
 }
 
+/* Leader line from the owning major down the indent gutter */
+.waypoint-item-minor::after{
+  content:"";
+  position:absolute;
+  left:calc(var(--space-3) + var(--space-2));
+  top:0; bottom:0;
+  width:1px;
+  background:var(--border-quiet);
+  pointer-events:none;
+}
+
+/* Canvas draws minors as small grey shaping dots regardless of dotColor, so
+   the row shows that glyph rather than a swatch the render ignores. */
+.waypoint-minor-dot{
+  width:0.4375rem;
+  height:0.4375rem;
+  border-radius:50%;
+  flex-shrink:0;
+  background:var(--icon-02);
+  opacity:0.5;
+  /* Occupy the same box as .waypoint-color-dot so titles stay on one rhythm */
+  margin:0 calc((0.75rem - 0.4375rem) / 2);
+}
+
+/* Minors do not drag, so the handle slot is dead space in a narrow panel */
+.waypoint-handle.is-fixed{
+  display:none;
+}
+
+.waypoint-minor-tag{
+  flex-shrink:0;
+  margin-left:var(--space-1);
+  padding:0 var(--space-1);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  font-size:var(--type-caption);
+  line-height:1.5;
+  color:var(--text-02);
+  background:var(--ui-02);
+}
+
+@media (forced-colors: active){
+  .waypoint-item-minor::after{ background:CanvasText; }
+  .waypoint-minor-dot{ background:CanvasText; opacity:1; }
+  .waypoint-minor-tag{ border-color:CanvasText; color:CanvasText; background:Canvas; }
+}
+/* ── Branch rows (ROUTE-01c) ───────────────────────────────────────────────
+   A branch reuses the minor row's indent and leader so hierarchy reads the
+   same way, but carries the route's own colour rather than the grey shaping
+   glyph: a branch waypoint IS a route waypoint, it just runs in parallel. */
+.waypoint-item-branch > .waypoint-row .waypoint-minor-dot{
+  background:var(--interactive-01);
+  opacity:1;
+}
+.waypoint-item-branch::after{
+  background:var(--interactive-01);
+  opacity:0.4;
+}
+.waypoint-item-branch .waypoint-minor-tag{
+  color:var(--interactive-01);
+  border-color:var(--interactive-01);
+}
+
+/* The row a branch leaves. Badged onto the waypoint's own colour dot rather
+   than placed in the text flow: a major row is already dot + handle + title +
+   ▲▼ + × in a ~140px column, and one more inline child wrapped the title. The
+   mark belongs to the marker anyway. Aria-hidden — the row's .sr-only says it. */
+.waypoint-fork-mark{
+  position:absolute;
+  left:calc(var(--space-3) + 0.4rem);
+  top:0.5rem;
+  line-height:1;
+  color:var(--interactive-01);
+  font-size:var(--type-caption);
+  pointer-events:none;
+}
+
+@media (forced-colors: active){
+  .waypoint-item-branch > .waypoint-row .waypoint-minor-dot,
+  .waypoint-item-branch::after{ background:Highlight; opacity:1; }
+  .waypoint-item-branch .waypoint-minor-tag{ color:CanvasText; border-color:CanvasText; }
+  .waypoint-fork-mark{ color:CanvasText; }
+}
 /* Delete button: separate focusable control with own focus ring */
 .waypoint-delete{
   width:var(--control-lg);
@@ -1678,7 +2357,7 @@ kbd{
 /* Move up/down buttons - keyboard alternative to drag (AAA) */
 .waypoint-move-btns{
   display:flex;
-  flex-direction:column;
+  flex-direction:row;
   gap:0;
   opacity:0;
   pointer-events:none;
@@ -1698,8 +2377,8 @@ kbd{
 }
 
 .waypoint-move-btn{
-  width:1.5rem;
-  height:1.375rem; /* 22px: two stacked = the 44px row height; larger tap target than the old 16px */
+  width:var(--touch-target-min);
+  height:var(--touch-target-min);
   padding:0;
   border:none;
   background:transparent;
@@ -1805,8 +2484,8 @@ kbd{
   position:absolute;
   top:var(--space-3);
   right:var(--space-3);
-  width:2rem;
-  height:2rem;
+  width:var(--touch-target-min);
+  height:var(--touch-target-min);
   padding:0;
   background:transparent;
   border:none;
@@ -1849,6 +2528,104 @@ kbd{
   display:flex;
   gap:var(--space-3);
   justify-content:flex-end;
+}
+
+.diagnostics-modal-content{
+  max-width:48rem;
+  max-height:calc(100vh - (2 * var(--space-4)));
+  overflow-y:auto;
+}
+
+.modal-content .diagnostics-public-warning{
+  margin-top:calc(-1 * var(--space-2));
+  padding:var(--space-3);
+  border-left:3px solid var(--support-warning);
+  background:var(--support-warning-bg);
+  color:var(--text-01);
+}
+
+.diagnostics-preview-label{
+  display:block;
+  margin:0 0 var(--space-2);
+  color:var(--text-01);
+  font-size:var(--type-label);
+  font-weight:var(--w-label);
+}
+
+.diagnostics-preview{
+  display:block;
+  width:100%;
+  min-height:16rem;
+  max-height:45vh;
+  margin:0;
+  padding:var(--space-3);
+  resize:vertical;
+  box-sizing:border-box;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  background:var(--ui-00);
+  color:var(--text-01);
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  line-height:var(--lh-body);
+}
+
+.diagnostics-preview:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.modal-content .diagnostics-status{
+  min-height:1.5rem;
+  margin:var(--space-2) 0 var(--space-3);
+  color:var(--text-02);
+}
+
+.modal-content .diagnostics-issues-note{
+  margin:calc(-1 * var(--space-2)) 0 var(--space-3);
+}
+
+.modal-content .diagnostics-issues-note[hidden]{
+  display:none;
+}
+
+.diagnostics-inline-action{
+  display:inline-flex;
+  align-items:center;
+  min-height:var(--control-min-h);
+  padding:0 var(--space-2);
+  border:0;
+  background:transparent;
+  color:var(--link-01);
+  font:inherit;
+  font-weight:var(--w-label);
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+.diagnostics-inline-action[hidden]{
+  display:none;
+}
+
+.diagnostics-inline-action:hover{
+  background:var(--hover-ui);
+}
+
+.diagnostics-inline-action:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.diagnostics-issues-note code{
+  overflow-wrap:anywhere;
+}
+
+.diagnostics-actions{
+  flex-wrap:wrap;
 }
 
 /* ========== Keyboard Shortcuts Modal ========== */
@@ -2299,6 +3076,9 @@ kbd{
 #canvas{
   flex:0 0 auto;
   width:100%;
+  /* Canvas gestures are authored by the captured Pointer Events state
+     machine. Page scrolling remains available outside the canvas surface. */
+  touch-action:none;
   background:#fff;
   cursor:crosshair;
   display:block;
@@ -2427,6 +3207,10 @@ kbd{
 .btn-primary{
   background:var(--uon-blue); /* per spec v3.1.241 §4.4 */
   border-color:var(--uon-blue);
+  color:var(--text-04);
+}
+
+a.btn-primary:visited{
   color:var(--text-04);
 }
 
@@ -2681,122 +3465,200 @@ kbd{
 }
 
 /* =========================
-   Responsive: Medium screens - collapsible right sidebar
-   At ~1280px (80rem), right sidebar becomes collapsible overlay
+   Responsive: Medium screens
+   Keep all three real DOM columns present, but narrow both inspectors.
    ========================= */
 @media (max-width: 80rem) {
-  .sidebar-left,
-  .sidebar.left {
-    max-width: var(--sidebar-max-width);
-    min-width: var(--sidebar-min-width);
+  .header,
+  .header-controls{
+    flex-wrap:wrap;
   }
-  
-  .sidebar-right,
-  .sidebar.right {
-    position: fixed;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: var(--sidebar-max-width);
-    max-width: 90vw;
-    transform: translateX(100%);
-    transition: transform var(--motion-fast) var(--ease-out);
-    z-index: 100;
-    box-shadow: var(--elev-3);
+
+  .main{
+    grid-template-columns:minmax(15rem,18rem) minmax(20rem,1fr) minmax(15rem,18rem);
   }
-  
-  .sidebar-right.is-open,
-  .sidebar.right.is-open {
-    transform: translateX(0);
-  }
-  
-  /* Sidebar toggle button - visible at medium screens */
-  .sidebar-toggle {
-    display: flex;
-    position: fixed;
-    right: var(--space-2);
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 99;
-    background: var(--ui-01);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-2);
-    padding: var(--space-2);
-    min-width: var(--touch-target-min);
-    min-height: var(--touch-target-min);
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: var(--elev-1);
-  }
-  
-  .sidebar-toggle:hover {
-    background: var(--hover-ui);
-  }
-  
-  /* Backdrop overlay when sidebar is open */
-  .sidebar-backdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: var(--overlay-01);
-    z-index: 99;
-  }
-  
-  .sidebar-backdrop.is-visible {
-    display: block;
+
+  .sidebar,
+  .sidebar-right{
+    min-width:0;
   }
 }
 
 /* =========================
-   Responsive: Reflow breakpoint for AAA zoom compliance
-   At ~1024px (64rem) or 200%+ zoom on 1440px screens, stack layout
+   Responsive: Reflow breakpoint for WCAG zoom compliance
+   At ~1024px (64rem), including zoom-reduced viewports, use document
+   scrolling and stack the actual settings, canvas, and layer panels.
    ========================= */
 @media (max-width: 64rem) {
-  #app {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr auto;
-    height: auto;
-    min-height: 100vh;
+  html,
+  body{
+    height:auto;
+    min-height:100%;
   }
-  
-  .sidebar.left {
-    grid-column: 1;
-    grid-row: 1;
-    width: 100%;
-    max-width: none;
-    border-right: none;
-    border-bottom: 1px solid var(--border-passive);
-    max-height: 40vh;
-    overflow-y: auto;
+
+  body{
+    overflow:auto;
   }
-  
-  .main-content {
-    grid-column: 1;
-    grid-row: 2;
-    min-height: 50vh;
+
+  #app{
+    display:flex;
+    flex-direction:column;
+    height:auto;
+    min-height:100vh;
+    overflow:visible;
   }
-  
-  .sidebar.right {
-    grid-column: 1;
-    grid-row: 3;
-    width: 100%;
-    max-width: none;
-    border-left: none;
-    border-top: 1px solid var(--border-passive);
-    max-height: 30vh;
-    overflow-y: auto;
+
+  .header-title{
+    flex-basis:100%;
   }
-  
-  /* Header spans full width */
-  header {
-    grid-column: 1;
+
+  .header-controls{
+    width:100%;
+    margin-left:0;
   }
-  
-  /* Playbar at bottom */
-  .playbar-container {
-    grid-column: 1;
-    grid-row: 4;
+
+  .main{
+    display:flex;
+    flex-direction:column;
+    width:100%;
+    overflow:visible;
+  }
+
+  .sidebar,
+  .canvas-area,
+  .sidebar-right{
+    position:static;
+    width:100%;
+    max-width:none;
+    transform:none;
+    grid-column:auto;
+    grid-row:auto;
+  }
+
+  .sidebar,
+  .sidebar-right,
+  .settings-sections,
+  .waypoint-list{
+    overflow:visible;
+    max-height:none;
+  }
+
+  .canvas-area{
+    min-height:22rem;
+    justify-content:flex-start;
+    border-left:none;
+    border-right:none;
+    border-top:1px solid var(--border-subtle);
+    border-bottom:1px solid var(--border-subtle);
+  }
+
+  .sidebar-right{
+    border-top:1px solid var(--border-passive);
+  }
+
+  .controls{
+    position:static;
+    width:100%;
+    align-self:stretch;
+    flex-wrap:wrap;
+  }
+
+  .timeline{
+    flex:1 1 20rem;
+    min-width:0;
+  }
+}
+
+@media (max-width: 30rem) {
+  .header{
+    padding:var(--space-3);
+  }
+
+  .header-controls{
+    gap:var(--space-1);
+  }
+
+  .mode-switch{
+    width:100%;
+    justify-content:center;
+  }
+
+  .header-controls > .dropdown{
+    flex:1 1 8rem;
+  }
+
+  .header-controls > .dropdown .dropdown-toggle,
+  .header-controls > #report-bug-btn,
+  .header-controls > #help-btn{
+    width:100%;
+  }
+
+  .header-controls > #report-bug-btn,
+  .header-controls > #help-btn{
+    flex:1 1 8rem;
+  }
+
+  .diagnostics-actions .btn{
+    flex:1 1 10rem;
+  }
+
+  .canvas-area{
+    min-height:16rem;
+  }
+
+  .transport-controls{
+    width:100%;
+    justify-content:center;
+  }
+
+  .timeline{
+    flex-basis:100%;
+    gap:var(--space-2);
+  }
+
+  .time{
+    min-width:2.5rem;
+  }
+
+  .modal,
+  .splash-screen{
+    padding:var(--space-2);
+  }
+
+  .modal-content,
+  .splash-content{
+    max-height:calc(100vh - (2 * var(--space-2)));
+    overflow-y:auto;
+    padding:var(--space-4);
+  }
+
+  .section-content label.crowd-variation-control{
+    flex-wrap:wrap;
+  }
+
+  .crowd-variation-control input[type="range"]{
+    order:3;
+    flex:1 0 100%;
+    margin:var(--space-2) 0 var(--space-1);
+  }
+
+  .section-content .crowd-variation-control span:first-child{
+    flex:1 1 auto;
+  }
+
+  .section-content .crowd-variation-control span:last-child{
+    min-width:0;
+    white-space:nowrap;
+  }
+
+  .crowd-busyness-handle-row,
+  .crowd-busyness-actions{
+    grid-template-columns:1fr;
+  }
+
+  .crowd-busyness-handle-title,
+  .crowd-busyness-remove{
+    grid-column:1;
   }
 }
 
@@ -2837,59 +3699,6 @@ body[data-mode="preview"]::after {
   body[data-mode="preview"]::after {
     opacity: 1;
   }
-}
-
-/* =========================
-   Min-width gate (R-3)
-   Warn users on screens narrower than 1440px
-   ========================= */
-.screen-warning{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  background:rgba(0,0,0,0.6);
-  backdrop-filter:blur(4px);
-  -webkit-backdrop-filter:blur(4px);
-  align-items:center;
-  justify-content:center;
-}
-
-.screen-warning-content{
-  background:var(--ui-00);
-  border-radius:var(--radius-2);
-  padding:var(--space-5) var(--space-6);
-  max-width:28rem;
-  text-align:center;
-  box-shadow:var(--elev-3, 0 8px 32px rgba(0,0,0,0.3));
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:var(--space-3);
-}
-
-.screen-warning-content svg{
-  color:var(--support-warning, #F1C21B);
-}
-
-.screen-warning-content h2{
-  font-size:var(--type-h2);
-  font-weight:var(--w-h2);
-  color:var(--text-01);
-  margin:0;
-}
-
-.screen-warning-content p{
-  font-size:var(--type-body);
-  color:var(--text-02);
-  margin:0;
-  line-height:1.5;
-}
-
-.screen-warning-hint{
-  font-size:var(--type-caption) !important;
-  color:var(--text-03) !important;
-  font-family:var(--font-mono);
 }
 
 /* ============================================================================
@@ -2938,9 +3747,37 @@ body[data-mode="preview"]::after {
   font-size:var(--text-sm);
 }
 
-/* Show warning on narrow screens */
-@media (max-width: 1439px) {
-  .screen-warning:not(.dismissed){
-    display:flex;
+/* ── Forced colours (A11Y-02) ──────────────────────────────────────────────
+   Windows High Contrast and its kin force `box-shadow` to none, and every
+   focus ring in this project is a box-shadow drawn over `outline:none`.
+   Left alone, a high-contrast user gets no visible focus anywhere at all.
+   `outline` IS repainted with system colours, so it is the one thing they
+   can actually see: restored here for every focusable element in a single
+   place. `!important` because the per-component rules that zero the outline
+   are more specific than any selector this block could reasonably carry, and
+   in this mode one consistent system ring is the goal anyway.
+
+   Below it, the UI that carries meaning in hue alone is repainted to system
+   colours. The map canvas is deliberately NOT touched: it is content, like an
+   image, and forced colours leaves it as authored — so the Okabe-Ito data
+   palette and the affordances drawn over it (the hovered leg, its "+" handle,
+   beacons) stay legible against each other exactly as before. That exemption
+   is recorded in UI-STANDARDS → Accessibility rather than worked around
+   here, because repainting content to system colours would destroy the
+   colour-blind-safe palette it exists to protect. */
+@media (forced-colors: active){
+  :focus-visible{
+    outline:var(--focus-width) solid Highlight !important;
+    outline-offset:var(--focus-offset) !important;
   }
+
+  /* Selection accent bars: their fill would otherwise flatten to Canvas and
+     the selected row would lose its only non-text marker. */
+  .waypoint-item.selected::before,
+  .waypoint-item.is-selected::before,
+  .layer-item.selected::before{ background:Highlight; }
+
+  /* This one draws its bar as an inset box-shadow, so only the border can
+     survive — make that border carry the selection. */
+  .scene-outline-action.is-selected{ border-color:Highlight; }
 }

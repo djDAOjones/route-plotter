@@ -16,13 +16,15 @@
  * crowd cards — the handlers no-op headless without their elements).
  */
 
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { EventBus } from '../src/core/EventBus.js';
 import { Waypoint } from '../src/models/Waypoint.js';
+import { UndoService } from '../src/services/UndoService.js';
 import { editorPanelMixin } from '../src/app/editorPanel.js';
 import { wiringControllersMixin } from '../src/app/wiringControllers.js';
 import { undoRedoMixin } from '../src/app/undoRedo.js';
 import { UIController } from '../src/controllers/UIController.js';
+import { attachSwatchPickers } from '../src/components/SwatchPicker.js';
 
 // ── Stub waypoints ──────────────────────────────────────────────────
 
@@ -129,6 +131,105 @@ describe('selectionTargets', () => {
     const app = { selectedWaypoint: major, selectedWaypoints: [major, minor], selectionTargets: editorPanelMixin.selectionTargets };
     expect(app.selectionTargets(true)).toEqual([major]);
     expect(app.selectionTargets()).toEqual([major, minor]);
+  });
+});
+
+describe('waypoint inspector mixed presentation', () => {
+  function mountMixedHarness() {
+    document.body.innerHTML = `
+      <div id="waypoint-scope">
+        <input id="segment-color" type="hidden" value="#d55e00">
+        <div class="swatch-picker" data-target-input="#segment-color"></div>
+        <select id="path-shape"><option value="line">Line</option><option value="squiggle">Squiggle</option></select>
+        <input id="segment-width" type="range"><span id="segment-width-value"></span>
+        <input id="dot-color" type="hidden" value="#d55e00">
+        <div class="swatch-picker" data-target-input="#dot-color"></div>
+        <select id="marker-style"><option value="dot">Dot</option><option value="flag">Flag</option></select>
+        <input id="dot-size" type="range"><span id="dot-size-value"></span>
+        <select id="editor-beacon-style"><option value="none">None</option><option value="ripple">Ripple</option></select>
+        <input id="ripple-wait" type="checkbox">
+        <input id="label-color" type="hidden" value="#1a1a1a">
+        <div class="swatch-picker" data-target-input="#label-color" data-mode="neutral-ink" data-allow-custom="true"></div>
+        <input id="label-bg-color" type="hidden" value="#ffffff">
+        <div class="swatch-picker" data-target-input="#label-bg-color" data-mode="neutral-ink" data-allow-custom="true"></div>
+        <input id="label-size" type="range"><span id="label-size-value"></span>
+      </div>`;
+    attachSwatchPickers();
+    const byId = id => document.getElementById(id);
+    return {
+      elements: {
+        segmentColor: byId('segment-color'),
+        pathShape: byId('path-shape'),
+        segmentWidth: byId('segment-width'),
+        segmentWidthValue: byId('segment-width-value'),
+        dotColor: byId('dot-color'),
+        markerStyle: byId('marker-style'),
+        dotSize: byId('dot-size'),
+        dotSizeValue: byId('dot-size-value'),
+        editorBeaconStyle: byId('editor-beacon-style'),
+        rippleWait: byId('ripple-wait'),
+        labelColor: byId('label-color'),
+        labelBgColor: byId('label-bg-color'),
+        labelSize: byId('label-size'),
+        labelSizeValue: byId('label-size-value'),
+      },
+      styles: { dotColor: '#d55e00', dotSize: 8 },
+      imageAssetService: { getAsset: vi.fn() },
+      uiController: { _updateAreaSubControls: vi.fn() },
+      _updateBeaconControlsVisibility: vi.fn(),
+      _updateShapeParamsVisibility: vi.fn(),
+    };
+  }
+
+  test('compares leg values across all targets but major-only values across majors', () => {
+    const major = makeWaypoint({
+      markerStyle: 'flag',
+      pathShape: 'line',
+      segmentWidth: 3,
+      labelSize: 20,
+    });
+    const minor = Waypoint.createMinor(0.4, 0.4);
+    minor.pathShape = 'squiggle';
+    minor.segmentWidth = 9;
+    const app = mountMixedHarness();
+    Object.assign(app, {
+      _syncMajorWaypointControls: editorPanelMixin._syncMajorWaypointControls,
+      _applyWaypointMixedStates: editorPanelMixin._applyWaypointMixedStates,
+    });
+
+    app._syncMajorWaypointControls(major, [major]);
+    app._applyWaypointMixedStates([major, minor], [major]);
+
+    expect(app.elements.pathShape.value).toBe('__mixed__');
+    expect(app.elements.segmentWidthValue.textContent).toBe('Mixed');
+    expect(app.elements.markerStyle.value).toBe('flag');
+    expect(app.elements.markerStyle.dataset.mixed).toBeUndefined();
+    expect(app.elements.labelSizeValue.textContent).toBe('20 reference px');
+  });
+
+  test('presents select, range, checkbox and swatch disagreement without changing models', () => {
+    const a = makeWaypoint({
+      markerStyle: 'dot', dotColor: '#d55e00', rippleWait: true, labelSize: 18,
+    });
+    const b = makeWaypoint({
+      markerStyle: 'flag', dotColor: '#0072b2', rippleWait: false, labelSize: 30,
+    });
+    const before = [a.toJSON(), b.toJSON()];
+    const app = mountMixedHarness();
+    Object.assign(app, {
+      _syncMajorWaypointControls: editorPanelMixin._syncMajorWaypointControls,
+      _applyWaypointMixedStates: editorPanelMixin._applyWaypointMixedStates,
+    });
+
+    app._syncMajorWaypointControls(a, [a, b]);
+    app._applyWaypointMixedStates([a, b], [a, b]);
+
+    expect(app.elements.markerStyle.value).toBe('__mixed__');
+    expect(app.elements.labelSizeValue.textContent).toBe('Mixed');
+    expect(app.elements.labelSize.getAttribute('aria-valuetext')).toBe('Mixed');
+    expect(app.elements.rippleWait.indeterminate).toBe(true);
+    expect(document.querySelector('[data-target-input="#dot-color"] .swatch-mixed-state').hidden).toBe(false);
+    expect([a.toJSON(), b.toJSON()]).toEqual(before);
   });
 });
 
@@ -295,6 +396,48 @@ describe('waypoint:nudge with a multi-selection', () => {
     expect(b.imgX).toBeCloseTo(0.61, 10);
     expect(a.imgX).toBeCloseTo(0.2, 10);
   });
+
+  test('a burst of nudges becomes one undo step for the whole selection', () => {
+    vi.useFakeTimers();
+    try {
+      const a = makeWaypoint({ imgX: 0.2, imgY: 0.2 });
+      const b = makeWaypoint({ imgX: 0.6, imgY: 0.6 });
+      const app = makeApp({ waypoints: [a, b] });
+      app.scene = { toJSON: () => ({}) };
+      app.styles = {};
+      app.undoService = new UndoService(app.eventBus);
+      app._undoDebounceTimer = null;
+      app._getUndoableState = undoRedoMixin._getUndoableState;
+      app.saveUndoState = undoRedoMixin.saveUndoState;
+      app.saveUndoStateDebounced = undoRedoMixin.saveUndoStateDebounced;
+
+      app.eventBus.emit('waypoint:selected', a);
+      app.eventBus.emit('waypoint:toggle-select', b);
+      app.saveUndoState();
+
+      for (let i = 0; i < 3; i++) {
+        app.eventBus.emit('waypoint:nudge', {
+          waypoint: a,
+          dxFraction: 0.01,
+          dyFraction: 0,
+        });
+      }
+
+      expect(app.undoService.canUndo()).toBe(false);
+      vi.advanceTimersByTime(399);
+      expect(app.undoService.canUndo()).toBe(false);
+      vi.advanceTimersByTime(1);
+      expect(app.undoService.canUndo()).toBe(true);
+
+      const beforeBurst = app.undoService.undo();
+      expect(beforeBurst.waypoints[0].imgX).toBeCloseTo(0.2, 10);
+      expect(beforeBurst.waypoints[1].imgX).toBeCloseTo(0.6, 10);
+      expect(app.undoService.canUndo()).toBe(false);
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
+  });
 });
 
 // ── Undo: the multi-selection survives snapshot → restore ───────────
@@ -318,11 +461,15 @@ describe('undo snapshot and restore of the multi-selection', () => {
       autoSave() {},
       resolveCrowdSelectionAfterRestore() {},
       resolveNetworkAfterRestore() {},
+      _syncSceneOutlineSelectionAfterRestore: vi.fn(),
       _syncGlobalStyleUI() {},
       _addWaypointToMap(wp) { this.waypointsById.set(wp.id, wp); },
+      sectionController: { setWaypointSelectionState: vi.fn() },
       uiController: {
         selections: [],
-        setSelection(wps, primary) { this.selections.push({ wps: [...wps], primary }); }
+        editors: [],
+        setSelection(wps, primary) { this.selections.push({ wps: [...wps], primary }); },
+        updateWaypointEditor(primary, multi) { this.editors.push({ primary, multi }); }
       },
       interactionHandler: { setSelectedWaypoint() {} }
     };
@@ -338,6 +485,7 @@ describe('undo snapshot and restore of the multi-selection', () => {
     const app = makeUndoApp([a, b, c]);
     app.selectedWaypoint = b;
     app.selectedWaypoints = [a, b];
+    app.selectedCrowd = { id: 'crowd-stale' };
 
     const state = app._getUndoableState();
     expect(state.selectedWaypointIds).toEqual([a.id, b.id]);
@@ -351,10 +499,16 @@ describe('undo snapshot and restore of the multi-selection', () => {
     expect(app.selectedWaypoints[0]).not.toBe(a); // New object, same identity
     expect(app.selectedWaypoint?.id).toBe(b.id);
     expect(app.selectedWaypoints).toContain(app.selectedWaypoint);
+    expect(app.selectedCrowd).toBeNull();
+    expect(app._syncSceneOutlineSelectionAfterRestore).toHaveBeenCalledOnce();
     // The UI layers were handed the re-resolved selection
     const last = app.uiController.selections.at(-1);
     expect(last.wps.map(wp => wp.id)).toEqual([a.id, b.id]);
     expect(last.primary?.id).toBe(b.id);
+    const editor = app.uiController.editors.at(-1);
+    expect(editor.primary).toBe(app.selectedWaypoint);
+    expect(editor.multi).toEqual(app.selectedWaypoints);
+    expect(app.sectionController.setWaypointSelectionState).toHaveBeenCalledWith(true);
   });
 
   test('single selection restores as a one-waypoint selection array', () => {
@@ -368,6 +522,19 @@ describe('undo snapshot and restore of the multi-selection', () => {
 
     expect(app.selectedWaypoints).toHaveLength(1);
     expect(app.selectedWaypoints[0].id).toBe(a.id);
+    expect(app.sectionController.setWaypointSelectionState).toHaveBeenCalledWith(true);
+  });
+
+  test('restoring route scope clears the section controller selection state', () => {
+    const a = makeWaypoint();
+    const app = makeUndoApp([a]);
+
+    const state = app._getUndoableState();
+    app._restoreState(state);
+
+    expect(app.selectedWaypoint).toBeNull();
+    expect(app.selectedWaypoints).toEqual([]);
+    expect(app.sectionController.setWaypointSelectionState).toHaveBeenCalledWith(false);
   });
 });
 
@@ -383,8 +550,10 @@ describe('UIController multi-select', () => {
       <div id="scope-chip" data-scope="route">
         <button id="scope-prev-btn"></button>
         <span id="scope-chip-text">Editing · Route</span>
+        <button id="scope-route-btn" disabled>Route</button>
         <button id="scope-next-btn"></button>
       </div>
+      <h2 id="leg-section-title">Leg</h2>
       <ul id="waypoint-list"></ul>
     `;
     listEl = document.getElementById('waypoint-list');
@@ -451,10 +620,40 @@ describe('UIController multi-select', () => {
     // Stepping is disabled in multi-select
     expect(document.getElementById('scope-prev-btn').disabled).toBe(true);
     expect(document.getElementById('scope-next-btn').disabled).toBe(true);
+    expect(document.getElementById('leg-section-title').textContent).toBe('Leg');
 
     ui.setSelection([a, minor, b], b);
     ui.updateWaypointList([a, minor, b, c]);
     expect(chipText()).toBe('Editing · 3 waypoints (1 minor)');
+  });
+
+  test('Route button exits single and multi waypoint scope but not route or crowd scope', () => {
+    ui.updateWaypointList([a, b, c]);
+    const routeButton = document.getElementById('scope-route-btn');
+    const deselected = [];
+    bus.on('waypoint:deselected', () => deselected.push(true));
+
+    ui.setSelection([a], a);
+    ui.updateWaypointEditor(a);
+    expect(routeButton.disabled).toBe(false);
+    routeButton.click();
+
+    ui.setSelection([a, b], b);
+    ui.updateWaypointEditor(b, [a, b]);
+    expect(routeButton.disabled).toBe(false);
+    routeButton.click();
+    expect(deselected).toHaveLength(2);
+
+    ui.setSelection([], null);
+    ui.updateWaypointEditor(null);
+    expect(routeButton.disabled).toBe(true);
+    routeButton.click();
+
+    bus.emit('crowd:selected', { name: 'Visitors' });
+    ui.updateWaypointEditor(null);
+    expect(routeButton.disabled).toBe(true);
+    routeButton.click();
+    expect(deselected).toHaveLength(2);
   });
 
   test('setSelection keeps the list rows in sync with an app-decided selection', () => {
@@ -466,7 +665,8 @@ describe('UIController multi-select', () => {
     expect(rows[0].classList.contains('is-selected')).toBe(true);
     expect(rows[1].classList.contains('is-selected')).toBe(false);
     expect(rows[2].classList.contains('is-selected')).toBe(true);
-    expect(rows[0].querySelector('.waypoint-row').getAttribute('aria-selected')).toBe('true');
+    expect(rows[0].querySelector('.waypoint-row').getAttribute('aria-pressed')).toBe('true');
+    expect(listEl.getAttribute('role')).toBeNull();
   });
 
   test('updateWaypointEditor in multi mode announces the count, not a waypoint', () => {

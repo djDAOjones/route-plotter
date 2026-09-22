@@ -38,6 +38,8 @@ import { VIDEO_EXPORT, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUND_VISIBILI
 import { pathTimingMixin } from '../app/pathTiming.js';
 import { cameraMixin } from '../app/camera.js';
 import { viewportMixin } from '../app/viewport.js';
+import { resolveRenderReference } from '../utils/renderReference.js';
+import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
 
 export class PlayerApp {
   /**
@@ -61,6 +63,7 @@ export class PlayerApp {
     this.waypoints = [];
     this.scene = new Scene();
     this.pathPoints = [];
+    this.renderReference = null;
     this.styles = {};              // fully provided by the embedded project data
     this.background = { image: null, overlay: 0, fit: 'fit' };
     this.motionSettings = {
@@ -70,6 +73,7 @@ export class PlayerApp {
       backgroundVisibility: BACKGROUND_VISIBILITY.ALWAYS_SHOW,
       revealSize: MOTION.SPOTLIGHT_SIZE_DEFAULT,
       revealFeather: MOTION.SPOTLIGHT_FEATHER_DEFAULT,
+      revealTrail: MOTION.SPOTLIGHT_TRAIL_DEFAULT,
       aovAngle: MOTION.AOV_ANGLE_DEFAULT,
       aovDistance: MOTION.AOV_DISTANCE_DEFAULT,
       aovDropoff: MOTION.AOV_DROPOFF_DEFAULT
@@ -101,7 +105,6 @@ export class PlayerApp {
     this.elements = {};
     this.renderQueued = false;
     this._waypointProgressCache = null;
-    this._segmentLengthsCache = null;
     this._majorWaypointsCache = null;
     this._durationUpdateTimeout = null;
     this._lastDisplayedSecond = -1;
@@ -155,6 +158,15 @@ export class PlayerApp {
       fit: data.background?.fit ?? 'fit'
     };
     this.coordinateTransform.setBackgroundZoom(this.exportSettings.backgroundZoom / 100);
+
+    // Legacy snapshots inherit the authored timing canvas. Current snapshots
+    // carry an independent visual reference so appearance and timing can evolve
+    // without coupling either model to the export resolution.
+    this.renderReference = resolveRenderReference(
+      data.renderReference,
+      data.timingReference,
+      { width: this.exportSettings.resolutionX, height: this.exportSettings.resolutionY }
+    );
 
     // Custom images must finish decoding before the first frame — the exported
     // page has no later user interaction to trigger a corrective render.
@@ -292,12 +304,13 @@ export class PlayerApp {
       const progressChanged = Math.abs(state.progress - lastProgress) > 0.0001;
       const waitingChanged = state.isWaitingAtWaypoint !== lastWaitingState;
       const zoomTransitioning = this.cameraService.isZoomTransitioning(this.displayWidth, this.displayHeight);
-      if (state.isPlaying || progressChanged || waitingChanged || zoomTransitioning) {
+      if (this.animationEngine.isPlaying() || progressChanged || waitingChanged || zoomTransitioning) {
         if (onFrame) onFrame(state);
         this.render();
         lastProgress = state.progress;
         lastWaitingState = state.isWaitingAtWaypoint;
       }
+      return this.cameraService.isZoomTransitioning(this.displayWidth, this.displayHeight);
     });
   }
 
@@ -323,6 +336,13 @@ export class PlayerApp {
     const renderState = {
       waypoints: this.waypoints,
       pathPoints: this.pathPoints,
+      // Branch geometry and the composed master timeline (ROUTE-01d). Both come
+      // from pathTimingMixin, which the player takes wholesale, so a branched
+      // export renders through the same code the editor does.
+      branchPaths: this.branchPaths,
+      branchTimeline: this.getBranchTimeline(),
+      // Route moments a bound crowd reads (COMPOSE-01), one way only.
+      routeAnchors: this.getRouteArrivalMap?.() || null,
       styles: this.styles,
       selectedWaypoint: null,
       selectedWaypoints: [],
@@ -344,6 +364,8 @@ export class PlayerApp {
       viewport: this.viewport,
       imageToCanvas: (x, y, clamp) => this.imageToCanvas(x, y, clamp),
       coordinateTransform: this.coordinateTransform,
+      renderReference: this.renderReference,
+      interactiveLabels: false,
       visibleBounds: this.getVisibleBounds(),
       displayWidth: cw,
       displayHeight: ch,
@@ -393,13 +415,13 @@ export class PlayerApp {
         }
       }
     }
-    const headAssetId = this.styles.pathHead?.imageAssetId;
-    if (headAssetId && this._assets.has(headAssetId)) {
-      try {
-        this.styles.pathHead.image = await this._assets.get(headAssetId).getImageElement();
-      } catch (err) {
-        console.warn('Failed to restore path head image:', err);
-      }
+    try {
+      this.styles.pathHead.image = await resolvePathHeadImage(
+        this.styles.pathHead,
+        assetId => this._assets.get(assetId)?.getImageElement() ?? null
+      );
+    } catch (err) {
+      console.warn('Failed to restore path head image:', err);
     }
   }
 }

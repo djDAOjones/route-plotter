@@ -9,7 +9,7 @@
 
 export const TOOLTIPS = {
   // Marker section
-  marker_size: 'Size of waypoint markers on the map (1-50 pixels)',
+  marker_size: 'Size of waypoint markers on the map in project reference pixels',
   marker_color: 'Fill color for waypoint markers',
   marker_label: 'Show or hide waypoint labels on the map',
   marker_label_size: 'Text size for waypoint labels',

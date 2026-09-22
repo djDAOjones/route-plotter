@@ -15,9 +15,31 @@
  */
 import { isMac } from '../config/keybindings.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
+import {
+  busynessAt,
+  compileBusynessEnvelope,
+  defaultBusynessEnvelope,
+  MAX_BUSYNESS_HANDLES,
+  normalizeBusynessEnvelope,
+} from '../utils/busynessEnvelope.js';
+import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
+import { waitForCrowdMs } from '../utils/crowdArrival.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
+const BUSYNESS_GRAPH = Object.freeze({ width: 300, height: 140, padX: 18, padY: 16 });
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+export function formatCrowdReleaseTiming(percent) {
+  const rounded = Math.round(percent);
+  return rounded === 0 ? 'Even' : `${rounded}% uneven`;
+}
+
+export function formatCrowdReleaseBias(percent) {
+  const rounded = Math.round(percent);
+  if (rounded === 0) return 'Even';
+  return rounded < 0 ? `Earlier ${Math.abs(rounded)}%` : `Later ${rounded}%`;
+}
 
 export const crowdsMixin = {
 
@@ -67,8 +89,8 @@ export const crowdsMixin = {
       this.queueRender();
     });
 
-    // The Add-crowd gate follows route existence (crowds need a route
-    // to follow until network editing ships)
+    // Route changes update the Add-crowd description: a new crowd follows
+    // an existing route or starts an empty custom network.
     this.eventBus.on('waypoint:list-updated', () => this.updateLayersStrip());
 
     // ── Card controls (single-writer: this is the only wiring) ──
@@ -77,6 +99,7 @@ export const crowdsMixin = {
     document.getElementById('crowd-guide-type')?.addEventListener('change', (e) => {
       if (!this.selectedCrowd) return;
       this.selectedCrowd.setGuideType(e.target.value);
+      this.syncCrowdEditor();
       this.eventBus.emit('crowd:param-changed');
       // The network mixin reacts: empty-network crowds go straight into
       // network editing; switching back to route closes the mode
@@ -116,6 +139,16 @@ export const crowdsMixin = {
       return `${Math.round(raw)}%`;
     });
 
+    this._wireCrowdSlider('crowd-onset-variance', (raw) => {
+      emitterOf()?.update({ onsetVariance: raw / 100 });
+      return formatCrowdReleaseTiming(raw);
+    });
+
+    this._wireCrowdSlider('crowd-intensity-ramp', (raw) => {
+      emitterOf()?.update({ intensityRamp: raw / 100 });
+      return formatCrowdReleaseBias(raw);
+    });
+
     this._wireCrowdSlider('crowd-speed', (raw) => {
       emitterOf()?.update({ speed: raw / 100 });
       return `${(raw / 100).toFixed(2)} img/s`;
@@ -132,6 +165,26 @@ export const crowdsMixin = {
       em.update({ lifecycleMode: e.target.value });
       this.eventBus.emit('crowd:param-changed');
     });
+
+    document.getElementById('crowd-reroll-btn')?.addEventListener('click', () => {
+      this._rerollCrowdPattern();
+    });
+
+    document.getElementById('crowd-busyness-add')?.addEventListener('click', () => {
+      this._addCrowdBusynessHandle();
+    });
+    document.getElementById('crowd-busyness-reset')?.addEventListener('click', () => {
+      this._commitCrowdBusynessEnvelope(defaultBusynessEnvelope(), 'Busyness reset to even.');
+    });
+    document.getElementById('crowd-busyness-handles')?.addEventListener('change', (event) => {
+      this._changeCrowdBusynessControl(event.target);
+    });
+
+    const busynessGraph = document.getElementById('crowd-busyness-graph');
+    busynessGraph?.addEventListener('pointerdown', event => this._startCrowdBusynessDrag(event));
+    busynessGraph?.addEventListener('pointermove', event => this._moveCrowdBusynessDrag(event));
+    busynessGraph?.addEventListener('pointerup', event => this._finishCrowdBusynessDrag(event, true));
+    busynessGraph?.addEventListener('pointercancel', event => this._finishCrowdBusynessDrag(event, false));
   },
 
   /**
@@ -148,8 +201,180 @@ export const crowdsMixin = {
       if (!this.selectedCrowd?.emitters[0]) return;
       const text = apply(parseFloat(e.target.value));
       if (valueEl) valueEl.textContent = text;
+      el.setAttribute('aria-valuetext', text);
       this.eventBus.emit('crowd:param-changed');
     });
+  },
+
+  /**
+   * Give the primary emitter a new persisted pattern seed. Randomness happens
+   * only at this authoring action; playback remains a pure seeded evaluation.
+   * @returns {number|null} New seed, or null when no editable emitter exists
+   */
+  _rerollCrowdPattern() {
+    const layer = this.selectedCrowd;
+    const emitter = layer?.emitters[0];
+    if (!layer || !emitter) return null;
+
+    this._flushPendingUndo?.();
+    const seed = emitter.reseed();
+    this.syncCrowdEditor();
+    this.saveUndoState();
+    this.autoSave();
+    this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', {
+      kind: 'crowd-pattern-seed',
+      layerId: layer.id,
+      emitterId: emitter.id,
+    });
+    this.announce(`${layer.name || 'Crowd'} pattern re-rolled. Undo is available.`);
+    return seed;
+  },
+
+  /**
+   * Add one handle at the midpoint of the widest span, preserving the current
+   * curve at that point so adding alone does not change playback.
+   * @private
+   */
+  _addCrowdBusynessHandle() {
+    const emitter = this.selectedCrowd?.emitters[0];
+    if (!emitter || emitter.busynessEnvelope.length >= MAX_BUSYNESS_HANDLES) return;
+    const next = emitter.busynessEnvelope.map(handle => ({ ...handle }));
+    let widestIndex = 0;
+    for (let index = 1; index < next.length - 1; index++) {
+      if (next[index + 1].time - next[index].time >
+          next[widestIndex + 1].time - next[widestIndex].time) widestIndex = index;
+    }
+    const left = next[widestIndex];
+    const right = next[widestIndex + 1];
+    const time = Math.round(((left.time + right.time) / 2) * 100) / 100;
+    next.splice(widestIndex + 1, 0, {
+      time,
+      value: busynessAt(next, time),
+      transition: left.transition,
+    });
+    this._commitCrowdBusynessEnvelope(next, `Busyness handle added at ${Math.round(time * 100)}%.`);
+  },
+
+  /** @private */
+  _changeCrowdBusynessControl(control) {
+    const emitter = this.selectedCrowd?.emitters[0];
+    const index = Number(control?.dataset?.busynessIndex);
+    const field = control?.dataset?.busynessField;
+    if (!emitter || !Number.isInteger(index) || !field || !emitter.busynessEnvelope[index]) return;
+
+    const next = emitter.busynessEnvelope.map(handle => ({ ...handle }));
+    if (field === 'time' && index > 0 && index < next.length - 1) {
+      const lower = next[index - 1].time + 0.01;
+      const upper = next[index + 1].time - 0.01;
+      next[index].time = Math.max(lower, Math.min(upper, Number(control.value) / 100));
+    } else if (field === 'value') {
+      next[index].value = Math.max(0, Math.min(1, Number(control.value) / 100));
+    } else if (field === 'transition' && index < next.length - 1) {
+      next[index].transition = control.value === 'step' ? 'step' : 'gradual';
+    } else if (field === 'remove' && index > 0 && index < next.length - 1) {
+      next.splice(index, 1);
+    } else {
+      return;
+    }
+    this._commitCrowdBusynessEnvelope(next, 'Busyness pattern updated.');
+  },
+
+  /**
+   * Commit one accessible/discrete envelope edit as one undoable transaction.
+   * @private
+   */
+  _commitCrowdBusynessEnvelope(next, announcement) {
+    const layer = this.selectedCrowd;
+    const emitter = layer?.emitters[0];
+    if (!layer || !emitter || compileBusynessEnvelope(next).totalArea <= 0) {
+      this.announce?.('Keep at least one busyness span above 0%.');
+      this.syncCrowdEditor();
+      return false;
+    }
+    const normalized = normalizeBusynessEnvelope(next);
+    if (JSON.stringify(normalized) === JSON.stringify(emitter.busynessEnvelope)) return false;
+
+    this._flushPendingUndo?.();
+    emitter.update({ busynessEnvelope: normalized });
+    this.syncCrowdEditor();
+    this.saveUndoState();
+    this.autoSave();
+    this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', {
+      kind: 'crowd-busyness-envelope', layerId: layer.id, emitterId: emitter.id,
+    });
+    if (announcement) this.announce?.(`${announcement} Undo is available.`);
+    return true;
+  },
+
+  /** @private */
+  _startCrowdBusynessDrag(event) {
+    const target = event.target?.closest?.('[data-busyness-handle]');
+    const emitter = this.selectedCrowd?.emitters[0];
+    if (!target || !emitter) return;
+    event.preventDefault();
+    this._flushPendingUndo?.();
+    this._crowdBusynessDrag = {
+      pointerId: event.pointerId,
+      index: Number(target.dataset.busynessHandle),
+      original: emitter.busynessEnvelope.map(handle => ({ ...handle })),
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  },
+
+  /** @private */
+  _moveCrowdBusynessDrag(event) {
+    const drag = this._crowdBusynessDrag;
+    const emitter = this.selectedCrowd?.emitters[0];
+    if (!drag || drag.pointerId !== event.pointerId || !emitter) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const { width, height, padX, padY } = BUSYNESS_GRAPH;
+    const x = (event.clientX - rect.left) / rect.width * width;
+    const y = (event.clientY - rect.top) / rect.height * height;
+    const next = emitter.busynessEnvelope.map(handle => ({ ...handle }));
+    const handle = next[drag.index];
+    if (!handle) return;
+
+    handle.value = Math.max(0, Math.min(1, (height - padY - y) / (height - 2 * padY)));
+    if (drag.index > 0 && drag.index < next.length - 1) {
+      const candidate = (x - padX) / (width - 2 * padX);
+      handle.time = Math.max(
+        next[drag.index - 1].time + 0.01,
+        Math.min(next[drag.index + 1].time - 0.01, candidate)
+      );
+    }
+    if (compileBusynessEnvelope(next).totalArea <= 0) return;
+    emitter.update({ busynessEnvelope: next });
+    drag.moved = true;
+    this._syncCrowdBusynessEditor(emitter);
+    this.queueRender();
+  },
+
+  /** @private */
+  _finishCrowdBusynessDrag(event, commit) {
+    const drag = this._crowdBusynessDrag;
+    const layer = this.selectedCrowd;
+    const emitter = layer?.emitters[0];
+    if (!drag || drag.pointerId !== event.pointerId || !emitter) return;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    this._crowdBusynessDrag = null;
+    if (!commit) {
+      emitter.update({ busynessEnvelope: drag.original });
+      this.syncCrowdEditor();
+      this.queueRender();
+      return;
+    }
+    if (!drag.moved) return;
+    this.saveUndoState();
+    this.autoSave();
+    this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', {
+      kind: 'crowd-busyness-envelope', layerId: layer.id, emitterId: emitter.id,
+    });
+    this.announce?.('Busyness handle moved. Undo is available.');
   },
 
   /**
@@ -162,24 +387,27 @@ export const crowdsMixin = {
     if (!strip) return;
 
     strip.innerHTML = '';
-    strip.setAttribute('role', 'listbox');
+    // Rows contain independent select, visibility, and delete buttons, so
+    // native list semantics are more accurate than a partial ARIA listbox.
+    strip.removeAttribute('role');
     strip.setAttribute('aria-label', 'Layers');
+    strip.removeAttribute('aria-multiselectable');
 
     // Route row — the hero layer; selected whenever no crowd is
     const routeItem = document.createElement('li');
     routeItem.className = 'layer-item';
-    routeItem.setAttribute('role', 'presentation');
     const routeRow = document.createElement('button');
     routeRow.type = 'button';
     routeRow.className = 'layer-row';
-    routeRow.setAttribute('role', 'option');
     const routeSelected = !this.selectedCrowd;
-    routeRow.setAttribute('aria-selected', routeSelected ? 'true' : 'false');
+    routeRow.setAttribute('aria-pressed', routeSelected ? 'true' : 'false');
     if (routeSelected) routeItem.classList.add('selected');
 
     const routeSwatch = document.createElement('span');
     routeSwatch.className = 'layer-swatch layer-swatch-route';
-    routeSwatch.style.background = this.styles?.pathColor || '#D55E00';
+    // Use the colour-only property: imported project strings must never turn
+    // a decorative swatch into a CSS image/network request.
+    routeSwatch.style.backgroundColor = this.styles?.pathColor || '#D55E00';
     const routeTitle = document.createElement('span');
     routeTitle.className = 'layer-title';
     routeTitle.textContent = 'Route';
@@ -199,13 +427,12 @@ export const crowdsMixin = {
       strip.appendChild(this._buildCrowdRow(layer));
     }
 
-    // Add crowd needs a route for dots to follow (route guide is the
-    // only guide until network editing ships)
+    // A route is optional: without one, Add crowd starts network authoring.
     if (this._addCrowdBtn) {
       const noRoute = this.waypoints.length < 2;
-      this._addCrowdBtn.disabled = noRoute;
+      this._addCrowdBtn.disabled = false;
       this._addCrowdBtn.title = noRoute
-        ? 'Crowds follow the route — draw a route first'
+        ? 'Add a crowd and draw the network it follows'
         : 'Add a crowd of dots that follows the route';
     }
   },
@@ -220,20 +447,18 @@ export const crowdsMixin = {
   _buildCrowdRow(layer) {
     const item = document.createElement('li');
     item.className = 'layer-item';
-    item.setAttribute('role', 'presentation');
     if (!layer.visible) item.classList.add('layer-hidden');
 
     const row = document.createElement('button');
     row.type = 'button';
     row.className = 'layer-row';
-    row.setAttribute('role', 'option');
     const selected = this.selectedCrowd === layer;
-    row.setAttribute('aria-selected', selected ? 'true' : 'false');
+    row.setAttribute('aria-pressed', selected ? 'true' : 'false');
     if (selected) item.classList.add('selected');
 
     const swatch = document.createElement('span');
     swatch.className = 'layer-swatch';
-    swatch.style.background = layer.emitters[0]?.dotColor || NEW_CROWD_DOT_COLOR;
+    swatch.style.backgroundColor = layer.emitters[0]?.dotColor || NEW_CROWD_DOT_COLOR;
 
     const title = document.createElement('span');
     title.className = 'layer-title';
@@ -265,6 +490,7 @@ export const crowdsMixin = {
       this.autoSave();
       this.updateLayersStrip();
       this.queueRender();
+      this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-visibility', layerId: layer.id });
       this.announce(layer.visible ? `${layer.name} shown` : `${layer.name} hidden`);
     });
 
@@ -311,6 +537,7 @@ export const crowdsMixin = {
         layer.name = name;
         this.saveUndoState();
         this.autoSave();
+        this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-name', layerId: layer.id });
         // Re-announce the selection so the scope chip picks up the new
         // name (renames fire no crowd event of their own)
         if (this.selectedCrowd === layer) {
@@ -334,25 +561,147 @@ export const crowdsMixin = {
   },
 
   /**
-   * Create a crowd that follows the route, with one dot stream, and
-   * select it. Dots are flowing as soon as the timeline moves — no
-   * graph UI involved.
+   * Create and select a crowd with one dot stream. An existing route is
+   * the guide; otherwise the crowd starts with an empty custom network and
+   * the ordinary network event hands authoring to network edit mode.
    */
-  addCrowd() {
-    if (this.waypoints.length < 2) {
-      this.announce('Crowds follow the route — draw a route first');
-      return;
-    }
+  addCrowd({ enterNetworkEditor = true } = {}) {
+    const hasRoute = this.waypoints.length >= 2;
     const layer = this.scene.addFlowLayer({
       name: this._nextCrowdName(),
-      guideType: 'route',
+      guideType: hasRoute ? 'route' : 'graph',
       emitters: [{ dotColor: NEW_CROWD_DOT_COLOR }],
     });
     this.saveUndoState();
     this.autoSave();
+    this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-added', layerId: layer.id });
     this.eventBus.emit('crowd:selected', layer);
     this.queueRender();
-    this.announce(`${layer.name} added — dots follow the route`);
+    this.announce(hasRoute
+      ? `${layer.name} added — dots follow the route`
+      : `${layer.name} added — draw the network its dots will follow`);
+    if (!hasRoute && enterNetworkEditor) {
+      // crowd:selected must land first so the network mixin edits this layer.
+      this.eventBus.emit('network:guide-changed', layer);
+    }
+  },
+
+  /**
+   * Trace the hero route into the selected crowd's guide network (COMPOSE-03).
+   *
+   * A copy, not a view: the traced network is the author's to reshape, and
+   * nothing they do to it moves the route. Each traced node keeps a one-way
+   * binding to the waypoint it came from, so moving that waypoint carries the
+   * node with it rather than stranding the copy.
+   *
+   * @param {FlowLayer} [layer=this.selectedCrowd]
+   * @returns {boolean} True when the network was replaced
+   */
+  traceRouteIntoCrowd(layer = this.selectedCrowd) {
+    if (!layer) {
+      this.eventBus.emit('ui:toast', { message: 'Select a crowd to trace the route into' });
+      return false;
+    }
+
+    const trace = traceRouteIntoGraph(this.waypoints);
+    if (trace.problems.length > 0) {
+      this.eventBus.emit('ui:toast', { message: trace.problems[0].detail });
+      return false;
+    }
+
+    // Put the pen down first: the trace replaces every node, and a half-drawn
+    // edge would be left pointing at one that no longer exists.
+    if (this.networkEditService?.active) this.networkEditService.exit();
+
+    const applied = applyTraceToLayer(layer, trace);
+    // Anchored nodes need their positions resolved before anything renders.
+    this.calculatePath();
+    this.saveUndoState();
+    this.autoSave();
+    this.updateLayersStrip();
+    this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-network-traced', layerId: layer.id });
+
+    const message = `Traced the route into ${layer.name} — ${applied.nodes} nodes, ${applied.edges} paths`;
+    this.announce(message);
+    this.eventBus.emit('ui:toast', { message });
+    return true;
+  },
+
+  /**
+   * Hold a route waypoint until this crowd has finished (COMPOSE-02).
+   *
+   * The wait is *baked*: solved once against the current scene and written
+   * into the waypoint as an ordinary authored `pauseTime`. The route does not
+   * acquire a live dependency on the crowd — Phase 5 forbids that outright,
+   * and a live one would make the timeline a fixed-point problem every frame.
+   * Retune the crowd afterwards and the number goes stale, which is the honest
+   * trade: fit it again.
+   *
+   * Applies to the selected waypoint when there is one, otherwise the route's
+   * last major — the two cases an author actually means by "wait here".
+   *
+   * @param {FlowLayer} [layer=this.selectedCrowd]
+   * @param {Object} [waypoint] Waypoint to hold at
+   * @returns {boolean} True when a wait was written
+   */
+  fitRouteWaitToCrowd(layer = this.selectedCrowd, waypoint = null) {
+    if (!layer) {
+      this.eventBus.emit('ui:toast', { message: 'Select a crowd first' });
+      return false;
+    }
+
+    const target = waypoint
+      || (this.selectedWaypoint?.isMajor ? this.selectedWaypoint : null)
+      || [...this.waypoints].reverse().find(each => each.isMajor);
+    if (!target) {
+      this.eventBus.emit('ui:toast', { message: 'Add a major waypoint to hold the route at' });
+      return false;
+    }
+
+    const durationMs = this.animationEngine.state.duration;
+    const routeAnchors = this.getRouteArrivalMap?.();
+    const arrivalMs = routeAnchors?.arrivalMsById?.[target.id];
+    if (!Number.isFinite(arrivalMs) || !(durationMs > 0)) {
+      this.eventBus.emit('ui:toast', { message: 'The route has no timing to fit a wait into yet' });
+      return false;
+    }
+
+    const schedules = this.swarmEngine.scheduleDots(layer, {
+      durationMs,
+      routePathPoints: this.pathPoints,
+      routeAnchors,
+    });
+    const solved = waitForCrowdMs({
+      schedules,
+      arrivalMs,
+      durationMs,
+      currentWaitMs: target.pauseMode === 'timed' ? (target.pauseTime || 0) : 0,
+    });
+    if (!solved.satisfiable) {
+      this.eventBus.emit('ui:toast', { message: solved.reason });
+      return false;
+    }
+
+    const waitMs = Math.ceil(solved.waitMs);
+    target.pauseMode = waitMs > 0 ? 'timed' : 'none';
+    target.pauseTime = waitMs;
+
+    this.calculatePath();
+    this.invalidateAnimationTiming();
+    this.updateWaypointList();
+    this.saveUndoState();
+    this.autoSave();
+    this.queueRender();
+
+    const seconds = (waitMs / 1000).toFixed(1);
+    const name = target.name || 'the waypoint';
+    const message = waitMs > 0
+      ? `${name} now waits ${seconds}s for ${layer.name}`
+      : `${layer.name} already finishes before ${name} — no wait needed`;
+    this.announce(message);
+    this.eventBus.emit('ui:toast', { message });
+    return true;
   },
 
   /**
@@ -371,6 +720,7 @@ export const crowdsMixin = {
     this.autoSave();
     this.updateLayersStrip();
     this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-deleted', layerId: layer.id });
     this.eventBus.emit('ui:toast', {
       message: `Deleted ${layer.name} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
     });
@@ -392,6 +742,10 @@ export const crowdsMixin = {
     const setText = (id, text) => {
       const el = document.getElementById(id);
       if (el) el.textContent = text;
+      const control = id.endsWith('-value')
+        ? document.getElementById(id.slice(0, -'-value'.length))
+        : null;
+      control?.setAttribute('aria-valuetext', text);
     };
 
     set('crowd-guide-type', layer.guideType);
@@ -410,14 +764,172 @@ export const crowdsMixin = {
     setText('crowd-release-start-value', `${Math.round(em.releaseStart * 100)}%`);
     set('crowd-release-duration', Math.round(em.releaseDuration * 100));
     setText('crowd-release-duration-value', `${Math.round(em.releaseDuration * 100)}%`);
+    set('crowd-onset-variance', Math.round(em.onsetVariance * 100));
+    setText(
+      'crowd-onset-variance-value',
+      formatCrowdReleaseTiming(em.onsetVariance * 100)
+    );
+    set('crowd-intensity-ramp', Math.round(em.intensityRamp * 100));
+    setText(
+      'crowd-intensity-ramp-value',
+      formatCrowdReleaseBias(em.intensityRamp * 100)
+    );
     set('crowd-speed', Math.round(em.speed * 100));
     setText('crowd-speed-value', `${em.speed.toFixed(2)} img/s`);
     set('crowd-speed-variance', Math.round(em.speedVariance * 100));
     setText('crowd-speed-variance-value', `${Math.round(em.speedVariance * 100)}%`);
     set('crowd-lifecycle', em.lifecycleMode);
+    setText('crowd-seed-value', String(em.seed));
+    this._syncCrowdBusynessEditor(em);
+
+    const hint = document.getElementById('crowd-pattern-hint');
+    if (hint) {
+      hint.textContent = layer.guideType === 'graph'
+        ? 'Junction shares set route proportions. Re-roll changes which dots take them, plus individual walking and set-off variation.'
+        : 'Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path.';
+    }
 
     // Chip text follows crowd selection/name via the UIController's own
     // crowd listeners; nothing to do here beyond the controls.
+  },
+
+  /**
+   * Redraw the busyness graph and its equivalent exact controls from model
+   * state. Rebuilding from authored data also keeps undo/project restores
+   * from leaving stale control rows behind.
+   * @private
+   */
+  _syncCrowdBusynessEditor(emitter) {
+    const graph = document.getElementById('crowd-busyness-graph');
+    const controls = document.getElementById('crowd-busyness-handles');
+    if (!graph || !controls) return;
+    const handles = emitter.busynessEnvelope;
+    const { width, height, padX, padY } = BUSYNESS_GRAPH;
+    const x = time => padX + time * (width - 2 * padX);
+    const y = value => height - padY - value * (height - 2 * padY);
+
+    graph.replaceChildren();
+    const baseline = document.createElementNS(SVG_NS, 'path');
+    baseline.setAttribute('class', 'crowd-busyness-axis');
+    baseline.setAttribute('d', `M ${padX} ${height - padY} H ${width - padX} M ${padX} ${padY} V ${height - padY}`);
+    graph.appendChild(baseline);
+
+    const pieces = [`M ${x(handles[0].time)} ${y(handles[0].value)}`];
+    for (let index = 0; index < handles.length - 1; index++) {
+      const current = handles[index];
+      const next = handles[index + 1];
+      if (current.transition === 'step') pieces.push(`H ${x(next.time)} V ${y(next.value)}`);
+      else pieces.push(`L ${x(next.time)} ${y(next.value)}`);
+    }
+    const curve = document.createElementNS(SVG_NS, 'path');
+    curve.setAttribute('class', 'crowd-busyness-line');
+    curve.setAttribute('d', pieces.join(' '));
+    graph.appendChild(curve);
+
+    handles.forEach((handle, index) => {
+      const target = document.createElementNS(SVG_NS, 'circle');
+      target.setAttribute('class', 'crowd-busyness-handle-target');
+      target.setAttribute('cx', String(x(handle.time)));
+      target.setAttribute('cy', String(y(handle.value)));
+      target.setAttribute('r', '22');
+      target.setAttribute('data-busyness-handle', String(index));
+      target.setAttribute('aria-hidden', 'true');
+      graph.appendChild(target);
+      const circle = document.createElementNS(SVG_NS, 'circle');
+      circle.setAttribute('class', 'crowd-busyness-handle');
+      circle.setAttribute('cx', String(x(handle.time)));
+      circle.setAttribute('cy', String(y(handle.value)));
+      circle.setAttribute('r', '8');
+      circle.setAttribute('aria-hidden', 'true');
+      graph.appendChild(circle);
+    });
+
+    const description = handles.length === 2 && handles.every(handle => handle.value === 1)
+      ? 'Even busyness across the release window'
+      : `${handles.length} busyness handles across the release window`;
+    graph.setAttribute('aria-label', description);
+    const summary = document.getElementById('crowd-busyness-summary');
+    if (summary) summary.textContent = description.startsWith('Even') ? 'Even' : `${handles.length} handles`;
+
+    controls.replaceChildren();
+    handles.forEach((handle, index) => {
+      const row = document.createElement('div');
+      row.className = 'crowd-busyness-handle-row';
+      const title = document.createElement('span');
+      title.className = 'crowd-busyness-handle-title';
+      title.textContent = `Handle ${index + 1}`;
+      row.appendChild(title);
+      row.appendChild(this._crowdBusynessNumberControl('Time', index, 'time', handle.time * 100, {
+        readOnly: index === 0 || index === handles.length - 1,
+      }));
+      row.appendChild(this._crowdBusynessNumberControl('Busy', index, 'value', handle.value * 100));
+
+      if (index < handles.length - 1) {
+        const label = document.createElement('label');
+        label.textContent = 'Change';
+        const select = document.createElement('select');
+        select.dataset.busynessIndex = String(index);
+        select.dataset.busynessField = 'transition';
+        for (const [value, text] of [['gradual', 'Gradual'], ['step', 'Sudden']]) {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = text;
+          option.selected = handle.transition === value;
+          select.appendChild(option);
+        }
+        label.appendChild(select);
+        row.appendChild(label);
+      }
+      if (index > 0 && index < handles.length - 1) {
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'btn btn-ghost crowd-busyness-remove';
+        remove.textContent = 'Remove';
+        remove.setAttribute('aria-label', `Remove busyness handle ${index + 1}`);
+        remove.dataset.busynessIndex = String(index);
+        remove.dataset.busynessField = 'remove';
+        remove.addEventListener('click', event => this._changeCrowdBusynessControl(event.currentTarget));
+        row.appendChild(remove);
+      }
+      controls.appendChild(row);
+    });
+
+    const add = document.getElementById('crowd-busyness-add');
+    if (add) {
+      add.disabled = handles.length >= MAX_BUSYNESS_HANDLES;
+      add.title = add.disabled ? `Maximum ${MAX_BUSYNESS_HANDLES} handles` : 'Add a handle in the widest span';
+    }
+    const reset = document.getElementById('crowd-busyness-reset');
+    if (reset) {
+      reset.disabled = JSON.stringify(handles) === JSON.stringify(defaultBusynessEnvelope());
+    }
+  },
+
+  /** @private */
+  _crowdBusynessNumberControl(labelText, index, field, value, { readOnly = false } = {}) {
+    const label = document.createElement('label');
+    label.textContent = labelText;
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.max = '100';
+    input.step = '0.1';
+    input.value = String(Math.round(value * 10) / 10);
+    input.readOnly = readOnly;
+    input.inputMode = 'decimal';
+    input.dataset.busynessIndex = String(index);
+    input.dataset.busynessField = field;
+    input.setAttribute('aria-label', `${labelText} for busyness handle ${index + 1}, percent`);
+    input.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' || input.readOnly) return;
+      event.preventDefault();
+      this._changeCrowdBusynessControl(input);
+    });
+    const unit = document.createElement('span');
+    unit.textContent = '%';
+    label.appendChild(input);
+    label.appendChild(unit);
+    return label;
   },
 
   /**

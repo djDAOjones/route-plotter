@@ -2,1048 +2,1040 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
-## 2026-08-19 — Backlog triage: next milestone resequenced into waves; quarantine created
-
-**Task:** Owner-requested assessment of every backlog item (useful? fits
-the design? viable?) with verdicts stated, the backlog reorganised into a
-development sequence, and rejected/questionable items quarantined visibly
-for owner approval rather than deleted.
-
-**Verified in code (2026-08-19):** the icebox main.js split is DONE
-(Phase 1: 6,057 → 1,150 lines + src/app mixins, all five candidate
-clusters extracted); the three dead-code icebox lines and the wish-list
-`getSegmentLengths` pair remain genuinely dead (no callers;
-`#export-mode-warning` element absent so the call null-guard no-ops);
-keybinding customisation has no UI (`saveCustomBindings` uncalled);
-`TextLabelService.autoPosition` already collision-scores; comet + reveal
-already combine (Phase 5 golden variant); waypoint `customImage` with
-auto-rotation exists as the base for a custom head icon; an example
-project ZIP already ships in images/.
-
-**Decision — wave sequence (proposal; owner disposes):** W0 close-out
-(one consolidated feel-check clears both June [~] segment-speed items
-plus the Phase 4/5 checks); W1 hygiene & launch-window quick wins
-(dead-code sweep, nudge-undo coalescing, unit/naming pass, bug report
-button, and three defect fixes promoted from the wish-list — area-handle
-hit-test at zoom > 1, stale controls after undo/redo, Clear All undo
-snapshot); W2 inspector completion (two-tier disclosure FIRST since it
-defines the card slots, then minors-in-list, per-card reset/apply-onward);
-W3 route⇄crowd composition (anchors before the branch gesture, which
-depends on them; fit-wait and trace-route alongside); W4 showcase
-(example projects authored after W3 so they demo the full story; custom
-head icon). Ordering rationale: defects and the feedback channel first
-while v3 is newly live; structural UI before the features that land on
-it; the anchors→branch dependency chain; examples authored once.
-
-**Decision — merged and reframed:** "Relative sizing across canvas
-sizes" + "Export resolution preservation in zoom modes" merged into one
-blocked design ticket (same root: absolute-px sizing tied to canvas
-resolution; touches the timingReference rules — highest blast radius in
-the app). Reflow breakpoint reframed as the brief's WCAG 2.2 reflow
-commitment (1.4.10); its scoping/posture decision is the schedulable
-unit, not the implementation.
-
-**Quarantine (nothing deleted; owner approval pending):** propose CUT
-import/export keybindings (feature on an unbuilt foundation); propose
-RESTATE-OR-CUT comet-for-reveal, label auto-position improvement, and
-path randomised-frequency (none names a current gap); propose DELETE the
-verified-done main.js-split line. Wish-list triage: 4 lines moved out
-(1 folded into the sweep, 3 promoted as W1 fixes), 14 remain.
-
----
-
-## 2026-08-19 — Phase 5: HTML export runs the real stack; v3 goes live on GitHub Pages
-
-**Task:** Phase 5 of the v3.0 refactor — HTML-export parity via PlayerCore,
-GitHub Pages enablement, docs refresh (backlog Phase 5; owner scoped the
-export work to FULL render-stack reuse over engine-bundle-only, and set
-Pages go-live for end of phase, 2026-08-19).
-
-**Decision — the exported player IS the app's render stack.** New
-`src/player/PlayerApp.js`: a headless app core owning real instances of
-EventBus, AnimationEngine, PathCalculator, CoordinateTransform,
-RenderingService (and through it Beacon/Area/Dot/TextLabel renderers),
-MotionVisibilityService, CameraService, SwarmEngine, hydrated from the
-embedded project snapshot. It adopts `pathTimingMixin` WHOLESALE plus
-cherry-picked viewport methods and `cameraMixin._calculateCameraState`
-(the mixin `this`-contract makes this safe), so the fragile timing chain —
-segment markers, pause budgets incl. grow early-onset, reveal intro,
-comet tail — has exactly one source. The 1,270-line hand-written template
-player (own mapping copy, delta-time `updateBeacons` — the founding
-defect class) is deleted; exports gain swarm layers AND area highlights
-(never exported before — the old payload simply omitted them). Bundle
-discipline: the player must never import ImageAssetService (drags jszip)
-or the exporting mixin (drags mediabunny); custom images hydrate through
-the bare ImageAsset model.
-
-**Decision — snapshot-embedded exports.** `_buildProjectSnapshot()`
-extracted in the persistence mixin is now the single coordVersion-9 shape
-for autosave AND HTML export (exports always include assets; autosave
-keeps its 5MB gate). HTMLExportService embeds it plus the background data
-URL and the pre-built `docs/player.js` (second esbuild entry, IIFE,
-prod-minified; fetched same-origin at export time, inlined so files stay
-self-contained; script-breakout-safe via unicode-escaping the < in the
-embedded JSON).
-
-**Decision — authored-timeline preservation via `timingReference`.**
-Speed is px/s against the on-screen path, so duration/markers depend on
-canvas size; video export already preserves the authored timeline by
-never recomputing at the export canvas (_enterExportMode's rule), and the
-old HTML export did so by serialising markers verbatim. The new player
-honours the same rule: the snapshot carries additive
-`timingReference {width, height}` (the app's display dims at export);
-PlayerApp computes timing ONCE in that space — reproducing the authored
-timeline to the double — then switches to export-resolution render space
-(like an exported video frame) scaled into the window per frame.
-`resetPlayback()` mirrors the app's `animation:reset` recipe for renderer
-state but RESTORES the authored duration/mode instead of recomputing
-(AnimationState.reset() clobbers both; nothing can change post-load, so
-restore is exact). Found en route: `seekToTime()` updates currentTime but
-not pathProgress — scrubbing must use `seekToProgress()` (the player's
-arrow keys initially hit this; the app's slider always used the safe path).
-
-**Verification:** 331/331 tests — new `tests/playerApp.test.js` golden
-cross-check: app fixture (real services + real mixins) → snapshot →
-PlayerApp reproduces the FULL timeline fingerprint (duration, segment
-markers, pause budgets, intro/tail, beacon schedules) exactly, incl. a
-reveal+comet variant; authored-timeline restore after reset; identical
-deterministic swarm across independent player instances; includeText
-flow-through. Live pass at v3.2.617: real in-app export of an authored
-scene (4 waypoints incl. minor, pauses, 2.0x leg, ripple+grow beacons,
-labels, circle area highlight, route-guide crowd seed 42 + graph crowd
-seed 7) proved BYTE-IDENTICAL reconstructable (sha256 match of blob vs
-service-template rebuild); exported page: zero console errors, timeline
-equal to the app to the last digit, scrub-return byte-identical canvas,
-both crowds rasterising (1,003 + 1,473 tolerance-counted pixels), area
-highlight obeying hide-before (0 early / 103,805 fill px late), play
-advancing correctly (60 synthetic frames = 1002ms; pane rAF throttling is
-environmental). Shell follows UI-STANDARDS: UoN tokens inlined, Carbon
-productive controls, 44px targets, focus rings, native range +
-aria-valuetext, keyboard transport, visible boot-error state.
-
-**Release:** version bumped 3.1 → 3.2 (AGENTS release rule); GitHub Pages
-enabled on `route-plotter` (main, /docs) and v3.2.618 deployed —
-**https://djdaojones.github.io/route-plotter/ is live** (player.js served
-alongside, so exports work from the live site). The frozen v2 line stays
-at router-plotter-02 for existing users. Docs refreshed: README, brief,
-architecture, DEV-INFRASTRUCTURE (v3 URL + dual entry points), and the
-owner-approved dev-guide reconciliation (§4/§7/§10 mixin split, §9 worker
-removal, §3 build:deploy alias — doc-delta ticked). Decision-log archived
-by month (2026-06, 2026-04 → archive/, INDEX.md created) per the
-owner-approved budget split.
-
-**Scope:** new src/player/{PlayerApp,playerEntry}.js,
-tests/playerApp.test.js, pm archive files; HTMLExportService.js rewritten
-(−1,270-line template); persistence.js (+_buildProjectSnapshot,
-+timingReference), exporting.js (snapshot payload), build.js (player
-entry), scenePersistence.test.js (real snapshot binding), package.json
-(3.2), docs refresh set. Bundle: docs/app.js −45KB (template player
-gone); docs/player.js 138KB min. Phase 5 closes the founding phase plan;
-next milestone = post-Phase-4 feature wish-list (anchors, fit-wait,
-branch gesture, More… tiering, minors-in-list).
-
-## 2026-08-18 — Phase 4 fifth slice: multi-select everywhere — the hidden bulk mode dissolves
-
-**Task:** Land the last Phase 4 item: multi-select honoured by every
-card; the hidden "Select All Waypoints" bulk mode dissolves into
-ordinary multi-select; minors included; one undo entry per bulk change.
-
-**What shipped:**
-
-- **Selection is now an app-level set with a primary.** `RoutePlotter`
-  carries `selectedWaypoints` (route order) beside `selectedWaypoint`
-  (the last-interacted primary); single selection is a one-element set.
-  The existing event trio is the only pipeline — `waypoint:selected`,
-  `waypoint:multi-selected` (now normalised to route order), and
-  `waypoint:deselected` — plus new `waypoint:toggle-select` for
-  membership toggles. UIController keeps its gesture Set and gains
-  `setSelection()` so app-decided selections (canvas toggle, Cmd+A,
-  undo restore, deletes) keep list rows, chip, and shift-range anchor
-  coherent without event loops.
-- **The bulk mode is gone.** The "Select All Waypoints" list row, the
-  "Apply to all?" warning modal, `waypoint:all-selected`,
-  `waypoint:all-change`, and UIController's bulk-only control
-  listeners are deleted. The app's DOM wiring is now the single writer
-  for every selection size: each card handler writes to
-  `selectionTargets()` and emits its usual change event once with the
-  primary, so a bulk gesture still runs one path recalc, one debounced
-  undo entry, one autosave — "one undo entry per bulk change" falls
-  out of the existing pipelines rather than a parallel bulk path.
-- **Applicability follows the disabled-control rule.** Leg/path
-  properties (segment colour/width/style, path shape + params) write
-  to minors too — the old `waypoint:all-change` skipped minors, so
-  bulk restyles left minor-owned legs inconsistent. Marker, beacon,
-  label, pause, speed, and camera targets filter to majors, exactly
-  the controls the single-selection UI disables for minors. Label
-  *text* stays single-only (hidden in multi). `_updateRippleWaitTime`
-  re-times every selected ripple major from its own maxScale.
-- **Gestures:** list click/Cmd-click/Shift-click unchanged (the Set
-  machinery already existed, but cards ignored it — edits silently hit
-  only the primary). Canvas Cmd/Ctrl+click on a waypoint now toggles
-  membership (empty-canvas Cmd+click still adds a minor; the mousedown
-  path skips select-and-drag under the modifier so the toggle isn't
-  collapsed before the click lands). Cmd/Ctrl+A selects the whole
-  route **including minors** — the old handler called
-  `uiController.selectAllWaypoints()`, a method that never existed;
-  the bus swallowed the TypeError, so Cmd+A had been dead. Delete
-  removes the whole selection in one pass (one snapshot, one recalc,
-  one "N waypoints deleted" announcement, then Route scope). Arrow
-  nudges move every selected waypoint by the same canvas delta.
-  Right-click on a selection member keeps the selection.
-- **Inspector in multi:** cards populate from the primary (the values
-  a change will write everywhere) instead of clearing to defaults; the
-  chip says "Editing · N waypoints (M minor)" — minors are named in
-  the count because the list doesn't show them yet. Chip stepping
-  stays disabled in multi. Renderer draws selection rings on every
-  member (`renderWaypoints` accepts one waypoint or the set;
-  edit-mode-only for minors since minors never render in preview).
-- **Undo:** snapshots add `selectedWaypointIds`; `_restoreState`
-  re-resolves the set by id and hands it to UIController and
-  InteractionHandler — Cmd+Z mid-multi-select keeps the selection, and
-  the wish-listed "scope chip stale after undo" quirk is fixed for
-  waypoint scopes as a side effect (editor control values after undo
-  remain the open half of that quirk).
-
-**Live-verified** at v3.1.610 dev (1680×1000, real events): bulk
-segment colour/width hit exactly the selected waypoints, +1 undo stack
-entry per gesture, one undo reverted one gesture with selection
-intact; Cmd+A chip "Editing · 4 waypoints (1 minor)"; real canvas
-cmd+click toggled without adding a minor; real ArrowRight moved the
-pair; real Delete removed the pair as one entry and undo brought both
-back selected; autosave round-trip across reload; selection-ring
-pixel-diffs per waypoint (890/831/345/583 changed px = rings on all
-four incl. the minor; unselected neighbours byte-identical — early
-all-four diffs were mode/resize transition races in the probe, not
-the app); zero console errors. Test-suite: 326/326 (25 new in
-tests/multiSelect.test.js — selectionTargets rules, select-all incl.
-minors, toggle collapse ladder, bulk delete/nudge, snapshot id
-round-trip, headless UIController gestures + chip).
-
-**Feel-check flags for the owner:** Cmd+A now works and includes
-minors (invisible in the list until minors-in-list ships); canvas
-Cmd/Ctrl+click on a waypoint toggles selection instead of plain
-selecting; the "Apply to all?" confirm is gone (undo toast philosophy);
-multi cards show the primary's values with no mixed-value indication
-yet; dragging a member still moves only that waypoint (group drag
-wish-listed).
-
----
-
-
-**Task:** Land Phase 4 item 4: network editing as the app's one true tool
-mode (backlog: "like polygon draw") — pen gestures on shared
-hit-testing, Node card (pass-through/entry/exit), Edge card (direction;
-weight shown as computed junction traffic share). Unlocks the Guide
-card's "Custom network" option that slice 3 shipped disabled.
-
-**What shipped:**
-
-- New `src/services/NetworkEditService.js` owns tool state (bound
-  layer, pen anchor, selection, hover, drag) + the mode banner, on the
-  AreaDrawingService pattern: `network:edit-mode-changed` flips
-  interception in InteractionHandler; capture-phase keys (Esc /
-  Delete / T) keep global shortcuts out. New `src/app/network.js`
-  mixin owns transforms, hit-testing, the cards, and the
-  undo/autosave/render answer to `network:changed` — the same seams
-  the crowds mixin uses.
-- **Pen chaining:** click places a node already linked from the pen
-  node (successive clicks draw a connected chain, exactly the route-
-  drawing feel); click an existing node links pen→node once (loops
-  close, duplicates never) and continues from it; click an edge
-  selects it and lifts the pen (inspecting is not drawing); Shift
-  while placing snaps 15° from the pen node (shared snapToAngle).
-  Drag moves a node (Shift snaps vs its first neighbour), bends an
-  edge (control point inserted in chain order under the pointer), or
-  moves a control handle; drags commit one undo entry at release,
-  Esc mid-drag cancels (an inserted bend point is removed).
-  Shift-click deletes node/edge/control with the standard undo toast.
-  Esc ladder: cancel drag → lift pen → clear selection → exit.
-- **Entry/exit:** the Guide select's Custom network option is enabled;
-  switching an empty-network crowd auto-enters the mode ("two clicks
-  to a pen"), an "Edit network" button re-enters later. Entering
-  forces Edit mode through the canonical `_setPreviewMode(false)` —
-  found live: the app idles in Preview, where the mode's scaffolding
-  layers are gated off. Mode exits on: Done button, Esc, crowd
-  deselected (incl. deletion — any waypoint selection deselects the
-  crowd), a different crowd selected, guide switched back to route,
-  or Preview re-entered.
-- **Inspector:** node-scope and edge-scope groups join the one-
-  inspector; SectionController's priority is now network > crowd >
-  waypoint > route; chip wears the crowd green — "Editing · Node ·
-  entry" / "Editing · Edge · one-way" — and re-announces on type/
-  direction changes. Node card: Type select + Delete. Edge card:
-  Direction, Swap (one-way only; reverses endpoints + control order),
-  and Traffic — the weight slider's readout is the computed share of
-  departures at each end ("100% · 25% of departures"), never the bare
-  weight; the approximation ignores the walk's came-from exclusion.
-- **Rendering:** SwarmEngine's per-edge geometry cache went public
-  (`edgeGeometry`, was `_edgeGeometry`) so drawing and hit-testing use
-  exactly the curve dots travel. Two VECTOR_LAYERS entries:
-  `network-guide` beneath flow-layers (edges in the crowd's dot colour,
-  one-way midpoint arrows, glyphs entry=triangle / exit=square /
-  pass-through=circle, white-outlined) — drawn for any selected
-  graph-guided crowd, edit mode only, even with the dots' eye off
-  (the eye hides dots, not scaffolding); `network-edit-overlay` above
-  hover-affordances (pen ring + dashed preview line, hover/selection
-  rings, control handles), ids validated against the live graph so
-  stale targets draw nothing.
-- **Persistence:** graph edits ride the scene machinery unchanged
-  (autosave + undo snapshots since Phase 2). Restores re-bind the mode
-  by layer id (`resolveNetworkAfterRestore` beside the crowd resolve in
-  `_restoreState`): fresh layer adopted, selection/pen re-resolved by
-  id, mode closes only if the layer is gone. CSS note: `.btn`'s
-  display rule was defeating the `hidden` attribute (same fix the
-  scope groups already carry) — `.btn[hidden]` now wins.
-
-**Verification:** 301/301 tests (28 new in tests/networkEdit.test.js —
-service against real models, mixin glue on the crowds-style jsdom
-harness). Live at v3.1.607 dev, 1680×1000, real events end-to-end:
-guide switch auto-entered (Preview forced to Edit — fix found by pixel
-count returning 0 for scaffolding, then verified 3,991 exact-ink px
-network-only), pen chained 3 nodes/2 edges by real clicks and closed
-the triangle on the first node, banner counts tracked, chip followed
-every scope, drag-bend inserted a control point through the real
-pointer pipeline, node drag moved and re-anchored, hover gave pointer
-cursor + hover state (embedded-browser rAF freeze delays it until a
-frame composites — known harness artifact), direction/swap wrote
-through with chip re-announce, Cmd+Z mid-mode rebound the fresh layer
-with the edge still selected and the swap reversed, Esc ladder walked
-pen → selection → exit, passive network stayed rendered after exit,
-button re-entered and Done exited, engine walked the custom network
-(23 dots mid-timeline; 1,645 exact-colour dot px, byte-identical
-across eye toggle), autosave round-tripped the graph across reload
-(nodes/edges/types intact), zero console errors, embedded profile
-restored to its as-found empty state.
-
-**Design points (owner feel-check welcome):** Node/Edge as the
-user-facing nouns (banner, cards, chip alike); auto-enter only when
-the switched crowd's network is empty; edge selection lifts the pen;
-entry=triangle/exit=square glyph language; chip reuses the crowd
-green for network scopes; T cycles node type (waypoint habit);
-right-click suppressed inside the mode; Add crowd still requires a
-route (network-only scenes wish-listed); Motion card's "At route end"
-label reads odd for networks (wish-listed).
-
----
-
-## 2026-08-18 — Phase 4 third slice: layers strip + Crowd scope — dots flowing in two clicks
-
-**Task:** Land Phase 4 item 3: layers strip above the waypoint list
-(Route + crowds: add/rename/visibility), and selecting a crowd switches
-the inspector to Crowd scope — Guide / Dots / Release / Motion. Zero
-graph UI until Custom network is chosen (network editing is the next
-slice, so that option is present but disabled).
-
-**What shipped:**
-
-- New `src/app/crowds.js` mixin owns the whole feature: the strip
-  (Route row + one row per crowd — colour swatch, name, visibility eye,
-  delete ×, double-click-to-rename), "+ Add crowd", the crowd selection
-  events, card syncing, and the single-writer control wiring.
-- "Add crowd" creates a route-guided FlowLayer with one Emitter
-  (model defaults, but dot colour Okabe-Ito sky blue #56B4E9 so the
-  crowd reads instantly against the vermillion route) and selects it —
-  dots are flowing on the next play/scrub: click 1 Add crowd, click 2
-  play. The button gates on a route existing ("Crowds follow the
-  route — draw a route first") because route is the only guide until
-  network editing lands.
-- Crowd scope joins the one-inspector: `#crowd-scope` group with
-  **Guide** (Follow route | Custom network disabled with reason) ·
-  **Dots** (colour swatch grid, size, wobble) · **Release** (count,
-  window start/length as % of the timeline) · **Motion** (speed in
-  img/s, variance, "At route end" lifecycle select). Dots + Release
-  open by default. Cards edit the layer's FIRST emitter — the model
-  keeps its emitters array; multi-stream authoring is a later tier.
-- Scope chip: "Editing · Crowd 1 · crowd", new green tint tokens
-  (`--scope-crowd-*`, ≥8:1); crowds sit outside the Route ↔ waypoints
-  prev/next step cycle (steppers disable — design point, revisit if
-  stepping into crowds feels missing).
-- Selection exclusivity through ordinary events: crowd:selected emits
-  waypoint:deselected; any waypoint selection emits crowd:deselected;
-  Escape backs out of Crowd scope to Route scope. SectionController's
-  scope switch is now three-way (crowd > waypoint > route).
-- Persistence/undo ride the existing machinery (scene has been in
-  autosave + undo snapshots since Phase 2): param edits go through a
-  central `crowd:param-changed` (debounced undo + autosave + render,
-  mirroring waypoint:path-property-changed); restores re-resolve the
-  selected crowd by id (`resolveCrowdSelectionAfterRestore` in
-  _restoreState and both load paths); crowd delete is instant with an
-  undo toast (same contract as shift-click waypoint delete).
-- **Bug found live and fixed:** the `waypoint:deselect` bus handler
-  has thrown `this.selectWaypoint is not a function` since the Phase 1
-  mixin split (no such method survived; the EventBus swallowed the
-  error, so Escape never cleared waypoint selection through this
-  path). Now routes through the canonical `waypoint:deselected`
-  pipeline — Escape deselection genuinely works.
-
-**Verification:** 274/274 tests (15 new: add/name/gate, strip render +
-selection + visibility + delete/toast, scope exclusivity incl. Escape,
-restore re-resolution by id, rename commit/cancel + chip re-announce).
-Live at v3.1.605 dev, 1680×1000, empty embedded profile restored empty:
-add-crowd one-click flow (chip, scope groups, strip), dots at
-mid-timeline (59 exact-colour px → eye toggle 0 → 59 byte-deterministic),
-all nine controls written through with correct conversions (size 59 →
-11,053 px, count → 16,206 px, colour swap 46k green px + row swatch),
-rename → chip follows (regression found live, fixed, tested),
-delete → toast → undo returns the same layer id, full autosave
-round-trip across reload (name/guide/colour/count/size/lifecycle/
-window/speed all intact), Escape fix verified in the served bundle.
-
-**Design points (owner feel-check welcome):** new-crowd dot colour sky
-blue vs the model's founding orange default (deliberate contrast
-choice); crowd rename is double-click-only (no F2/context menu yet);
-crowds excluded from chip stepping; Dots + Release open as the crowd
-defaults; strip lists crowds in scene order under Route (drag-reorder
-and z-order presentation are later work alongside `Scene.moveFlowLayer`).
-
----
-
-## 2026-08-18 — Phase 4 second slice: canvas affordances — the map answers back
-
-**Task:** Land Phase 4 item 2: hover cursor + ring on waypoints and area
-handles; segment hit-testing (hover glow, click selects the owning
-waypoint and flashes its Leg card); midpoint "+" handle inserting a minor
-on the leg. Modifier gestures unchanged.
-
-**What shipped:**
-
-- New pure-geometry util `src/utils/segmentHitTest.js` (nearest-point
-  projection onto the path polyline, waypoint→point-index mapping, leg
-  ownership, leg midpoint), unit-tested in isolation. A leg is the span
-  between consecutive waypoints of any type — exactly what the
-  inspector's Leg card header names, so canvas and inspector teach the
-  same rule. `findSegmentAt` on the pointer mixin wraps it with the
-  screen→canvas transform and zoom-scaled radii (INTERACTION:
-  SEGMENT_HIT_RADIUS 8, LEG_PLUS_HIT_RADIUS 12).
-- InteractionHandler grew an idle-hover path: rAF-throttled
-  `canvas:hover-move` (+ `canvas:hover-clear` on mouseleave, drag start,
-  draw mode), answered in wiringControllers by the same hit-test cascade
-  clicks use — area handle → waypoint → leg "+" → leg. Cursor logic
-  unified in `_refreshCursor`: modifiers outrank hover (they change what
-  a click does), hover shows pointer, else crosshair.
-- Render side: `hover` rides renderState; two VECTOR_LAYERS entries —
-  `leg-hover` (glow underlay beneath the path: white halo + accent, width
-  follows the leg's rendered thickness via the last-major styling rule)
-  and `hover-affordances` (two-tone hover ring on waypoints/handles —
-  solid, lighter than the marching-ants selection ring; the "+" chip at
-  the leg midpoint, enlarged/filled when its own radius is hovered).
-  All hover layers gate on edit mode and validate hover against current
-  data, so stale hovers after route edits draw nothing.
-- Click cascade: plain click that misses waypoints now checks legs
-  before falling through to add-waypoint. Leg body → `segment:clicked`
-  (select owner + `section:flash` on the Leg card — SectionController
-  expands, scrolls, and pulses it; reduced-motion gets a single static
-  highlight). Midpoint "+" → `waypoint:insert-on-leg`: minor spliced at
-  exactly owner+1 with the midpoint's path coords, so the route shape
-  doesn't move; inherits the owner's styling (copy-at-creation), becomes
-  the selection (same rule as insert-adjacent); one undo entry via
-  waypoint:added. A click within ~8px of the path no longer drops an
-  accidental major on top of it — that's the point of hit-testing.
-- Modifier clicks (add minor/major, shift-delete, snap) behave exactly
-  as before, even over the path.
-
-**Verification:** 259/259 tests (16 new: geometry util + hover layer
-dispatch/order). Live at v3.1.604 dev, 1680×1000, embedded profile
-(autosave was empty; restored to empty + reload): all three hover types
-+ callbacks verified through real mousemove/click events end-to-end —
-ring pixels appear/clear byte-identically, leg glow 7.3k px, "+" insert
-turned MMmM into MmMmM at index 1 on the exact midpoint with chip
-"Editing · minor waypoint", undo/redo exact, leg click selected the
-owner + expanded/flashed the Leg card without adding a waypoint, cursor
-pointer/crosshair/not-allowed precedence correct, preview mode refuses
-hover, hit radii scale at 2.25× zoom. Zero console errors.
-
-**Pre-existing quirks spotted, not touched (wish-listed):** the
-`history:undo`/`history:redo` bus emits from InteractionHandler have no
-listener (real Cmd+Z lives in playback.js's own keydown handler — two
-parallel handlers, one dead emit); the scope chip goes stale after
-undo/redo because `_restoreState` re-emits no selection events; area
-handle hit-testing (drag, and now hover, consistently) misses at
-viewport zoom > 1 — `area:check-handle` compares screen coords against
-imageToCanvas outputs.
-
----
-
-## 2026-08-18 — Phase 4 first slice: scope-split inspector — the sidebar says what it edits
-
-**Task:** Land Phase 4 item 1 (adopted direction "one inspector, explicit
-scopes"): markup + wiring only, no model changes.
-
-**What shipped:**
-
-- Scope chip replaces the empty sidebar subtitle: "Editing · Waypoint 2
-  'Library' · major" / "Editing · Route" / "Editing · N waypoints" /
-  "Editing · All waypoints", colour-tinted per scope (new
-  `--scope-waypoint-*` / `--scope-route-*` tokens, ≥7:1), `role=status`
-  so scope changes are announced. Prev/next buttons step the selection
-  Route → Waypoint 1 → … → last: prev from Waypoint 1 backs out to Route
-  scope, ends disable, multi/all modes aren't steppable. Steps emit the
-  ordinary `waypoint:selected`/`waypoint:deselected` events.
-- Two scope groups in the DOM (`#waypoint-scope` / `#route-scope`);
-  SectionController toggles `hidden` on selection change — the
-  `settings-disabled` ghost state is deleted outright. With zero
-  waypoints the help placeholder now sits above Route scope, so
-  Background/Video settings are reachable before the first waypoint
-  (previously all sections were hidden).
-- Waypoint cards: **Marker** (colour/icon/size) · **On arrival** (beacon
-  + ripple/pulse subs, wait time, and the camera zoom block moved in —
-  the Camera section is gone) · **Label** (was Text) · **Leg → next**
-  (segment colour/thickness/shape/style/speed; the header names the
-  ownership rule via UIController — "Leg → Waypoint 3 'Chapel'", or
-  "Leg → route end" on the final waypoint) · **Area**.
-- Route cards: **Head** (head cluster out of the old Path card; "Arrow
-  Style" label → "Style") · **Pacing** (Duration + Scale, moved from the
-  right sidebar) · **Reveal** (was Animation) · **Path emphasis** (moved
-  from the right sidebar) · **Background** · **Video settings** (was
-  Export — the header Export menu keeps the name for actions).
-- Right sidebar is now just the Waypoints list — the slot the Phase 4
-  Layers strip lands in.
-
-**Design points (owner feel-check welcome):**
-
-- Duration/Scale/Path emphasis now require deselecting (Route scope) to
-  reach — deliberate ("the panel edits what's selected"), but it moves
-  three much-used controls; flag it if it fights muscle memory.
-- Defaults: waypoint scope opens on Marker (as before); Route scope
-  opens on Pacing + Background (tune timing / start a project).
-- Minor waypoint chip reads "Editing · minor waypoint" (no index) —
-  minors-in-list presentation is still the open sub-decision.
-- Section state keys renamed (text→label, path→leg, camera→on-arrival,
-  animation→reveal, export→video; + head/pacing/path-emphasis): open/
-  closed states reset once per browser; stale old keys in localStorage
-  are harmless.
-- Kept `animation-speed-right` etc. ids through the move — the
-  unit/naming pass is already a post-Phase-4 backlog item.
-
-**Design gate:** Carbon accordion + tag/chip patterns; the heuristic
-served is recognition-over-recall (scope visible at all times). Chip
-fg/bg pairs ≥7:1; nav buttons 44px targets; no colour-only meaning (the
-text names the scope); `aria-controls`/`aria-expanded` wiring kept on
-all renamed sections.
-
-**Verification:** build + 243/243 tests green; live at v3.1.602 —
-scope switch on select/deselect/Escape, chip stepping incl. both
-boundaries, leg header naming (rename + route end cases), On-arrival
-camera sync, thickness log-scale conversion intact through the moved
-Leg card, all-waypoints and multi-select chips, zero console errors.
-Embedded-profile autosave backed up and restored byte-identical.
-
----
-
-## 2026-08-18 — Phase 3.5 shipped: fifteen paper cuts, and the defects hiding under them
-
-**Task:** All 15 items from the authoring-UI review landed (seven
-commits, edaa4e1..441d43b + close-out). The notable finds beyond the
-review's own list, discovered while fixing its items:
-
-- **Bulk "apply to all" thickness corrupted data** — UIController sent
-  the raw 0–1000 slider integer as `segmentWidth`, so bulk writes stored
-  e.g. 333 on every major. The log-scale conversion now lives once in
-  `src/utils/pathWidthScale.js` (tested), used by both wiring layers,
-  which may not call each other (EventBus rule).
-- **Bulk edits took no undo snapshot** — the modal's "cannot be undone"
-  was literally true. Snapshot added; copy now advertises Cmd+Z.
-  (clearAll still doesn't snapshot — wish-listed, copy there is honest.)
-- **labelPosition had no single-selection wiring at all**; the select
-  did nothing. Wired in the DOM layer like its label siblings.
-- **F2 rename targeted a detached row** (selection rebuilds the list);
-  the extracted `startRenameFor` defers a frame and re-finds the row.
-- **The T key was dead** — `waypoint:toggle-type` had no handler. Real
-  handler written for the context menu (guards the last major,
-  recalculates duration); renames now undo-snapshot too.
-- **Reorder never invalidated `_majorWaypointsCache`** (index-derived
-  positions went stale) and took no undo snapshot — fixed with the
-  minor-carry data bug.
-- **Duration readout mechanism found** (the 8.6s vs 7.7s VERIFY item):
-  preview-only tail time (trail fade + 500 ms handle) was counted for
-  every scene with `pathTrail > 0`, but trails render only in comet
-  mode. Tail is now gated on comet; edit == preview for non-comet
-  scenes (verified live 7080 == 7080 ms on identical data). Comet keeps
-  its genuine preview extension (7080 → 8396 ms) — open design point
-  for the Phase 4 Pacing card: label that extension rather than hide it.
-
-Verified live at v3.1.599, 1680×1000, owner autosave backed up and
-restored byte-identical. 243/243 tests.
-
-## 2026-08-18 — Phase 3.5 kickoff: the review's open sub-decisions resolved
-
-Four of the five open sub-decisions from the authoring-UI review entry
-(below) resolved by the owner at Phase 3.5 kickoff; the fifth (how
-minors present in the waypoint list) stays open — it gates a
-next-milestone item, not this phase.
-
-- **Sequencing: Phase 3.5 fully precedes Phase 4.** All 15 paper cuts
-  land now — they are small, independent and individually verifiable,
-  and the inspector rewrite then starts from a clean base. Most are
-  logic-level (listeners, bus handlers, model fields) and survive the
-  Phase 4 markup regroup.
-- **Path head is global.** Matches what users already see (UI and
-  renderer are global) and the adopted Phase 4 layout, which puts Head
-  at Route scope. The dead per-waypoint fields stop being written;
-  loads tolerate them. Rejected per-waypoint: more work, contradicts
-  the adopted direction.
-- **Shift+click delete keeps no confirm — undo toast.** Delete stays
-  instant; a toast advertises Cmd+Z. The undo service already covers
-  deletion; a dialog would punish every intentional delete.
-- **"Crowd" is the user-facing noun** for dot layers ("Editing ·
-  Crowd", Crowd scope). Internal names (`FlowLayer`, `flow-layers`
-  registry entry, `scene` block) are unchanged — code vocabulary is
-  not user vocabulary.
-
-## 2026-08-18 — Authoring-UI review: "one inspector, explicit scopes" adopted for Phase 4
-
-**Task:** Pre-Phase-4 deep review of the authoring UI (path/waypoint styling
-focus) and how crowd authoring folds in. Full write-up — findings, verified
-bug table with file:line refs, before/after sidebar mockups, method — at
-<https://claude.ai/code/artifact/9553ea85-5c61-4d69-b98c-19f74437f480>
-(reviewed at v3.1.593: hands-on live pass at 1680×1000 against the owner's
-real autosave, backed up and verified byte-identical after, plus a full
-wiring trace of index.html, SectionController, UIController, editorPanel,
-wiringDom/wiringControllers/wiringBus, InteractionHandler, and the
-rendering/area services).
-
-**Headline finding:** scope is invisible. The left sidebar edits three
-different things — the selected waypoint (Marker/Text/most-of-Path/Area/
-Camera), the whole route (head cluster, Background, Animation, Export), and
-a hidden all-majors bulk mode — with no labelling anywhere. The Path card is
-the worst case: per-segment controls sit beside route-global head controls,
-and the head disagrees three ways (per-waypoint in the model, global in UI
-and renderer). Segments have no hit-testing, so "which waypoint owns this
-line" is learnable only by experiment; the subtitle element that could
-announce scope renders an empty string in single selection. Secondary
-findings: the good copy-at-creation inheritance model is invisible,
-irreversible and non-retroactive; modifier-only gestures with a dead
-right-click; unit/naming drift ("Arrow Style" configures a head that can be
-a dot; readouts mix real units, abstract scales and one raw slider int).
-Verified paper-cut bugs — including one DATA bug (major reorder detaches
-minors) — are itemised as backlog Phase 3.5.
-
-**Direction adopted (backlog Phase 4 rewritten):** the sidebar becomes an
-inspector for the current selection, opening with a scope header that always
-names its subject — "Editing · Waypoint 2 'Library' · major" / "Editing ·
-Route" (replacing the settings-disabled ghost state) / "Editing · Crowd".
-One rule the user learns once: the panel edits what's selected — waypoint,
-route, crowd layer, node or edge. Key moves: cards regroup by subject
-(Marker / On arrival / Label / "Leg → next waypoint" / Area for waypoints;
-Head / Pacing / Reveal / Background / Video settings for the route); the Leg
-card names the segment-ownership rule in its own header (the Camera
-prev/this/next idea, generalised); inheritance stays copy-at-creation but
-gains per-card "Reset to route style" / "Apply onward"; bulk mode dissolves
-into ordinary multi-select. Crowd authoring lands as one more scope on the
-same skeleton: Layers strip above the waypoint list, Follow-route as the
-two-click default guide, network editing as the app's one true tool mode on
-shared pen services, edge weights displayed as computed junction traffic
-shares. Anchors (node↔waypoint drops, emitter windows resolved through
-PlayerCore's pure mappings) and "fit wait to crowd" (bake, don't bind —
-route timing never becomes a live function of swarm state) are post-Phase-4
-backlog items.
-
-**Deliberately kept:** the section system and persisted open/closed state,
-the existing contextual-disclosure patterns, the Okabe-Ito-only constraint,
-copy-at-creation inheritance (made visible, not replaced), the keyboard map,
-the waypoint list's reorder/rename mechanics.
-
-**Open sub-decisions (owner's call):** "Crowd" vs "Flow" as the
-user-facing noun; shift-delete = undo-toast vs confirm; how minors present
-in the list; whether Phase 3.5 fully precedes Phase 4 or interleaves;
-path-head resolution (global vs per-waypoint — Phase 3.5 item forces the
-choice).
-
-**Session hygiene note:** the review's dev-server run regenerated docs/ and
-bumped version.json; those side effects were reverted, not committed.
-
----
-
-## 2026-08-18 — Phase 3 swarm engine: deterministic SwarmEngine + batched DotRenderer
-
-**Task:** Phase 3 of the v3.0 refactor — dots flow while everything stays a
-pure function of timeline time (backlog Phase 3; behavioural spec carried
-from the salvaged fork suites, tick() API superseded per 2026-08-17).
-
-**Shipped:**
-- `src/services/SwarmEngine.js` — `evaluate(timelineMs, layer, context)`
-  recomputes every dot from scratch each call: no stored dot state, no
-  call-order sensitivity (pinned by test: t₂-after-t₁ == t₂ on a fresh
-  engine). Variation comes from `hash(seed, dotIndex, hopIndex)` — FNV-1a
-  combine + murmur3 fmix32 finaliser, offset-basis-seeded so seed 0 still
-  mixes; exact outputs are test-pinned because changing the hash would
-  silently restyle every authored scene.
-- Onset model: dot i of N takes centred slot (i+0.5)/N across the release
-  window; `onsetVariance` linearly blends slot → uniform draw (0 = even
-  metronome, 1 = fully scattered — dotCount stays an exact promise);
-  `intensityRamp` biases via power curve (u^(1/(1+r)) back-loaded,
-  u^(1-r) front-loaded). Overhanging windows clip at evaluation, as the
-  Phase 2 model promised.
-- Graph walk: hop 0 picks the entry (uniform over `type:'entry'` nodes;
-  a graph with no explicit entries falls back to any node with a way
-  onward, so console/authoring experiments flow immediately); each
-  junction consumes one hop index, choosing among traversable edges
-  (one-way honoured, two-way walkable both directions) proportional to
-  edge weight; the arrival edge is excluded unless it is the only option
-  (anti-ping-pong); a dead end behaves as an exit. Walks are capped at
-  2048 hops per dot per evaluation (beyond it the dot parks) to bound
-  frame cost.
-- Lifecycles at an exit: `disappear` ends the dot; `collect` parks it on
-  the exit node; `respawn` teleports to a freshly hashed entry and keeps
-  walking (the walk is one infinite deterministic edge sequence);
-  `loop` replays the dot's own first journey cyclically (distance modulo
-  journey length). On a route guide, respawn and loop coincide (single
-  path, wrap by length).
-- `wobble`: perpendicular sine displacement, phase a pure function of
-  distance travelled (amplitude ≤ 2% of the image at wobble 1, per-dot
-  frequency/phase hashed); parked dots don't wobble.
-- Per-edge geometry: one PathCalculator instance per edge (backlog), the
-  polyline cached against a signature of node positions + control points,
-  so authoring edits invalidate exactly the edges they touch (test-pinned
-  mid-edge). Corner-slowing spacing is deliberately kept: dots ease
-  through sharp corners with the hero head's motion language.
-- `src/services/DotRenderer.js` + a `flow-layers` entry in
-  `RenderingService.VECTOR_LAYERS` between `area-highlights` and `path` —
-  beneath the hero route per the founding decision, above the area
-  spotlight so dots stay bright like the path does. Dots batch into one
-  canvas path per (colour, size) group; radius =
-  `scaleSizeClamped(dotSize × 10)` reference px. renderState gains
-  `scene` + `swarmEngine`; the engine reads `animationEngine.getTime()`
-  and `state.duration`, so scrub, play, reverse and export all see the
-  same dots by construction.
-
-**Verification:** 234/234 tests (was 204; 30-test swarmEngine suite
-covering the salvaged fork spec re-expressed against evaluate()).
-Live pass at v3.1.591 on the owner's real autosave (backed up first,
-restored byte-for-byte after, reload confirmed 3 waypoints / 0 flow
-layers): console-authored 4-node graph (weighted 3:1 fork, one curved
-edge) + sky-blue respawn stream + orange mid-timeline collect burst;
-toggling the layer changed canvas pixels by +1550 blue / +2011 orange
-(dots demonstrably rasterise beneath nothing-else-changed frames);
-seek 4000 → 7500 → 500 → 4000 reproduced a byte-identical canvas hash;
-playback advanced with the burst visibly travelling; zero console
-errors.
-
-**Scope:** new SwarmEngine.js, DotRenderer.js, swarmEngine.test.js;
-RenderingService.js (import + registry entry), main.js (engine instance +
-renderState), services/index.js barrel, vectorLayers.test.js order pin.
-Phase 4 (authoring UI) is next; Phase 5 wires the HTML-export player.
-
----
-
-## 2026-08-18 — Phase 2 scene model: Scene/FlowLayer/Emitter land, saves go to coordVersion 9
-
-**Task:** Phase 2 of the v3.0 refactor — the layered-scene data model and
-additive save/load (backlog Phase 2; founding + salvage entries 2026-08-17).
-
-**Shipped:**
-- `src/models/Emitter.js` — one dot stream's authored parameters plus its
-  per-emitter seed. Full founding vocabulary: dotCount, speed,
-  speedVariance, dotSize, dotColor, lifecycleMode
-  (disappear/respawn/loop/collect), releaseStart/releaseDuration,
-  onsetVariance, intensityRamp, wobble. Zero transient state — dots are
-  computed by the Phase 3 engine as a pure function of
-  (timelineMs, layer, seed) and never stored.
-- `src/models/FlowLayer.js` — guide network + emitters. `guideType`
-  'graph' | 'route' (hero route reused as a guide, per the founding
-  decision); a layer always owns its GraphModel so switching guide type
-  never loses data. This is the salvaged GraphModel's first wiring.
-- `src/models/Scene.js` — ordered flow layers (index 0 bottom; all flow
-  layers draw beneath the hero route); CRUD, reorder, clear. The hero
-  route stays `RoutePlotter.waypoints` — the Scene model carries flow
-  layers only.
-- Persistence: coordVersion 7→**9** (8 skipped — the fork's graph-only
-  saves used it). v9 = the v7 shape + an additive `scene` block; pre-v9
-  saves load unchanged with an empty scene (MIN_COORD_VERSION stays 6).
-  Scene is cleared by `clearAll()` and included in undo snapshots, so
-  Phase 4 editing gets undo by construction.
-
-**Decision — emitter timing is an onset window on the master timeline**
-(owner's call, 2026-08-18, over fork-style free-running releasePeriod and
-over "whole timeline only"). Each emitter's dots onset within
-releaseStart/releaseDuration; default window = the whole timeline. All
-candidate parameterisations were determinism-safe — the mandate constrains
-evaluation, not vocabulary — so the window won on expressiveness
-(mid-animation crowd arrival) and on dotCount being an exact promise
-rather than a rate-dependent cap.
-
-**Decision — the release window is normalised (0–1 fractions of the
-timeline), not milliseconds.** Timeline duration is derived (route length
-÷ speed, plus pauses) and shifts constantly during authoring; absolute
-windows would drift out of range. Both fields clamp independently; an
-overhanging window (start + duration > 1) is kept as authored and clipped
-by the engine at evaluation time.
-
-**Decision — full founding vocabulary in v9 from day one** (owner's call
-over a fork-proven-fields-only format). onsetVariance/intensityRamp/wobble
-are persisted now with defaults; Phase 3 may refine ranges but not names.
-Adding defaulted fields later stays legal within v9 if the engine needs
-more (e.g. a wobble frequency).
-
-**Verification:** 204/204 tests (was 158) — four new suites: Emitter,
-FlowLayer, Scene, and a scenePersistence contract suite that binds the
-persistence/undo mixins to a fake app and pins the additive-format rules.
-Live browser pass at v3.1.589: the owner's real v7 autosave upgraded to
-v9 in place (3 waypoints intact, empty scene block added); a
-programmatically authored scene (graph + seeded emitter, mid-timeline
-window) survived autosave → reload as real model instances with exact
-params; no console errors; the owner's autosave was backed up first and
-byte-for-byte restored after the test.
-
----
-
-## 2026-08-17 — PlayerCore teardown: the scene is now a pure function of timeline time (Phase 1 complete)
-
-**Task:** Phase 1 item 3 — PlayerCore extraction + deterministic
-animation-core teardown + scrub-vs-play golden-frame harness.
-
-**Decision — PlayerCore owns all timeline math.** New `src/core/PlayerCore.js`
-(pure, no wall-clock, no mutation): segment building, pause building, beacon
-schedules, and the timeline↔path mappings. AnimationEngine keeps its public
-surface (setSegmentMarkers/setPauseMarkers/timelineToPathProgress/
-pathToTimelineProgress and the marker fields the HTML export serialises —
-shapes unchanged) but every mapping delegates to PlayerCore; the engine's
-remaining jobs are transport state and wait-event edge-detection
-(`_applyWaitState`). Play advances time, scrub sets it, export steps it —
-one evaluation path.
-
-**Decision — beacon phases are closed-form.** Every animator's
-`update(deltaTime, phase, …)` accumulation (plus the `_lastHoldTime`/
-`_lastLoopTime`/pauseElapsed sync hacks) is replaced by
-`sync(localSec, win, options)`: full visual state derived from the beacon's
-local clock `timelineMs - clockStartMs`, where clock starts and hold windows
-come from PlayerCore's per-waypoint schedules (`engine.beaconSchedules`).
-Consequences: reverse playback and backward scrubbing render beacons exactly
-(rings un-fade, completed beacons revive); pulse's exit-crossing is computed,
-not frame-detected; ripple ring state rebuilds per evaluation.
-
-**Decision — grow pauses are exact, runtime extension deleted.** One
-early-onset formula (`PlayerCore.beaconEarlyOnsetMs`: lead capped by the
-half-gap to the previous major) feeds BOTH the pause budget and the beacon
-schedule, so the scale-down always completes inside the precomputed pause.
-The `isGrowBeaconAnimating` hook, the mid-evaluation marker mutation /
-`timeShiftApplied` machinery, and the interim export fixed-frame-delta patch
-(+ its test) are all deleted. The export render-loop gate stays as a plain
-perf optimisation.
-
-**Known behaviour deltas (deliberate):** grow early-onset now uses exact
-path-times with a half-gap-to-previous-major cap (the engine and renderer
-previously used two *different* approximations — the drift the 750ms buffer
-papered over; buffer retained as visual margin). Ripple pause budgets read
-`rippleMaxScale` (the value the rings actually use) rather than the stale
-`beaconScale`. `pathToTimelineProgress` now includes start-handle/intro
-offsets, making it a true inverse under export handles and reveal intros.
-Pulse under hide-before begins its loop after its full 2-quarter onset
-(previously desynced by one quarter). Per-frame SegSpeed/Timeline debug
-traces were dropped with the duplicated math; `dumpSegmentState()` remains.
-
-**Verification:** `tests/goldenFrames.test.js` — sequential jittered playback,
-reverse traversal, and fixed-step export stepping each equal direct seeks in
-full scene state (path + waits + every beacon field); evaluation provably
-never mutates the timeline; grow completes by pause end; backward scrub
-revives beacons byte-identically. `tests/playerCore.test.js` pins builders,
-budgets, windows, and inverse mappings. 158/158 tests; ESLint sweep clean.
-Live in the throttled pane: seek-into-beacon renders mid-animation state,
-end-and-back round-trip identical, reverse JKL un-fades rings, and a 105-frame
-MP4 exported clean at 1.1fps (fully throttled) with zero console errors and
-no interim patch.
-
-**Scope:** new `src/core/PlayerCore.js`; `AnimationEngine.js` (−~350 lines),
-`BeaconRenderer.js` (all five animators + service update), `RenderingService.js`
-(timeline-time beacon sync; fixed-delta machinery removed), `exporting.js`,
-`playback.js`, `main.js` (hook removal); tests: goldenFrames + playerCore
-added, exportFrameDelta removed (superseded).
-
----
-
-## 2026-08-17 — Export slowdown when browser inactive: fixed-frame-delta interim fix
-
-**Task:** Owner report — video export "encodes weirdly (slowed animation)"
-unless the browser stays active during export.
-
-**Mechanism (confirmed in code + live):** the export loop itself is
-deterministic — `seekToProgress(progress)` per frame with explicit WebCodecs
-timestamps — but `RenderingService.renderBeacons()` advanced beacon animators
-by **wall-clock delta between renders**. Foreground encodes only looked right
-because the loop happens to run near real-time; in a background tab the
-loop's `setTimeout` yields stretch to ~1s, advancing beacon phases ~25x per
-encoded frame, and grow-beacon pause extension (driven by those same clocks)
-mutates the progress→time map mid-export — the hero motion stretches through
-the extended sections. Exactly the stateful-animation defect class from the
-founding entry, showing up in encodes.
-
-**Decision — pin beacon time to encoded-frame time during export.**
-`RenderingService.setFixedFrameDelta(seconds)`: when set, beacon updates
-advance by exactly that delta per rendered frame (export sets 1/frameRate,
-clears to wall-clock in the export `finally`; unpinning re-arms the
-wall-clock tracker so the first live frame never inherits an export-length
-delta). Because fixed-delta renders are time-advancing, the AnimationEngine
-update callback now skips rendering while `_isExportMode` — the export loop
-owns rendering (previously duplicate renders were harmless only because
-wall-clock deltas are render-count-independent).
-
-**Interim, not the fix:** the PlayerCore teardown still replaces accumulation
-with closed-form beacon phases; this patch (and its `_isExportMode` render
-gate) should be removed as part of that work — noted on the backlog item.
-
-**Verified live in the throttled in-app browser** (unfocused pane = the
-failing environment): 75-frame MP4 export completed; all 76 beacon updates
-during export received exactly 0.100s (1/10fps), none wall-clock — proving
-both the pin and the render gate; post-export preview resumed on the 0.016s
-bootstrap. `tests/exportFrameDelta.test.js` pins the selection logic
-(145 tests total).
-
-**Scope:** `RenderingService.js`, `src/app/exporting.js`,
-`src/app/playback.js`, `tests/exportFrameDelta.test.js`.
-
----
-
-## 2026-08-17 — Phase 1 enabling refactor: main.js mixin split + renderer layer registry
-
-**Task:** Phase 1 items 1–2 — split the 6,235-line `main.js` and formalise
-the vector draw order — as groundwork for the PlayerCore teardown (item 3).
-
-**Decision — prototype mixins, not class inheritance or delegation.** Twelve
-method groups moved verbatim into `src/app/*` modules, each exporting a plain
-object attached by `Object.assign(RoutePlotter.prototype, …)` at the bottom of
-`main.js`: wiringDom, wiringBus, wiringControllers, undoRedo, playback,
-camera, viewport, pathTiming, persistence, exporting, editorPanel, pointer.
-`main.js` (6,235 → ~1,120 lines) keeps only the app core: constructor, init,
-model bookkeeping, render scheduling, image loading, destroy. `this` semantics
-and the runtime prototype shape are unchanged (bundle grew 214 bytes — module
-wrappers only). Constraint this creates: **method names must stay unique
-across all mixins** (last-write-wins otherwise) — `tests/mixins.test.js`
-fails loudly on a collision.
-
-**Deviations from verbatim (all deliberate):** `static JKL_MAX_SPEED` became
-a module const in `playback.js` (statics cannot ride a prototype mixin);
-`snapToAngle()` moved to `src/utils/snapToAngle.js` (needed by two wiring
-mixins; unit-tested); per-file imports trimmed to what each file uses.
-
-**Decision — vector draw order is data, not code.** The hard-coded sequence
-in `RenderingService.renderVectorLayerTo()` became the static
-`RenderingService.VECTOR_LAYERS` registry (bottom → top: area-highlights,
-path, path-head, beacons, waypoints, area-edit-handles, area-draw-preview).
-Each entry guards its own visibility; shared per-frame derivations ride a
-`frame` object. Phase 2 flow layers (swarms beneath the hero route) insert by
-adding an entry between area-highlights and path. `tests/vectorLayers.test.js`
-pins the order and the ALWAYS_HIDE guards.
-
-**Verification:** build + 142/142 tests (11 new); one-off ESLint no-undef
-sweep over `src/` clean (the two remaining warnings are pre-existing unused
-locals, left verbatim); interactive in-app-browser pass — waypoint add/drag,
-play/scrub, JKL (L×3 → 4x, J reverse, K reset-on-pause), undo/redo exact
-position round-trip, zoom-to-waypoint, Edit/Preview toggle, autosave reload —
-zero console errors. Two environment findings worth keeping: the embedded
-browser throttles rAF when unfocused, freezing the engine clock between
-forced frames (confirms the delta-time accumulation the PlayerCore teardown
-exists to kill), and keyboard shortcuts are correctly swallowed while a
-slider (e.g. `#timeline-slider`) holds focus — test keys with body focus.
-
-**Scope:** `src/main.js`, new `src/app/*` (12 files), `src/utils/snapToAngle.js`,
-`src/services/RenderingService.js`, `tests/mixins.test.js`,
-`tests/vectorLayers.test.js`, README tree/orchestrator note. v3.1.580+.
-
----
-
-## 2026-08-17 — Dot-crowd salvage: recovered fork state, GraphModel landed, coordVersion goes to 9
-
-**Task:** Before archiving dot-crowd-navigator, verify the local OneDrive
-working copy held nothing unpushed (founding-entry gate).
-
-**Finding:** It held a lot. The fork's last local state (2026-05-03, never
-pushed) was a working standalone graph editor — clean ~700-line app shell,
-GraphModel/GraphRenderer/GraphInteractionHandler/GraphUIController, JSON
-save/load with graph-only autosave at coordVersion 8, zoom/pan, undo — plus
-Phase 2 core: SimulationState (9 tests), SwarmEngine (7 tests, weighted
-routing, 4 lifecycle modes), DotRenderer, and sim controls UI. OneDrive
-file-offloading (~2026-07-14) then destroyed most of `src/`. Recovered:
-tracked files from git; newer files from Windsurf local-history snapshots.
-Unrecoverable (agent-written, no history entries): SwarmEngine.js,
-SimulationState.js, DotRenderer.js, GraphUIController.js — their test
-suites survive. Full story: SALVAGE-NOTE.md in the archived fork.
-
-**Decision — carried into v3 now:** `GraphModel.js` + its 25 tests land in
-src/models/ and tests/ (unwired until Phase 2, same treatment as
-GraphNode/GraphEdge — total graph tests now 62). Fork memory, the two
-swarm test suites, and the recovered graph-editor source are archived under
-`specs/dot-crowd-navigator/` as Phase 2–4 reference.
-
-**Decision — tick() API superseded, behaviour retained.** The recovered
-SwarmEngine tests specify a stateful `tick(deltaMs)` engine — exactly the
-architecture the deterministic-timeline mandate forbids. v3 carries the
-*behavioural* spec (release scheduling, weighted junction choice, lifecycle
-modes disappear/respawn/loop/collect, normalised dot positions) into the
-pure `evaluate(timelineMs, layer)` design; the tick-based tests are kept as
-reference only, not ported as-is.
-
-**Decision — coordVersion for the layered scene is 9, not 8.** The fork's
-local builds already shipped a *different* coordVersion 8 (graph-only JSON,
-clears v≤7 data). v3 skips 8 entirely to keep the number unambiguous:
-7 = current route-only, 9 = layered scene (routeLayer + flowLayers).
-
-**Repo state:** dot-crowd-navigator final state pushed (as-found +
-restoration commits) and the repo archived; router-plotter-01 archived.
-router-plotter-02 stays live as the frozen v2 line.
-
----
-
-## 2026-08-17 — Route Plotter v3 founding: fresh repo, dot-crowd fold-in, deterministic-timeline mandate
-
-**Task:** Owner-commissioned review of router-plotter-02 (mature) vs
-dot-crowd-navigator (nascent) to decide whether the dot-swarm concept folds
-into the route-plotter line, and to found the v3 refactor.
-
-**Finding that reframed everything:** git history proves dot-crowd-navigator
-is router-plotter-02 copied at v3.1.530 (2026-04-12) — a rename plus two
-unwired model classes (`GraphNode`, `GraphEdge`, 232 LOC, 37 passing tests)
-and spec docs. The swarm was never built. "Merge the apps" therefore means
-"build the swarm feature inside this codebase, guided by the fork's spec".
-Verdict from adversarial cross-review: viable; conflicts are sequencing
-risks, not incompatibilities.
-
-**Decision — v3 is this fresh-history repo (`route-plotter`).** Imported
-router-plotter-02 @ v3.1 build 573 (commit 5b19787) as the initial commit.
-router-plotter-02 keeps its name and stays frozen as the v2 line, so the
-deployed v2 Pages URL (djdaojones.github.io/router-plotter-02/) keeps
-working while v3 matures. dot-crowd-navigator and router-plotter-01 will be
-archived on GitHub after cherry-picking, gated on a diff of the local
-OneDrive working copies to confirm no unpushed work (the fork's overview doc
-references a `Migration.md` and a more advanced state that exist nowhere on
-GitHub).
-
-**Decision — supersedes dot-crowd AGENTS.md "no linear routes" invariant.**
-The fork's spec forbade Waypoint/linear-route abstractions; v3 explicitly
-adopts a coexistence model instead: a **layered scene over one master
-timeline** — the existing Waypoint chain remains the narrative "hero route"
-layer, and new **flow layers** (guide networks built from the ported
-GraphNode/GraphEdge, or the hero route reused as a guide) carry emitters
-with the fork's swarm vocabulary (count, release window, onset variance,
-speed variance, intensity ramp, wobble, lifecycle). The fork's spec docs are
-archived under `specs/dot-crowd-navigator/` as the feature-vocabulary source.
-
-**Decision — deterministic-timeline mandate (animation-core teardown).**
-Owner reports v2 scrubbing sometimes disagreed with real-time playback and
-requested a total teardown. Review confirmed the mechanism class:
-`BeaconRenderer` animators accumulate `this.time += deltaTime` with
-pause-sync/monotonic-hold hacks, and Grow beacons mutate timeline duration
-at runtime (`isGrowBeaconAnimating` dynamically extends pauses) — so
-duration is not a pure function of project state, and seek and play can
-diverge. Mandate for all v3 work: **the scene is a pure function of
-(timelineMs, projectState, seed)** — no wall-clock or delta-time
-accumulation in any renderer; beacon phases become closed-form functions of
-time-since-trigger; grow-beacon pause extension is precomputed into the
-timeline, never applied mid-flight; play = advancing time, scrub = setting
-time, export = stepping time, all through one evaluation path (the
-`PlayerCore` extraction). The swarm engine inherits the same rule
-(`hash(seed, dotIndex, hopIndex)` for per-dot variation), which makes video
-export, scrubbing, reverse JKL, and undo correct by construction.
-
-**Phases (backlog holds the living copy):** 0 stabilise (lockfile tracked,
-es2022 esbuild targets, bundle JSZip, PM-Skills 4.7.0) → 1 enabling refactor
-(main.js split, renderer layer registry, PlayerCore + timeline teardown) →
-2 scene/flow-layer model (coordVersion 8) → 3 deterministic SwarmEngine +
-batched DotRenderer → 4 authoring UI (first canvas tool-mode: Route/Flow,
-Crowd sidebar section, graph gestures) → 5 HTML-export parity via
-PlayerCore, docs, deploy.
-
-**Scope:** pm_skills upgraded v2.3.0 → 4.7.0 (fresh install, v2 project
-memory ported forward); GraphNode/GraphEdge + tests cherry-picked verbatim;
-fork's AGENTS.md + overview archived to specs/dot-crowd-navigator/.
-
----
+## 2026-08-28 — a benchmark with no threshold, and the restore that wasn't
+
+**ICE-03 shipped as a harness, not a gate**, on the owner's call. A committed
+frame-time threshold would pass on one machine and fail on another with
+identical code, and a red that means nothing is worse than no check at all. So
+`scripts/perf-harness.js` prints the cost curve on demand and asserts nothing
+about timings; you compare your own before and after. It reproduced PERF-01's
+figures on re-run (2,000 waypoints: 65.2 ms against 64.6 ms measured by hand),
+which is the point — the numbers move a little run to run, which is exactly
+why none of them is committed as a threshold.
+
+**Its first version destroyed the project it was protecting.** The harness
+backed up the autosave and restored it in a `finally` — and the still-running
+app then autosaved the synthetic 2,000-waypoint benchmark project straight
+over the restore. Caught because the restore was *verified* after a reload
+rather than assumed; the scratch project on the dev server was lost and had to
+be rebuilt from the shipped `uon-open-day` example, which it had come from.
+
+The fix is not a bigger backup: autosave is **suppressed for the rest of the
+page's life**, so the synthetic projects can never reach storage at all, and
+the closing warning insists on a reload. Verified by running a destructive
+benchmark and confirming the project survived a reload intact. The regression
+test pins the suppression, its ordering before the restore, that nothing puts
+the real `autoSave` back, and that the `finally` exists — the safety contract,
+not the speed.
+
+**What the test does and does not judge.** It guards the ways a console tool
+silently rots — it still loads, exposes one entry point, refuses clearly with
+no app and with no project — and pins the safety behaviour. It asserts nothing
+about milliseconds, and asserts that the harness carries no threshold, so a
+future well-meaning addition of one has to be a deliberate conversation.
+
+**Link:** ICE-03 (shipped), PERF-01 (its baseline), REV-07 (icebox).
+
+## 2026-08-28 — the ceiling is waypoints; crowds and image size are not it
+
+**PERF-01 measured rather than agreed**, per the owner's call: profile a range
+and read the ceiling off the data. Measured in production Chromium at a fixed
+1280x720 render surface, median and p95 of `render()` over 25 deterministic
+timeline instants — the same pure evaluation play, scrub and export share, so
+the numbers are not a sampling artefact.
+
+**Waypoint count is the only dimension that costs real frame time.**
+
+| Waypoints | Path points | Median | p95 | Verdict |
+| --- | --- | --- | --- | --- |
+| 5-50 | 451-4,902 | 0.2-0.6 ms | <1 ms | free |
+| 100 | 9,902 | 1.2 ms | 1.6 ms | free |
+| 200 | 19,902 | 1.8 ms | 3.3 ms | comfortable |
+| 500 | 49,902 | 6.4 ms | 15.6 ms | borderline |
+| 1,000 | 99,902 | 18.1 ms | 51.7 ms | not interactive |
+| 2,000 (the enforced limit) | 199,902 | 64.6 ms | 222 ms | unusable |
+
+**Crowd size is close to free.** Holding a 12-waypoint route, 5,000 dots — the
+per-emitter maximum — costs 1.2 ms median against 0.3 ms for none. The whole
+range from 0 to the limit spans about one millisecond.
+
+**Image resolution costs no frame time at all.** 1 MP and 48 MP both render in
+0.3 ms: the destination surface is fixed, so the downscale is effectively
+constant-cost. What a large image costs is *memory and import*, not rendering
+— 48 MP is 183 MiB decoded. Worth saying plainly, because the admission limits
+(48 MP / 40 MiB) read like performance limits and are not.
+
+**Combined profiles**, each with route, crowd and image together:
+
+| Profile | Waypoints | Dots | Image | Median | p95 | Holds 60fps |
+| --- | --- | --- | --- | --- | --- | --- |
+| Small | 8 | 100 | 1 MP | 0.3 ms | 0.6 ms | yes |
+| Typical | 25 | 500 | 4 MP | 0.7 ms | 1.0 ms | yes |
+| Large | 100 | 2,000 | 12 MP | 1.5 ms | 2.5 ms | yes |
+| Extreme | 500 | 5,000 | 24 MP | 7.4 ms | 18.4 ms | no |
+| At every limit | 2,000 | 5,000 | 48 MP | 75.8 ms | 210 ms | no |
+
+**What the data says the ceiling is.** Expressed as "stays interactive at
+60fps including p95": comfortably **200 waypoints**, borderline at 500, gone by
+1,000. Crowd size and image resolution should not appear in a stated ceiling at
+all — neither is the binding constraint. The enforced `MAX_WAYPOINTS` of 2,000
+is roughly ten times the comfortable figure; that is a *safety* bound against
+hostile input (RP-09), and this measurement does not argue for lowering it, but
+it does mean the UI limit was never a performance statement.
+
+**Caveats, stated rather than buried.** One machine, one browser, one surface
+size; a larger canvas or a slower machine moves every number. Render cost is
+not export cost — export adds encoding per frame. These are the figures to
+re-run against, not universal constants, which is exactly what ICE-03 exists
+to make repeatable; its stated trigger ("alongside PERF-01") has now fired.
+
+**Link:** PERF-01 (shipped), ICE-03 (promoted), RP-09.
+
+## 2026-08-28 — a label the author placed is never moved out from under them
+
+**LABEL-01 shipped.** The owner's judgement was that auto-position itself works
+well; what was wrong was *when* it ran and how findable it was. Three contracts
+came out of that, and they pull against each other, so each is pinned:
+
+- **It runs when a label is first written.** A new label starts at the default
+  offset, which frequently sits under its own marker — written, then invisible.
+  It is placed the moment it first has text.
+- **It never runs again once the author has placed the label.** A new persisted
+  `labelPlacedByHand` flag is set by the offset sliders, the only route by
+  which a label can be moved by hand. Absent on older saves, which restore as
+  *not* placed — so they stay eligible rather than being frozen where they are.
+  It is deliberately excluded from the style-propagation lists: where a label
+  sits is per-waypoint authoring state, not a style to apply onward.
+- **Asking for it explicitly always works.** The button ignores the flag. Being
+  asked for is not the same as happening to you, and the distinction is the
+  whole reason the flag can be safe.
+
+**The offer fires on collision, which is the owner's change to the ticket.**
+The original plan prompted on first write; the owner moved it to "when a
+collision is detected", which is better — a prompt on every first label is
+noise, and a collision is the moment the offer is actually worth making. It is
+checked when the text is *committed*, not per keystroke: only then does the
+box have its final size. `collidesAtCurrentPosition` reuses the very scoring
+auto-position optimises against, so "colliding" means exactly what
+auto-position would try to escape.
+
+**The prompt reuses the existing toast rather than inventing a component**,
+gaining one optional action button. That keeps it in the established polite
+live region and out of the focus order. It is an offer that fades, so it is
+never the only route: the button now sits in the Label card's primary tier,
+which is the other half of the owner's call. Four primary controls is the top
+of the 2-4 budget, and the tier guard in `reviewAccessibility.test.js` was
+updated to say so — the old expectation encoded a design decision the owner has
+now overridden, so the expectation moved rather than the check being weakened.
+
+**Evidence.** Verified live in Chromium: a first write moves the label off the
+default; dragging an offset slider sets the flag; rewriting the label
+afterwards leaves it exactly where the author put it; a colliding label raises
+one toast whose 44px action actually re-places it; a label that fits raises
+nothing. The example ZIPs changed because `Waypoint.toJSON` now carries the
+flag. The working project was backed up and restored byte-for-byte.
+
+**Link:** LABEL-01 (shipped), UI-01 (tier budget), REV-05.
+
+## 2026-08-28 — the reveal fades on a trail, and the hard edge was invisible
+
+**REVEAL-01 shipped as an authorable property**, per the owner's call. The
+mask still repaints every passed path point on every frame — that full rebuild
+is precisely what makes scrubbing bidirectional — but each point is now
+weighted by how far behind the head it sits.
+
+- **Weighted as a fraction of the whole path**, not a point count, so the fade
+  reads identically whatever the path's length or point density. A test pins
+  that a sparse path and a dense one fade the same.
+- **A pure function of position, never an accumulated decay.** Tested by
+  arriving at the same instant forwards and backwards and demanding the same
+  answer. An accumulator would have broken scrubbing and split preview from
+  export.
+- **`revealTrail` = 100 is a sentinel meaning "never fades"**, and it is the
+  default, so every project authored before this control existed renders
+  exactly as it did. That rule lives in `revealTrailAlpha` rather than in its
+  caller: the caller keeps only a fast path that skips per-point work. Putting
+  one copy of a rule in two places is what caused BUG-01 the same day.
+- **The snapshot defaults the value rather than copying it through.** A caller
+  whose live settings predate the property would otherwise write an explicit
+  `undefined`, which the snapshot validator reads as present-but-invalid and
+  refuses to load. The persistence suite caught exactly that.
+
+**The reveal sliders were never synced on load.** A restored project rendered
+its authored spotlight size and feather while the sliders sat at their markup
+defaults, and the spotlight controls stayed hidden until the mode dropdown was
+touched. Adding a third unsynced control would have compounded that, so
+`syncRevealControls` now places all three and their containers at load.
+
+**BUG-02, found while verifying REVEAL-01 in the browser: the default feather
+made the spotlight invisible.** A radial gradient whose two radii are equal
+paints nothing, and `SPOTLIGHT_FEATHER_DEFAULT` is 0 — so `innerRadius`
+equalled `radius` and every new project's spotlight, in both the accumulating
+and non-accumulating modes, rendered *nothing at all*. Measured in Chromium:
+peak mask alpha 0 at feather 0, 255 at feather 1. This mattered beyond its own
+severity — an owner switching on the reveal to try REVEAL-01 would have seen a
+blank canvas and concluded the new feature was broken. The inner circle is now
+kept a sub-pixel inside the outer one, so a zero feather is the hard edge the
+default always claimed to be, shared by both call sites.
+
+**Evidence.** In Chromium at the shipped default feather: no-fade paints the
+whole travelled path (alpha 255 at start, middle and head); a 50% trail gives
+255 at the head, 129 mid-path, 0 at the start; a 20% trail gives 255 only near
+the head. The control shows for spotlight-reveal, hides for plain spotlight,
+and carries `aria-valuetext` in step with its readout — the slider runs a log2
+scale, so its raw position would mean nothing announced.
+
+**Link:** REVEAL-01 (shipped), BUG-02, BUG-01 (same one-rule-two-places
+lesson), REV-04.
+
+## 2026-08-28 — four owner calls set the shape of the remaining work
+
+With everything decision-free shipped, the rest of the queue needed the owner.
+All four answered, and two changed the ticket rather than merely unblocking it.
+
+- **REVEAL-01 — authorable, not a constant.** The fade behind the head is a
+  per-project value the author sets, so this is no longer "pick a good default
+  and ship": it needs a persisted property (default, `toJSON`/`fromJSON`,
+  snapshot inclusion, restore, round-trip test) and a Reveal control, and the
+  exported player has to honour it too.
+- **LABEL-01 — promote the button, and prompt on collision.** The owner moved
+  the nudge's trigger: not "when a label is first written" but *when a label
+  actually collides with something*. That is the moment the offer is worth
+  making; a prompt on every first label would be noise. The control itself
+  moves up into the Label card's primary tier rather than staying behind
+  `More`.
+- **PERF-01 — a curve, not a ceiling.** Rather than agreeing a maximum and
+  measuring it, profile small/typical/large/extreme and deliver the cost curve,
+  so the supported ceiling is read from data. This inverts the ticket: the
+  number is the output, not the input.
+- **REL-01 — decide at release.** The source-map question is carried into
+  DEPLOY-01 rather than settled now, so REL-01 stops being a runnable sign-off
+  and becomes blocked on the same call.
+
+**Link:** REVEAL-01, LABEL-01, PERF-01, REL-01, DEPLOY-01.
+
+## 2026-08-28 — three upgrades taken, one refused on the Node floor
+
+**DEPS-01 shipped.** Every direct dependency was checked against the registry,
+not against the ticket's remembered numbers, and each upgrade was gated
+separately rather than as one batch.
+
+- **vitest 4.1.10 -> 4.1.11** (dev, patch). Green.
+- **mediabunny 1.55.3** (runtime, patch). Its 1.55.2/1.55.3 notes are entirely
+  demux-side — ISOBMFF Annex B, encrypted-file `tenc` fallback, HLS `emsg`
+  segments, `AacAudioSpecificConfig` — plus a custom-Promise compatibility fix.
+  None of it touches the video-only mux path this app uses, which never
+  demuxes and exports no audio. Re-verified anyway, and that re-verification
+  is what turned up BUG-01.
+- **jsdom 27.4.0 -> 29.1.1** (dev, two majors). The 28 resource-loading
+  overhaul and the 29 CSSOM rewrite both have zero surface here: nothing in
+  the suite configures a `ResourceLoader` or reads CSSOM — the CSS tests read
+  file text. Green across all 1033 tests, and it *removed* five transitive
+  packages (157 -> 152) as jsdom replaced legacy CSSOM dependencies.
+- **jszip, esbuild, axe-core** are already at latest.
+
+**jsdom 30 is deliberately not taken.** It requires Node
+`^22.22.2 || ^24.15.0 || >=26.0.0`; this checkout runs Node 24.5.0, which does
+not satisfy `^24.15.0`. The manifest would not need to change — `engines` is
+already `>=24.0.0 <25` and `.nvmrc` is just `24` — only the developer's
+installed Node would. That is a toolchain call for the owner, not something to
+take silently as part of a dependency pass. Recorded on the wish-list.
+
+**A stale registry read is worth noting for the next pass:** `npm outdated`
+reported jsdom's latest as 29.1.1, while `npm view jsdom dist-tags` said
+30.0.1. The per-package check is the one to trust.
+
+**The governance guard did its job.** The dependency ledger in
+`governance.test.js` and the table in `THIRD_PARTY_NOTICES.md` both pin exact
+versions, and the first upgrade failed the gate until both were updated —
+which is the point of the ledger. Licences were re-read from the lockfile
+rather than assumed: vitest MIT, mediabunny MPL-2.0, jsdom MIT, unchanged.
+`npm audit` remains clean at 0 vulnerabilities.
+
+**One side effect worth seeing:** `npm install mediabunny@1.55.3` tightened its
+declared range from `^1.39.2` to `^1.55.3`. That is an improvement — the range
+now records the version actually tested — but it was npm's doing, not a
+deliberate choice, so it is stated rather than buried.
+
+**Link:** DEPS-01 (shipped), LEGAL-01 (same MPL versions), REV-07 (icebox —
+would automate this pass).
+
+## 2026-08-28 — a branch run must not read the trunk's wait index
+
+**Found while re-verifying export for DEPS-01, not by looking for it.** The
+ticket asks for an export re-verification after the mediabunny bump; the
+export threw instead — `Cannot read properties of undefined (reading 'imgX')`
+— on the autosaved branched project. Video export was broken outright for
+that shape, and scrubbing to the end of the timeline threw the same way.
+
+**Not caused by this session.** The only app source touched here was
+`ParamTooltip.js` and two stylesheets; `RenderingService.js` was untouched
+since the handover baseline. Confirmed by diff before diagnosing further, so
+the bump was never a suspect.
+
+**Root cause, caught live rather than reasoned about.** Instrumenting
+`getHeadDirection` in the browser showed the failing call receiving a
+three-waypoint array — `Trent Building, Sports fields, Library`, the *branch
+run* — while `animationEngine.state.pauseWaypointIndex` was `4`, an index into
+the whole six-waypoint route. `waypoints[4]` was `undefined`, and the guard
+checked only `waypoints.length > 1`, never that the index was in range.
+
+**The fix has an in-repo precedent, which is why it is a one-liner and not a
+redesign.** `MotionVisibilityService` performs the identical calculation and
+already guards it with `pauseWaypointIndex < waypoints.length`; the renderer's
+copy — written explicitly to match it ("same as AOV") — simply missed that
+clause. Out of range means the wait belongs to another run, so the run falls
+through to its own path-based direction, exactly as the AOV path does. The
+comment says why the bounds check is load-bearing rather than defensive, so it
+does not get "simplified" away later.
+
+**Evidence.** A unit test reproduces the crash from the observed shape (a
+three-waypoint run with the wait at index 4) and pins the fall-through, plus
+two tests that the guard does not disable the behaviour it protects — an
+in-range wait still steers waypoint-to-waypoint. In Chromium after the fix,
+export produces a valid 1.78 MB MP4 (`ftyp isom`) and a valid 3.70 MB WebM
+(EBML magic) with nothing thrown. Nothing was written to disk: the blob was
+captured at `URL.createObjectURL` and the anchor click swallowed.
+
+**Link:** DEPS-01 (whose verification surfaced it), ROUTE-01b, REV-04.
+
+## 2026-08-28 — forced colours removes every focus ring, so outline carries it
+
+**A11Y-02 shipped, and it was worse than the ticket knew.** The ticket listed
+selection accent bars, focus rings, the leg "+" and beacon colours as lacking
+`forced-colors` fallbacks. Reading the stylesheet turned the middle item from
+a gap into a defect: forced-colours modes set `box-shadow` to none, and every
+focus ring in this project is a box-shadow drawn over `outline:none` — 22 of
+them in `main.css` alone, plus the dropdown, context-menu and swatch rings.
+In high contrast a keyboard user had **no visible focus anywhere**.
+
+**One global block restores it,** because `outline` *is* repainted with system
+colours while box-shadow is not. It carries `!important` on the outline itself:
+the per-component rules that zero the outline are more specific than any
+selector this block could reasonably wear, and in this mode a single
+consistent system ring is the goal rather than the app's layered blue one.
+
+**A second, quieter defect fell out of the same read.** `var(--focus)` is not
+a token anywhere in the project, so `.waypoint-rename-input:focus-visible`
+resolved to `box-shadow: none` — the inline rename input had no focus ring at
+all, in *any* colour mode, because an invalid custom property does not fall
+back to the cascade. The bespoke override is deleted and the input takes the
+universal ring like every other input. Proved both ways in the live browser:
+re-inserting the old rule returns `none`, removing it returns the two-layer
+white/blue ring.
+
+**Two deliberate non-fixes, both recorded in UI-STANDARDS rather than worked
+around.** The **map canvas** is content: forced colours does not repaint it,
+and neither do we — the Okabe-Ito palette, the hovered leg, its "+" handle and
+the beacons stay as authored and stay legible against each other. Repainting
+them to system colours would destroy the colour-blind-safe palette that exists
+for these very users. **Colour swatches** take `forced-color-adjust: none`,
+the sanctioned colour-picker case: the chip *is* the value, and one flattened
+system colour leaves nothing to choose from.
+
+**What is and is not evidenced.** The rules are proved to ship and parse in
+the live stylesheet — a bad system-colour keyword would simply not be there —
+and the ring fix is measured live. How they *look* under a real high-contrast
+theme still needs devtools emulation this automation cannot drive, which is
+exactly the residual REV-05 already carries. That stays owner-run rather than
+being claimed.
+
+**Link:** A11Y-02 (shipped), REV-05, UI-STANDARDS -> Forced colours.
+
+## 2026-08-27 — a hint is a description, not a button that does nothing
+
+**A11Y-01 shipped.** `ParamTooltip` gave all 74 `[data-tip]` labels
+`role="button"` and `tabindex="0"`. That announced 74 hint labels as buttons
+that perform no action, put 74 phantom stops in the sidebar tab order, and
+obliged each to a 44 px target it never meets at 96x19. On the two camera
+`<label>`s the role is invalid ARIA outright, which is what axe reported.
+
+**The hint is now what it always was: a description of the control.** Every
+trigger resolves through its enclosing `label[for]` — all 74 do, so no
+fallback path was needed — and the hint text becomes an `.sr-only` node the
+control points at with `aria-describedby`. Three constraints shaped it:
+
+- **The node sits after the `</label>`, never inside it.** Text inside a
+  `<label for>` joins the control's accessible *name*, and the visible label
+  has to keep matching that name for speech input (WCAG 2.5.3).
+- **The token is appended, never replaced.** 23 of these controls are sliders
+  whose readout already owns the first `aria-describedby` token
+  (UI-STANDARDS -> Recognition over recall). The value still announces first,
+  then the hint.
+- **`.sr-only`, not `aria-hidden`.** A directly referenced hidden node does
+  still contribute a description under AccName, but this programme does not
+  claim screen-reader behaviour it has not measured — NVDA/VoiceOver evidence
+  is owner-run under REV-05 — so the hint takes the plainest, best-supported
+  route and accepts being read twice in browse mode.
+
+**Dropping the tab stop must not make the hint mouse-only.** Removing the
+phantom role alone would trade an invalid-ARIA failure for a WCAG 2.1.1 one,
+so keyboard focus on the described control now reveals the same tooltip,
+gated on `:focus-visible` so a mouse user who never asked for it is left
+alone. Escape dismisses it for as long as focus stays there (WCAG 1.4.13),
+which keeps arrow-key editing quiet. Verified live in Chromium at v3.2.680:
+the pointer path, a real Tab arrival, Escape followed by arrow keys, and a
+fresh mouse click that correctly reveals nothing. The interactive
+accessibility tree now lists only real controls.
+
+**The gate could not have caught this, and now can.** `axeAudit.test.js` only
+ever mounted the *static* `index.html`, and the role was applied at init — so
+the shell was clean while the running app was not. There is now a second axe
+run over the shell *as JavaScript leaves it*. Replaying the old enhancement
+under that harness reproduces exactly the two `aria-allowed-role` hits the
+live Chromium audit found, so the new assertion is not vacuous. Anything that
+decorates the DOM on startup belongs in both runs.
+
+**Link:** A11Y-01 (shipped), REV-05, UI-STANDARDS -> Help and contextual
+guidance.
+
+## 2026-08-27 — owner sets the prune bar, and holds the merge
+
+Two owner calls following the memory prune. **Pruning must never harm
+development quality**: archive freely once context is closed, but content
+still feeding open work — open-item rationale, the active era's trajectory —
+stays live, and budget/prune-to targets yield to that bar (today's stopping
+points, log at 16/20 entries and trajectory at 91% of budget, are the rule
+applied, not an overrun to fix). Post-prune audit confirmed no open item's
+needed context went cold: REV-03's archived design entry covers implemented,
+green work, with live detail in its ticket. And **review-remediation does
+not merge to main yet** — the live site stays on v3.2.618 until the owner
+calls the release.
+
+## 2026-08-27 — memory prune, and two owner deferrals
+
+Maintenance Diagnose flagged the decision-log at 51 live entries (budget 20)
+and the trajectory at 3,859 words (budget 2,000). Pruned losslessly
+(diff-verified): 36 entries (2026-08-17 → 2026-08-26) moved to
+`archive/decision-log-2026-08-17-to-2026-08-26.md`, keeping today's 15 live;
+the trajectory's two closed epochs moved to `archive/trajectory/`
+(0001 v2-line era Apr–Jun, 0002 v3.0 refactor milestone Aug 17–19), keeping
+the remediation era live at 1,812 words. Swept the one ticked doc-deltas
+line; dropped the stale `docs/player.js.map` file-map row (the build emits no
+player sourcemap). Owner calls this session: **stay on PM-Skills 4.7.0**
+(upstream is 4.9.2 — skipped, not merely deferred); **dependency updates
+deferred into new ticket DEPS-01** (consider upgrades across the board).
+Gate context: 67 files / 1006 tests green, `npm audit` clean.
+
+## 2026-08-27 — the original review is fully dispositioned into the backlog
+
+**Question asked:** is everything from the original review and its report now
+effective in the backlog? **Audited rather than assumed**, against all three
+layers of the report, not just the headline findings.
+
+**RP-01…RP-18:** all shipped or carrying a named ticket. The crosswalk was
+already accurate for the findings themselves and has been refreshed with
+current dispositions.
+
+**The gap was everything that was not a numbered finding.** Section 17's
+*Optional* roadmap and section 18's *unresolved uncertainties* never entered
+the backlog, because the crosswalk only ever bridged RP-01…RP-18. Five items
+were still open and are now ticketed:
+
+- **DEPLOY-01** — RP-07's stated residual plus §18's "GitHub branch
+  protection/Pages permissions". Written as an open sign-off, then corrected
+  on reading `f1c14b9`: a parallel maintenance session had already put the
+  question to the owner, who **held the merge** — the live site stays on
+  v3.2.618 until they call the release. The ticket is now `[blocked: owner
+  calls the release]`, so the residual is tracked without reopening a settled
+  decision.
+- **REL-01** — `docs/app.js.map` publishes 3.1 MB carrying `sourcesContent`
+  for 89 first-party files. The repository is public, so this is a size and
+  tidiness decision, not a secrecy one; saying otherwise would overstate it.
+  `[sign-off]`.
+- **PERF-01** — RP-09 bounded *hostile* inputs, but no *legitimate* maximum
+  project was ever profiled, so the supported ceiling is a UI limit rather than
+  a measured budget.
+- **LEGAL-01** — MPL-2.0 posture for mediabunny (bundled) and now axe-core
+  (dev-only). Notices shipped under REV-09; the review was explicit that a
+  technical review cannot give legal advice. `[maintainer]`.
+- **ICE-03** — a visual/performance benchmark corpus, Icebox with a trigger.
+
+Seven further §17/§18 items were checked and are genuinely closed: structured
+diagnostics, Clear All semantics, content sensitivity, public-ZIP intent,
+supported browsers, the coverage floor, and the AAA audit. Each is recorded in
+the crosswalk with where it landed, so the next audit does not repeat this one.
+
+**Crosswalk extended** with a second table covering the non-finding items, and
+the dossier index now points at the current continuation prompt. The old
+prompt is kept as provenance for the run it briefed rather than deleted.
+
+**Parallel session reconciled.** Two commits (`ea3e27a`, `f1c14b9`) landed on
+the branch from a maintenance session while this audit ran: the memory prune
+happened, with an owner-set quality bar that pruning must never harm
+development, and DEPS-01 was added. This session's edits applied cleanly on top
+(additions only, nothing clobbered), DEPLOY-01 was corrected as above, and
+LEGAL-01 now points at DEPS-01, which moves the same MPL-licensed versions.
+The trajectory and decision-log budget warnings this session had been
+preserving are therefore resolved, not deferred.
+
+**Link:** DEPLOY-01, REL-01, PERF-01, LEGAL-01, ICE-03.
+
+## 2026-08-27 — owner verdicts clear quarantine, and axe joins the gate
+
+**Quarantine is empty.** All four parked items got an owner verdict:
+- **QUAR-01** import/export custom keybindings — **cut**.
+- **QUAR-04** randomised path-shape frequency — **cut**; the owner judges it
+  already done.
+- **QUAR-02** → promoted as **REVEAL-01**. The owner's intent, recovered:
+  the spotlight reveals the background, and that reveal then *fades out over
+  time* behind the head. Investigated rather than guessed — it is **not**
+  currently possible. `buildSpotlightRevealMask` repaints every passed path
+  point at full opacity on every frame, so revealed stays revealed, uniformly
+  and permanently. The fix is tractable and fits the architecture: weight each
+  point's alpha by its distance behind the head, keeping the per-frame rebuild
+  that is what makes scrubbing bidirectional.
+- **QUAR-03** → promoted as **LABEL-01**. The owner confirms auto-position
+  works well; the ask is *when* it runs and how findable it is. Run it when a
+  label is first written, never after the author has moved it by hand, and
+  surface the control — it sits inside the collapsed "More" disclosure today.
+
+Two of four were genuinely recoverable intent, which is the argument for
+quarantining rather than cutting on an agent's judgement.
+
+**axe-core added as a dev dependency**, owner-approved. Runtime dependencies
+are unchanged: jszip and mediabunny. `tests/axeAudit.test.js` is now a standing
+gate over the app shell across WCAG 2.0/2.1/2.2 A/AA/AAA and best-practice.
+
+**Result: 48 rules, zero violations** — run twice in production Chromium, once
+on the empty shell and once with the "Open day route" example loaded, with
+`color-contrast` genuinely evaluated (confirmed, not assumed). The jsdom gate
+disables `color-contrast` because jsdom has no painting; a pass there would be
+a false green, so contrast stays a live measurement.
+
+**Four incompletes, triaged, none a defect:**
+- `aria-allowed-role` on two camera `<label>`s — axe's independent
+  confirmation of **A11Y-01**, and stricter than the original finding:
+  `role="button"` is *invalid* on a `<label>`, and becomes a violation rather
+  than an incomplete once those controls are shown. Ticket updated to say so.
+- `aria-valid-attr-value` on the File and Export dropdowns — the referenced
+  menus exist with `role="menu"`; axe cannot resolve a `display:none` target.
+  Markup is correct.
+- `color-contrast` / `color-contrast-enhanced` on `.waypoint-fork-mark` — axe
+  skips glyph-only content. The mark is `aria-hidden`, decorative, and its
+  meaning is carried by the row's `.sr-only` text.
+
+**Deferred by the owner:** the `trajectory.md` and `decision-log.md` size
+warnings, to a maintenance session shortly. Not pruned.
+
+**Link:** REV-05 (residual now NVDA/VoiceOver and forced colours only),
+REVEAL-01, LABEL-01, A11Y-01.
+
+## 2026-08-27 — the accessibility audit, and what it is honest to claim
+
+**Ran and green in production Chromium:** unique ids, every control named,
+one h1, no heading-rank skips, a main landmark, `lang`, alt text everywhere,
+a polite live region. Contrast measured on every visible text node against its
+effective background at the AAA thresholds. Target size on every rendered
+control. Reflow at 320 CSS px — the WCAG 1.4.10 equivalent of 400% zoom at
+1280 px — with no horizontal document scroll and, after the fix below, no
+undersized control.
+
+**Two AAA failures, found and fixed:**
+- The Edit/Preview label measured 6.37:1. `--text-03` is exactly 7:1 on white,
+  but that label sits on the toggle's own `--ui-02` surface. Moved to
+  `--text-02`, now 19.17:1.
+- The skip link was 37 px tall. It is the first thing a keyboard or switch user
+  reaches, so it now fills the 44 px target.
+
+**Two findings ticketed rather than folded in.** An assurance pass that
+quietly turns into a redesign is exactly the failure this programme warns
+against, so:
+- **A11Y-01** — `ParamTooltip` gives every `[data-tip]` label `role="button"`
+  and `tabindex="0"`. That announces ~80 hint labels as buttons that perform no
+  action, and obliges each to a 44 px target it does not meet at 96×19. The
+  right shape is `aria-describedby` on the control the label describes; that is
+  a semantics change across the sidebar and deserves its own run.
+- **A11Y-02** — only the UI-02 and ROUTE-01c row affordances declare
+  `forced-colors` fallbacks. Selection accent bars, focus rings, the leg "+"
+  and beacon colours have none.
+
+**What is NOT claimed.** axe-core was not run: it would be a new dev
+dependency, and that is an approval, not an assumption. Forced-colours and
+reduced-motion emulation need devtools media overrides this automation cannot
+drive. NVDA and VoiceOver remain owner-run by standing policy. The regression
+test asserts only what static analysis can settle and says so in its header —
+a jsdom "pass" on contrast or a screen reader would be worth less than nothing.
+
+**Link:** REV-05, still `[~]` with a named residual.
+
+## 2026-08-27 — examples are generated project saves, published under review
+
+**Owner decision:** the examples ship as full `.zip` project saves so people
+can download and re-use them, not as JSON the app alone understands. Asked and
+answered at the DEMO-01 gate.
+
+**Generated, not committed as source.** The repository holds the example
+*definitions* (`src/examples/index.js`) and the already-bundled backgrounds;
+the build pairs them into the archive. This keeps a second copy of a 1–2 MB
+image out of the source tree, and the archives are byte-reproducible — fixed
+entry timestamps and a pinned authoring date, because `Waypoint.toJSON()`
+carries `created`/`modified` — so a rebuild that changed no example produces
+no diff and lands no new blob in history. The archives themselves do go to
+`docs/`, which is how a static site can offer a download at all.
+
+**Built from the live models, which is what makes them fixtures.** Hand-written
+JSON would rot into a shape nobody reads; `toJSON()` output is current by
+definition. `tests/exampleProjects.test.js` rehydrates each one through the
+app's own timing path and asserts it resolves, times deterministically, gives
+every waypoint an arrival and leaves no broken crowd binding. If the save
+format, branch model or timeline maths drift, an example stops resolving and
+the suite says so.
+
+**Publication boundary, honoured rather than bypassed.** The build refused any
+ZIP in its output, because "legacy project ZIPs still require individual
+provenance review" (decision-log 2026-08-26). That rule was never a blanket
+ban on archives — it was a ban on publishing archives nobody had reviewed. So
+`public-assets.json` gained an `exampleProjects` block naming the three
+approved archives and the approved background each contains, the build's guard
+now refuses any ZIP *not* in that record, and `publicationBoundary.test.js`
+asserts the shipped set equals the approved set. A stray user project still
+fails the build.
+
+**Content:** a plain labelled route with a beacon (no crowd); a branching
+campus route whose crowd is traced from it and released at the head's arrival;
+and a weighted network with two dot streams and no hero route — between them
+every Phase 5 capability, and one gentle first-open example.
+
+**Link:** DEMO-01. 65 files / 991 tests green. Verified in production Chromium:
+"Open day route" opened from the File menu with its background, 1 branch, 0
+structural problems, 4 crowd nodes bound and none broken, one join wait and an
+11.65 s timeline. Zero console entries.
+
+## 2026-08-27 — the branch handle is an offer, and it must survive a tap
+
+**Decision:** A waypoint that a *bound entry* node sits on carries a "+" handle
+beside its marker. Clicking it emits `route:branch-arm` — the same event
+Alt+click emits — so there is one branch path through the code, not a second
+mechanism that could drift from it. Entry nodes only: a pass-through or exit
+node marks a crowd already moving through, not a moment the story opens at, and
+a broken binding offers nothing.
+
+**Its own hit target, and not hover-gated.** The handle sits clear of the
+marker so it cannot steal the marker's clicks — which also puts it outside the
+marker's hit radius, so a cascade that only looked for handles *after* a
+waypoint hit never reached it. It is now checked ahead of the waypoint, beside
+the area handles.
+
+More importantly, the click path hit-tests the handle itself rather than
+trusting the hover state. Gating on hover left the handle dead on touch and
+pen, where a tap never hovers first — exactly the devices REV-03 unified this
+transaction for. Hover is the visual affordance; it is not the gate. This was
+found because the hover cascade is not reproducible in browser automation, and
+chasing that turned up the real defect underneath it.
+
+**One "+" routine:** the leg-midpoint handle and this one now draw through
+`_drawPlusHandle`, so two offers that mean "add something here" cannot drift
+into looking different.
+
+**Link:** COMPOSE-04. 64 files / 963 tests green. Verified in production
+Chromium: the handle on the crowd's entry waypoint armed the fork with no hover
+beforehand, and the place click created `Waypoint 1·B1` alongside the existing
+`2·B1` — correctly lettered per fork — with no structural problems and zero
+console entries.
+
+## 2026-08-27 — a closed client socket is not a port holder
+
+**Decision:** `scripts/restart.sh` matches `lsof -sTCP:LISTEN` when deciding
+whether the port is held by a foreign process.
+
+**Rationale:** it matched *any* socket on port 3000, including a browser's
+stale CLOSED client connections to the server it had just stopped. The
+documented one-command boot then refused to start — correctly reporting that it
+would not kill a process it does not own, but about sockets that hold nothing.
+The ownership-safety contract is intact and still refuses a genuine foreign
+listener; it just no longer mistakes a hung-up caller for one.
+
+**Found by:** the boot failing after a dev-server restart during COMPOSE-04
+verification, with nothing listening on the port at all.
+
+**Link:** DEV-01. `tests/restartSafety.test.sh` still green.
+
+## 2026-08-27 — the crowd wait is solved, not iterated, and then baked
+
+**Decision:** "Wait here for this crowd" computes the wait a waypoint needs so
+the head is still there when the crowd's last dot arrives, and writes it as an
+ordinary authored `pauseTime`. The route gains no live dependency on the crowd —
+Phase 5 forbids that, and a live one would make the timeline a fixed-point
+problem on every frame.
+
+**Why a difference is wrong.** Adding a wait `P` lengthens the timeline, and
+every dot's onset is a *fraction* of the timeline, so the crowd finishes later
+too. "Last arrival minus arrival" therefore undershoots, and iterating converges
+slowly as onsets approach the end. Solved per dot instead, with `A` the head's
+arrival (unaffected by a wait *at* that waypoint), `f` the onset fraction, `J`
+the journey and `D` the timeline minus the waypoint's current wait:
+
+    A + P ≥ f·(D + P) + J   ⇒   P ≥ (f·D + J − A) / (1 − f)
+
+taking the largest such `P` over the dots. Exact in one pass, and idempotent:
+fitting twice lands on the same number, so a refit never creeps.
+
+**Unsatisfiable cases are reported, not approximated:** a dot with onset
+fraction 1 releases exactly at the end and moves out by however much the route
+is lengthened, so no wait can outlast it; a looping or respawning crowd has no
+arrival at all. Both come back with a reason rather than a wrong number.
+
+**Shared arithmetic:** the onset routine was extracted from `SwarmEngine` into
+`crowdArrival.js` and the engine now imports it, rather than the solve
+restating it. Every swarm fixture stayed byte-for-byte identical through that
+extraction, which is the check that mattered. `scheduleDots` resolves the guide
+the same way `evaluate` does and walks a graph dot's own route to its first
+exit, so per-dot journeys differ on a graph exactly as they do on screen.
+
+**Assumption at the skipped gate:** the wait applies to the selected major
+waypoint when there is one, otherwise the route's last major — the two things
+an author means by "wait here" — rather than introducing a waypoint picker.
+
+**Staleness is honest, not hidden:** the number is a snapshot. Retune the crowd
+and it goes stale; fit it again. That is the cost of baking, and it is the cost
+Phase 5 chose.
+
+**Link:** COMPOSE-02. 63 files / 945 tests green. Verified in production
+Chromium: a crowd finishing at ~25 s against a 7.3 s route solved to a 48215 ms
+wait, after which the head leaves at 53984 ms and the last dot arrives at
+53983 ms. The naive difference would have set ~19 s and still missed. Zero
+console entries.
+
+## 2026-08-27 — tracing the route makes a copy that still follows it
+
+**Decision:** "Trace route into network" replaces the selected crowd's guide
+network with one mirroring the route: a node per **major** waypoint, an edge
+per leg carrying that leg's **minors as control points**, and `one-way` edges
+throughout. Branches trace as edges leaving the fork node and returning to the
+rejoin node, so a crowd splits exactly where the route splits.
+
+**A copy that still follows.** Every traced node keeps a COMPOSE-01 binding to
+the waypoint it came from, so moving that waypoint carries the node rather than
+stranding the copy — but the network is otherwise the author's: retune weights,
+add shortcuts, draw extra nodes, none of which reaches back into the route.
+That is the one-way rule paying for itself twice.
+
+**Minors are geometry, not junctions.** A node at a minor would be a decision
+point the route does not have, and a crowd would treat it as a place to choose.
+Carrying minors as edge control points keeps the guide curve the route's own
+curve instead of a straight chord between majors.
+
+**Entries and exits are derived, not declared:** a node with no incoming edge
+is an entry, one with no outgoing edge an exit. A branched route therefore
+yields several exits without the caller reasoning about topology.
+
+**Refuse rather than half-build:** a route with fewer than two majors, or one
+whose branch structure has an unresolved fork or rejoin, is refused with a
+reason. A partial trace would leave edges pointing at endpoints that were never
+created.
+
+**Availability:** the button stays enabled while the pen is live — switching a
+crowd to "Custom network" hands you the pen immediately, which is exactly when
+"or just trace the route" is most useful. Clicking it puts the pen down first,
+because the trace replaces every node and a half-drawn edge would be left
+pointing at one that no longer exists.
+
+**Link:** COMPOSE-03. 62 files / 923 tests green. Verified in production
+Chromium on the branched route: 4 bound nodes with the first an entry and the
+last an exit, 4 one-way edges including the fork→branch and branch→rejoin
+pair, and the trunk leg carrying its 2 minors as control points. Zero console
+entries.
+
+## 2026-08-27 — a bound crowd reads the route; the route never reads the crowd
+
+**Decision:** `GraphNode.anchorWaypointId` binds a node's *evaluated* position
+to a waypoint, and `Emitter.releaseAnchor` binds a release window's start to a
+route moment. Both are resolved at evaluation time from live route state, both
+default to null, and both are omitted from `toJSON()` when null so an
+unanchored scene's saved shape is unchanged.
+
+**Authored intent is never rewritten.** A bound node keeps its own `x`/`y`;
+only a derived `position()` follows the waypoint. That is what makes the
+fallback meaningful — when the waypoint is deleted the node returns to where it
+was authored, keeps its binding, and the break is reported. Deleting the node
+or freezing the crowd would both destroy work the author never asked to lose
+(the ticket's open question on fallback).
+
+**Named moments, not a normalised offset** (the ticket's second open question):
+`arrival`, `pause-end` and `route-end`. An author can reason about "when the
+head gets there" and "when it moves off again"; both survive retiming; and an
+offset into a pause means nothing when the pause is zero.
+
+**Determinism and fixture compatibility:** only a bound emitter's window
+*start* moves. The onset arithmetic — slot, hash channels, variance, ramp,
+busyness envelope — is untouched, so every existing unanchored swarm hash is
+byte-for-byte identical, which the suite confirms. `getRouteArrivalMap()`
+composes a linear route's single trunk leg through the same routine a branched
+one uses, so a bound crowd reads the same arithmetic either way.
+
+**Read split:** everything that draws an edge, walks a dot or hit-tests reads
+`node.position()`; the authoring surfaces (semantic outline inputs, node drag,
+validation) keep reading `x`/`y`. `edgeGeometry`'s cache signature includes the
+resolved position, so a route edit invalidates the drawn curve — the drawn
+curve and the curve dots travel must stay the same curve.
+
+**Warning cadence:** the break notice fires once per *change*, not once per
+path rebuild — `calculatePath` runs on every drag frame. Resolution itself runs
+ahead of that function's early returns, because deleting a route down to one
+waypoint breaks every binding and is exactly when a stale resolution is worst.
+
+**Link:** COMPOSE-01. 61 files / 906 tests green. Verified in production
+Chromium on a branched route: the node bound to its waypoint's exact position
+while its authored coordinates stayed put, the emitter released at 2993 ms
+(Waypoint 2's arrival plus its 1500 ms wait) with nothing before it, and
+breaking the binding returned the node to its authored position with the
+binding intact and the break reported. Zero console entries.
+
+## 2026-08-27 — the exported player inherits branches rather than reimplementing them
+
+**Decision:** ROUTE-01d needed almost no new export code. `PlayerApp` already
+takes `pathTimingMixin` wholesale, so it builds the same splines and composes
+the same master timeline the editor does; the work was carrying `branchPaths`
+and `branchTimeline` into its render state and proving nothing is lost in
+between. A second, player-local branch implementation was never on the table —
+it is exactly how play, scrub and export would drift apart.
+
+**Timeline length:** a terminal branch can outlive the trunk, so
+`updateAnimationDuration` now takes the max of the trunk-derived duration and
+the composed branch total (plus the same handles, intro and tail, which sit
+outside the composition). Without this the route ended when the trunk did and
+a longer branch was cut off mid-animation. A branch that fits inside the trunk
+changes nothing — it must not pad a route it already fits in.
+
+**Cache correctness:** the composed timeline is a function of geometry *and*
+base speed, so its cache is keyed on both. Keying on geometry alone reported a
+branch's duration at the previous speed after a speed change.
+
+**Partial-mixin hosts, a third time:** `updateAnimationDuration` calling
+`this.getBranchTimeline()` broke the player-parity harness, which
+cherry-picks mixin methods. Fixed on both sides — the harness takes the new
+accessor (it is part of the timing contract it exercises) and the call is
+optional, because a host without the accessor has no branch data either.
+
+**Evidence:** 60 files / 878 tests. Live Chromium: composed total and engine
+duration agree at 7269 ms on a branched route, the coordVersion-9 snapshot
+carries `branchId`/`branchFrom`/`branchRejoin` on exactly the one branch
+waypoint and adds no key to the other five, and the `player.js` bundle inlined
+into every standalone export contains the branch composition and render code.
+Opening an exported file in a browser end-to-end remains REV-04's outstanding,
+owner-run evidence.
+
+**Link:** ROUTE-01d.
+
+## 2026-08-27 — two gestures author a branch, and both are owner-chosen
+
+**Decision:** Alt+click on an existing waypoint arms a branch; the next plain
+canvas click places its first waypoint. Dragging a branch's last waypoint onto
+another waypoint rejoins the branch there; dragging it onto the current target
+again clears the rejoin. Both were picked by the owner at the ROUTE-01c gate
+over a list "+ Branch" button, a canvas ⑂ handle and an inspector dropdown.
+
+**What Alt+click gives up:** Alt+click previously force-added a major *even on
+top of an existing waypoint*, bypassing selection. The hit-test now splits it:
+empty canvas still force-adds, a waypoint hit arms a branch. The one lost case
+is force-adding a major exactly on top of another, and Alt+Cmd still
+force-adds a minor there. Escape unwinds an armed gesture before it unwinds a
+selection — an armed state is the more recent and more surprising one to be
+stuck in.
+
+**Placement:** a branch is inserted after the fork's own leg block, so the flat
+array still reads in route order and the sidebar list needs no reordering pass.
+Numbering is `fork·letter·position` (`2·B1`), lettered from B because the
+trunk's own continuation past the fork is implicitly A — so adding a second
+branch never renumbers the first.
+
+**Validation lives in the model, not the gesture:** `canForkFrom`,
+`canRejoinBranch` and `branchEndInfo` answer every question the gestures ask,
+and `canRejoinBranch` decides by applying the change to a copy and re-resolving
+rather than restating the rules. A gesture that reimplemented them would drift
+from `resolveRouteBranches` the first time either changed.
+
+**Two bugs the live pass found, neither reachable from jsdom:**
+- `findWaypointAt` hit-tested the waypoint being dragged. At drop time it sits
+  under the cursor, on top of the target, so the rejoin never fired. It now
+  takes an exclusion, and the caller excludes the whole drag group.
+- Both branch handlers snapshotted undo *before* mutating. This project's undo
+  stack holds post-action states and `undo()` pops the current one to restore
+  the previous, so a pre-mutation snapshot made undo skip a step. Corrected to
+  match `waypoint:deleted` and `waypoints:reordered`.
+
+**Layout:** the fork ⑂ is badged onto the waypoint's colour dot rather than
+placed in the row's text flow. A major row is already dot + handle + title +
+▲▼ + × inside roughly 140px, and one more inline child wrapped the title.
+
+**Link:** ROUTE-01c. 59 files / 869 tests green. Verified in production
+Chromium: fork armed and placed at the right array index, rejoin set with a
+1203 ms join wait and the dragged point restored rather than moved, the same
+drag toggling back to terminal, undo restoring the rejoin, persistence across
+reload, zero console entries.
+
+## 2026-08-27 — a branch borrows the trunk's transport, never its own
+
+**Decision:** `AnimationEngine` keeps exactly one authoritative transport — the
+trunk's. Branch timing is pure derived data: `branchTiming.js` turns each run's
+geometry into a leg, `PlayerCore.composeBranchTimeline` places the legs, and the
+renderer asks `branchPathProgressAt(masterTimeMs, …)` for a branch's position.
+No branch installs segment markers, holds playback state or accumulates time.
+
+**Rationale:** the deterministic-timeline mandate says the scene is a pure
+function of (timelineMs, projectState, seed). A per-branch transport would have
+given every branch its own accumulating clock and broken that at the first
+scrub. Deriving each branch's position from the master instant keeps play,
+scrub and export agreeing by construction, exactly as they already do for the
+trunk.
+
+**Shared mapping, not a second one:** each leg carries its own `{segments,
+pauses, pathDuration, totalPauseTime, hasVariableSpeed}` in precisely the shape
+`PlayerCore.timelineToPath` consumes, and branches resolve position through
+that same function. A first attempt approximated it (local time minus pause
+time already spent) and drifted the moment a pause sat mid-branch rather than
+at its end. An interleaved pause now holds a branch head still for the same
+reason and by the same arithmetic as the trunk.
+
+**Render seam:** two additive vector layers — `branch-paths` beneath the trunk
+so the trunk still reads as the primary line, `branch-heads` above it, since
+every enabled branch animates simultaneously and so owns a head. `renderPath`
+and `renderPathHead` read a small fixed slice of the engine, so each branch
+passes a facade that differs only in `getPathProgress()` and delegates the
+rest. Branch waypoints, labels, beacons and areas needed no change at all:
+those layers already iterate the whole waypoint array. Both branch layers
+return early when `state.branchPaths` is empty, so a linear route never enters
+the branch pass.
+
+**Assumption at the skipped gate (camera):** the follow-camera keeps tracking
+the trunk head. Trunk timing now reads `routeOf(app)` — the trunk, not the full
+array — and `CameraService.toMajorKeyframes` follows it, so this falls out of
+the model rather than being special-cased. Choosing per-fork which head the
+camera follows, or framing all live heads, is a product decision left to
+ROUTE-01c's sign-off.
+
+**Mixin safety:** `routeOf(app)` is a module helper, not a mixin method,
+because `PlayerApp` borrows only part of `pathTiming`; a `this.trunkRoute()`
+call was undefined there and broke seven export-parity tests.
+
+**Link:** ROUTE-01b. 58 files / 832 tests green. Verified in production
+Chromium on a branched route: trunk and branch splines both start at the fork
+point, two heads advance simultaneously from t=0, the shorter branch completes
+and holds, zero console entries. A linear route reports `isLinear` with no
+branch paths and renders unchanged.
+
+## 2026-08-27 — branches are runs in the one waypoint array, not a second graph
+
+**Decision:** A hero-route branch is a *contiguous run* of waypoints sharing a
+`branchId`, stored in the same ordered array the route has always used, with
+`branchFrom` on the run's first waypoint and `branchRejoin` on its last. All
+three default to null and are omitted from `toJSON()` when null, so an unsplit
+project's save is byte-identical to a pre-ROUTE-01 save.
+
+**Alternatives rejected:** a dedicated `RouteGraph` of nodes and edges reads
+cleaner in isolation but forces a migration of every consumer — path,
+rendering, timing, persistence, export, outline — and cannot honour "preserve
+valid linear projects exactly" without carrying the array anyway. Reusing the
+crowd `GraphModel` was rejected outright: it is a weighted directed graph where
+dots *choose* an edge, and importing edge weights and probabilistic selection
+into hero-route storytelling would have made the two models mean the same
+thing when the approved contract says they must not.
+
+**Timeline composition:** `PlayerCore.composeBranchTimeline` resolves leg start
+times by relaxation over fork dependencies, so it is order-independent and
+terminates on a cyclic structure by reporting the survivors as `unresolved`
+rather than looping. Simultaneous start, latest-arrival rejoin recorded as a
+`joinWaitsById` entry (once per join, not once per incoming branch) and
+completion as the max over every terminal endpoint. A disabled branch keeps its
+place but contributes zero duration — otherwise hiding a branch would stretch
+the route it is hidden from.
+
+**Validation, not repair:** `resolveRouteBranches` never throws and never
+fixes a broken structure. A deleted fork target, a split run or a cycle comes
+back in `problems` with the runs still intact, so the route renders and the
+author is told what is wrong. Silent repair during a render would rewrite
+authored intent.
+
+**Scope:** ROUTE-01 was too large for one slice, so it is now ROUTE-01a
+(this: model + composition, headless), ROUTE-01b (rendering + camera),
+ROUTE-01c (authoring, `[sign-off]`) and ROUTE-01d (export parity). COMPOSE-01
+and COMPOSE-03 depend on the model, so they gate on ROUTE-01a; REV-05 needs
+the authoring UI to settle, so it gates on ROUTE-01c.
+
+**Link:** ROUTE-01a. 57 files / 808 tests green; no runtime behaviour change.
+
+## 2026-08-27 — the route list shows minors, and one numbering serves both views
+
+**Decision:** The sidebar waypoint list renders the whole route. Minors appear
+as indented child rows of the leg they shape, with a visible `minor` tag, a
+grey shaping-dot glyph matching what the canvas actually draws, and an
+`.sr-only` statement of the relationship — indentation alone would leave the
+structure to layout (WCAG 2.2 1.3.1).
+
+**Rationale — one numbering:** `src/utils/waypointNaming.js` now numbers the
+route once (`1`, `1.1`, `1.2`, `2`, …) and both the list and the semantic
+outline read from it. Before this, the outline numbered minors by route
+position, so its "Minor waypoint 7" and the list's "Waypoint 7" named different
+waypoints — a collision a screen-reader user moving between the two surfaces
+would hit directly. Leg 0 is a real case, not a guard: deleting a major strands
+its trailing minors ahead of every remaining major, and they read `0.1`, `0.2`
+rather than borrowing the number of the major that now follows them.
+
+**Rationale — reorder-visible, not reorder-able:** a minor is not draggable and
+owns no ▲/▼. Its place inside a leg is authored on the canvas, and
+`reorderWaypointBlocks` already moves it with its major; giving minors their
+own reorder controls would reopen the 2026-08-18 data bug where rebuilding
+majors in place silently reattached minors to different legs. A major instead
+drags as its whole leg block, so the minors visibly travel to where the model
+will actually put them. The `waypoints:reordered` payload stays majors-only.
+
+**Alternatives rejected:** an ARIA tree (`role="treeitem"` + `aria-level`)
+would have replaced the deliberate action-list semantics — each row is a native
+button beside independent reorder/delete buttons — for hierarchy the `.sr-only`
+line already conveys. Keeping the outline's route-position numbering and giving
+the list its own scheme would have shipped two names per waypoint.
+
+**Link:** UI-02. 56 files / 773 tests green; verified in production Chromium —
+selection, rename, block reorder with minors travelling, autosave round-trip,
+44 px rows, zero console entries. Generated Pages build v3.2.658.
+
+## 2026-08-27 — inline rename detaches its blur listener before touching the DOM
+
+**Decision:** `startRenameFor`'s `finish()` calls
+`input.removeEventListener('blur', onBlur)` as its first statement, and returns
+early when the input is no longer connected.
+
+**Rationale:** replacing the focused input removes it from the tree, and Chrome
+dispatches the resulting `blur` from *inside* that `replaceWith` call. The
+re-entrant pass then replaced a node that no longer had a parent and threw
+`NotFoundError` into the console on every successful Enter-committed rename.
+An `isConnected` guard alone did not close it — the re-entry happens mid-swap,
+while the node's connected flag is still set. Detaching the listener up front
+removes the re-entry entirely, whatever the dispatch ordering. The `isConnected`
+return still covers the other case: an app-side list rebuild (autosave, a
+selection refresh) replacing the row while a rename is open, where the new row
+already carries its own title span.
+
+**Context:** pre-existing since the rename paths were unified, found live during
+UI-02 verification rather than by any test — jsdom does not reproduce Chrome's
+synchronous mid-mutation blur, so the regression test asserts the re-entrant
+`finish()` cannot throw rather than reproducing the browser's exact ordering.
+
+**Link:** UI-02a. `tests/waypointList.test.js`.
+
+## 2026-08-27 — gate vocabulary splits blocking dependencies from evidence debt
+
+**Decision:** Backlog gates now distinguish `[gated: X impl]` — waits on X's
+code landing — from `[verify: …]`, an evidence residual that blocks nothing
+downstream. ROUTE-01 and the COMPOSE chain move to `[ready]`/`[gated: … impl]`;
+REV-05 re-gates onto UI-02 and ROUTE-01. Items also carry a short title and a
+band so the roadmap table reads without cross-referencing.
+
+**Rationale:** REV-03's implementation shipped at `bbc1c3f`; only physical
+iOS/Android evidence is outstanding. Writing that as `[gated: REV-03]` parked
+the entire Phase 5 chain behind evidence none of its successors needs — the
+real dependency is a stable single pointer transaction, which exists. REV-05 is
+the genuine exception: it wants the authoring UI to stop changing shape, and
+the tickets still changing it are UI-02 and ROUTE-01, not REV-03.
+
+**Cost if wrong:** ROUTE-01 builds branch authoring on a pointer layer whose
+physical-device behaviour is unconfirmed. Accepted: the layer is green in
+automation and production Chromium, and REV-03/REV-04 keep their honest
+evidence residuals rather than being closed early.
+
+**Link:** backlog refactor, 2026-08-27.
+
+## Archived: 2026-08-17 → 2026-08-26 — see archive/decision-log-2026-08-17-to-2026-08-26.md
+## Archived: 2026-06 — see archive/decision-log-2026-06.md
+## Archived: 2026-04 — see archive/decision-log-2026-04.md

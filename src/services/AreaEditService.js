@@ -53,6 +53,9 @@ export class AreaEditService {
     
     /** @type {{x: number, y: number}|null} Original vertex position before drag */
     this._origVertex = null;
+
+    /** @type {boolean} Whether the current area differs from its drag-start value */
+    this._dragChanged = false;
     
     this._subscribeToEvents();
   }
@@ -68,13 +71,15 @@ export class AreaEditService {
     });
     
     this.eventBus.on('waypoint:deselected', () => {
-      this.activeWaypoint = null;
-      this.isDragging = false;
+      this._resetTransientState();
     });
+
+    this.eventBus.on('project:replaced', () => this._resetTransientState());
+    this.eventBus.on('app:cleared', () => this._resetTransientState());
     
     // Area edit drag events (emitted by InteractionHandler)
-    this.eventBus.on('area:edit-start', ({ waypoint, imgX, imgY, imageToCanvas }) => {
-      this._startDrag(waypoint, imgX, imgY, imageToCanvas);
+    this.eventBus.on('area:edit-start', ({ waypoint, imgX, imgY, imageToScreen }) => {
+      this._startDrag(waypoint, imgX, imgY, imageToScreen);
     });
     
     this.eventBus.on('area:edit-move', ({ imgX, imgY }) => {
@@ -84,6 +89,21 @@ export class AreaEditService {
     this.eventBus.on('area:edit-end', () => {
       this._endDrag();
     });
+
+    this.eventBus.on('area:edit-cancel', () => {
+      this._cancelDrag();
+    });
+  }
+
+  _resetTransientState() {
+    this.isDragging = false;
+    this.dragTarget = null;
+    this.dragVertexIndex = -1;
+    this.activeWaypoint = null;
+    this._dragStartImg = null;
+    this._origCenter = null;
+    this._origVertex = null;
+    this._dragChanged = false;
   }
   
   /**
@@ -93,12 +113,10 @@ export class AreaEditService {
    * @param {Object} waypoint - Waypoint to test
    * @param {number} screenX - Screen X (CSS pixels relative to canvas)
    * @param {number} screenY - Screen Y (CSS pixels relative to canvas)
-   * @param {Function} imageToCanvas - Coordinate transform
-   * @param {number} displayWidth - Canvas width
-   * @param {number} displayHeight - Canvas height
+   * @param {Function} imageToScreen - Image-to-screen coordinate transform
    * @returns {{type: string, vertexIndex?: number}|null} Hit result or null
    */
-  hitTest(waypoint, screenX, screenY, imageToCanvas, displayWidth, displayHeight) {
+  hitTest(waypoint, screenX, screenY, imageToScreen) {
     if (!waypoint?.hasAreaHighlight()) return null;
     
     const ah = waypoint.areaHighlight;
@@ -106,7 +124,7 @@ export class AreaEditService {
     
     if (shape === 'circle' || shape === 'rectangle') {
       // Test center handle
-      const center = imageToCanvas(ah.centerX, ah.centerY);
+      const center = imageToScreen(ah.centerX, ah.centerY);
       const dist = Math.sqrt((screenX - center.x) ** 2 + (screenY - center.y) ** 2);
       if (dist <= HANDLE_HIT_RADIUS) {
         return { type: 'center' };
@@ -116,7 +134,7 @@ export class AreaEditService {
     if (shape === 'polygon' && ah.points && ah.points.length > 0) {
       // Test each vertex handle
       for (let i = 0; i < ah.points.length; i++) {
-        const p = imageToCanvas(ah.points[i].x, ah.points[i].y);
+        const p = imageToScreen(ah.points[i].x, ah.points[i].y);
         const dist = Math.sqrt((screenX - p.x) ** 2 + (screenY - p.y) ** 2);
         if (dist <= HANDLE_HIT_RADIUS) {
           return { type: 'vertex', vertexIndex: i };
@@ -133,14 +151,15 @@ export class AreaEditService {
    * @param {Object} waypoint - Waypoint being edited
    * @param {number} imgX - Normalized image X
    * @param {number} imgY - Normalized image Y
-   * @param {Function} imageToCanvas - Coordinate transform for hit test
+   * @param {Function} imageToScreen - Image-to-screen transform for hit test
    */
-  _startDrag(waypoint, imgX, imgY, imageToCanvas) {
+  _startDrag(waypoint, imgX, imgY, imageToScreen) {
     if (!waypoint?.hasAreaHighlight()) return;
     
     const ah = waypoint.areaHighlight;
     this.activeWaypoint = waypoint;
     this._dragStartImg = { x: imgX, y: imgY };
+    this._dragChanged = false;
     
     if (ah.shape === 'circle' || ah.shape === 'rectangle') {
       this.isDragging = true;
@@ -148,14 +167,19 @@ export class AreaEditService {
       this._origCenter = { x: ah.centerX, y: ah.centerY };
     } else if (ah.shape === 'polygon') {
       // Find which vertex is closest to drag start
-      // We need canvas coords for hit testing, so use the imageToCanvas fn
-      const canvasPos = imageToCanvas(imgX, imgY);
-      const hit = this.hitTest(waypoint, canvasPos.x, canvasPos.y, imageToCanvas, 0, 0);
+      // Keep the pointer and the 8px hit radius in screen space so viewport
+      // zoom does not make the target drift away from its rendered handle.
+      const screenPos = imageToScreen(imgX, imgY);
+      const hit = this.hitTest(waypoint, screenPos.x, screenPos.y, imageToScreen);
       if (hit && hit.type === 'vertex') {
         this.isDragging = true;
         this.dragTarget = 'vertex';
         this.dragVertexIndex = hit.vertexIndex;
         this._origVertex = { ...ah.points[hit.vertexIndex] };
+        this.eventBus.emit('area:vertex-selected', {
+          waypoint,
+          index: hit.vertexIndex,
+        });
       }
     }
   }
@@ -174,10 +198,17 @@ export class AreaEditService {
     const clampedY = Math.max(0, Math.min(1, imgY));
     
     if (this.dragTarget === 'center') {
+      const changedNow = ah.centerX !== clampedX || ah.centerY !== clampedY;
       ah.centerX = clampedX;
       ah.centerY = clampedY;
+      this._dragChanged = clampedX !== this._origCenter.x || clampedY !== this._origCenter.y;
+      if (!changedNow) return;
     } else if (this.dragTarget === 'vertex' && this.dragVertexIndex >= 0) {
+      const point = ah.points[this.dragVertexIndex];
+      const changedNow = point.x !== clampedX || point.y !== clampedY;
       ah.points[this.dragVertexIndex] = { x: clampedX, y: clampedY };
+      this._dragChanged = clampedX !== this._origVertex.x || clampedY !== this._origVertex.y;
+      if (!changedNow) return;
     }
     
     this.eventBus.emit('render:request');
@@ -189,17 +220,49 @@ export class AreaEditService {
    */
   _endDrag() {
     if (!this.isDragging) return;
-    
+
+    const waypoint = this.activeWaypoint;
+    const changed = this._dragChanged;
     this.isDragging = false;
     this.dragTarget = null;
     this.dragVertexIndex = -1;
     this._dragStartImg = null;
     this._origCenter = null;
     this._origVertex = null;
-    
-    if (this.activeWaypoint) {
-      this.eventBus.emit('area:changed', { waypoint: this.activeWaypoint });
+    this._dragChanged = false;
+
+    if (changed && waypoint) {
+      this.eventBus.emit('area:changed', { waypoint });
     }
+  }
+
+  /**
+   * Cancel an in-flight drag and restore the exact drag-start geometry.
+   * Cancellation is transient recovery, so it renders the restoration but
+   * never emits area:changed (and therefore creates no undo/autosave commit).
+   * @private
+   */
+  _cancelDrag() {
+    if (!this.isDragging || !this.activeWaypoint) return;
+
+    const ah = this.activeWaypoint.areaHighlight;
+    const changed = this._dragChanged;
+    if (this.dragTarget === 'center' && this._origCenter) {
+      ah.centerX = this._origCenter.x;
+      ah.centerY = this._origCenter.y;
+    } else if (this.dragTarget === 'vertex' && this.dragVertexIndex >= 0 && this._origVertex) {
+      ah.points[this.dragVertexIndex] = { ...this._origVertex };
+    }
+
+    this.isDragging = false;
+    this.dragTarget = null;
+    this.dragVertexIndex = -1;
+    this._dragStartImg = null;
+    this._origCenter = null;
+    this._origVertex = null;
+    this._dragChanged = false;
+
+    if (changed) this.eventBus.emit('render:request');
   }
   
   /**

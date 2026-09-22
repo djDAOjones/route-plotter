@@ -6,7 +6,12 @@
  * RoutePlotter instance; main.js attaches the group via
  * Object.assign(RoutePlotter.prototype, cameraMixin).
  */
-import { CameraService, CAMERA_DEFAULTS } from '../services/CameraService.js';
+import { CameraService, CAMERA_DEFAULTS, ZOOM_MODE } from '../services/CameraService.js';
+import {
+  hasMixedValues,
+  setRangeMixed,
+  setSelectMixed,
+} from '../utils/mixedControlState.js';
 
 export const cameraMixin = {
   
@@ -20,15 +25,23 @@ export const cameraMixin = {
    */
   _updateCameraControls(waypoint) {
     if (!waypoint) return;
-    
-    // Ensure camera object exists (lazy initialization)
-    if (!waypoint.camera) {
-      waypoint.camera = { zoom: CAMERA_DEFAULTS.ZOOM, zoomMode: CAMERA_DEFAULTS.ZOOM_MODE };
-    }
+
+    // Camera fields write only to selected majors. In a major/minor selection,
+    // use an actual write target rather than presenting the primary minor's
+    // defensive defaults as if they represented the selection.
+    const selectedMajors = typeof this.selectionTargets === 'function'
+      ? this.selectionTargets(true)
+      : (waypoint.isMajor !== false ? [waypoint] : []);
+    const source = selectedMajors.includes(waypoint) ? waypoint : selectedMajors[0];
+    const hasMajorTarget = Boolean(source);
+    const sourceZoom = source?.camera?.zoom ?? CAMERA_DEFAULTS.ZOOM;
+    const sourceMode = Object.values(ZOOM_MODE).includes(source?.camera?.zoomMode)
+      ? source.camera.zoomMode
+      : CAMERA_DEFAULTS.ZOOM_MODE;
     
     // Get major waypoints for index lookup (UI only shows major waypoints)
     const majorWps = this.waypoints.filter(wp => wp.isMajor !== false);
-    const majorIndex = majorWps.indexOf(waypoint);
+    const majorIndex = majorWps.indexOf(source);
     
     // Update "Prev Zoom" display (read-only)
     const prevMajorWp = (majorIndex > 0) ? majorWps[majorIndex - 1] : null;
@@ -43,18 +56,47 @@ export const cameraMixin = {
     }
     
     // Update "This Zoom" slider
-    const zoom = waypoint.camera.zoom ?? CAMERA_DEFAULTS.ZOOM;
-    const sliderValue = CameraService.zoomToSlider(zoom);
+    const sliderValue = CameraService.zoomToSlider(sourceZoom);
+    const formattedZoom = hasMajorTarget ? CameraService.formatZoom(sourceZoom) : '—';
     if (this.elements.cameraZoom) {
       this.elements.cameraZoom.value = sliderValue;
+      this.elements.cameraZoom.disabled = !hasMajorTarget;
+      this.elements.cameraZoom.setAttribute('aria-valuetext', formattedZoom);
     }
     if (this.elements.cameraZoomValue) {
-      this.elements.cameraZoomValue.textContent = CameraService.formatZoom(zoom);
+      this.elements.cameraZoomValue.textContent = formattedZoom;
     }
-    
-    // (Zoom-mode UI removed 2026-08-18 — camera.zoomMode remains model-only
-    // until the Phase 4 inspector surfaces it.)
 
+    // Multi-select owns a separate visible range. Preserve the source thumb as
+    // a useful edit starting point, but replace its value claim when targets
+    // disagree.
+    if (this.elements.cameraSelectedZoom) {
+      this.elements.cameraSelectedZoom.value = sliderValue;
+      this.elements.cameraSelectedZoom.disabled = !hasMajorTarget;
+      this.elements.cameraSelectedZoom.setAttribute('aria-valuetext', formattedZoom);
+    }
+    if (this.elements.cameraSelectedZoomValue) {
+      this.elements.cameraSelectedZoomValue.textContent = formattedZoom;
+    }
+    setRangeMixed(
+      this.elements.cameraSelectedZoom,
+      this.elements.cameraSelectedZoomValue,
+      hasMixedValues(selectedMajors, wp => wp.camera?.zoom ?? CAMERA_DEFAULTS.ZOOM)
+    );
+    
+    if (this.elements.cameraZoomMode) {
+      setSelectMixed(this.elements.cameraZoomMode, false);
+      this.elements.cameraZoomMode.value = sourceMode;
+      this.elements.cameraZoomMode.disabled = !hasMajorTarget;
+      setSelectMixed(
+        this.elements.cameraZoomMode,
+        hasMixedValues(selectedMajors, wp => (
+          Object.values(ZOOM_MODE).includes(wp.camera?.zoomMode)
+            ? wp.camera.zoomMode
+            : CAMERA_DEFAULTS.ZOOM_MODE
+        ))
+      );
+    }
 
     // Update "Next Zoom" display (read-only)
     const nextMajorWp = (majorIndex >= 0 && majorIndex < majorWps.length - 1)

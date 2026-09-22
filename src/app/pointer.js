@@ -142,8 +142,60 @@ export const pointerMixin = {
    * @param {number} screenX - X coordinate in screen space (CSS pixels)
    * @param {number} screenY - Y coordinate in screen space (CSS pixels)
    * @returns {Waypoint|undefined} Waypoint at position, or undefined
+     * @param {Object|Set|null} [exclude] Waypoint (or set) the hit-test must skip
    */
-  findWaypointAt(screenX, screenY) {
+  /**
+   * Where a waypoint's branch handle sits, in screen coordinates (COMPOSE-04).
+   *
+   * Up and to the right of the marker, clear of the route itself so the handle
+   * never sits on the line the author is trying to click.
+   * @param {Object} waypoint
+   * @returns {{x: number, y: number, radius: number}}
+   */
+  waypointBranchHandleAt(waypoint) {
+    const centre = this.imageToCanvas(waypoint.imgX, waypoint.imgY);
+    const offset = INTERACTION.WAYPOINT_HIT_RADIUS;
+    return { x: centre.x + offset, y: centre.y - offset, radius: offset * 0.75 };
+  },
+
+  /**
+   * True when a screen point is on that waypoint's branch handle.
+   * @param {Object} waypoint
+   * @param {number} screenX
+   * @param {number} screenY
+   * @returns {boolean}
+   */
+  isOnWaypointBranchHandle(waypoint, screenX, screenY) {
+    if (!waypoint) return false;
+    const handle = this.waypointBranchHandleAt(waypoint);
+    const point = this.screenToCanvas(screenX, screenY);
+    const zoom = this.viewport?.zoom || 1;
+    return Math.hypot(handle.x - point.x, handle.y - point.y) <= handle.radius / zoom;
+  },
+
+  /**
+   * The waypoint whose branch handle is under a screen point, or null.
+   *
+   * Its own hit target, checked ahead of the waypoint itself: the handle sits
+   * clear of the marker precisely so it does not steal the marker's clicks,
+   * which also puts it outside the marker's hit radius — so a cascade that
+   * only looked at handles *after* a waypoint hit would never reach it.
+   *
+   * @param {number} screenX
+   * @param {number} screenY
+   * @param {Set<string>} handleWaypointIds Waypoints that carry a handle
+   * @returns {Object|null}
+   */
+  findBranchHandleAt(screenX, screenY, handleWaypointIds) {
+    if (!handleWaypointIds || handleWaypointIds.size === 0) return null;
+    for (const waypoint of this.waypoints) {
+      if (!waypoint.isMajor || !handleWaypointIds.has(waypoint.id)) continue;
+      if (this.isOnWaypointBranchHandle(waypoint, screenX, screenY)) return waypoint;
+    }
+    return null;
+  },
+
+  findWaypointAt(screenX, screenY, exclude = null) {
     // Convert screen coords to canvas coords (inverse viewport transform)
     const click = this.screenToCanvas(screenX, screenY);
     
@@ -156,6 +208,9 @@ export const pointerMixin = {
     let closestDist = Infinity;
 
     for (const wp of this.waypoints) {
+      // A drop hit-test runs while the dragged waypoint sits under the
+      // cursor, so it would always find itself (ROUTE-01c).
+      if (exclude && (wp === exclude || (exclude.has && exclude.has(wp)))) continue;
       const wpCanvas = this.imageToCanvas(wp.imgX, wp.imgY);
       const dx = wpCanvas.x - click.x;
       const dy = wpCanvas.y - click.y;

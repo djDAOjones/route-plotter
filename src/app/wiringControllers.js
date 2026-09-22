@@ -11,6 +11,11 @@ import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { ContextMenu } from '../components/ContextMenu.js';
 import { snapToAngle } from '../utils/snapToAngle.js';
+import {
+  branchInsertIndex, canForkFrom, canRejoinBranch, branchEndInfo,
+} from '../utils/routeBranches.js';
+import { boundEntryWaypointIds } from '../utils/routeAnchors.js';
+import { loadBackgroundFile } from './backgroundLoading.js';
 
 /**
  * Reorder waypoints to a new major order, each major carrying its
@@ -47,6 +52,63 @@ export function reorderWaypointBlocks(waypoints, newMajorOrder) {
   return reordered;
 }
 
+/**
+ * Resolve the insertion boundary for pointer and semantic waypoint authoring.
+ * Semantic commands carry `insertAfterId` (`null` means route start); pointer
+ * commands omit it and keep the historical selected-minor-run behavior.
+ */
+export function resolveWaypointInsertIndex(waypoints, data, selectedWaypoint = null) {
+  if (Object.prototype.hasOwnProperty.call(data, 'insertAfterId')) {
+    if (data.insertAfterId === null) return 0;
+    const explicitIndex = waypoints.findIndex(waypoint => waypoint.id === data.insertAfterId);
+    return explicitIndex === -1 ? waypoints.length : explicitIndex + 1;
+  }
+
+  if (data.isMajor || !selectedWaypoint) return waypoints.length;
+  const selectedIndex = waypoints.indexOf(selectedWaypoint);
+  if (selectedIndex === -1) return waypoints.length;
+  let insertIndex = selectedIndex + 1;
+  while (insertIndex < waypoints.length && !waypoints[insertIndex].isMajor) insertIndex += 1;
+  return insertIndex;
+}
+
+/**
+ * Resolve an area handle against a pointer in screen CSS pixels. Keeping this
+ * boundary explicit prevents viewport zoom/pan from mixing canvas and screen
+ * coordinate spaces.
+ * @param {Object} app - RoutePlotter-compatible orchestrator
+ * @param {number} screenX
+ * @param {number} screenY
+ * @returns {Object|null}
+ */
+export function findAreaHandleAtScreen(app, screenX, screenY) {
+  if (!app.selectedWaypoint || !app.areaEditService) return null;
+  const imageToScreen = (x, y) => app.imageToScreen(x, y);
+  const hit = app.areaEditService.hitTest(
+    app.selectedWaypoint,
+    screenX,
+    screenY,
+    imageToScreen
+  );
+  return hit
+    ? { ...hit, waypoint: app.selectedWaypoint, imageToScreen }
+    : null;
+}
+
+/**
+ * Give document commands one execution owner while allowing toolbar and
+ * keyboard emitters to share the same EventBus route.
+ * @param {Object} app - RoutePlotter-compatible orchestrator
+ */
+export function setupDocumentCommands(app) {
+  app.eventBus.on('history:undo', () => app.undo());
+  app.eventBus.on('history:redo', () => app.redo());
+  app.eventBus.on('file:save', () => void app.requestProjectSave());
+  app.elements.saveProjectBtn?.addEventListener('click', () => app.eventBus.emit('file:save'));
+  app.elements.undoBtn?.addEventListener('click', () => app.eventBus.emit('history:undo'));
+  app.elements.redoBtn?.addEventListener('click', () => app.eventBus.emit('history:redo'));
+}
+
 export const wiringControllersMixin = {
   
   /**
@@ -55,29 +117,7 @@ export const wiringControllersMixin = {
   setupControllerEventConnections() {
     // Background events from UIController
     this.eventBus.on('background:upload', (file) => {
-      this.loadImageFile(file).then(img => {
-        this.background.image = img;
-        this.updateImageTransform(img);
-        
-        // Set export resolution to match native image dimensions
-        this.exportSettings.resolutionX = img.naturalWidth;
-        this.exportSettings.resolutionY = img.naturalHeight;
-        if (this.elements.exportResX) {
-          this.elements.exportResX.value = img.naturalWidth;
-        }
-        if (this.elements.exportResY) {
-          this.elements.exportResY.value = img.naturalHeight;
-        }
-        console.debug(`📐 [Resolution] Set to image native size: ${img.naturalWidth}×${img.naturalHeight}`);
-        
-        // Resize canvas to match new aspect ratio
-        this.updateCanvasAspectRatio();
-        
-        if (this.waypoints.length >= 2) {
-          this.calculatePath();
-        }
-        this.autoSave();
-      });
+      void loadBackgroundFile(this, file);
     });
     
     this.eventBus.on('background:overlay-change', (value) => {
@@ -156,7 +196,7 @@ export const wiringControllersMixin = {
         this.jklSpeed = 1;
       }
       this.animationEngine.setPlaybackSpeed(-this.jklSpeed);
-      if (!this.animationEngine.state.isPlaying) {
+      if (!this.animationEngine.isPlaying()) {
         this.animationEngine.play();
       }
       console.debug(`⏪ JKL Reverse: ${-this.jklSpeed}x`);
@@ -172,7 +212,7 @@ export const wiringControllersMixin = {
         this.jklSpeed = 1;
       }
       this.animationEngine.setPlaybackSpeed(this.jklSpeed);
-      if (!this.animationEngine.state.isPlaying) {
+      if (!this.animationEngine.isPlaying()) {
         this.animationEngine.play();
       }
       console.debug(`⏩ JKL Forward: ${this.jklSpeed}x`);
@@ -180,7 +220,7 @@ export const wiringControllersMixin = {
     
     // Reset JKL state when animation is toggled via K or space
     this.eventBus.on('ui:animation:toggle', () => {
-      if (this.animationEngine.state.isPlaying) {
+      if (this.animationEngine.isPlaying()) {
         this.animationEngine.pause();
         this.jklDirection = 0;
         this.jklSpeed = 1;
@@ -255,20 +295,7 @@ export const wiringControllersMixin = {
       let addY = data.imgY;
       
       // Determine insertion index first (needed for angle snap reference)
-      let insertIndex = this.waypoints.length; // Default: append to end
-      
-      if (!data.isMajor && this.selectedWaypoint) {
-        // Minor waypoints: find insertion point after selected waypoint
-        const selectedIndex = this.waypoints.indexOf(this.selectedWaypoint);
-        if (selectedIndex !== -1) {
-          // Find the last consecutive minor waypoint after the selected one
-          // This ensures new minors append to the sequence, not insert at the start
-          insertIndex = selectedIndex + 1;
-          while (insertIndex < this.waypoints.length && !this.waypoints[insertIndex].isMajor) {
-            insertIndex++;
-          }
-        }
-      }
+      const insertIndex = resolveWaypointInsertIndex(this.waypoints, data, this.selectedWaypoint);
       
       // 15° angle snapping when Shift is held
       if (data.shiftKey && insertIndex > 0) {
@@ -300,18 +327,130 @@ export const wiringControllersMixin = {
         this.selectedWaypoint = waypoint;
         this.selectedWaypoints = [waypoint];
         this.uiController?.setSelection([waypoint], waypoint);
+        if (this.interactionHandler?.setSelection) {
+          this.interactionHandler.setSelection([waypoint], waypoint);
+        } else {
+          this.interactionHandler?.setSelectedWaypoint?.(waypoint);
+        }
       }
 
       this.eventBus.emit('waypoint:added', waypoint);
     });
     
+    // ========== BRANCH AUTHORING (ROUTE-01c) ==========
+
+    /**
+     * route:branch-arm — Alt+click landed on a waypoint. Arm the gesture and
+     * say so; the next plain canvas click places the branch's first waypoint.
+     */
+    this.eventBus.on('route:branch-arm', ({ waypoint }) => {
+      const verdict = canForkFrom(waypoint);
+      if (!verdict.ok) {
+        this.eventBus.emit('ui:toast', { message: verdict.reason });
+        return;
+      }
+      this.interactionHandler.branchArmed = waypoint;
+      const label = waypoint.name || 'this waypoint';
+      this.announce(`Branching from ${label}. Click where the branch should go.`);
+      this.eventBus.emit('ui:toast', {
+        message: `Branch from ${label} — click where it should go (Esc to cancel)`
+      });
+    });
+
+    this.eventBus.on('route:branch-cancel', () => {
+      if (!this.interactionHandler.branchArmed) return;
+      this.interactionHandler.branchArmed = null;
+      this.announce('Branch cancelled.');
+      this.eventBus.emit('ui:toast', { message: 'Branch cancelled' });
+    });
+
+    /**
+     * route:branch-place — Place the branch's first waypoint.
+     *
+     * The branch run is inserted after the fork's own leg block so the array
+     * still reads in route order (branchInsertIndex). A branch waypoint is a
+     * major: it carries timing of its own, which is what makes the branch
+     * animate rather than merely bend a leg.
+     */
+    this.eventBus.on('route:branch-place', ({ imgX, imgY }) => {
+      const fork = this.interactionHandler.branchArmed;
+      this.interactionHandler.branchArmed = null;
+      if (!fork || !this.waypointsById?.has?.(fork.id)) {
+        this.eventBus.emit('ui:toast', { message: 'That waypoint is no longer on the route' });
+        return;
+      }
+
+      const waypoint = Waypoint.createMajor(imgX, imgY);
+      waypoint.copyPropertiesFrom(fork);
+      waypoint.branchId = `br_${waypoint.id}`;
+      waypoint.branchFrom = fork.id;
+
+      this.waypoints.splice(branchInsertIndex(this.waypoints, fork.id), 0, waypoint);
+      this._addWaypointToMap(waypoint);
+      this._majorWaypointsCache = null;
+      // Snapshot AFTER the mutation: the stack holds post-action states, and
+      // undo() pops the current one to restore the previous.
+      this.saveUndoState();
+
+      this.selectedWaypoint = waypoint;
+      this.selectedWaypoints = [waypoint];
+      this.uiController?.setSelection([waypoint], waypoint);
+      this.interactionHandler?.setSelection?.([waypoint], waypoint);
+
+      this.calculatePath();
+      this.updateAnimationDuration();
+      this.updateWaypointList();
+      this.eventBus.emit('waypoint:added', waypoint);
+      this.autoSave();
+      this.queueRender();
+      this.announce(`Branch added from ${fork.name || 'the waypoint'}.`);
+    });
+
+    /**
+     * route:branch-rejoin — A branch's last waypoint was dropped on another
+     * waypoint. Dropping on the current target clears the rejoin, so the same
+     * gesture both makes and unmakes it; there is no separate "end here"
+     * control to find.
+     */
+    this.eventBus.on('route:branch-rejoin', ({ waypoint, targetId }) => {
+      const info = branchEndInfo(this.waypoints, waypoint);
+      if (!info || !info.isEnd) return;
+
+      const current = waypoint.branchRejoin || null;
+      const next = current === targetId ? null : targetId;
+      const verdict = canRejoinBranch(this.waypoints, info.branchId, next);
+      if (!verdict.ok) {
+        this.eventBus.emit('ui:toast', { message: verdict.reason });
+        return;
+      }
+
+      waypoint.branchRejoin = next;
+      this.saveUndoState(); // after the mutation, per the undo-stack contract
+      this.calculatePath();
+      this.updateAnimationDuration();
+      this.updateWaypointList();
+      this.autoSave();
+      this.queueRender();
+
+      const targetName = next
+        ? (this.waypointsById.get(next)?.name || 'that waypoint')
+        : null;
+      const message = next ? `Branch rejoins at ${targetName}` : 'Branch now ends here';
+      this.announce(message);
+      this.eventBus.emit('ui:toast', { message });
+    });
+
     // Note: waypoint:position-changed is handled in _setupEventBusListeners()
     // which applies position, recalculates path, and manages undo saves.
     
     this.eventBus.on('waypoint:selected', (waypoint) => {
       this.selectedWaypoint = waypoint;
       this.selectedWaypoints = [waypoint];
-      this.interactionHandler?.setSelectedWaypoint(waypoint);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection([waypoint], waypoint);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(waypoint);
+      }
       this.uiController?.setSelection([waypoint], waypoint);
       this.uiController?.updateWaypointEditor(waypoint);
       this.updateWaypointList();
@@ -324,6 +463,8 @@ export const wiringControllersMixin = {
       refreshSwatchPicker('#dot-color');
       refreshSwatchPicker('#segment-color');
       refreshSwatchPicker('#path-head-color');
+      refreshSwatchPicker('#label-color');
+      refreshSwatchPicker('#label-bg-color');
 
       this.queueRender(); // Highlight selection
     });
@@ -336,15 +477,22 @@ export const wiringControllersMixin = {
       const inSelection = new Set(waypoints);
       this.selectedWaypoints = this.waypoints.filter(wp => inSelection.has(wp));
       this.selectedWaypoint = primary;
-      this.interactionHandler?.setSelectedWaypoint(primary);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection(this.selectedWaypoints, primary);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(primary);
+      }
       this.uiController?.setSelection(this.selectedWaypoints, primary);
-      // Inspector shows the primary's values; edits write to the whole selection
+      // Inspector compares each control's actual write targets and presents
+      // disagreement explicitly; edits still write through one selection path.
       this.uiController?.updateWaypointEditor(primary, this.selectedWaypoints);
       this.updateWaypointList();
       this.updateWaypointEditor(); // Sync RoutePlotter's editor (camera controls etc.)
       this._updateCameraControlsVisibility(true); // Multi-select mode
       refreshSwatchPicker('#dot-color');
       refreshSwatchPicker('#segment-color');
+      refreshSwatchPicker('#label-color');
+      refreshSwatchPicker('#label-bg-color');
       this.queueRender();
     });
 
@@ -383,7 +531,11 @@ export const wiringControllersMixin = {
     this.eventBus.on('waypoint:deselected', () => {
       this.selectedWaypoint = null;
       this.selectedWaypoints = [];
-      this.interactionHandler?.setSelectedWaypoint(null);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection([], null);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(null);
+      }
       this.uiController?.setSelection([], null);
       this.uiController?.updateWaypointEditor(null);
       this.updateWaypointList();
@@ -411,7 +563,11 @@ export const wiringControllersMixin = {
         }
         this.selectedWaypoint = null;
         this.selectedWaypoints = [];
-        this.interactionHandler?.setSelectedWaypoint(null);
+        if (this.interactionHandler?.setSelection) {
+          this.interactionHandler.setSelection([], null);
+        } else {
+          this.interactionHandler?.setSelectedWaypoint?.(null);
+        }
         this.uiController?.setSelection([], null);
         // One pass through the shared deleted pipeline: one undo
         // snapshot, one path recalc, one autosave. The deselected event
@@ -432,8 +588,8 @@ export const wiringControllersMixin = {
       this.clearAll();
     });
     
-    // Project save/load buttons
-    this.elements.saveProjectBtn?.addEventListener('click', () => this.saveProject());
+    // Project load remains a direct file-picker action. Save joins Undo/Redo
+    // in setupDocumentCommands so toolbar and keyboard share one owner.
     this.elements.loadProjectBtn?.addEventListener('click', () => this.elements.loadProjectInput?.click());
     this.elements.loadProjectInput?.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
@@ -465,7 +621,11 @@ export const wiringControllersMixin = {
       this.selectedWaypoint = newWaypoint;
       this.selectedWaypoints = [newWaypoint];
       this.uiController?.setSelection([newWaypoint], newWaypoint);
-      this.interactionHandler?.setSelectedWaypoint(newWaypoint);
+      if (this.interactionHandler?.setSelection) {
+        this.interactionHandler.setSelection([newWaypoint], newWaypoint);
+      } else {
+        this.interactionHandler?.setSelectedWaypoint?.(newWaypoint);
+      }
       
       // Update path and UI
       this.generatePathData();
@@ -760,7 +920,7 @@ export const wiringControllersMixin = {
       if (!this.previewMode) {
         this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
       }
-      this.exportHTML();
+      void this.requestHTMLExport();
     });
     
     // ========== MOTION VISIBILITY EVENTS ==========
@@ -773,9 +933,8 @@ export const wiringControllersMixin = {
     this.eventBus.on('motion:preview-mode-change', (previewMode) => {
       this.previewMode = previewMode;
       console.debug(`👁️ [Motion] ${previewMode ? 'Preview' : 'Edit'} mode`);
-      // Recalculate duration to add/remove end buffer
-      this.updateAnimationDuration();
-      this.render();
+      this.invalidateAnimationTiming();
+      this.queueRender();
     });
     
     /**
@@ -785,15 +944,11 @@ export const wiringControllersMixin = {
     this.eventBus.on('motion:path-visibility-change', (mode) => {
       console.debug('[Motion] pathVisibility changed:', this.motionSettings.pathVisibility, '→', mode);
       this.motionSettings.pathVisibility = mode;
-      
-      // Show/hide Trail Size control based on mode
-      const trailControl = document.getElementById('path-trail-control');
-      if (trailControl) {
-        trailControl.style.display = (mode === PATH_VISIBILITY.INSTANTANEOUS) ? 'flex' : 'none';
-      }
-      
+      this.uiController?.updateTrailControlVisibility?.(mode);
+
+      this.invalidateAnimationTiming();
       this.autoSave();
-      if (this.previewMode) this.render();
+      if (this.previewMode) this.queueRender();
     });
     
     /**
@@ -802,10 +957,9 @@ export const wiringControllersMixin = {
      */
     this.eventBus.on('motion:path-trail-change', (trailFraction) => {
       this.motionSettings.pathTrail = trailFraction;
-      // Recalculate duration since tail time depends on trail
-      this.updateAnimationDuration();
+      this.invalidateAnimationTiming();
       this.autoSave();
-      if (this.previewMode) this.render();
+      if (this.previewMode) this.queueRender();
     });
     
     /**
@@ -826,8 +980,9 @@ export const wiringControllersMixin = {
       if (mode === 'spotlight-reveal' || mode === 'angle-of-view-reveal') {
         this.motionVisibilityService.resetRevealMask();
       }
+      this.invalidateAnimationTiming();
       this.autoSave();
-      if (this.previewMode) this.render();
+      if (this.previewMode) this.queueRender();
     });
     
     /**
@@ -844,6 +999,16 @@ export const wiringControllersMixin = {
      */
     this.eventBus.on('motion:reveal-feather-change', (featherPercent) => {
       this.motionSettings.revealFeather = featherPercent;
+      this.autoSave();
+      if (this.previewMode) this.render();
+    });
+    
+    /**
+     * motion:reveal-trail-change - REVEAL-01: how much of the path behind the
+     * head stays revealed before the reveal fades out
+     */
+    this.eventBus.on('motion:reveal-trail-change', (trailPercent) => {
+      this.motionSettings.revealTrail = trailPercent;
       this.autoSave();
       if (this.previewMode) this.render();
     });
@@ -930,6 +1095,10 @@ export const wiringControllersMixin = {
       if (callback) callback(isWithin);
     });
     
+    this.eventBus.on('waypoint:check-branch-handle', ({ x, y }, callback) => {
+      if (callback) callback(this.findBranchHandleAt(x, y, boundEntryWaypointIds(this.scene)));
+    });
+
     this.eventBus.on('waypoint:check-at-position', (pos, callback) => {
       const waypoint = this.findWaypointAt(pos.x, pos.y);
       if (callback) callback(waypoint);
@@ -937,20 +1106,7 @@ export const wiringControllersMixin = {
     
     // Area highlight handle hit test (for edit dragging)
     this.eventBus.on('area:check-handle', ({ screenX, screenY }, callback) => {
-      if (!this.selectedWaypoint || !this.areaEditService) {
-        if (callback) callback(null);
-        return;
-      }
-      const imageToCanvas = (x, y) => this.imageToCanvas(x, y);
-      const hit = this.areaEditService.hitTest(
-        this.selectedWaypoint, screenX, screenY,
-        imageToCanvas, this.canvas.width, this.canvas.height
-      );
-      if (hit) {
-        if (callback) callback({ ...hit, waypoint: this.selectedWaypoint, imageToCanvas });
-      } else {
-        if (callback) callback(null);
-      }
+      if (callback) callback(findAreaHandleAtScreen(this, screenX, screenY));
     });
 
     // ========== CANVAS HOVER AFFORDANCES (Phase 4) ==========
@@ -967,15 +1123,19 @@ export const wiringControllersMixin = {
 
       if (!this.previewMode && !this.areaDrawingService?.isDrawing) {
         // Area handles first (they sit above waypoints when editing)
-        if (this.selectedWaypoint && this.areaEditService) {
-          const handleHit = this.areaEditService.hitTest(
-            this.selectedWaypoint, x, y,
-            (ix, iy) => this.imageToCanvas(ix, iy),
-            this.canvas.width, this.canvas.height
-          );
-          if (handleHit) {
-            hover = { type: 'area-handle', waypoint: this.selectedWaypoint, handle: handleHit };
-          }
+        const areaHandle = findAreaHandleAtScreen(this, x, y);
+        if (areaHandle) {
+          const { waypoint, imageToScreen: _imageToScreen, ...handle } = areaHandle;
+          hover = { type: 'area-handle', waypoint, handle };
+        }
+
+        if (!hover) {
+          // The branch handle beside a waypoint a bound crowd enters from
+          // (COMPOSE-04): the hero peels off exactly where the crowd joins.
+          // Checked ahead of the waypoint because it deliberately sits clear
+          // of the marker, and so outside the marker's own hit radius.
+          const forkable = this.findBranchHandleAt(x, y, boundEntryWaypointIds(this.scene));
+          if (forkable) hover = { type: 'waypoint-plus', waypoint: forkable };
         }
 
         if (!hover) {
@@ -1178,14 +1338,8 @@ export const wiringControllersMixin = {
       }
     });
     
-    // Undo/Redo button click handlers
-    this.elements.undoBtn?.addEventListener('click', () => this.undo());
-    this.elements.redoBtn?.addEventListener('click', () => this.redo());
-    
-    // ========== KEYBOARD SHORTCUTS ==========
-    // Centralized keyboard handler for global shortcuts
-    // Delegates to specific handlers for modularity
-    
-    document.addEventListener('keydown', (e) => this._handleKeyDown(e));
+    // Document commands have one EventBus-owned execution path. Both toolbar
+    // buttons and InteractionHandler shortcuts emit these events exactly once.
+    setupDocumentCommands(this);
   }
 };

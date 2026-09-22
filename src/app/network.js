@@ -16,7 +16,30 @@
  */
 import { INTERACTION } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
+import { getGraphDepartureShares } from '../utils/graphRouting.js';
 import { nearestOnPolyline } from '../utils/segmentHitTest.js';
+
+const NODE_TYPE_LABELS = {
+  normal: 'pass-through',
+  entry: 'entry',
+  exit: 'exit',
+};
+
+const NETWORK_CARD_HINTS = {
+  passive: {
+    node: 'Dots appear at entries and finish at exits. Use Type to change this node, or Delete node to remove it. Choose Edit network to move nodes.',
+    edge: 'Configured share among paths leaving each end. Use Direction and Traffic to edit this edge, or Delete edge to remove it. Choose Edit network to bend paths.',
+  },
+  active: {
+    node: 'Dots appear at entries and finish at exits. T cycles the type; drag to move; Shift-click deletes.',
+    edge: 'Configured share among paths leaving each end. Arriving dots avoid an immediate U-turn when another path is available. Drag the edge to bend it; Shift-click deletes.',
+  },
+};
+
+/** Compact author-facing weight text without losing useful decimals. */
+function formatWeight(weight) {
+  return Number(weight.toFixed(2)).toString();
+}
 
 export const networkMixin = {
 
@@ -27,9 +50,13 @@ export const networkMixin = {
    */
   setupNetworkControls() {
     this._editNetworkBtn = document.getElementById('network-edit-btn');
+    this._traceRouteBtn = document.getElementById('crowd-trace-route-btn');
+    this._fitWaitBtn = document.getElementById('crowd-fit-wait-btn');
     this._guideHintEl = document.getElementById('crowd-guide-hint');
 
     this._editNetworkBtn?.addEventListener('click', () => this.enterNetworkEditMode());
+    this._traceRouteBtn?.addEventListener('click', () => this.traceRouteIntoCrowd());
+    this._fitWaitBtn?.addEventListener('click', () => this.fitRouteWaitToCrowd());
 
     // ── Guide changes (emitted by the crowds mixin's select wiring) ──
     // Switching an empty-network crowd to Custom network hands the user
@@ -37,27 +64,40 @@ export const networkMixin = {
     this.eventBus.on('network:guide-changed', (layer) => {
       if (layer.guideType === 'graph' && layer.graph.getNodes().length === 0) {
         this.enterNetworkEditMode();
-      } else if (layer.guideType === 'route' && this.networkEditService.active) {
-        this.networkEditService.exit();
+      } else if (layer.guideType === 'route') {
+        const svc = this.networkEditService;
+        if (svc.active) svc.exit();
+        else if (svc.layer === layer) svc.clearInspection();
       }
       this.updateGuideCard();
     });
 
-    // ── Mode exits on scope/context changes ─────────────────
-    // The mode edits the selected crowd's network; when that stops being
-    // true (deselect, other crowd, preview, crowd deleted) it closes.
+    // ── Bound-network cleanup on scope/context changes ──────
+    // Active authoring closes fully; passive inspection simply unbinds.
     this.eventBus.on('crowd:deselected', () => {
-      if (this.networkEditService.active) this.networkEditService.exit();
+      const svc = this.networkEditService;
+      if (svc.active) svc.exit();
+      else svc.clearInspection();
     });
     this.eventBus.on('crowd:selected', (layer) => {
-      if (this.networkEditService.active && this.networkEditService.layer !== layer) {
-        this.networkEditService.exit();
+      const svc = this.networkEditService;
+      if (svc.layer && svc.layer !== layer) {
+        if (svc.active) svc.exit();
+        else svc.clearInspection();
       }
       this.updateGuideCard();
     });
     this.eventBus.on('motion:preview-mode-change', (previewMode) => {
       if (previewMode && this.networkEditService.active) this.networkEditService.exit();
     });
+    const clearProjectNetworkScope = () => {
+      const service = this.networkEditService;
+      if (service.active) service.exit();
+      else service.clearInspection();
+      this.updateGuideCard();
+    };
+    this.eventBus.on('project:replaced', clearProjectNetworkScope);
+    this.eventBus.on('app:cleared', clearProjectNetworkScope);
     // Keep the Guide card's button state in step with the mode itself
     // (Done button and Esc exit without passing through this mixin)
     this.eventBus.on('network:edit-mode-changed', () => this.updateGuideCard());
@@ -91,6 +131,9 @@ export const networkMixin = {
     this.eventBus.on('network:drag-end', () => {
       this.networkEditService.endDrag();
     });
+    this.eventBus.on('network:drag-cancel', () => {
+      this.networkEditService.cancelDrag();
+    });
     this.eventBus.on('network:hover-move', ({ x, y }, callback) => {
       const svc = this.networkEditService;
       if (!svc.active) {
@@ -108,6 +151,7 @@ export const networkMixin = {
     // ── Selection → cards ───────────────────────────────────
     this.eventBus.on('network:node-selected', () => this.syncNetworkCards());
     this.eventBus.on('network:edge-selected', () => this.syncNetworkCards());
+    this.eventBus.on('network:node-deselected', () => this._syncNodePathWeights(null));
 
     // ── Node card (single-writer wiring) ────────────────────
     document.getElementById('network-node-type')?.addEventListener('change', (e) => {
@@ -280,7 +324,7 @@ export const networkMixin = {
     let bestNode = null;
     let bestNodeDist = Infinity;
     for (const node of graph.getNodes()) {
-      const p = this.imageToCanvas(node.x, node.y);
+      const p = this.imageToCanvas(node.position().x, node.position().y);
       const dist = Math.hypot(click.x - p.x, click.y - p.y);
       if (dist <= nodeThreshold && dist < bestNodeDist) {
         bestNode = node;
@@ -309,9 +353,9 @@ export const networkMixin = {
       const source = graph.getNode(bestEdge.sourceId);
       const target = graph.getNode(bestEdge.targetId);
       const chain = [
-        this.imageToCanvas(source.x, source.y),
+        this.imageToCanvas(source.position().x, source.position().y),
         ...bestEdge.controlPoints.map(p => this.imageToCanvas(p.x, p.y)),
-        this.imageToCanvas(target.x, target.y),
+        this.imageToCanvas(target.position().x, target.position().y),
       ];
       const onChain = nearestOnPolyline(chain, click.x, click.y);
       return { kind: 'edge', edge: bestEdge, insertIndex: Math.floor(onChain.index) };
@@ -336,15 +380,44 @@ export const networkMixin = {
       this._editNetworkBtn.textContent =
         this.networkEditService.active ? 'Editing network…' : 'Edit network';
     }
+    if (this._traceRouteBtn) {
+      // Tracing needs a graph-guided crowd to write into and a route worth
+      // copying. It stays available while the pen is live: switching to a
+      // custom network hands you the pen immediately, which is exactly the
+      // moment "or just trace the route" is most useful (COMPOSE-03).
+      const graphGuided = !!layer && layer.guideType === 'graph';
+      const hasRoute = (this.waypoints?.length || 0) >= 2;
+      this._traceRouteBtn.hidden = !graphGuided;
+      this._traceRouteBtn.disabled = !hasRoute;
+      this._traceRouteBtn.title = hasRoute
+        ? 'Copy the route into this crowd\u2019s network, so its dots follow the same shape and can branch where the route branches'
+        : 'Add at least two route waypoints first';
+    }
+    if (this._fitWaitBtn) {
+      // Applies to route- and graph-guided crowds alike: either way the
+      // question is "when has this crowd finished?" (COMPOSE-02).
+      const hasRoute = (this.waypoints?.length || 0) >= 2;
+      this._fitWaitBtn.hidden = !layer;
+      this._fitWaitBtn.disabled = !hasRoute;
+      const held = this.selectedWaypoint?.isMajor ? (this.selectedWaypoint.name || 'the selected waypoint') : 'the last waypoint';
+      this._fitWaitBtn.title = hasRoute
+        ? `Hold ${held} until this crowd has finished`
+        : 'Add at least two route waypoints first';
+    }
     if (this._guideHintEl && layer) {
       if (layer.guideType !== 'graph') {
         this._guideHintEl.textContent = 'Dots follow your route. Custom network lets you draw paths of their own.';
       } else {
         const nodes = layer.graph.getNodes().length;
         const edges = layer.graph.getEdges().length;
-        this._guideHintEl.textContent = nodes === 0
+        const networkHint = nodes === 0
           ? 'No network yet — Edit network hands you the pen.'
-          : `Dots walk this crowd's own network (${nodes} node${nodes === 1 ? '' : 's'}, ${edges} edge${edges === 1 ? '' : 's'}).`;
+          : `Dots walk this crowd's own network (${nodes} node${nodes === 1 ? '' : 's'}, `
+            + `${edges} edge${edges === 1 ? '' : 's'}).`;
+        const timingHint = this.waypoints?.length < 2
+          ? ' Add at least two route waypoints to set the master timing before previewing or exporting.'
+          : '';
+        this._guideHintEl.textContent = networkHint + timingHint;
       }
     }
   },
@@ -355,12 +428,18 @@ export const networkMixin = {
    */
   syncNetworkCards() {
     const svc = this.networkEditService;
+    const hints = svc.active ? NETWORK_CARD_HINTS.active : NETWORK_CARD_HINTS.passive;
+    const nodeHint = document.getElementById('network-node-hint');
+    const edgeHint = document.getElementById('network-edge-hint');
+    if (nodeHint) nodeHint.textContent = hints.node;
+    if (edgeHint) edgeHint.textContent = hints.edge;
 
     const node = svc.selectedNode();
     if (node) {
       const typeEl = document.getElementById('network-node-type');
       if (typeEl) typeEl.value = node.type;
     }
+    this._syncNodePathWeights(node);
 
     const edge = svc.selectedEdge();
     if (edge) {
@@ -375,43 +454,148 @@ export const networkMixin = {
   },
 
   /**
-   * Weight readout as computed junction traffic shares, not a bare
-   * number (backlog): of the dots leaving each end's junction, the
-   * percentage that picks this edge. One-way edges depart their source
-   * only. The approximation ignores the walk's came-from exclusion.
+   * Build the selected junction's relative-weight rows. The visible rows are
+   * the exact directionally valid departures used by SwarmEngine; a single
+   * path has no choice to weight, so the fieldset stays hidden.
+   * @param {Object|null} node
+   * @private
+   */
+  _syncNodePathWeights(node) {
+    const fieldset = document.getElementById('network-path-weights');
+    const rowsEl = document.getElementById('network-path-weight-rows');
+    if (!fieldset || !rowsEl) return;
+
+    rowsEl.replaceChildren();
+    const svc = this.networkEditService;
+    if (!node || !svc.layer) {
+      fieldset.hidden = true;
+      return;
+    }
+
+    const graph = svc.layer.graph;
+    const departures = getGraphDepartureShares(graph, node.id);
+    if (departures.length < 2) {
+      fieldset.hidden = true;
+      return;
+    }
+
+    const nodes = graph.getNodes();
+    departures.forEach((departure, index) => {
+      const destinationId = departure.reversed
+        ? departure.edge.sourceId
+        : departure.edge.targetId;
+      const destination = graph.getNode(destinationId);
+      const type = destination?.type || 'normal';
+      const ordinal = Math.max(1,
+        nodes.filter(candidate => candidate.type === type)
+          .findIndex(candidate => candidate.id === destinationId) + 1
+      );
+      const inputId = `network-path-weight-${index + 1}`;
+      const nameId = `${inputId}-name`;
+      const outputId = `${inputId}-value`;
+
+      const row = document.createElement('label');
+      row.className = 'network-path-weight-row';
+      row.dataset.edgeId = departure.edge.id;
+
+      const name = document.createElement('span');
+      name.id = nameId;
+      name.className = 'network-path-weight-name';
+      name.textContent = `Path ${index + 1} to ${NODE_TYPE_LABELS[type]} ${ordinal}`;
+
+      const input = document.createElement('input');
+      input.id = inputId;
+      input.type = 'number';
+      input.min = '0.01';
+      input.step = '0.01';
+      input.value = formatWeight(departure.edge.weight);
+      input.setAttribute('aria-labelledby', nameId);
+      input.setAttribute('aria-describedby', `${outputId} network-path-weights-help`);
+      input.addEventListener('input', () => {
+        const weight = Number(input.value);
+        if (!Number.isFinite(weight) || weight < 0.01) {
+          input.setCustomValidity('Enter a weight of 0.01 or more.');
+          input.setAttribute('aria-invalid', 'true');
+          return;
+        }
+        input.setCustomValidity('');
+        input.removeAttribute('aria-invalid');
+        departure.edge.setWeight(weight);
+        this._updateNodePathWeightReadouts(node.id);
+        // crowd:param-changed → crowds mixin → debounced undo/autosave/render.
+        this.eventBus.emit('crowd:param-changed');
+      });
+      input.addEventListener('change', () => {
+        if (input.validity.valid) return;
+        input.value = formatWeight(departure.edge.weight);
+        input.setCustomValidity('');
+        input.removeAttribute('aria-invalid');
+      });
+
+      const output = document.createElement('output');
+      output.id = outputId;
+      output.className = 'network-path-weight-value';
+      output.setAttribute('for', inputId);
+
+      row.append(name, input, output);
+      rowsEl.appendChild(row);
+    });
+
+    fieldset.hidden = false;
+    this._updateNodePathWeightReadouts(node.id);
+  },
+
+  /** Update every displayed percentage after one relative weight changes. */
+  _updateNodePathWeightReadouts(nodeId) {
+    const rowsEl = document.getElementById('network-path-weight-rows');
+    const graph = this.networkEditService.layer?.graph;
+    if (!rowsEl || !graph) return;
+    const shares = new Map(
+      getGraphDepartureShares(graph, nodeId).map(share => [share.edge.id, share])
+    );
+    for (const row of rowsEl.querySelectorAll('.network-path-weight-row')) {
+      const share = shares.get(row.dataset.edgeId);
+      const output = row.querySelector('.network-path-weight-value');
+      if (share && output) {
+        output.textContent = `Weight ${formatWeight(share.edge.weight)} · ${share.percent}%`;
+      }
+    }
+  },
+
+  /**
+   * Configured junction shares for the selected edge. Actual choices can be
+   * renormalised by arrival path because the walk avoids an immediate U-turn
+   * whenever another departure exists.
    * @param {Object} edge
    * @private
    */
   _updateEdgeShareReadout(edge) {
     const valueEl = document.getElementById('network-edge-weight-value');
     const svc = this.networkEditService;
-    if (!valueEl || !svc.active) return;
+    if (!valueEl || !svc.layer) return;
     const graph = svc.layer.graph;
 
-    const shareFrom = (nodeId) => {
-      let total = 0;
-      for (const e of graph.getEdgesForNode(nodeId)) {
-        if (e.sourceId === nodeId || e.direction === 'two-way') total += e.weight;
-      }
-      return total > 0 ? Math.round((edge.weight / total) * 100) : 100;
-    };
+    const shareFrom = (nodeId) =>
+      getGraphDepartureShares(graph, nodeId)
+        .find(share => share.edge.id === edge.id)?.percent ?? 0;
 
     valueEl.textContent = edge.direction === 'one-way'
-      ? `${shareFrom(edge.sourceId)}% of departures`
-      : `${shareFrom(edge.sourceId)}% · ${shareFrom(edge.targetId)}% of departures`;
+      ? `${shareFrom(edge.sourceId)}% configured share`
+      : `${shareFrom(edge.sourceId)}% · ${shareFrom(edge.targetId)}% configured shares`;
   },
 
   /**
-   * After a restore (undo/redo) rebuilt the scene, the mode's layer and
-   * selection references are stale. Re-bind by id; if the layer is gone
-   * or no longer the selected crowd, the mode closes.
+   * After a restore (undo/redo) rebuilt the scene, the bound layer and
+   * selection references are stale. Re-bind active or passive state by id;
+   * if the layer is gone or no longer selected, clear the matching state.
    */
   resolveNetworkAfterRestore() {
     const svc = this.networkEditService;
-    if (!svc.active) return;
+    if (!svc.layer) return;
     const fresh = this.scene.getFlowLayer(svc.layer.id);
     if (!fresh || this.selectedCrowd !== fresh) {
-      svc.exit();
+      if (svc.active) svc.exit();
+      else svc.clearInspection();
     } else {
       svc.rebind(fresh);
       this.syncNetworkCards();
