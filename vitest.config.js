@@ -14,6 +14,10 @@ export default defineConfig({
     
     // Setup files
     setupFiles: ['./tests/setup.js'],
+
+    // Clear mock call history between tests, so one test cannot read another's
+    // calls. Implementations set with mockImplementation survive.
+    clearMocks: true,
     
     // Coverage configuration
     coverage: {
