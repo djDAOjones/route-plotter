@@ -1,8 +1,9 @@
 <!-- markdownlint-disable MD013 MD060 -->
 # Route Plotter review dossier
 
-This directory makes the 26 August 2026 repository review and its remediation
-handover durable inside the repository. It is source documentation. It is not
+This directory makes the 26 August 2026 repository review, its remediation
+handover and the 22 September 2026 abstraction plan durable inside the
+repository. It is source documentation. It is not
 part of the generated GitHub Pages application and must not be copied into or
 hand-edited under `docs/`.
 
@@ -10,6 +11,7 @@ hand-edited under `docs/`.
 
 | File | Role |
 | --- | --- |
+| `codebase-abstraction-and-auditability-plan-2026-09-22.md` | **Adopted** refactoring programme (2026-09-22): a two-round Claude and Codex abstraction and auditability review of `main` @ `2e4d78e`, with 111 items in waves W0–W12. The owner accepted every §20 default. The backlog carries only the current wave. |
 | `route-plotter-continuation-prompt-2026-08-27.md` | **Current** paste-ready prompt for the next development chat. Work is now driven by the PM-Skills backlog; every review finding has been dispositioned into it. |
 | `route-plotter-review-remediation-continuation-prompt-2026-08-26.md` | Superseded. Historical provenance for the remediation run it briefed. |
 | `route-plotter-v3-comprehensive-repository-review-2026-08-26.md` | Full read-only review of Route Plotter at commit `cec0191`. This is historical evidence, not a description of the remediated branch's present health. |

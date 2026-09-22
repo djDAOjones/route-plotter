@@ -7,7 +7,8 @@
 - Semicolons
 - LF line endings
 - 120 char max line length (JS/HTML/CSS), 80 for markdown
-- Enforced by `.editorconfig`
+- Declared in `.editorconfig`: editors apply indentation and line endings,
+  but no tool enforces the line lengths (there is no linter)
 
 ## Naming
 
@@ -21,20 +22,25 @@
 
 ## Commit messages
 
-Format: `type(scope): description`
+Format: `<ITEM-ID>: summary`, naming the backlog item the commit closes or
+advances (the shape `pm_skills/integrations/task.md` step 11 expects).
 
-Types: `feat`, `fix`, `refactor`, `style`, `chore`, `test`, `docs`
+- Memory-only commits: `PM: summary`
+- Deploy commits (written by `npm run push`): `chore: deploy vX.Y.Z`
+- Body: one what/why line, then this repository's verify line:
+  `Verify: <F> test files · <T> tests · shell 0 · build:check 0`. The gate
+  has no lint or typecheck step, so never report one.
 
 Examples:
 
-- `feat(area): add polygon area highlights`
-- `fix(animation): correct duration after reset`
-- `chore: deploy v3.1.530`
+- `REL-02: protect main against force-push and deletion`
+- `PM: record four owner calls on the remaining queue`
+- `chore: deploy v3.2.690`
 
 ## Documentation
 
-Permanent rules are in `AGENTS.md` § Code documentation. This section
-captures how they apply to this project:
+Permanent rules are in `AGENTS.md` § Minimal change and documentation
+discipline. This section captures how they apply to this project:
 
 - **Always document:** event chains across files, coordinate transform
   logic, animation timing calculations, serialisation format
@@ -48,11 +54,12 @@ captures how they apply to this project:
 
 ## Testing
 
-- Test runner: Vitest with jsdom
-- Unit tests cover: Waypoint, AnimationState, PathCalculator,
-  CoordinateTransform, EventBus, Easing, CatmullRom
-- Integration testing: manual browser verification
-- After every change: `npm run build` + `npm test`
+- Test runner: Vitest with jsdom; test roles are in `file-map.md` → tests
+- Browser and device checks that automation cannot cover are named per task
+  (`AGENTS.md` § Testing and persistence)
+- After every change: `npm run check` (tests, shell contract and
+  `build:check`). It is non-mutating; `npm run build` and `npm run dev`
+  rewrite tracked `docs/` and `version.json`, so don't run them as a check
 
 ## Patterns to follow
 

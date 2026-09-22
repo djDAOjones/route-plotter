@@ -2,6 +2,75 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-22 — adopt the codebase abstraction plan, on every recommended default
+
+**Owner's call: all 22 recommended defaults in the plan's §20 are accepted**,
+in their words: "agree with all recommendations". The plan is a two-round
+Claude (Opus 5) and Codex (`gpt-6-astra`) review at `2e4d78e`: 111 items (33
+behaviour defects, each still needing approval of its stated new behaviour,
+and 78 behaviour-preserving refactors) in waves W0–W12. Per Q20 it now lives
+at `reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md`, and its
+§20 is the answer sheet. The answers that shape how the work runs:
+
+- **Q1/Q2 — where work lands.** Every wave runs on a short-lived branch from
+  `main`, in a fresh clone outside OneDrive; merges reach `main` in small
+  batches, each a tagged release. DOC-06 (a) writes this into `AGENTS.md`
+  first, because without it `task.md` step 11 commits and pushes every close
+  onto the live `main`.
+- **Q8 — tests that pin dead code** are deleted with it, one entry here per
+  batch naming each test and symbol. A test that uses a dead symbol inside a
+  live assertion is rewritten with its assertions kept. Re-pointing an import
+  when code moves is not weakening a test.
+- **Q15 — the communication rule** becomes: components reach the app through
+  the bus; the app calls components through named public methods; modal tools
+  make provisional edits and commit them through events. DOC-03 rewrites it in
+  `AGENTS.md`, `architecture.md` and `conventions.md` together.
+
+**How the programme runs in memory** (DOC-06 (i), (j)). Backlog `### Next`
+holds only the current wave, W0 now; the next wave enters from the plan's §13
+when this one closes. This log gets one entry per wave, listing each PR's
+preserved contract, not one per PR, so a programme of about 100 PRs does not
+churn it. This entry makes the log 21/20: a note under the prune bar, not a
+prune trigger.
+
+**Supersedes** the merge-hold half of "2026-08-27 — owner sets the prune bar,
+and holds the merge", which the v3.2.690 release had already overtaken. Its
+prune bar stands, and outranks the plan's own budget remarks.
+
+**Memory changes made with this entry** (DOC-06 (g), (h)): `file-map.md` is
+marked hand-maintained, because its generator keeps only the first line of
+each row, and its counts are corrected; `conventions.md` now gives the commit
+format, verify line and gate this repository actually uses; the trajectory and
+wish-list headers name the current prompts; and the wish-list's
+Duration-slider idea is cut, as it is now the plan's DEF-20.
+
+**Link:** DOC-06, DEF-18, GOV-01, DOC-02, DOC-03; plan §2.9, §12, §13, §20.
+
+## 2026-09-22 — memory prune: the Phase 5 build-out goes cold
+
+Maintenance Diagnose flagged the decision-log at 30 live entries (budget 20)
+and the trajectory at 2,535 words (budget 2,000). Pruned losslessly
+(diff-verified; independently re-verified by Codex `gpt-6-astra`): 11 of the
+19 2026-08-27 entries moved to `archive/decision-log-2026-08-27-to-2026-08-27.md`,
+and the trajectory's 2026-08-26 → 08-27 build-out sections to
+`archive/trajectory/trajectory-0003-2026-08-26-to-2026-08-27.md` (live
+trajectory 1,021 words). **Owner's call: the log stops at 20/20, not the
+prune-to 14,** under the prune bar. The accessibility audit is REV-05's
+original evidence boundary, and the log archives oldest-first, so the five
+newer entries that day stay with it. ROUTE-01d ("the exported player inherits
+branches…") and ROUTE-01b ("a branch borrows the trunk's transport…") also stay
+live, out of age order, because the codebase abstraction plan cites them as
+evidence for its pending work. Both files stay date-ordered and verbatim.
+Also corrected the INDEX's June count (19 entries, not 14). **Not added to
+`file-map.md`:** its generator ignores `pm_skills/` and lists any hand-added
+archive row as "no longer on disk" (tested first).
+
+**Two owner calls from the audit.** Reduced-motion emulation returns to
+REV-05's residual: the audit above listed it as not claimed, but it left the
+residual at `24e650c` with no recorded call. REV-03's physical pass now names
+the branch "+" handle tap (COMPOSE-04), as a test of the shipped gesture, not
+a reopening of its design.
+
 ## 2026-09-22 — main is protected against force-push and deletion (REL-02)
 
 **Owner's call, on the recommended option.** Main is now what Pages serves, so
@@ -658,229 +727,6 @@ a jsdom "pass" on contrast or a screen reader would be worth less than nothing.
 
 **Link:** REV-05, still `[~]` with a named residual.
 
-## 2026-08-27 — examples are generated project saves, published under review
-
-**Owner decision:** the examples ship as full `.zip` project saves so people
-can download and re-use them, not as JSON the app alone understands. Asked and
-answered at the DEMO-01 gate.
-
-**Generated, not committed as source.** The repository holds the example
-*definitions* (`src/examples/index.js`) and the already-bundled backgrounds;
-the build pairs them into the archive. This keeps a second copy of a 1–2 MB
-image out of the source tree, and the archives are byte-reproducible — fixed
-entry timestamps and a pinned authoring date, because `Waypoint.toJSON()`
-carries `created`/`modified` — so a rebuild that changed no example produces
-no diff and lands no new blob in history. The archives themselves do go to
-`docs/`, which is how a static site can offer a download at all.
-
-**Built from the live models, which is what makes them fixtures.** Hand-written
-JSON would rot into a shape nobody reads; `toJSON()` output is current by
-definition. `tests/exampleProjects.test.js` rehydrates each one through the
-app's own timing path and asserts it resolves, times deterministically, gives
-every waypoint an arrival and leaves no broken crowd binding. If the save
-format, branch model or timeline maths drift, an example stops resolving and
-the suite says so.
-
-**Publication boundary, honoured rather than bypassed.** The build refused any
-ZIP in its output, because "legacy project ZIPs still require individual
-provenance review" (decision-log 2026-08-26). That rule was never a blanket
-ban on archives — it was a ban on publishing archives nobody had reviewed. So
-`public-assets.json` gained an `exampleProjects` block naming the three
-approved archives and the approved background each contains, the build's guard
-now refuses any ZIP *not* in that record, and `publicationBoundary.test.js`
-asserts the shipped set equals the approved set. A stray user project still
-fails the build.
-
-**Content:** a plain labelled route with a beacon (no crowd); a branching
-campus route whose crowd is traced from it and released at the head's arrival;
-and a weighted network with two dot streams and no hero route — between them
-every Phase 5 capability, and one gentle first-open example.
-
-**Link:** DEMO-01. 65 files / 991 tests green. Verified in production Chromium:
-"Open day route" opened from the File menu with its background, 1 branch, 0
-structural problems, 4 crowd nodes bound and none broken, one join wait and an
-11.65 s timeline. Zero console entries.
-
-## 2026-08-27 — the branch handle is an offer, and it must survive a tap
-
-**Decision:** A waypoint that a *bound entry* node sits on carries a "+" handle
-beside its marker. Clicking it emits `route:branch-arm` — the same event
-Alt+click emits — so there is one branch path through the code, not a second
-mechanism that could drift from it. Entry nodes only: a pass-through or exit
-node marks a crowd already moving through, not a moment the story opens at, and
-a broken binding offers nothing.
-
-**Its own hit target, and not hover-gated.** The handle sits clear of the
-marker so it cannot steal the marker's clicks — which also puts it outside the
-marker's hit radius, so a cascade that only looked for handles *after* a
-waypoint hit never reached it. It is now checked ahead of the waypoint, beside
-the area handles.
-
-More importantly, the click path hit-tests the handle itself rather than
-trusting the hover state. Gating on hover left the handle dead on touch and
-pen, where a tap never hovers first — exactly the devices REV-03 unified this
-transaction for. Hover is the visual affordance; it is not the gate. This was
-found because the hover cascade is not reproducible in browser automation, and
-chasing that turned up the real defect underneath it.
-
-**One "+" routine:** the leg-midpoint handle and this one now draw through
-`_drawPlusHandle`, so two offers that mean "add something here" cannot drift
-into looking different.
-
-**Link:** COMPOSE-04. 64 files / 963 tests green. Verified in production
-Chromium: the handle on the crowd's entry waypoint armed the fork with no hover
-beforehand, and the place click created `Waypoint 1·B1` alongside the existing
-`2·B1` — correctly lettered per fork — with no structural problems and zero
-console entries.
-
-## 2026-08-27 — a closed client socket is not a port holder
-
-**Decision:** `scripts/restart.sh` matches `lsof -sTCP:LISTEN` when deciding
-whether the port is held by a foreign process.
-
-**Rationale:** it matched *any* socket on port 3000, including a browser's
-stale CLOSED client connections to the server it had just stopped. The
-documented one-command boot then refused to start — correctly reporting that it
-would not kill a process it does not own, but about sockets that hold nothing.
-The ownership-safety contract is intact and still refuses a genuine foreign
-listener; it just no longer mistakes a hung-up caller for one.
-
-**Found by:** the boot failing after a dev-server restart during COMPOSE-04
-verification, with nothing listening on the port at all.
-
-**Link:** DEV-01. `tests/restartSafety.test.sh` still green.
-
-## 2026-08-27 — the crowd wait is solved, not iterated, and then baked
-
-**Decision:** "Wait here for this crowd" computes the wait a waypoint needs so
-the head is still there when the crowd's last dot arrives, and writes it as an
-ordinary authored `pauseTime`. The route gains no live dependency on the crowd —
-Phase 5 forbids that, and a live one would make the timeline a fixed-point
-problem on every frame.
-
-**Why a difference is wrong.** Adding a wait `P` lengthens the timeline, and
-every dot's onset is a *fraction* of the timeline, so the crowd finishes later
-too. "Last arrival minus arrival" therefore undershoots, and iterating converges
-slowly as onsets approach the end. Solved per dot instead, with `A` the head's
-arrival (unaffected by a wait *at* that waypoint), `f` the onset fraction, `J`
-the journey and `D` the timeline minus the waypoint's current wait:
-
-    A + P ≥ f·(D + P) + J   ⇒   P ≥ (f·D + J − A) / (1 − f)
-
-taking the largest such `P` over the dots. Exact in one pass, and idempotent:
-fitting twice lands on the same number, so a refit never creeps.
-
-**Unsatisfiable cases are reported, not approximated:** a dot with onset
-fraction 1 releases exactly at the end and moves out by however much the route
-is lengthened, so no wait can outlast it; a looping or respawning crowd has no
-arrival at all. Both come back with a reason rather than a wrong number.
-
-**Shared arithmetic:** the onset routine was extracted from `SwarmEngine` into
-`crowdArrival.js` and the engine now imports it, rather than the solve
-restating it. Every swarm fixture stayed byte-for-byte identical through that
-extraction, which is the check that mattered. `scheduleDots` resolves the guide
-the same way `evaluate` does and walks a graph dot's own route to its first
-exit, so per-dot journeys differ on a graph exactly as they do on screen.
-
-**Assumption at the skipped gate:** the wait applies to the selected major
-waypoint when there is one, otherwise the route's last major — the two things
-an author means by "wait here" — rather than introducing a waypoint picker.
-
-**Staleness is honest, not hidden:** the number is a snapshot. Retune the crowd
-and it goes stale; fit it again. That is the cost of baking, and it is the cost
-Phase 5 chose.
-
-**Link:** COMPOSE-02. 63 files / 945 tests green. Verified in production
-Chromium: a crowd finishing at ~25 s against a 7.3 s route solved to a 48215 ms
-wait, after which the head leaves at 53984 ms and the last dot arrives at
-53983 ms. The naive difference would have set ~19 s and still missed. Zero
-console entries.
-
-## 2026-08-27 — tracing the route makes a copy that still follows it
-
-**Decision:** "Trace route into network" replaces the selected crowd's guide
-network with one mirroring the route: a node per **major** waypoint, an edge
-per leg carrying that leg's **minors as control points**, and `one-way` edges
-throughout. Branches trace as edges leaving the fork node and returning to the
-rejoin node, so a crowd splits exactly where the route splits.
-
-**A copy that still follows.** Every traced node keeps a COMPOSE-01 binding to
-the waypoint it came from, so moving that waypoint carries the node rather than
-stranding the copy — but the network is otherwise the author's: retune weights,
-add shortcuts, draw extra nodes, none of which reaches back into the route.
-That is the one-way rule paying for itself twice.
-
-**Minors are geometry, not junctions.** A node at a minor would be a decision
-point the route does not have, and a crowd would treat it as a place to choose.
-Carrying minors as edge control points keeps the guide curve the route's own
-curve instead of a straight chord between majors.
-
-**Entries and exits are derived, not declared:** a node with no incoming edge
-is an entry, one with no outgoing edge an exit. A branched route therefore
-yields several exits without the caller reasoning about topology.
-
-**Refuse rather than half-build:** a route with fewer than two majors, or one
-whose branch structure has an unresolved fork or rejoin, is refused with a
-reason. A partial trace would leave edges pointing at endpoints that were never
-created.
-
-**Availability:** the button stays enabled while the pen is live — switching a
-crowd to "Custom network" hands you the pen immediately, which is exactly when
-"or just trace the route" is most useful. Clicking it puts the pen down first,
-because the trace replaces every node and a half-drawn edge would be left
-pointing at one that no longer exists.
-
-**Link:** COMPOSE-03. 62 files / 923 tests green. Verified in production
-Chromium on the branched route: 4 bound nodes with the first an entry and the
-last an exit, 4 one-way edges including the fork→branch and branch→rejoin
-pair, and the trunk leg carrying its 2 minors as control points. Zero console
-entries.
-
-## 2026-08-27 — a bound crowd reads the route; the route never reads the crowd
-
-**Decision:** `GraphNode.anchorWaypointId` binds a node's *evaluated* position
-to a waypoint, and `Emitter.releaseAnchor` binds a release window's start to a
-route moment. Both are resolved at evaluation time from live route state, both
-default to null, and both are omitted from `toJSON()` when null so an
-unanchored scene's saved shape is unchanged.
-
-**Authored intent is never rewritten.** A bound node keeps its own `x`/`y`;
-only a derived `position()` follows the waypoint. That is what makes the
-fallback meaningful — when the waypoint is deleted the node returns to where it
-was authored, keeps its binding, and the break is reported. Deleting the node
-or freezing the crowd would both destroy work the author never asked to lose
-(the ticket's open question on fallback).
-
-**Named moments, not a normalised offset** (the ticket's second open question):
-`arrival`, `pause-end` and `route-end`. An author can reason about "when the
-head gets there" and "when it moves off again"; both survive retiming; and an
-offset into a pause means nothing when the pause is zero.
-
-**Determinism and fixture compatibility:** only a bound emitter's window
-*start* moves. The onset arithmetic — slot, hash channels, variance, ramp,
-busyness envelope — is untouched, so every existing unanchored swarm hash is
-byte-for-byte identical, which the suite confirms. `getRouteArrivalMap()`
-composes a linear route's single trunk leg through the same routine a branched
-one uses, so a bound crowd reads the same arithmetic either way.
-
-**Read split:** everything that draws an edge, walks a dot or hit-tests reads
-`node.position()`; the authoring surfaces (semantic outline inputs, node drag,
-validation) keep reading `x`/`y`. `edgeGeometry`'s cache signature includes the
-resolved position, so a route edit invalidates the drawn curve — the drawn
-curve and the curve dots travel must stay the same curve.
-
-**Warning cadence:** the break notice fires once per *change*, not once per
-path rebuild — `calculatePath` runs on every drag frame. Resolution itself runs
-ahead of that function's early returns, because deleting a route down to one
-waypoint breaks every binding and is exactly when a stale resolution is worst.
-
-**Link:** COMPOSE-01. 61 files / 906 tests green. Verified in production
-Chromium on a branched route: the node bound to its waypoint's exact position
-while its authored coordinates stayed put, the emitter released at 2993 ms
-(Waypoint 2's arrival plus its 1500 ms wait) with nothing before it, and
-breaking the binding returned the node to its authored position with the
-binding intact and the break reported. Zero console entries.
-
 ## 2026-08-27 — the exported player inherits branches rather than reimplementing them
 
 **Decision:** ROUTE-01d needed almost no new export code. `PlayerApp` already
@@ -916,53 +762,6 @@ Opening an exported file in a browser end-to-end remains REV-04's outstanding,
 owner-run evidence.
 
 **Link:** ROUTE-01d.
-
-## 2026-08-27 — two gestures author a branch, and both are owner-chosen
-
-**Decision:** Alt+click on an existing waypoint arms a branch; the next plain
-canvas click places its first waypoint. Dragging a branch's last waypoint onto
-another waypoint rejoins the branch there; dragging it onto the current target
-again clears the rejoin. Both were picked by the owner at the ROUTE-01c gate
-over a list "+ Branch" button, a canvas ⑂ handle and an inspector dropdown.
-
-**What Alt+click gives up:** Alt+click previously force-added a major *even on
-top of an existing waypoint*, bypassing selection. The hit-test now splits it:
-empty canvas still force-adds, a waypoint hit arms a branch. The one lost case
-is force-adding a major exactly on top of another, and Alt+Cmd still
-force-adds a minor there. Escape unwinds an armed gesture before it unwinds a
-selection — an armed state is the more recent and more surprising one to be
-stuck in.
-
-**Placement:** a branch is inserted after the fork's own leg block, so the flat
-array still reads in route order and the sidebar list needs no reordering pass.
-Numbering is `fork·letter·position` (`2·B1`), lettered from B because the
-trunk's own continuation past the fork is implicitly A — so adding a second
-branch never renumbers the first.
-
-**Validation lives in the model, not the gesture:** `canForkFrom`,
-`canRejoinBranch` and `branchEndInfo` answer every question the gestures ask,
-and `canRejoinBranch` decides by applying the change to a copy and re-resolving
-rather than restating the rules. A gesture that reimplemented them would drift
-from `resolveRouteBranches` the first time either changed.
-
-**Two bugs the live pass found, neither reachable from jsdom:**
-- `findWaypointAt` hit-tested the waypoint being dragged. At drop time it sits
-  under the cursor, on top of the target, so the rejoin never fired. It now
-  takes an exclusion, and the caller excludes the whole drag group.
-- Both branch handlers snapshotted undo *before* mutating. This project's undo
-  stack holds post-action states and `undo()` pops the current one to restore
-  the previous, so a pre-mutation snapshot made undo skip a step. Corrected to
-  match `waypoint:deleted` and `waypoints:reordered`.
-
-**Layout:** the fork ⑂ is badged onto the waypoint's colour dot rather than
-placed in the row's text flow. A major row is already dot + handle + title +
-▲▼ + × inside roughly 140px, and one more inline child wrapped the title.
-
-**Link:** ROUTE-01c. 59 files / 869 tests green. Verified in production
-Chromium: fork armed and placed at the right array index, rejoin set with a
-1203 ms join wait and the dragged point restored rather than moved, the same
-drag toggling back to terminal, undo restoring the rejoin, persistence across
-reload, zero console entries.
 
 ## 2026-08-27 — a branch borrows the trunk's transport, never its own
 
@@ -1014,127 +813,7 @@ point, two heads advance simultaneously from t=0, the shorter branch completes
 and holds, zero console entries. A linear route reports `isLinear` with no
 branch paths and renders unchanged.
 
-## 2026-08-27 — branches are runs in the one waypoint array, not a second graph
-
-**Decision:** A hero-route branch is a *contiguous run* of waypoints sharing a
-`branchId`, stored in the same ordered array the route has always used, with
-`branchFrom` on the run's first waypoint and `branchRejoin` on its last. All
-three default to null and are omitted from `toJSON()` when null, so an unsplit
-project's save is byte-identical to a pre-ROUTE-01 save.
-
-**Alternatives rejected:** a dedicated `RouteGraph` of nodes and edges reads
-cleaner in isolation but forces a migration of every consumer — path,
-rendering, timing, persistence, export, outline — and cannot honour "preserve
-valid linear projects exactly" without carrying the array anyway. Reusing the
-crowd `GraphModel` was rejected outright: it is a weighted directed graph where
-dots *choose* an edge, and importing edge weights and probabilistic selection
-into hero-route storytelling would have made the two models mean the same
-thing when the approved contract says they must not.
-
-**Timeline composition:** `PlayerCore.composeBranchTimeline` resolves leg start
-times by relaxation over fork dependencies, so it is order-independent and
-terminates on a cyclic structure by reporting the survivors as `unresolved`
-rather than looping. Simultaneous start, latest-arrival rejoin recorded as a
-`joinWaitsById` entry (once per join, not once per incoming branch) and
-completion as the max over every terminal endpoint. A disabled branch keeps its
-place but contributes zero duration — otherwise hiding a branch would stretch
-the route it is hidden from.
-
-**Validation, not repair:** `resolveRouteBranches` never throws and never
-fixes a broken structure. A deleted fork target, a split run or a cycle comes
-back in `problems` with the runs still intact, so the route renders and the
-author is told what is wrong. Silent repair during a render would rewrite
-authored intent.
-
-**Scope:** ROUTE-01 was too large for one slice, so it is now ROUTE-01a
-(this: model + composition, headless), ROUTE-01b (rendering + camera),
-ROUTE-01c (authoring, `[sign-off]`) and ROUTE-01d (export parity). COMPOSE-01
-and COMPOSE-03 depend on the model, so they gate on ROUTE-01a; REV-05 needs
-the authoring UI to settle, so it gates on ROUTE-01c.
-
-**Link:** ROUTE-01a. 57 files / 808 tests green; no runtime behaviour change.
-
-## 2026-08-27 — the route list shows minors, and one numbering serves both views
-
-**Decision:** The sidebar waypoint list renders the whole route. Minors appear
-as indented child rows of the leg they shape, with a visible `minor` tag, a
-grey shaping-dot glyph matching what the canvas actually draws, and an
-`.sr-only` statement of the relationship — indentation alone would leave the
-structure to layout (WCAG 2.2 1.3.1).
-
-**Rationale — one numbering:** `src/utils/waypointNaming.js` now numbers the
-route once (`1`, `1.1`, `1.2`, `2`, …) and both the list and the semantic
-outline read from it. Before this, the outline numbered minors by route
-position, so its "Minor waypoint 7" and the list's "Waypoint 7" named different
-waypoints — a collision a screen-reader user moving between the two surfaces
-would hit directly. Leg 0 is a real case, not a guard: deleting a major strands
-its trailing minors ahead of every remaining major, and they read `0.1`, `0.2`
-rather than borrowing the number of the major that now follows them.
-
-**Rationale — reorder-visible, not reorder-able:** a minor is not draggable and
-owns no ▲/▼. Its place inside a leg is authored on the canvas, and
-`reorderWaypointBlocks` already moves it with its major; giving minors their
-own reorder controls would reopen the 2026-08-18 data bug where rebuilding
-majors in place silently reattached minors to different legs. A major instead
-drags as its whole leg block, so the minors visibly travel to where the model
-will actually put them. The `waypoints:reordered` payload stays majors-only.
-
-**Alternatives rejected:** an ARIA tree (`role="treeitem"` + `aria-level`)
-would have replaced the deliberate action-list semantics — each row is a native
-button beside independent reorder/delete buttons — for hierarchy the `.sr-only`
-line already conveys. Keeping the outline's route-position numbering and giving
-the list its own scheme would have shipped two names per waypoint.
-
-**Link:** UI-02. 56 files / 773 tests green; verified in production Chromium —
-selection, rename, block reorder with minors travelling, autosave round-trip,
-44 px rows, zero console entries. Generated Pages build v3.2.658.
-
-## 2026-08-27 — inline rename detaches its blur listener before touching the DOM
-
-**Decision:** `startRenameFor`'s `finish()` calls
-`input.removeEventListener('blur', onBlur)` as its first statement, and returns
-early when the input is no longer connected.
-
-**Rationale:** replacing the focused input removes it from the tree, and Chrome
-dispatches the resulting `blur` from *inside* that `replaceWith` call. The
-re-entrant pass then replaced a node that no longer had a parent and threw
-`NotFoundError` into the console on every successful Enter-committed rename.
-An `isConnected` guard alone did not close it — the re-entry happens mid-swap,
-while the node's connected flag is still set. Detaching the listener up front
-removes the re-entry entirely, whatever the dispatch ordering. The `isConnected`
-return still covers the other case: an app-side list rebuild (autosave, a
-selection refresh) replacing the row while a rename is open, where the new row
-already carries its own title span.
-
-**Context:** pre-existing since the rename paths were unified, found live during
-UI-02 verification rather than by any test — jsdom does not reproduce Chrome's
-synchronous mid-mutation blur, so the regression test asserts the re-entrant
-`finish()` cannot throw rather than reproducing the browser's exact ordering.
-
-**Link:** UI-02a. `tests/waypointList.test.js`.
-
-## 2026-08-27 — gate vocabulary splits blocking dependencies from evidence debt
-
-**Decision:** Backlog gates now distinguish `[gated: X impl]` — waits on X's
-code landing — from `[verify: …]`, an evidence residual that blocks nothing
-downstream. ROUTE-01 and the COMPOSE chain move to `[ready]`/`[gated: … impl]`;
-REV-05 re-gates onto UI-02 and ROUTE-01. Items also carry a short title and a
-band so the roadmap table reads without cross-referencing.
-
-**Rationale:** REV-03's implementation shipped at `bbc1c3f`; only physical
-iOS/Android evidence is outstanding. Writing that as `[gated: REV-03]` parked
-the entire Phase 5 chain behind evidence none of its successors needs — the
-real dependency is a stable single pointer transaction, which exists. REV-05 is
-the genuine exception: it wants the authoring UI to stop changing shape, and
-the tickets still changing it are UI-02 and ROUTE-01, not REV-03.
-
-**Cost if wrong:** ROUTE-01 builds branch authoring on a pointer layer whose
-physical-device behaviour is unconfirmed. Accepted: the layer is green in
-automation and production Chromium, and REV-03/REV-04 keep their honest
-evidence residuals rather than being closed early.
-
-**Link:** backlog refactor, 2026-08-27.
-
+## Archived: 2026-08-27 (11 of 19 entries) — see archive/decision-log-2026-08-27-to-2026-08-27.md
 ## Archived: 2026-08-17 → 2026-08-26 — see archive/decision-log-2026-08-17-to-2026-08-26.md
 ## Archived: 2026-06 — see archive/decision-log-2026-06.md
 ## Archived: 2026-04 — see archive/decision-log-2026-04.md

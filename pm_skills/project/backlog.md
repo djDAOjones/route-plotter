@@ -30,20 +30,50 @@
   are implemented and green in automation plus production Chromium. Record the
   physical mobile pass.
 - [~] **REV-05 Accessibility assurance** · Accessibility assurance
-  [verify: NVDA/VoiceOver + forced-colours emulation] — Everything automatable
-  is done and green: structural audit, AAA contrast sampling, 400%-zoom reflow,
-  and axe over both the static shell and the shell as JavaScript leaves it
-  (48 rules, zero violations, contrast evaluated live in Chromium). A11Y-01 and
-  A11Y-02 closed the two findings this audit spun out, so forced-colours
-  fallbacks now exist and are proved to ship — what remains is *looking* at
-  them under a real high-contrast theme, plus the screen-reader pass. Both stay
-  owner-run.
+  [verify: NVDA/VoiceOver + forced-colours + reduced-motion emulation] —
+  Everything automatable is done and green: structural audit, AAA contrast
+  sampling, 400%-zoom reflow, and axe over both the static shell and the shell
+  as JavaScript leaves it (48 rules, zero violations, contrast evaluated live in
+  Chromium). A11Y-01 and A11Y-02 closed the two findings this audit spun out, so
+  forced-colours fallbacks now exist and are proved to ship — what remains is
+  *looking* at them under a real high-contrast theme, a reduced-motion
+  emulation pass including canvas motion (restored 2026-09-22; it left this
+  residual at `24e650c` without an owner call), plus the screen-reader pass.
+  All stay owner-run.
 
 ### Next
 
-<!-- Empty since the v3.2.690 release (2026-09-22): every open item is either
-     owner-run evidence (Current) or deferred behind a stated trigger (Icebox).
-     New work enters here, branched from main. -->
+<!-- Holds only the CURRENT wave of the adopted codebase abstraction plan
+     (reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md; IDs are
+     the plan's, used verbatim). When this wave closes, the next one enters
+     from the plan's §13; never import the whole plan here. Work branches from
+     main in a fresh clone outside OneDrive (owner's §20 Q1/Q2 answers). -->
+
+- [ ] **DOC-06 Agent workflow fits this repo** · Codebase auditability
+  [ready] [[detail]](../../reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md) — First, `AGENTS.md` gains `## Commit, push and release`:
+  agents work on short-lived branches and never commit to or push `main`, and
+  `docs/` and `version.json` change only through `npm run push`. Without it,
+  `task.md` step 11 commits and pushes every close onto the live `main`. Then
+  sub-items (b)–(f) in the plan's §12. (g) and (h) shipped 2026-09-22.
+- [ ] **DEF-18 push.js refuses unknown flags** · Codebase auditability
+  [ready] — `node push.js --dryrun`, a typo, performs a real and now live
+  release. Reject unknown flags with no git side effect and run `npm run check`
+  rather than `npm test`; add the `releaseSafety` case first.
+- [ ] **GOV-01 Branch-per-wave working setup** · Codebase auditability
+  [gated: DOC-06 impl] — Every wave on a short-lived branch from `main` in a
+  fresh clone outside OneDrive; merges reach `main` in small batches, each a
+  tagged release. Done when DOC-06 (a) and the DEV-INFRASTRUCTURE release
+  steps say so and W1 starts that way.
+- [ ] **DOC-02 Canonical docs match the code** · Codebase auditability
+  — Correct the 14 README, DEV-INFRASTRUCTURE and `architecture.md`
+  contradictions listed in the plan (§6 SEG-030), linking rather than
+  restating.
+- [ ] **DOC-03 The real communication rule** · Codebase auditability — Replace
+  "EventBus only, exceptions: none" with the owner's §20 Q15 rule: components
+  reach the app through the bus; the app calls components through named public
+  methods; modal tools make provisional edits and commit them through events.
+  Change `AGENTS.md`, `architecture.md` and `conventions.md` together, and name
+  the exceptions CON-01 will remove.
 
 ### Icebox
 

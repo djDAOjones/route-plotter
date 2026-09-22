@@ -41,6 +41,9 @@ single physical action cannot mutate the project twice or leave a drag stuck.
 - Focused suites, the canonical gate and production Chromium checks are green.
 - A real iOS Safari and Android Chrome pass records tap, drag, cancellation,
   page navigation and rotation behaviour before REV-03 is evicted as shipped.
+- That pass also taps the branch "+" handle on a bound entry waypoint
+  (COMPOSE-04 hit-tests it so touch and pen reach it without hover), as a test
+  of the shipped gesture, not a reopening of branch interaction design.
 
 ## Evidence boundary
 

@@ -1,19 +1,22 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 296 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 297 file(s) across 12 section(s); pm_skills/ is not mapped here.
+     Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
+     only the first line of each row, so it drops wrapped roles and blanks
+     three reviews rows. Update the rows and these counts by hand. -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
 - `_Joe` — 45 file(s)
-- `docs` — 20 file(s)
+- `docs` — 22 file(s)
 - `images` — 6 file(s)
-- `reviews` — 7 file(s)
-- `scripts` — 4 file(s)
+- `reviews` — 8 file(s)
+- `scripts` — 5 file(s)
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 69 file(s)
+- `tests` — 74 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -143,6 +146,9 @@
   Full historical Route Plotter review at commit cec0191, public-path sanitised
 - `reviews/route-plotter-continuation-prompt-2026-08-27.md` — Current
   paste-ready continuation prompt; work is driven by the PM-Skills backlog
+- `reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md` —
+  Adopted refactoring programme (waves W0–W12); the backlog carries only the
+  current wave
 
 ## scripts
 
