@@ -222,13 +222,46 @@ breaking change.
   current branch to the same remote ref.
 - **Custom message:** `npm run push -- "custom msg"`
 - **Dry run:** `npm run push:dry-run`
-- **Releasing a line into main** (DEPLOY-01, 2026-09-22): tag the currently
-  live build as the rollback point; `git merge --no-ff` into main; run the full
-  gate; `npm run push` on main; wait for the **Verify** workflow to pass on the
-  deploy commit itself; only then switch or confirm the Pages source; confirm
-  the `github-pages` deployment reached that SHA; compare published files by
-  SHA-256 against `docs/`; then tag the deploy commit with the build number
-  `version.json` actually records.
+- **Working setup** (GOV-01; owner's answers to the abstraction plan's §20 Q1
+  and Q2, 2026-09-22): work in a fresh full clone outside OneDrive — a plain
+  `git clone`, not `--single-branch`, which tracks only one branch — then
+  `nvm use` and `npm ci`. Make one short-lived branch from `main` per
+  concern, named for its item (e.g. `w0/def-18-push-flags`); run
+  `npm run check`; push the branch; open a pull request; and wait for
+  **Verify** to pass on it. The owner decides each merge (squash, keeping the
+  `<ITEM-ID>: summary` title); the agent rules are `AGENTS.md` → Commit, push
+  and release. The OneDrive checkout stays the owner's: update it only by
+  fast-forward, and only when it is clean.
+- **A merge does not release source changes.** Every push to `main` rebuilds
+  Pages, but from the committed `docs/`, which only `npm run push` changes;
+  merged source goes live at the next release, which the owner calls. So a
+  pull request must never change `docs/` or `version.json`: check its diff
+  before merging.
+- **Releasing** (when the owner calls it). Where
+  `pm_skills/prompts/deploy.md` differs, these steps win: it builds and tags
+  before deploying, but here the helper builds, and the tag goes on the deploy
+  commit the helper creates.
+  1. In a Working-setup clone, on a clean `main` that matches `origin/main`,
+     confirm the Pages source is `main` `/docs` and the latest Pages build
+     has status `built` at the SHA you expect (commands under Target); stop
+     if either differs. That live SHA needs a pushed rollback tag: if it has
+     none, add an annotated tag at that exact SHA. Existing tags never move.
+  2. `npm run check`, then `npm run push:dry-run`. Do not build, bump the
+     version or tag first: the helper builds, and a prior build dirties the
+     tree.
+  3. `npm run push`, and note the deploy commit's SHA.
+  4. Pages starts building on that push, so **Verify** on the deploy commit
+     confirms the release rather than gating it. Wait for it.
+  5. Confirm the `github-pages` deployment reached that SHA, and compare the
+     published files by SHA-256 against `docs/`. Load the live site to a
+     ready state (Runtime lifecycle → Health / readiness; the page title shows
+     the version), play a built-in example, and export it as MP4 and HTML.
+  6. If any check in steps 4–5 fails, roll back (below) and check the
+     restored site the same way.
+  7. Tag the deploy commit `v<major>.<minor>.<build>`, from `package.json`
+     and the `version.json` that the push committed (e.g. `v3.2.691`), as an
+     annotated tag at that SHA, and push that one tag.
+  8. Record the release in project memory through a `PM:` pull request.
 - **Changing the Pages source does not trigger a build.** Switching it through
   the API left the old artefact live; `gh api -X POST
   repos/djDAOjones/route-plotter/pages/builds` requested one. Pushes to the
@@ -239,9 +272,10 @@ breaking change.
 - **Main is protected** (REL-02): a repository ruleset blocks force-pushes and
   deletion of `main`, with no bypass. Ordinary fast-forward pushes — including
   `npm run push` — are unaffected; a rollback never rewrites main.
-- **OneDrive:** this checkout lives in OneDrive, which can evict tracked files
-  and `.git` internals to online-only; git then fails with
-  `mmap failed: Operation timed out`. Run a release from a fresh local clone.
+- **OneDrive:** the owner's checkout lives in OneDrive, which can evict tracked
+  files and `.git` internals to online-only; git then fails with
+  `mmap failed: Operation timed out`. That is why work and releases run from a
+  fresh clone outside it (Working setup above).
 - **Live URL:** <https://djdaojones.github.io/route-plotter/> (Pages enabled 2026-08-19, Phase 5; the frozen v2 line stays at <https://djdaojones.github.io/router-plotter-02/>)
 
 ---
