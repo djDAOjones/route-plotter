@@ -3,8 +3,26 @@
  * Implements publish-subscribe pattern
  */
 export class EventBus {
-  constructor() {
+  /**
+   * A listener that throws must not stop the listeners after it, so `emit`
+   * logs its error and carries on — which also hides real failures, for as
+   * long as nobody reads the console (ISO-02). `onListenerError` makes them
+   * observable: tests pass one that throws, which ends that emit and fails the
+   * test. `listenerErrorCount` counts synchronous listener throws caught by
+   * `emit`, whichever path handles them; `emitAsync` still rejects to its
+   * caller instead, so it reaches neither the handler nor the count.
+   *
+   * @param {Object} [options]
+   * @param {(error: Error, context: {eventName: string, args: any[]}) => void} [options.onListenerError]
+   *   Called instead of the default `console.error`, with a copy of the
+   *   dispatched arguments (the payload objects in it are the same ones the
+   *   listeners received). Returning continues with the next listener; throwing
+   *   ends the emit and propagates.
+   */
+  constructor({ onListenerError = null } = {}) {
     this.events = new Map();
+    this.onListenerError = onListenerError;
+    this.listenerErrorCount = 0;
   }
   
   /**
@@ -96,11 +114,30 @@ export class EventBus {
       try {
         listener(...args);
       } catch (error) {
-        console.error(`Error in event listener for ${eventName}:`, error);
+        this._reportListenerError(error, eventName, args);
       }
     });
   }
   
+  /**
+   * Report a listener error: count it, then hand it to `onListenerError` if
+   * one was given, or log it as this bus always has.
+   *
+   * @param {Error} error
+   * @param {string} eventName
+   * @param {any[]} args
+   */
+  _reportListenerError(error, eventName, args) {
+    this.listenerErrorCount += 1;
+    if (this.onListenerError) {
+      // A copy: a handler that edited this array would change what the
+      // listeners after it receive.
+      this.onListenerError(error, { eventName, args: [...args] });
+      return;
+    }
+    console.error(`Error in event listener for ${eventName}:`, error);
+  }
+
   /**
    * Emit an event (alias for emit)
    * @param {string} eventName - Name of the event
