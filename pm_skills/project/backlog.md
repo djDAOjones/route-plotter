@@ -46,34 +46,40 @@
 <!-- Holds only the CURRENT wave of the adopted codebase abstraction plan
      (reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md; IDs are
      the plan's, used verbatim). When this wave closes, the next one enters
-     from the plan's §13; never import the whole plan here. Work branches from
-     main in a fresh clone outside OneDrive (owner's §20 Q1/Q2 answers). -->
+     from the plan's §13; never import the whole plan here. Working setup and
+     release steps: DEV-INFRASTRUCTURE.md → Deployment. W0 closed 2026-09-22.
+     Now W1 (the safety net), with W2's first defect, DEF-01, alongside; the
+     rest of W2 enters when W1 closes. -->
 
-- [ ] **DOC-06 Agent workflow fits this repo** · Codebase auditability
-  [ready] [[detail]](../../reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md) — First, `AGENTS.md` gains `## Commit, push and release`:
-  agents work on short-lived branches and never commit to or push `main`, and
-  `docs/` and `version.json` change only through `npm run push`. Without it,
-  `task.md` step 11 commits and pushes every close onto the live `main`. Then
-  sub-items (b)–(f) in the plan's §12. (g) and (h) shipped 2026-09-22.
-- [ ] **DEF-18 push.js refuses unknown flags** · Codebase auditability
-  [ready] — `node push.js --dryrun`, a typo, performs a real and now live
-  release. Reject unknown flags with no git side effect and run `npm run check`
-  rather than `npm test`; add the `releaseSafety` case first.
-- [ ] **GOV-01 Branch-per-wave working setup** · Codebase auditability
-  [gated: DOC-06 impl] — Every wave on a short-lived branch from `main` in a
-  fresh clone outside OneDrive; merges reach `main` in small batches, each a
-  tagged release. Done when DOC-06 (a) and the DEV-INFRASTRUCTURE release
-  steps say so and W1 starts that way.
-- [ ] **DOC-02 Canonical docs match the code** · Codebase auditability
-  — Correct the 14 README, DEV-INFRASTRUCTURE and `architecture.md`
-  contradictions listed in the plan (§6 SEG-030), linking rather than
-  restating.
-- [ ] **DOC-03 The real communication rule** · Codebase auditability — Replace
-  "EventBus only, exceptions: none" with the owner's §20 Q15 rule: components
-  reach the app through the bus; the app calls components through named public
-  methods; modal tools make provisional edits and commit them through events.
-  Change `AGENTS.md`, `architecture.md` and `conventions.md` together, and name
-  the exceptions CON-01 will remove.
+- [ ] **TST-01 Whole-app test boot** · Codebase auditability [ready] — A
+  `tests/helpers/bootApp.js` harness boots the real RoutePlotter in jsdom
+  (stubs for `APP_VERSION`, `matchMedia`, `fetch`), and `tests/setup.js`
+  gains fidelity: `localStorage.getItem` returns `null`, one recording context
+  per canvas, `clearMocks`. Review every test branch the `null` fix flips.
+- [ ] **ISO-02 Listener errors are observable** · Codebase auditability
+  [ready] — `new EventBus({ onListenerError })` with today's default
+  unchanged, plus counters.
+- [ ] **TST-10 Loud bus, quiet console in tests** · Codebase auditability
+  [gated: ISO-02 impl] — Pin EventBus semantics, run a strict bus in tests,
+  fail on unexpected `console.error`/`warn` (allowlist), and a canary that
+  fails below 72 files or 1,000 tests.
+- [ ] **TST-07 Player host contract** · Codebase auditability [ready] — Test
+  the ~25-member host contract on the real `PlayerApp`, anchored parity, and
+  the player-closure rule through esbuild's metafile.
+- [ ] **TST-06 Snapshot-shape goldens** · Codebase auditability
+  [gated: TST-01 impl] — Snapshot files per example, `load(save(x))`
+  idempotence, and an "authorable ⇒ loadable" property test whose known
+  failures are `todo` with their DEF IDs until W2.
+- [ ] **TST-02 Golden draw logs** · Codebase auditability
+  [gated: TST-01 impl] — 3 examples × 5 instants × edit/preview/export through
+  the recording context; render-level play == seek and app == player; prove
+  each golden can fail.
+- [ ] **DEF-01 Live debug overlay** · Codebase auditability [ready] —
+  "Angle of View Reveal" paints a black "Background Mode Debug" panel into
+  preview, exports and the player, on the live site. Delete the call, the
+  method and the AoV debug state; the absence test comes first (a `fillText`
+  spy, or TST-02's recording context). The owner approves the stated new
+  behaviour at the PR.
 
 ### Icebox
 

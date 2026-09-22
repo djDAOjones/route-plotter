@@ -32,7 +32,7 @@
 - `index.html` — Single-page app shell (sidebar + canvas + controls)
 - `package.json` — Project metadata and scripts
 - `public-assets.json` — Owner-approved public image allowlist pinned to exact paths and SHA-256 hashes
-- `push.js` — Clean-tree, current-branch Pages deploy helper with argv-safe commits and a non-mutating dry run
+- `push.js` — Clean-tree, current-branch Pages deploy helper: refuses unknown options and mistyped dry runs, runs `npm run check`, argv-safe commits and a non-mutating dry run
 - `version.json` — Auto-incremented build number
 - `vitest.config.js` — Vitest jsdom configuration, setup binding and test-file selection
 
@@ -159,7 +159,7 @@
 - `scripts/perf-harness.js` — Console-pasted performance cost curve (waypoints,
   crowd size, image resolution); no threshold, outside the quality gate
 - `scripts/build.sh` — maintainer wrapper: `npm run build` into docs/ (`--test`, `--help`)
-- `scripts/restart.sh` — Exact owned-process stop/start/status wrapper: refuse foreign listeners, record process identity and verify HTTP 200
+- `scripts/restart.sh` — Exact owned-process stop/start/status wrapper: refuse foreign listeners, record process identity and wait until the server answers
 
 ## specs
 
@@ -210,7 +210,7 @@
 - `src/components/Tooltip.js` — Tooltip attachment
 - `src/config/constants.js` — All tuneable values (animation, rendering, path, etc.)
 - `src/config/helpContent.js` — Welcome modal and inline help HTML generators
-- `src/config/keybindings.js` — Mouse + keyboard bindings (customisable via localStorage)
+- `src/config/keybindings.js` — Shortcut table the help panel renders; key handling lives in `InteractionHandler` (README → Keybindings)
 - `src/config/tooltips.js` — Tooltip definitions
 - `src/controllers/SceneOutlineController.js` — Native-details/list/form renderer owning transient disclosure, focus and dirty-draft state while emitting model-free commands in the shared plain field vocabulary
 - `src/controllers/SectionController.js` — Collapsible settings sections, waypoint/route/crowd/network scope switching, undo selection-state synchronization and deterministic native More keyboard activation
@@ -347,7 +347,7 @@
 - `tests/projectLimits.test.js` — Adversarial image, model, ZIP/ZIP64 and detached-import resource-limit contracts
 - `tests/projectReset.test.js` — Behavioral Clear All proof for stale writers/tokens, asset/reference removal and one empty non-undoable baseline
 - `tests/publicationBoundary.test.js` — Approved-image hashes, CSP/same-origin shell, exact Pages inventory and manifest-tamper rejection
-- `tests/releaseSafety.test.js` — Clean-build rollback, versioned CSS references and dry-run deployment safety contracts
+- `tests/releaseSafety.test.js` — Clean-build rollback, versioned CSS references, dry-run deployment safety, and the DEF-18 refusals (unknown options, mistyped npm settings) and check-gate contracts
 - `tests/renderReference.test.js` — Reference migration, aspect/export scaling, label clamp, camera, area-border and no-timeline-mutation contracts
 - `tests/restartSafety.test.sh` — Shell contract for exact owned-process restart, readiness and foreign-listener refusal
 - `tests/revealTrail.test.js` — REVEAL-01 contract: the reveal fades as a pure

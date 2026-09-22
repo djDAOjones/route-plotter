@@ -2,6 +2,59 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-22 — W0 closes: no accidental release, and docs that match the code
+
+**Owner calls this wave.** Merges are squash merges, keeping the
+`<ITEM-ID>: summary` title; the agent runs each merge only on the owner's
+word. No "Protected infrastructure" list: the owner merges every change
+anyway. DEF-18's stated new behaviour was approved, including the two typo
+routes the plan row missed and the trade-off that `yes=false` in an npm
+config makes `npm run push` refuse. Merges and releases are separate calls:
+a pull request per concern, and the owner calls each release.
+
+**Each PR and what it preserved** (all text-only except #2; `docs/`,
+`version.json` and `src/` unchanged; live bytes still v3.2.690, 22/22 by
+SHA-256):
+
+- #1 DOC-06 (a): the `AGENTS.md` branch-and-release rule. No runtime change.
+- #2 DEF-18: refuses unknown options, npm settings resembling a dry run, and
+  `-n`; reads `dry_run` case-insensitively; runs `npm run check`.
+  Preserved: every documented push and dry-run form, the clean-tree gate, the
+  generated-path allowlist, argv safety. +6 tests, each failing on the old
+  helper; the shared test helper now drops inherited npm settings.
+- #3 DOC-06 (b)–(f): Quality gate, 12 framework aliases, the refactor-mode,
+  re-pointing, boot-check and prune-bar clauses.
+- #4 GOV-01: working setup and eight release steps.
+- #5 DOC-02: SEG-030 items 1–14 all closed (item 8 by #3, item 13 earlier).
+- #6 DOC-03: the Q15 rule in `AGENTS.md`, `architecture.md` and
+  `conventions.md`, with its exceptions listed.
+
+Codex (`gpt-6-astra`) reviewed every PR adversarially and changed five of
+them, including two blockers in GOV-01 and two in DOC-03.
+
+**Plan rows patched, with dated notes:** DEF-18 (wider refusal),
+DOC-06 (all 12 references, not 3–4), GOV-01 (a branch per concern; releases
+called separately), DOC-02, DOC-03, and W0's status.
+
+**Open for the owner:** DOC-03 found two exceptions with no plan item —
+NetworkEditService edits the model while only bound for inspection, and
+AreaEditService calls an app-supplied coordinate callback. Also logged as
+ideas: `restart.sh` proves only that the server answers; `serve` is broken;
+CI could refuse a pull request that touches `docs/`.
+
+**Metrics against the §18 baseline:** open defects 33 → 32; doc
+contradictions 13 → 0 known; dangling framework references 12 → 0; tests
+1,065 → 1,071 across 72 files. Unchanged: about 46 dead functions, 47
+functions over 100 lines, 0 render goldens, 5 source-text test sites, 52 of
+77 orchestrator events never exercised.
+
+**Noted:** rapid merges make the Pages builds API report the superseded
+builds as "errored"; they are cancelled runs. Check the build for the SHA you
+care about. This entry makes the log 22/20: reported under the prune bar, not
+pruned.
+
+**Link:** DOC-06, DEF-18, GOV-01, DOC-02, DOC-03; PRs #1–#6; plan §12, §13, §18.
+
 ## 2026-09-22 — adopt the codebase abstraction plan, on every recommended default
 
 **Owner's call: all 22 recommended defaults in the plan's §20 are accepted**,

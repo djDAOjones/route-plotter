@@ -25,3 +25,6 @@
 - `npm run dev` leaves `docs/player.js.map` behind: the watch build emits a player sourcemap the production build's 17-file inventory does not, so the generated tree drifts from what is published. — (from: 2026-08-27 ROUTE-01b)
 - Marquee / rubber-band selection on canvas — drag over empty space currently does nothing in edit mode; a selection rectangle is the natural next gesture. — (from: 2026-08-18 Phase 4 multi-select)
 - jsdom 30 needs Node >= 24.15.0 and this checkout runs 24.5.0; no manifest change is required (engines already allows it, .nvmrc is just `24`) — only the installed Node. Owner's toolchain call. — (from: 2026-08-28 DEPS-01)
+- `npm run serve` serves the unbuilt source shell at `/` (only `/docs/` runs the app) and `start` duplicates `dev`: fix or remove both (plan SEG-026). — (from: 2026-09-22 DOC-02)
+- `restart.sh` proves only that the server answers, while AGENTS' recovery rule asks it to verify readiness, which DEV-INFRASTRUCTURE defines as no console errors and a rendered version stamp. — (from: 2026-09-22 DOC-02)
+- CI could fail a pull request that changes `docs/` or `version.json`, which only `npm run push` may commit; today the release steps rely on checking the diff by eye. — (from: 2026-09-22 GOV-01)
