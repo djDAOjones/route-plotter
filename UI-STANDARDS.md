@@ -260,3 +260,10 @@ Before sign-off on any UI-affecting change, verify:
 12. Critical submissions or destructive actions support validation,
     confirmation, undo, or reversal as appropriate.
 13. Any exception to the AAA-by-default rule is documented explicitly.
+
+## Framework section aliases
+
+- **Diagnostics affordance** (a `pm_skills/` template title) → the header's
+  **Report a bug** button and the Export menu's **Download diagnostics…** and
+  **Copy diagnostics…** items, which preview the exact payload before it
+  leaves the app (`DEV-INFRASTRUCTURE.md` → Framework section aliases).

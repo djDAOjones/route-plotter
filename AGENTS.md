@@ -56,7 +56,7 @@ Load only the tier the task needs so startup context stays useful.
 - Read `UI-STANDARDS.md` for UI, controls, layout, text, states,
   accessibility, or user-facing behaviour.
 - Read `DEV-INFRASTRUCTURE.md` for build, dev-server, versioning, scripts,
-  configuration, or deployment work. At task close, read its quality-gate
+  configuration, or deployment work. At task close, read its Quality gate
   section even when the rest was not needed.
 
 ### Warm and cold
@@ -69,13 +69,19 @@ Load only the tier the task needs so startup context stays useful.
   backlog item carries `[detail]`.
 - Memory budgets live only in `pm_skills/memory-policy.md`. Read that file for
   task close or memory maintenance; never restate its numbers here.
+- Report a budget overrun and propose the prune; never prune without the
+  owner. The owner's prune bar outranks the policy's prune-to targets
+  (decision log, 2026-08-27, "owner sets the prune bar").
 
 ## Workflow
 
 1. For non-trivial work, follow `pm_skills/integrations/task.md`; its default
    mode is `checkpoint`. Use `full` for `[sign-off]` items or when requested.
    For bugs, follow `pm_skills/integrations/bugfix.md`. For small work, use the
-   quick path in `pm_skills/prompts/quick-task.md`.
+   quick path in `pm_skills/prompts/quick-task.md`. In `task.md`'s `refactor`
+   mode, the preserved interface is `window.*` globals, DOM ids, EventBus event
+   names and persisted formats; module exports may move, with test imports
+   re-pointed.
 2. Search the full source tree before proposing changes. Check
    `src/config/constants.js` for tuneable values and `index.html` for existing
    controls before adding anything.
@@ -141,7 +147,9 @@ Load only the tier the task needs so startup context stays useful.
 ## Testing and persistence
 
 - Run the non-mutating canonical gate, `npm run check`, after changes. Never
-  delete, skip, or weaken an existing test to obtain a pass.
+  delete, skip, or weaken an existing test to obtain a pass. Re-pointing a
+  test's import when code moves, with its assertions unchanged, is not
+  weakening it.
 - Add a focused test for new model methods, utilities, and regressions. Name
   any browser/device verification that remains manual.
 - A persisted property needs a default, `toJSON()` and `fromJSON()` handling,
@@ -169,3 +177,23 @@ Load only the tier the task needs so startup context stays useful.
 
 When a fact changes, update its owner and link to it elsewhere rather than
 restating it.
+
+## Framework section aliases
+
+The vendored `pm_skills/` workflows name `AGENTS.md` sections by their
+template titles. Here is where each one lives in this file:
+
+- **Read tiers** → Before every task.
+- **Files to never edit** → Files agents must not hand-edit.
+- **Protected infrastructure** → none, by owner decision (2026-09-22); `main`
+  is guarded by Commit, push and release.
+- **One-command quality gate** → `npm run check`, described in
+  `DEV-INFRASTRUCTURE.md` → Quality gate.
+- **Capturing deferred ideas** → Minimal change and documentation discipline,
+  the `wish-list.md` rule.
+- **Traceable version identity** → `DEV-INFRASTRUCTURE.md` → Framework
+  section aliases.
+- **Security baseline** → `DEV-INFRASTRUCTURE.md` → Framework section
+  aliases.
+- **Self-explaining runtime** → `DEV-INFRASTRUCTURE.md` → Framework section
+  aliases, Maintainer diagnostics.

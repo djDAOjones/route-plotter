@@ -49,6 +49,26 @@ Do not add scripts without updating this table.
 
 ---
 
+## Quality gate
+
+The one-command gate is `npm run check`: the Vitest suite, the restart-script
+shell contract, then `build:check` (rows in Canonical scripts above). It is
+non-mutating, so run it after every change and at task close.
+
+- `build:check` builds production output into a temporary directory,
+  validates it (file inventory, local references, stylesheet version stamps)
+  and discards it. It never writes `docs/` or `version.json`.
+- CI runs the same command on every push and pull request (the **Verify**
+  workflow, `.github/workflows/ci.yml`), then fails if `docs/` or
+  `version.json` differ from the commit.
+- There is no linter, formatter check, type checker or Markdown link checker,
+  so report only what the gate runs. The verify-line format is in
+  `pm_skills/project/conventions.md` → Commit messages.
+- `npm run dev`, `npm run build` and `./scripts/restart.sh` rewrite `docs/`
+  and `version.json`, so none of them is a check.
+
+---
+
 ## Dev server
 
 - **URL:** `http://localhost:3000`
@@ -103,6 +123,15 @@ serving `docs/` over HTTP. Reaching a known-good state is one command
 - **Health / readiness:** the app is *ready* — not merely launched —
   when `http://localhost:3000` loads with no console errors and the
   version stamp renders. A blank page or console error means not-ready.
+- **Close-out boot check** (`pm_skills/prompts/end-of-task.md` step 2): run
+  `npm run check`. Its `build:check` proves the production build without
+  touching tracked files, but not readiness: when a task changed what the app
+  does at runtime, check readiness as above or report it as not verified. An
+  interactive boot (`npm run dev` or `./scripts/restart.sh`) rewrites
+  `docs/`, bumps `version.json` and leaves an untracked
+  `docs/player.js.map`. Before committing, stop that server (the watcher
+  would rewrite them again), run `git restore docs version.json` and delete
+  the map.
 - **Recovery playbook** — server wedged or port stuck. One command stops any
   running dev server, reboots, and waits for HTTP 200:
 
@@ -321,3 +350,25 @@ The project root contains `.editorconfig`:
 - `_Joe/` — personal dev notes, design docs, helper scripts.
 - `version.json` — managed by the build script.
 - `node_modules/` — managed by npm.
+
+---
+
+## Framework section aliases
+
+The vendored `pm_skills/` workflows name `DEV-INFRASTRUCTURE.md` sections by
+their template titles. These have no section of their own here:
+
+- **Security baseline** → no runtime secrets are required (Runtime lifecycle
+  → Env / secrets); untrusted-input limits are in Imported-project safety
+  budgets; vulnerability reports follow `.github/SECURITY.md`. If a
+  credential is ever exposed, stop the release and tell the owner, who
+  revokes or rotates it before any history cleanup.
+- **Maintainer diagnostics** → `src/services/DiagnosticsService.js` builds a
+  redacted environment snapshot, and `src/app/privacy.js` previews it before
+  anything is copied, downloaded or reported (`UI-STANDARDS.md` → Framework
+  section aliases). It is not an event log: there is no structured logger or
+  console capture, so report a workflow's logger step as not applicable.
+- **Traceable version identity** → Version management. The identity is
+  `major.minor.build`, which diagnostics report as `appVersion`; there is no
+  commit-derived `buildId`, so a release ties the build number to its commit
+  with a tag (Deployment).
