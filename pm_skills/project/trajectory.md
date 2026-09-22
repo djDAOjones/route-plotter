@@ -17,6 +17,21 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Release v3.2.690 (shipped 2026-09-22)
+
+DEPLOY-01 — The remediation line is released from `main`: v3.2.690
+(`caea691`), Pages source back on `main /docs`, verified by deployment SHA and
+by SHA-256 of every published file; rollback tag `v3.2.689`. Also corrected the
+record that Pages had served `main` all along — it had served the branch since
+2026-08-26. (2026-09-22) — see decision-log.
+
+REL-01 — The production source map stays published. (2026-09-22) — see
+decision-log.
+
+LEGAL-01 — Owner confirmed the MPL posture; the notices and licence now ship
+with the app and are linked from Help, with mediabunny's source pinned to the
+exact tag and commit it was built from. (2026-09-22) — see decision-log.
+
 ## Programme close-out (2026-08-27)
 
 PM — The original review is fully dispositioned: RP-01…RP-18 all shipped or

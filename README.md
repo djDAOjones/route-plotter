@@ -391,7 +391,9 @@ Precise terms used across the codebase.
 
 Route Plotter's first-party source is available under the [MIT License](LICENSE).
 Third-party components retain their own terms; see
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Both are also published with
+the application, as `THIRD_PARTY_NOTICES.txt` and `LICENSE.txt`, and linked
+from its Help screen.
 
 ## Author
 

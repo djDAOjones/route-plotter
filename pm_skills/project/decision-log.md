@@ -2,6 +2,87 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-22 — v3.2.690 released from main, verified by bytes not titles
+
+**DEPLOY-01, REL-01 and LEGAL-01 closed on the owner's approval**, in their
+words: "proceed approved with DEPLOY-01 and REL-01 and LEGAL-01. use codex astra
+as a partner to check approach". Codex (`gpt-6-astra`, read-only sandbox)
+reviewed the plan before anything public changed, and changed it: a revert of
+the merge alone would not restore matching artefacts, so the live build was
+tagged `v3.2.689` first as a pinned rollback point; `push.js` runs only
+`npm test`, so Pages waited for CI on the exact deploy SHA; and it found the
+LEGAL-01 gap below. It judged the Pages switch within the DEPLOY-01 approval.
+
+**Run from a fresh clone, not the working copy.** OneDrive had evicted 129 of
+354 tracked files and 1,241 of 2,142 files under `.git` to online-only, and
+`git log` failed with `mmap failed: Operation timed out`. A release that
+stalls mid-merge is worse than a stale working copy, so it ran from a clean
+local clone and pushed from there.
+
+**Sequence, each step verified before the next:** `v3.2.689` tag on
+`587f90a` → `git merge --no-ff` (`35de7d5`) → LEGAL-01 fix (`4e5575d`) → full
+gate → cold boot → `npm run push` on main (`caea691`, v3.2.690) → CI Verify
+green on `caea691` → Pages source switched to main. **The API switch did not
+trigger a build** — none appeared in 400 s — so a build was requested with
+`POST /pages/builds`; the deployment then succeeded with the `github-pages`
+environment at `caea691`. Every published file matched the build by SHA-256.
+On the live site the `uon-open-day` example loads, its MP4 export plays
+(decoded frame at 6 s, 1280×720, 15.73 s = the 13.73 s timeline plus the
+deliberate 2 s `START_BUFFER_MS`), and its standalone HTML export — rebuilt
+byte-for-byte from the live blob's SHA-256 — boots and plays.
+
+**REL-01: keep the source map.** The repository is public, so it hides nothing,
+and it lets production be debugged against the exact bundle. Stated with
+Codex's qualifications: browsers fetch it only when devtools are open, not on
+ordinary page loads; readable traces still need tooling that uses it; and git
+does not grow by a full 3.3 MB per deploy. It is not counted towards MPL
+compliance.
+
+**LEGAL-01: a technical-completeness fix, not a legal verdict.** Mediabunny
+(MPL-2.0) ships minified in `docs/app.js`, but the notices and licence were
+never published — absent from the build allowlist — and the bundle's licence
+comment points only at the licence text. They now ship as
+`THIRD_PARTY_NOTICES.txt` and `LICENSE.txt` (plain text because Pages runs
+Jekyll), linked from Help; mediabunny's source is pinned to tag `v1.55.3`,
+commit `16f8889e`, verified to be the npm package's own `gitHead`, bundled
+unmodified. The owner's confirmation is recorded above as given.
+
+**Branch protection: inspected, not changed.** Main has none and the repo has
+no rulesets; that is REL-02, the owner's call.
+
+**Link:** DEPLOY-01, REL-01, LEGAL-01 (all shipped), REL-02.
+
+## 2026-09-22 — the merge hold never held: Pages served the branch from 08-26
+
+**A correction to 2026-08-27**, appended rather than edited. That entry
+recorded "the live site stays on v3.2.618 until the owner calls the release".
+It was already false. Pages build history shows `main` commits built up to
+2026-08-19 (`cec0191`, v3.2.618) and the first branch-only build at
+2026-08-26T14:33Z (`c1b73d8`): the Pages source had been switched to
+`review-remediation`, and every push from then on deployed publicly.
+
+**This programme's own reporting repeated it.** The 2026-08-28 session said
+"nothing on this branch is live" after checking git refs but never the Pages
+source — the one setting that decides what is served. The consequence worth
+owning: BUG-01, the export crash on the shipped `uon-open-day` example, was
+live from the DEMO-01 build (~15:00 UTC 2026-08-27) until its fix deployed at
+~23:32 UTC. Everything else shipped then was verified, and went live sooner
+than anyone believed.
+
+**How it happened without anyone doing anything wrong.** `push.js` ends by
+saying "Select this branch and /docs in GitHub Pages settings when ready", and
+DEV-INFRASTRUCTURE permitted selecting a review branch "for a Pages preview".
+Selecting it was a documented step; nothing recorded that it had been taken.
+
+**The durable rule:** what is live is whatever the Pages source and its latest
+build say — `gh api repos/djDAOjones/route-plotter/pages` and
+`…/pages/builds/latest` — never an inference from git refs. DEV-INFRASTRUCTURE
+→ Deployment now says so. The owner's hold was a good-faith decision; this
+corrects the fact beneath it, not the decision.
+
+**Link:** DEPLOY-01, BUG-01, 2026-08-27 "owner sets the prune bar, and holds the
+merge".
+
 ## 2026-08-28 — a benchmark with no threshold, and the restore that wasn't
 
 **ICE-03 shipped as a harness, not a gate**, on the owner's call. A committed

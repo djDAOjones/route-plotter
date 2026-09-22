@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 294 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
+<!-- 296 file(s) across 12 section(s); regenerate with pm_skills/scaffold/gen-file-map.mjs -->
 - `(root)` — 14 file(s)
 - `.devin` — 2 file(s)
 - `.github` — 3 file(s)
@@ -94,6 +94,8 @@
 
 ## docs
 
+- `docs/LICENSE.txt` — Generated plain-text copy of `LICENSE` published with the app (LEGAL-01)
+- `docs/THIRD_PARTY_NOTICES.txt` — Generated plain-text copy of `THIRD_PARTY_NOTICES.md` published with the app and linked from Help (LEGAL-01)
 - `docs/app.js` — Generated, minified main application bundle served by GitHub Pages
 - `docs/app.js.map` — Generated source map for the Pages application bundle
 - `docs/examples/nervous-system-flow.zip` — Generated downloadable example project save (Pages output)

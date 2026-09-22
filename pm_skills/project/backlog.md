@@ -41,29 +41,13 @@
 
 ### Next
 
-- [ ] **DEPLOY-01 Release the remediation branch** · Release
-  [blocked: owner calls the release] — The owner held the merge on 2026-08-27
-  (`f1c14b9`): the live site stays on v3.2.618 until they call it. This ticket
-  exists so RP-07's residual is tracked rather than forgotten, not to reopen
-  the decision. When called: `review-remediation` is 42 commits ahead of
-  `main` as of `c993ea9` — a number that goes stale on every commit, so read it
-  with `git rev-list --count origin/main..review-remediation` rather than
-  trusting this line. Also settle GitHub branch-protection and Pages
-  permissions, which the review could inspect only from repository files.
-- [ ] **REL-01 Decide the production source-map policy** · Release
-  [blocked: settled when the release is called] — `docs/app.js.map` publishes
-  3.1 MB carrying the full unminified source of 89 first-party files
-  (`sourcesContent`). The repository is public, so this is a size and tidiness
-  decision rather than a secrecy one: keep it for debuggable production stack
-  traces, or drop it. **Owner 2026-08-28: decide at release** — carry it into
-  DEPLOY-01 rather than settling it now. Review §17 Optional.
-- [ ] **LEGAL-01 Confirm the MPL source-notice posture** · Governance
-  [ready] [maintainer] — `mediabunny` (runtime, bundled) and now `axe-core`
-  (dev-only) are MPL-2.0. Notices and licence text shipped under REV-09, but
-  the review flagged that a technical review cannot give legal advice and the
-  owner should confirm the redistribution posture is what they intend. Review
-  §18 "MPL/source-notice obligations". DEPS-01 has since shipped, so the
-  versions to confirm are settled: mediabunny 1.55.3 and axe-core 4.13.0.
+- [ ] **REL-02 Decide branch protection for main** · Release [maintainer] —
+  DEPLOY-01's residual. Inspected 2026-09-22: `main` has no branch protection
+  and the repository no rulesets. Main is now what Pages serves, so a
+  force-push or deletion would take the live site with it. The non-obstructive
+  minimum is blocking force-pushes and deletion on main, which leaves
+  `npm run push` working; requiring status checks or reviews would block that
+  helper's direct push, so it is a heavier choice. Owner's call.
 
 ### Icebox
 

@@ -179,14 +179,36 @@ breaking change.
 ## Deployment
 
 - **Target:** GitHub Pages served from `/docs` on the selected branch. The live
-  site currently selects `main`; a review branch can be selected for a Pages
-  preview without changing the helper.
+  site selects `main` — restored at the v3.2.690 release on 2026-09-22. From
+  2026-08-26 to that release it selected `review-remediation`, so every push to
+  that branch deployed publicly while this file said otherwise. **What is live
+  is whatever the Pages source says**, never an inference from git refs:
+  `gh api repos/djDAOjones/route-plotter/pages --jq .source` and
+  `gh api repos/djDAOjones/route-plotter/pages/builds/latest --jq .commit`.
+  Selecting a review branch for a preview makes that branch the public site.
 - **Pipeline:** first commit all source changes, then run `npm run push`. The
   helper requires a clean tree, runs tests, creates and validates a fresh
   production output, permits only `docs/` and `version.json` to change, commits
   those generated files, and pushes the current branch to the same remote ref.
 - **Custom message:** `npm run push -- "custom msg"`
 - **Dry run:** `npm run push:dry-run`
+- **Releasing a line into main** (DEPLOY-01, 2026-09-22): tag the currently
+  live build as the rollback point; `git merge --no-ff` into main; run the full
+  gate; `npm run push` on main; wait for the **Verify** workflow to pass on the
+  deploy commit itself, because the helper runs only `npm test`; only then
+  switch or confirm the Pages source; confirm the `github-pages` deployment
+  reached that SHA; compare published files by SHA-256 against `docs/`; then
+  tag the deploy commit with the build number `version.json` actually records.
+- **Changing the Pages source does not trigger a build.** Switching it through
+  the API left the old artefact live; `gh api -X POST
+  repos/djDAOjones/route-plotter/pages/builds` requested one. Pushes to the
+  selected branch do trigger builds.
+- **Rollback:** point Pages at a branch holding the last good tag (`v3.2.689`
+  is `587f90a`), request a build, and confirm the deployment SHA. A revert of a
+  merge alone does not restore matching generated artefacts.
+- **OneDrive:** this checkout lives in OneDrive, which can evict tracked files
+  and `.git` internals to online-only; git then fails with
+  `mmap failed: Operation timed out`. Run a release from a fresh local clone.
 - **Live URL:** <https://djdaojones.github.io/route-plotter/> (Pages enabled 2026-08-19, Phase 5; the frozen v2 line stays at <https://djdaojones.github.io/router-plotter-02/>)
 
 ---
