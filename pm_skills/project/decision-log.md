@@ -2,6 +2,24 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-22 — main is protected against force-push and deletion (REL-02)
+
+**Owner's call, on the recommended option.** Main is now what Pages serves, so
+rewriting or deleting it would take the public site with it. A repository
+ruleset ("Protect main — no force-push or deletion (REL-02)", id 23814820)
+blocks exactly `deletion` and `non_fast_forward` on `refs/heads/main`, with
+**no bypass actors** — it binds pushes made with the owner's admin credentials
+too, which is how agents push. Required status checks were declined: GitHub
+rejects direct pushes to a branch that requires them, which would break the
+documented `npm run push` pipeline.
+
+Verified through GitHub's effective-rules API for `main`, not by attempting a
+force-push: if the rule had failed, that test would have rewound the live site.
+Rollback therefore never force-pushes main — see DEV-INFRASTRUCTURE →
+Deployment.
+
+**Link:** REL-02 (shipped), DEPLOY-01.
+
 ## 2026-09-22 — v3.2.690 released from main, verified by bytes not titles
 
 **DEPLOY-01, REL-01 and LEGAL-01 closed on the owner's approval**, in their

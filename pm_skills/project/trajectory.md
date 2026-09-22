@@ -28,6 +28,10 @@ record that Pages had served `main` all along — it had served the branch since
 REL-01 — The production source map stays published. (2026-09-22) — see
 decision-log.
 
+REL-02 — `main` is protected by a ruleset against force-push and deletion,
+with no bypass, so the branch Pages serves cannot be rewritten or removed.
+(2026-09-22) — see decision-log.
+
 LEGAL-01 — Owner confirmed the MPL posture; the notices and licence now ship
 with the app and are linked from Help, with mediabunny's source pinned to the
 exact tag and commit it was built from. (2026-09-22) — see decision-log.

@@ -206,6 +206,9 @@ breaking change.
 - **Rollback:** point Pages at a branch holding the last good tag (`v3.2.689`
   is `587f90a`), request a build, and confirm the deployment SHA. A revert of a
   merge alone does not restore matching generated artefacts.
+- **Main is protected** (REL-02): a repository ruleset blocks force-pushes and
+  deletion of `main`, with no bypass. Ordinary fast-forward pushes — including
+  `npm run push` — are unaffected; a rollback never rewrites main.
 - **OneDrive:** this checkout lives in OneDrive, which can evict tracked files
   and `.git` internals to online-only; git then fails with
   `mmap failed: Operation timed out`. Run a release from a fresh local clone.

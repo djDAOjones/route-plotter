@@ -41,13 +41,9 @@
 
 ### Next
 
-- [ ] **REL-02 Decide branch protection for main** · Release [maintainer] —
-  DEPLOY-01's residual. Inspected 2026-09-22: `main` has no branch protection
-  and the repository no rulesets. Main is now what Pages serves, so a
-  force-push or deletion would take the live site with it. The non-obstructive
-  minimum is blocking force-pushes and deletion on main, which leaves
-  `npm run push` working; requiring status checks or reviews would block that
-  helper's direct push, so it is a heavier choice. Owner's call.
+<!-- Empty since the v3.2.690 release (2026-09-22): every open item is either
+     owner-run evidence (Current) or deferred behind a stated trigger (Icebox).
+     New work enters here, branched from main. -->
 
 ### Icebox
 
