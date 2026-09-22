@@ -17,6 +17,19 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Release v3.2.691 (shipped 2026-09-22)
+
+DEF-01 — The "Background Mode Debug" panel no longer paints over the picture
+in Angle of View Reveal, in preview, video exports or the player; the overlay,
+its AoV debug logs and the cone-debug state are gone, pinned by a test that
+proves no background mode draws text or a panel. (2026-09-22) — see
+decision-log.
+
+TST-01 — Tests can boot the whole app from the shipped shell, and the test
+world behaves like a browser: absent storage keys read `null`, and every
+canvas records its own draw calls, style state and resets. (2026-09-22) — see
+decision-log.
+
 ## Abstraction programme W0 — safe setup (closed 2026-09-22)
 
 Outcome: agents can no longer release by accident, and the root docs match

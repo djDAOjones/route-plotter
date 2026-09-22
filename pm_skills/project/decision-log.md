@@ -2,6 +2,50 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-22 — v3.2.691: the debug overlay leaves the live site
+
+**Released on the owner's instruction** ("progress as much as possible without
+gating… commit, push, and deploy"), by the GOV-01 steps written this morning,
+from a fresh clone: rollback tag `v3.2.690` confirmed live, gate green,
+`npm run push:dry-run`, `npm run push` → `fb3426c`, **Verify** green on that
+commit, the `github-pages` deployment at that SHA, all **22 published files
+SHA-256-identical** to `docs/`, annotated tag `v3.2.691` pushed afterwards.
+
+**DEF-01, the behaviour change.** "Angle of View Reveal" painted a black panel
+and four lines of developer text over the canvas every frame — preview, video
+export and the standalone player — and had done since the mode shipped.
+Reproduced in a browser on a production build of `main` (pixel (20,20) =
+rgba(0,0,0,179)), and gone afterwards (fully transparent, no text drawn, and
+the string absent from the live bundle). The reveal geometry is untouched:
+Codex compared **300 before/after mask transcripts**, all identical.
+
+**Release smoke test** (the exact published bytes, served locally so the live
+site's storage was never touched): the `uon-open-day` example opens, its
+timeline composes to 12.0 s, stepping the engine advances play, an HTML export
+is a 1.98 MB self-contained file carrying the player and snapshot, and an MP4
+export completes to a 4.9 MB file with `ftyp` at offset 4.
+
+**TST-01 shipped too** (W1's first item, test-only): a boot harness that starts
+the real app from `index.html`, and a `setup.js` that behaves like a browser —
+absent keys read `null`, each canvas records its own calls, style state and
+resize resets, and mock history no longer leaks between tests. Codex's review
+caught a recorder that logged `save`/`restore` without restoring state, which
+would have baked wrong values into the render goldens W1 adds next.
+
+**Two process lessons.**
+- A pull request stacked on another merged into *its base branch*, not `main`,
+  because GitHub had not retargeted it yet, and deleting that branch nearly
+  lost the work (recovered by cherry-pick). Open each PR against `main`, and
+  merge them one at a time.
+- In a Browser pane narrower than 1440 px the app's layout gate collapses the
+  canvas, so timings read 0 and a probe looks like a defect. Emulate ≥1440 px
+  before judging anything.
+
+**Memory:** this log is 23/20 live entries — reported under the owner's prune
+bar, not pruned.
+
+**Link:** DEF-01, TST-01; PRs #9, #11, #12; release v3.2.691 (`fb3426c`).
+
 ## 2026-09-22 — W0 closes: no accidental release, and docs that match the code
 
 **Owner calls this wave.** Merges are squash merges, keeping the

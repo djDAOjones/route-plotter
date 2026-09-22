@@ -48,14 +48,10 @@
      the plan's, used verbatim). When this wave closes, the next one enters
      from the plan's §13; never import the whole plan here. Working setup and
      release steps: DEV-INFRASTRUCTURE.md → Deployment. W0 closed 2026-09-22.
-     Now W1 (the safety net), with W2's first defect, DEF-01, alongside; the
-     rest of W2 enters when W1 closes. -->
+     Now W1 (the safety net). TST-01 shipped 2026-09-22, as did W2's first
+     defect, DEF-01, released as v3.2.691; the rest of W2 enters when W1
+     closes. -->
 
-- [ ] **TST-01 Whole-app test boot** · Codebase auditability [ready] — A
-  `tests/helpers/bootApp.js` harness boots the real RoutePlotter in jsdom
-  (stubs for `APP_VERSION`, `matchMedia`, `fetch`), and `tests/setup.js`
-  gains fidelity: `localStorage.getItem` returns `null`, one recording context
-  per canvas, `clearMocks`. Review every test branch the `null` fix flips.
 - [ ] **ISO-02 Listener errors are observable** · Codebase auditability
   [ready] — `new EventBus({ onListenerError })` with today's default
   unchanged, plus counters.
@@ -74,13 +70,6 @@
   [gated: TST-01 impl] — 3 examples × 5 instants × edit/preview/export through
   the recording context; render-level play == seek and app == player; prove
   each golden can fail.
-- [ ] **DEF-01 Live debug overlay** · Codebase auditability [ready] —
-  "Angle of View Reveal" paints a black "Background Mode Debug" panel into
-  preview, exports and the player, on the live site. Delete the call, the
-  method and the AoV debug state; the absence test comes first (a `fillText`
-  spy, or TST-02's recording context). The owner approves the stated new
-  behaviour at the PR.
-
 ### Icebox
 
 - [ ] **REV-07 CI maturity** · Engineering maturity [deferred] — Mature the
