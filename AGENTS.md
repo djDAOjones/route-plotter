@@ -112,8 +112,13 @@ Load only the tier the task needs so startup context stays useful.
 
 - Waypoints store normalised `imgX` and `imgY` values (0–1). Convert through
   `CoordinateTransform`; never persist canvas pixels on a waypoint.
-- EventBus is the only cross-component communication channel. Components emit
-  events; the `RoutePlotter` orchestrator handles mutation.
+- Components (the controllers, `InteractionHandler` and the modal tools) get
+  no app instance and reach the app through the EventBus. The app
+  (`RoutePlotter` and its mixins) owns durable model changes and calls
+  components only through their public methods. Modal tools may change the
+  model provisionally while active and commit through events. The current
+  exceptions are listed in `pm_skills/project/architecture.md` →
+  Communication patterns.
 - `InteractionHandler` owns one Pointer Events transaction for mouse, touch,
   and pen authoring. Do not add a competing canvas click/mouse/touch mutation
   path.

@@ -161,7 +161,9 @@ There is no framework. The app is pure JavaScript with Canvas 2D rendering and v
 
 ### Event-driven communication
 
-Components talk through `EventBus` (pub-sub), not direct method calls:
+Components reach the orchestrator through `EventBus` (pub-sub), and the
+orchestrator calls their public methods. The rule and its current exceptions
+are in `pm_skills/project/architecture.md` → Communication patterns.
 
 ```text
 Captured canvas gesture → InteractionHandler emits one terminal event
