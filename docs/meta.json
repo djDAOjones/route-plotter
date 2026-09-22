@@ -105,7 +105,7 @@
       "format": "esm"
     },
     "src/services/MotionVisibilityService.js": {
-      "bytes": 74485,
+      "bytes": 71912,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -280,7 +280,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 105057,
+      "bytes": 104906,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3716,13 +3716,13 @@
     }
   },
   "outputs": {
-    ".docs-build-yxSgJ5/app.js.map": {
+    ".docs-build-ik3bDA/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3335385
+      "bytes": 3331350
     },
-    ".docs-build-yxSgJ5/app.js": {
+    ".docs-build-ik3bDA/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3764,7 +3764,7 @@
           "bytesInOutput": 2238
         },
         "src/services/MotionVisibilityService.js": {
-          "bytesInOutput": 13843
+          "bytesInOutput": 12713
         },
         "src/utils/uiReadouts.js": {
           "bytesInOutput": 418
@@ -3815,7 +3815,7 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 28277
+          "bytesInOutput": 28253
         },
         "src/utils/crowdArrival.js": {
           "bytesInOutput": 843
@@ -4079,7 +4079,7 @@
           "bytesInOutput": 22705
         }
       },
-      "bytes": 1077362
+      "bytes": 1076208
     }
   }
 }
