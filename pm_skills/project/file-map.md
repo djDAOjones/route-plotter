@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 330 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 331 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -11,7 +11,7 @@
 - `_Joe` — 45 file(s)
 - `docs` — 22 file(s)
 - `images` — 6 file(s)
-- `reviews` — 10 file(s)
+- `reviews` — 11 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
@@ -146,12 +146,16 @@
   Full historical Route Plotter review at commit cec0191, public-path sanitised
 - `reviews/route-plotter-continuation-prompt-2026-08-27.md` — Superseded
   continuation prompt, kept as provenance for the backlog-driven era
-- `reviews/route-plotter-continuation-prompt-2026-09-23.md` — Current paste-ready prompt: continues the abstraction programme from W1, after W0 closed and v3.2.691 shipped
-- `reviews/route-plotter-continuation-prompt-2026-09-22.md` — Current
-  paste-ready prompt that runs the abstraction plan wave by wave
+- `reviews/route-plotter-continuation-prompt-w2-2026-09-23.md` — Current
+  paste-ready prompt: fix the live defects (W2 and the eight ground-rule-8
+  defects W1 released), with Codex as the comparative reviewer
+- `reviews/route-plotter-continuation-prompt-2026-09-23.md` — Superseded
+  continuation prompt, kept as provenance for W1 (the safety net)
+- `reviews/route-plotter-continuation-prompt-2026-09-22.md` — Superseded
+  continuation prompt, kept as provenance for W0
 - `reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md` —
-  Adopted refactoring programme (waves W0–W12); the backlog carries only the
-  current wave
+  Adopted refactoring programme (waves W0–W12); the backlog carries the current
+  wave plus any unwaved defects whose prerequisite has landed
 
 ## scripts
 
