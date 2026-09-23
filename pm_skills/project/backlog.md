@@ -47,29 +47,34 @@
      (reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md; IDs are
      the plan's, used verbatim). When this wave closes, the next one enters
      from the plan's §13; never import the whole plan here. Working setup and
-     release steps: DEV-INFRASTRUCTURE.md → Deployment. W0 closed 2026-09-22.
-     Now W1 (the safety net). TST-01 shipped 2026-09-22, as did W2's first
-     defect, DEF-01, released as v3.2.691; the rest of W2 enters when W1
-     closes. -->
+     release steps: DEV-INFRASTRUCTURE.md → Deployment. W0 closed 2026-09-22,
+     W1 (the safety net) on 2026-09-23. Now W2, the urgent live defects: one
+     per pull request, each stating its behaviour change for Joe. W2's first
+     defect, DEF-01, already shipped as v3.2.691. W3 (the SPL-01 pilot) enters
+     from the plan's §13 when this wave closes. -->
 
-- [ ] **ISO-02 Listener errors are observable** · Codebase auditability
-  [ready] — `new EventBus({ onListenerError })` with today's default
-  unchanged, plus counters.
-- [ ] **TST-10 Loud bus, quiet console in tests** · Codebase auditability
-  [gated: ISO-02 impl] — Pin EventBus semantics, run a strict bus in tests,
-  fail on unexpected `console.error`/`warn` (allowlist), and a canary that
-  fails below 72 files or 1,000 tests.
-- [ ] **TST-07 Player host contract** · Codebase auditability [ready] — Test
-  the ~25-member host contract on the real `PlayerApp`, anchored parity, and
-  the player-closure rule through esbuild's metafile.
-- [ ] **TST-06 Snapshot-shape goldens** · Codebase auditability
-  [gated: TST-01 impl] — Snapshot files per example, `load(save(x))`
-  idempotence, and an "authorable ⇒ loadable" property test whose known
-  failures are `todo` with their DEF IDs until W2.
-- [ ] **TST-02 Golden draw logs** · Codebase auditability
-  [gated: TST-01 impl] — 3 examples × 5 instants × edit/preview/export through
-  the recording context; render-level play == seek and app == player; prove
-  each golden can fail.
+- [ ] **DEF-02 The player never builds `waypointsById`** · Live defect [ready]
+  — Every anchored crowd node in an exported HTML player draws at its authored
+  position instead of at its waypoint. `tests/playerHostContract.test.js` and
+  `tests/goldenDrawLogs.test.js` both carry the `todo` to flip.
+- [ ] **DEF-03 Authoring outside the image will not reload** · Live defect
+  [gated: owner §20 Q3] — Below 100% background zoom a waypoint can be authored
+  outside 0–1, and load refuses it. Joe chooses: widen what load accepts
+  (default) or clamp at authoring.
+- [ ] **DEF-23 Exports carry images only undo can reach** · Live defect
+  [gated: owner §20 Q4] — Filter exported assets to the snapshot's live
+  references; keep filenames only in ZIPs.
+- [ ] **DEF-31 Traced graph IDs overflow the ID limit** · Live defect [ready]
+  — `gn_trace_<id>` and `ge_trace_<from>__<to>` reach 265/523 characters from
+  legitimate 256-character waypoint IDs, so the traced layer fails reload.
+- [ ] **DEF-26 A short hex glow colour freezes playback** · Live defect
+  [ready] — May join this wave (plan §13 W2).
+
+<!-- Awaiting Joe before they can be scheduled (see the 2026-09-23 decision
+     log entry): DEF-34 (proposed) — the exported HTML player ignores Graphics
+     scale; and whether the unbounded label field, now annotated onto the
+     DEF-04 row, should be its own row. -->
+
 ### Icebox
 
 - [ ] **REV-07 CI maturity** · Engineering maturity [deferred] — Mature the
