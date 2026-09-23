@@ -12,6 +12,7 @@ import { traceRouteIntoGraph, applyTraceToLayer, TRACE_PROBLEM } from '../src/ut
 import { resolveGraphAnchors } from '../src/utils/routeAnchors.js';
 import { Scene } from '../src/models/Scene.js';
 import { Waypoint } from '../src/models/Waypoint.js';
+import { ENTITY_ID_LIMITS, boundedEntityId } from '../src/utils/entityId.js';
 
 const major = (id, x, y, extra = {}) =>
   Object.assign(Waypoint.createMajor(x, y), { id }, extra);
@@ -187,5 +188,125 @@ describe('applyTraceToLayer', () => {
 
   test('a layer with no graph is a no-op, not a throw', () => {
     expect(applyTraceToLayer(null, { nodes: [], edges: [] })).toEqual({ nodes: 0, edges: 0 });
+  });
+});
+
+describe('traced ids fit the persisted id limit (DEF-31)', () => {
+  // Waypoint ids up to the limit load, and the trace used to build on them
+  // verbatim: `gn_trace_<id>` reached 265 characters and
+  // `ge_trace_<from>__<to>` 523, which the loader refuses.
+  const { MAX_LENGTH } = ENTITY_ID_LIMITS;
+  /** A waypoint id of exactly the limit, ending in `tail`. */
+  const longestId = (fill, tail = '') => `wp_${fill.repeat(MAX_LENGTH - 3 - tail.length)}${tail}`;
+  const idsOf = ({ nodes, edges }) => [...nodes, ...edges].map(each => each.id);
+
+  test('ids that fit are kept verbatim, so every existing trace keeps its ids', () => {
+    const { nodes, edges } = traceRouteIntoGraph(linearRoute());
+
+    expect(nodes.map(node => node.id)).toEqual(['gn_trace_a', 'gn_trace_b', 'gn_trace_c']);
+    expect(edges.map(edge => edge.id)).toEqual(['ge_trace_a__b', 'ge_trace_b__c']);
+  });
+
+  test('the longest legitimate waypoint ids trace to ids that fit and still connect', () => {
+    const route = [
+      major(longestId('a'), 0.1, 0.1), major(longestId('b'), 0.5, 0.5), major(longestId('c'), 0.9, 0.9),
+    ];
+    expect(route.map(waypoint => waypoint.id.length)).toEqual([MAX_LENGTH, MAX_LENGTH, MAX_LENGTH]);
+    const trace = traceRouteIntoGraph(route);
+
+    expect(idsOf(trace).every(id => id.length <= MAX_LENGTH)).toBe(true);
+    expect(new Set(idsOf(trace)).size).toBe(idsOf(trace).length);
+    // The mapping is carried by the anchor, not by the id, and is untouched.
+    expect(trace.nodes.map(node => node.anchorWaypointId)).toEqual(route.map(waypoint => waypoint.id));
+    const nodeIds = new Set(trace.nodes.map(node => node.id));
+    expect(trace.edges.every(edge => nodeIds.has(edge.sourceId) && nodeIds.has(edge.targetId))).toBe(true);
+
+    // And the network reloads, which it could not: the layer validates every
+    // node and edge id against the same limit.
+    const scene = new Scene();
+    applyTraceToLayer(scene.addFlowLayer({ name: 'Crowd 1', guideType: 'route' }), trace);
+    const restored = Scene.fromJSON(JSON.parse(JSON.stringify(scene.toJSON()))).getFlowLayers()[0];
+    expect(restored.graph.getNodes().map(node => node.id)).toEqual(trace.nodes.map(node => node.id));
+    expect(restored.graph.getEdges()).toHaveLength(2);
+  });
+
+  test('a branched route of the longest ids fits too, rejoin edge included', () => {
+    const [a, f, b, z] = ['a', 'f', 'b', 'z'].map(fill => longestId(fill));
+    const route = [
+      major(a, 0.1, 0.1),
+      major(f, 0.4, 0.4),
+      major(b, 0.4, 0.8, { branchId: 'B', branchFrom: f, branchRejoin: z }),
+      major(z, 0.9, 0.5),
+    ];
+    const trace = traceRouteIntoGraph(route);
+
+    expect(trace.problems).toEqual([]);
+    expect(trace.edges).toHaveLength(4);
+    expect(idsOf(trace).every(id => id.length <= MAX_LENGTH)).toBe(true);
+    expect(new Set(idsOf(trace)).size).toBe(idsOf(trace).length);
+  });
+
+  test('an id of exactly the limit is kept verbatim', () => {
+    const route = [
+      major('x'.repeat(MAX_LENGTH - 'gn_trace_'.length), 0.1, 0.1),
+      major('p'.repeat(122), 0.5, 0.5),
+      major('q'.repeat(123), 0.9, 0.9),
+    ];
+    const { nodes, edges } = traceRouteIntoGraph(route);
+
+    expect(nodes[0].id).toBe(`gn_trace_${route[0].id}`);
+    expect(edges[1].id).toBe(`ge_trace_${route[1].id}__${route[2].id}`);
+    expect([nodes[0].id.length, edges[1].id.length]).toEqual([MAX_LENGTH, MAX_LENGTH]);
+  });
+
+  test('a shortened id is pinned, so it cannot drift between versions', () => {
+    expect(boundedEntityId(`gn_trace_${'a'.repeat(MAX_LENGTH)}`))
+      .toBe(`gn_trace_${'a'.repeat(236)}_bpp9kfrr7v`);
+  });
+
+  test('ids that would clash are kept apart, so no node or leg is lost', () => {
+    // Codex's crafted cases from the DEF-31 review: a waypoint id chosen to
+    // equal another's shortened node id, and one that makes two legs spell the
+    // same edge id; and the older ambiguity of `__` inside a waypoint id.
+    const longest = 'a'.repeat(MAX_LENGTH);
+    const nodeLookalike = boundedEntityId(`gn_trace_${longest}`).slice('gn_trace_'.length);
+    const nodeClash = traceRouteIntoGraph([
+      major(longest, 0.1, 0.1), major(nodeLookalike, 0.5, 0.5), major('z', 0.9, 0.9),
+    ]);
+    expect(new Set(nodeClash.nodes.map(node => node.id)).size).toBe(3);
+    expect(nodeClash.edges).toHaveLength(2);
+
+    const far = 'b'.repeat(MAX_LENGTH);
+    const edgeLookalike = boundedEntityId(`ge_trace_a__${far}`).slice('ge_trace_a__'.length);
+    const edgeClash = traceRouteIntoGraph([
+      major('a', 0.1, 0.1), major(far, 0.5, 0.5), major('z', 0.9, 0.9),
+      major(edgeLookalike, 0.3, 0.8, { branchId: 'B', branchFrom: 'a' }),
+    ]);
+    expect(edgeClash.problems).toEqual([]);
+    expect(new Set(edgeClash.edges.map(edge => edge.id)).size).toBe(3);
+
+    const underscored = traceRouteIntoGraph([
+      major('a__b', 0.1, 0.1), major('c', 0.3, 0.3), major('a', 0.6, 0.6), major('b__c', 0.9, 0.9),
+    ]);
+    expect(underscored.edges.map(edge => edge.id))
+      .toEqual(['ge_trace_a__b__c', 'ge_trace_c__a', 'ge_trace_a__b__c~2']);
+
+    // The graph keeps every one of them: it would silently drop a duplicate.
+    for (const trace of [nodeClash, edgeClash, underscored]) {
+      const layer = new Scene().addFlowLayer({ name: 'Crowd 1', guideType: 'route' });
+      applyTraceToLayer(layer, trace);
+      expect(layer.graph.getNodes()).toHaveLength(trace.nodes.length);
+      expect(layer.graph.getEdges()).toHaveLength(trace.edges.length);
+    }
+  });
+
+  test('ids that differ only past the cut stay distinct, and a trace is repeatable', () => {
+    const route = [
+      major(longestId('x', '1'), 0.1, 0.1), major(longestId('x', '2'), 0.5, 0.5), major(longestId('x', '3'), 0.9, 0.9),
+    ];
+    const ids = idsOf(traceRouteIntoGraph(route));
+
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(idsOf(traceRouteIntoGraph(route))).toEqual(ids);
   });
 });
