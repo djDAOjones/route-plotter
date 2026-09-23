@@ -11,7 +11,8 @@ hand-edited under `docs/`.
 
 | File | Role |
 | --- | --- |
-| `route-plotter-continuation-prompt-2026-09-22.md` | **Current** paste-ready prompt for the next development chat: it runs the adopted abstraction programme below, wave by wave, from the backlog. |
+| `route-plotter-continuation-prompt-2026-09-23.md` | **Current** paste-ready prompt for the next development chat: it picks the adopted abstraction programme up in W1, after W0 closed and v3.2.691 shipped. |
+| `route-plotter-continuation-prompt-2026-09-22.md` | Superseded by the 2026-09-23 prompt. Historical provenance: it briefed W0. |
 | `codebase-abstraction-and-auditability-plan-2026-09-22.md` | **Adopted** refactoring programme (2026-09-22): a two-round Claude and Codex abstraction and auditability review of `main` @ `2e4d78e`, with 111 items in waves W0–W12. The owner accepted every §20 default. The backlog carries only the current wave. |
 | `route-plotter-continuation-prompt-2026-08-27.md` | Superseded by the 2026-09-22 prompt. Historical provenance: every original review finding was dispositioned into the PM-Skills backlog. |
 | `route-plotter-review-remediation-continuation-prompt-2026-08-26.md` | Superseded. Historical provenance for the remediation run it briefed. |
