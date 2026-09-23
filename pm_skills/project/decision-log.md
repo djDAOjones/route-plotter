@@ -2,6 +2,41 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-23 — the backlog's Next lane also carries runnable unwaved defects
+
+**Refines DOC-06 (i)** ("Backlog `### Next` holds only the current wave",
+adopted 2026-09-22). W1's close made two things schedulable at once: the W2
+wave, and the eight defects in plan §13 ground rule 8's "After W1" slot —
+DEF-08, 17, 21, 26, 28, 29, 30, 33. Those are not a wave; the rule says each
+lands as soon as its prerequisite exists, and theirs has. A lane that listed
+only W2 would have hidden eight runnable P1–P3 defects, so `### Next` now holds
+both groups, plus DEF-34 marked as needing Joe. The original purpose stands:
+nothing enters the lane until it is runnable, and the plan is never imported
+wholesale. `file-map.md`'s description of the plan was corrected to match.
+
+**Two gate flags were false.** DEF-03 and DEF-23 were marked `[gated: owner]`
+for §20 Q3 and Q4 — decisions Joe made on 2026-09-22 when he accepted all 22
+recommended defaults. The plan's own DEF-03, DEF-23 and DEF-29 rows still
+carried pre-acceptance "owner decides" wording, which is where the error came
+from; all three now carry a dated note. The backlog's gate vocabulary gained
+`[owner: …]` and a warning that a gate is a claim to be checked.
+
+**Codex reviewed the refactored lane and the W2 continuation prompt** and found
+seven ways they would have misled the next session. The two that mattered: the
+prompt told it to "flip the `todo`s", but a `todo` has no body and the active
+test beside it asserts the *broken* behaviour, so the real work is to turn each
+characterisation into a regression; and DEF-03's accepted policy contradicts
+`AGENTS.md`'s still-live hard rule that waypoints are "0–1", which would stop
+an obedient agent or push it to clamp. Reconciling that rule is now part of
+DEF-03. Also corrected: the camera snaps only at 1× zoom (so "render until
+settled" is bounded, not impossible), `authoredExtras` carries four of the five
+non-`none` beacon styles and not `pop`, and the release rules had lost the two
+owner-authorised exceptions to "never push `main`".
+
+**Budgets:** Active is 1,418 words against a 1,500 soft cap, 19 open items
+against 40. The decision log is 29 live entries against 20 — over by Joe's
+standing choice, reported, not pruned.
+
 ## 2026-09-23 — W1 closes: the safety net is built
 
 Six pull requests (#11, #14, #15, #16, #18, #19), all test-only. Nothing a
