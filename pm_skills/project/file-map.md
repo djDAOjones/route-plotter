@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 308 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 315 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 83 file(s)
+- `tests` — 90 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -303,6 +303,7 @@
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
+- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; plus the DEF-03/04/31 failures characterised with the reason the loader gives
 - `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
@@ -352,6 +353,7 @@
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings
 - `tests/playerEntryAccessibility.test.js` — Exported-player summary, keyboard/transport live-region and playback-speed integration contracts
 - `tests/privacy.test.js` — Export disclosures, byte-identical diagnostics, support navigation/address fallback, mode isolation, focus recovery and no automatic sharing
+- `tests/projectSnapshotShape.test.js` — TST-06 save-shape goldens: a file snapshot per bundled example, `load(save(x))` idempotence, the assets-included/excluded shape, and the `modified` restamp characterised
 - `tests/projectLimits.test.js` — Adversarial image, model, ZIP/ZIP64 and detached-import resource-limit contracts
 - `tests/projectReset.test.js` — Behavioral Clear All proof for stale writers/tokens, asset/reference removal and one empty non-undoable baseline
 - `tests/publicationBoundary.test.js` — Approved-image hashes, CSP/same-origin shell, exact Pages inventory and manifest-tamper rejection
@@ -373,7 +375,13 @@
 - `tests/scenePersistence.test.js` — coordVersion-9 scene variation/seed autosave, ZIP, migration and undo round-trip contracts
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts
 - `tests/helpers/consoleGuard.js` — TST-10 console guard: records console.error/warn, fails the test on anything undeclared, and holds the short allowlist of known warts
+- `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)
 - `tests/helpers/bootApp.js` — TST-01 boot harness: builds the shipped index.html shell, stubs APP_VERSION/matchMedia/fetch/layout, and starts the real RoutePlotter
+- `tests/fixtures/authoredExtras.js` — TST-06 fixture: the Open day example with every field of the save shape moved off its default, including two image assets and authored camera zooms
+- `tests/goldens/project-snapshot-authored-extras.json` — TST-06 golden: the saved shape of the authored-extras fixture, the one that exercises every field
+- `tests/goldens/project-snapshot-nervous-system-flow.json` — TST-06 golden: the saved shape of the Signal flow example (guide network, no hero route)
+- `tests/goldens/project-snapshot-parm-aerial-walk.json` — TST-06 golden: the saved shape of the Site walk example (plain labelled chain)
+- `tests/goldens/project-snapshot-uon-open-day.json` — TST-06 golden: the saved shape of the Open day route example (branched route, traced anchored crowd)
 - `tests/setup.js` — Vitest jsdom setup (uses defineProperty for getter-only jsdom globals)
 - `tests/startup.test.js` — Recovery-before-default-image startup ordering contracts
 - `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation

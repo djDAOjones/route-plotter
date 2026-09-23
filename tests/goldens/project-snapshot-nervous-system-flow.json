@@ -1,0 +1,344 @@
+{
+  "coordVersion": 9,
+  "waypoints": [
+    {
+      "id": "ex-ns-1",
+      "imgX": 0.12,
+      "imgY": 0.5,
+      "isMajor": true,
+      "segmentColor": "transparent",
+      "segmentWidth": 3,
+      "segmentStyle": "solid",
+      "segmentSpeed": 1,
+      "pathShape": "line",
+      "shapeAmplitude": 10,
+      "shapeFrequency": 5,
+      "markerStyle": "none",
+      "dotColor": "#E69F00",
+      "dotSize": 8,
+      "beaconStyle": "none",
+      "rippleThickness": 2,
+      "rippleMaxScale": 1000,
+      "rippleWait": true,
+      "pulseAmplitude": 1,
+      "pulseCycleSpeed": 4,
+      "name": "Stimulus",
+      "label": "",
+      "labelMode": "fade-up",
+      "labelOffsetX": 0,
+      "labelOffsetY": 0,
+      "labelPlacedByHand": false,
+      "labelWidth": 15,
+      "labelSize": 16,
+      "labelColor": "#1a1a1a",
+      "labelBgColor": "#FFFFFF",
+      "labelBgOpacity": 0.85,
+      "pauseMode": "none",
+      "pauseTime": 0,
+      "customImage": null,
+      "customImageAssetId": null,
+      "customImageRotation": "fixed",
+      "customImageRotationOffset": 0,
+      "camera": {
+        "zoom": 1,
+        "zoomMode": "continuous"
+      },
+      "areaHighlight": {
+        "enabled": false,
+        "shape": "none",
+        "centerX": 0.5,
+        "centerY": 0.5,
+        "radius": 0.05,
+        "width": 0.1,
+        "height": 0.1,
+        "points": [],
+        "fillColor": "#56B4E9",
+        "fillOpacity": 0.3,
+        "borderColor": "#0072B2",
+        "borderWidth": 2,
+        "borderStyle": "solid",
+        "visibility": "hide-before",
+        "fadeInMs": 500,
+        "fadeOutMs": 500
+      },
+      "created": 1767225600000,
+      "modified": 1790154000000
+    },
+    {
+      "id": "ex-ns-2",
+      "imgX": 0.88,
+      "imgY": 0.5,
+      "isMajor": true,
+      "segmentColor": "transparent",
+      "segmentWidth": 3,
+      "segmentStyle": "solid",
+      "segmentSpeed": 1,
+      "pathShape": "line",
+      "shapeAmplitude": 10,
+      "shapeFrequency": 5,
+      "markerStyle": "none",
+      "dotColor": "#E69F00",
+      "dotSize": 8,
+      "beaconStyle": "none",
+      "rippleThickness": 2,
+      "rippleMaxScale": 1000,
+      "rippleWait": true,
+      "pulseAmplitude": 1,
+      "pulseCycleSpeed": 4,
+      "name": "Response",
+      "label": "",
+      "labelMode": "fade-up",
+      "labelOffsetX": 0,
+      "labelOffsetY": 0,
+      "labelPlacedByHand": false,
+      "labelWidth": 15,
+      "labelSize": 16,
+      "labelColor": "#1a1a1a",
+      "labelBgColor": "#FFFFFF",
+      "labelBgOpacity": 0.85,
+      "pauseMode": "timed",
+      "pauseTime": 3000,
+      "customImage": null,
+      "customImageAssetId": null,
+      "customImageRotation": "fixed",
+      "customImageRotationOffset": 0,
+      "camera": {
+        "zoom": 1,
+        "zoomMode": "continuous"
+      },
+      "areaHighlight": {
+        "enabled": false,
+        "shape": "none",
+        "centerX": 0.5,
+        "centerY": 0.5,
+        "radius": 0.05,
+        "width": 0.1,
+        "height": 0.1,
+        "points": [],
+        "fillColor": "#56B4E9",
+        "fillOpacity": 0.3,
+        "borderColor": "#0072B2",
+        "borderWidth": 2,
+        "borderStyle": "solid",
+        "visibility": "hide-before",
+        "fadeInMs": 500,
+        "fadeOutMs": 500
+      },
+      "created": 1767225600000,
+      "modified": 1790154000000
+    }
+  ],
+  "scene": {
+    "flowLayers": [
+      {
+        "id": "ex-ns-crowd",
+        "name": "Signals",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-ns-n1",
+              "x": 0.12,
+              "y": 0.5,
+              "type": "entry",
+              "label": "Stimulus"
+            },
+            {
+              "id": "ex-ns-n2",
+              "x": 0.38,
+              "y": 0.34,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-ns-n3",
+              "x": 0.38,
+              "y": 0.66,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-ns-n4",
+              "x": 0.64,
+              "y": 0.5,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-ns-n5",
+              "x": 0.88,
+              "y": 0.5,
+              "type": "exit",
+              "label": "Response"
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-ns-e1",
+              "sourceId": "ex-ns-n1",
+              "targetId": "ex-ns-n2",
+              "weight": 1,
+              "direction": "two-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-ns-e2",
+              "sourceId": "ex-ns-n1",
+              "targetId": "ex-ns-n3",
+              "weight": 2,
+              "direction": "two-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-ns-e3",
+              "sourceId": "ex-ns-n2",
+              "targetId": "ex-ns-n4",
+              "weight": 1,
+              "direction": "two-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-ns-e4",
+              "sourceId": "ex-ns-n3",
+              "targetId": "ex-ns-n4",
+              "weight": 1,
+              "direction": "two-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-ns-e5",
+              "sourceId": "ex-ns-n4",
+              "targetId": "ex-ns-n5",
+              "weight": 1,
+              "direction": "two-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-ns-fast",
+            "seed": 1,
+            "dotCount": 40,
+            "speed": 0.22,
+            "speedVariance": 0.2,
+            "dotSize": 0.3,
+            "dotColor": "#56B4E9",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0,
+            "releaseDuration": 0.5,
+            "onsetVariance": 0.8,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0
+          },
+          {
+            "id": "ex-ns-slow",
+            "seed": 2,
+            "dotCount": 25,
+            "speed": 0.1,
+            "speedVariance": 0.2,
+            "dotSize": 0.45,
+            "dotColor": "#009E73",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0.15,
+            "releaseDuration": 0.55,
+            "onsetVariance": 0.4,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0
+          }
+        ]
+      }
+    ]
+  },
+  "styles": {
+    "pathColor": "#E69F00",
+    "pathThickness": 3,
+    "pathStyle": "solid",
+    "pathShape": "line",
+    "markerStyle": "dot",
+    "dotColor": "#D55E00",
+    "dotSize": 10,
+    "beaconStyle": "none",
+    "labelMode": "fade-up",
+    "graphicsScale": 1,
+    "showPathCasing": true,
+    "pathWidth": 4,
+    "pathHead": {
+      "style": "arrow",
+      "color": "#E69F00",
+      "size": 12,
+      "image": null,
+      "imageAssetId": null,
+      "rotationMode": "auto",
+      "rotationOffset": 0
+    },
+    "pathGlow": {
+      "enabled": false,
+      "intensity": 0.5
+    }
+  },
+  "animationState": {
+    "mode": "constant-speed",
+    "speed": 200,
+    "duration": 0
+  },
+  "background": {
+    "overlay": 0,
+    "fit": "fit"
+  },
+  "exportSettings": {
+    "frameRate": 30,
+    "pathOnly": false,
+    "resolutionX": 1920,
+    "resolutionY": 1080,
+    "backgroundZoom": 100,
+    "includeCamera": false,
+    "includeText": true
+  },
+  "motionSettings": {
+    "pathVisibility": "show-on-progression",
+    "pathTrail": 0,
+    "waypointVisibility": "show-on-progression",
+    "backgroundVisibility": "always-show",
+    "revealSize": 30,
+    "revealFeather": 40,
+    "revealTrail": 100,
+    "aovAngle": 60,
+    "aovDistance": 40,
+    "aovDropoff": 50
+  },
+  "imageAssets": [],
+  "renderReference": {
+    "width": 660,
+    "height": 660
+  },
+  "timingReference": {
+    "width": 660,
+    "height": 660
+  }
+}
