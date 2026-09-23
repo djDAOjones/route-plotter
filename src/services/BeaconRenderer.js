@@ -462,15 +462,23 @@ class GlowBeacon extends BaseBeacon {
   
   /**
    * Convert hex color to rgba string
+   *
+   * Takes every form a project may store (`safeColor`: #rgb, #rgba, #rrggbb,
+   * #rrggbbaa). Short forms double each digit, and a colour's own alpha scales
+   * the requested one rather than being dropped (DEF-26: `#f80` became
+   * `rgba(248, 0, NaN, …)`, which `addColorStop` throws on every frame).
    * @param {string} hex - Hex color
    * @param {number} alpha - Alpha value 0-1
    * @returns {string} RGBA color string
    */
   hexToRgba(hex, alpha) {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    let digits = hex.slice(1);
+    if (digits.length <= 4) digits = [...digits].map(digit => digit + digit).join('');
+    const r = parseInt(digits.slice(0, 2), 16);
+    const g = parseInt(digits.slice(2, 4), 16);
+    const b = parseInt(digits.slice(4, 6), 16);
+    const own = digits.length === 8 ? parseInt(digits.slice(6, 8), 16) / 255 : 1;
+    return `rgba(${r}, ${g}, ${b}, ${alpha * own})`;
   }
   
   reset() {

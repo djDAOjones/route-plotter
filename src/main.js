@@ -693,8 +693,14 @@ class RoutePlotter {
       this.renderQueued = true;
       // Store the frame id so teardown (destroy) can cancel a pending render.
       this._renderRafId = requestAnimationFrame(() => {
-        this.render();
-        this.renderQueued = false;
+        try {
+          this.render();
+        } finally {
+          // Cleared even when the frame throws: a flag left set would make
+          // every later queueRender return early, so edits stopped redrawing
+          // until reload (DEF-26).
+          this.renderQueued = false;
+        }
       });
     }
   }
