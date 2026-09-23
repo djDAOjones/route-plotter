@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 305 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 307 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 81 file(s)
+- `tests` — 83 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -344,6 +344,8 @@
   `finally`, and no pass/fail timing threshold has crept in
 - `tests/pathHeadPresets.test.js` — Drone preset metadata, native control, loader ownership and renderer-transform contracts
 - `tests/performanceScheduling.test.js` — Manual-rAF scheduler contract: idle sleep, transport wake/coalescing, camera keepalive and export suspension/restore
+- `tests/playerBundleClosure.test.js` — TST-07: esbuild's metafile proves the exported player bundle carries no editor-only module, and that the editor's does
+- `tests/playerHostContract.test.js` — TST-07: every member the adopted pathTiming mixin reaches for exists on a really-loaded PlayerApp (waypointsById is DEF-02)
 - `tests/playerAccessibility.test.js` — Aggregate-summary privacy/counting and discrete/coalesced transport-announcement contracts
 - `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings

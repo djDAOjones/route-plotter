@@ -199,7 +199,11 @@ function trackCanvasSize(canvas, context) {
   }
 }
 
-HTMLCanvasElement.prototype.getContext = vi.fn(function getContext() {
+// A test file may run in the node environment (TST-07's bundle check), where
+// there is no DOM to patch.
+const hasDom = typeof HTMLCanvasElement !== 'undefined';
+
+if (hasDom) HTMLCanvasElement.prototype.getContext = vi.fn(function getContext() {
   let context = canvasContexts.get(this);
   if (!context) {
     context = createRecordingContext(this);
@@ -208,10 +212,12 @@ HTMLCanvasElement.prototype.getContext = vi.fn(function getContext() {
   }
   return context;
 });
-HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,');
-HTMLCanvasElement.prototype.toBlob = vi.fn((cb) => {
-  cb(new Blob([''], { type: 'image/png' }));
-});
+if (hasDom) {
+  HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,');
+  HTMLCanvasElement.prototype.toBlob = vi.fn((cb) => {
+    cb(new Blob([''], { type: 'image/png' }));
+  });
+}
 
 /** The recording context a canvas has been given, without creating one. */
 function contextFor(canvas) {
@@ -236,12 +242,14 @@ defineGlobal('Image', class {
 });
 
 // Mock URL object-URL helpers (define to override getter-only props)
-Object.defineProperty(global.URL, 'createObjectURL', {
-  configurable: true, writable: true, value: vi.fn(() => 'blob:mock-url')
-});
-Object.defineProperty(global.URL, 'revokeObjectURL', {
-  configurable: true, writable: true, value: vi.fn()
-});
+if (hasDom) {
+  Object.defineProperty(global.URL, 'createObjectURL', {
+    configurable: true, writable: true, value: vi.fn(() => 'blob:mock-url')
+  });
+  Object.defineProperty(global.URL, 'revokeObjectURL', {
+    configurable: true, writable: true, value: vi.fn()
+  });
+}
 
 // Export mocks for use in tests
 export {
