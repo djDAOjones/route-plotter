@@ -33,7 +33,12 @@ function hostContract() {
   return [...used].sort();
 }
 
-async function loadedPlayer() {
+/**
+ * A player loaded from a two-waypoint export.
+ * @param {(waypoints: Waypoint[]) => Object|undefined} [sceneFor] - The
+ *   export's `scene` block, built from its waypoints; none by default.
+ */
+async function loadedPlayer(sceneFor = () => undefined) {
   const canvas = document.createElement('canvas');
   canvas.width = 1000;
   canvas.height = 800;
@@ -42,6 +47,7 @@ async function loadedPlayer() {
   await player.load({
     coordVersion: 9,
     waypoints: waypoints.map(waypoint => waypoint.toJSON()),
+    scene: sceneFor(waypoints),
     // A real export carries these; without styles the load warns about the
     // path head, which is not what this test is about.
     styles: { pathHead: { type: 'arrow' } },
@@ -66,12 +72,54 @@ describe('the exported player keeps its host contract (TST-07)', () => {
     const player = await loadedPlayer();
     const missing = hostContract().filter(member => player[member] === undefined);
 
-    // `waypointsById` is DEF-02: the player never builds it, so every anchored
-    // crowd node draws at its authored position. W2 fixes it; until then it is
-    // the one known gap, and this test states it rather than hiding it.
-    expect(missing).toEqual(['waypointsById']);
+    // Until DEF-02 this was `['waypointsById']`, and every anchored crowd node
+    // in an exported player drew at its authored position.
+    expect(missing).toEqual([]);
   });
 
-  test.todo('DEF-02: the player builds waypointsById, so anchored crowd nodes land on their waypoint');
+  test('DEF-02: the player builds waypointsById, so an anchored crowd node lands on its waypoint', async () => {
+    // Nodes of every type, each authored away from the waypoint it is
+    // anchored to: what moving a waypoint after "Trace route into crowd"
+    // leaves behind. `calculatePath` resolves every anchor through
+    // `this.waypointsById` (`resolveGraphAnchors`), so a player without the
+    // lookup reported each anchor broken and fell back to the authored spot.
+    const player = await loadedPlayer(waypoints => ({
+      flowLayers: [{
+        id: 'crowd',
+        name: 'Crowd',
+        graph: {
+          nodes: [
+            { id: 'entry', x: 0.5, y: 0.5, type: 'entry', anchorWaypointId: waypoints[1].id },
+            { id: 'through', x: 0.5, y: 0.2, type: 'normal', anchorWaypointId: waypoints[0].id },
+            { id: 'exit', x: 0.9, y: 0.1, type: 'exit', anchorWaypointId: waypoints[1].id },
+            { id: 'free', x: 0.1, y: 0.9, type: 'normal' },
+          ],
+          edges: [
+            { id: 'in', sourceId: 'entry', targetId: 'through' },
+            { id: 'on', sourceId: 'through', targetId: 'exit' },
+            { id: 'off', sourceId: 'through', targetId: 'free' },
+          ],
+        },
+        emitters: [],
+      }],
+    }));
+
+    expect(player.anchorReport).toEqual({ bound: 3, broken: [] });
+    const nodes = player.scene.getFlowLayers()[0].graph.getNodes();
+    expect(Object.fromEntries(nodes.map(node => [node.id, node.position()]))).toEqual({
+      entry: { x: 0.8, y: 0.7 },
+      through: { x: 0.2, y: 0.3 },
+      exit: { x: 0.8, y: 0.7 },
+      free: { x: 0.1, y: 0.9 },
+    });
+    // Binding never rewrites the authored position (COMPOSE-01).
+    expect(nodes.map(node => [node.x, node.y])).toEqual([[0.5, 0.5], [0.5, 0.2], [0.9, 0.1], [0.1, 0.9]]);
+
+    // The lookup holds the very waypoints the player draws, not copies.
+    expect(player.waypointsById.size).toBe(player.waypoints.length);
+    for (const waypoint of player.waypoints) {
+      expect(player.waypointsById.get(waypoint.id)).toBe(waypoint);
+    }
+  });
 
 });
