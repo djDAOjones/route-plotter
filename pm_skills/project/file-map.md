@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 331 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 332 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -14,7 +14,7 @@
 - `reviews` — 11 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
-- `src` — 97 file(s)
+- `src` — 98 file(s)
 - `styles` — 6 file(s)
 - `tests` — 105 file(s)
 <!-- /file-map-index -->
@@ -268,6 +268,7 @@
 - `src/utils/entityId.js` — Shared persisted structural-ID length boundary that leaves authored display text untouched
 - `src/utils/focusTrap.js` — Modal inerting, focus containment/wrap, Escape handling and origin-focus restoration
 - `src/utils/graphRouting.js` — Shared directed departures, overflow-safe weight normalisation and stable whole-percentage traffic shares
+- `src/utils/imageCoordinates.js` — DEF-03: the one range check and clamp for stored image points, shared by load and the zoomed-out authoring paths
 - `src/utils/index.js` — Barrel exports for Catmull-Rom and easing utilities
 - `src/utils/mixedControlState.js` — DOM-only mixed-value comparison, select/range/checkbox presentation and concrete-input reset helpers
 - `src/utils/pathHeadPresets.js` — Built-in route-head registry, shared image decoding and custom/preset hydration boundary
@@ -307,7 +308,7 @@
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
-- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; plus the DEF-03/04/31 failures characterised with the reason the loader gives
+- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); and the DEF-04/31 failures characterised with the reason the loader gives
 - `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in

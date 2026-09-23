@@ -15,7 +15,7 @@ import { MotionVisibilityService } from '../src/services/MotionVisibilityService
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { CameraService } from '../src/services/CameraService.js';
 import { RenderingService } from '../src/services/RenderingService.js';
-import { RENDERING } from '../src/config/constants.js';
+import { IMAGE_COORDINATES, RENDERING } from '../src/config/constants.js';
 import { cameraMixin } from '../src/app/camera.js';
 
 describe('AnimationState (extended)', () => {
@@ -270,9 +270,16 @@ describe('Waypoint (extended)', () => {
   });
 
   test('validate rejects out-of-range and missing coordinates', () => {
+    // Off the image is in range since DEF-03: a point authored in the margin
+    // while zoomed out must reload. The range is IMAGE_COORDINATES.
+    const { MIN, MAX } = IMAGE_COORDINATES;
     expect(Waypoint.validate({ imgX: 0.5, imgY: 0.5 })).toBe(true);
-    expect(Waypoint.validate({ imgX: -0.1, imgY: 0.5 })).toBe(false);
-    expect(Waypoint.validate({ imgX: 1.5, imgY: 0.5 })).toBe(false);
+    expect(Waypoint.validate({ imgX: -0.1, imgY: 1.5 })).toBe(true);
+    expect(Waypoint.validate({ imgX: MIN, imgY: MAX })).toBe(true);
+    expect(Waypoint.validate({ imgX: MIN - 0.001, imgY: 0.5 })).toBe(false);
+    expect(Waypoint.validate({ imgX: 0.5, imgY: MAX + 0.001 })).toBe(false);
+    expect(Waypoint.validate({ imgX: Number.NaN, imgY: 0.5 })).toBe(false);
+    expect(Waypoint.validate({ imgX: '0.5', imgY: 0.5 })).toBe(false);
     expect(Waypoint.validate({ imgX: 0.5 })).toBe(false); // missing imgY
     expect(Waypoint.validate(null)).toBe(false);
   });
