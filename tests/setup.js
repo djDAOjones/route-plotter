@@ -106,16 +106,54 @@ function describeValue(value) {
   return `[${value.constructor?.name ?? 'object'}]`;
 }
 
+/**
+ * One transcript across every canvas, in the order the calls were made.
+ *
+ * Per-canvas transcripts cannot show *interleaving*, and interleaving is what
+ * decides the picture: compositing an offscreen layer before it is drawn, or
+ * after it is cleared, leaves each canvas's own transcript unchanged and the
+ * screen blank. Each entry is `[contextId, name, ...args]` (TST-02).
+ */
+const orderedCalls = [];
+let recordingContexts = 0;
+// Off unless a test asks for it: every other test in the worker would
+// otherwise pay for a transcript nobody drains.
+let recordingOrder = false;
+
+/** Start or stop keeping the cross-canvas transcript. */
+function recordCallOrder(enabled) {
+  recordingOrder = enabled;
+  if (!enabled) orderedCalls.length = 0;
+}
+
+/** Drain the cross-canvas transcript. `contextIdFor` names the surfaces in it. */
+function takeOrderedCalls() {
+  return orderedCalls.splice(0, orderedCalls.length);
+}
+
+/** The recorder's id for a canvas, for reading `takeOrderedCalls` back. */
+function contextIdFor(canvas) {
+  return canvasContexts.get(canvas)?.recorderId ?? null;
+}
+
 function createRecordingContext(canvas) {
   const calls = [];
   const style = { ...CONTEXT_STYLE_DEFAULTS };
   const stack = [];
   let lineDash = [];
   let gradients = 0;
+  const recorderId = ++recordingContexts;
+
+  /** Every call is written twice: to this canvas, and to the shared order. */
+  const record = (call) => {
+    calls.push(call);
+    if (recordingOrder) orderedCalls.push([recorderId, ...call]);
+  };
 
   const context = {
     canvas,
     calls,
+    recorderId,
     /** Return the transcript so far and start a new one (per-frame goldens). */
     takeCalls() {
       return calls.splice(0, calls.length);
@@ -125,7 +163,7 @@ function createRecordingContext(canvas) {
   for (const name of CONTEXT_METHODS) {
     const result = CONTEXT_METHOD_RESULTS[name];
     context[name] = vi.fn((...args) => {
-      calls.push([name, ...args.map(describeValue)]);
+      record([name, ...args.map(describeValue)]);
       return result ? result(...args) : undefined;
     });
   }
@@ -137,14 +175,14 @@ function createRecordingContext(canvas) {
       get: () => style[name],
       set: (next) => {
         style[name] = next;
-        calls.push([`set:${name}`, describeValue(next)]);
+        record([`set:${name}`, describeValue(next)]);
       }
     });
   }
 
   context.save = vi.fn(() => {
     stack.push({ style: { ...style }, lineDash: lineDash.slice() });
-    calls.push(['save']);
+    record(['save']);
   });
   context.restore = vi.fn(() => {
     const previous = stack.pop();
@@ -152,24 +190,26 @@ function createRecordingContext(canvas) {
       Object.assign(style, previous.style);
       lineDash = previous.lineDash;
     }
-    calls.push(['restore']);
+    record(['restore']);
   });
   context.setLineDash = vi.fn((dash = []) => {
     lineDash = Array.from(dash);
-    calls.push(['setLineDash', lineDash.slice()]);
+    record(['setLineDash', lineDash.slice()]);
   });
   context.getLineDash = vi.fn(() => lineDash.slice());
 
   for (const name of ['createLinearGradient', 'createRadialGradient']) {
     context[name] = vi.fn((...args) => {
       const id = `[gradient ${++gradients}]`;
-      calls.push([name, ...args.map(describeValue)]);
+      record([name, ...args.map(describeValue)]);
       return {
         __recorderId: id,
-        addColorStop: vi.fn((offset, color) => calls.push([`${id}.addColorStop`, offset, color]))
+        addColorStop: vi.fn((offset, color) => record([`${id}.addColorStop`, offset, color]))
       };
     });
   }
+
+  context.record = record;
 
   /** A real canvas discards its context state when it is resized. */
   context.resetForResize = () => {
@@ -193,7 +233,7 @@ function trackCanvasSize(canvas, context) {
       set: (next) => {
         value = next;
         context.resetForResize();
-        context.calls.push([`canvas.${name}`, next]);
+        context.record([`canvas.${name}`, next]);
       }
     });
   }
@@ -255,7 +295,10 @@ if (hasDom) {
 export {
   localStorageMock,
   createRecordingContext,
-  contextFor
+  contextFor,
+  contextIdFor,
+  recordCallOrder,
+  takeOrderedCalls
 };
 
 // Unexpected console.error/warn fails the test that produced it (TST-10).

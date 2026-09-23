@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 315 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 330 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 90 file(s)
+- `tests` — 105 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -317,6 +317,7 @@
 - `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
+- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples × 5 instants × editor/preview/export, plus play == seek, app == player, and the DEF-02 anchored-crowd divergence
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding
@@ -375,9 +376,21 @@
 - `tests/scenePersistence.test.js` — coordVersion-9 scene variation/seed autosave, ZIP, migration and undo round-trip contracts
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts
 - `tests/helpers/consoleGuard.js` — TST-10 console guard: records console.error/warn, fails the test on anything undeclared, and holds the short allowlist of known warts
+- `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main and offscreen vector canvases as rounded, diffable draw-log lines and compares two frames
 - `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)
 - `tests/helpers/bootApp.js` — TST-01 boot harness: builds the shipped index.html shell, stubs APP_VERSION/matchMedia/fetch/layout, and starts the real RoutePlotter
 - `tests/fixtures/authoredExtras.js` — TST-06 fixture: the Open day example with every field of the save shape moved off its default, including two image assets and authored camera zooms
+- `tests/goldens/draw-log-authored-extras-edit.txt` — TST-02 golden: the editor draw transcript for the authored-extras fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-authored-extras-export.txt` — TST-02 golden: the export-canvas draw transcript for the authored-extras fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-authored-extras-preview.txt` — TST-02 golden: the preview draw transcript for the authored-extras fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-nervous-system-flow-export.txt` — TST-02 golden: the export-canvas draw transcript for the Signal flow fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-nervous-system-flow-preview.txt` — TST-02 golden: the preview draw transcript for the Signal flow fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-parm-aerial-walk-edit.txt` — TST-02 golden: the editor draw transcript for the Site walk fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-parm-aerial-walk-export.txt` — TST-02 golden: the export-canvas draw transcript for the Site walk fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-parm-aerial-walk-preview.txt` — TST-02 golden: the preview draw transcript for the Site walk fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-uon-open-day-edit.txt` — TST-02 golden: the editor draw transcript for the Open day route fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-uon-open-day-export.txt` — TST-02 golden: the export-canvas draw transcript for the Open day route fixture, its canvas set-up frame and five instants
+- `tests/goldens/draw-log-uon-open-day-preview.txt` — TST-02 golden: the preview draw transcript for the Open day route fixture, its canvas set-up frame and five instants
 - `tests/goldens/project-snapshot-authored-extras.json` — TST-06 golden: the saved shape of the authored-extras fixture, the one that exercises every field
 - `tests/goldens/project-snapshot-nervous-system-flow.json` — TST-06 golden: the saved shape of the Signal flow example (guide network, no hero route)
 - `tests/goldens/project-snapshot-parm-aerial-walk.json` — TST-06 golden: the saved shape of the Site walk example (plain labelled chain)

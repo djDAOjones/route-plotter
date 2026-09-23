@@ -1,0 +1,4160 @@
+# canvas set-up
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -247.5 1155 1155
+main save
+main set:globalAlpha 0.005
+main set:fillStyle #fff
+main fillRect 0 0 660 660
+main restore
+vector clearRect 0 0 660 660
+vector save
+vector beginPath
+vector moveTo -16.5 -16.5
+vector lineTo 445.5 41.25
+vector lineTo 272.25 561
+vector closePath
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fill
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector stroke
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector setLineDash []
+vector setLineDash []
+vector save
+vector set:globalAlpha 0.5
+vector set:fillStyle #000000
+vector set:strokeStyle #ffffff
+vector set:lineWidth 1.6
+vector beginPath
+vector arc 214.5 295.35 6.4 0 6.283
+vector fill
+vector stroke
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 3
+vector measureText Label 3
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 421.3 312.12
+vector lineTo 469.7 312.12
+vector quadraticCurveTo 476.1 312.12 476.1 318.52
+vector lineTo 476.1 381.08
+vector quadraticCurveTo 476.1 387.48 469.7 387.48
+vector lineTo 421.3 387.48
+vector quadraticCurveTo 414.9 387.48 414.9 381.08
+vector lineTo 414.9 318.52
+vector quadraticCurveTo 414.9 312.12 421.3 312.12
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 3 445.5 349.8
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 330.7 400 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 4
+vector measureText Label 4
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 554.95 270.87
+vector lineTo 603.35 270.87
+vector quadraticCurveTo 609.75 270.87 609.75 277.27
+vector lineTo 609.75 339.83
+vector quadraticCurveTo 609.75 346.23 603.35 346.23
+vector lineTo 554.95 346.23
+vector quadraticCurveTo 548.55 346.23 548.55 339.83
+vector lineTo 548.55 277.27
+vector quadraticCurveTo 548.55 270.87 554.95 270.87
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 4 579.15 308.55
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 457.75 365.35 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 5
+vector measureText Label 5
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 342.1 -93.78
+vector lineTo 390.5 -93.78
+vector quadraticCurveTo 396.9 -93.78 396.9 -87.38
+vector lineTo 396.9 -24.82
+vector quadraticCurveTo 396.9 -18.42 390.5 -18.42
+vector lineTo 342.1 -18.42
+vector quadraticCurveTo 335.7 -18.42 335.7 -24.82
+vector lineTo 335.7 -87.38
+vector quadraticCurveTo 335.7 -93.78 342.1 -93.78
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 5 366.3 -56.1
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 238.3 7.3 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 6
+vector measureText Label 6
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 741.4 107.52
+vector lineTo 789.8 107.52
+vector quadraticCurveTo 796.2 107.52 796.2 113.92
+vector lineTo 796.2 176.48
+vector quadraticCurveTo 796.2 182.88 789.8 182.88
+vector lineTo 741.4 182.88
+vector quadraticCurveTo 735 182.88 735 176.48
+vector lineTo 735 113.92
+vector quadraticCurveTo 735 107.52 741.4 107.52
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 6 765.6 145.2
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 631 215.2 44.8 44.8
+vector fill
+vector stroke
+main drawImage [canvas] 0 0 660 660
+
+# progress 0
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -247.5 1155 1155
+main save
+main set:globalAlpha 0.005
+main set:fillStyle #fff
+main fillRect 0 0 660 660
+main restore
+vector clearRect 0 0 660 660
+vector save
+vector beginPath
+vector moveTo -16.5 -16.5
+vector lineTo 445.5 41.25
+vector lineTo 272.25 561
+vector closePath
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fill
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector stroke
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector setLineDash []
+vector setLineDash []
+vector save
+vector set:globalAlpha 0.5
+vector set:fillStyle #000000
+vector set:strokeStyle #ffffff
+vector set:lineWidth 1.6
+vector beginPath
+vector arc 214.5 295.35 6.4 0 6.283
+vector fill
+vector stroke
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 3
+vector measureText Label 3
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 421.3 312.12
+vector lineTo 469.7 312.12
+vector quadraticCurveTo 476.1 312.12 476.1 318.52
+vector lineTo 476.1 381.08
+vector quadraticCurveTo 476.1 387.48 469.7 387.48
+vector lineTo 421.3 387.48
+vector quadraticCurveTo 414.9 387.48 414.9 381.08
+vector lineTo 414.9 318.52
+vector quadraticCurveTo 414.9 312.12 421.3 312.12
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 3 445.5 349.8
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 330.7 400 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 4
+vector measureText Label 4
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 554.95 270.87
+vector lineTo 603.35 270.87
+vector quadraticCurveTo 609.75 270.87 609.75 277.27
+vector lineTo 609.75 339.83
+vector quadraticCurveTo 609.75 346.23 603.35 346.23
+vector lineTo 554.95 346.23
+vector quadraticCurveTo 548.55 346.23 548.55 339.83
+vector lineTo 548.55 277.27
+vector quadraticCurveTo 548.55 270.87 554.95 270.87
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 4 579.15 308.55
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 457.75 365.35 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 5
+vector measureText Label 5
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 342.1 -93.78
+vector lineTo 390.5 -93.78
+vector quadraticCurveTo 396.9 -93.78 396.9 -87.38
+vector lineTo 396.9 -24.82
+vector quadraticCurveTo 396.9 -18.42 390.5 -18.42
+vector lineTo 342.1 -18.42
+vector quadraticCurveTo 335.7 -18.42 335.7 -24.82
+vector lineTo 335.7 -87.38
+vector quadraticCurveTo 335.7 -93.78 342.1 -93.78
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 5 366.3 -56.1
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 238.3 7.3 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 6
+vector measureText Label 6
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 741.4 107.52
+vector lineTo 789.8 107.52
+vector quadraticCurveTo 796.2 107.52 796.2 113.92
+vector lineTo 796.2 176.48
+vector quadraticCurveTo 796.2 182.88 789.8 182.88
+vector lineTo 741.4 182.88
+vector quadraticCurveTo 735 182.88 735 176.48
+vector lineTo 735 113.92
+vector quadraticCurveTo 735 107.52 741.4 107.52
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 6 765.6 145.2
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 631 215.2 44.8 44.8
+vector fill
+vector stroke
+main drawImage [canvas] 0 0 660 660
+
+# progress 0.25
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -247.5 1155 1155
+main save
+main set:globalAlpha 0.005
+main set:fillStyle #fff
+main fillRect 0 0 660 660
+main restore
+vector clearRect 0 0 660 660
+vector save
+vector beginPath
+vector moveTo -16.5 -16.5
+vector lineTo 445.5 41.25
+vector lineTo 272.25 561
+vector closePath
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fill
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector stroke
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #56B4E9
+vector beginPath
+vector moveTo 183.666 320.706
+vector arc 176.466 320.706 7.2 0 6.283
+vector moveTo 98.158 377.711
+vector arc 90.958 377.711 7.2 0 6.283
+vector moveTo 237.202 206.216
+vector arc 230.002 206.216 7.2 0 6.283
+vector moveTo 203.945 307.187
+vector arc 196.745 307.187 7.2 0 6.283
+vector moveTo -31.868 464.395
+vector arc -39.068 464.395 7.2 0 6.283
+vector moveTo 89.906 383.213
+vector arc 82.706 383.213 7.2 0 6.283
+vector moveTo 81.291 388.956
+vector arc 74.091 388.956 7.2 0 6.283
+vector moveTo 155.518 339.471
+vector arc 148.318 339.471 7.2 0 6.283
+vector moveTo -47.279 474.67
+vector arc -54.479 474.67 7.2 0 6.283
+vector moveTo -28.008 461.822
+vector arc -35.208 461.822 7.2 0 6.283
+vector moveTo -6.396 447.414
+vector arc -13.596 447.414 7.2 0 6.283
+vector moveTo 186.244 318.987
+vector arc 179.044 318.987 7.2 0 6.283
+vector moveTo 189.756 316.646
+vector arc 182.556 316.646 7.2 0 6.283
+vector moveTo 160.203 336.348
+vector arc 153.003 336.348 7.2 0 6.283
+vector moveTo 106.131 372.396
+vector arc 98.931 372.396 7.2 0 6.283
+vector moveTo 20.872 429.235
+vector arc 13.672 429.235 7.2 0 6.283
+vector moveTo 70.39 396.223
+vector arc 63.19 396.223 7.2 0 6.283
+vector moveTo 137.093 351.754
+vector arc 129.893 351.754 7.2 0 6.283
+vector moveTo 80.824 389.267
+vector arc 73.624 389.267 7.2 0 6.283
+vector moveTo -28.762 462.324
+vector arc -35.962 462.324 7.2 0 6.283
+vector moveTo 15.806 432.612
+vector arc 8.606 432.612 7.2 0 6.283
+vector moveTo 2.831 441.263
+vector arc -4.369 441.263 7.2 0 6.283
+vector moveTo -5.345 446.713
+vector arc -12.545 446.713 7.2 0 6.283
+vector moveTo -30.515 463.493
+vector arc -37.715 463.493 7.2 0 6.283
+vector moveTo 80.483 389.495
+vector arc 73.283 389.495 7.2 0 6.283
+vector moveTo 26.132 425.729
+vector arc 18.932 425.729 7.2 0 6.283
+vector moveTo 73.005 394.48
+vector arc 65.805 394.48 7.2 0 6.283
+vector moveTo 126.371 358.903
+vector arc 119.171 358.903 7.2 0 6.283
+vector moveTo 78.682 390.695
+vector arc 71.482 390.695 7.2 0 6.283
+vector moveTo 5.992 439.155
+vector arc -1.208 439.155 7.2 0 6.283
+vector moveTo 70.677 396.032
+vector arc 63.477 396.032 7.2 0 6.283
+vector moveTo -54.349 479.383
+vector arc -61.549 479.383 7.2 0 6.283
+vector moveTo 28.889 423.891
+vector arc 21.689 423.891 7.2 0 6.283
+vector moveTo 14.722 433.335
+vector arc 7.522 433.335 7.2 0 6.283
+vector moveTo 76.366 392.239
+vector arc 69.166 392.239 7.2 0 6.283
+vector moveTo -43.945 472.447
+vector arc -51.145 472.447 7.2 0 6.283
+vector moveTo -27.247 461.315
+vector arc -34.447 461.315 7.2 0 6.283
+vector moveTo 34.42 420.204
+vector arc 27.22 420.204 7.2 0 6.283
+vector moveTo -49.551 476.184
+vector arc -56.751 476.184 7.2 0 6.283
+vector fill
+vector restore
+vector lineTo 214.828 293.069
+vector lineTo 215.131 290.778
+vector lineTo 215.429 288.485
+vector lineTo 215.724 286.192
+vector lineTo 216.018 283.898
+vector lineTo 216.31 281.605
+vector lineTo 216.603 279.312
+vector lineTo 216.895 277.018
+vector lineTo 217.187 274.725
+vector lineTo 217.479 272.431
+vector lineTo 217.772 270.138
+vector lineTo 218.065 267.844
+vector lineTo 218.358 265.551
+vector lineTo 218.652 263.258
+vector lineTo 218.946 260.964
+vector lineTo 219.241 258.671
+vector lineTo 219.536 256.378
+vector lineTo 219.832 254.085
+vector lineTo 220.128 251.792
+vector lineTo 220.425 249.499
+vector lineTo 220.722 247.206
+vector lineTo 221.021 244.914
+vector lineTo 221.32 242.621
+vector lineTo 221.619 240.329
+vector lineTo 221.919 238.036
+vector lineTo 222.22 235.744
+vector lineTo 222.522 233.452
+vector lineTo 222.824 231.16
+vector lineTo 223.128 228.868
+vector lineTo 223.432 226.576
+vector lineTo 223.736 224.284
+vector lineTo 224.042 221.992
+vector lineTo 224.348 219.701
+vector lineTo 224.655 217.409
+vector lineTo 224.963 215.118
+vector lineTo 225.272 212.826
+vector lineTo 225.582 210.535
+vector lineTo 225.892 208.244
+vector lineTo 226.204 205.953
+vector lineTo 226.516 203.663
+vector lineTo 226.83 201.372
+vector lineTo 227.144 199.082
+vector lineTo 227.46 196.791
+vector lineTo 227.776 194.501
+vector lineTo 228.093 192.211
+vector lineTo 228.412 189.921
+vector lineTo 228.731 187.631
+vector lineTo 229.052 185.342
+vector lineTo 229.373 183.052
+vector lineTo 229.696 180.763
+vector lineTo 230.02 178.474
+vector lineTo 230.345 176.185
+vector lineTo 230.672 173.896
+vector lineTo 230.999 171.608
+vector lineTo 231.328 169.32
+vector lineTo 231.658 167.031
+vector lineTo 231.989 164.743
+vector lineTo 232.322 162.456
+vector lineTo 232.656 160.168
+vector lineTo 232.992 157.881
+vector lineTo 233.329 155.594
+vector lineTo 233.667 153.307
+vector lineTo 234.007 151.02
+vector lineTo 234.349 148.734
+vector lineTo 234.692 146.448
+vector lineTo 235.037 144.162
+vector lineTo 235.384 141.876
+vector lineTo 235.732 139.591
+vector lineTo 236.082 137.306
+vector lineTo 236.434 135.021
+vector lineTo 236.788 132.737
+vector lineTo 237.144 130.453
+vector lineTo 237.502 128.169
+vector lineTo 237.862 125.886
+vector lineTo 238.224 123.603
+vector lineTo 238.588 121.32
+vector lineTo 238.956 119.038
+vector lineTo 239.325 116.756
+vector lineTo 239.696 114.475
+vector lineTo 240.071 112.194
+vector lineTo 240.448 109.914
+vector lineTo 240.828 107.634
+vector lineTo 241.211 105.355
+vector lineTo 241.597 103.076
+vector lineTo 241.986 100.798
+vector lineTo 242.379 98.521
+vector lineTo 242.774 96.244
+vector lineTo 243.175 93.968
+vector lineTo 243.579 91.693
+vector lineTo 243.986 89.418
+vector lineTo 244.398 87.145
+vector lineTo 244.815 84.873
+vector lineTo 245.236 82.601
+vector lineTo 245.663 80.331
+vector lineTo 246.096 78.063
+vector lineTo 246.533 75.795
+vector lineTo 246.977 73.529
+vector lineTo 247.428 71.265
+vector lineTo 247.887 69.002
+vector lineTo 248.353 66.742
+vector lineTo 248.827 64.484
+vector lineTo 249.31 62.229
+vector lineTo 249.804 59.977
+vector lineTo 250.31 57.729
+vector lineTo 250.828 55.485
+vector lineTo 251.36 53.246
+vector lineTo 251.907 51.014
+vector lineTo 252.473 48.789
+vector lineTo 253.059 46.575
+vector lineTo 253.669 44.374
+vector lineTo 254.306 42.191
+vector lineTo 254.982 40.038
+vector lineTo 255.696 37.929
+vector lineTo 256.453 35.891
+vector lineTo 257.255 34.01
+vector lineTo 258.032 32.457
+vector lineTo 258.556 31.586
+vector lineTo 258.894 31.089
+vector lineTo 259.187 30.732
+vector lineTo 259.503 30.395
+vector lineTo 259.848 30.088
+vector lineTo 260.24 29.843
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 260.24 29.843
+vector lineTo 260.411 29.79
+vector stroke
+vector setLineDash []
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo -62.7 480.15
+vector lineTo -60.845 478.887
+vector lineTo -58.995 477.617
+vector lineTo -57.146 476.344
+vector lineTo -55.298 475.07
+vector lineTo -53.451 473.795
+vector lineTo -51.603 472.52
+vector lineTo -49.756 471.245
+vector lineTo -47.908 469.97
+vector lineTo -46.061 468.695
+vector lineTo -44.214 467.42
+vector lineTo -42.367 466.144
+vector lineTo -40.519 464.869
+vector lineTo -38.672 463.594
+vector lineTo -36.825 462.319
+vector lineTo -34.977 461.044
+vector lineTo -33.13 459.769
+vector lineTo -31.282 458.494
+vector lineTo -29.435 457.219
+vector lineTo -27.587 455.945
+vector lineTo -25.739 454.67
+vector lineTo -23.891 453.396
+vector lineTo -22.043 452.121
+vector lineTo -20.195 450.847
+vector lineTo -18.347 449.573
+vector lineTo -16.499 448.3
+vector lineTo -14.651 447.026
+vector lineTo -12.802 445.752
+vector lineTo -10.954 444.479
+vector lineTo -9.105 443.206
+vector lineTo -7.256 441.933
+vector lineTo -5.407 440.66
+vector lineTo -3.558 439.387
+vector lineTo -1.709 438.114
+vector lineTo 0.14 436.842
+vector lineTo 1.989 435.57
+vector lineTo 3.839 434.298
+vector lineTo 5.688 433.026
+vector lineTo 7.538 431.754
+vector lineTo 9.388 430.483
+vector lineTo 11.238 429.211
+vector lineTo 13.088 427.94
+vector lineTo 14.938 426.669
+vector lineTo 16.788 425.398
+vector lineTo 18.639 424.128
+vector lineTo 20.489 422.858
+vector lineTo 22.34 421.587
+vector lineTo 24.191 420.318
+vector lineTo 26.042 419.048
+vector lineTo 27.893 417.778
+vector lineTo 29.745 416.509
+vector lineTo 31.596 415.24
+vector lineTo 33.448 413.971
+vector lineTo 35.3 412.702
+vector lineTo 37.152 411.434
+vector lineTo 39.004 410.166
+vector lineTo 40.856 408.898
+vector lineTo 42.708 407.63
+vector lineTo 44.561 406.363
+vector lineTo 46.414 405.096
+vector lineTo 48.267 403.829
+vector lineTo 50.12 402.562
+vector lineTo 51.973 401.296
+vector lineTo 53.827 400.03
+vector lineTo 55.68 398.764
+vector lineTo 57.534 397.498
+vector lineTo 59.388 396.233
+vector lineTo 61.243 394.968
+vector lineTo 63.097 393.703
+vector lineTo 64.952 392.439
+vector lineTo 66.807 391.174
+vector lineTo 68.662 389.911
+vector lineTo 70.517 388.647
+vector lineTo 72.372 387.384
+vector lineTo 74.228 386.121
+vector lineTo 76.084 384.858
+vector lineTo 77.94 383.596
+vector lineTo 79.796 382.334
+vector lineTo 81.653 381.073
+vector lineTo 83.51 379.812
+vector lineTo 85.367 378.551
+vector lineTo 87.224 377.29
+vector lineTo 89.082 376.03
+vector lineTo 90.94 374.77
+vector lineTo 92.798 373.511
+vector lineTo 94.656 372.252
+vector lineTo 96.515 370.994
+vector lineTo 98.374 369.736
+vector lineTo 100.233 368.478
+vector lineTo 102.093 367.221
+vector lineTo 103.953 365.964
+vector lineTo 105.813 364.708
+vector lineTo 107.673 363.452
+vector lineTo 109.534 362.197
+vector lineTo 111.395 360.942
+vector lineTo 113.257 359.688
+vector lineTo 115.119 358.434
+vector lineTo 116.981 357.181
+vector lineTo 118.844 355.929
+vector lineTo 120.706 354.676
+vector lineTo 122.57 353.425
+vector lineTo 124.434 352.174
+vector lineTo 126.298 350.924
+vector lineTo 128.162 349.675
+vector lineTo 130.028 348.426
+vector lineTo 131.893 347.178
+vector lineTo 133.759 345.93
+vector lineTo 135.626 344.683
+vector lineTo 137.493 343.438
+vector lineTo 139.36 342.192
+vector lineTo 141.228 340.948
+vector lineTo 143.097 339.705
+vector lineTo 144.966 338.463
+vector lineTo 146.836 337.221
+vector lineTo 148.707 335.98
+vector lineTo 150.578 334.741
+vector lineTo 152.45 333.502
+vector lineTo 154.322 332.265
+vector lineTo 156.196 331.029
+vector lineTo 158.07 329.794
+vector lineTo 159.945 328.56
+vector lineTo 161.821 327.328
+vector lineTo 163.697 326.097
+vector lineTo 165.575 324.868
+vector lineTo 167.454 323.64
+vector lineTo 169.333 322.414
+vector lineTo 171.214 321.19
+vector lineTo 173.096 319.967
+vector lineTo 174.98 318.747
+vector lineTo 176.865 317.529
+vector lineTo 178.751 316.314
+vector lineTo 180.638 315.101
+vector lineTo 182.528 313.891
+vector lineTo 184.419 312.684
+vector lineTo 186.312 311.48
+vector lineTo 188.208 310.281
+vector lineTo 190.106 309.086
+vector lineTo 192.006 307.895
+vector lineTo 193.91 306.71
+vector lineTo 195.816 305.53
+vector lineTo 197.726 304.359
+vector lineTo 199.641 303.197
+vector lineTo 201.56 302.045
+vector lineTo 203.484 300.906
+vector lineTo 205.413 299.786
+vector lineTo 207.347 298.692
+vector lineTo 209.283 297.635
+vector lineTo 211.197 296.652
+vector lineTo 212.936 295.856
+vector lineTo 213.679 295.573
+vector lineTo 214.107 295.439
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 214.107 295.439
+vector lineTo 214.272 295.404
+vector stroke
+vector setLineDash []
+vector save
+vector translate 214.715 295.343
+vector rotate 0.197
+vector beginPath
+vector set:fillStyle #009E73
+vector arc 0 0 16.8 0 6.283
+vector fill
+vector restore
+vector save
+vector translate 260.86 29.705
+vector rotate -0.613
+vector beginPath
+vector set:fillStyle #009E73
+vector arc 0 0 16.8 0 6.283
+vector fill
+vector restore
+vector save
+vector set:strokeStyle #CC79A7
+vector set:lineWidth 8
+vector beginPath
+vector arc -62.7 480.15 466.977 0 6.283
+vector set:globalAlpha 0.171
+vector stroke
+vector restore
+vector save
+vector set:globalAlpha 0.5
+vector set:fillStyle #000000
+vector set:strokeStyle #ffffff
+vector set:lineWidth 1.6
+vector beginPath
+vector arc 214.5 295.35 6.4 0 6.283
+vector fill
+vector stroke
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 3
+vector measureText Label 3
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 421.3 312.12
+vector lineTo 469.7 312.12
+vector quadraticCurveTo 476.1 312.12 476.1 318.52
+vector lineTo 476.1 381.08
+vector quadraticCurveTo 476.1 387.48 469.7 387.48
+vector lineTo 421.3 387.48
+vector quadraticCurveTo 414.9 387.48 414.9 381.08
+vector lineTo 414.9 318.52
+vector quadraticCurveTo 414.9 312.12 421.3 312.12
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 3 445.5 349.8
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 330.7 400 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 4
+vector measureText Label 4
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 554.95 270.87
+vector lineTo 603.35 270.87
+vector quadraticCurveTo 609.75 270.87 609.75 277.27
+vector lineTo 609.75 339.83
+vector quadraticCurveTo 609.75 346.23 603.35 346.23
+vector lineTo 554.95 346.23
+vector quadraticCurveTo 548.55 346.23 548.55 339.83
+vector lineTo 548.55 277.27
+vector quadraticCurveTo 548.55 270.87 554.95 270.87
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 4 579.15 308.55
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 457.75 365.35 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 5
+vector measureText Label 5
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 342.1 -93.78
+vector lineTo 390.5 -93.78
+vector quadraticCurveTo 396.9 -93.78 396.9 -87.38
+vector lineTo 396.9 -24.82
+vector quadraticCurveTo 396.9 -18.42 390.5 -18.42
+vector lineTo 342.1 -18.42
+vector quadraticCurveTo 335.7 -18.42 335.7 -24.82
+vector lineTo 335.7 -87.38
+vector quadraticCurveTo 335.7 -93.78 342.1 -93.78
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 5 366.3 -56.1
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 238.3 7.3 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 6
+vector measureText Label 6
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 741.4 107.52
+vector lineTo 789.8 107.52
+vector quadraticCurveTo 796.2 107.52 796.2 113.92
+vector lineTo 796.2 176.48
+vector quadraticCurveTo 796.2 182.88 789.8 182.88
+vector lineTo 741.4 182.88
+vector quadraticCurveTo 735 182.88 735 176.48
+vector lineTo 735 113.92
+vector quadraticCurveTo 735 107.52 741.4 107.52
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 6 765.6 145.2
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 631 215.2 44.8 44.8
+vector fill
+vector stroke
+main drawImage [canvas] 0 0 660 660
+
+# progress 0.5
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -247.5 1155 1155
+main save
+main set:globalAlpha 0.005
+main set:fillStyle #fff
+main fillRect 0 0 660 660
+main restore
+vector clearRect 0 0 660 660
+vector save
+vector beginPath
+vector moveTo -16.5 -16.5
+vector lineTo 445.5 41.25
+vector lineTo 272.25 561
+vector closePath
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fill
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector stroke
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #56B4E9
+vector beginPath
+vector moveTo 178.884 323.894
+vector arc 171.684 323.894 7.2 0 6.283
+vector moveTo 538.7 344.363
+vector arc 531.5 344.363 7.2 0 6.283
+vector moveTo 178.474 324.168
+vector arc 171.274 324.168 7.2 0 6.283
+vector moveTo 262.767 59.215
+vector arc 255.567 59.215 7.2 0 6.283
+vector moveTo 521.589 164.006
+vector arc 514.389 164.006 7.2 0 6.283
+vector moveTo 375.844 86.847
+vector arc 368.644 86.847 7.2 0 6.283
+vector moveTo 177.239 324.991
+vector arc 170.039 324.991 7.2 0 6.283
+vector moveTo 458.993 397.959
+vector arc 451.793 397.959 7.2 0 6.283
+vector moveTo 238.716 197.507
+vector arc 231.516 197.507 7.2 0 6.283
+vector moveTo 395.428 416.034
+vector arc 388.228 416.034 7.2 0 6.283
+vector moveTo 175.977 325.832
+vector arc 168.777 325.832 7.2 0 6.283
+vector moveTo 240.064 189.755
+vector arc 232.864 189.755 7.2 0 6.283
+vector moveTo 226.495 267.777
+vector arc 219.295 267.777 7.2 0 6.283
+vector moveTo 266.459 337.739
+vector arc 259.259 337.739 7.2 0 6.283
+vector moveTo 165.872 332.569
+vector arc 158.672 332.569 7.2 0 6.283
+vector moveTo 225.991 299.404
+vector arc 218.791 299.404 7.2 0 6.283
+vector moveTo 193.651 314.049
+vector arc 186.451 314.049 7.2 0 6.283
+vector moveTo 519.16 361.251
+vector arc 511.96 361.251 7.2 0 6.283
+vector moveTo 530.716 351.28
+vector arc 523.516 351.28 7.2 0 6.283
+vector moveTo 148.687 344.025
+vector arc 141.487 344.025 7.2 0 6.283
+vector moveTo 456.782 398.652
+vector arc 449.582 398.652 7.2 0 6.283
+vector moveTo 371.571 421.423
+vector arc 364.371 421.423 7.2 0 6.283
+vector moveTo 399.171 415.081
+vector arc 391.971 415.081 7.2 0 6.283
+vector moveTo 251.111 323.235
+vector arc 243.911 323.235 7.2 0 6.283
+vector moveTo 356.372 419.774
+vector arc 349.172 419.774 7.2 0 6.283
+vector moveTo 463.187 396.625
+vector arc 455.987 396.625 7.2 0 6.283
+vector moveTo 443.885 402.592
+vector arc 436.685 402.592 7.2 0 6.283
+vector moveTo 180.845 322.587
+vector arc 173.645 322.587 7.2 0 6.283
+vector moveTo 84.088 387.091
+vector arc 76.888 387.091 7.2 0 6.283
+vector moveTo 342.863 408.352
+vector arc 335.663 408.352 7.2 0 6.283
+vector moveTo 256.89 93.009
+vector arc 249.69 93.009 7.2 0 6.283
+vector moveTo 252.629 117.507
+vector arc 245.429 117.507 7.2 0 6.283
+vector moveTo 247.038 149.657
+vector arc 239.838 149.657 7.2 0 6.283
+vector moveTo 488.504 386.94
+vector arc 481.304 386.94 7.2 0 6.283
+vector moveTo 237.808 202.731
+vector arc 230.608 202.731 7.2 0 6.283
+vector moveTo 192.402 314.882
+vector arc 185.202 314.882 7.2 0 6.283
+vector moveTo 242.001 178.621
+vector arc 234.801 178.621 7.2 0 6.283
+vector moveTo 508.933 370.014
+vector arc 501.733 370.014 7.2 0 6.283
+vector moveTo 169.637 330.059
+vector arc 162.437 330.059 7.2 0 6.283
+vector moveTo 438.779 404.108
+vector arc 431.579 404.108 7.2 0 6.283
+vector moveTo 208.462 304.175
+vector arc 201.262 304.175 7.2 0 6.283
+vector moveTo 421.335 409.117
+vector arc 414.135 409.117 7.2 0 6.283
+vector moveTo 131.66 355.377
+vector arc 124.46 355.377 7.2 0 6.283
+vector moveTo 484.915 388.947
+vector arc 477.715 388.947 7.2 0 6.283
+vector moveTo 203.941 307.19
+vector arc 196.741 307.19 7.2 0 6.283
+vector moveTo 249.31 136.595
+vector arc 242.11 136.595 7.2 0 6.283
+vector moveTo 239.892 190.743
+vector arc 232.692 190.743 7.2 0 6.283
+vector moveTo 148.291 344.289
+vector arc 141.091 344.289 7.2 0 6.283
+vector moveTo 44.775 413.3
+vector arc 37.575 413.3 7.2 0 6.283
+vector moveTo 488.173 387.178
+vector arc 480.973 387.178 7.2 0 6.283
+vector moveTo 227.763 260.486
+vector arc 220.563 260.486 7.2 0 6.283
+vector moveTo 35.702 419.349
+vector arc 28.502 419.349 7.2 0 6.283
+vector moveTo 188.637 317.392
+vector arc 181.437 317.392 7.2 0 6.283
+vector moveTo 175.919 325.871
+vector arc 168.719 325.871 7.2 0 6.283
+vector moveTo 334.825 401.185
+vector arc 327.625 401.185 7.2 0 6.283
+vector moveTo 232.31 234.341
+vector arc 225.11 234.341 7.2 0 6.283
+vector moveTo 374.224 420.919
+vector arc 367.024 420.919 7.2 0 6.283
+vector moveTo 225.514 273.418
+vector arc 218.314 273.418 7.2 0 6.283
+vector moveTo 229.815 248.691
+vector arc 222.615 248.691 7.2 0 6.283
+vector moveTo 73.878 393.898
+vector arc 66.678 393.898 7.2 0 6.283
+vector fill
+vector restore
+vector lineTo 214.828 293.069
+vector lineTo 215.131 290.778
+vector lineTo 215.429 288.485
+vector lineTo 215.724 286.192
+vector lineTo 216.018 283.898
+vector lineTo 216.31 281.605
+vector lineTo 216.603 279.312
+vector lineTo 216.895 277.018
+vector lineTo 217.187 274.725
+vector lineTo 217.479 272.431
+vector lineTo 217.772 270.138
+vector lineTo 218.065 267.844
+vector lineTo 218.358 265.551
+vector lineTo 218.652 263.258
+vector lineTo 218.946 260.964
+vector lineTo 219.241 258.671
+vector lineTo 219.536 256.378
+vector lineTo 219.832 254.085
+vector lineTo 220.128 251.792
+vector lineTo 220.425 249.499
+vector lineTo 220.722 247.206
+vector lineTo 221.021 244.914
+vector lineTo 221.32 242.621
+vector lineTo 221.619 240.329
+vector lineTo 221.919 238.036
+vector lineTo 222.22 235.744
+vector lineTo 222.522 233.452
+vector lineTo 222.824 231.16
+vector lineTo 223.128 228.868
+vector lineTo 223.432 226.576
+vector lineTo 223.736 224.284
+vector lineTo 224.042 221.992
+vector lineTo 224.348 219.701
+vector lineTo 224.655 217.409
+vector lineTo 224.963 215.118
+vector lineTo 225.272 212.826
+vector lineTo 225.582 210.535
+vector lineTo 225.892 208.244
+vector lineTo 226.204 205.953
+vector lineTo 226.516 203.663
+vector lineTo 226.83 201.372
+vector lineTo 227.144 199.082
+vector lineTo 227.46 196.791
+vector lineTo 227.776 194.501
+vector lineTo 228.093 192.211
+vector lineTo 228.412 189.921
+vector lineTo 228.731 187.631
+vector lineTo 229.052 185.342
+vector lineTo 229.373 183.052
+vector lineTo 229.696 180.763
+vector lineTo 230.02 178.474
+vector lineTo 230.345 176.185
+vector lineTo 230.672 173.896
+vector lineTo 230.999 171.608
+vector lineTo 231.328 169.32
+vector lineTo 231.658 167.031
+vector lineTo 231.989 164.743
+vector lineTo 232.322 162.456
+vector lineTo 232.656 160.168
+vector lineTo 232.992 157.881
+vector lineTo 233.329 155.594
+vector lineTo 233.667 153.307
+vector lineTo 234.007 151.02
+vector lineTo 234.349 148.734
+vector lineTo 234.692 146.448
+vector lineTo 235.037 144.162
+vector lineTo 235.384 141.876
+vector lineTo 235.732 139.591
+vector lineTo 236.082 137.306
+vector lineTo 236.434 135.021
+vector lineTo 236.788 132.737
+vector lineTo 237.144 130.453
+vector lineTo 237.502 128.169
+vector lineTo 237.862 125.886
+vector lineTo 238.224 123.603
+vector lineTo 238.588 121.32
+vector lineTo 238.956 119.038
+vector lineTo 239.325 116.756
+vector lineTo 239.696 114.475
+vector lineTo 240.071 112.194
+vector lineTo 240.448 109.914
+vector lineTo 240.828 107.634
+vector lineTo 241.211 105.355
+vector lineTo 241.597 103.076
+vector lineTo 241.986 100.798
+vector lineTo 242.379 98.521
+vector lineTo 242.774 96.244
+vector lineTo 243.175 93.968
+vector lineTo 243.579 91.693
+vector lineTo 243.986 89.418
+vector lineTo 244.398 87.145
+vector lineTo 244.815 84.873
+vector lineTo 245.236 82.601
+vector lineTo 245.663 80.331
+vector lineTo 246.096 78.063
+vector lineTo 246.533 75.795
+vector lineTo 246.977 73.529
+vector lineTo 247.428 71.265
+vector lineTo 247.887 69.002
+vector lineTo 248.353 66.742
+vector lineTo 248.827 64.484
+vector lineTo 249.31 62.229
+vector lineTo 249.804 59.977
+vector lineTo 250.31 57.729
+vector lineTo 250.828 55.485
+vector lineTo 251.36 53.246
+vector lineTo 251.907 51.014
+vector lineTo 252.473 48.789
+vector lineTo 253.059 46.575
+vector lineTo 253.669 44.374
+vector lineTo 254.306 42.191
+vector lineTo 254.982 40.038
+vector lineTo 255.696 37.929
+vector lineTo 256.453 35.891
+vector lineTo 257.255 34.01
+vector lineTo 258.032 32.457
+vector lineTo 258.556 31.586
+vector lineTo 258.894 31.089
+vector lineTo 259.187 30.732
+vector lineTo 259.503 30.395
+vector lineTo 259.848 30.088
+vector lineTo 260.24 29.843
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 260.24 29.843
+vector lineTo 260.681 29.706
+vector lineTo 261.142 29.703
+vector lineTo 262.048 29.841
+vector lineTo 263.915 30.371
+vector lineTo 265.984 31.106
+vector lineTo 268.086 31.929
+vector lineTo 270.193 32.803
+vector lineTo 272.297 33.711
+vector lineTo 274.398 34.644
+vector lineTo 276.495 35.595
+vector lineTo 278.588 36.559
+vector lineTo 280.678 37.535
+vector lineTo 282.764 38.519
+vector lineTo 284.847 39.514
+vector lineTo 286.927 40.516
+vector lineTo 289.005 41.523
+vector lineTo 291.081 42.536
+vector lineTo 293.154 43.555
+vector lineTo 295.226 44.576
+vector lineTo 297.296 45.604
+vector lineTo 299.364 46.634
+vector lineTo 301.431 47.668
+vector lineTo 303.496 48.705
+vector lineTo 305.56 49.745
+vector lineTo 307.622 50.788
+vector lineTo 309.684 51.832
+vector lineTo 311.744 52.881
+vector lineTo 313.803 53.93
+vector lineTo 315.861 54.982
+vector lineTo 317.919 56.035
+vector lineTo 319.975 57.092
+vector lineTo 322.031 58.148
+vector lineTo 324.085 59.208
+vector lineTo 326.139 60.268
+vector lineTo 328.192 61.331
+vector lineTo 330.245 62.394
+vector lineTo 332.296 63.459
+vector lineTo 334.348 64.525
+vector lineTo 336.398 65.593
+vector lineTo 338.448 66.662
+vector lineTo 340.497 67.731
+vector lineTo 342.546 68.803
+vector lineTo 344.594 69.874
+vector lineTo 346.642 70.948
+vector lineTo 348.689 72.022
+vector lineTo 350.736 73.097
+vector lineTo 352.782 74.173
+vector lineTo 354.828 75.25
+vector lineTo 356.873 76.328
+vector lineTo 358.918 77.406
+vector lineTo 360.962 78.486
+vector lineTo 363.006 79.566
+vector lineTo 365.05 80.647
+vector lineTo 367.093 81.729
+vector lineTo 369.136 82.811
+vector lineTo 371.178 83.894
+vector lineTo 373.22 84.978
+vector lineTo 375.262 86.062
+vector lineTo 377.304 87.147
+vector lineTo 379.345 88.233
+vector lineTo 381.386 89.319
+vector lineTo 383.426 90.406
+vector lineTo 385.466 91.493
+vector lineTo 387.506 92.582
+vector lineTo 389.546 93.67
+vector lineTo 391.585 94.759
+vector lineTo 393.624 95.849
+vector lineTo 395.663 96.939
+vector lineTo 397.701 98.03
+vector lineTo 399.74 99.121
+vector lineTo 401.778 100.213
+vector lineTo 403.815 101.305
+vector lineTo 405.853 102.398
+vector lineTo 407.89 103.491
+vector lineTo 409.927 104.584
+vector lineTo 411.964 105.678
+vector lineTo 414.001 106.773
+vector lineTo 416.037 107.867
+vector lineTo 418.073 108.962
+vector lineTo 420.109 110.058
+vector lineTo 422.145 111.154
+vector lineTo 424.18 112.25
+vector lineTo 426.216 113.347
+vector lineTo 428.251 114.444
+vector lineTo 430.286 115.542
+vector lineTo 432.32 116.64
+vector lineTo 434.355 117.738
+vector lineTo 436.389 118.836
+vector lineTo 438.423 119.935
+vector lineTo 440.457 121.034
+vector lineTo 442.491 122.134
+vector lineTo 444.525 123.234
+vector lineTo 446.558 124.334
+vector lineTo 448.592 125.434
+vector lineTo 450.625 126.535
+vector lineTo 452.658 127.636
+vector lineTo 454.69 128.738
+vector lineTo 456.723 129.839
+vector lineTo 458.756 130.941
+vector lineTo 460.788 132.044
+vector lineTo 462.82 133.146
+vector lineTo 464.852 134.249
+vector lineTo 466.884 135.352
+vector lineTo 468.916 136.455
+vector lineTo 470.947 137.559
+vector lineTo 472.979 138.663
+vector lineTo 475.01 139.767
+vector lineTo 477.041 140.872
+vector lineTo 479.072 141.976
+vector lineTo 481.103 143.081
+vector lineTo 483.134 144.186
+vector lineTo 485.165 145.292
+vector lineTo 487.195 146.397
+vector lineTo 489.226 147.503
+vector lineTo 491.256 148.609
+vector lineTo 493.286 149.716
+vector lineTo 495.316 150.822
+vector lineTo 497.346 151.929
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 497.346 151.929
+vector lineTo 497.78 152.165
+vector stroke
+vector setLineDash []
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo -62.7 480.15
+vector lineTo -60.845 478.887
+vector lineTo -58.995 477.617
+vector lineTo -57.146 476.344
+vector lineTo -55.298 475.07
+vector lineTo -53.451 473.795
+vector lineTo -51.603 472.52
+vector lineTo -49.756 471.245
+vector lineTo -47.908 469.97
+vector lineTo -46.061 468.695
+vector lineTo -44.214 467.42
+vector lineTo -42.367 466.144
+vector lineTo -40.519 464.869
+vector lineTo -38.672 463.594
+vector lineTo -36.825 462.319
+vector lineTo -34.977 461.044
+vector lineTo -33.13 459.769
+vector lineTo -31.282 458.494
+vector lineTo -29.435 457.219
+vector lineTo -27.587 455.945
+vector lineTo -25.739 454.67
+vector lineTo -23.891 453.396
+vector lineTo -22.043 452.121
+vector lineTo -20.195 450.847
+vector lineTo -18.347 449.573
+vector lineTo -16.499 448.3
+vector lineTo -14.651 447.026
+vector lineTo -12.802 445.752
+vector lineTo -10.954 444.479
+vector lineTo -9.105 443.206
+vector lineTo -7.256 441.933
+vector lineTo -5.407 440.66
+vector lineTo -3.558 439.387
+vector lineTo -1.709 438.114
+vector lineTo 0.14 436.842
+vector lineTo 1.989 435.57
+vector lineTo 3.839 434.298
+vector lineTo 5.688 433.026
+vector lineTo 7.538 431.754
+vector lineTo 9.388 430.483
+vector lineTo 11.238 429.211
+vector lineTo 13.088 427.94
+vector lineTo 14.938 426.669
+vector lineTo 16.788 425.398
+vector lineTo 18.639 424.128
+vector lineTo 20.489 422.858
+vector lineTo 22.34 421.587
+vector lineTo 24.191 420.318
+vector lineTo 26.042 419.048
+vector lineTo 27.893 417.778
+vector lineTo 29.745 416.509
+vector lineTo 31.596 415.24
+vector lineTo 33.448 413.971
+vector lineTo 35.3 412.702
+vector lineTo 37.152 411.434
+vector lineTo 39.004 410.166
+vector lineTo 40.856 408.898
+vector lineTo 42.708 407.63
+vector lineTo 44.561 406.363
+vector lineTo 46.414 405.096
+vector lineTo 48.267 403.829
+vector lineTo 50.12 402.562
+vector lineTo 51.973 401.296
+vector lineTo 53.827 400.03
+vector lineTo 55.68 398.764
+vector lineTo 57.534 397.498
+vector lineTo 59.388 396.233
+vector lineTo 61.243 394.968
+vector lineTo 63.097 393.703
+vector lineTo 64.952 392.439
+vector lineTo 66.807 391.174
+vector lineTo 68.662 389.911
+vector lineTo 70.517 388.647
+vector lineTo 72.372 387.384
+vector lineTo 74.228 386.121
+vector lineTo 76.084 384.858
+vector lineTo 77.94 383.596
+vector lineTo 79.796 382.334
+vector lineTo 81.653 381.073
+vector lineTo 83.51 379.812
+vector lineTo 85.367 378.551
+vector lineTo 87.224 377.29
+vector lineTo 89.082 376.03
+vector lineTo 90.94 374.77
+vector lineTo 92.798 373.511
+vector lineTo 94.656 372.252
+vector lineTo 96.515 370.994
+vector lineTo 98.374 369.736
+vector lineTo 100.233 368.478
+vector lineTo 102.093 367.221
+vector lineTo 103.953 365.964
+vector lineTo 105.813 364.708
+vector lineTo 107.673 363.452
+vector lineTo 109.534 362.197
+vector lineTo 111.395 360.942
+vector lineTo 113.257 359.688
+vector lineTo 115.119 358.434
+vector lineTo 116.981 357.181
+vector lineTo 118.844 355.929
+vector lineTo 120.706 354.676
+vector lineTo 122.57 353.425
+vector lineTo 124.434 352.174
+vector lineTo 126.298 350.924
+vector lineTo 128.162 349.675
+vector lineTo 130.028 348.426
+vector lineTo 131.893 347.178
+vector lineTo 133.759 345.93
+vector lineTo 135.626 344.683
+vector lineTo 137.493 343.438
+vector lineTo 139.36 342.192
+vector lineTo 141.228 340.948
+vector lineTo 143.097 339.705
+vector lineTo 144.966 338.463
+vector lineTo 146.836 337.221
+vector lineTo 148.707 335.98
+vector lineTo 150.578 334.741
+vector lineTo 152.45 333.502
+vector lineTo 154.322 332.265
+vector lineTo 156.196 331.029
+vector lineTo 158.07 329.794
+vector lineTo 159.945 328.56
+vector lineTo 161.821 327.328
+vector lineTo 163.697 326.097
+vector lineTo 165.575 324.868
+vector lineTo 167.454 323.64
+vector lineTo 169.333 322.414
+vector lineTo 171.214 321.19
+vector lineTo 173.096 319.967
+vector lineTo 174.98 318.747
+vector lineTo 176.865 317.529
+vector lineTo 178.751 316.314
+vector lineTo 180.638 315.101
+vector lineTo 182.528 313.891
+vector lineTo 184.419 312.684
+vector lineTo 186.312 311.48
+vector lineTo 188.208 310.281
+vector lineTo 190.106 309.086
+vector lineTo 192.006 307.895
+vector lineTo 193.91 306.71
+vector lineTo 195.816 305.53
+vector lineTo 197.726 304.359
+vector lineTo 199.641 303.197
+vector lineTo 201.56 302.045
+vector lineTo 203.484 300.906
+vector lineTo 205.413 299.786
+vector lineTo 207.347 298.692
+vector lineTo 209.283 297.635
+vector lineTo 211.197 296.652
+vector lineTo 212.936 295.856
+vector lineTo 213.679 295.573
+vector lineTo 214.107 295.439
+vector lineTo 214.546 295.348
+vector lineTo 214.994 295.336
+vector lineTo 215.44 295.385
+vector lineTo 216.424 295.647
+vector lineTo 218.035 296.322
+vector lineTo 219.838 297.31
+vector lineTo 221.658 298.456
+vector lineTo 223.464 299.696
+vector lineTo 225.25 300.999
+vector lineTo 227.018 302.344
+vector lineTo 228.767 303.723
+vector lineTo 230.502 305.127
+vector lineTo 232.224 306.552
+vector lineTo 233.934 307.994
+vector lineTo 235.633 309.451
+vector lineTo 237.324 310.92
+vector lineTo 239.006 312.399
+vector lineTo 240.681 313.888
+vector lineTo 242.349 315.385
+vector lineTo 244.011 316.891
+vector lineTo 245.667 318.403
+vector lineTo 247.318 319.92
+vector lineTo 248.965 321.444
+vector lineTo 250.606 322.972
+vector lineTo 252.244 324.506
+vector lineTo 253.878 326.043
+vector lineTo 255.508 327.585
+vector lineTo 257.135 329.13
+vector lineTo 258.759 330.678
+vector lineTo 260.38 332.23
+vector lineTo 261.998 333.785
+vector lineTo 263.614 335.342
+vector lineTo 265.228 336.902
+vector lineTo 266.839 338.464
+vector lineTo 268.448 340.029
+vector lineTo 270.055 341.596
+vector lineTo 271.659 343.165
+vector lineTo 273.263 344.735
+vector lineTo 274.864 346.308
+vector lineTo 276.464 347.881
+vector lineTo 278.063 349.457
+vector lineTo 279.66 351.034
+vector lineTo 281.256 352.613
+vector lineTo 282.85 354.192
+vector lineTo 284.444 355.773
+vector lineTo 286.036 357.355
+vector lineTo 287.627 358.938
+vector lineTo 289.217 360.522
+vector lineTo 290.807 362.107
+vector lineTo 292.395 363.693
+vector lineTo 293.983 365.28
+vector lineTo 295.571 366.867
+vector lineTo 297.157 368.454
+vector lineTo 298.743 370.043
+vector lineTo 300.329 371.632
+vector lineTo 301.914 373.221
+vector lineTo 303.499 374.81
+vector lineTo 305.084 376.4
+vector lineTo 306.668 377.99
+vector lineTo 308.253 379.58
+vector lineTo 309.837 381.17
+vector lineTo 311.422 382.76
+vector lineTo 313.006 384.35
+vector lineTo 314.591 385.94
+vector lineTo 316.176 387.529
+vector lineTo 317.762 389.118
+vector lineTo 319.348 390.706
+vector lineTo 320.935 392.293
+vector lineTo 322.523 393.88
+vector lineTo 324.112 395.466
+vector lineTo 325.702 397.05
+vector lineTo 327.293 398.633
+vector lineTo 328.886 400.214
+vector lineTo 330.481 401.793
+vector lineTo 332.078 403.37
+vector lineTo 333.677 404.944
+vector lineTo 335.28 406.515
+vector lineTo 336.886 408.082
+vector lineTo 338.496 409.644
+vector lineTo 340.111 411.201
+vector lineTo 341.732 412.75
+vector lineTo 343.361 414.29
+vector lineTo 344.999 415.818
+vector lineTo 346.648 417.328
+vector lineTo 348.312 418.812
+vector lineTo 349.994 420.244
+vector lineTo 351.66 421.544
+vector lineTo 352.64 422.18
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 352.64 422.18
+vector lineTo 353.063 422.384
+vector lineTo 353.853 422.554
+vector lineTo 355.834 422.587
+vector lineTo 358.009 422.405
+vector lineTo 360.209 422.12
+vector lineTo 362.412 421.771
+vector lineTo 364.613 421.381
+vector lineTo 366.812 420.961
+vector lineTo 369.008 420.517
+vector lineTo 371.201 420.055
+vector lineTo 373.391 419.575
+vector lineTo 375.579 419.083
+vector lineTo 377.765 418.579
+vector lineTo 379.948 418.065
+vector lineTo 382.13 417.541
+vector lineTo 384.309 417.009
+vector lineTo 386.487 416.47
+vector lineTo 388.664 415.924
+vector lineTo 390.838 415.372
+vector lineTo 393.012 414.813
+vector lineTo 395.184 414.249
+vector lineTo 397.355 413.68
+vector lineTo 399.524 413.106
+vector lineTo 401.692 412.527
+vector lineTo 403.859 411.944
+vector lineTo 406.025 411.356
+vector lineTo 408.19 410.764
+vector lineTo 410.354 410.168
+vector lineTo 412.517 409.569
+vector lineTo 414.678 408.965
+vector lineTo 416.839 408.357
+vector lineTo 418.998 407.746
+vector lineTo 421.157 407.132
+vector lineTo 423.314 406.513
+vector lineTo 425.471 405.891
+vector lineTo 427.626 405.265
+vector lineTo 429.781 404.636
+vector lineTo 431.934 404.004
+vector lineTo 434.086 403.367
+vector lineTo 436.237 402.726
+vector lineTo 438.387 402.082
+vector lineTo 440.536 401.434
+vector lineTo 442.683 400.781
+vector lineTo 444.829 400.125
+vector lineTo 446.974 399.464
+vector lineTo 449.117 398.798
+vector lineTo 451.258 398.128
+vector lineTo 453.398 397.452
+vector lineTo 455.536 396.77
+vector lineTo 457.672 396.082
+vector lineTo 459.806 395.387
+vector lineTo 461.936 394.685
+vector lineTo 464.064 393.974
+vector lineTo 466.188 393.253
+vector lineTo 468.307 392.519
+vector lineTo 470.42 391.772
+vector lineTo 472.526 391.006
+vector lineTo 474.618 390.215
+vector lineTo 476.69 389.389
+vector lineTo 478.705 388.506
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 478.705 388.506
+vector lineTo 480.022 387.786
+vector stroke
+vector setLineDash []
+vector save
+vector translate 481.793 386.565
+vector rotate 0.519
+vector beginPath
+vector set:fillStyle #009E73
+vector arc 0 0 16.8 0 6.283
+vector fill
+vector restore
+vector save
+vector translate 499.809 153.272
+vector rotate 1.285
+vector beginPath
+vector set:fillStyle #009E73
+vector arc 0 0 16.8 0 6.283
+vector fill
+vector restore
+vector save
+vector createRadialGradient 353.1 422.4 11.2 353.1 422.4 201.6
+vector [gradient 1].addColorStop 0 #CC79A7
+vector [gradient 1].addColorStop 0.3 rgba(204, 121, 167, 0.5185761539889397)
+vector [gradient 1].addColorStop 0.6 rgba(204, 121, 167, 0.2592880769944699)
+vector [gradient 1].addColorStop 1 rgba(204, 121, 167, 0)
+vector beginPath
+vector arc 353.1 422.4 201.6 0 6.283
+vector set:fillStyle [gradient 1]
+vector fill
+vector restore
+vector save
+vector set:globalAlpha 0.5
+vector set:fillStyle #000000
+vector set:strokeStyle #ffffff
+vector set:lineWidth 1.6
+vector beginPath
+vector arc 214.5 295.35 6.4 0 6.283
+vector fill
+vector stroke
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 3
+vector measureText Label 3
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 421.3 312.12
+vector lineTo 469.7 312.12
+vector quadraticCurveTo 476.1 312.12 476.1 318.52
+vector lineTo 476.1 381.08
+vector quadraticCurveTo 476.1 387.48 469.7 387.48
+vector lineTo 421.3 387.48
+vector quadraticCurveTo 414.9 387.48 414.9 381.08
+vector lineTo 414.9 318.52
+vector quadraticCurveTo 414.9 312.12 421.3 312.12
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 3 445.5 349.8
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 330.7 400 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 4
+vector measureText Label 4
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 554.95 270.87
+vector lineTo 603.35 270.87
+vector quadraticCurveTo 609.75 270.87 609.75 277.27
+vector lineTo 609.75 339.83
+vector quadraticCurveTo 609.75 346.23 603.35 346.23
+vector lineTo 554.95 346.23
+vector quadraticCurveTo 548.55 346.23 548.55 339.83
+vector lineTo 548.55 277.27
+vector quadraticCurveTo 548.55 270.87 554.95 270.87
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 4 579.15 308.55
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 457.75 365.35 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 5
+vector measureText Label 5
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 342.1 -93.78
+vector lineTo 390.5 -93.78
+vector quadraticCurveTo 396.9 -93.78 396.9 -87.38
+vector lineTo 396.9 -24.82
+vector quadraticCurveTo 396.9 -18.42 390.5 -18.42
+vector lineTo 342.1 -18.42
+vector quadraticCurveTo 335.7 -18.42 335.7 -24.82
+vector lineTo 335.7 -87.38
+vector quadraticCurveTo 335.7 -93.78 342.1 -93.78
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 5 366.3 -56.1
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 238.3 7.3 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 6
+vector measureText Label 6
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 741.4 107.52
+vector lineTo 789.8 107.52
+vector quadraticCurveTo 796.2 107.52 796.2 113.92
+vector lineTo 796.2 176.48
+vector quadraticCurveTo 796.2 182.88 789.8 182.88
+vector lineTo 741.4 182.88
+vector quadraticCurveTo 735 182.88 735 176.48
+vector lineTo 735 113.92
+vector quadraticCurveTo 735 107.52 741.4 107.52
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 6 765.6 145.2
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 631 215.2 44.8 44.8
+vector fill
+vector stroke
+main drawImage [canvas] 0 0 660 660
+
+# progress 0.75
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -247.5 1155 1155
+main save
+main set:globalAlpha 0.005
+main set:fillStyle #fff
+main fillRect 0 0 660 660
+main restore
+vector clearRect 0 0 660 660
+vector save
+vector beginPath
+vector moveTo -16.5 -16.5
+vector lineTo 445.5 41.25
+vector lineTo 272.25 561
+vector closePath
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fill
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector stroke
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #56B4E9
+vector beginPath
+vector moveTo 263.164 56.931
+vector arc 255.964 56.931 7.2 0 6.283
+vector moveTo 263.494 55.034
+vector arc 256.294 55.034 7.2 0 6.283
+vector moveTo 584.473 197.297
+vector arc 577.273 197.297 7.2 0 6.283
+vector moveTo 255.605 100.396
+vector arc 248.405 100.396 7.2 0 6.283
+vector moveTo 354.278 75.43
+vector arc 347.078 75.43 7.2 0 6.283
+vector moveTo 647.207 249.372
+vector arc 640.007 249.372 7.2 0 6.283
+vector moveTo 458.886 397.992
+vector arc 451.686 397.992 7.2 0 6.283
+vector moveTo 504.752 155.092
+vector arc 497.552 155.092 7.2 0 6.283
+vector moveTo 344.303 70.149
+vector arc 337.103 70.149 7.2 0 6.283
+vector moveTo 544.588 339.25
+vector arc 537.388 339.25 7.2 0 6.283
+vector moveTo 414.634 410.971
+vector arc 407.434 410.971 7.2 0 6.283
+vector moveTo 552.173 332.652
+vector arc 544.973 332.652 7.2 0 6.283
+vector moveTo 281.05 36.662
+vector arc 273.85 36.662 7.2 0 6.283
+vector moveTo 430.877 406.408
+vector arc 423.677 406.408 7.2 0 6.283
+vector moveTo 655.353 242.206
+vector arc 648.153 242.206 7.2 0 6.283
+vector moveTo 634.497 260.551
+vector arc 627.297 260.551 7.2 0 6.283
+vector moveTo 657.826 240.031
+vector arc 650.626 240.031 7.2 0 6.283
+vector moveTo 372.54 421.245
+vector arc 365.34 421.245 7.2 0 6.283
+vector moveTo 236.108 212.502
+vector arc 228.908 212.502 7.2 0 6.283
+vector moveTo 625.097 218.804
+vector arc 617.897 218.804 7.2 0 6.283
+vector moveTo 589.831 200.134
+vector arc 582.631 200.134 7.2 0 6.283
+vector moveTo 558.884 183.75
+vector arc 551.684 183.75 7.2 0 6.283
+vector moveTo 403.494 101.485
+vector arc 396.294 101.485 7.2 0 6.283
+vector moveTo 433.063 405.778
+vector arc 425.863 405.778 7.2 0 6.283
+vector moveTo 396.962 98.027
+vector arc 389.762 98.027 7.2 0 6.283
+vector moveTo 318.403 56.437
+vector arc 311.203 56.437 7.2 0 6.283
+vector moveTo 594.809 295.394
+vector arc 587.609 295.394 7.2 0 6.283
+vector moveTo 464.803 396.104
+vector arc 457.603 396.104 7.2 0 6.283
+vector moveTo 456.462 398.753
+vector arc 449.262 398.753 7.2 0 6.283
+vector moveTo 519.221 162.752
+vector arc 512.021 162.752 7.2 0 6.283
+vector moveTo 437.121 119.288
+vector arc 429.921 119.288 7.2 0 6.283
+vector moveTo 382.828 419.071
+vector arc 375.628 419.071 7.2 0 6.283
+vector moveTo 228.797 254.545
+vector arc 221.597 254.545 7.2 0 6.283
+vector moveTo 466.384 134.78
+vector arc 459.184 134.78 7.2 0 6.283
+vector moveTo 312.94 381.195
+vector arc 305.74 381.195 7.2 0 6.283
+vector moveTo 552.983 331.947
+vector arc 545.783 331.947 7.2 0 6.283
+vector moveTo 378.855 419.955
+vector arc 371.655 419.955 7.2 0 6.283
+vector moveTo 519.335 162.813
+vector arc 512.135 162.813 7.2 0 6.283
+vector moveTo 357.063 76.904
+vector arc 349.863 76.904 7.2 0 6.283
+vector moveTo 476.053 139.899
+vector arc 468.853 139.899 7.2 0 6.283
+vector moveTo 265.641 42.687
+vector arc 258.441 42.687 7.2 0 6.283
+vector fill
+vector restore
+vector lineTo 214.828 293.069
+vector lineTo 215.131 290.778
+vector lineTo 215.429 288.485
+vector lineTo 215.724 286.192
+vector lineTo 216.018 283.898
+vector lineTo 216.31 281.605
+vector lineTo 216.603 279.312
+vector lineTo 216.895 277.018
+vector lineTo 217.187 274.725
+vector lineTo 217.479 272.431
+vector lineTo 217.772 270.138
+vector lineTo 218.065 267.844
+vector lineTo 218.358 265.551
+vector lineTo 218.652 263.258
+vector lineTo 218.946 260.964
+vector lineTo 219.241 258.671
+vector lineTo 219.536 256.378
+vector lineTo 219.832 254.085
+vector lineTo 220.128 251.792
+vector lineTo 220.425 249.499
+vector lineTo 220.722 247.206
+vector lineTo 221.021 244.914
+vector lineTo 221.32 242.621
+vector lineTo 221.619 240.329
+vector lineTo 221.919 238.036
+vector lineTo 222.22 235.744
+vector lineTo 222.522 233.452
+vector lineTo 222.824 231.16
+vector lineTo 223.128 228.868
+vector lineTo 223.432 226.576
+vector lineTo 223.736 224.284
+vector lineTo 224.042 221.992
+vector lineTo 224.348 219.701
+vector lineTo 224.655 217.409
+vector lineTo 224.963 215.118
+vector lineTo 225.272 212.826
+vector lineTo 225.582 210.535
+vector lineTo 225.892 208.244
+vector lineTo 226.204 205.953
+vector lineTo 226.516 203.663
+vector lineTo 226.83 201.372
+vector lineTo 227.144 199.082
+vector lineTo 227.46 196.791
+vector lineTo 227.776 194.501
+vector lineTo 228.093 192.211
+vector lineTo 228.412 189.921
+vector lineTo 228.731 187.631
+vector lineTo 229.052 185.342
+vector lineTo 229.373 183.052
+vector lineTo 229.696 180.763
+vector lineTo 230.02 178.474
+vector lineTo 230.345 176.185
+vector lineTo 230.672 173.896
+vector lineTo 230.999 171.608
+vector lineTo 231.328 169.32
+vector lineTo 231.658 167.031
+vector lineTo 231.989 164.743
+vector lineTo 232.322 162.456
+vector lineTo 232.656 160.168
+vector lineTo 232.992 157.881
+vector lineTo 233.329 155.594
+vector lineTo 233.667 153.307
+vector lineTo 234.007 151.02
+vector lineTo 234.349 148.734
+vector lineTo 234.692 146.448
+vector lineTo 235.037 144.162
+vector lineTo 235.384 141.876
+vector lineTo 235.732 139.591
+vector lineTo 236.082 137.306
+vector lineTo 236.434 135.021
+vector lineTo 236.788 132.737
+vector lineTo 237.144 130.453
+vector lineTo 237.502 128.169
+vector lineTo 237.862 125.886
+vector lineTo 238.224 123.603
+vector lineTo 238.588 121.32
+vector lineTo 238.956 119.038
+vector lineTo 239.325 116.756
+vector lineTo 239.696 114.475
+vector lineTo 240.071 112.194
+vector lineTo 240.448 109.914
+vector lineTo 240.828 107.634
+vector lineTo 241.211 105.355
+vector lineTo 241.597 103.076
+vector lineTo 241.986 100.798
+vector lineTo 242.379 98.521
+vector lineTo 242.774 96.244
+vector lineTo 243.175 93.968
+vector lineTo 243.579 91.693
+vector lineTo 243.986 89.418
+vector lineTo 244.398 87.145
+vector lineTo 244.815 84.873
+vector lineTo 245.236 82.601
+vector lineTo 245.663 80.331
+vector lineTo 246.096 78.063
+vector lineTo 246.533 75.795
+vector lineTo 246.977 73.529
+vector lineTo 247.428 71.265
+vector lineTo 247.887 69.002
+vector lineTo 248.353 66.742
+vector lineTo 248.827 64.484
+vector lineTo 249.31 62.229
+vector lineTo 249.804 59.977
+vector lineTo 250.31 57.729
+vector lineTo 250.828 55.485
+vector lineTo 251.36 53.246
+vector lineTo 251.907 51.014
+vector lineTo 252.473 48.789
+vector lineTo 253.059 46.575
+vector lineTo 253.669 44.374
+vector lineTo 254.306 42.191
+vector lineTo 254.982 40.038
+vector lineTo 255.696 37.929
+vector lineTo 256.453 35.891
+vector lineTo 257.255 34.01
+vector lineTo 258.032 32.457
+vector lineTo 258.556 31.586
+vector lineTo 258.894 31.089
+vector lineTo 259.187 30.732
+vector lineTo 259.503 30.395
+vector lineTo 259.848 30.088
+vector lineTo 260.24 29.843
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 260.24 29.843
+vector lineTo 260.681 29.706
+vector lineTo 261.142 29.703
+vector lineTo 262.048 29.841
+vector lineTo 263.915 30.371
+vector lineTo 265.984 31.106
+vector lineTo 268.086 31.929
+vector lineTo 270.193 32.803
+vector lineTo 272.297 33.711
+vector lineTo 274.398 34.644
+vector lineTo 276.495 35.595
+vector lineTo 278.588 36.559
+vector lineTo 280.678 37.535
+vector lineTo 282.764 38.519
+vector lineTo 284.847 39.514
+vector lineTo 286.927 40.516
+vector lineTo 289.005 41.523
+vector lineTo 291.081 42.536
+vector lineTo 293.154 43.555
+vector lineTo 295.226 44.576
+vector lineTo 297.296 45.604
+vector lineTo 299.364 46.634
+vector lineTo 301.431 47.668
+vector lineTo 303.496 48.705
+vector lineTo 305.56 49.745
+vector lineTo 307.622 50.788
+vector lineTo 309.684 51.832
+vector lineTo 311.744 52.881
+vector lineTo 313.803 53.93
+vector lineTo 315.861 54.982
+vector lineTo 317.919 56.035
+vector lineTo 319.975 57.092
+vector lineTo 322.031 58.148
+vector lineTo 324.085 59.208
+vector lineTo 326.139 60.268
+vector lineTo 328.192 61.331
+vector lineTo 330.245 62.394
+vector lineTo 332.296 63.459
+vector lineTo 334.348 64.525
+vector lineTo 336.398 65.593
+vector lineTo 338.448 66.662
+vector lineTo 340.497 67.731
+vector lineTo 342.546 68.803
+vector lineTo 344.594 69.874
+vector lineTo 346.642 70.948
+vector lineTo 348.689 72.022
+vector lineTo 350.736 73.097
+vector lineTo 352.782 74.173
+vector lineTo 354.828 75.25
+vector lineTo 356.873 76.328
+vector lineTo 358.918 77.406
+vector lineTo 360.962 78.486
+vector lineTo 363.006 79.566
+vector lineTo 365.05 80.647
+vector lineTo 367.093 81.729
+vector lineTo 369.136 82.811
+vector lineTo 371.178 83.894
+vector lineTo 373.22 84.978
+vector lineTo 375.262 86.062
+vector lineTo 377.304 87.147
+vector lineTo 379.345 88.233
+vector lineTo 381.386 89.319
+vector lineTo 383.426 90.406
+vector lineTo 385.466 91.493
+vector lineTo 387.506 92.582
+vector lineTo 389.546 93.67
+vector lineTo 391.585 94.759
+vector lineTo 393.624 95.849
+vector lineTo 395.663 96.939
+vector lineTo 397.701 98.03
+vector lineTo 399.74 99.121
+vector lineTo 401.778 100.213
+vector lineTo 403.815 101.305
+vector lineTo 405.853 102.398
+vector lineTo 407.89 103.491
+vector lineTo 409.927 104.584
+vector lineTo 411.964 105.678
+vector lineTo 414.001 106.773
+vector lineTo 416.037 107.867
+vector lineTo 418.073 108.962
+vector lineTo 420.109 110.058
+vector lineTo 422.145 111.154
+vector lineTo 424.18 112.25
+vector lineTo 426.216 113.347
+vector lineTo 428.251 114.444
+vector lineTo 430.286 115.542
+vector lineTo 432.32 116.64
+vector lineTo 434.355 117.738
+vector lineTo 436.389 118.836
+vector lineTo 438.423 119.935
+vector lineTo 440.457 121.034
+vector lineTo 442.491 122.134
+vector lineTo 444.525 123.234
+vector lineTo 446.558 124.334
+vector lineTo 448.592 125.434
+vector lineTo 450.625 126.535
+vector lineTo 452.658 127.636
+vector lineTo 454.69 128.738
+vector lineTo 456.723 129.839
+vector lineTo 458.756 130.941
+vector lineTo 460.788 132.044
+vector lineTo 462.82 133.146
+vector lineTo 464.852 134.249
+vector lineTo 466.884 135.352
+vector lineTo 468.916 136.455
+vector lineTo 470.947 137.559
+vector lineTo 472.979 138.663
+vector lineTo 475.01 139.767
+vector lineTo 477.041 140.872
+vector lineTo 479.072 141.976
+vector lineTo 481.103 143.081
+vector lineTo 483.134 144.186
+vector lineTo 485.165 145.292
+vector lineTo 487.195 146.397
+vector lineTo 489.226 147.503
+vector lineTo 491.256 148.609
+vector lineTo 493.286 149.716
+vector lineTo 495.316 150.822
+vector lineTo 497.346 151.929
+vector lineTo 499.376 153.036
+vector lineTo 501.405 154.143
+vector lineTo 503.435 155.25
+vector lineTo 505.464 156.358
+vector lineTo 507.494 157.466
+vector lineTo 509.523 158.574
+vector lineTo 511.552 159.682
+vector lineTo 513.581 160.791
+vector lineTo 515.61 161.899
+vector lineTo 517.639 163.008
+vector lineTo 519.667 164.117
+vector lineTo 521.696 165.227
+vector lineTo 523.724 166.336
+vector lineTo 525.753 167.446
+vector lineTo 527.781 168.556
+vector lineTo 529.809 169.665
+vector lineTo 531.837 170.776
+vector lineTo 533.865 171.886
+vector lineTo 535.893 172.997
+vector lineTo 537.921 174.107
+vector lineTo 539.948 175.218
+vector lineTo 541.976 176.329
+vector lineTo 544.003 177.441
+vector lineTo 546.031 178.552
+vector lineTo 548.058 179.664
+vector lineTo 550.085 180.775
+vector lineTo 552.112 181.887
+vector lineTo 554.139 182.999
+vector lineTo 556.166 184.111
+vector lineTo 558.193 185.224
+vector lineTo 560.22 186.336
+vector lineTo 562.246 187.449
+vector lineTo 564.273 188.562
+vector lineTo 566.299 189.675
+vector lineTo 568.326 190.788
+vector lineTo 570.352 191.901
+vector lineTo 572.379 193.015
+vector lineTo 574.405 194.128
+vector lineTo 576.431 195.242
+vector lineTo 578.457 196.356
+vector lineTo 580.483 197.47
+vector lineTo 582.509 198.584
+vector lineTo 584.535 199.698
+vector lineTo 586.56 200.813
+vector lineTo 588.586 201.927
+vector lineTo 590.612 203.042
+vector lineTo 592.637 204.156
+vector lineTo 594.663 205.271
+vector lineTo 596.688 206.386
+vector lineTo 598.713 207.501
+vector lineTo 600.739 208.617
+vector lineTo 602.764 209.732
+vector lineTo 604.789 210.847
+vector lineTo 606.814 211.963
+vector lineTo 608.839 213.079
+vector lineTo 610.864 214.194
+vector lineTo 612.889 215.31
+vector lineTo 614.914 216.426
+vector lineTo 616.939 217.542
+vector lineTo 618.964 218.658
+vector lineTo 620.989 219.774
+vector lineTo 623.013 220.89
+vector lineTo 625.038 222.006
+vector lineTo 627.063 223.122
+vector lineTo 629.088 224.239
+vector lineTo 631.112 225.355
+vector lineTo 633.137 226.471
+vector lineTo 635.162 227.587
+vector lineTo 637.187 228.703
+vector lineTo 639.212 229.819
+vector lineTo 641.237 230.934
+vector lineTo 643.262 232.05
+vector lineTo 645.288 233.164
+vector lineTo 647.314 234.278
+vector lineTo 649.341 235.391
+vector lineTo 651.368 236.5
+vector lineTo 653.4 237.6
+vector stroke
+vector setLineDash []
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo -62.7 480.15
+vector lineTo -60.845 478.887
+vector lineTo -58.995 477.617
+vector lineTo -57.146 476.344
+vector lineTo -55.298 475.07
+vector lineTo -53.451 473.795
+vector lineTo -51.603 472.52
+vector lineTo -49.756 471.245
+vector lineTo -47.908 469.97
+vector lineTo -46.061 468.695
+vector lineTo -44.214 467.42
+vector lineTo -42.367 466.144
+vector lineTo -40.519 464.869
+vector lineTo -38.672 463.594
+vector lineTo -36.825 462.319
+vector lineTo -34.977 461.044
+vector lineTo -33.13 459.769
+vector lineTo -31.282 458.494
+vector lineTo -29.435 457.219
+vector lineTo -27.587 455.945
+vector lineTo -25.739 454.67
+vector lineTo -23.891 453.396
+vector lineTo -22.043 452.121
+vector lineTo -20.195 450.847
+vector lineTo -18.347 449.573
+vector lineTo -16.499 448.3
+vector lineTo -14.651 447.026
+vector lineTo -12.802 445.752
+vector lineTo -10.954 444.479
+vector lineTo -9.105 443.206
+vector lineTo -7.256 441.933
+vector lineTo -5.407 440.66
+vector lineTo -3.558 439.387
+vector lineTo -1.709 438.114
+vector lineTo 0.14 436.842
+vector lineTo 1.989 435.57
+vector lineTo 3.839 434.298
+vector lineTo 5.688 433.026
+vector lineTo 7.538 431.754
+vector lineTo 9.388 430.483
+vector lineTo 11.238 429.211
+vector lineTo 13.088 427.94
+vector lineTo 14.938 426.669
+vector lineTo 16.788 425.398
+vector lineTo 18.639 424.128
+vector lineTo 20.489 422.858
+vector lineTo 22.34 421.587
+vector lineTo 24.191 420.318
+vector lineTo 26.042 419.048
+vector lineTo 27.893 417.778
+vector lineTo 29.745 416.509
+vector lineTo 31.596 415.24
+vector lineTo 33.448 413.971
+vector lineTo 35.3 412.702
+vector lineTo 37.152 411.434
+vector lineTo 39.004 410.166
+vector lineTo 40.856 408.898
+vector lineTo 42.708 407.63
+vector lineTo 44.561 406.363
+vector lineTo 46.414 405.096
+vector lineTo 48.267 403.829
+vector lineTo 50.12 402.562
+vector lineTo 51.973 401.296
+vector lineTo 53.827 400.03
+vector lineTo 55.68 398.764
+vector lineTo 57.534 397.498
+vector lineTo 59.388 396.233
+vector lineTo 61.243 394.968
+vector lineTo 63.097 393.703
+vector lineTo 64.952 392.439
+vector lineTo 66.807 391.174
+vector lineTo 68.662 389.911
+vector lineTo 70.517 388.647
+vector lineTo 72.372 387.384
+vector lineTo 74.228 386.121
+vector lineTo 76.084 384.858
+vector lineTo 77.94 383.596
+vector lineTo 79.796 382.334
+vector lineTo 81.653 381.073
+vector lineTo 83.51 379.812
+vector lineTo 85.367 378.551
+vector lineTo 87.224 377.29
+vector lineTo 89.082 376.03
+vector lineTo 90.94 374.77
+vector lineTo 92.798 373.511
+vector lineTo 94.656 372.252
+vector lineTo 96.515 370.994
+vector lineTo 98.374 369.736
+vector lineTo 100.233 368.478
+vector lineTo 102.093 367.221
+vector lineTo 103.953 365.964
+vector lineTo 105.813 364.708
+vector lineTo 107.673 363.452
+vector lineTo 109.534 362.197
+vector lineTo 111.395 360.942
+vector lineTo 113.257 359.688
+vector lineTo 115.119 358.434
+vector lineTo 116.981 357.181
+vector lineTo 118.844 355.929
+vector lineTo 120.706 354.676
+vector lineTo 122.57 353.425
+vector lineTo 124.434 352.174
+vector lineTo 126.298 350.924
+vector lineTo 128.162 349.675
+vector lineTo 130.028 348.426
+vector lineTo 131.893 347.178
+vector lineTo 133.759 345.93
+vector lineTo 135.626 344.683
+vector lineTo 137.493 343.438
+vector lineTo 139.36 342.192
+vector lineTo 141.228 340.948
+vector lineTo 143.097 339.705
+vector lineTo 144.966 338.463
+vector lineTo 146.836 337.221
+vector lineTo 148.707 335.98
+vector lineTo 150.578 334.741
+vector lineTo 152.45 333.502
+vector lineTo 154.322 332.265
+vector lineTo 156.196 331.029
+vector lineTo 158.07 329.794
+vector lineTo 159.945 328.56
+vector lineTo 161.821 327.328
+vector lineTo 163.697 326.097
+vector lineTo 165.575 324.868
+vector lineTo 167.454 323.64
+vector lineTo 169.333 322.414
+vector lineTo 171.214 321.19
+vector lineTo 173.096 319.967
+vector lineTo 174.98 318.747
+vector lineTo 176.865 317.529
+vector lineTo 178.751 316.314
+vector lineTo 180.638 315.101
+vector lineTo 182.528 313.891
+vector lineTo 184.419 312.684
+vector lineTo 186.312 311.48
+vector lineTo 188.208 310.281
+vector lineTo 190.106 309.086
+vector lineTo 192.006 307.895
+vector lineTo 193.91 306.71
+vector lineTo 195.816 305.53
+vector lineTo 197.726 304.359
+vector lineTo 199.641 303.197
+vector lineTo 201.56 302.045
+vector lineTo 203.484 300.906
+vector lineTo 205.413 299.786
+vector lineTo 207.347 298.692
+vector lineTo 209.283 297.635
+vector lineTo 211.197 296.652
+vector lineTo 212.936 295.856
+vector lineTo 213.679 295.573
+vector lineTo 214.107 295.439
+vector lineTo 214.546 295.348
+vector lineTo 214.994 295.336
+vector lineTo 215.44 295.385
+vector lineTo 216.424 295.647
+vector lineTo 218.035 296.322
+vector lineTo 219.838 297.31
+vector lineTo 221.658 298.456
+vector lineTo 223.464 299.696
+vector lineTo 225.25 300.999
+vector lineTo 227.018 302.344
+vector lineTo 228.767 303.723
+vector lineTo 230.502 305.127
+vector lineTo 232.224 306.552
+vector lineTo 233.934 307.994
+vector lineTo 235.633 309.451
+vector lineTo 237.324 310.92
+vector lineTo 239.006 312.399
+vector lineTo 240.681 313.888
+vector lineTo 242.349 315.385
+vector lineTo 244.011 316.891
+vector lineTo 245.667 318.403
+vector lineTo 247.318 319.92
+vector lineTo 248.965 321.444
+vector lineTo 250.606 322.972
+vector lineTo 252.244 324.506
+vector lineTo 253.878 326.043
+vector lineTo 255.508 327.585
+vector lineTo 257.135 329.13
+vector lineTo 258.759 330.678
+vector lineTo 260.38 332.23
+vector lineTo 261.998 333.785
+vector lineTo 263.614 335.342
+vector lineTo 265.228 336.902
+vector lineTo 266.839 338.464
+vector lineTo 268.448 340.029
+vector lineTo 270.055 341.596
+vector lineTo 271.659 343.165
+vector lineTo 273.263 344.735
+vector lineTo 274.864 346.308
+vector lineTo 276.464 347.881
+vector lineTo 278.063 349.457
+vector lineTo 279.66 351.034
+vector lineTo 281.256 352.613
+vector lineTo 282.85 354.192
+vector lineTo 284.444 355.773
+vector lineTo 286.036 357.355
+vector lineTo 287.627 358.938
+vector lineTo 289.217 360.522
+vector lineTo 290.807 362.107
+vector lineTo 292.395 363.693
+vector lineTo 293.983 365.28
+vector lineTo 295.571 366.867
+vector lineTo 297.157 368.454
+vector lineTo 298.743 370.043
+vector lineTo 300.329 371.632
+vector lineTo 301.914 373.221
+vector lineTo 303.499 374.81
+vector lineTo 305.084 376.4
+vector lineTo 306.668 377.99
+vector lineTo 308.253 379.58
+vector lineTo 309.837 381.17
+vector lineTo 311.422 382.76
+vector lineTo 313.006 384.35
+vector lineTo 314.591 385.94
+vector lineTo 316.176 387.529
+vector lineTo 317.762 389.118
+vector lineTo 319.348 390.706
+vector lineTo 320.935 392.293
+vector lineTo 322.523 393.88
+vector lineTo 324.112 395.466
+vector lineTo 325.702 397.05
+vector lineTo 327.293 398.633
+vector lineTo 328.886 400.214
+vector lineTo 330.481 401.793
+vector lineTo 332.078 403.37
+vector lineTo 333.677 404.944
+vector lineTo 335.28 406.515
+vector lineTo 336.886 408.082
+vector lineTo 338.496 409.644
+vector lineTo 340.111 411.201
+vector lineTo 341.732 412.75
+vector lineTo 343.361 414.29
+vector lineTo 344.999 415.818
+vector lineTo 346.648 417.328
+vector lineTo 348.312 418.812
+vector lineTo 349.994 420.244
+vector lineTo 351.66 421.544
+vector lineTo 352.64 422.18
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 352.64 422.18
+vector lineTo 353.063 422.384
+vector lineTo 353.853 422.554
+vector lineTo 355.834 422.587
+vector lineTo 358.009 422.405
+vector lineTo 360.209 422.12
+vector lineTo 362.412 421.771
+vector lineTo 364.613 421.381
+vector lineTo 366.812 420.961
+vector lineTo 369.008 420.517
+vector lineTo 371.201 420.055
+vector lineTo 373.391 419.575
+vector lineTo 375.579 419.083
+vector lineTo 377.765 418.579
+vector lineTo 379.948 418.065
+vector lineTo 382.13 417.541
+vector lineTo 384.309 417.009
+vector lineTo 386.487 416.47
+vector lineTo 388.664 415.924
+vector lineTo 390.838 415.372
+vector lineTo 393.012 414.813
+vector lineTo 395.184 414.249
+vector lineTo 397.355 413.68
+vector lineTo 399.524 413.106
+vector lineTo 401.692 412.527
+vector lineTo 403.859 411.944
+vector lineTo 406.025 411.356
+vector lineTo 408.19 410.764
+vector lineTo 410.354 410.168
+vector lineTo 412.517 409.569
+vector lineTo 414.678 408.965
+vector lineTo 416.839 408.357
+vector lineTo 418.998 407.746
+vector lineTo 421.157 407.132
+vector lineTo 423.314 406.513
+vector lineTo 425.471 405.891
+vector lineTo 427.626 405.265
+vector lineTo 429.781 404.636
+vector lineTo 431.934 404.004
+vector lineTo 434.086 403.367
+vector lineTo 436.237 402.726
+vector lineTo 438.387 402.082
+vector lineTo 440.536 401.434
+vector lineTo 442.683 400.781
+vector lineTo 444.829 400.125
+vector lineTo 446.974 399.464
+vector lineTo 449.117 398.798
+vector lineTo 451.258 398.128
+vector lineTo 453.398 397.452
+vector lineTo 455.536 396.77
+vector lineTo 457.672 396.082
+vector lineTo 459.806 395.387
+vector lineTo 461.936 394.685
+vector lineTo 464.064 393.974
+vector lineTo 466.188 393.253
+vector lineTo 468.307 392.519
+vector lineTo 470.42 391.772
+vector lineTo 472.526 391.006
+vector lineTo 474.618 390.215
+vector lineTo 476.69 389.389
+vector lineTo 478.705 388.506
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 478.705 388.506
+vector lineTo 480.472 387.54
+vector lineTo 482.243 386.233
+vector lineTo 484 384.849
+vector lineTo 485.744 383.44
+vector lineTo 487.478 382.018
+vector lineTo 489.207 380.588
+vector lineTo 490.93 379.151
+vector lineTo 492.65 377.709
+vector lineTo 494.367 376.264
+vector lineTo 496.082 374.816
+vector lineTo 497.794 373.365
+vector lineTo 499.505 371.912
+vector lineTo 501.214 370.457
+vector lineTo 502.921 369
+vector lineTo 504.628 367.542
+vector lineTo 506.333 366.082
+vector lineTo 508.037 364.621
+vector lineTo 509.74 363.159
+vector lineTo 511.443 361.696
+vector lineTo 513.144 360.233
+vector lineTo 514.845 358.768
+vector lineTo 516.545 357.302
+vector lineTo 518.245 355.836
+vector lineTo 519.943 354.369
+vector lineTo 521.642 352.901
+vector lineTo 523.34 351.433
+vector lineTo 525.037 349.964
+vector lineTo 526.734 348.495
+vector lineTo 528.43 347.025
+vector lineTo 530.126 345.554
+vector lineTo 531.822 344.084
+vector lineTo 533.517 342.612
+vector lineTo 535.212 341.141
+vector lineTo 536.907 339.668
+vector lineTo 538.601 338.196
+vector lineTo 540.295 336.723
+vector lineTo 541.988 335.25
+vector lineTo 543.682 333.776
+vector lineTo 545.375 332.302
+vector lineTo 547.067 330.828
+vector lineTo 548.76 329.354
+vector lineTo 550.452 327.879
+vector lineTo 552.144 326.404
+vector lineTo 553.836 324.929
+vector lineTo 555.527 323.453
+vector lineTo 557.218 321.977
+vector lineTo 558.91 320.501
+vector lineTo 560.6 319.025
+vector lineTo 562.291 317.548
+vector lineTo 563.982 316.071
+vector lineTo 565.672 314.594
+vector lineTo 567.362 313.117
+vector lineTo 569.052 311.64
+vector lineTo 570.742 310.162
+vector lineTo 572.431 308.684
+vector lineTo 574.121 307.206
+vector lineTo 575.81 305.728
+vector lineTo 577.499 304.25
+vector lineTo 579.188 302.771
+vector lineTo 580.877 301.292
+vector lineTo 582.565 299.814
+vector lineTo 584.254 298.335
+vector lineTo 585.942 296.855
+vector lineTo 587.63 295.376
+vector lineTo 589.319 293.896
+vector lineTo 591.007 292.417
+vector lineTo 592.694 290.937
+vector lineTo 594.382 289.457
+vector lineTo 596.07 287.977
+vector lineTo 597.757 286.497
+vector lineTo 599.445 285.016
+vector lineTo 601.132 283.536
+vector lineTo 602.819 282.055
+vector lineTo 604.506 280.575
+vector lineTo 606.193 279.094
+vector lineTo 607.88 277.613
+vector lineTo 609.566 276.132
+vector lineTo 611.253 274.651
+vector lineTo 612.94 273.169
+vector lineTo 614.626 271.688
+vector lineTo 616.312 270.206
+vector lineTo 617.999 268.725
+vector lineTo 619.685 267.243
+vector lineTo 621.371 265.761
+vector lineTo 623.057 264.279
+vector lineTo 624.743 262.797
+vector lineTo 626.428 261.315
+vector lineTo 628.114 259.833
+vector lineTo 629.8 258.35
+vector lineTo 631.485 256.868
+vector lineTo 633.171 255.386
+vector lineTo 634.856 253.903
+vector lineTo 636.542 252.421
+vector lineTo 638.227 250.938
+vector lineTo 639.912 249.455
+vector lineTo 641.598 247.973
+vector lineTo 643.283 246.49
+vector lineTo 644.968 245.007
+vector lineTo 646.654 243.525
+vector lineTo 648.339 242.042
+vector lineTo 650.025 240.56
+vector lineTo 651.711 239.078
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 651.711 239.078
+vector lineTo 653.4 237.6
+vector stroke
+vector setLineDash []
+vector save
+vector translate 651.711 239.078
+vector rotate -1.335
+vector beginPath
+vector set:fillStyle #009E73
+vector arc 0 0 16.8 0 6.283
+vector fill
+vector restore
+vector save
+vector translate 651.368 236.5
+vector rotate 1.272
+vector beginPath
+vector set:fillStyle #009E73
+vector arc 0 0 16.8 0 6.283
+vector fill
+vector restore
+vector save
+vector set:globalAlpha 0.5
+vector set:fillStyle #000000
+vector set:strokeStyle #ffffff
+vector set:lineWidth 1.6
+vector beginPath
+vector arc 214.5 295.35 6.4 0 6.283
+vector fill
+vector stroke
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 3
+vector measureText Label 3
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 421.3 312.12
+vector lineTo 469.7 312.12
+vector quadraticCurveTo 476.1 312.12 476.1 318.52
+vector lineTo 476.1 381.08
+vector quadraticCurveTo 476.1 387.48 469.7 387.48
+vector lineTo 421.3 387.48
+vector quadraticCurveTo 414.9 387.48 414.9 381.08
+vector lineTo 414.9 318.52
+vector quadraticCurveTo 414.9 312.12 421.3 312.12
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 3 445.5 349.8
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 330.7 400 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 4
+vector measureText Label 4
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 554.95 270.87
+vector lineTo 603.35 270.87
+vector quadraticCurveTo 609.75 270.87 609.75 277.27
+vector lineTo 609.75 339.83
+vector quadraticCurveTo 609.75 346.23 603.35 346.23
+vector lineTo 554.95 346.23
+vector quadraticCurveTo 548.55 346.23 548.55 339.83
+vector lineTo 548.55 277.27
+vector quadraticCurveTo 548.55 270.87 554.95 270.87
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 4 579.15 308.55
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 457.75 365.35 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 5
+vector measureText Label 5
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 342.1 -93.78
+vector lineTo 390.5 -93.78
+vector quadraticCurveTo 396.9 -93.78 396.9 -87.38
+vector lineTo 396.9 -24.82
+vector quadraticCurveTo 396.9 -18.42 390.5 -18.42
+vector lineTo 342.1 -18.42
+vector quadraticCurveTo 335.7 -18.42 335.7 -24.82
+vector lineTo 335.7 -87.38
+vector quadraticCurveTo 335.7 -93.78 342.1 -93.78
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 5 366.3 -56.1
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 238.3 7.3 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 6
+vector measureText Label 6
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 741.4 107.52
+vector lineTo 789.8 107.52
+vector quadraticCurveTo 796.2 107.52 796.2 113.92
+vector lineTo 796.2 176.48
+vector quadraticCurveTo 796.2 182.88 789.8 182.88
+vector lineTo 741.4 182.88
+vector quadraticCurveTo 735 182.88 735 176.48
+vector lineTo 735 113.92
+vector quadraticCurveTo 735 107.52 741.4 107.52
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 6 765.6 145.2
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 631 215.2 44.8 44.8
+vector fill
+vector stroke
+main drawImage [canvas] 0 0 660 660
+
+# progress 1
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -247.5 1155 1155
+main save
+main set:globalAlpha 0.005
+main set:fillStyle #fff
+main fillRect 0 0 660 660
+main restore
+vector clearRect 0 0 660 660
+vector save
+vector beginPath
+vector moveTo -16.5 -16.5
+vector lineTo 445.5 41.25
+vector lineTo 272.25 561
+vector closePath
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fill
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector stroke
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #E69F00
+vector set:globalAlpha 0.55
+vector fillRect 21.45 429 178.2 125.4
+vector set:globalAlpha 1
+vector set:strokeStyle #D55E00
+vector set:lineWidth 9.6
+vector setLineDash [38.400000000000006,19.200000000000003]
+vector strokeRect 21.45 429 178.2 125.4
+vector restore
+vector save
+vector set:fillStyle #56B4E9
+vector beginPath
+vector moveTo 502.825 154.072
+vector arc 495.625 154.072 7.2 0 6.283
+vector moveTo 506.665 156.105
+vector arc 499.465 156.105 7.2 0 6.283
+vector moveTo 426.591 113.713
+vector arc 419.391 113.713 7.2 0 6.283
+vector moveTo 591.189 200.853
+vector arc 583.989 200.853 7.2 0 6.283
+vector moveTo 634.273 223.662
+vector arc 627.073 223.662 7.2 0 6.283
+vector moveTo 562.295 185.556
+vector arc 555.095 185.556 7.2 0 6.283
+vector moveTo 588.835 300.628
+vector arc 581.635 300.628 7.2 0 6.283
+vector moveTo 324.405 59.614
+vector arc 317.205 59.614 7.2 0 6.283
+vector moveTo 659.615 237.078
+vector arc 652.415 237.078 7.2 0 6.283
+vector moveTo 634.307 260.719
+vector arc 627.107 260.719 7.2 0 6.283
+vector moveTo 290.733 41.788
+vector arc 283.533 41.788 7.2 0 6.283
+vector moveTo 602.022 289.072
+vector arc 594.822 289.072 7.2 0 6.283
+vector moveTo 603.037 288.181
+vector arc 595.837 288.181 7.2 0 6.283
+vector moveTo 639.916 226.65
+vector arc 632.716 226.65 7.2 0 6.283
+vector fill
+vector restore
+vector lineTo 214.828 293.069
+vector lineTo 215.131 290.778
+vector lineTo 215.429 288.485
+vector lineTo 215.724 286.192
+vector lineTo 216.018 283.898
+vector lineTo 216.31 281.605
+vector lineTo 216.603 279.312
+vector lineTo 216.895 277.018
+vector lineTo 217.187 274.725
+vector lineTo 217.479 272.431
+vector lineTo 217.772 270.138
+vector lineTo 218.065 267.844
+vector lineTo 218.358 265.551
+vector lineTo 218.652 263.258
+vector lineTo 218.946 260.964
+vector lineTo 219.241 258.671
+vector lineTo 219.536 256.378
+vector lineTo 219.832 254.085
+vector lineTo 220.128 251.792
+vector lineTo 220.425 249.499
+vector lineTo 220.722 247.206
+vector lineTo 221.021 244.914
+vector lineTo 221.32 242.621
+vector lineTo 221.619 240.329
+vector lineTo 221.919 238.036
+vector lineTo 222.22 235.744
+vector lineTo 222.522 233.452
+vector lineTo 222.824 231.16
+vector lineTo 223.128 228.868
+vector lineTo 223.432 226.576
+vector lineTo 223.736 224.284
+vector lineTo 224.042 221.992
+vector lineTo 224.348 219.701
+vector lineTo 224.655 217.409
+vector lineTo 224.963 215.118
+vector lineTo 225.272 212.826
+vector lineTo 225.582 210.535
+vector lineTo 225.892 208.244
+vector lineTo 226.204 205.953
+vector lineTo 226.516 203.663
+vector lineTo 226.83 201.372
+vector lineTo 227.144 199.082
+vector lineTo 227.46 196.791
+vector lineTo 227.776 194.501
+vector lineTo 228.093 192.211
+vector lineTo 228.412 189.921
+vector lineTo 228.731 187.631
+vector lineTo 229.052 185.342
+vector lineTo 229.373 183.052
+vector lineTo 229.696 180.763
+vector lineTo 230.02 178.474
+vector lineTo 230.345 176.185
+vector lineTo 230.672 173.896
+vector lineTo 230.999 171.608
+vector lineTo 231.328 169.32
+vector lineTo 231.658 167.031
+vector lineTo 231.989 164.743
+vector lineTo 232.322 162.456
+vector lineTo 232.656 160.168
+vector lineTo 232.992 157.881
+vector lineTo 233.329 155.594
+vector lineTo 233.667 153.307
+vector lineTo 234.007 151.02
+vector lineTo 234.349 148.734
+vector lineTo 234.692 146.448
+vector lineTo 235.037 144.162
+vector lineTo 235.384 141.876
+vector lineTo 235.732 139.591
+vector lineTo 236.082 137.306
+vector lineTo 236.434 135.021
+vector lineTo 236.788 132.737
+vector lineTo 237.144 130.453
+vector lineTo 237.502 128.169
+vector lineTo 237.862 125.886
+vector lineTo 238.224 123.603
+vector lineTo 238.588 121.32
+vector lineTo 238.956 119.038
+vector lineTo 239.325 116.756
+vector lineTo 239.696 114.475
+vector lineTo 240.071 112.194
+vector lineTo 240.448 109.914
+vector lineTo 240.828 107.634
+vector lineTo 241.211 105.355
+vector lineTo 241.597 103.076
+vector lineTo 241.986 100.798
+vector lineTo 242.379 98.521
+vector lineTo 242.774 96.244
+vector lineTo 243.175 93.968
+vector lineTo 243.579 91.693
+vector lineTo 243.986 89.418
+vector lineTo 244.398 87.145
+vector lineTo 244.815 84.873
+vector lineTo 245.236 82.601
+vector lineTo 245.663 80.331
+vector lineTo 246.096 78.063
+vector lineTo 246.533 75.795
+vector lineTo 246.977 73.529
+vector lineTo 247.428 71.265
+vector lineTo 247.887 69.002
+vector lineTo 248.353 66.742
+vector lineTo 248.827 64.484
+vector lineTo 249.31 62.229
+vector lineTo 249.804 59.977
+vector lineTo 250.31 57.729
+vector lineTo 250.828 55.485
+vector lineTo 251.36 53.246
+vector lineTo 251.907 51.014
+vector lineTo 252.473 48.789
+vector lineTo 253.059 46.575
+vector lineTo 253.669 44.374
+vector lineTo 254.306 42.191
+vector lineTo 254.982 40.038
+vector lineTo 255.696 37.929
+vector lineTo 256.453 35.891
+vector lineTo 257.255 34.01
+vector lineTo 258.032 32.457
+vector lineTo 258.556 31.586
+vector lineTo 258.894 31.089
+vector lineTo 259.187 30.732
+vector lineTo 259.503 30.395
+vector lineTo 259.848 30.088
+vector lineTo 260.24 29.843
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 260.24 29.843
+vector lineTo 260.681 29.706
+vector lineTo 261.142 29.703
+vector lineTo 262.048 29.841
+vector lineTo 263.915 30.371
+vector lineTo 265.984 31.106
+vector lineTo 268.086 31.929
+vector lineTo 270.193 32.803
+vector lineTo 272.297 33.711
+vector lineTo 274.398 34.644
+vector lineTo 276.495 35.595
+vector lineTo 278.588 36.559
+vector lineTo 280.678 37.535
+vector lineTo 282.764 38.519
+vector lineTo 284.847 39.514
+vector lineTo 286.927 40.516
+vector lineTo 289.005 41.523
+vector lineTo 291.081 42.536
+vector lineTo 293.154 43.555
+vector lineTo 295.226 44.576
+vector lineTo 297.296 45.604
+vector lineTo 299.364 46.634
+vector lineTo 301.431 47.668
+vector lineTo 303.496 48.705
+vector lineTo 305.56 49.745
+vector lineTo 307.622 50.788
+vector lineTo 309.684 51.832
+vector lineTo 311.744 52.881
+vector lineTo 313.803 53.93
+vector lineTo 315.861 54.982
+vector lineTo 317.919 56.035
+vector lineTo 319.975 57.092
+vector lineTo 322.031 58.148
+vector lineTo 324.085 59.208
+vector lineTo 326.139 60.268
+vector lineTo 328.192 61.331
+vector lineTo 330.245 62.394
+vector lineTo 332.296 63.459
+vector lineTo 334.348 64.525
+vector lineTo 336.398 65.593
+vector lineTo 338.448 66.662
+vector lineTo 340.497 67.731
+vector lineTo 342.546 68.803
+vector lineTo 344.594 69.874
+vector lineTo 346.642 70.948
+vector lineTo 348.689 72.022
+vector lineTo 350.736 73.097
+vector lineTo 352.782 74.173
+vector lineTo 354.828 75.25
+vector lineTo 356.873 76.328
+vector lineTo 358.918 77.406
+vector lineTo 360.962 78.486
+vector lineTo 363.006 79.566
+vector lineTo 365.05 80.647
+vector lineTo 367.093 81.729
+vector lineTo 369.136 82.811
+vector lineTo 371.178 83.894
+vector lineTo 373.22 84.978
+vector lineTo 375.262 86.062
+vector lineTo 377.304 87.147
+vector lineTo 379.345 88.233
+vector lineTo 381.386 89.319
+vector lineTo 383.426 90.406
+vector lineTo 385.466 91.493
+vector lineTo 387.506 92.582
+vector lineTo 389.546 93.67
+vector lineTo 391.585 94.759
+vector lineTo 393.624 95.849
+vector lineTo 395.663 96.939
+vector lineTo 397.701 98.03
+vector lineTo 399.74 99.121
+vector lineTo 401.778 100.213
+vector lineTo 403.815 101.305
+vector lineTo 405.853 102.398
+vector lineTo 407.89 103.491
+vector lineTo 409.927 104.584
+vector lineTo 411.964 105.678
+vector lineTo 414.001 106.773
+vector lineTo 416.037 107.867
+vector lineTo 418.073 108.962
+vector lineTo 420.109 110.058
+vector lineTo 422.145 111.154
+vector lineTo 424.18 112.25
+vector lineTo 426.216 113.347
+vector lineTo 428.251 114.444
+vector lineTo 430.286 115.542
+vector lineTo 432.32 116.64
+vector lineTo 434.355 117.738
+vector lineTo 436.389 118.836
+vector lineTo 438.423 119.935
+vector lineTo 440.457 121.034
+vector lineTo 442.491 122.134
+vector lineTo 444.525 123.234
+vector lineTo 446.558 124.334
+vector lineTo 448.592 125.434
+vector lineTo 450.625 126.535
+vector lineTo 452.658 127.636
+vector lineTo 454.69 128.738
+vector lineTo 456.723 129.839
+vector lineTo 458.756 130.941
+vector lineTo 460.788 132.044
+vector lineTo 462.82 133.146
+vector lineTo 464.852 134.249
+vector lineTo 466.884 135.352
+vector lineTo 468.916 136.455
+vector lineTo 470.947 137.559
+vector lineTo 472.979 138.663
+vector lineTo 475.01 139.767
+vector lineTo 477.041 140.872
+vector lineTo 479.072 141.976
+vector lineTo 481.103 143.081
+vector lineTo 483.134 144.186
+vector lineTo 485.165 145.292
+vector lineTo 487.195 146.397
+vector lineTo 489.226 147.503
+vector lineTo 491.256 148.609
+vector lineTo 493.286 149.716
+vector lineTo 495.316 150.822
+vector lineTo 497.346 151.929
+vector lineTo 499.376 153.036
+vector lineTo 501.405 154.143
+vector lineTo 503.435 155.25
+vector lineTo 505.464 156.358
+vector lineTo 507.494 157.466
+vector lineTo 509.523 158.574
+vector lineTo 511.552 159.682
+vector lineTo 513.581 160.791
+vector lineTo 515.61 161.899
+vector lineTo 517.639 163.008
+vector lineTo 519.667 164.117
+vector lineTo 521.696 165.227
+vector lineTo 523.724 166.336
+vector lineTo 525.753 167.446
+vector lineTo 527.781 168.556
+vector lineTo 529.809 169.665
+vector lineTo 531.837 170.776
+vector lineTo 533.865 171.886
+vector lineTo 535.893 172.997
+vector lineTo 537.921 174.107
+vector lineTo 539.948 175.218
+vector lineTo 541.976 176.329
+vector lineTo 544.003 177.441
+vector lineTo 546.031 178.552
+vector lineTo 548.058 179.664
+vector lineTo 550.085 180.775
+vector lineTo 552.112 181.887
+vector lineTo 554.139 182.999
+vector lineTo 556.166 184.111
+vector lineTo 558.193 185.224
+vector lineTo 560.22 186.336
+vector lineTo 562.246 187.449
+vector lineTo 564.273 188.562
+vector lineTo 566.299 189.675
+vector lineTo 568.326 190.788
+vector lineTo 570.352 191.901
+vector lineTo 572.379 193.015
+vector lineTo 574.405 194.128
+vector lineTo 576.431 195.242
+vector lineTo 578.457 196.356
+vector lineTo 580.483 197.47
+vector lineTo 582.509 198.584
+vector lineTo 584.535 199.698
+vector lineTo 586.56 200.813
+vector lineTo 588.586 201.927
+vector lineTo 590.612 203.042
+vector lineTo 592.637 204.156
+vector lineTo 594.663 205.271
+vector lineTo 596.688 206.386
+vector lineTo 598.713 207.501
+vector lineTo 600.739 208.617
+vector lineTo 602.764 209.732
+vector lineTo 604.789 210.847
+vector lineTo 606.814 211.963
+vector lineTo 608.839 213.079
+vector lineTo 610.864 214.194
+vector lineTo 612.889 215.31
+vector lineTo 614.914 216.426
+vector lineTo 616.939 217.542
+vector lineTo 618.964 218.658
+vector lineTo 620.989 219.774
+vector lineTo 623.013 220.89
+vector lineTo 625.038 222.006
+vector lineTo 627.063 223.122
+vector lineTo 629.088 224.239
+vector lineTo 631.112 225.355
+vector lineTo 633.137 226.471
+vector lineTo 635.162 227.587
+vector lineTo 637.187 228.703
+vector lineTo 639.212 229.819
+vector lineTo 641.237 230.934
+vector lineTo 643.262 232.05
+vector lineTo 645.288 233.164
+vector lineTo 647.314 234.278
+vector lineTo 649.341 235.391
+vector lineTo 651.368 236.5
+vector lineTo 653.4 237.6
+vector stroke
+vector setLineDash []
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo -62.7 480.15
+vector lineTo -60.845 478.887
+vector lineTo -58.995 477.617
+vector lineTo -57.146 476.344
+vector lineTo -55.298 475.07
+vector lineTo -53.451 473.795
+vector lineTo -51.603 472.52
+vector lineTo -49.756 471.245
+vector lineTo -47.908 469.97
+vector lineTo -46.061 468.695
+vector lineTo -44.214 467.42
+vector lineTo -42.367 466.144
+vector lineTo -40.519 464.869
+vector lineTo -38.672 463.594
+vector lineTo -36.825 462.319
+vector lineTo -34.977 461.044
+vector lineTo -33.13 459.769
+vector lineTo -31.282 458.494
+vector lineTo -29.435 457.219
+vector lineTo -27.587 455.945
+vector lineTo -25.739 454.67
+vector lineTo -23.891 453.396
+vector lineTo -22.043 452.121
+vector lineTo -20.195 450.847
+vector lineTo -18.347 449.573
+vector lineTo -16.499 448.3
+vector lineTo -14.651 447.026
+vector lineTo -12.802 445.752
+vector lineTo -10.954 444.479
+vector lineTo -9.105 443.206
+vector lineTo -7.256 441.933
+vector lineTo -5.407 440.66
+vector lineTo -3.558 439.387
+vector lineTo -1.709 438.114
+vector lineTo 0.14 436.842
+vector lineTo 1.989 435.57
+vector lineTo 3.839 434.298
+vector lineTo 5.688 433.026
+vector lineTo 7.538 431.754
+vector lineTo 9.388 430.483
+vector lineTo 11.238 429.211
+vector lineTo 13.088 427.94
+vector lineTo 14.938 426.669
+vector lineTo 16.788 425.398
+vector lineTo 18.639 424.128
+vector lineTo 20.489 422.858
+vector lineTo 22.34 421.587
+vector lineTo 24.191 420.318
+vector lineTo 26.042 419.048
+vector lineTo 27.893 417.778
+vector lineTo 29.745 416.509
+vector lineTo 31.596 415.24
+vector lineTo 33.448 413.971
+vector lineTo 35.3 412.702
+vector lineTo 37.152 411.434
+vector lineTo 39.004 410.166
+vector lineTo 40.856 408.898
+vector lineTo 42.708 407.63
+vector lineTo 44.561 406.363
+vector lineTo 46.414 405.096
+vector lineTo 48.267 403.829
+vector lineTo 50.12 402.562
+vector lineTo 51.973 401.296
+vector lineTo 53.827 400.03
+vector lineTo 55.68 398.764
+vector lineTo 57.534 397.498
+vector lineTo 59.388 396.233
+vector lineTo 61.243 394.968
+vector lineTo 63.097 393.703
+vector lineTo 64.952 392.439
+vector lineTo 66.807 391.174
+vector lineTo 68.662 389.911
+vector lineTo 70.517 388.647
+vector lineTo 72.372 387.384
+vector lineTo 74.228 386.121
+vector lineTo 76.084 384.858
+vector lineTo 77.94 383.596
+vector lineTo 79.796 382.334
+vector lineTo 81.653 381.073
+vector lineTo 83.51 379.812
+vector lineTo 85.367 378.551
+vector lineTo 87.224 377.29
+vector lineTo 89.082 376.03
+vector lineTo 90.94 374.77
+vector lineTo 92.798 373.511
+vector lineTo 94.656 372.252
+vector lineTo 96.515 370.994
+vector lineTo 98.374 369.736
+vector lineTo 100.233 368.478
+vector lineTo 102.093 367.221
+vector lineTo 103.953 365.964
+vector lineTo 105.813 364.708
+vector lineTo 107.673 363.452
+vector lineTo 109.534 362.197
+vector lineTo 111.395 360.942
+vector lineTo 113.257 359.688
+vector lineTo 115.119 358.434
+vector lineTo 116.981 357.181
+vector lineTo 118.844 355.929
+vector lineTo 120.706 354.676
+vector lineTo 122.57 353.425
+vector lineTo 124.434 352.174
+vector lineTo 126.298 350.924
+vector lineTo 128.162 349.675
+vector lineTo 130.028 348.426
+vector lineTo 131.893 347.178
+vector lineTo 133.759 345.93
+vector lineTo 135.626 344.683
+vector lineTo 137.493 343.438
+vector lineTo 139.36 342.192
+vector lineTo 141.228 340.948
+vector lineTo 143.097 339.705
+vector lineTo 144.966 338.463
+vector lineTo 146.836 337.221
+vector lineTo 148.707 335.98
+vector lineTo 150.578 334.741
+vector lineTo 152.45 333.502
+vector lineTo 154.322 332.265
+vector lineTo 156.196 331.029
+vector lineTo 158.07 329.794
+vector lineTo 159.945 328.56
+vector lineTo 161.821 327.328
+vector lineTo 163.697 326.097
+vector lineTo 165.575 324.868
+vector lineTo 167.454 323.64
+vector lineTo 169.333 322.414
+vector lineTo 171.214 321.19
+vector lineTo 173.096 319.967
+vector lineTo 174.98 318.747
+vector lineTo 176.865 317.529
+vector lineTo 178.751 316.314
+vector lineTo 180.638 315.101
+vector lineTo 182.528 313.891
+vector lineTo 184.419 312.684
+vector lineTo 186.312 311.48
+vector lineTo 188.208 310.281
+vector lineTo 190.106 309.086
+vector lineTo 192.006 307.895
+vector lineTo 193.91 306.71
+vector lineTo 195.816 305.53
+vector lineTo 197.726 304.359
+vector lineTo 199.641 303.197
+vector lineTo 201.56 302.045
+vector lineTo 203.484 300.906
+vector lineTo 205.413 299.786
+vector lineTo 207.347 298.692
+vector lineTo 209.283 297.635
+vector lineTo 211.197 296.652
+vector lineTo 212.936 295.856
+vector lineTo 213.679 295.573
+vector lineTo 214.107 295.439
+vector lineTo 214.546 295.348
+vector lineTo 214.994 295.336
+vector lineTo 215.44 295.385
+vector lineTo 216.424 295.647
+vector lineTo 218.035 296.322
+vector lineTo 219.838 297.31
+vector lineTo 221.658 298.456
+vector lineTo 223.464 299.696
+vector lineTo 225.25 300.999
+vector lineTo 227.018 302.344
+vector lineTo 228.767 303.723
+vector lineTo 230.502 305.127
+vector lineTo 232.224 306.552
+vector lineTo 233.934 307.994
+vector lineTo 235.633 309.451
+vector lineTo 237.324 310.92
+vector lineTo 239.006 312.399
+vector lineTo 240.681 313.888
+vector lineTo 242.349 315.385
+vector lineTo 244.011 316.891
+vector lineTo 245.667 318.403
+vector lineTo 247.318 319.92
+vector lineTo 248.965 321.444
+vector lineTo 250.606 322.972
+vector lineTo 252.244 324.506
+vector lineTo 253.878 326.043
+vector lineTo 255.508 327.585
+vector lineTo 257.135 329.13
+vector lineTo 258.759 330.678
+vector lineTo 260.38 332.23
+vector lineTo 261.998 333.785
+vector lineTo 263.614 335.342
+vector lineTo 265.228 336.902
+vector lineTo 266.839 338.464
+vector lineTo 268.448 340.029
+vector lineTo 270.055 341.596
+vector lineTo 271.659 343.165
+vector lineTo 273.263 344.735
+vector lineTo 274.864 346.308
+vector lineTo 276.464 347.881
+vector lineTo 278.063 349.457
+vector lineTo 279.66 351.034
+vector lineTo 281.256 352.613
+vector lineTo 282.85 354.192
+vector lineTo 284.444 355.773
+vector lineTo 286.036 357.355
+vector lineTo 287.627 358.938
+vector lineTo 289.217 360.522
+vector lineTo 290.807 362.107
+vector lineTo 292.395 363.693
+vector lineTo 293.983 365.28
+vector lineTo 295.571 366.867
+vector lineTo 297.157 368.454
+vector lineTo 298.743 370.043
+vector lineTo 300.329 371.632
+vector lineTo 301.914 373.221
+vector lineTo 303.499 374.81
+vector lineTo 305.084 376.4
+vector lineTo 306.668 377.99
+vector lineTo 308.253 379.58
+vector lineTo 309.837 381.17
+vector lineTo 311.422 382.76
+vector lineTo 313.006 384.35
+vector lineTo 314.591 385.94
+vector lineTo 316.176 387.529
+vector lineTo 317.762 389.118
+vector lineTo 319.348 390.706
+vector lineTo 320.935 392.293
+vector lineTo 322.523 393.88
+vector lineTo 324.112 395.466
+vector lineTo 325.702 397.05
+vector lineTo 327.293 398.633
+vector lineTo 328.886 400.214
+vector lineTo 330.481 401.793
+vector lineTo 332.078 403.37
+vector lineTo 333.677 404.944
+vector lineTo 335.28 406.515
+vector lineTo 336.886 408.082
+vector lineTo 338.496 409.644
+vector lineTo 340.111 411.201
+vector lineTo 341.732 412.75
+vector lineTo 343.361 414.29
+vector lineTo 344.999 415.818
+vector lineTo 346.648 417.328
+vector lineTo 348.312 418.812
+vector lineTo 349.994 420.244
+vector lineTo 351.66 421.544
+vector lineTo 352.64 422.18
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 352.64 422.18
+vector lineTo 353.063 422.384
+vector lineTo 353.853 422.554
+vector lineTo 355.834 422.587
+vector lineTo 358.009 422.405
+vector lineTo 360.209 422.12
+vector lineTo 362.412 421.771
+vector lineTo 364.613 421.381
+vector lineTo 366.812 420.961
+vector lineTo 369.008 420.517
+vector lineTo 371.201 420.055
+vector lineTo 373.391 419.575
+vector lineTo 375.579 419.083
+vector lineTo 377.765 418.579
+vector lineTo 379.948 418.065
+vector lineTo 382.13 417.541
+vector lineTo 384.309 417.009
+vector lineTo 386.487 416.47
+vector lineTo 388.664 415.924
+vector lineTo 390.838 415.372
+vector lineTo 393.012 414.813
+vector lineTo 395.184 414.249
+vector lineTo 397.355 413.68
+vector lineTo 399.524 413.106
+vector lineTo 401.692 412.527
+vector lineTo 403.859 411.944
+vector lineTo 406.025 411.356
+vector lineTo 408.19 410.764
+vector lineTo 410.354 410.168
+vector lineTo 412.517 409.569
+vector lineTo 414.678 408.965
+vector lineTo 416.839 408.357
+vector lineTo 418.998 407.746
+vector lineTo 421.157 407.132
+vector lineTo 423.314 406.513
+vector lineTo 425.471 405.891
+vector lineTo 427.626 405.265
+vector lineTo 429.781 404.636
+vector lineTo 431.934 404.004
+vector lineTo 434.086 403.367
+vector lineTo 436.237 402.726
+vector lineTo 438.387 402.082
+vector lineTo 440.536 401.434
+vector lineTo 442.683 400.781
+vector lineTo 444.829 400.125
+vector lineTo 446.974 399.464
+vector lineTo 449.117 398.798
+vector lineTo 451.258 398.128
+vector lineTo 453.398 397.452
+vector lineTo 455.536 396.77
+vector lineTo 457.672 396.082
+vector lineTo 459.806 395.387
+vector lineTo 461.936 394.685
+vector lineTo 464.064 393.974
+vector lineTo 466.188 393.253
+vector lineTo 468.307 392.519
+vector lineTo 470.42 391.772
+vector lineTo 472.526 391.006
+vector lineTo 474.618 390.215
+vector lineTo 476.69 389.389
+vector lineTo 478.705 388.506
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 478.705 388.506
+vector lineTo 480.472 387.54
+vector lineTo 482.243 386.233
+vector lineTo 484 384.849
+vector lineTo 485.744 383.44
+vector lineTo 487.478 382.018
+vector lineTo 489.207 380.588
+vector lineTo 490.93 379.151
+vector lineTo 492.65 377.709
+vector lineTo 494.367 376.264
+vector lineTo 496.082 374.816
+vector lineTo 497.794 373.365
+vector lineTo 499.505 371.912
+vector lineTo 501.214 370.457
+vector lineTo 502.921 369
+vector lineTo 504.628 367.542
+vector lineTo 506.333 366.082
+vector lineTo 508.037 364.621
+vector lineTo 509.74 363.159
+vector lineTo 511.443 361.696
+vector lineTo 513.144 360.233
+vector lineTo 514.845 358.768
+vector lineTo 516.545 357.302
+vector lineTo 518.245 355.836
+vector lineTo 519.943 354.369
+vector lineTo 521.642 352.901
+vector lineTo 523.34 351.433
+vector lineTo 525.037 349.964
+vector lineTo 526.734 348.495
+vector lineTo 528.43 347.025
+vector lineTo 530.126 345.554
+vector lineTo 531.822 344.084
+vector lineTo 533.517 342.612
+vector lineTo 535.212 341.141
+vector lineTo 536.907 339.668
+vector lineTo 538.601 338.196
+vector lineTo 540.295 336.723
+vector lineTo 541.988 335.25
+vector lineTo 543.682 333.776
+vector lineTo 545.375 332.302
+vector lineTo 547.067 330.828
+vector lineTo 548.76 329.354
+vector lineTo 550.452 327.879
+vector lineTo 552.144 326.404
+vector lineTo 553.836 324.929
+vector lineTo 555.527 323.453
+vector lineTo 557.218 321.977
+vector lineTo 558.91 320.501
+vector lineTo 560.6 319.025
+vector lineTo 562.291 317.548
+vector lineTo 563.982 316.071
+vector lineTo 565.672 314.594
+vector lineTo 567.362 313.117
+vector lineTo 569.052 311.64
+vector lineTo 570.742 310.162
+vector lineTo 572.431 308.684
+vector lineTo 574.121 307.206
+vector lineTo 575.81 305.728
+vector lineTo 577.499 304.25
+vector lineTo 579.188 302.771
+vector lineTo 580.877 301.292
+vector lineTo 582.565 299.814
+vector lineTo 584.254 298.335
+vector lineTo 585.942 296.855
+vector lineTo 587.63 295.376
+vector lineTo 589.319 293.896
+vector lineTo 591.007 292.417
+vector lineTo 592.694 290.937
+vector lineTo 594.382 289.457
+vector lineTo 596.07 287.977
+vector lineTo 597.757 286.497
+vector lineTo 599.445 285.016
+vector lineTo 601.132 283.536
+vector lineTo 602.819 282.055
+vector lineTo 604.506 280.575
+vector lineTo 606.193 279.094
+vector lineTo 607.88 277.613
+vector lineTo 609.566 276.132
+vector lineTo 611.253 274.651
+vector lineTo 612.94 273.169
+vector lineTo 614.626 271.688
+vector lineTo 616.312 270.206
+vector lineTo 617.999 268.725
+vector lineTo 619.685 267.243
+vector lineTo 621.371 265.761
+vector lineTo 623.057 264.279
+vector lineTo 624.743 262.797
+vector lineTo 626.428 261.315
+vector lineTo 628.114 259.833
+vector lineTo 629.8 258.35
+vector lineTo 631.485 256.868
+vector lineTo 633.171 255.386
+vector lineTo 634.856 253.903
+vector lineTo 636.542 252.421
+vector lineTo 638.227 250.938
+vector lineTo 639.912 249.455
+vector lineTo 641.598 247.973
+vector lineTo 643.283 246.49
+vector lineTo 644.968 245.007
+vector lineTo 646.654 243.525
+vector lineTo 648.339 242.042
+vector lineTo 650.025 240.56
+vector lineTo 651.711 239.078
+vector stroke
+vector set:strokeStyle #0072B2
+vector set:lineWidth 11.2
+vector setLineDash [16,8]
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 651.711 239.078
+vector lineTo 653.4 237.6
+vector stroke
+vector setLineDash []
+vector save
+vector translate 651.711 239.078
+vector rotate -1.335
+vector beginPath
+vector set:fillStyle #009E73
+vector arc 0 0 16.8 0 6.283
+vector fill
+vector restore
+vector save
+vector translate 651.368 236.5
+vector rotate 1.272
+vector beginPath
+vector set:fillStyle #009E73
+vector arc 0 0 16.8 0 6.283
+vector fill
+vector restore
+vector save
+vector set:globalAlpha 0.5
+vector set:fillStyle #000000
+vector set:strokeStyle #ffffff
+vector set:lineWidth 1.6
+vector beginPath
+vector arc 214.5 295.35 6.4 0 6.283
+vector fill
+vector stroke
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 3
+vector measureText Label 3
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 421.3 312.12
+vector lineTo 469.7 312.12
+vector quadraticCurveTo 476.1 312.12 476.1 318.52
+vector lineTo 476.1 381.08
+vector quadraticCurveTo 476.1 387.48 469.7 387.48
+vector lineTo 421.3 387.48
+vector quadraticCurveTo 414.9 387.48 414.9 381.08
+vector lineTo 414.9 318.52
+vector quadraticCurveTo 414.9 312.12 421.3 312.12
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 3 445.5 349.8
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 330.7 400 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 4
+vector measureText Label 4
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 554.95 270.87
+vector lineTo 603.35 270.87
+vector quadraticCurveTo 609.75 270.87 609.75 277.27
+vector lineTo 609.75 339.83
+vector quadraticCurveTo 609.75 346.23 603.35 346.23
+vector lineTo 554.95 346.23
+vector quadraticCurveTo 548.55 346.23 548.55 339.83
+vector lineTo 548.55 277.27
+vector quadraticCurveTo 548.55 270.87 554.95 270.87
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 4 579.15 308.55
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 457.75 365.35 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 5
+vector measureText Label 5
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 342.1 -93.78
+vector lineTo 390.5 -93.78
+vector quadraticCurveTo 396.9 -93.78 396.9 -87.38
+vector lineTo 396.9 -24.82
+vector quadraticCurveTo 396.9 -18.42 390.5 -18.42
+vector lineTo 342.1 -18.42
+vector quadraticCurveTo 335.7 -18.42 335.7 -24.82
+vector lineTo 335.7 -87.38
+vector quadraticCurveTo 335.7 -93.78 342.1 -93.78
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 5 366.3 -56.1
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 238.3 7.3 44.8 44.8
+vector fill
+vector stroke
+vector save
+vector set:globalAlpha 1
+vector set:font 43.2px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Label
+vector measureText Label 6
+vector measureText Label 6
+vector save
+vector set:globalAlpha 0.42
+vector set:fillStyle #F0E442
+vector beginPath
+vector moveTo 741.4 107.52
+vector lineTo 789.8 107.52
+vector quadraticCurveTo 796.2 107.52 796.2 113.92
+vector lineTo 796.2 176.48
+vector quadraticCurveTo 796.2 182.88 789.8 182.88
+vector lineTo 741.4 182.88
+vector quadraticCurveTo 735 182.88 735 176.48
+vector lineTo 735 113.92
+vector quadraticCurveTo 735 107.52 741.4 107.52
+vector closePath
+vector fill
+vector restore
+vector set:fillStyle #009E73
+vector fillText Label 6 765.6 145.2
+vector restore
+vector set:fillStyle #CC79A7
+vector set:strokeStyle white
+vector set:lineWidth 3.2
+vector beginPath
+vector rect 631 215.2 44.8 44.8
+vector fill
+vector stroke
+main drawImage [canvas] 0 0 660 660

@@ -1,0 +1,468 @@
+# canvas set-up
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector setLineDash []
+main drawImage [canvas] 0 0 660 660
+
+# progress 0
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector setLineDash []
+main drawImage [canvas] 0 0 660 660
+
+# progress 0.25
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector save
+vector set:fillStyle #56B4E9
+vector beginPath
+vector moveTo 146.959 369.852
+vector arc 143.959 369.852 3 0 6.283
+vector moveTo 97.365 339.332
+vector arc 94.365 339.332 3 0 6.283
+vector moveTo 166.803 382.063
+vector arc 163.803 382.063 3 0 6.283
+vector moveTo 98.116 339.795
+vector arc 95.116 339.795 3 0 6.283
+vector moveTo 202.053 256.244
+vector arc 199.053 256.244 3 0 6.283
+vector moveTo 133.411 298.485
+vector arc 130.411 298.485 3 0 6.283
+vector moveTo 140.445 365.843
+vector arc 137.445 365.843 3 0 6.283
+vector moveTo 211.988 250.13
+vector arc 208.988 250.13 3 0 6.283
+vector moveTo 138.219 364.473
+vector arc 135.219 364.473 3 0 6.283
+vector moveTo 85.578 332.079
+vector arc 82.578 332.079 3 0 6.283
+vector moveTo 173.752 386.34
+vector arc 170.752 386.34 3 0 6.283
+vector moveTo 110.01 347.114
+vector arc 107.01 347.114 3 0 6.283
+vector moveTo 197.046 400.674
+vector arc 194.046 400.674 3 0 6.283
+vector moveTo 178.913 389.516
+vector arc 175.913 389.516 3 0 6.283
+vector moveTo 113.842 349.472
+vector arc 110.842 349.472 3 0 6.283
+vector moveTo 115.261 309.655
+vector arc 112.261 309.655 3 0 6.283
+vector moveTo 96.421 321.249
+vector arc 93.421 321.249 3 0 6.283
+vector moveTo 168.739 383.255
+vector arc 165.739 383.255 3 0 6.283
+vector moveTo 148.787 370.977
+vector arc 145.787 370.977 3 0 6.283
+vector fill
+vector restore
+vector setLineDash []
+main drawImage [canvas] 0 0 660 660
+
+# progress 0.5
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector save
+vector set:fillStyle #56B4E9
+vector beginPath
+vector moveTo 206.599 406.553
+vector arc 203.599 406.553 3 0 6.283
+vector moveTo 302.157 405.842
+vector arc 299.157 405.842 3 0 6.283
+vector moveTo 191.351 397.17
+vector arc 188.351 397.17 3 0 6.283
+vector moveTo 285.842 415.882
+vector arc 282.842 415.882 3 0 6.283
+vector moveTo 348.865 377.099
+vector arc 345.865 377.099 3 0 6.283
+vector moveTo 272.088 424.346
+vector arc 269.088 424.346 3 0 6.283
+vector moveTo 149.844 371.627
+vector arc 146.844 371.627 3 0 6.283
+vector moveTo 273.607 236.589
+vector arc 270.607 236.589 3 0 6.283
+vector moveTo 276.672 421.525
+vector arc 273.672 421.525 3 0 6.283
+vector moveTo 350.047 283.629
+vector arc 347.047 283.629 3 0 6.283
+vector moveTo 230.443 421.226
+vector arc 227.443 421.226 3 0 6.283
+vector moveTo 307.67 257.551
+vector arc 304.67 257.551 3 0 6.283
+vector moveTo 232.426 422.447
+vector arc 229.426 422.447 3 0 6.283
+vector moveTo 242.961 231.07
+vector arc 239.961 231.07 3 0 6.283
+vector moveTo 197.789 258.869
+vector arc 194.789 258.869 3 0 6.283
+vector moveTo 338.049 383.754
+vector arc 335.049 383.754 3 0 6.283
+vector moveTo 409.425 320.169
+vector arc 406.425 320.169 3 0 6.283
+vector moveTo 335.448 385.355
+vector arc 332.448 385.355 3 0 6.283
+vector moveTo 254.513 435.161
+vector arc 251.513 435.161 3 0 6.283
+vector moveTo 119.495 352.951
+vector arc 116.495 352.951 3 0 6.283
+vector moveTo 176.658 271.872
+vector arc 173.658 271.872 3 0 6.283
+vector moveTo 312.137 399.7
+vector arc 309.137 399.7 3 0 6.283
+vector moveTo 235.833 424.543
+vector arc 232.833 424.543 3 0 6.283
+vector moveTo 310.659 400.61
+vector arc 307.659 400.61 3 0 6.283
+vector moveTo 215.556 412.065
+vector arc 212.556 412.065 3 0 6.283
+vector moveTo 236.343 424.857
+vector arc 233.343 424.857 3 0 6.283
+vector moveTo 125.946 356.921
+vector arc 122.946 356.921 3 0 6.283
+vector moveTo 389.938 351.823
+vector arc 386.938 351.823 3 0 6.283
+vector moveTo 323.187 392.9
+vector arc 320.187 392.9 3 0 6.283
+vector moveTo 126.24 302.899
+vector arc 123.24 302.899 3 0 6.283
+vector moveTo 299.153 407.69
+vector arc 296.153 407.69 3 0 6.283
+vector moveTo 153.704 285.998
+vector arc 150.704 285.998 3 0 6.283
+vector moveTo 104.415 343.671
+vector arc 101.415 343.671 3 0 6.283
+vector moveTo 288.86 245.975
+vector arc 285.86 245.975 3 0 6.283
+vector moveTo 284.169 243.089
+vector arc 281.169 243.089 3 0 6.283
+vector moveTo 210.192 408.764
+vector arc 207.192 408.764 3 0 6.283
+vector moveTo 89.842 334.703
+vector arc 86.842 334.703 3 0 6.283
+vector moveTo 350.077 376.352
+vector arc 347.077 376.352 3 0 6.283
+vector moveTo 345.251 379.322
+vector arc 342.251 379.322 3 0 6.283
+vector moveTo 109.786 346.976
+vector arc 106.786 346.976 3 0 6.283
+vector fill
+vector set:fillStyle #009E73
+vector beginPath
+vector moveTo 149.599 370.553
+vector arc 145.099 370.553 4.5 0 6.283
+vector moveTo 140.436 364.915
+vector arc 135.936 364.915 4.5 0 6.283
+vector moveTo 162.949 378.769
+vector arc 158.449 378.769 4.5 0 6.283
+vector moveTo 168.416 382.133
+vector arc 163.916 382.133 4.5 0 6.283
+vector moveTo 153.108 372.713
+vector arc 148.608 372.713 4.5 0 6.283
+vector moveTo 136.62 297.434
+vector arc 132.12 297.434 4.5 0 6.283
+vector moveTo 129.009 357.882
+vector arc 124.509 357.882 4.5 0 6.283
+vector moveTo 164.714 379.854
+vector arc 160.214 379.854 4.5 0 6.283
+vector moveTo 100.422 340.29
+vector arc 95.922 340.29 4.5 0 6.283
+vector moveTo 117.17 309.403
+vector arc 112.67 309.403 4.5 0 6.283
+vector moveTo 100.25 340.184
+vector arc 95.75 340.184 4.5 0 6.283
+vector moveTo 139.75 364.493
+vector arc 135.25 364.493 4.5 0 6.283
+vector moveTo 107.134 344.421
+vector arc 102.634 344.421 4.5 0 6.283
+vector moveTo 106.742 344.18
+vector arc 102.242 344.18 4.5 0 6.283
+vector moveTo 130.795 358.982
+vector arc 126.295 358.982 4.5 0 6.283
+vector moveTo 113.705 348.465
+vector arc 109.205 348.465 4.5 0 6.283
+vector moveTo 89.434 326.471
+vector arc 84.934 326.471 4.5 0 6.283
+vector moveTo 97.308 338.374
+vector arc 92.808 338.374 4.5 0 6.283
+vector moveTo 96.503 322.121
+vector arc 92.003 322.121 4.5 0 6.283
+vector fill
+vector restore
+vector setLineDash []
+main drawImage [canvas] 0 0 660 660
+
+# progress 0.75
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector save
+vector set:fillStyle #56B4E9
+vector beginPath
+vector moveTo 388.385 352.778
+vector arc 385.385 352.778 3 0 6.283
+vector moveTo 462.922 330
+vector arc 459.922 330 3 0 6.283
+vector moveTo 370.139 364.007
+vector arc 367.139 364.007 3 0 6.283
+vector moveTo 376.481 299.896
+vector arc 373.481 299.896 3 0 6.283
+vector moveTo 319.873 265.06
+vector arc 316.873 265.06 3 0 6.283
+vector moveTo 386 305.754
+vector arc 383 305.754 3 0 6.283
+vector moveTo 349.542 376.682
+vector arc 346.542 376.682 3 0 6.283
+vector moveTo 385.621 354.48
+vector arc 382.621 354.48 3 0 6.283
+vector moveTo 395.572 311.645
+vector arc 392.572 311.645 3 0 6.283
+vector moveTo 352.759 374.702
+vector arc 349.759 374.702 3 0 6.283
+vector moveTo 379.538 358.223
+vector arc 376.538 358.223 3 0 6.283
+vector moveTo 491.776 330
+vector arc 488.776 330 3 0 6.283
+vector moveTo 396.399 347.847
+vector arc 393.399 347.847 3 0 6.283
+vector moveTo 407.689 319.101
+vector arc 404.689 319.101 3 0 6.283
+vector moveTo 340.742 277.903
+vector arc 337.742 277.903 3 0 6.283
+vector moveTo 315.147 262.152
+vector arc 312.147 262.152 3 0 6.283
+vector moveTo 551.362 330
+vector arc 548.362 330 3 0 6.283
+vector moveTo 423.448 331.201
+vector arc 420.448 331.201 3 0 6.283
+vector moveTo 288.132 414.472
+vector arc 285.132 414.472 3 0 6.283
+vector moveTo 331.568 272.257
+vector arc 328.568 272.257 3 0 6.283
+vector moveTo 454.898 330
+vector arc 451.898 330 3 0 6.283
+vector moveTo 413.513 337.315
+vector arc 410.513 337.315 3 0 6.283
+vector moveTo 339.491 277.133
+vector arc 336.491 277.133 3 0 6.283
+vector moveTo 385.595 354.496
+vector arc 382.595 354.496 3 0 6.283
+vector moveTo 424.878 330.321
+vector arc 421.878 330.321 3 0 6.283
+vector moveTo 276.923 421.371
+vector arc 273.923 421.371 3 0 6.283
+vector moveTo 383.338 304.116
+vector arc 380.338 304.116 3 0 6.283
+vector moveTo 325.627 268.601
+vector arc 322.627 268.601 3 0 6.283
+vector moveTo 366.335 293.652
+vector arc 363.335 293.652 3 0 6.283
+vector moveTo 328.945 270.643
+vector arc 325.945 270.643 3 0 6.283
+vector moveTo 243.149 429.045
+vector arc 240.149 429.045 3 0 6.283
+vector moveTo 468.914 330
+vector arc 465.914 330 3 0 6.283
+vector moveTo 378.883 358.626
+vector arc 375.883 358.626 3 0 6.283
+vector moveTo 378.127 359.091
+vector arc 375.127 359.091 3 0 6.283
+vector moveTo 280.852 418.953
+vector arc 277.852 418.953 3 0 6.283
+vector moveTo 319.384 264.759
+vector arc 316.384 264.759 3 0 6.283
+vector moveTo 561.975 330
+vector arc 558.975 330 3 0 6.283
+vector moveTo 256.58 433.889
+vector arc 253.58 433.889 3 0 6.283
+vector fill
+vector set:fillStyle #009E73
+vector beginPath
+vector moveTo 237.109 424.406
+vector arc 232.609 424.406 4.5 0 6.283
+vector moveTo 232.282 421.435
+vector arc 227.782 421.435 4.5 0 6.283
+vector moveTo 250.573 432.691
+vector arc 246.073 432.691 4.5 0 6.283
+vector moveTo 254.301 434.985
+vector arc 249.801 434.985 4.5 0 6.283
+vector moveTo 226.314 417.762
+vector arc 221.814 417.762 4.5 0 6.283
+vector moveTo 214.16 249.717
+vector arc 209.66 249.717 4.5 0 6.283
+vector moveTo 207.008 405.882
+vector arc 202.508 405.882 4.5 0 6.283
+vector moveTo 255.29 435.594
+vector arc 250.79 435.594 4.5 0 6.283
+vector moveTo 184.854 392.248
+vector arc 180.354 392.248 4.5 0 6.283
+vector moveTo 183.295 268.711
+vector arc 178.795 268.711 4.5 0 6.283
+vector moveTo 173.025 384.969
+vector arc 168.525 384.969 4.5 0 6.283
+vector moveTo 213.865 410.102
+vector arc 209.365 410.102 4.5 0 6.283
+vector moveTo 182.599 390.861
+vector arc 178.099 390.861 4.5 0 6.283
+vector moveTo 156.953 284.921
+vector arc 152.453 284.921 4.5 0 6.283
+vector moveTo 170.731 383.558
+vector arc 166.231 383.558 4.5 0 6.283
+vector moveTo 223.432 415.989
+vector arc 218.932 415.989 4.5 0 6.283
+vector moveTo 152.04 287.945
+vector arc 147.54 287.945 4.5 0 6.283
+vector moveTo 185.571 392.69
+vector arc 181.071 392.69 4.5 0 6.283
+vector moveTo 179.509 271.04
+vector arc 175.009 271.04 4.5 0 6.283
+vector moveTo 180.433 389.528
+vector arc 175.933 389.528 4.5 0 6.283
+vector moveTo 148.287 369.746
+vector arc 143.787 369.746 4.5 0 6.283
+vector moveTo 162.762 281.347
+vector arc 158.262 281.347 4.5 0 6.283
+vector moveTo 148.475 369.862
+vector arc 143.975 369.862 4.5 0 6.283
+vector moveTo 116.222 350.013
+vector arc 111.722 350.013 4.5 0 6.283
+vector moveTo 112.697 347.845
+vector arc 108.197 347.845 4.5 0 6.283
+vector fill
+vector restore
+vector setLineDash []
+main drawImage [canvas] 0 0 660 660
+
+# progress 1
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector save
+vector set:fillStyle #56B4E9
+vector beginPath
+vector moveTo 570.443 330
+vector arc 567.443 330 3 0 6.283
+vector moveTo 188.004 264.89
+vector arc 185.004 264.89 3 0 6.283
+vector moveTo 137.811 295.778
+vector arc 134.811 295.778 3 0 6.283
+vector moveTo 193.289 261.638
+vector arc 190.289 261.638 3 0 6.283
+vector moveTo 301.559 253.79
+vector arc 298.559 253.79 3 0 6.283
+vector moveTo 194.048 398.829
+vector arc 191.048 398.829 3 0 6.283
+vector moveTo 217.017 247.036
+vector arc 214.017 247.036 3 0 6.283
+vector moveTo 204.764 405.424
+vector arc 201.764 405.424 3 0 6.283
+vector moveTo 546.614 330
+vector arc 543.614 330 3 0 6.283
+vector moveTo 493.85 330
+vector arc 490.85 330 3 0 6.283
+vector moveTo 117.542 308.251
+vector arc 114.542 308.251 3 0 6.283
+vector moveTo 462.234 330
+vector arc 459.234 330 3 0 6.283
+vector moveTo 497.116 330
+vector arc 494.116 330 3 0 6.283
+vector moveTo 138.841 295.144
+vector arc 135.841 295.144 3 0 6.283
+vector moveTo 295.166 249.856
+vector arc 292.166 249.856 3 0 6.283
+vector moveTo 237.387 234.5
+vector arc 234.387 234.5 3 0 6.283
+vector moveTo 422.901 328.462
+vector arc 419.901 328.462 3 0 6.283
+vector moveTo 239.064 233.468
+vector arc 236.064 233.468 3 0 6.283
+vector moveTo 325.786 391.301
+vector arc 322.786 391.301 3 0 6.283
+vector moveTo 181.024 269.185
+vector arc 178.024 269.185 3 0 6.283
+vector moveTo 346.613 378.484
+vector arc 343.613 378.484 3 0 6.283
+vector moveTo 381.883 356.78
+vector arc 378.883 356.78 3 0 6.283
+vector moveTo 191.135 397.037
+vector arc 188.135 397.037 3 0 6.283
+vector moveTo 304.737 255.746
+vector arc 301.737 255.746 3 0 6.283
+vector moveTo 479.954 330
+vector arc 476.954 330 3 0 6.283
+vector moveTo 138.045 295.634
+vector arc 135.045 295.634 3 0 6.283
+vector moveTo 403.374 343.554
+vector arc 400.374 343.554 3 0 6.283
+vector fill
+vector set:fillStyle #009E73
+vector beginPath
+vector moveTo 324.619 392.942
+vector arc 320.119 392.942 4.5 0 6.283
+vector moveTo 324.128 393.244
+vector arc 319.628 393.244 4.5 0 6.283
+vector moveTo 338.196 384.587
+vector arc 333.696 384.587 4.5 0 6.283
+vector moveTo 340.186 383.362
+vector arc 335.686 383.362 4.5 0 6.283
+vector moveTo 299.52 408.388
+vector arc 295.02 408.388 4.5 0 6.283
+vector moveTo 291.699 246.8
+vector arc 287.199 246.8 4.5 0 6.283
+vector moveTo 285.007 417.319
+vector arc 280.507 417.319 4.5 0 6.283
+vector moveTo 345.867 379.866
+vector arc 341.367 379.866 4.5 0 6.283
+vector moveTo 269.286 426.993
+vector arc 264.786 426.993 4.5 0 6.283
+vector moveTo 249.42 228.018
+vector arc 244.92 228.018 4.5 0 6.283
+vector moveTo 245.801 429.754
+vector arc 241.301 429.754 4.5 0 6.283
+vector moveTo 287.98 415.489
+vector arc 283.48 415.489 4.5 0 6.283
+vector moveTo 258.064 433.899
+vector arc 253.564 433.899 4.5 0 6.283
+vector moveTo 247.084 229.456
+vector arc 242.584 229.456 4.5 0 6.283
+vector moveTo 234.721 422.936
+vector arc 230.221 422.936 4.5 0 6.283
+vector moveTo 316.069 398.204
+vector arc 311.569 398.204 4.5 0 6.283
+vector moveTo 234.525 237.185
+vector arc 230.025 237.185 4.5 0 6.283
+vector moveTo 257.437 434.285
+vector arc 252.937 434.285 4.5 0 6.283
+vector moveTo 269.584 233.19
+vector arc 265.084 233.19 4.5 0 6.283
+vector moveTo 263.557 430.519
+vector arc 259.057 430.519 4.5 0 6.283
+vector moveTo 238.6 425.323
+vector arc 234.1 425.323 4.5 0 6.283
+vector moveTo 229.02 240.572
+vector arc 224.52 240.572 4.5 0 6.283
+vector moveTo 236.749 424.184
+vector arc 232.249 424.184 4.5 0 6.283
+vector moveTo 188.929 394.756
+vector arc 184.429 394.756 4.5 0 6.283
+vector moveTo 197.39 399.963
+vector arc 192.89 399.963 4.5 0 6.283
+vector fill
+vector restore
+vector setLineDash []
+main drawImage [canvas] 0 0 660 660
