@@ -264,7 +264,7 @@ const DEFAULT_BINDINGS = {
       key: 'k',
       modifiers: [],
       action: 'animation:pause',
-      description: 'Pause',
+      description: 'Play/pause',
       category: 'playback',
       hidden: true // J/K/L shown as group
     },
@@ -279,14 +279,14 @@ const DEFAULT_BINDINGS = {
       key: ',',
       modifiers: [],
       action: 'animation:step-backward',
-      description: 'Step backward',
+      description: 'Skip to start',
       category: 'playback'
     },
     stepForward: {
       key: '.',
       modifiers: [],
       action: 'animation:step-forward',
-      description: 'Step forward',
+      description: 'Skip to end',
       category: 'playback'
     },
 

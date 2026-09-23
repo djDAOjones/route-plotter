@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 331 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 332 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 105 file(s)
+- `tests` — 106 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -328,6 +328,7 @@
 - `tests/headDirectionBranchWait.test.js` — BUG-01 contract: a wait indexed
   past the end of a branch run falls through to that run's own path
   direction, while an in-range wait still steers waypoint-to-waypoint
+- `tests/helpTellsTheTruth.test.js` — DEF-21: the Help entries for `,`, `.` and K and the File menu's shortcuts match what the keys actually do on a booted app
 - `tests/helpers/minCountReporter.js` — TST-10 canary: fails an unfiltered run in which fewer than 72 files or 1,000 tests ran
 - `tests/htmlExportCache.test.js` — HTML export fetches the standalone player bundle for the exact application build
 - `tests/imageAssetRoundTrip.test.js` — Persistence-safe image IDs and import→export→import asset round-trip contracts
