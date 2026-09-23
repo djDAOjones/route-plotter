@@ -2,6 +2,71 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-23 — W1 closes: the safety net is built
+
+Six pull requests (#11, #14, #15, #16, #18, #19), all test-only. Nothing a
+user sees changed, and `main` is at `180d354`; the live site stays v3.2.691.
+Gate at close: **82 test files · 1,156 tests · 7 todo · shell 0 ·
+build:check 0** (was 72 / 1,065 at the programme's baseline).
+
+**The preserved contract of each PR.**
+- **TST-01** (#9, #11) — boot harness and a browser-true `setup.js`. No `src/`
+  change; existing assertions untouched.
+- **ISO-02** (#14) — `new EventBus({ onListenerError })` and counters, with
+  today's default (log and continue) unchanged.
+- **TST-10** (#15) — strict bus in tests, a console guard, the min-count
+  canary. No production change.
+- **TST-07** (#16) — the player host contract derived from the mixin source,
+  and the bundle-closure rule. No production change.
+- **TST-06** (#18) — the save shape. `_buildProjectSnapshot` untouched.
+- **TST-02** (#19) — the draw log. The only non-test edit is additive and
+  opt-in: `tests/setup.js`'s recorder now also keeps a shared cross-canvas
+  transcript. `ctx.calls` keeps its shape.
+
+**What is now pinned.** A file golden of the save shape per bundled example
+plus an every-field-non-default fixture; `load(save(x)) == save(x)`; the
+"authorable ⇒ loadable" property over every slider and select of the shipped
+shell, each proved individually to reach the saved project; and whole draw
+transcripts for four fixtures × five instants × editor/preview/export, with
+`play == seek` and `app == player` at the draw level.
+
+**Two defects were found that the plan did not have, both characterised, not
+fixed.**
+- **An unbounded label field** produces a project that will not reload
+  ("Project contains an oversized text value"). It is DEF-04's class, so the
+  DEF-04 row is annotated with it rather than given a number of its own.
+- **DEF-34, proposed:** the exported HTML player never calls
+  `setGraphicsScale`, so a project authored at any Graphics scale but 1
+  exports to video correctly and to HTML at the wrong size. Added to §12.1 as
+  **Proposed**, awaiting Joe; the test states it exactly — every differing
+  draw line is a width, dash, radius or rect, each out by precisely the scale.
+
+**One thing that looks like a defect and is not,** recorded so nobody
+re-discovers it: the editor eases its camera toward the authored centre while
+a freshly loaded player starts on it, so the very first instant of a camera
+project is the one frame where app and player legitimately differ, and only in
+the camera transform.
+
+**`modified` is already owned by the plan** (§13 ⑬, §20 Q12, answered
+"restore it", W8). The round trip loses it because the `Waypoint` constructor
+restamps unconditionally; TST-06 characterises that rather than adding a
+second record of it.
+
+**Codex earned its place twice.** On TST-06 it broke a draft whose
+example-only goldens passed while custom-marker assignments and authored
+camera zooms were silently dropped, and whose non-vacuity check passed with
+twenty selects and four sliders silenced. On TST-02 it found six gaps: capture
+that could not see cross-canvas interleaving (compositing the vector layer
+before drawing it passed), a warm-up frame that discarded the layer's
+persistent scale transform, examples rendered with no background at all,
+an uncaptured reveal-mask canvas, a `play == seek` check that compared the
+played host with itself, and a false claim in a file header. Each fix was
+re-verified by re-running the mutation that exposed it.
+
+**Test wall time is 62.7 s, up from the 44.8 s baseline** — the price of
+booting the real app. TST-15 (node environment for pure files) is the lever if
+it becomes a nuisance.
+
 ## 2026-09-22 — v3.2.691: the debug overlay leaves the live site
 
 **Released on the owner's instruction** ("progress as much as possible without

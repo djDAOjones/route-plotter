@@ -17,6 +17,35 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## W1 — the abstraction programme's safety net (closed 2026-09-23)
+
+Outcome: the behaviour a refactor must not change is now written down and
+enforced — the save shape, what the renderer draws, and the two interfaces
+nobody had declared. Test-only; nothing shipped to users.
+
+ISO-02 — A listener that throws on the EventBus can be observed instead of
+vanishing: an optional `onListenerError` handler and counters, with today's
+log-and-continue default unchanged. (2026-09-23) — see decision-log.
+
+TST-10 — The suite is loud where it should be and quiet where it should not:
+a strict bus, an undeclared `console.error`/`warn` fails its test, and a
+canary fails a run too small to be the real suite. (2026-09-23)
+
+TST-07 — The exported player's ~25-member host contract is derived from the
+mixin's own source and checked against a player that really loaded a project,
+and the player bundle is proved closed through esbuild's metafile.
+(2026-09-23)
+
+TST-06 — The one save shape is pinned to a file per example plus a fixture
+that leaves no field at its default, `load(save(x))` is proved stable, and
+every slider and select of the shipped shell is shown to save a project that
+loads — with DEF-03/04/31 characterised as the three places it does not.
+(2026-09-23) — see decision-log.
+
+TST-02 — What the renderer draws is frozen: whole draw transcripts for four
+fixtures at five instants in the editor, preview and export, with play == seek
+and app == player proved at the draw level. (2026-09-23) — see decision-log.
+
 ## Release v3.2.691 (shipped 2026-09-22)
 
 DEF-01 — The "Background Mode Debug" panel no longer paints over the picture
