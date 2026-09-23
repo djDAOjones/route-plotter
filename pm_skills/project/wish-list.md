@@ -28,3 +28,4 @@
 - `npm run serve` serves the unbuilt source shell at `/` (only `/docs/` runs the app) and `start` duplicates `dev`: fix or remove both (plan SEG-026). — (from: 2026-09-22 DOC-02)
 - `restart.sh` proves only that the server answers, while AGENTS' recovery rule asks it to verify readiness, which DEV-INFRASTRUCTURE defines as no console errors and a rendered version stamp. — (from: 2026-09-22 DOC-02)
 - CI could fail a pull request that changes `docs/` or `version.json`, which only `npm run push` may commit; today the release steps rely on checking the diff by eye. — (from: 2026-09-22 GOV-01)
+- `bootApp` returns before `app.ready` resolves and its teardown does not await it, so a pending startup from one test can install bus listeners during the next; tests that touch the UI must await `ready` themselves today. — (from: 2026-09-23 TST-06, Codex review)
