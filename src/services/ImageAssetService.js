@@ -11,6 +11,7 @@
 
 import { ImageAsset, IMAGE_LIMITS } from '../models/ImageAsset.js';
 import JSZip from 'jszip';
+import { collectImageAssetReferences } from '../utils/assetReferences.js';
 
 // Size limits in bytes
 export const SIZE_LIMITS = Object.freeze({
@@ -636,9 +637,17 @@ export class ImageAssetService {
     // Create assets folder
     const assetsFolder = zip.folder('assets');
     
-    // Add all image assets to assets folder
+    // Add the image assets the project references. The store also keeps
+    // images only undo history can reach, which undo needs and a shared file
+    // must not carry (DEF-23). An inline copy of the images, from a snapshot
+    // built with its assets, is held to the same rule.
+    const referenced = collectImageAssetReferences(projectData);
+    if (Array.isArray(archivedProjectData.imageAssets)) {
+      archivedProjectData.imageAssets = archivedProjectData.imageAssets.filter(asset => referenced.has(asset?.id));
+    }
     const assetManifest = [];
     for (const [id, asset] of this._assets) {
+      if (!referenced.has(id)) continue;
       ImageAsset.assertValidSerialized(asset);
       // Extract binary data from base64
       const base64Data = asset.base64.split(',')[1];

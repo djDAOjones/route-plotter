@@ -61,7 +61,10 @@ describe('image asset archive round trips', () => {
     const imported = await source.importZip(await projectArchive('safe-id_1'));
     source.replaceAssets(imported.imageAssets);
 
-    const exported = await source.exportZip(imported.projectData, null, 'round-trip');
+    // A shared file carries only the images its project uses (DEF-23), so the
+    // project refers to this one, as any real project holding it would.
+    const projectData = { ...imported.projectData, waypoints: [{ customImageAssetId: 'safe-id_1' }] };
+    const exported = await source.exportZip(projectData, null, 'round-trip');
     const reloaded = await new ImageAssetService().importZip(await blobBytes(exported));
 
     expect(reloaded.imageAssets.map(asset => asset.id)).toEqual(['safe-id_1']);

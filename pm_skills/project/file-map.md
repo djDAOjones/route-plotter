@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 331 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 332 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 97 file(s)
 - `styles` — 6 file(s)
-- `tests` — 105 file(s)
+- `tests` — 106 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -247,8 +247,8 @@
 - `src/services/CoordinateTransform.js` — Image ↔ canvas coordinate conversion
 - `src/services/DiagnosticsService.js` — Pure fixed-schema technical diagnostics with bounded allowlisted fields and URL/path/filename redaction
 - `src/services/DotRenderer.js` — Batched swarm-dot drawing: one canvas path per (colour, size) group, sizes via `scaleSizeClamped()` (Phase 3)
-- `src/services/HTMLExportService.js` — Self-contained HTML export: embeds snapshot/background and the exact-build same-origin player bundle; owns the exported shell
-- `src/services/ImageAssetService.js` — Strict bitmap validation, bounded ZIP staging/export, deduplication and deterministic unreachable-asset sweeping
+- `src/services/HTMLExportService.js` — Self-contained HTML export: embeds snapshot/background (only the images the project uses, without their filenames: DEF-23) and the exact-build same-origin player bundle; owns the exported shell
+- `src/services/ImageAssetService.js` — Strict bitmap validation, bounded ZIP staging/export (only the images the project uses: DEF-23), deduplication and deterministic unreachable-asset sweeping
 - `src/services/MotionVisibilityService.js` — Stateless timeline-derived path, waypoint and background visibility, including comet trails
 - `src/services/NetworkEditService.js` — Network edit mode (Phase 4): pen state machine (chaining, drags, bends, Esc ladder, mode keys), banner, node/edge selection events, and the guide/overlay canvas rendering (edge geometry via SwarmEngine's cache)
 - `src/services/PathCalculator.js` — Catmull-Rom spline, corner-slowing reparameterisation, curvature; `legTimingLengths()` gives per-major-leg timing lengths (progress-span basis)
@@ -321,6 +321,7 @@
 - `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
+- `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
 - `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples × 5 instants × editor/preview/export, plus play == seek, app == player, and the DEF-02 anchored-crowd divergence
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts

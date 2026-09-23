@@ -84,7 +84,8 @@ describe('HTML export player cache correctness', () => {
     const blob = await service.exportHTML({
       projectData: {
         coordVersion: 9,
-        imageAssets: [{ name: 'explicit-source-name.png', base64: PIXEL_PNG }],
+        waypoints: [{ id: 'wp', imgX: 0.5, imgY: 0.5, customImageAssetId: 'marker' }],
+        imageAssets: [{ id: 'marker', name: 'explicit-source-name.png', base64: PIXEL_PNG }],
       },
       backgroundDataURL: PIXEL_PNG,
       title: 'Sentinel export',
@@ -92,7 +93,10 @@ describe('HTML export player cache correctness', () => {
     const html = await readBlobText(blob);
 
     expect(html).toContain(`window.__ROUTE_PLOTTER_BG__ = ${JSON.stringify(PIXEL_PNG)};`);
-    expect(html).toContain('explicit-source-name.png');
+    // The image the project uses travels byte for byte; since DEF-23 its
+    // original filename stays in project files and never reaches the page.
+    expect(html).toContain(`"id":"marker","base64":${JSON.stringify(PIXEL_PNG)}`);
+    expect(html).not.toContain('explicit-source-name.png');
     expect(html).not.toContain('data:image/jpeg');
     expect(canvasEncoding).not.toHaveBeenCalled();
     expect(html).toContain(

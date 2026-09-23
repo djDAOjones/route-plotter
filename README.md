@@ -159,8 +159,11 @@ file. Open Project validates and decodes a detached candidate before replacing
 the current project; any failure leaves the live project, assets, history, and
 autosave unchanged. ZIP and standalone HTML exports embed the retained original
 PNG, JPEG, or WebP data URL without canvas/JPEG re-encoding; export stops with a
-clear error if those source bytes are unavailable. Explicitly shared exports
-may contain original custom-image filenames and asset metadata.
+clear error if those source bytes are unavailable. Both carry only the custom
+images the project uses; an image that only undo could bring back stays
+behind. Project files keep those images' stored filenames and HTML exports
+leave them out, though an image's original bytes can carry metadata of their
+own.
 
 ### Import safety limits
 
