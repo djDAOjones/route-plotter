@@ -325,7 +325,7 @@
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
-- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, and app == player for every fixture (at an authored Graphics scale: DEF-34; after an anchored crowd's waypoint moves: DEF-02) but the camera fixture's eased first frame
+- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, and app == player for every fixture, at Graphics scales 0.5, 1.6 and 8 with labels (DEF-34), and after an anchored crowd's waypoint moves (DEF-02); the camera fixture's eased first frame is held to its scale-1 translations
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding
