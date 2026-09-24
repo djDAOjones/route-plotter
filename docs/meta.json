@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 16273,
+      "bytes": 17015,
       "imports": [],
       "format": "esm"
     },
@@ -68,7 +68,7 @@
       "format": "esm"
     },
     "src/utils/entityId.js": {
-      "bytes": 989,
+      "bytes": 2262,
       "imports": [],
       "format": "esm"
     },
@@ -185,7 +185,7 @@
       "format": "esm"
     },
     "src/services/BeaconRenderer.js": {
-      "bytes": 43702,
+      "bytes": 44228,
       "imports": [],
       "format": "esm"
     },
@@ -201,7 +201,7 @@
       "format": "esm"
     },
     "src/services/AnimationEngine.js": {
-      "bytes": 38032,
+      "bytes": 38423,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -377,12 +377,12 @@
       "format": "esm"
     },
     "src/core/EventBus.js": {
-      "bytes": 4428,
+      "bytes": 6092,
       "imports": [],
       "format": "esm"
     },
     "src/config/keybindings.js": {
-      "bytes": 14444,
+      "bytes": 14448,
       "imports": [],
       "format": "esm"
     },
@@ -2652,13 +2652,29 @@
       "imports": [],
       "format": "esm"
     },
-    "src/services/AreaDrawingService.js": {
-      "bytes": 10993,
+    "src/utils/imageCoordinates.js": {
+      "bytes": 910,
       "imports": [
         {
           "path": "src/config/constants.js",
           "kind": "import-statement",
           "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/AreaDrawingService.js": {
+      "bytes": 11361,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
         }
       ],
       "format": "esm"
@@ -2747,8 +2763,13 @@
       ],
       "format": "cjs"
     },
+    "src/utils/assetReferences.js": {
+      "bytes": 6641,
+      "imports": [],
+      "format": "esm"
+    },
     "src/services/ImageAssetService.js": {
-      "bytes": 30973,
+      "bytes": 31574,
       "imports": [
         {
           "path": "src/models/ImageAsset.js",
@@ -2759,17 +2780,27 @@
           "path": "node_modules/jszip/dist/jszip.min.js",
           "kind": "import-statement",
           "original": "jszip"
+        },
+        {
+          "path": "src/utils/assetReferences.js",
+          "kind": "import-statement",
+          "original": "../utils/assetReferences.js"
         }
       ],
       "format": "esm"
     },
     "src/services/HTMLExportService.js": {
-      "bytes": 13240,
+      "bytes": 14122,
       "imports": [
         {
           "path": "src/models/ImageAsset.js",
           "kind": "import-statement",
           "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/utils/assetReferences.js",
+          "kind": "import-statement",
+          "original": "../utils/assetReferences.js"
         }
       ],
       "format": "esm"
@@ -2800,7 +2831,7 @@
       "format": "esm"
     },
     "src/models/Waypoint.js": {
-      "bytes": 20150,
+      "bytes": 20274,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2811,17 +2842,27 @@
           "path": "src/services/CameraService.js",
           "kind": "import-statement",
           "original": "../services/CameraService.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
         }
       ],
       "format": "esm"
     },
     "src/utils/routeTrace.js": {
-      "bytes": 6638,
+      "bytes": 7929,
       "imports": [
         {
           "path": "src/utils/routeBranches.js",
           "kind": "import-statement",
           "original": "./routeBranches.js"
+        },
+        {
+          "path": "src/utils/entityId.js",
+          "kind": "import-statement",
+          "original": "./entityId.js"
         }
       ],
       "format": "esm"
@@ -2904,7 +2945,7 @@
       "format": "esm"
     },
     "src/app/wiringBus.js": {
-      "bytes": 17223,
+      "bytes": 17930,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -2925,6 +2966,16 @@
           "path": "src/utils/routeBranches.js",
           "kind": "import-statement",
           "original": "../utils/routeBranches.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
         }
       ],
       "format": "esm"
@@ -2951,7 +3002,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 53095,
+      "bytes": 53772,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2989,16 +3040,16 @@
           "original": "../utils/routeAnchors.js"
         },
         {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        },
+        {
           "path": "src/app/backgroundLoading.js",
           "kind": "import-statement",
           "original": "./backgroundLoading.js"
         }
       ],
-      "format": "esm"
-    },
-    "src/utils/assetReferences.js": {
-      "bytes": 6641,
-      "imports": [],
       "format": "esm"
     },
     "src/app/undoRedo.js": {
@@ -3117,7 +3168,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 52578,
+      "bytes": 52965,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3168,6 +3219,11 @@
           "path": "src/utils/entityId.js",
           "kind": "import-statement",
           "original": "../utils/entityId.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
         },
         {
           "path": "src/utils/uiReadouts.js",
@@ -3422,7 +3478,7 @@
       "format": "esm"
     },
     "src/app/privacy.js": {
-      "bytes": 13844,
+      "bytes": 13897,
       "imports": [
         {
           "path": "src/services/DiagnosticsService.js",
@@ -3464,7 +3520,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 47225,
+      "bytes": 47463,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3716,13 +3772,13 @@
     }
   },
   "outputs": {
-    ".docs-build-ik3bDA/app.js.map": {
+    ".docs-build-OVcsYb/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3331350
+      "bytes": 3345627
     },
-    ".docs-build-ik3bDA/app.js": {
+    ".docs-build-OVcsYb/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3731,7 +3787,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 3989
+          "bytesInOutput": 4009
         },
         "src/models/GraphNode.js": {
           "bytesInOutput": 1159
@@ -3755,7 +3811,7 @@
           "bytesInOutput": 4772
         },
         "src/utils/entityId.js": {
-          "bytesInOutput": 245
+          "bytesInOutput": 694
         },
         "src/models/FlowLayer.js": {
           "bytesInOutput": 4276
@@ -3788,13 +3844,13 @@
           "bytesInOutput": 2218
         },
         "src/services/BeaconRenderer.js": {
-          "bytesInOutput": 10271
+          "bytesInOutput": 10382
         },
         "src/core/PlayerCore.js": {
           "bytesInOutput": 7294
         },
         "src/services/AnimationEngine.js": {
-          "bytesInOutput": 12814
+          "bytesInOutput": 12861
         },
         "src/utils/segmentHitTest.js": {
           "bytesInOutput": 565
@@ -3827,10 +3883,10 @@
           "bytesInOutput": 6353
         },
         "src/core/EventBus.js": {
-          "bytesInOutput": 998
+          "bytesInOutput": 1244
         },
         "src/config/keybindings.js": {
-          "bytesInOutput": 6178
+          "bytesInOutput": 6182
         },
         "src/config/helpContent.js": {
           "bytesInOutput": 2446
@@ -3940,8 +3996,11 @@
         "src/controllers/SectionController.js": {
           "bytesInOutput": 7113
         },
+        "src/utils/imageCoordinates.js": {
+          "bytesInOutput": 141
+        },
         "src/services/AreaDrawingService.js": {
-          "bytesInOutput": 5039
+          "bytesInOutput": 5055
         },
         "src/utils/snapToAngle.js": {
           "bytesInOutput": 191
@@ -3974,10 +4033,13 @@
           "bytesInOutput": 5003
         },
         "src/services/ImageAssetService.js": {
-          "bytesInOutput": 13648
+          "bytesInOutput": 13770
+        },
+        "src/utils/assetReferences.js": {
+          "bytesInOutput": 2653
         },
         "src/services/HTMLExportService.js": {
-          "bytesInOutput": 8044
+          "bytesInOutput": 8220
         },
         "src/app/operationGeneration.js": {
           "bytesInOutput": 702
@@ -3992,10 +4054,10 @@
           "bytesInOutput": 595
         },
         "src/models/Waypoint.js": {
-          "bytesInOutput": 7560
+          "bytesInOutput": 7496
         },
         "src/utils/routeTrace.js": {
-          "bytesInOutput": 1877
+          "bytesInOutput": 2098
         },
         "src/examples/index.js": {
           "bytesInOutput": 4585
@@ -4004,7 +4066,7 @@
           "bytesInOutput": 18168
         },
         "src/app/wiringBus.js": {
-          "bytesInOutput": 5750
+          "bytesInOutput": 5859
         },
         "src/components/ContextMenu.js": {
           "bytesInOutput": 3100
@@ -4013,10 +4075,7 @@
           "bytesInOutput": 1721
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 22029
-        },
-        "src/utils/assetReferences.js": {
-          "bytesInOutput": 2653
+          "bytesInOutput": 22069
         },
         "src/app/undoRedo.js": {
           "bytesInOutput": 8213
@@ -4034,7 +4093,7 @@
           "bytesInOutput": 8178
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 28451
+          "bytesInOutput": 28527
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5071
@@ -4067,7 +4126,7 @@
           "bytesInOutput": 2176
         },
         "src/app/privacy.js": {
-          "bytesInOutput": 9595
+          "bytesInOutput": 9648
         },
         "src/app/startup.js": {
           "bytesInOutput": 110
@@ -4076,10 +4135,10 @@
           "bytesInOutput": 1770
         },
         "src/main.js": {
-          "bytesInOutput": 22705
+          "bytesInOutput": 22718
         }
       },
-      "bytes": 1076208
+      "bytes": 1077988
     }
   }
 }
