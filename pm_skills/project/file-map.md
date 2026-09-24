@@ -325,7 +325,7 @@
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
-- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, and app == player for every fixture, at Graphics scales 0.5, 1.6 and 8 with labels (DEF-34), and after an anchored crowd's waypoint moves (DEF-02); the camera fixture's eased first frame is held to its scale-1 translations
+- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, and app == player for every fixture, at Graphics scales 0.5, 1.6 and 8 with labels (DEF-34), and after an anchored crowd's waypoint moves (DEF-02); the camera fixture's eased first frame is held to its scale-1 translations; every frame composites the vector layer by name, at its display size even at pixel density 2 (TST-17)
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding
@@ -386,7 +386,7 @@
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts
 - `tests/shortHexGlow.test.js` — DEF-26: the glow draws every stored hex form with its own alpha, and one throwing frame stops neither playback nor editor redraws
 - `tests/helpers/consoleGuard.js` — TST-10 console guard: records console.error/warn, fails the test on anything undeclared, and holds the short allowlist of known warts
-- `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main and offscreen vector canvases as rounded, diffable draw-log lines and compares two frames
+- `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main, offscreen vector and reveal-mask canvases as rounded, diffable draw-log lines, names each composited canvas by its surface (TST-17), and compares two frames
 - `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)
 - `tests/helpers/bootApp.js` — TST-01 boot harness: builds the shipped index.html shell, stubs APP_VERSION/matchMedia/fetch/layout, and starts the real RoutePlotter
 - `tests/fixtures/authoredExtras.js` — TST-06 fixture: the Open day example with every field of the save shape moved off its default, including two image assets and authored camera zooms
@@ -405,12 +405,12 @@
 - `tests/goldens/project-snapshot-nervous-system-flow.json` — TST-06 golden: the saved shape of the Signal flow example (guide network, no hero route)
 - `tests/goldens/project-snapshot-parm-aerial-walk.json` — TST-06 golden: the saved shape of the Site walk example (plain labelled chain)
 - `tests/goldens/project-snapshot-uon-open-day.json` — TST-06 golden: the saved shape of the Open day route example (branched route, traced anchored crowd)
-- `tests/setup.js` — Vitest jsdom setup (uses defineProperty for getter-only jsdom globals)
+- `tests/setup.js` — Vitest jsdom setup: getter-only jsdom globals via defineProperty, and one recording context per canvas, which writes a canvas argument with its recorder id (TST-17)
 - `tests/startup.test.js` — Recovery-before-default-image startup ordering contracts
 - `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
 - `tests/undoService.test.js` — Prospective-save parity, natural rollover, extra oldest discard, redo preservation/invalidation and rejected-input immutability
-- `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets
+- `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets, and (TST-17) a transcript names a composited canvas while drawing label text as written
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
 - `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch
 - `tests/videoExporter.test.js` — Endpoint-inclusive frame planning, visibility throttling, cancellation and complete MediaRecorder/WebCodecs cleanup

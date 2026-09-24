@@ -5,7 +5,7 @@ main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
 vector setLineDash []
-main drawImage [canvas] 0 0 660 660
+main drawImage [canvas vector] 0 0 660 660
 
 # progress 0
 main clearRect 0 0 660 660
@@ -14,7 +14,7 @@ main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
 vector setLineDash []
-main drawImage [canvas] 0 0 660 660
+main drawImage [canvas vector] 0 0 660 660
 
 # progress 0.25
 main clearRect 0 0 660 660
@@ -66,7 +66,7 @@ vector arc 145.787 370.977 3 0 6.283
 vector fill
 vector restore
 vector setLineDash []
-main drawImage [canvas] 0 0 660 660
+main drawImage [canvas vector] 0 0 660 660
 
 # progress 0.5
 main clearRect 0 0 660 660
@@ -201,7 +201,7 @@ vector arc 92.003 322.121 4.5 0 6.283
 vector fill
 vector restore
 vector setLineDash []
-main drawImage [canvas] 0 0 660 660
+main drawImage [canvas vector] 0 0 660 660
 
 # progress 0.75
 main clearRect 0 0 660 660
@@ -344,7 +344,7 @@ vector arc 108.197 347.845 4.5 0 6.283
 vector fill
 vector restore
 vector setLineDash []
-main drawImage [canvas] 0 0 660 660
+main drawImage [canvas vector] 0 0 660 660
 
 # progress 1
 main clearRect 0 0 660 660
@@ -465,4 +465,4 @@ vector arc 192.89 399.963 4.5 0 6.283
 vector fill
 vector restore
 vector setLineDash []
-main drawImage [canvas] 0 0 660 660
+main drawImage [canvas vector] 0 0 660 660

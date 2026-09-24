@@ -17,7 +17,9 @@
  * they use one background mode, two beacon styles, no camera zoom and no area
  * highlights. `authoredExtras` — TST-06's every-field-non-default fixture —
  * joins them to cover the spotlight reveal, all four beacon styles, authored
- * camera zooms, area highlights and a path-only export.
+ * camera zooms and area highlights. It also asks for a path-only export, but
+ * `enterMode` does not take the export step that hides the background, so no
+ * golden here draws one.
  *
  * Two invariants come with them. `play == seek`: reaching an instant by
  * stepping the engine must draw exactly what seeking to it draws, both on the
@@ -125,6 +127,11 @@ function expectGolden(name, sections) {
   const path = goldenPath(name);
   const text = sections.map(([title, lines]) => `# ${title}\n${lines.join('\n')}`).join('\n\n') + '\n';
 
+  // A surface with no role is labelled by its recorder id, which depends on
+  // how many canvases the file made before it, so a golden holding one would
+  // pass or fail by test order. Name the surface in `drawLog.js` instead.
+  expect(text, `${name} uses a surface with no name`).not.toMatch(/other#\d/);
+
   if (UPDATING) {
     writeFileSync(path, text, 'utf8');
     return;
@@ -186,6 +193,13 @@ describe('golden draw logs (TST-02)', () => {
           expect(frames.at(-1).length).toBeGreaterThan(20);
           // The background reaches the canvas in every mode.
           expect(frames[0].some(operations => /^main drawImage \[image/.test(operations))).toBe(true);
+          // So does the vector layer, in every frame and by name (TST-17): a
+          // source written only as `[canvas]` let a render that composited
+          // the wrong canvas, blanking the route, match every golden.
+          for (const [index, frame] of frames.entries()) {
+            expect(frame.some(operations => operations.startsWith('main drawImage [canvas vector] ')),
+              `progress ${INSTANTS[index]} composites the vector layer`).toBe(true);
+          }
 
           if (skipGolden) return;
           expectGolden(`${fixture.id}-${mode}`, [
@@ -286,6 +300,27 @@ describe('golden draw logs (TST-02)', () => {
 
     });
   }
+
+  test('the vector layer is composited at its display size at any pixel density', async () => {
+    // The goldens run at a pixel density of 1, where the vector layer's
+    // backing store and its display size are the same numbers, so a render
+    // that composited it at the wrong one of the two matched every golden
+    // (Codex, TST-17). At density 2 the editor backs the layer at twice its
+    // display size, and must still composite it at its display size.
+    const density = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+    Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 2 });
+    try {
+      const app = await appWithFixture(fixtures().find(each => each.id === 'uon-open-day'));
+      enterMode(app, 'preview');
+      const frame = frameAt(app, 0.5);
+
+      expect(app.renderingService.vectorCanvas.width).toBe(app.displayWidth * 2);
+      expect(frame).toContain(`main drawImage [canvas vector] 0 0 ${app.displayWidth} ${app.displayHeight}`);
+    } finally {
+      if (density) Object.defineProperty(window, 'devicePixelRatio', density);
+      else delete window.devicePixelRatio;
+    }
+  });
 
   describe('fixed defects stay fixed', () => {
 

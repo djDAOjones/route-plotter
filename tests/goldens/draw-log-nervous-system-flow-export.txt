@@ -9,7 +9,7 @@ vector setTransform 1 0 0 1 0 0
 vector scale 1 1
 vector clearRect 0 0 1920 1080
 vector setLineDash []
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 0
 main clearRect 0 0 1920 1080
@@ -18,7 +18,7 @@ main fillRect 0 0 1920 1080
 main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
 vector setLineDash []
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 0.25
 main clearRect 0 0 1920 1080
@@ -70,7 +70,7 @@ vector arc 658.561 607.053 4.909 0 6.283
 vector fill
 vector restore
 vector setLineDash []
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 0.5
 main clearRect 0 0 1920 1080
@@ -205,7 +205,7 @@ vector arc 570.55 527.108 7.364 0 6.283
 vector fill
 vector restore
 vector setLineDash []
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 0.75
 main clearRect 0 0 1920 1080
@@ -348,7 +348,7 @@ vector arc 597.05 569.2 7.364 0 6.283
 vector fill
 vector restore
 vector setLineDash []
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 1
 main clearRect 0 0 1920 1080
@@ -469,4 +469,4 @@ vector arc 735.638 654.485 7.364 0 6.283
 vector fill
 vector restore
 vector setLineDash []
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080

@@ -110,7 +110,7 @@ vector beginPath
 vector arc 1273.2 334.8 13.091 0 6.283
 vector fill
 vector stroke
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 0
 main clearRect 0 0 1920 1080
@@ -220,7 +220,7 @@ vector beginPath
 vector arc 1273.2 334.8 13.091 0 6.283
 vector fill
 vector stroke
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 0.25
 main clearRect 0 0 1920 1080
@@ -798,7 +798,7 @@ vector beginPath
 vector arc 1273.2 334.8 13.091 0 6.283
 vector fill
 vector stroke
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 0.5
 main clearRect 0 0 1920 1080
@@ -1376,7 +1376,7 @@ vector beginPath
 vector arc 1273.2 334.8 13.091 0 6.283
 vector fill
 vector stroke
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 0.75
 main clearRect 0 0 1920 1080
@@ -2096,7 +2096,7 @@ vector beginPath
 vector arc 1273.2 334.8 13.091 0 6.283
 vector fill
 vector stroke
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
 
 # progress 1
 main clearRect 0 0 1920 1080
@@ -2984,4 +2984,4 @@ vector beginPath
 vector arc 1273.2 334.8 13.091 0 6.283
 vector fill
 vector stroke
-main drawImage [canvas] 0 0 1920 1080
+main drawImage [canvas vector] 0 0 1920 1080
