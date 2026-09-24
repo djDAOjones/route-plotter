@@ -196,6 +196,18 @@ describe('PlayerApp export parity (golden cross-check)', () => {
     expect(player.motionSettings.revealTrail).toBe(MOTION.SPOTLIGHT_TRAIL_MAX);
   });
 
+  test('a snapshot without a Graphics scale draws at 1×, as the editor does', async () => {
+    // The player hands `styles.graphicsScale` to its renderer as the editor
+    // does (`_syncGlobalStyleUI`), fallback included (DEF-34). Without the
+    // fallback the multiplier, and every vector size with it, would be NaN.
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    const snapshot = app._buildProjectSnapshot();
+    delete snapshot.styles.graphicsScale;
+
+    const player = await makePlayerFromSnapshot(snapshot);
+    expect(player.renderingService._graphicsScale).toBe(1);
+  });
+
   test('snapshot → PlayerApp reproduces the app timeline exactly', async () => {
     const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
     const snapshot = app._buildProjectSnapshot();

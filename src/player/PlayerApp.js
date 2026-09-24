@@ -151,6 +151,11 @@ export class PlayerApp {
     }
 
     this.styles = { ...this.styles, ...data.styles };
+    // The renderer keeps the Graphics scale on itself instead of reading it
+    // from each frame's styles, so every host must hand it over, with the
+    // editor's fallback (`_syncGlobalStyleUI`). Without this an export drew
+    // every vector size at 1× (DEF-34).
+    this.renderingService.setGraphicsScale(this.styles.graphicsScale ?? 1);
     if (data.motionSettings) {
       this.motionSettings = { ...this.motionSettings, ...data.motionSettings };
     }

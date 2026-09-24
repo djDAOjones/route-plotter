@@ -325,7 +325,7 @@
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
-- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, app == player (also after an anchored crowd's waypoint moves: DEF-02), and the proposed DEF-34 graphics-scale divergence
+- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, and app == player for every fixture (at an authored Graphics scale: DEF-34; after an anchored crowd's waypoint moves: DEF-02) but the camera fixture's eased first frame
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding
@@ -359,7 +359,7 @@
 - `tests/playerBundleClosure.test.js` — TST-07: esbuild's metafile proves the exported player bundle carries no editor-only module, and that the editor's does
 - `tests/playerHostContract.test.js` — TST-07: every member the adopted pathTiming mixin reaches for exists on a really-loaded PlayerApp, and (DEF-02) its `waypointsById` puts an anchored crowd node on its waypoint
 - `tests/playerAccessibility.test.js` — Aggregate-summary privacy/counting and discrete/coalesced transport-announcement contracts
-- `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts
+- `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts, and the player's Graphics scale fallback (DEF-34)
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings
 - `tests/playerEntryAccessibility.test.js` — Exported-player summary, keyboard/transport live-region and playback-speed integration contracts
 - `tests/privacy.test.js` — Export disclosures, byte-identical diagnostics, support navigation/address fallback, mode isolation, focus recovery and no automatic sharing
