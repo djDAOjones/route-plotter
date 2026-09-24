@@ -23,7 +23,8 @@
  * stepping the engine must draw exactly what seeking to it draws, both on the
  * host that played and on one that never did. And `app == player`: the
  * exported HTML player must draw what the export canvas draws — for every
- * fixture, and after an anchored crowd node's waypoint has moved, which it did
+ * fixture, which it did not at an authored Graphics scale until DEF-34 was
+ * fixed, and after an anchored crowd node's waypoint has moved, which it did
  * not until DEF-02 was fixed.
  *
  * What these do not cover: the player's *display* transform (`PlayerApp.resize`
@@ -269,16 +270,17 @@ describe('golden draw logs (TST-02)', () => {
         // `RenderingService`, reading the saved project. This is the test that
         // an export is what it promised to be.
         //
-        // `authored-extras` is excluded and tested below instead: it is the
-        // only fixture with a graphics scale, which the player drops, and the
-        // only one with a camera, whose easing makes its very first frame a
-        // transient rather than a picture.
-        if (fixture.id === 'authored-extras') return;
+        // `authored-extras` is the only fixture with a Graphics scale, which
+        // the player dropped until DEF-34, and the only one with a camera,
+        // whose easing makes its very first frame a transient rather than a
+        // picture. That frame is still drawn on both hosts, so the later ones
+        // follow the same sequence, but it is compared below instead.
         const { app, player } = await exportAndPlayer(fixture);
 
         for (const instant of INSTANTS) {
-          expect(differingLines(frameAt(app, instant), frameAt(player, instant)),
-            `instant ${instant}`).toEqual([]);
+          const differing = differingLines(frameAt(app, instant), frameAt(player, instant));
+          if (fixture.id === 'authored-extras' && instant === 0) continue;
+          expect(differing, `instant ${instant}`).toEqual([]);
         }
       });
 
@@ -328,54 +330,42 @@ describe('golden draw logs (TST-02)', () => {
       expect(differing).toEqual(INSTANTS.map(() => 0));
     });
 
-  });
-
-  describe('the known failures', () => {
-
-    test('DEF-34 (proposed): the exported player ignores Graphics scale', async () => {
-      // `RenderingService` keeps the graphics-scale multiplier on itself
-      // (`RenderingService.js:83,141`) and only the editor's slider and undo
-      // restore ever call `setGraphicsScale` (`wiringDom.js:736`,
-      // `undoRedo.js:444`). `PlayerApp` never does — it holds
-      // `styles.graphicsScale` and draws as though it were 1 — so a project
-      // authored at any other graphics scale exports to video correctly and to
-      // HTML at the wrong size. Found here; not in the plan; proposed to Joe.
+    test.each([0.5, 1.6, 8])('DEF-34: the exported player draws at the authored Graphics scale (%s)', async (scale) => {
+      // `RenderingService` keeps the Graphics scale multiplier on itself
+      // rather than reading it from each frame's styles, and `PlayerApp` never
+      // set it. So an HTML export drew every path width, dash, marker radius
+      // and area rectangle as though the scale were 1, each out by exactly the
+      // authored scale, while the video export of the same project was right.
+      //
+      // The fixture is authored at 1.6; a scale below 1 and one past the
+      // renderer's 4× clamp are checked too. It exports without text and with
+      // a camera, so text is turned on, because label type scales as well, and
+      // the camera off, so the first instant can be compared with the rest.
       const fixture = fixtures().find(each => each.id === 'authored-extras');
+      fixture.project.styles.graphicsScale = scale;
+      fixture.project.exportSettings.includeText = true;
+      fixture.project.exportSettings.includeCamera = false;
       const { app, player } = await exportAndPlayer(fixture);
-      expect(app.styles.graphicsScale).toBe(1.6);
-      expect(player.styles.graphicsScale).toBe(1.6);
-      expect(app.renderingService._graphicsScale).toBe(1.6);
-      expect(player.renderingService._graphicsScale).toBe(1);
+      expect(app.renderingService._graphicsScale).toBe(Math.min(scale, 4));
+      expect(player.renderingService._graphicsScale).toBe(app.renderingService._graphicsScale);
 
-      const appFrame = frameAt(app, 0.5);
-      const playerFrame = frameAt(player, 0.5);
-      const differences = differingLines(appFrame, playerFrame);
-      expect(differences.length).toBeGreaterThan(20);
+      const frames = INSTANTS.map(instant => {
+        const appFrame = frameAt(app, instant);
+        expect(differingLines(appFrame, frameAt(player, instant)), `instant ${instant}`).toEqual([]);
+        return appFrame;
+      });
 
-      // Every difference is a *size*, and each one is out by exactly the
-      // graphics scale — not some other divergence that happens to show up
-      // here. Nothing else about the two frames differs: not a coordinate, not
-      // a colour, not the order of a single call.
-      const operationOf = (line) => line.split(' ')[1];
-      expect([...new Set(differences.map(index => operationOf(appFrame[index])))].sort())
-        .toEqual(['arc', 'rect', 'set:lineWidth', 'setLineDash']);
-
-      /** The one argument each of those operations scales. */
-      const sizeOf = (line) => {
-        const parts = line.split(' ');
-        if (parts[1] === 'arc') return Number(parts[4]);            // radius
-        if (parts[1] === 'rect') return Number(parts[4]);           // width
-        if (parts[1] === 'setLineDash') return Number(parts[2].replace('[', '').split(',')[0]);
-        return Number(parts.at(-1));                                 // lineWidth
-      };
-      for (const index of differences) {
-        // Three decimals of tolerance, because the transcript rounds to three.
-        expect(sizeOf(appFrame[index]) / sizeOf(playerFrame[index]),
-          `${appFrame[index]} vs ${playerFrame[index]}`).toBeCloseTo(1.6, 3);
+      // Non-vacuity: the frames draw every kind of size the player got wrong,
+      // and labels.
+      const operations = new Set(frames[2].map(line => line.split(' ')[1]));
+      for (const sized of ['arc', 'rect', 'set:lineWidth', 'setLineDash', 'set:font', 'fillText']) {
+        expect(operations).toContain(sized);
       }
     });
 
-    test.todo('DEF-34: the exported player draws at the authored Graphics scale');
+  });
+
+  describe('the one expected difference', () => {
 
     test('a camera project\'s first frame differs only by the easing', async () => {
       // Not a defect, and stated so it cannot be mistaken for one later. The
@@ -384,13 +374,23 @@ describe('golden draw logs (TST-02)', () => {
       // on it, so the instant a project is opened at is the one frame where
       // the two legitimately disagree — and only in the camera transform.
       const fixture = fixtures().find(each => each.id === 'authored-extras');
-      fixture.project.styles.graphicsScale = 1; // isolate from DEF-34 above
       const { app, player } = await exportAndPlayer(fixture);
+      const TRANSLATION = /^(main|vector) translate /;
+      const translations = frame => frame.filter(line => TRANSLATION.test(line));
 
-      const atZero = differingLines(frameAt(app, 0), frameAt(player, 0));
-      const first = frameAt(app, 0);
+      const appFirst = frameAt(app, 0);
+      const playerFirst = frameAt(player, 0);
+      const atZero = differingLines(appFirst, playerFirst);
       expect(atZero.length).toBeGreaterThan(0);
-      for (const index of atZero) expect(first[index]).toMatch(/^(main|vector) translate /);
+      for (const index of atZero) expect(appFirst[index]).toMatch(TRANSLATION);
+
+      // A size could hide in a translation, so each host must translate
+      // exactly as it does at Graphics scale 1 rather than the authored 1.6.
+      const unscaled = fixtures().find(each => each.id === 'authored-extras');
+      unscaled.project.styles.graphicsScale = 1;
+      const plain = await exportAndPlayer(unscaled);
+      expect(translations(frameAt(plain.app, 0))).toEqual(translations(appFirst));
+      expect(translations(frameAt(plain.player, 0))).toEqual(translations(playerFirst));
 
       for (const instant of INSTANTS.slice(1)) {
         expect(differingLines(frameAt(app, instant), frameAt(player, instant)),
