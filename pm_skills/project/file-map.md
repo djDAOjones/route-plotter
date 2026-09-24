@@ -329,6 +329,7 @@
 - `tests/headDirectionBranchWait.test.js` — BUG-01 contract: a wait indexed
   past the end of a branch run falls through to that run's own path
   direction, while an in-range wait still steers waypoint-to-waypoint
+- `tests/helpTellsTheTruth.test.js` — DEF-21: the Help entries for `,`, `.` and K and the File menu's shortcuts match what the keys actually do on a booted app
 - `tests/helpers/minCountReporter.js` — TST-10 canary: fails an unfiltered run in which fewer than 72 files or 1,000 tests ran
 - `tests/htmlExportCache.test.js` — HTML export fetches the standalone player bundle for the exact application build
 - `tests/imageAssetRoundTrip.test.js` — Persistence-safe image IDs and import→export→import asset round-trip contracts
