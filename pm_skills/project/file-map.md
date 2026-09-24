@@ -265,7 +265,7 @@
 - `src/utils/branchTiming.js` — Pure per-run branch timing: builds each run's
 - `src/utils/busynessEnvelope.js` — Pure busyness-handle normalisation/validation, segment-area compilation and inverse-density sampling for seeded release times
 - `src/utils/crowdArrival.js` — Pure crowd-arrival maths shared with
-- `src/utils/entityId.js` — Shared persisted structural-ID length boundary that leaves authored display text untouched
+- `src/utils/entityId.js` — Shared persisted structural-ID length boundary that leaves authored display text untouched, and the bounded derivation for ids built from other ids (DEF-31)
 - `src/utils/focusTrap.js` — Modal inerting, focus containment/wrap, Escape handling and origin-focus restoration
 - `src/utils/graphRouting.js` — Shared directed departures, overflow-safe weight normalisation and stable whole-percentage traffic shares
 - `src/utils/imageCoordinates.js` — DEF-03: the one range check and clamp for stored image points, shared by load and the zoomed-out authoring paths
@@ -276,7 +276,7 @@
 - `src/utils/renderReference.js` — Pure visual-reference migration and current-to-authored short-edge scale calculation
 - `src/utils/routeAnchors.js` — Pure one-way route→crowd binding: resolves
 - `src/utils/routeBranches.js` — Pure hero-route branch resolution: cuts a
-- `src/utils/routeTrace.js` — Pure trace of the hero route into a crowd guide
+- `src/utils/routeTrace.js` — Pure trace of the hero route into a crowd guide network (COMPOSE-03): a node per major, an edge per leg carrying its minors, branches from fork to rejoin, and derived ids fitted to the persisted limit (DEF-31)
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
 - `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers)
@@ -308,7 +308,7 @@
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
-- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); and the DEF-04/31 failures characterised with the reason the loader gives
+- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); the DEF-31 regression (a crowd traced from the longest waypoint ids reloads); and the DEF-04 failures characterised with the reason the loader gives
 - `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
@@ -375,7 +375,7 @@
 - `tests/reviewTimeline.test.js` — Stateless comet, canonical transport/export and timing-invalidation review regressions
 - `tests/routeAnchors.test.js` — COMPOSE-01 contract: node/emitter binding,
 - `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
-- `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across
+- `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across linear and branched routes, a copy that never reaches back into the route, the save/load round trip, and (DEF-31) derived ids that fit the persisted limit
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
 - `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts
 - `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts

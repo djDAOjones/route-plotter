@@ -2,11 +2,11 @@
  * TST-06 — authorable ⇒ loadable (part 2 of 2).
  *
  * The invariant: anything the app's own interface can author must survive a
- * save and a load. It is not held today — DEF-04 and DEF-31 each break it, and
- * each one loses a user's work — so this file does three things. The property
- * tests state the invariant over the controls where it *does* hold; the known
- * failures are characterised exactly as they behave now, each with a `todo`
- * naming the fix that will replace it; and a fixed one (DEF-03) keeps its
+ * save and a load. It is not held today — DEF-04 breaks it, and loses a
+ * user's work — so this file does three things. The property tests state the
+ * invariant over the controls where it *does* hold; the known failures are
+ * characterised exactly as they behave now, each with a `todo` naming the fix
+ * that will replace it; and the fixed ones (DEF-03, DEF-31) keep their
  * regressions.
  *
  * "Authorable" is taken literally: the controls are the real `<input>` and
@@ -456,15 +456,18 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
 
     test.todo('DEF-04: a label typed past 100,000 characters loads again');
 
-    test('DEF-31: tracing a route with long waypoint ids will not load', async () => {
-      allowConsole(LOAD_REFUSED);
+  });
+
+  describe('DEF-31: a traced crowd reloads', () => {
+
+    test('tracing a route with long waypoint ids loads again', async () => {
       const app = await bootWithRoute({ waypoints: 0 });
       // Ids up to 256 characters load (`entityId.js:6`), so a project can
       // legitimately carry them — this one is given them the way a load would.
-      // `traceRouteIntoGraph` then builds derived ids as `gn_trace_<id>` and
-      // `ge_trace_<from>__<to>` (`routeTrace.js:64,95`), which overshoot the
-      // same limit, so "Trace route into crowd" produces a project the app can
-      // no longer open.
+      // `traceRouteIntoGraph` used to build derived ids as `gn_trace_<id>` and
+      // `ge_trace_<from>__<to>`, which overshot the same limit, so "Trace
+      // route into crowd" produced a project the app could no longer open
+      // ("Invalid graph node id").
       const project = {
         coordVersion: 9,
         waypoints: [
@@ -477,14 +480,21 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
 
       app.addCrowd({ enterNetworkEditor: false });
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
-      const nodes = app._buildProjectSnapshot().scene.flowLayers[0].graph.nodes;
-      expect(nodes.every(node => node.id.length > PROJECT_MODEL_LIMITS.MAX_ENTITY_ID_LENGTH)).toBe(true);
+      const { graph } = app._buildProjectSnapshot().scene.flowLayers[0];
+      const ids = [...graph.nodes, ...graph.edges].map(each => each.id);
+      expect(ids).toHaveLength(3);
+      expect(ids.every(id => id.length <= PROJECT_MODEL_LIMITS.MAX_ENTITY_ID_LENGTH)).toBe(true);
 
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(false);
-      expect(refusalReason()).toContain('Invalid graph node id');
+      // Was refused: "Invalid graph node id".
+      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      // The mapping survives: each node still follows its own waypoint, and
+      // the leg between them is still there.
+      const reloaded = app.scene.getFlowLayers()[0].graph;
+      expect(reloaded.getNodes().map(node => node.anchorWaypointId))
+        .toEqual(app.waypoints.map(waypoint => waypoint.id));
+      expect(reloaded.getEdges()).toHaveLength(1);
+      expect(app.anchorReport).toEqual({ bound: 2, broken: [] });
     });
-
-    test.todo('DEF-31: tracing a route with long waypoint ids loads again');
 
   });
 

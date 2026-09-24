@@ -20,6 +20,32 @@
  */
 
 import { resolveRouteBranches } from './routeBranches.js';
+import { boundedEntityId } from './entityId.js';
+
+/**
+ * Hand out ids that are unique within one trace (DEF-31).
+ *
+ * Waypoint ids are unique, but ids built from them need not be: a `__` inside
+ * a waypoint id lets two legs spell the same edge id, and a long id cut to the
+ * limit can equal a short one. Either would make the graph silently keep one
+ * and drop the other. A clash takes the next free `~n`, so an ordinary route
+ * keeps exactly the ids it always had.
+ */
+function uniqueIds() {
+  const used = new Set();
+  return (base) => {
+    let id = boundedEntityId(base);
+    for (let n = 2; used.has(id); n += 1) {
+      // Every candidate is a different string, so no more than `used.size` of
+      // them can be taken. Getting past that means derived ids stopped being
+      // distinct, and failing loudly beats freezing the editor in this loop.
+      if (n > used.size + 2) throw new Error('Could not give a traced crowd element a unique id');
+      id = boundedEntityId(`${base}~${n}`);
+    }
+    used.add(id);
+    return id;
+  };
+}
 
 /** Why a route could not be traced. */
 export const TRACE_PROBLEM = {
@@ -55,13 +81,17 @@ export function traceRouteIntoGraph(waypoints = []) {
   const runs = [structure.trunk, ...structure.branches];
   const nodeIdByWaypointId = new Map();
   const nodes = [];
+  const nodeIdFor = uniqueIds();
+  const edgeIdFor = uniqueIds();
 
   // Nodes first, so an edge can always resolve both endpoints — including a
   // branch edge that reaches back to a trunk waypoint.
   for (const run of runs) {
     for (const waypoint of run.waypoints) {
       if (waypoint.isMajor === false) continue;
-      const nodeId = `gn_trace_${waypoint.id}`;
+      // Waypoint ids may be as long as the limit itself, so a derived id is
+      // fitted back inside it rather than overshooting (DEF-31).
+      const nodeId = nodeIdFor(`gn_trace_${waypoint.id}`);
       nodeIdByWaypointId.set(waypoint.id, nodeId);
       nodes.push({
         id: nodeId,
@@ -92,7 +122,7 @@ export function traceRouteIntoGraph(waypoints = []) {
       const targetId = nodeIdByWaypointId.get(link.toId);
       if (!sourceId || !targetId || sourceId === targetId) continue;
       edges.push({
-        id: `ge_trace_${link.fromId}__${link.toId}`,
+        id: edgeIdFor(`ge_trace_${link.fromId}__${link.toId}`),
         sourceId,
         targetId,
         weight: 1,
@@ -107,7 +137,7 @@ export function traceRouteIntoGraph(waypoints = []) {
       const targetId = nodeIdByWaypointId.get(run.rejoinAtId);
       if (sourceId && targetId && sourceId !== targetId) {
         edges.push({
-          id: `ge_trace_${lastMajor.id}__${run.rejoinAtId}`,
+          id: edgeIdFor(`ge_trace_${lastMajor.id}__${run.rejoinAtId}`),
           sourceId,
           targetId,
           weight: 1,

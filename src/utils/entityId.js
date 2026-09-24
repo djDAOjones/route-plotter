@@ -26,3 +26,39 @@ export function assertPersistedEntityId(value, label) {
   }
   return value;
 }
+
+/**
+ * Fit an id built from other ids into the persisted limit (DEF-31).
+ *
+ * An id that already fits is returned unchanged, so no id in a saved project
+ * ever moves. A longer one keeps its readable start and ends in a hash of the
+ * whole, so it stays deterministic, and two ids that differ only past the
+ * cut stay distinct.
+ *
+ * @param {string} id
+ * @returns {string}
+ */
+export function boundedEntityId(id) {
+  if (id.length <= ENTITY_ID_LIMITS.MAX_LENGTH) return id;
+  const suffix = `_${hash53(id).toString(36)}`;
+  return id.slice(0, ENTITY_ID_LIMITS.MAX_LENGTH - suffix.length) + suffix;
+}
+
+/**
+ * cyrb53, a small well-mixed 53-bit string hash. It is not cryptographic: it
+ * only has to keep derived ids apart, deterministically, on every platform.
+ */
+function hash53(text) {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let index = 0; index < text.length; index += 1) {
+    const code = text.charCodeAt(index);
+    h1 = Math.imul(h1 ^ code, 2654435761);
+    h2 = Math.imul(h2 ^ code, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+}
