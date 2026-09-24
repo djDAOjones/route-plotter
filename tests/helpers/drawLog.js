@@ -10,7 +10,8 @@
  * its offscreen layer before drawing it, or after clearing it, leaves both
  * canvases' individual transcripts untouched and the screen blank. A call on
  * a surface this module does not know is labelled `other#<id>` rather than
- * dropped.
+ * dropped, and a canvas passed as an argument carries the same label as the
+ * calls drawn on it, so a frame says which surface it composited (TST-17).
  */
 
 import { contextIdFor, recordCallOrder, takeOrderedCalls } from '../setup.js';
@@ -29,12 +30,24 @@ function round(value) {
   return value;
 }
 
-function describeCall(call, gradientNames) {
+function describeCall(call, gradientNames, surfaces) {
   return call.map(round)
     .map(value => (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)))
     .map(value => renameGradient(value, gradientNames))
+    .map(value => renameCanvas(value, surfaces))
     .map(shortenImage)
     .join(' ');
+}
+
+/** The label a surface's lines carry, and the name a canvas argument takes. */
+function surfaceLabel(surfaces, id) {
+  return surfaces.get(id) ?? `other#${id}`;
+}
+
+/** `setup.js` records a canvas argument as `[canvas #<recorder id>]`. */
+function renameCanvas(value, surfaces) {
+  if (typeof value !== 'string') return value;
+  return value.replace(/\[canvas #(\d+)\]/g, (whole, id) => `[canvas ${surfaceLabel(surfaces, Number(id))}]`);
 }
 
 /**
@@ -70,8 +83,8 @@ function renameGradient(value, names) {
  * `main` is the visible canvas; `vector` is the offscreen layer the renderer
  * creates for the route, markers and crowds; `mask` is the reveal mask the
  * visibility service builds for the spotlight and angle-of-view modes, whose
- * pixels reach `main` only as an opaque `[canvas]` argument, so without it a
- * mask that stopped painting would be invisible here.
+ * pixels reach `main` only as an opaque `[canvas mask]` argument, so without
+ * its own lines a mask that stopped painting would be invisible here.
  */
 function surfaceNames(host) {
   const names = new Map();
@@ -100,7 +113,7 @@ export function takeFrame(host) {
   const names = surfaceNames(host);
   const gradients = new Map();
   return takeOrderedCalls()
-    .map(([id, ...call]) => `${names.get(id) ?? `other#${id}`} ${describeCall(call, gradients)}`);
+    .map(([id, ...call]) => `${surfaceLabel(names, id)} ${describeCall(call, gradients, names)}`);
 }
 
 /**

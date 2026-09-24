@@ -96,12 +96,20 @@ const CONTEXT_STYLE_DEFAULTS = Object.freeze({
   lineDashOffset: 0
 });
 
-/** Values are copied and named, so a later mutation cannot rewrite history. */
+/**
+ * Values are copied and named, so a later mutation cannot rewrite history.
+ * A canvas is named by its recording context's id, which `drawLog.js` turns
+ * into the surface it is; a bare `[canvas]` let a render that composited the
+ * wrong one pass every golden (TST-17). A canvas never drawn on has no id.
+ */
 function describeValue(value) {
   if (Array.isArray(value)) return value.slice();
   if (value === null || typeof value !== 'object') return value;
   if (value.__recorderId) return value.__recorderId;
-  if (value instanceof HTMLCanvasElement) return '[canvas]';
+  if (value instanceof HTMLCanvasElement) {
+    const id = contextIdFor(value);
+    return id === null ? '[canvas]' : `[canvas #${id}]`;
+  }
   if (typeof Image !== 'undefined' && value instanceof Image) return `[image ${value.src ?? ''}]`;
   return `[${value.constructor?.name ?? 'object'}]`;
 }

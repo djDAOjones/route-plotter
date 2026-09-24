@@ -185,6 +185,13 @@ describe('golden draw logs (TST-02)', () => {
           expect(frames.at(-1).length).toBeGreaterThan(20);
           // The background reaches the canvas in every mode.
           expect(frames[0].some(operations => /^main drawImage \[image/.test(operations))).toBe(true);
+          // So does the vector layer, in every frame and by name (TST-17): a
+          // source written only as `[canvas]` let a render that composited
+          // the wrong canvas, blanking the route, match every golden.
+          for (const [index, frame] of frames.entries()) {
+            expect(frame.some(operations => operations.startsWith('main drawImage [canvas vector] ')),
+              `progress ${INSTANTS[index]} composites the vector layer`).toBe(true);
+          }
 
           if (skipGolden) return;
           expectGolden(`${fixture.id}-${mode}`, [

@@ -14,7 +14,7 @@ main set:globalCompositeOperation destination-in
 main translate 640 360
 main scale 1.75 1.75
 main translate -365.714 -431.54
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
 main set:globalAlpha 0.005
@@ -111,7 +111,7 @@ vector arc 211.6 523.8 24.436 0 6.283
 vector fill
 vector stroke
 vector restore
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas vector] 0 0 1280 720
 
 # progress 0
 main clearRect 0 0 1280 720
@@ -129,7 +129,7 @@ main set:globalCompositeOperation destination-in
 main translate 640 360
 main scale 1.75 1.75
 main translate -365.714 -438.16
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
 main set:globalAlpha 0.005
@@ -222,7 +222,7 @@ vector arc 211.6 523.8 24.436 0 6.283
 vector fill
 vector stroke
 vector restore
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas vector] 0 0 1280 720
 
 # progress 0.25
 main clearRect 0 0 1280 720
@@ -1312,7 +1312,7 @@ main set:globalCompositeOperation destination-in
 main translate 640 360
 main scale 1.75 1.75
 main translate -914.286 -259.2
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
 main set:globalAlpha 0.005
@@ -1943,7 +1943,7 @@ vector rect 968.364 234.764 48.873 48.873
 vector fill
 vector stroke
 vector restore
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas vector] 0 0 1280 720
 
 # progress 0.5
 main clearRect 0 0 1280 720
@@ -3033,7 +3033,7 @@ main set:globalCompositeOperation destination-in
 main translate 640 360
 main scale 1.75 1.75
 main translate -914.286 -259.2
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
 main set:globalAlpha 0.005
@@ -3504,7 +3504,7 @@ vector rect 968.364 234.764 48.873 48.873
 vector fill
 vector stroke
 vector restore
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas vector] 0 0 1280 720
 
 # progress 0.75
 main clearRect 0 0 1280 720
@@ -4594,7 +4594,7 @@ main set:globalCompositeOperation destination-in
 main translate 640 360
 main scale 1.75 1.75
 main translate -914.286 -259.2
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
 main set:globalAlpha 0.005
@@ -4902,7 +4902,7 @@ vector rect 968.364 234.764 48.873 48.873
 vector fill
 vector stroke
 vector restore
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas vector] 0 0 1280 720
 
 # progress 1
 main clearRect 0 0 1280 720
@@ -5992,7 +5992,7 @@ main set:globalCompositeOperation destination-in
 main translate 640 360
 main scale 1.75 1.75
 main translate -914.286 -259.2
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
 main set:globalAlpha 0.005
@@ -6129,4 +6129,4 @@ vector rect 968.364 234.764 48.873 48.873
 vector fill
 vector stroke
 vector restore
-main drawImage [canvas] 0 0 1280 720
+main drawImage [canvas vector] 0 0 1280 720

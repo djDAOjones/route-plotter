@@ -386,7 +386,7 @@
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts
 - `tests/shortHexGlow.test.js` — DEF-26: the glow draws every stored hex form with its own alpha, and one throwing frame stops neither playback nor editor redraws
 - `tests/helpers/consoleGuard.js` — TST-10 console guard: records console.error/warn, fails the test on anything undeclared, and holds the short allowlist of known warts
-- `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main and offscreen vector canvases as rounded, diffable draw-log lines and compares two frames
+- `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main, offscreen vector and reveal-mask canvases as rounded, diffable draw-log lines, names each composited canvas by its surface (TST-17), and compares two frames
 - `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)
 - `tests/helpers/bootApp.js` — TST-01 boot harness: builds the shipped index.html shell, stubs APP_VERSION/matchMedia/fetch/layout, and starts the real RoutePlotter
 - `tests/fixtures/authoredExtras.js` — TST-06 fixture: the Open day example with every field of the save shape moved off its default, including two image assets and authored camera zooms
@@ -405,7 +405,7 @@
 - `tests/goldens/project-snapshot-nervous-system-flow.json` — TST-06 golden: the saved shape of the Signal flow example (guide network, no hero route)
 - `tests/goldens/project-snapshot-parm-aerial-walk.json` — TST-06 golden: the saved shape of the Site walk example (plain labelled chain)
 - `tests/goldens/project-snapshot-uon-open-day.json` — TST-06 golden: the saved shape of the Open day route example (branched route, traced anchored crowd)
-- `tests/setup.js` — Vitest jsdom setup (uses defineProperty for getter-only jsdom globals)
+- `tests/setup.js` — Vitest jsdom setup: getter-only jsdom globals via defineProperty, and one recording context per canvas, which writes a canvas argument with its recorder id (TST-17)
 - `tests/startup.test.js` — Recovery-before-default-image startup ordering contracts
 - `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
