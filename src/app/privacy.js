@@ -23,7 +23,7 @@ const SHARE_DISCLOSURES = Object.freeze({
   html: Object.freeze({
     title: 'Export standalone HTML?',
     description:
-      'The HTML file contains your route, timings, crowd settings and original embedded image bytes. Stored image filenames or metadata may also travel with the file. Nothing is uploaded automatically; this information leaves your browser only if you share the export.',
+      'The HTML file contains your route, timings, crowd settings and the original bytes of the images it uses, but not the filenames stored for them. An image file can carry details of its own, such as camera metadata. Nothing is uploaded automatically; this information leaves your browser only if you share the export.',
     action: 'Export HTML',
     returnFocusId: 'export-dropdown-btn',
   }),

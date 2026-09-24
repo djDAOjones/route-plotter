@@ -21,6 +21,7 @@
  */
 
 import { ImageAsset, IMAGE_LIMITS } from '../models/ImageAsset.js';
+import { collectImageAssetReferences } from '../utils/assetReferences.js';
 
 export class HTMLExportService {
   constructor() {
@@ -57,8 +58,28 @@ export class HTMLExportService {
     const retainedBackground = this._validateBackgroundDataURL(backgroundDataURL);
 
     const playerBundle = await this._fetchPlayerBundle();
-    const html = this._generateHTML(title, retainedBackground, projectData, playerBundle);
+    const html = this._generateHTML(title, retainedBackground, this._sharedProjectData(projectData), playerBundle);
     return new Blob([html], { type: 'text/html' });
+  }
+
+  /**
+   * The project as a shared page may carry it (DEF-23): only the images the
+   * project references, since the store also keeps images only undo history
+   * can reach, and without their original filenames, which stay in project
+   * files. The player needs neither.
+   * @param {Object} projectData
+   * @returns {Object}
+   */
+  _sharedProjectData(projectData) {
+    const referenced = collectImageAssetReferences(projectData);
+    // A project file's manifest is where filenames live; it has no place here.
+    const { assetManifest: _manifest, ...shared } = projectData;
+    return {
+      ...shared,
+      imageAssets: (projectData.imageAssets || [])
+        .filter(asset => referenced.has(asset.id))
+        .map(({ name: _filename, ...asset }) => asset),
+    };
   }
 
   /**
