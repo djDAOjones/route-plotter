@@ -35,7 +35,7 @@ consolidate. Never rewrite.*
   now 111 items plus DEF-34–36 and TST-17. **Joe accepted all 22 §20
   defaults on 2026-09-22, and on 2026-09-24 approved DEF-34 and accepted
   DEF-35, DEF-36 and TST-17.** Check §20 and the decision log before telling
-  him anything needs his decision — he has answered more than you think.
+  Joe anything needs a decision — more has been answered than you think.
 - **Line references in the plan are at `2e4d78e`**, and `src/` has moved.
   Re-verify every reference before relying on it.
 
@@ -155,7 +155,7 @@ release, and `DEV-INFRASTRUCTURE.md` → Deployment.
 - One concern per PR, on a short-lived branch from `main`, opened with
   `gh pr create`. CI (`Verify`) must be green. **Always base a PR on `main`.**
 - **Never commit to or push `main` except** merging a PR Joe has told you to
-  merge, and `npm run push` for a release he has called. Approving a merge
+  merge, and `npm run push` for a release Joe has called. Approving a merge
   does not call a release.
 - **Parallel PRs collide on shared lines**: `file-map.md`'s header counts, a
   test file's header, `wish-list.md`'s last line. Identical edits on both
@@ -178,8 +178,8 @@ release, and `DEV-INFRASTRUCTURE.md` → Deployment.
   a gate is a claim, so check it.
 - Add a `file-map.md` row for every new file and correct the counts. **Never
   run `gen-file-map.mjs`.**
-- Budget overruns are reported and proposed, never pruned without Joe; his
-  prune bar (decision log, 2026-08-27) outranks the prune-to targets.
+- Budget overruns are reported and proposed, never pruned without Joe; the
+  owner's prune bar (decision log, 2026-08-27) outranks the prune-to targets.
 
 **Plan fidelity**
 - If evidence shows a row is wrong, patch it with a dated note, say so in the
@@ -269,10 +269,10 @@ over-promised privacy claim. **Assume your work has a hole like that.**
 ## Working with Joe
 
 Joe is a novice coder who owns macro structure, UX and conceptual design. Do
-the work; explain only when asked. Ask only what is genuinely his, few and
-concrete, each with a recommended default — check §20 and the decision log
-first. His call wins; trust his bug instincts and reproduce before disputing.
-Short updates while you work; he prefers momentum.
+the work; explain only when asked. Ask only what is genuinely Joe's to
+decide, few and concrete, each with a recommended default — check §20 and the
+decision log first. Joe's call wins; trust Joe's bug instincts and reproduce
+before disputing. Short updates while you work; Joe prefers momentum.
 
 ## End every session with a handoff
 
