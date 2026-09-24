@@ -82,6 +82,20 @@ export const PATH = {
   CORNER_SLOW_FACTOR: 0.7
 };
 
+// Where a stored point may sit, in normalised image coordinates: 0–1 spans the
+// image. Below 100% background zoom the canvas shows margin round the image,
+// and waypoints and polygon vertices can be authored there; ten image-widths
+// either side covers the whole canvas at the 50% minimum for every aspect
+// preset with images up to 5:1 either way. Load accepts exactly this range and
+// every authoring path stops at it, so a point's position never stops a
+// project reopening (DEF-03). The bound also keeps one stray coordinate from
+// costing PathCalculator, which samples a point per 0.002 of path length,
+// millions of samples; it is not a budget for a whole route.
+export const IMAGE_COORDINATES = {
+  MIN: -10,
+  MAX: 11
+};
+
 // UI interaction thresholds
 export const INTERACTION = {
   WAYPOINT_HIT_RADIUS: 15,        // Click detection radius for waypoints (pixels)

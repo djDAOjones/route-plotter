@@ -10,6 +10,8 @@ import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { snapToAngle } from '../utils/snapToAngle.js';
 import { branchEndInfo } from '../utils/routeBranches.js';
+import { IMAGE_COORDINATES } from '../config/constants.js';
+import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 
 /**
  * Resolve a drag that ended on top of another waypoint as a branch rejoin.
@@ -170,23 +172,31 @@ export const wiringBusMixin = {
         if (primaryStart && dragGroup.length > 0) {
           let dx = newX - primaryStart.imgX;
           let dy = newY - primaryStart.imgY;
-          if (zoom >= 1) {
-            const minDx = Math.max(...dragGroup.map(item => -item.imgX));
-            const maxDx = Math.min(...dragGroup.map(item => 1 - item.imgX));
-            const minDy = Math.max(...dragGroup.map(item => -item.imgY));
-            const maxDy = Math.min(...dragGroup.map(item => 1 - item.imgY));
-            dx = minDx <= maxDx ? Math.max(minDx, Math.min(maxDx, dx)) : 0;
-            dy = minDy <= maxDy ? Math.max(minDy, Math.min(maxDy, dy)) : 0;
-          }
+          // One shared delta that keeps every member in bounds, so the group
+          // keeps its shape: the image when zoomed in; zoomed out, the range
+          // load accepts (DEF-03).
+          const [lo, hi] = zoom >= 1 ? [0, 1] : [IMAGE_COORDINATES.MIN, IMAGE_COORDINATES.MAX];
+          const minDx = Math.max(...dragGroup.map(item => lo - item.imgX));
+          const maxDx = Math.min(...dragGroup.map(item => hi - item.imgX));
+          const minDy = Math.max(...dragGroup.map(item => lo - item.imgY));
+          const maxDy = Math.min(...dragGroup.map(item => hi - item.imgY));
+          dx = minDx <= maxDx ? Math.max(minDx, Math.min(maxDx, dx)) : 0;
+          dy = minDy <= maxDy ? Math.max(minDy, Math.min(maxDy, dy)) : 0;
           for (const item of dragGroup) {
             item.waypoint.imgX = item.imgX + dx;
             item.waypoint.imgY = item.imgY + dy;
+            if (zoom < 1) {
+              // start + (edge - start) can round a hair past the edge
+              item.waypoint.imgX = clampImageCoordinate(item.waypoint.imgX);
+              item.waypoint.imgY = clampImageCoordinate(item.waypoint.imgY);
+            }
           }
         } else if (this.waypoints.includes(waypoint)) {
           if (zoom < 1) {
-            // Zoomed out: allow waypoints outside image bounds (coords outside 0-1)
-            waypoint.imgX = newX;
-            waypoint.imgY = newY;
+            // Zoomed out: waypoints may leave the image, as far as load
+            // accepts (DEF-03)
+            waypoint.imgX = clampImageCoordinate(newX);
+            waypoint.imgY = clampImageCoordinate(newY);
           } else {
             // Zoomed in or 100%: clamp to image bounds
             waypoint.imgX = Math.max(0, Math.min(1, newX));

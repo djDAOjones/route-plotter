@@ -2,12 +2,12 @@
  * TST-06 — authorable ⇒ loadable (part 2 of 2).
  *
  * The invariant: anything the app's own interface can author must survive a
- * save and a load. It is not held today — DEF-03 and DEF-04 each break it, and
- * each one loses a user's work — so this file does three things. The property
- * tests state the invariant over the controls where it *does* hold; the known
- * failures are characterised exactly as they behave now, each with a `todo`
- * naming the fix that will replace it; and a fixed one (DEF-31) keeps its
- * regression.
+ * save and a load. It is not held today — DEF-04 breaks it, and loses a
+ * user's work — so this file does three things. The property tests state the
+ * invariant over the controls where it *does* hold; the known failures are
+ * characterised exactly as they behave now, each with a `todo` naming the fix
+ * that will replace it; and the fixed ones (DEF-03, DEF-31) keep their
+ * regressions.
  *
  * "Authorable" is taken literally: the controls are the real `<input>` and
  * `<select>` elements of the shipped shell, driven through the real wiring on
@@ -31,6 +31,9 @@ import {
   comparableSnapshot, freezeClock, loadSnapshot, LOAD_REFUSED,
 } from './helpers/projectSnapshot.js';
 import { PROJECT_MODEL_LIMITS } from '../src/app/persistence.js';
+import { IMAGE_COORDINATES } from '../src/config/constants.js';
+import { PlayerApp } from '../src/player/PlayerApp.js';
+import { CoordinateTransform } from '../src/services/CoordinateTransform.js';
 
 /**
  * A booted app with enough route for the per-waypoint controls to act on.
@@ -210,25 +213,204 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
     expect(selects().length - inert.length).toBeGreaterThanOrEqual(14);
   });
 
-  describe('the known failures (W2 fixes each one)', () => {
+  describe('DEF-03: points authored off the image reload', () => {
 
-    test('DEF-03: a waypoint authored outside the image at 50% zoom will not load', async () => {
-      allowConsole(LOAD_REFUSED);
+    // Below 100% background zoom `screenToImage` deliberately returns the
+    // canvas margin round the image as coordinates outside 0–1
+    // (`viewport.js:257-262`), and a click, a drag or a polygon vertex there
+    // is an ordinary thing to do while zoomed out. Until DEF-03 the loader
+    // refused anything outside 0–1, so the project, its autosave and the
+    // exported player's copy of the route were all lost.
+
+    test('a waypoint authored outside the image at 50% zoom loads again', async () => {
       const app = await bootWithRoute({ waypoints: 1 });
-      // Below 100% background zoom `screenToImage` deliberately returns
-      // coordinates outside 0–1 (`viewport.js:257-262`), and the `waypoint:add`
-      // handler builds the waypoint from them without clamping
-      // (`wiringControllers.js:309-310`, `Waypoint.js:172`). A click in the
-      // margin is an ordinary thing to do while zoomed out.
       app.exportSettings.backgroundZoom = 50;
       app.eventBus.emit('waypoint:add', { imgX: 1.35, imgY: -0.2, isMajor: true });
-      expect(app.waypoints.map(waypoint => waypoint.imgX)).toContain(1.35);
+      expect(app.waypoints.map(waypoint => [waypoint.imgX, waypoint.imgY])).toEqual([[0.2, 0.35], [1.35, -0.2]]);
 
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(false);
-      expect(refusalReason()).toContain('Invalid waypoint at index 1');
+      // Was refused: "Invalid waypoint at index 1".
+      const saved = app._buildProjectSnapshot();
+      expect(await loadSnapshot(app, saved)).toBe(true);
+      expect(app.waypoints.map(waypoint => [waypoint.imgX, waypoint.imgY])).toEqual([[0.2, 0.35], [1.35, -0.2]]);
+      expect(comparableSnapshot(app._buildProjectSnapshot())).toEqual(comparableSnapshot(saved));
     });
 
-    test.todo('DEF-03: a waypoint authored outside the image at 50% zoom loads again');
+    test('a polygon drawn outside the image at 50% zoom loads again', async () => {
+      const app = await bootWithRoute({ waypoints: 1 });
+      app.exportSettings.backgroundZoom = 50;
+      const drawing = app.areaDrawingService;
+      drawing.startDrawing(app.waypoints[0]);
+      drawing._placeVertex(-0.3, 0.2);
+      drawing._placeVertex(1.4, 0.3);
+      drawing._placeVertex(0.5, 1.6);
+      drawing._completePolygon();
+      const drawn = [{ x: -0.3, y: 0.2 }, { x: 1.4, y: 0.3 }, { x: 0.5, y: 1.6 }];
+      expect(app.waypoints[0].areaHighlight.points).toEqual(drawn);
+
+      // Was refused: "Invalid waypoint polygon point at index 0".
+      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(app.waypoints[0].areaHighlight.points).toEqual(drawn);
+    });
+
+    test('an area highlight on a waypoint off the image loads again', async () => {
+      // Choosing a shape centres the new area on its waypoint
+      // (`UIController.js:1331-1335`), so an off-image waypoint gives its area
+      // an off-image centre, which load refused as well ("Waypoint area
+      // centerX is outside the supported range").
+      const app = await bootWithRoute({ waypoints: 1 });
+      app.exportSettings.backgroundZoom = 50;
+      app.eventBus.emit('waypoint:add', { imgX: 1.35, imgY: -0.2, isMajor: true });
+      const offImage = app.waypoints.find(waypoint => waypoint.imgX === 1.35);
+      expect(app.selectedWaypoint).toBe(offImage);
+      applyValue(document.getElementById('area-shape'), 'circle');
+      expect([offImage.areaHighlight.centerX, offImage.areaHighlight.centerY]).toEqual([1.35, -0.2]);
+
+      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      const reloaded = app.waypoints.find(waypoint => waypoint.id === offImage.id);
+      expect([reloaded.areaHighlight.centerX, reloaded.areaHighlight.centerY]).toEqual([1.35, -0.2]);
+    });
+
+    test('the exported player keeps a waypoint authored outside the image', async () => {
+      // The player validates each waypoint on its own and silently dropped the
+      // ones outside 0–1 (`PlayerApp.js:140-142`), so the exported route lost
+      // them without a word while the project itself refused to open.
+      const app = await bootWithRoute({ waypoints: 2 });
+      app.exportSettings.backgroundZoom = 50;
+      app.eventBus.emit('waypoint:add', { imgX: -0.4, imgY: 1.3, isMajor: true });
+      const project = JSON.parse(JSON.stringify(app._buildProjectSnapshot()));
+
+      const player = new PlayerApp(document.createElement('canvas'));
+      await player.load(project, null);
+      expect(player.waypoints.map(waypoint => [waypoint.imgX, waypoint.imgY]))
+        .toEqual(app.waypoints.map(waypoint => [waypoint.imgX, waypoint.imgY]));
+      expect(player.waypoints).toHaveLength(3);
+    });
+
+    test('load takes the whole range and nothing past it', async () => {
+      allowConsole(LOAD_REFUSED);
+      const app = await bootWithRoute({ waypoints: 2 });
+      const { MIN, MAX } = IMAGE_COORDINATES;
+      const withFirstAt = (imgX, imgY) => {
+        const project = app._buildProjectSnapshot();
+        Object.assign(project.waypoints[0], { imgX, imgY });
+        return project;
+      };
+
+      expect(await loadSnapshot(app, withFirstAt(MIN, MAX))).toBe(true);
+      expect(await loadSnapshot(app, withFirstAt(MAX, MIN))).toBe(true);
+      expect(await loadSnapshot(app, withFirstAt(MIN - 0.001, 0.5))).toBe(false);
+      expect(refusalReason()).toContain('Invalid waypoint at index 0');
+    });
+
+    test('authoring stops where load does, so the extremes reload too', async () => {
+      // A drag follows the captured pointer off the canvas and off the window,
+      // and a held arrow key nudges without end, so zoomed out nothing bounded
+      // a point at all. It now stops at the range load accepts, which lies far
+      // outside the visible canvas.
+      const app = await bootWithRoute({ waypoints: 3 });
+      app.exportSettings.backgroundZoom = 50;
+      const { MIN, MAX } = IMAGE_COORDINATES;
+      const [first, second, third] = app.waypoints;
+
+      app.eventBus.emit('waypoint:position-changed', { waypoint: first, imgX: -40, imgY: 55, isDragging: true });
+      app.eventBus.emit('waypoint:drag-ended', { waypoint: first });
+      expect([first.imgX, first.imgY]).toEqual([MIN, MAX]);
+
+      for (let press = 0; press < 12; press += 1) {
+        app.eventBus.emit('waypoint:nudge', { waypoint: second, dxFraction: 1, dyFraction: -1 });
+      }
+      expect([second.imgX, second.imgY]).toEqual([MAX, MIN]);
+
+      // A group moves by one delta that keeps every member inside, so the
+      // lowest member stops exactly on the edge and the shape is kept.
+      const group = [second, third].map(waypoint => ({ waypoint, imgX: waypoint.imgX, imgY: waypoint.imgY }));
+      const gap = third.imgX - second.imgX;
+      app.eventBus.emit('waypoint:position-changed', {
+        waypoint: third, imgX: -80, imgY: third.imgY, dragGroup: group, isDragging: true,
+      });
+      app.eventBus.emit('waypoint:drag-ended', { waypoint: third, dragGroup: group });
+      expect(Math.min(second.imgX, third.imgX)).toBeGreaterThanOrEqual(MIN);
+      expect(Math.min(second.imgX, third.imgX)).toBeCloseTo(MIN, 12);
+      expect(third.imgX - second.imgX).toBeCloseTo(gap, 9);
+
+      const before = new Set(app.waypoints);
+      app.eventBus.emit('waypoint:add', { imgX: 70, imgY: -70, isMajor: true });
+      const added = app.waypoints.find(waypoint => !before.has(waypoint));
+      expect([added.imgX, added.imgY]).toEqual([MAX, MIN]);
+
+      // The leg "+" handle inserts on the path midpoint, which a curved leg
+      // can carry past its endpoints.
+      app.eventBus.emit('waypoint:insert-on-leg', { waypointIndex: 0, imgX: 50, imgY: -50 });
+      expect([app.waypoints[1].imgX, app.waypoints[1].imgY]).toEqual([MAX, MIN]);
+
+      // A branch starts wherever its first waypoint is clicked, and that click
+      // is limited only to the canvas surface.
+      app.interactionHandler.branchArmed = first;
+      app.eventBus.emit('route:branch-place', { imgX: -40, imgY: 55 });
+      const branch = app.waypoints.find(waypoint => waypoint.branchFrom === first.id);
+      expect([branch.imgX, branch.imgY]).toEqual([MIN, MAX]);
+
+      app.areaDrawingService.startDrawing(first);
+      app.areaDrawingService._placeVertex(-30, 0.5);
+      app.areaDrawingService._placeVertex(0.5, 30);
+      app.areaDrawingService._placeVertex(30, -30);
+      app.areaDrawingService._completePolygon();
+      expect(first.areaHighlight.points).toEqual([{ x: MIN, y: 0.5 }, { x: 0.5, y: MAX }, { x: MAX, y: MIN }]);
+
+      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+    });
+
+    test('a group dragged to the edge stops exactly on it', async () => {
+      // The shared delta keeps the group's shape, but start + (edge − start)
+      // is not always the edge in floating point: from −9.12976462053035 it is
+      // 11.000000000000002, one step past MAX, which load would refuse.
+      const app = await bootWithRoute({ waypoints: 2 });
+      app.exportSettings.backgroundZoom = 50;
+      const [first] = app.waypoints;
+      first.imgX = -9.12976462053035;
+      const group = [{ waypoint: first, imgX: first.imgX, imgY: first.imgY }];
+
+      app.eventBus.emit('waypoint:position-changed', {
+        waypoint: first, imgX: 500, imgY: first.imgY, dragGroup: group, isDragging: true,
+      });
+      app.eventBus.emit('waypoint:drag-ended', { waypoint: first, dragGroup: group });
+      expect(first.imgX).toBe(IMAGE_COORDINATES.MAX);
+      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+    });
+
+    test('the range covers the whole canvas at 50% zoom, every preset, images up to 5:1', () => {
+      // Measured with the real transform rather than restated, so narrowing
+      // the range fails here: a 3.2:1 panorama on the 9:16 preset already puts
+      // the canvas edge at y = −5.2, and a 5:1 one at y = −8.4.
+      const { MIN, MAX } = IMAGE_COORDINATES;
+      const presets = [[1920, 1080], [1080, 1080], [1080, 1920]];
+      const images = [[5000, 1000], [1000, 5000], [3200, 1000], [1000, 3200], [1600, 1200]];
+      let farthest = 0;
+      for (const [canvasWidth, canvasHeight] of presets) {
+        for (const [imageWidth, imageHeight] of images) {
+          for (const fitMode of ['fit', 'fill']) {
+            const transform = new CoordinateTransform();
+            transform.setCanvasDimensions(canvasWidth, canvasHeight);
+            transform.setImageDimensions(imageWidth, imageHeight, fitMode);
+            transform.setBackgroundZoom(0.5);
+            for (const corner of [[0, 0], [canvasWidth, canvasHeight]]) {
+              const point = transform.canvasToImage(...corner);
+              for (const value of [point.x, point.y]) {
+                expect(value).toBeGreaterThanOrEqual(MIN);
+                expect(value).toBeLessThanOrEqual(MAX);
+                farthest = Math.max(farthest, Math.abs(value - 0.5));
+              }
+            }
+          }
+        }
+      }
+      // Non-vacuity: the widest cases really do reach far into the range.
+      expect(farthest).toBeGreaterThan(8);
+    });
+
+  });
+
+  describe('the known failures (W2 fixes each one)', () => {
 
     test('DEF-04: a polygon drawn past 256 vertices will not load', async () => {
       allowConsole(LOAD_REFUSED);

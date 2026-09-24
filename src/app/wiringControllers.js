@@ -15,6 +15,7 @@ import {
   branchInsertIndex, canForkFrom, canRejoinBranch, branchEndInfo,
 } from '../utils/routeBranches.js';
 import { boundEntryWaypointIds } from '../utils/routeAnchors.js';
+import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 import { loadBackgroundFile } from './backgroundLoading.js';
 
 /**
@@ -257,10 +258,11 @@ export const wiringControllersMixin = {
         const newCanvas = { x: currentCanvas.x + dx, y: currentCanvas.y + dy };
         const newImg = this.canvasToImage(newCanvas.x, newCanvas.y);
 
-        // Update waypoint position (clamped to image bounds unless zoomed out)
+        // Update waypoint position (clamped to image bounds unless zoomed
+        // out, when it may leave the image as far as load accepts: DEF-03)
         if (zoom < 1) {
-          wp.imgX = newImg.x;
-          wp.imgY = newImg.y;
+          wp.imgX = clampImageCoordinate(newImg.x);
+          wp.imgY = clampImageCoordinate(newImg.y);
         } else {
           wp.imgX = Math.max(0, Math.min(1, newImg.x));
           wp.imgY = Math.max(0, Math.min(1, newImg.y));
@@ -304,8 +306,12 @@ export const wiringControllersMixin = {
         addX = snapped.x;
         addY = snapped.y;
       }
-      
-      const waypoint = data.isMajor ? 
+      // Zoomed out, a click on the canvas margin lands off the image; keep it
+      // within what load accepts (DEF-03)
+      addX = clampImageCoordinate(addX);
+      addY = clampImageCoordinate(addY);
+
+      const waypoint = data.isMajor ?
         Waypoint.createMajor(addX, addY) : 
         Waypoint.createMinor(addX, addY);
       
@@ -380,7 +386,9 @@ export const wiringControllersMixin = {
         return;
       }
 
-      const waypoint = Waypoint.createMajor(imgX, imgY);
+      // Zoomed out, a branch can start in the canvas margin, off the image;
+      // keep it within what load accepts (DEF-03)
+      const waypoint = Waypoint.createMajor(clampImageCoordinate(imgX), clampImageCoordinate(imgY));
       waypoint.copyPropertiesFrom(fork);
       waypoint.branchId = `br_${waypoint.id}`;
       waypoint.branchFrom = fork.id;
@@ -1211,7 +1219,8 @@ export const wiringControllersMixin = {
       const owner = this.waypoints[waypointIndex];
       if (!owner || waypointIndex >= this.waypoints.length - 1) return;
 
-      const newWp = Waypoint.createMinor(imgX, imgY);
+      // The path midpoint can overshoot its endpoints on a curved leg (DEF-03)
+      const newWp = Waypoint.createMinor(clampImageCoordinate(imgX), clampImageCoordinate(imgY));
       newWp.copyPropertiesFrom(owner);
       this.waypoints.splice(waypointIndex + 1, 0, newWp);
 

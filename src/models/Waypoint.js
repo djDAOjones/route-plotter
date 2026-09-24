@@ -1,5 +1,6 @@
 import { RENDERING, ANIMATION, TEXT_LABEL, TEXT_VISIBILITY, AREA_HIGHLIGHT, AREA_VISIBILITY } from '../config/constants.js';
 import { CAMERA_DEFAULTS, ZOOM_MODE } from '../services/CameraService.js';
+import { isImageCoordinateInRange } from '../utils/imageCoordinates.js';
 
 /**
  * Model representing a waypoint on the route
@@ -499,9 +500,10 @@ export class Waypoint {
   static validate(data) {
     if (!data || typeof data !== 'object') return false;
     
-    // Required properties - only validate position
-    if (typeof data.imgX !== 'number' || data.imgX < 0 || data.imgX > 1) return false;
-    if (typeof data.imgY !== 'number' || data.imgY < 0 || data.imgY > 1) return false;
+    // Required properties - only validate position. A point authored off the
+    // image while zoomed out lies outside 0–1 and must still load (DEF-03).
+    if (!isImageCoordinateInRange(data.imgX)) return false;
+    if (!isImageCoordinateInRange(data.imgY)) return false;
     
     // Note: Optional properties are NOT validated here - invalid values will be
     // handled by the constructor defaults or TextLabelService fallbacks.

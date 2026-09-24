@@ -21,6 +21,7 @@
  */
 
 import { AREA_HIGHLIGHT } from '../config/constants.js';
+import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 
 export class AreaDrawingService {
   /**
@@ -120,10 +121,15 @@ export class AreaDrawingService {
   /**
    * Place a vertex at the given normalized image coordinates
    * @private
-   * @param {number} imgX - Normalized X (0-1)
-   * @param {number} imgY - Normalized Y (0-1)
+   * @param {number} imgX - Normalized X (0–1 spans the image; outside it when zoomed out)
+   * @param {number} imgY - Normalized Y (0–1 spans the image; outside it when zoomed out)
    */
   _placeVertex(imgX, imgY) {
+    // Zoomed out, a vertex can be placed in the canvas margin, off the image;
+    // keep it within what load accepts (DEF-03)
+    imgX = clampImageCoordinate(imgX);
+    imgY = clampImageCoordinate(imgY);
+
     // Check if clicking near first vertex to close polygon
     if (this.vertices.length >= AREA_HIGHLIGHT.DRAW_MIN_VERTICES) {
       const first = this.vertices[0];

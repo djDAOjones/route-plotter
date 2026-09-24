@@ -22,9 +22,9 @@
  * Two invariants come with them. `play == seek`: reaching an instant by
  * stepping the engine must draw exactly what seeking to it draws, both on the
  * host that played and on one that never did. And `app == player`: the
- * exported HTML player must draw what the export canvas draws — which holds
- * for every fixture, and breaks the moment an anchored crowd node's waypoint
- * moves, which is DEF-02.
+ * exported HTML player must draw what the export canvas draws — for every
+ * fixture, and after an anchored crowd node's waypoint has moved, which it did
+ * not until DEF-02 was fixed.
  *
  * What these do not cover: the player's *display* transform (`PlayerApp.resize`
  * returns early on a canvas with no parent, so the comparison is in export
@@ -285,6 +285,51 @@ describe('golden draw logs (TST-02)', () => {
     });
   }
 
+  describe('fixed defects stay fixed', () => {
+
+    test('DEF-02: the exported player follows a moved anchor waypoint', async () => {
+      // `PlayerApp` used to leave `waypointsById` unbuilt (the structural half
+      // is in `playerHostContract.test.js`), so it could not resolve a crowd
+      // node to its anchor waypoint and fell back to the position written at
+      // trace time. Nothing shows that in the shipped examples, because no
+      // waypoint has moved since its trace. Move one through the bus the drag
+      // uses (`wiringBus.js:185-198`): the player must still draw what the
+      // export canvas draws, crowd included.
+      const fixture = fixtures().find(each => each.id === 'uon-open-day');
+      const app = await appWithFixture(fixture);
+
+      const anchored = app.scene.getFlowLayers()[0].graph.getNodes()
+        .filter(node => node.anchorWaypointId);
+      expect(anchored.length).toBeGreaterThan(0);
+      const moved = app.waypoints.find(waypoint => waypoint.id === anchored[0].anchorWaypointId);
+      app.eventBus.emit('waypoint:position-changed', { waypoint: moved, imgX: 0.05, imgY: 0.05 });
+      app.eventBus.emit('waypoint:drag-ended', { waypoint: moved });
+      expect(moved.imgX).toBe(0.05);
+
+      app._setPreviewMode(true);
+      app.invalidateAnimationTiming();
+      const project = JSON.parse(JSON.stringify(app._buildProjectSnapshot()));
+      app._enterExportMode(app.exportSettings.resolutionX, app.exportSettings.resolutionY);
+      setUpFrame(app);
+
+      const player = await loadedPlayer(project, app);
+      expect(player.renderingService._graphicsScale).toBe(app.renderingService._graphicsScale);
+
+      // The move reached the saved project and the node's authored position
+      // did not follow it, so a player falling back to that position would
+      // draw the crowd somewhere else.
+      const node = player.scene.getFlowLayers()[0].graph.getNodes()
+        .find(each => each.id === anchored[0].id);
+      expect(node.position()).toEqual({ x: 0.05, y: 0.05 });
+      expect(Math.hypot(node.x - 0.05, node.y - 0.05)).toBeGreaterThan(0.1);
+
+      const differing = INSTANTS.map(instant =>
+        differingLines(frameAt(app, instant), frameAt(player, instant)).length);
+      expect(differing).toEqual(INSTANTS.map(() => 0));
+    });
+
+  });
+
   describe('the known failures', () => {
 
     test('DEF-34 (proposed): the exported player ignores Graphics scale', async () => {
@@ -352,41 +397,6 @@ describe('golden draw logs (TST-02)', () => {
           `instant ${instant}`).toEqual([]);
       }
     });
-
-    test('DEF-02: the player leaves an anchored crowd behind when its waypoint moves', async () => {
-      // `PlayerApp` never builds `waypointsById` (stated structurally in
-      // `playerHostContract.test.js`), so it cannot resolve a crowd node to
-      // its anchor waypoint and falls back to the position written at trace
-      // time. Nothing shows it in the shipped examples, because no waypoint
-      // has moved since its trace. Move one through the bus the drag uses
-      // (`wiringBus.js:185-198`) and the player draws a different picture from
-      // the export it came from.
-      const fixture = fixtures().find(each => each.id === 'uon-open-day');
-      const app = await appWithFixture(fixture);
-
-      const anchored = app.scene.getFlowLayers()[0].graph.getNodes()
-        .filter(node => node.anchorWaypointId);
-      expect(anchored.length).toBeGreaterThan(0);
-      const moved = app.waypoints.find(waypoint => waypoint.id === anchored[0].anchorWaypointId);
-      app.eventBus.emit('waypoint:position-changed', { waypoint: moved, imgX: 0.05, imgY: 0.05 });
-      app.eventBus.emit('waypoint:drag-ended', { waypoint: moved });
-      expect(moved.imgX).toBe(0.05);
-
-      app._setPreviewMode(true);
-      app.invalidateAnimationTiming();
-      const project = JSON.parse(JSON.stringify(app._buildProjectSnapshot()));
-      app._enterExportMode(app.exportSettings.resolutionX, app.exportSettings.resolutionY);
-      setUpFrame(app);
-
-      const player = await loadedPlayer(project, app);
-      expect(player.waypointsById).toBeUndefined();
-      expect(player.renderingService._graphicsScale).toBe(app.renderingService._graphicsScale);
-
-      expect(differingLines(frameAt(app, 0.5), frameAt(player, 0.5)).length)
-        .toBeGreaterThan(50);
-    });
-
-    test.todo('DEF-02: the player follows the moved waypoint, and matches the export');
 
   });
 

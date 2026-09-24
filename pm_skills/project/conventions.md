@@ -75,7 +75,7 @@ discipline. This section captures how they apply to this project:
 ## Patterns to avoid
 
 - Anything that rule forbids (see its list of current exceptions)
-- Storing pixel coordinates on Waypoint (use normalised 0–1)
+- Storing pixel coordinates on Waypoint (use normalised image coordinates)
 - Setting slider `.value` directly (use `ui:slider:update-speed` event)
 - Mid-file imports (esbuild requires all imports at top)
 - Per-frame object allocations in render loop
