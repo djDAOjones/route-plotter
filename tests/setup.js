@@ -100,7 +100,8 @@ const CONTEXT_STYLE_DEFAULTS = Object.freeze({
  * Values are copied and named, so a later mutation cannot rewrite history.
  * A canvas is named by its recording context's id, which `drawLog.js` turns
  * into the surface it is; a bare `[canvas]` let a render that composited the
- * wrong one pass every golden (TST-17). A canvas never drawn on has no id.
+ * wrong one pass every golden (TST-17). A canvas this recorder never gave a
+ * context has no id.
  */
 function describeValue(value) {
   if (Array.isArray(value)) return value.slice();

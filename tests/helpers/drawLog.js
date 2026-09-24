@@ -34,7 +34,7 @@ function describeCall(call, gradientNames, surfaces) {
   return call.map(round)
     .map(value => (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)))
     .map(value => renameGradient(value, gradientNames))
-    .map(value => renameCanvas(value, surfaces))
+    .map((value, index) => (index === 1 && IMAGE_SOURCE_CALLS.has(call[0]) ? renameCanvas(value, surfaces) : value))
     .map(shortenImage)
     .join(' ');
 }
@@ -44,10 +44,17 @@ function surfaceLabel(surfaces, id) {
   return surfaces.get(id) ?? `other#${id}`;
 }
 
-/** `setup.js` records a canvas argument as `[canvas #<recorder id>]`. */
+/** The calls whose first argument is an image source, so may be a canvas. */
+const IMAGE_SOURCE_CALLS = new Set(['drawImage', 'createPattern']);
+
+/**
+ * `setup.js` records a canvas source as `[canvas #<recorder id>]`. Only a
+ * source that is exactly that is renamed: a label can say anything, and a
+ * label reading `[canvas #1]` must stay as written on every host.
+ */
 function renameCanvas(value, surfaces) {
-  if (typeof value !== 'string') return value;
-  return value.replace(/\[canvas #(\d+)\]/g, (whole, id) => `[canvas ${surfaceLabel(surfaces, Number(id))}]`);
+  const source = /^\[canvas #(\d+)\]$/.exec(value);
+  return source ? `[canvas ${surfaceLabel(surfaces, Number(source[1]))}]` : value;
 }
 
 /**

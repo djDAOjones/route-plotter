@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { contextFor, localStorageMock } from './setup.js';
+import { contextFor, contextIdFor, localStorageMock } from './setup.js';
+import { discardFrame, takeFrame } from './helpers/drawLog.js';
 
 /**
  * The harness the characterisation tests are built on (TST-01). Each fact here
@@ -107,5 +108,25 @@ describe('test harness fidelity', () => {
 
   test('a canvas with no context yet has none recorded', () => {
     expect(contextFor(document.createElement('canvas'))).toBeNull();
+  });
+
+  test('a transcript names a composited canvas, and draws text as written', () => {
+    // A canvas source is recorded by its context id and named by the surface
+    // it is (TST-17). Only a source is renamed: a label may read exactly like
+    // the recorder's token for this very canvas, and is the author's text.
+    const canvas = document.createElement('canvas');
+    const layer = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    layer.getContext('2d');
+    const lookalike = `[canvas #${contextIdFor(canvas)}]`;
+
+    discardFrame();
+    ctx.drawImage(layer, 0, 0, 10, 10);
+    ctx.fillText(lookalike, 1, 2);
+
+    expect(takeFrame({ canvas, renderingService: { vectorCanvas: layer } })).toEqual([
+      'main drawImage [canvas vector] 0 0 10 10',
+      `main fillText ${lookalike} 1 2`,
+    ]);
   });
 });

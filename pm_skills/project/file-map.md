@@ -410,7 +410,7 @@
 - `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
 - `tests/undoService.test.js` — Prospective-save parity, natural rollover, extra oldest discard, redo preservation/invalidation and rejected-input immutability
-- `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets
+- `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets, and (TST-17) a transcript names a composited canvas while drawing label text as written
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
 - `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch
 - `tests/videoExporter.test.js` — Endpoint-inclusive frame planning, visibility throttling, cancellation and complete MediaRecorder/WebCodecs cleanup
