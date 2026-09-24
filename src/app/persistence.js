@@ -29,6 +29,7 @@ import {
 } from './operationGeneration.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
 import { assertPersistedEntityId, ENTITY_ID_LIMITS } from '../utils/entityId.js';
+import { isImageCoordinateInRange } from '../utils/imageCoordinates.js';
 import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
@@ -255,11 +256,15 @@ function stageWaypoints(data) {
           throw new Error(`Invalid waypoint area ${field} at index ${index}`);
         }
       }
-      for (const field of ['centerX', 'centerY', 'fillOpacity']) {
-        if (field in serialized.areaHighlight &&
-            (Number(serialized.areaHighlight[field]) < 0 || Number(serialized.areaHighlight[field]) > 1)) {
+      // A new area is centred on its waypoint, which may sit off the image (DEF-03).
+      for (const field of ['centerX', 'centerY']) {
+        if (field in serialized.areaHighlight && !isImageCoordinateInRange(Number(serialized.areaHighlight[field]))) {
           throw new Error(`Waypoint area ${field} is outside the supported range at index ${index}`);
         }
+      }
+      if ('fillOpacity' in serialized.areaHighlight &&
+          (Number(serialized.areaHighlight.fillOpacity) < 0 || Number(serialized.areaHighlight.fillOpacity) > 1)) {
+        throw new Error(`Waypoint area fillOpacity is outside the supported range at index ${index}`);
       }
       for (const field of ['radius', 'width', 'height']) {
         if (field in serialized.areaHighlight &&
@@ -283,8 +288,8 @@ function stageWaypoints(data) {
       throw new Error(`Project polygon-point limit is ${PROJECT_MODEL_LIMITS.MAX_AREA_POINTS_TOTAL}`);
     }
     for (const point of points) {
-      if (!point || !Number.isFinite(Number(point.x)) || !Number.isFinite(Number(point.y)) ||
-          Number(point.x) < 0 || Number(point.x) > 1 || Number(point.y) < 0 || Number(point.y) > 1) {
+      // Vertices drawn in the margin while zoomed out lie off the image (DEF-03).
+      if (!point || !isImageCoordinateInRange(Number(point.x)) || !isImageCoordinateInRange(Number(point.y))) {
         throw new Error(`Invalid waypoint polygon point at index ${index}`);
       }
     }
