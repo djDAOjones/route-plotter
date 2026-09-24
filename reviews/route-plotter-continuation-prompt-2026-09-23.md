@@ -1,6 +1,8 @@
 <!-- markdownlint-disable MD013 MD060 -->
 # Continue Route Plotter v3: the codebase abstraction programme (W1 onward)
 
+**Superseded by `route-plotter-continuation-prompt-w2-2026-09-23.md`**, which carries the programme on from W2. This prompt briefed W1, which closed on 2026-09-23; it remains as provenance.
+
 This supersedes `route-plotter-continuation-prompt-2026-09-22.md`, which briefed W0 and remains as provenance. Paste everything below into a fresh chat.
 
 You are continuing an adopted refactoring programme for Route Plotter v3.

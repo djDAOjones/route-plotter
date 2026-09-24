@@ -61,6 +61,7 @@ export class PlayerApp {
 
     // Model state (defaults mirror RoutePlotter; hydrate() overlays the export)
     this.waypoints = [];
+    this.waypointsById = new Map();
     this.scene = new Scene();
     this.pathPoints = [];
     this.renderReference = null;
@@ -140,6 +141,10 @@ export class PlayerApp {
     this.waypoints = (data.waypoints || [])
       .map(wpData => (Waypoint.validate(wpData) ? Waypoint.fromJSON(wpData) : null))
       .filter(wp => wp !== null);
+    // calculatePath resolves every anchored crowd node through this lookup
+    // (resolveGraphAnchors). Without it each node falls back to its authored
+    // position — where its waypoint was when the crowd was traced (DEF-02).
+    this.waypointsById = new Map(this.waypoints.map(wp => [wp.id, wp]));
 
     if (data.scene) {
       this.scene.fromJSON(data.scene);

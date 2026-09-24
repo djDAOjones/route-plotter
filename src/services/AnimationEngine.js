@@ -176,29 +176,38 @@ export class AnimationEngine {
 
       // Calculate time since last frame
       const elapsed = timestamp - this.lastFrameTime;
-      
-      // Only update at target frame rate
-      if (elapsed > ANIMATION.FRAME_INTERVAL) {
-        // Adjust for frame interval to prevent lag accumulation
-        this.lastFrameTime = timestamp - (elapsed % ANIMATION.FRAME_INTERVAL);
-        
-        if (this.state.isActivelyPlaying()) {
-          // Cap deltaTime to prevent huge jumps
-          const deltaTime = Math.min(elapsed, ANIMATION.MAX_DELTA_TIME) * this.state.playbackSpeed;
-          
-          // Update animation state
-          this.updateAnimation(deltaTime, timestamp);
-        }
-        
-        // Call update callback
-        this._keepAlive = this.onUpdate?.(this.state) === true;
-        
-        // Emit update event
-        this.emit('update', this.state);
-      }
 
-      if (this.state.isActivelyPlaying() || this._keepAlive) {
-        this._scheduleFrame();
+      let completed = false;
+      try {
+        // Only update at target frame rate
+        if (elapsed > ANIMATION.FRAME_INTERVAL) {
+          // Adjust for frame interval to prevent lag accumulation
+          this.lastFrameTime = timestamp - (elapsed % ANIMATION.FRAME_INTERVAL);
+
+          if (this.state.isActivelyPlaying()) {
+            // Cap deltaTime to prevent huge jumps
+            const deltaTime = Math.min(elapsed, ANIMATION.MAX_DELTA_TIME) * this.state.playbackSpeed;
+
+            // Update animation state
+            this.updateAnimation(deltaTime, timestamp);
+          }
+
+          // Call update callback
+          this._keepAlive = this.onUpdate?.(this.state) === true;
+
+          // Emit update event
+          this.emit('update', this.state);
+        }
+        completed = true;
+      } finally {
+        // One bad frame must not stop playback (DEF-26): the next frame is
+        // booked however this one ended. Only a callback that returned renews
+        // an idle keep-alive, so a frame that keeps throwing cannot spin while
+        // paused.
+        if (!completed) this._keepAlive = false;
+        if (this.state.isActivelyPlaying() || this._keepAlive) {
+          this._scheduleFrame();
+        }
       }
     };
     

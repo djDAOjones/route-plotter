@@ -54,7 +54,7 @@ describe('Waypoint Model', () => {
     };
     
     const invalidData = {
-      imgX: 1.5, // Out of range
+      imgX: 11.5, // Out of range (IMAGE_COORDINATES; 1.5 is a valid off-image point since DEF-03)
       imgY: 0.5
     };
     

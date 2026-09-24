@@ -110,7 +110,12 @@ Load only the tier the task needs so startup context stays useful.
 
 ## Hard rules and invariants
 
-- Waypoints store normalised `imgX` and `imgY` values (0–1). Convert through
+- Waypoints store normalised image coordinates in `imgX` and `imgY`: 0–1
+  spans the image, and a point authored off it (in the margin shown below
+  100% background zoom) lies outside that. Every authoring path stops at
+  `IMAGE_COORDINATES` (`src/config/constants.js`) and load accepts exactly
+  that range, both through `src/utils/imageCoordinates.js`, so a point's
+  position never stops a project reopening. Convert through
   `CoordinateTransform`; never persist canvas pixels on a waypoint.
 - Components (the controllers, `InteractionHandler` and the modal tools) get
   no app instance and reach the app through the EventBus. The app

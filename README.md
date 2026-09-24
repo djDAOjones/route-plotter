@@ -123,7 +123,7 @@ them before naming an event.
 
 ### Coordinate systems
 
-Waypoints are stored in **normalised image coordinates** (0–1). The `CoordinateTransform` service converts between:
+Waypoints are stored in **normalised image coordinates**, where 0–1 spans the image; points authored off the image while zoomed out lie outside it (the rule is in `AGENTS.md` → Hard rules and invariants). The `CoordinateTransform` service converts between:
 
 - **Image coords** (`imgX`, `imgY`) — storage and serialisation.
 - **Canvas coords** (`x`, `y`) — rendering and hit-testing.
@@ -312,7 +312,7 @@ Precise terms used across the codebase.
 - **Trail** — In comet mode, the visible path segment behind the head.
 - **Segment speed** — Per-segment speed multiplier (0.1x–10x).
 - **Progress** — Animation position, 0.0–1.0.
-- **Image coordinates** — Normalised 0–1 position on the background image. Used for storage.
+- **Image coordinates** — Normalised position on the background image, 0–1 across it and beyond it for points off the image. Used for storage.
 - **Canvas coordinates** — Screen-pixel position. Used for rendering and hit-testing.
 - **Graphics scale** — Global multiplier (0.25×–4×) applied to all vector element sizes.
 

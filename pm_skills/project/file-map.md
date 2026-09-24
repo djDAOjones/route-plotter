@@ -14,7 +14,7 @@
 - `reviews` — 11 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
-- `src` — 97 file(s)
+- `src` — 98 file(s)
 - `styles` — 6 file(s)
 - `tests` — 106 file(s)
 <!-- /file-map-index -->
@@ -268,6 +268,7 @@
 - `src/utils/entityId.js` — Shared persisted structural-ID length boundary that leaves authored display text untouched
 - `src/utils/focusTrap.js` — Modal inerting, focus containment/wrap, Escape handling and origin-focus restoration
 - `src/utils/graphRouting.js` — Shared directed departures, overflow-safe weight normalisation and stable whole-percentage traffic shares
+- `src/utils/imageCoordinates.js` — DEF-03: the one range check and clamp for stored image points, shared by load and the zoomed-out authoring paths
 - `src/utils/index.js` — Barrel exports for Catmull-Rom and easing utilities
 - `src/utils/mixedControlState.js` — DOM-only mixed-value comparison, select/range/checkbox presentation and concrete-input reset helpers
 - `src/utils/pathHeadPresets.js` — Built-in route-head registry, shared image decoding and custom/preset hydration boundary
@@ -307,7 +308,7 @@
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
-- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; plus the DEF-03/04/31 failures characterised with the reason the loader gives
+- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); and the DEF-04/31 failures characterised with the reason the loader gives
 - `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
@@ -322,13 +323,14 @@
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
-- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples × 5 instants × editor/preview/export, plus play == seek, app == player, and the DEF-02 anchored-crowd divergence
+- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, app == player (also after an anchored crowd's waypoint moves: DEF-02), and the proposed DEF-34 graphics-scale divergence
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding
 - `tests/headDirectionBranchWait.test.js` — BUG-01 contract: a wait indexed
   past the end of a branch run falls through to that run's own path
   direction, while an in-range wait still steers waypoint-to-waypoint
+- `tests/helpTellsTheTruth.test.js` — DEF-21: the Help entries for `,`, `.` and K and the File menu's shortcuts match what the keys actually do on a booted app
 - `tests/helpers/minCountReporter.js` — TST-10 canary: fails an unfiltered run in which fewer than 72 files or 1,000 tests ran
 - `tests/htmlExportCache.test.js` — HTML export fetches the standalone player bundle for the exact application build
 - `tests/imageAssetRoundTrip.test.js` — Persistence-safe image IDs and import→export→import asset round-trip contracts
@@ -353,7 +355,7 @@
 - `tests/pathHeadPresets.test.js` — Drone preset metadata, native control, loader ownership and renderer-transform contracts
 - `tests/performanceScheduling.test.js` — Manual-rAF scheduler contract: idle sleep, transport wake/coalescing, camera keepalive and export suspension/restore
 - `tests/playerBundleClosure.test.js` — TST-07: esbuild's metafile proves the exported player bundle carries no editor-only module, and that the editor's does
-- `tests/playerHostContract.test.js` — TST-07: every member the adopted pathTiming mixin reaches for exists on a really-loaded PlayerApp (waypointsById is DEF-02)
+- `tests/playerHostContract.test.js` — TST-07: every member the adopted pathTiming mixin reaches for exists on a really-loaded PlayerApp, and (DEF-02) its `waypointsById` puts an anchored crowd node on its waypoint
 - `tests/playerAccessibility.test.js` — Aggregate-summary privacy/counting and discrete/coalesced transport-announcement contracts
 - `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings
@@ -380,6 +382,7 @@
 - `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts
 - `tests/scenePersistence.test.js` — coordVersion-9 scene variation/seed autosave, ZIP, migration and undo round-trip contracts
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts
+- `tests/shortHexGlow.test.js` — DEF-26: the glow draws every stored hex form with its own alpha, and one throwing frame stops neither playback nor editor redraws
 - `tests/helpers/consoleGuard.js` — TST-10 console guard: records console.error/warn, fails the test on anything undeclared, and holds the short allowlist of known warts
 - `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main and offscreen vector canvases as rounded, diffable draw-log lines and compares two frames
 - `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)
