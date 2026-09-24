@@ -1,6 +1,8 @@
 <!-- markdownlint-disable MD013 MD060 -->
 # Continue Route Plotter v3: fix the live defects (W2 onward)
 
+**Superseded by `route-plotter-continuation-prompt-2026-09-24.md`**, which carries the programme on from the post-W2 queue. This prompt briefed W2, which closed on 2026-09-24 and was released as v3.2.692; it remains as provenance.
+
 This supersedes `route-plotter-continuation-prompt-2026-09-23.md`, which briefed W1 and
 remains as provenance. Paste everything below into a fresh chat.
 
