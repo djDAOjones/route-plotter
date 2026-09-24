@@ -87,15 +87,15 @@ changes.
    browser has it, otherwise an explicit reset) and prove a throw mid-layer
    leaves the next frame identical to a clean one. Behaviour-preserving when
    nothing throws: the goldens must stay byte-identical.
-4. **The remaining defects W1 released** (§13 ground rule 8): **DEF-08** (P1;
-   beacon scaling only while playing — needs `pop` added to `authoredExtras`,
-   and golden cells change), **DEF-17** (P1), **DEF-28** (P2), **DEF-33** (P3),
-   **DEF-30** (P3), **DEF-29** (P3, §20 Q7b decided).
-5. **DEF-35** (accepted) — off-image points (legal since DEF-03) are still
+4. **DEF-35** (P2, accepted) — off-image points (legal since DEF-03) are still
    pinned or refused by four readers: the scene outline will not submit any
    edit to an off-image waypoint, area-vertex and centre drags snap onto the
    image, crowd anchors and dots stop at the image edge. One PR per reader is
    fine.
+5. **The remaining defects W1 released** (§13 ground rule 8), in any order:
+   **DEF-08** (P1; beacon scaling only while playing — needs `pop` added to
+   `authoredExtras`, and golden cells change), **DEF-17** (P1), **DEF-28**
+   (P2), **DEF-33** (P3), **DEF-30** (P3), **DEF-29** (P3, §20 Q7b decided).
 6. **W3, the pilot:** SPL-01 — move the six pure slider-scale functions out of
    `MotionVisibilityService` into `utils/sliderScales`, per §14.
    Characterise `formatUIValue`'s existing rounding rather than "fixing" it.
