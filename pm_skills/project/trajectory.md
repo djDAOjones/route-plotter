@@ -17,6 +17,31 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## W2 — the live defects, released as v3.2.692 (closed 2026-09-24)
+
+Outcome: projects that would not reopen now do, the exported player draws what
+the editor draws, and a shared file carries only what the project uses.
+
+DEF-02 — An exported HTML player follows a traced crowd to its waypoints, as
+the editor and video do, instead of leaving it where it was traced.
+(2026-09-24) — see decision-log.
+
+DEF-03 — Waypoints, polygon vertices and area centres placed off the image
+while zoomed out reload, within ten image-widths of it, and every authoring
+path stops at that edge. (2026-09-24) — see decision-log.
+
+DEF-31 — Tracing a route whose waypoint ids are as long as the limit makes a
+project that reopens, with no node or path lost to a clashing id.
+(2026-09-24)
+
+DEF-23 — A saved project or HTML export carries only the images the project
+uses, and the HTML page no stored filenames. (2026-09-24) — see decision-log.
+
+DEF-26 — A short hex glow colour draws instead of freezing playback, and one
+bad frame no longer stops playback or redrawing. (2026-09-24)
+
+DEF-21 — Help and the File menu describe the keys that exist. (2026-09-24)
+
 ## W1 — the abstraction programme's safety net (closed 2026-09-23)
 
 Outcome: the behaviour a refactor must not change is now written down and

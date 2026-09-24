@@ -2,6 +2,78 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-24 — W2 closes: projects that would not reopen now do
+
+Seven pull requests (#22–#28), merged on Joe's word and released as
+v3.2.692 (entry below). Gate at close: **85 test files · 1,182 tests · 3 todo
+· shell 0 · build:check 0** (82 / 1,156 / 7 when W1 closed).
+
+**Each PR's stated behaviour change, approved by Joe on 2026-09-24.**
+- **DEF-02** (#23) — the exported player builds `waypointsById`, so a traced
+  crowd follows a moved waypoint in HTML exports as it does in the editor.
+- **DEF-03** (#24) — waypoints, polygon vertices and area centres authored off
+  the image reload, within `IMAGE_COORDINATES` (−10…11); every zoomed-out
+  authoring path stops at that edge. `AGENTS.md`'s "0–1" hard rule now says so.
+- **DEF-31** (#25) — ids derived from the longest legitimate waypoint ids are
+  bounded and unique within a trace; ids that fit never change.
+- **DEF-23** (#26) — a saved project and an HTML export carry only the images
+  the project references; the HTML page carries no stored filenames.
+- **DEF-26** (#27) — every stored hex form draws in the glow, alpha kept, and a
+  throwing frame stops neither playback nor redrawing.
+- **DEF-21** (#28) — Help and the File menu describe the keys that exist.
+- #22 pointed `reviews/README.md` at the current prompt.
+
+**Plan rows patched with dated notes.** DEF-03's example range was too small,
+and so was the first choice (−5…6); authoring had no outer bound at all. The
+DEF-26 row credited the ISO-02 hook with surfacing render errors; only
+listener errors reach it.
+
+**Codex found real holes in four of the five fixes it reviewed**, all adopted
+before merge: a missed authoring path and a range too small (DEF-03); crafted
+id clashes that silently dropped nodes, and the older `__` ambiguity
+(DEF-31); a test hole and an over-promised filename claim, since original image
+bytes carry their own metadata (DEF-23); a test hole (DEF-26).
+
+**W2's own validation ran in Chromium on the release candidate:** an HTML
+export with a traced crowd whose waypoint had moved, opened from another
+origin — one request, every anchored node on its waypoint; Angle of View
+Reveal with nothing drawn over the canvas; and DEF-26's probe, a `#f80` glow
+played to the end without an error. Joe allowed the temporary
+`.claude/launch.json` server for this (2026-09-24).
+
+**The queue after W2** (Joe, 2026-09-24): DEF-34 approved; DEF-35, DEF-36 and
+TST-17 accepted; the long label stays DEF-04's. W3 enters `### Next`.
+
+**Metrics against the baseline (§18):** open defects 33 → 28 (DEF-01, 02, 03,
+18, 21, 23, 26 and 31 closed; DEF-34, 35 and 36 added); render goldens 0 → 11
+(W1); test wall time 44.8 s → 62.6 s. **Budgets:** this log is 27/20 live
+entries, over by Joe's choice and reported; backlog Active 1,185 words and 17
+open items; trajectory within 2,000 words.
+
+## 2026-09-24 — v3.2.692: W2's fixes go live
+
+**Released on the owner's instruction** ("release all features"), by the
+Deployment steps, from a fresh clone. Pages served `main` `/docs`, built at
+`4ae5d80`, whose `docs/` tree is identical to `v3.2.691`'s, so that tag
+remained the rollback point. Then: gate green, `npm run push:dry-run`,
+`npm run push` → `14e3656`, **Verify** green on it, the `github-pages`
+deployment at that SHA, **all 22 published files SHA-256-identical** to
+`docs/`, and annotated tag `v3.2.692` pushed.
+
+**Smoke test** on the exact published bytes served locally, so the live
+site's storage was never touched: ready as "Route Plotter v3.2.692",
+`nervous-system-flow` played, and exported to HTML (625 KB, project and
+player inlined) and MP4 (773 KB, `ftyp` at offset 4).
+
+**What users notice:** HTML exports put traced crowds on their waypoints;
+projects with points off the image, or crowds traced from very long waypoint
+ids, open again; shared files leave behind images only undo could reach; a
+short hex glow colour no longer freezes playback; Help tells the truth.
+**HTML files exported before today keep the player they were made with** —
+re-export them to get DEF-02.
+
+**Link:** PRs #22–#28; release v3.2.692 (`14e3656`).
+
 ## 2026-09-23 — the backlog's Next lane also carries runnable unwaved defects
 
 **Refines DOC-06 (i)** ("Backlog `### Next` holds only the current wave",

@@ -11,7 +11,8 @@ hand-edited under `docs/`.
 
 | File | Role |
 | --- | --- |
-| `route-plotter-continuation-prompt-w2-2026-09-23.md` | **Current** paste-ready prompt for the next development chat: fix the live defects (W2 and the eight ground-rule-8 defects W1 released), with Codex as the comparative reviewer. |
+| `route-plotter-continuation-prompt-2026-09-24.md` | **Current** paste-ready prompt for the next development chat: clear the post-W2 queue (DEF-34 first, then the test-harness fixes and the released defects), then run the W3 pilot, with Codex as the comparative reviewer. |
+| `route-plotter-continuation-prompt-w2-2026-09-23.md` | Superseded by the 2026-09-24 prompt. Historical provenance: it briefed W2 (the live defects), released as v3.2.692. |
 | `route-plotter-continuation-prompt-2026-09-23.md` | Superseded by the W2 prompt. Historical provenance: it briefed W1 (the safety net). |
 | `route-plotter-continuation-prompt-2026-09-22.md` | Superseded by the 2026-09-23 prompt. Historical provenance: it briefed W0. |
 | `codebase-abstraction-and-auditability-plan-2026-09-22.md` | **Adopted** refactoring programme (2026-09-22): a two-round Claude and Codex abstraction and auditability review of `main` @ `2e4d78e`, with 111 items in waves W0–W12. The owner accepted every §20 default. The backlog carries the current wave plus any unwaved defects whose prerequisite has landed. |
