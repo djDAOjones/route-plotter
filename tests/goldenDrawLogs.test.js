@@ -40,7 +40,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { freezeClock, loadSnapshot } from './helpers/projectSnapshot.js';
 import { differingLines, discardFrame, frameAt, setUpFrame, takeFrame } from './helpers/drawLog.js';
@@ -396,6 +396,148 @@ describe('golden draw logs (TST-02)', () => {
       for (const sized of ['arc', 'rect', 'set:lineWidth', 'setLineDash', 'set:font', 'fillText']) {
         expect(operations).toContain(sized);
       }
+    });
+
+    describe('DEF-36: a frame that throws leaves nothing behind', () => {
+      // A renderer that throws part-way through the vector layer skips the
+      // `restore` of every save it had open: the camera's or the viewport's
+      // around the layer, and a beacon's or a marker's inside it. So every
+      // later frame drew through this one's transform, until a resize — under
+      // the 1.75× camera below, on a 2× display, at 3.5× instead of 2×. No
+      // call changes, so these transcripts carry each call's transform.
+      //
+      // A browser throws from a context call given a bad argument (an `arc`
+      // with a negative radius, a gradient given NaN, DEF-26's colour), so the
+      // throw is injected at a call on the vector layer's context. Every save
+      // the clean frame makes is tried at its `restore`, the latest point
+      // inside it, which leaves its whole body behind. The error must still
+      // reach the caller, which reports it (DEF-26).
+
+      /** The instant at which `authored-extras`'s first ripple is still drawing. */
+      const BEACON_INSTANT = 0.005;
+
+      /** The calls a frame makes on the vector layer's context, in order. */
+      function vectorCalls(frame) {
+        // A `set:` is a property, not a call, and an `addColorStop` is a gradient's.
+        return frame.filter(line => line.startsWith('vector ') && !/^vector (set:|canvas\.|\[gradient )/.test(line));
+      }
+
+      /** Where those calls `restore`, by their index among them. */
+      function restoreCalls(frame) {
+        return vectorCalls(frame).flatMap((line, index) => (line.startsWith('vector restore') ? [index] : []));
+      }
+
+      /** How deep the vector layer's saves nest in a frame. */
+      function deepestSave(frame) {
+        let depth = 0;
+        let deepest = 0;
+        for (const line of frame) {
+          if (line.startsWith('vector save')) deepest = Math.max(deepest, ++depth);
+          else if (line.startsWith('vector restore')) depth -= 1;
+        }
+        return deepest;
+      }
+
+      /**
+       * Render a frame whose vector-layer call `index` throws (none, for -1).
+       * Returns how many calls the frame made on that context, and whether
+       * the error reached the caller.
+       */
+      function renderThrowingAt(host, index) {
+        const context = host.renderingService.vectorCanvas.getContext('2d');
+        const thrown = new Error(`vector call ${index} throws`);
+        const names = Object.keys(context).filter(name => vi.isMockFunction(context[name]));
+        const methods = names.map(name => context[name]);
+        let calls = 0;
+        names.forEach((name, n) => {
+          context[name] = (...args) => {
+            if (calls++ === index) throw thrown;
+            return methods[n](...args);
+          };
+        });
+        try {
+          host.render();
+          return { calls, threw: false };
+        } catch (error) {
+          if (error !== thrown) throw error;
+          return { calls, threw: true };
+        } finally {
+          names.forEach((name, n) => { context[name] = methods[n]; });
+        }
+      }
+
+      /**
+       * Throw at every `restore` of a clean frame in turn, and draw the frame
+       * again after each: it must be the clean frame, transforms included.
+       */
+      function expectEachThrowForgotten(host, { layerScale, beacon }) {
+        // Counted over the clean frame only: a beacon's own save is one of
+        // the saves tried below.
+        const beaconRenderer = host.renderingService.beaconRenderer;
+        const save = host.renderingService.vectorCanvas.getContext('2d').save;
+        const renderBeacon = beaconRenderer.renderBeacon;
+        let beaconSaves = 0;
+        beaconRenderer.renderBeacon = function (...args) {
+          const before = save.mock.calls.length;
+          const result = renderBeacon.apply(this, args);
+          beaconSaves += save.mock.calls.length - before;
+          return result;
+        };
+        const clean = frameAt(host, BEACON_INSTANT, { transforms: true });
+        beaconRenderer.renderBeacon = renderBeacon;
+
+        // Non-vacuity: the layer draws under its own transform, with saves
+        // nested inside it, one of them a beacon's where the host draws one.
+        expect(clean.some(line => line.startsWith(`${layerScale} @ `)), layerScale).toBe(true);
+        expect(deepestSave(clean)).toBeGreaterThanOrEqual(2);
+        if (beacon) expect(beaconSaves).toBeGreaterThan(0);
+
+        // A throw is placed by counting calls, so the count must be the
+        // transcript's, or the throws below would land beside the restores.
+        expect(renderThrowingAt(host, -1).calls).toBe(vectorCalls(clean).length);
+
+        const throwAt = restoreCalls(clean);
+        expect(throwAt.length).toBeGreaterThanOrEqual(2);
+        for (const index of throwAt) {
+          expect(renderThrowingAt(host, index).threw, `the throw at vector call ${index} reaches the caller`).toBe(true);
+          const next = frameAt(host, BEACON_INSTANT, { transforms: true });
+          const differing = differingLines(next, clean);
+          expect(differing, `after a throw at vector call ${index}, "${next[differing[0]]}" ` +
+            `was "${clean[differing[0]]}"`).toEqual([]);
+        }
+        return clean;
+      }
+
+      test('in the editor, under the camera and under a viewport zoom, at pixel density 2', async () => {
+        // At density 1 the layer's base transform is the identity, so a
+        // reset that dropped it would pass; at 2 it is `scale(2, 2)`.
+        const density = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+        Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 2 });
+        try {
+          const app = await appWithFixture(fixtures().find(each => each.id === 'authored-extras'));
+
+          enterMode(app, 'preview');
+          const underCamera = expectEachThrowForgotten(app, { layerScale: 'vector scale 1.75 1.75', beacon: true });
+          expect(underCamera.find(line => line.startsWith('vector clearRect'))).toMatch(/ @ 2 0 0 2 0 0$/);
+
+          enterMode(app, 'edit');
+          app.setZoom(2, app.waypoints[1]);
+          expectEachThrowForgotten(app, { layerScale: 'vector scale 2 2', beacon: false });
+        } finally {
+          if (density) Object.defineProperty(window, 'devicePixelRatio', density);
+          else delete window.devicePixelRatio;
+        }
+      });
+
+      test('on the export canvas and in the exported player', async () => {
+        // Video frames are drawn by the editor on its export canvas; the HTML
+        // player is a second host over the same `RenderingService`.
+        const { app, player } = await exportAndPlayer(fixtures().find(each => each.id === 'authored-extras'));
+        for (const host of [app, player]) {
+          expectEachThrowForgotten(host, { layerScale: 'vector scale 1.75 1.75', beacon: true });
+        }
+      });
+
     });
 
   });

@@ -54,6 +54,10 @@ defineGlobal('localStorage', localStorageMock);
  * The recorder keeps the state a real context keeps: `save`/`restore` push and
  * pop the style stack, and resizing a canvas resets it, because renderers read
  * values back (for example a beacon multiplies the inherited `globalAlpha`).
+ * It keeps the transform the same way, because a transform can outlive its
+ * frame without changing a single call: a frame that throws before its
+ * `restore` leaves the next one drawing every identical call through the
+ * wrong matrix (DEF-36).
  */
 const CONTEXT_METHOD_RESULTS = {
   measureText: (text) => ({ width: String(text).length * 6 }),
@@ -96,6 +100,44 @@ const CONTEXT_STYLE_DEFAULTS = Object.freeze({
   lineDashOffset: 0
 });
 
+/** A transform in `DOMMatrix` order, `[a, b, c, d, e, f]`. Never mutated. */
+const IDENTITY_TRANSFORM = Object.freeze([1, 0, 0, 1, 0, 0]);
+
+/** `current × next`: what a context does to its transform on each call. */
+function multiplyTransforms([a1, b1, c1, d1, e1, f1], [a2, b2, c2, d2, e2, f2]) {
+  return Object.freeze([
+    a1 * a2 + c1 * b2,
+    b1 * a2 + d1 * b2,
+    a1 * c2 + c1 * d2,
+    b1 * c2 + d1 * d2,
+    a1 * e2 + c1 * f2 + e1,
+    b1 * e2 + d1 * f2 + f1
+  ]);
+}
+
+/**
+ * The transform each method leaves, given the one before it. A real context
+ * ignores a call with a non-finite argument, so these return null for one.
+ */
+const allFinite = (values, count) => values.length >= count && values.slice(0, count).every(Number.isFinite);
+const TRANSFORM_METHODS = {
+  translate: (current, x, y) => (allFinite([x, y], 2) ? multiplyTransforms(current, [1, 0, 0, 1, x, y]) : null),
+  scale: (current, x, y) => (allFinite([x, y], 2) ? multiplyTransforms(current, [x, 0, 0, y, 0, 0]) : null),
+  rotate: (current, angle) => (allFinite([angle], 1)
+    ? multiplyTransforms(current, [Math.cos(angle), Math.sin(angle), -Math.sin(angle), Math.cos(angle), 0, 0])
+    : null),
+  transform: (current, ...matrix) => (allFinite(matrix, 6) ? multiplyTransforms(current, matrix) : null),
+  setTransform: (current, ...matrix) => {
+    if (matrix.length === 0) return IDENTITY_TRANSFORM;
+    if (matrix.length === 1) {
+      const { a = 1, b = 0, c = 0, d = 1, e = 0, f = 0 } = matrix[0] ?? {};
+      matrix = [a, b, c, d, e, f];
+    }
+    return allFinite(matrix, 6) ? Object.freeze(matrix.slice(0, 6)) : null;
+  },
+  resetTransform: () => IDENTITY_TRANSFORM
+};
+
 /**
  * Values are copied and named, so a later mutation cannot rewrite history.
  * A canvas is named by its recording context's id, which `drawLog.js` turns
@@ -121,7 +163,9 @@ function describeValue(value) {
  * Per-canvas transcripts cannot show *interleaving*, and interleaving is what
  * decides the picture: compositing an offscreen layer before it is drawn, or
  * after it is cleared, leaves each canvas's own transcript unchanged and the
- * screen blank. Each entry is `[contextId, name, ...args]` (TST-02).
+ * screen blank. Each entry is `[contextId, name, ...args]` (TST-02), and
+ * carries the transform the call was made under as `entry.transform`, which
+ * `drawLog.js` shows only when asked, so the goldens' text is unchanged.
  */
 const orderedCalls = [];
 let recordingContexts = 0;
@@ -150,13 +194,14 @@ function createRecordingContext(canvas) {
   const style = { ...CONTEXT_STYLE_DEFAULTS };
   const stack = [];
   let lineDash = [];
+  let transform = IDENTITY_TRANSFORM;
   let gradients = 0;
   const recorderId = ++recordingContexts;
 
   /** Every call is written twice: to this canvas, and to the shared order. */
   const record = (call) => {
     calls.push(call);
-    if (recordingOrder) orderedCalls.push([recorderId, ...call]);
+    if (recordingOrder) orderedCalls.push(Object.assign([recorderId, ...call], { transform }));
   };
 
   const context = {
@@ -171,8 +216,10 @@ function createRecordingContext(canvas) {
 
   for (const name of CONTEXT_METHODS) {
     const result = CONTEXT_METHOD_RESULTS[name];
+    const nextTransform = TRANSFORM_METHODS[name];
     context[name] = vi.fn((...args) => {
       record([name, ...args.map(describeValue)]);
+      if (nextTransform) transform = nextTransform(transform, ...args) ?? transform;
       return result ? result(...args) : undefined;
     });
   }
@@ -190,16 +237,18 @@ function createRecordingContext(canvas) {
   }
 
   context.save = vi.fn(() => {
-    stack.push({ style: { ...style }, lineDash: lineDash.slice() });
+    stack.push({ style: { ...style }, lineDash: lineDash.slice(), transform });
     record(['save']);
   });
   context.restore = vi.fn(() => {
+    // Recorded first, like every call, so it carries the transform it undoes.
+    record(['restore']);
     const previous = stack.pop();
     if (previous) {
       Object.assign(style, previous.style);
       lineDash = previous.lineDash;
+      transform = previous.transform;
     }
-    record(['restore']);
   });
   context.setLineDash = vi.fn((dash = []) => {
     lineDash = Array.from(dash);
@@ -225,6 +274,7 @@ function createRecordingContext(canvas) {
     Object.assign(style, CONTEXT_STYLE_DEFAULTS);
     stack.length = 0;
     lineDash = [];
+    transform = IDENTITY_TRANSFORM;
   };
 
   return context;
@@ -241,8 +291,8 @@ function trackCanvasSize(canvas, context) {
       get: () => value,
       set: (next) => {
         value = next;
-        context.resetForResize();
         context.record([`canvas.${name}`, next]);
+        context.resetForResize();
       }
     });
   }

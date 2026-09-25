@@ -550,26 +550,38 @@ export class RenderingService {
     const cameraState = state.cameraState;
     const hasCamera = !hasZoom && cameraState && cameraState.enabled && Math.abs(cameraState.zoom - 1) > 0.001;
     
-    // Apply transform to vctx so vectors are rasterized at zoomed resolution
-    if (hasZoom) {
-      vctx.save();
-      vctx.scale(viewport.zoom, viewport.zoom);
-      vctx.translate(-viewport.panX, -viewport.panY);
-    } else if (hasCamera) {
-      vctx.save();
-      const zoom = cameraState.zoom;
-      const cx = cameraState.centerX;
-      const cy = cameraState.centerY;
-      vctx.translate(cw / 2, ch / 2);
-      vctx.scale(zoom, zoom);
-      vctx.translate(-cx, -cy);
-    }
-    
-    this.renderVectorLayerTo(vctx, state);
-    
-    // Restore vector context transform
-    if (hasZoom || hasCamera) {
-      vctx.restore();
+    try {
+      // Apply transform to vctx so vectors are rasterized at zoomed resolution
+      if (hasZoom) {
+        vctx.save();
+        vctx.scale(viewport.zoom, viewport.zoom);
+        vctx.translate(-viewport.panX, -viewport.panY);
+      } else if (hasCamera) {
+        vctx.save();
+        const zoom = cameraState.zoom;
+        const cx = cameraState.centerX;
+        const cy = cameraState.centerY;
+        vctx.translate(cw / 2, ch / 2);
+        vctx.scale(zoom, zoom);
+        vctx.translate(-cx, -cy);
+      }
+
+      this.renderVectorLayerTo(vctx, state);
+
+      // Restore vector context transform
+      if (hasZoom || hasCamera) {
+        vctx.restore();
+      }
+    } catch (error) {
+      // A throw part-way through the layer skips that restore, and any a
+      // renderer inside it owed (a beacon's, a marker's), so the context kept
+      // this frame's transform for every later frame: under a 2x camera they
+      // drew at 4x, until a resize (DEF-36). A resize at the same size is the
+      // cure, so this frame ends with one. It discards the saved states,
+      // transform and styles and puts back the base transform the layer keeps
+      // between frames. The error still reaches the caller, which reports it.
+      this.getVectorCanvas(displayWidth, displayHeight, state.pixelScale, true);
+      throw error;
     }
     
     // Composite vector layer 1:1 onto main canvas (no scaling — already
@@ -956,9 +968,12 @@ export class RenderingService {
    * @param {number} displayHeight - CSS-pixel height
    * @param {number} [pixelScale]  - Backing-store multiplier (default: devicePixelRatio, capped at 3).
    *                                  Pass 1 during export to match the identity-transform main canvas.
+   * @param {boolean} [reset]       - Resize even at the current size. Resizing discards the context's
+   *                                  saved states, transform and styles, which is how a frame that threw
+   *                                  puts the layer back (DEF-36).
    * @returns {HTMLCanvasElement}
    */
-  getVectorCanvas(displayWidth, displayHeight, pixelScale) {
+  getVectorCanvas(displayWidth, displayHeight, pixelScale, reset = false) {
     if (!this.vectorCanvas) {
       this.vectorCanvas = document.createElement('canvas');
     }
@@ -970,6 +985,7 @@ export class RenderingService {
     const pixelWidth = Math.round(cssWidth * scale);
     const pixelHeight = Math.round(cssHeight * scale);
     const needsResize =
+      reset ||
       this.vectorCanvas.width !== pixelWidth ||
       this.vectorCanvas.height !== pixelHeight ||
       this.vectorCanvasScale !== scale;

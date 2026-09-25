@@ -113,14 +113,24 @@ export function discardFrame() {
 /**
  * Drain one frame as transcript lines, each prefixed by its surface.
  *
+ * With `transforms`, each line ends with ` @ ` and the transform its call was
+ * made under (`a b c d e f`, `DOMMatrix` order, rounded as the arguments are).
+ * The goldens leave it off, since their calls already say every transform
+ * they make; it is for a comparison that must also catch a transform left
+ * over from an earlier frame, which changes no call (DEF-36).
+ *
  * @param {Object} host - A booted RoutePlotter or a loaded PlayerApp
+ * @param {{transforms?: boolean}} [options]
  * @returns {string[]}
  */
-export function takeFrame(host) {
+export function takeFrame(host, { transforms = false } = {}) {
   const names = surfaceNames(host);
   const gradients = new Map();
-  return takeOrderedCalls()
-    .map(([id, ...call]) => `${surfaceLabel(names, id)} ${describeCall(call, gradients, names)}`);
+  return takeOrderedCalls().map((entry) => {
+    const [id, ...call] = entry;
+    const line = `${surfaceLabel(names, id)} ${describeCall(call, gradients, names)}`;
+    return transforms ? `${line} @ ${entry.transform.map(round).join(' ')}` : line;
+  });
 }
 
 /**
@@ -129,12 +139,16 @@ export function takeFrame(host) {
  * The seek is what the renderer is asked to reproduce; nothing about the frame
  * may depend on how the instant was reached (`goldenFrames.test.js` pins that
  * at the state level, and `play == seek` pins it at the draw level).
+ *
+ * @param {Object} host - A booted RoutePlotter or a loaded PlayerApp
+ * @param {number} progress
+ * @param {{transforms?: boolean}} [options] - As `takeFrame`
  */
-export function frameAt(host, progress) {
+export function frameAt(host, progress, options) {
   host.animationEngine.seekToProgress(progress);
   discardFrame();
   host.render();
-  return takeFrame(host);
+  return takeFrame(host, options);
 }
 
 /**
