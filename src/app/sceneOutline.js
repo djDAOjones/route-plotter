@@ -18,7 +18,7 @@ import { EMITTER_LIMITS } from '../models/Emitter.js';
 import { PROJECT_MODEL_LIMITS } from './persistence.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
 import { IMAGE_COORDINATES } from '../config/constants.js';
-import { clampImageCoordinate } from '../utils/imageCoordinates.js';
+import { clampImageCoordinate, isImageCoordinateInRange } from '../utils/imageCoordinates.js';
 
 const NODE_TYPES = new Set(['normal', 'entry', 'exit']);
 const EDGE_DIRECTIONS = new Set(['one-way', 'two-way']);
@@ -59,14 +59,23 @@ function percentDraft(command, field, label) {
 /**
  * A waypoint's or polygon vertex's position, in percent of the image. Such a
  * point may sit off the image (DEF-03), so this takes the range a project can
- * store rather than 0–100 (DEF-35); network geometry uses `percent`.
+ * store, by the rule load applies, rather than 0–100 (DEF-35); network
+ * geometry uses `percent`.
  */
 function imagePercent(value, label) {
-  return numberBetween(value, label, IMAGE_COORDINATES.MIN * 100, IMAGE_COORDINATES.MAX * 100) / 100;
+  const position = Number(value) / 100;
+  if (!isImageCoordinateInRange(position)) {
+    throw new Error(`${label} must be between ${IMAGE_COORDINATES.MIN * 100} and ${IMAGE_COORDINATES.MAX * 100}.`);
+  }
+  return position;
 }
 
+// An untouched field submits the stored value it was drawn from. One outside
+// the range could only come from a tampered command, so the typed value is
+// checked and used instead.
 function imagePercentDraft(command, field, label) {
-  return originalCanonical(command, field) ?? imagePercent(command[field], label);
+  const canonical = originalCanonical(command, field);
+  return isImageCoordinateInRange(canonical) ? canonical : imagePercent(command[field], label);
 }
 
 function secondsDraft(command, field, label) {
@@ -94,6 +103,10 @@ function textDraft(command, field, label, options = {}) {
   return original.matches
     ? original.value
     : shortText(command[field], label, options);
+}
+
+function clamp01(value) {
+  return Math.max(0, Math.min(1, value));
 }
 
 export const sceneOutlineMixin = {
@@ -891,12 +904,18 @@ export const sceneOutlineMixin = {
     }
     const x = waypoint.imgX;
     const y = waypoint.imgY;
+    // Round a waypoint on the image the triangle stays on the image, as it
+    // always has. Round one off it (DEF-03), it surrounds the waypoint as far
+    // as a project can store a point, instead of collapsing onto the image's
+    // edge (DEF-35).
+    const onImage = x >= 0 && x <= 1 && y >= 0 && y <= 1;
+    const hold = onImage ? clamp01 : clampImageCoordinate;
     waypoint.areaHighlight.enabled = true;
     waypoint.areaHighlight.shape = 'polygon';
     waypoint.areaHighlight.points = [
-      { x: clampImageCoordinate(x), y: clampImageCoordinate(y - 0.04) },
-      { x: clampImageCoordinate(x - 0.04), y: clampImageCoordinate(y + 0.04) },
-      { x: clampImageCoordinate(x + 0.04), y: clampImageCoordinate(y + 0.04) },
+      { x: hold(x), y: hold(y - 0.04) },
+      { x: hold(x - 0.04), y: hold(y + 0.04) },
+      { x: hold(x + 0.04), y: hold(y + 0.04) },
     ];
     this.eventBus.emit('waypoint:selected', waypoint);
     const key = sceneOutlineKey('vertex', waypoint.id, 0);

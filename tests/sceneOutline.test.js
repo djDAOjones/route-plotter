@@ -595,7 +595,9 @@ describe('native scene outline DOM', () => {
     fixture.minor.areaHighlight.points[0] = { x: 1.4, y: -0.3 };
     eventBus.emit('scene-outline:update', snapshotFor(fixture));
     for (const key of ['waypoint:wp-major', 'waypoint:wp-minor', 'polygon:wp-minor', 'vertex:wp-minor:0',
-      'crowd:crowd-route', 'network:crowd-route', 'nodes:crowd-route', 'node:crowd-route:node-entry']) {
+      'crowd:crowd-route', 'network:crowd-route', 'nodes:crowd-route', 'node:crowd-route:node-entry',
+      'edges:crowd-route', 'edge:crowd-route:edge-a', 'controls:crowd-route:edge-a',
+      'control:crowd-route:edge-a:0']) {
       await openDisclosure(container, key);
     }
     const listener = vi.fn();
@@ -631,8 +633,11 @@ describe('native scene outline DOM', () => {
     }
 
     // Network geometry is authored on the image, and stays there.
-    for (const key of ['network:crowd-route:add-node-x', 'node:crowd-route:node-entry:y']) {
-      expect([inputFor(key).min, inputFor(key).max], key).toEqual(['0', '100']);
+    for (const key of ['network:crowd-route:add-node', 'node:crowd-route:node-entry',
+      'edge:crowd-route:edge-a:add-control', 'control:crowd-route:edge-a:0']) {
+      for (const field of key.includes(':add-') ? [`${key}-x`, `${key}-y`] : [`${key}:x`, `${key}:y`]) {
+        expect([inputFor(field).min, inputFor(field).max], field).toEqual(['0', '100']);
+      }
     }
   });
 
