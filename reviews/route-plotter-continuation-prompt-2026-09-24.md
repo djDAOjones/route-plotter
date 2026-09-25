@@ -1,6 +1,8 @@
 <!-- markdownlint-disable MD013 MD060 -->
 # Continue Route Plotter v3: the post-W2 queue, then the W3 pilot
 
+**Superseded by `route-plotter-continuation-prompt-2026-09-25.md`**, which carries the programme on from DEF-36. This prompt briefed the post-W2 queue; its first two items, DEF-34 (#31) and TST-17 (#32), merged on 2026-09-24 and are not yet released; it remains as provenance.
+
 This supersedes `route-plotter-continuation-prompt-w2-2026-09-23.md`, which
 briefed W2 and remains as provenance. Paste everything below into a fresh chat.
 
