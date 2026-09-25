@@ -11,7 +11,8 @@ hand-edited under `docs/`.
 
 | File | Role |
 | --- | --- |
-| `route-plotter-continuation-prompt-2026-09-24.md` | **Current** paste-ready prompt for the next development chat: clear the post-W2 queue (DEF-34 first, then the test-harness fixes and the released defects), then run the W3 pilot, with Codex as the comparative reviewer. |
+| `route-plotter-continuation-prompt-2026-09-25.md` | **Current** paste-ready prompt for the next development chat: the rest of the post-W2 queue (DEF-36 first, then DEF-35, the released defects and DEF-37), then the W3 pilot, with Codex as the comparative reviewer. It also records what the close-out PM PR still owes project memory for DEF-34, TST-17 and DEF-37. |
+| `route-plotter-continuation-prompt-2026-09-24.md` | Superseded by the 2026-09-25 prompt. Historical provenance: it briefed the post-W2 queue; DEF-34 (#31) and TST-17 (#32) merged from it on 2026-09-24, unreleased. |
 | `route-plotter-continuation-prompt-w2-2026-09-23.md` | Superseded by the 2026-09-24 prompt. Historical provenance: it briefed W2 (the live defects), released as v3.2.692. |
 | `route-plotter-continuation-prompt-2026-09-23.md` | Superseded by the W2 prompt. Historical provenance: it briefed W1 (the safety net). |
 | `route-plotter-continuation-prompt-2026-09-22.md` | Superseded by the 2026-09-23 prompt. Historical provenance: it briefed W0. |
