@@ -991,7 +991,7 @@ export class RenderingService {
       this.vectorCanvasScale !== scale;
     
     if (needsResize) {
-      console.debug('Resizing vector canvas to:', cssWidth, 'x', cssHeight, 'at', scale + 'x scale');
+      console.debug(`${reset ? 'Resetting' : 'Resizing'} vector canvas to:`, cssWidth, 'x', cssHeight, 'at', scale + 'x scale');
       this.vectorCanvas.width = pixelWidth;
       this.vectorCanvas.height = pixelHeight;
       this.vectorCanvasScale = scale;

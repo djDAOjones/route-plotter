@@ -130,9 +130,10 @@ describe('test harness fidelity', () => {
     ]);
   });
 
-  test('a transcript can show each call\'s transform, kept as a real context keeps it', () => {
+  test('a transcript can show the state each call was made in, kept as a real context keeps it', () => {
     // The goldens leave it off. DEF-36's comparison needs it, because a
-    // transform left over from an earlier frame changes no call.
+    // transform, a saved state or a style left over from an earlier frame
+    // changes no call.
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
@@ -143,32 +144,42 @@ describe('test harness fidelity', () => {
     ctx.rotate(Math.PI / 2);
     ctx.transform(1, 0, 0, 1, 1, 0);
     ctx.scale(Infinity, 1);
+    ctx.lineCap = 'round';
+    ctx.setLineDash([4, 2]);
     ctx.fillRect(0, 0, 1, 1);
     ctx.restore();
     ctx.fillRect(0, 0, 1, 1);
     ctx.setTransform(1, 0, 0, 1, 3, 4);
     ctx.resetTransform();
-    ctx.setTransform(1, 0, 0, 1, 3, 4);
+    ctx.setTransform({ e: 3, f: 4 });
+    ctx.globalAlpha = 0.5;
     canvas.width = 8;
     ctx.fillRect(0, 0, 1, 1);
 
-    expect(takeFrame({ canvas }, { transforms: true })).toEqual([
-      'main scale 2 2 @ 1 0 0 1 0 0',
-      'main save @ 2 0 0 2 0 0',
-      'main translate 10 5 @ 2 0 0 2 0 0',
-      'main rotate 1.571 @ 2 0 0 2 20 10',
-      'main transform 1 0 0 1 1 0 @ 0 2 -2 0 20 10',
+    expect(takeFrame({ canvas }, { state: true })).toEqual([
+      'main scale 2 2 @ 1 0 0 1 0 0 | saved 0',
+      'main save @ 2 0 0 2 0 0 | saved 0',
+      'main translate 10 5 @ 2 0 0 2 0 0 | saved 1',
+      'main rotate 1.571 @ 2 0 0 2 20 10 | saved 1',
+      'main transform 1 0 0 1 1 0 @ 0 2 -2 0 20 10 | saved 1',
       // A browser ignores a transform with a non-finite argument.
-      'main scale Infinity 1 @ 0 2 -2 0 20 12',
-      'main fillRect 0 0 1 1 @ 0 2 -2 0 20 12',
-      'main restore @ 0 2 -2 0 20 12',
-      'main fillRect 0 0 1 1 @ 2 0 0 2 0 0',
-      'main setTransform 1 0 0 1 3 4 @ 2 0 0 2 0 0',
-      'main resetTransform @ 1 0 0 1 3 4',
-      'main setTransform 1 0 0 1 3 4 @ 1 0 0 1 0 0',
-      // A resize resets the transform with the rest of the state.
-      'main canvas.width 8 @ 1 0 0 1 3 4',
-      'main fillRect 0 0 1 1 @ 1 0 0 1 0 0',
+      'main scale Infinity 1 @ 0 2 -2 0 20 12 | saved 1',
+      'main set:lineCap round @ 0 2 -2 0 20 12 | saved 1',
+      'main setLineDash [4,2] @ 0 2 -2 0 20 12 | saved 1 | lineCap=round',
+      'main fillRect 0 0 1 1 @ 0 2 -2 0 20 12 | saved 1 | lineCap=round lineDash=4,2',
+      'main restore @ 0 2 -2 0 20 12 | saved 1 | lineCap=round lineDash=4,2',
+      'main fillRect 0 0 1 1 @ 2 0 0 2 0 0 | saved 0',
+      'main setTransform 1 0 0 1 3 4 @ 2 0 0 2 0 0 | saved 0',
+      'main resetTransform @ 1 0 0 1 3 4 | saved 0',
+      'main setTransform [Object] @ 1 0 0 1 0 0 | saved 0',
+      'main set:globalAlpha 0.5 @ 1 0 0 1 3 4 | saved 0',
+      // A resize resets the transform, the saved states and the styles.
+      'main canvas.width 8 @ 1 0 0 1 3 4 | saved 0 | globalAlpha=0.5',
+      'main fillRect 0 0 1 1 @ 1 0 0 1 0 0 | saved 0',
     ]);
+
+    // A malformed transform call throws, as in a browser, and records nothing.
+    expect(() => ctx.translate(1)).toThrow(TypeError);
+    expect(takeFrame({ canvas })).toEqual([]);
   });
 });

@@ -404,14 +404,21 @@ describe('golden draw logs (TST-02)', () => {
       // around the layer, and a beacon's or a marker's inside it. So every
       // later frame drew through this one's transform, until a resize — under
       // the 1.75× camera below, on a 2× display, at 3.5× instead of 2×. No
-      // call changes, so these transcripts carry each call's transform.
+      // call changes, so these transcripts carry the state each call was made
+      // in: its transform, the saved states still open, and its styles.
+      //
+      // The frame after a throw must draw what a freshly sized layer draws,
+      // as the first frame after any resize does. A steady-state frame can
+      // differ from that, because the layer's styles carry from one frame to
+      // the next (DEF-39, proposed); that is older than this, and not its
+      // subject.
       //
       // A browser throws from a context call given a bad argument (an `arc`
       // with a negative radius, a gradient given NaN, DEF-26's colour), so the
       // throw is injected at a call on the vector layer's context. Every save
-      // the clean frame makes is tried at its `restore`, the latest point
-      // inside it, which leaves its whole body behind. The error must still
-      // reach the caller, which reports it (DEF-26).
+      // the frame makes is tried at its `restore`, the latest point inside
+      // it, which leaves its whole body behind. The error must still reach the
+      // caller, which reports it (DEF-26).
 
       /** The instant at which `authored-extras`'s first ripple is still drawing. */
       const BEACON_INSTANT = 0.005;
@@ -470,8 +477,28 @@ describe('golden draw logs (TST-02)', () => {
        * Throw at every `restore` of a clean frame in turn, and draw the frame
        * again after each: it must be the clean frame, transforms included.
        */
+      /**
+       * The frame a freshly sized layer draws, less the resize that sized it.
+       * A frame at the same instant comes first, so the main canvas and the
+       * reveal mask start as they do after any frame there (their styles carry
+       * over too), and only the layer is fresh. Any change of scale takes
+       * `getVectorCanvas`'s resize branch, the one a window resize takes,
+       * rather than the reset the fix adds.
+       */
+      function freshFrame(host) {
+        frameAt(host, BEACON_INSTANT);
+        host.renderingService.vectorCanvasScale = NaN;
+        const frame = frameAt(host, BEACON_INSTANT, { state: true });
+        const cleared = frame.findIndex(line => line.startsWith('vector clearRect'));
+        return frame.filter((line, index) => index >= cleared || !line.startsWith('vector '));
+      }
+
+      /**
+       * Throw at every `restore` of a fresh frame in turn, and draw the frame
+       * again after each: it must be the fresh frame, state included.
+       */
       function expectEachThrowForgotten(host, { layerScale, beacon }) {
-        // Counted over the clean frame only: a beacon's own save is one of
+        // Counted over the fresh frame only: a beacon's own save is one of
         // the saves tried below.
         const beaconRenderer = host.renderingService.beaconRenderer;
         const save = host.renderingService.vectorCanvas.getContext('2d').save;
@@ -483,29 +510,29 @@ describe('golden draw logs (TST-02)', () => {
           beaconSaves += save.mock.calls.length - before;
           return result;
         };
-        const clean = frameAt(host, BEACON_INSTANT, { transforms: true });
+        const fresh = freshFrame(host);
         beaconRenderer.renderBeacon = renderBeacon;
 
         // Non-vacuity: the layer draws under its own transform, with saves
         // nested inside it, one of them a beacon's where the host draws one.
-        expect(clean.some(line => line.startsWith(`${layerScale} @ `)), layerScale).toBe(true);
-        expect(deepestSave(clean)).toBeGreaterThanOrEqual(2);
+        expect(fresh.some(line => line.startsWith(`${layerScale} @ `)), layerScale).toBe(true);
+        expect(deepestSave(fresh)).toBeGreaterThanOrEqual(2);
         if (beacon) expect(beaconSaves).toBeGreaterThan(0);
 
         // A throw is placed by counting calls, so the count must be the
         // transcript's, or the throws below would land beside the restores.
-        expect(renderThrowingAt(host, -1).calls).toBe(vectorCalls(clean).length);
+        expect(renderThrowingAt(host, -1).calls).toBe(vectorCalls(fresh).length);
 
-        const throwAt = restoreCalls(clean);
+        const throwAt = restoreCalls(fresh);
         expect(throwAt.length).toBeGreaterThanOrEqual(2);
         for (const index of throwAt) {
           expect(renderThrowingAt(host, index).threw, `the throw at vector call ${index} reaches the caller`).toBe(true);
-          const next = frameAt(host, BEACON_INSTANT, { transforms: true });
-          const differing = differingLines(next, clean);
+          const next = frameAt(host, BEACON_INSTANT, { state: true });
+          const differing = differingLines(next, fresh);
           expect(differing, `after a throw at vector call ${index}, "${next[differing[0]]}" ` +
-            `was "${clean[differing[0]]}"`).toEqual([]);
+            `was "${fresh[differing[0]]}"`).toEqual([]);
         }
-        return clean;
+        return fresh;
       }
 
       test('in the editor, under the camera and under a viewport zoom, at pixel density 2', async () => {
@@ -518,7 +545,7 @@ describe('golden draw logs (TST-02)', () => {
 
           enterMode(app, 'preview');
           const underCamera = expectEachThrowForgotten(app, { layerScale: 'vector scale 1.75 1.75', beacon: true });
-          expect(underCamera.find(line => line.startsWith('vector clearRect'))).toMatch(/ @ 2 0 0 2 0 0$/);
+          expect(underCamera.find(line => line.startsWith('vector clearRect'))).toMatch(/ @ 2 0 0 2 0 0 \| saved 0$/);
 
           enterMode(app, 'edit');
           app.setZoom(2, app.waypoints[1]);

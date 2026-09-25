@@ -54,10 +54,10 @@ defineGlobal('localStorage', localStorageMock);
  * The recorder keeps the state a real context keeps: `save`/`restore` push and
  * pop the style stack, and resizing a canvas resets it, because renderers read
  * values back (for example a beacon multiplies the inherited `globalAlpha`).
- * It keeps the transform the same way, because a transform can outlive its
- * frame without changing a single call: a frame that throws before its
- * `restore` leaves the next one drawing every identical call through the
- * wrong matrix (DEF-36).
+ * It keeps the transform the same way, and can report the state each call was
+ * made in, because state can outlive its frame without changing a single
+ * call: a frame that threw before its `restore` left the next one drawing
+ * every identical call through the wrong matrix (DEF-36).
  */
 const CONTEXT_METHOD_RESULTS = {
   measureText: (text) => ({ width: String(text).length * 6 }),
@@ -116,24 +116,35 @@ function multiplyTransforms([a1, b1, c1, d1, e1, f1], [a2, b2, c2, d2, e2, f2]) 
 }
 
 /**
- * The transform each method leaves, given the one before it. A real context
- * ignores a call with a non-finite argument, so these return null for one.
+ * Apply a transform method's first `count` arguments, converted to numbers as
+ * a browser converts them. Too few throw, as in a browser; a non-finite one
+ * makes the call a no-op, which is null here.
  */
-const allFinite = (values, count) => values.length >= count && values.slice(0, count).every(Number.isFinite);
+function withArguments(name, args, count, apply) {
+  if (args.length < count) {
+    throw new TypeError(`Failed to execute '${name}' on 'CanvasRenderingContext2D': ` +
+      `${count} arguments required, but only ${args.length} present.`);
+  }
+  const values = args.slice(0, count).map(Number);
+  return values.every(Number.isFinite) ? apply(values) : null;
+}
+
+/** The transform each method leaves, given the one before it and the call's arguments. */
 const TRANSFORM_METHODS = {
-  translate: (current, x, y) => (allFinite([x, y], 2) ? multiplyTransforms(current, [1, 0, 0, 1, x, y]) : null),
-  scale: (current, x, y) => (allFinite([x, y], 2) ? multiplyTransforms(current, [x, 0, 0, y, 0, 0]) : null),
-  rotate: (current, angle) => (allFinite([angle], 1)
-    ? multiplyTransforms(current, [Math.cos(angle), Math.sin(angle), -Math.sin(angle), Math.cos(angle), 0, 0])
-    : null),
-  transform: (current, ...matrix) => (allFinite(matrix, 6) ? multiplyTransforms(current, matrix) : null),
-  setTransform: (current, ...matrix) => {
-    if (matrix.length === 0) return IDENTITY_TRANSFORM;
-    if (matrix.length === 1) {
-      const { a = 1, b = 0, c = 0, d = 1, e = 0, f = 0 } = matrix[0] ?? {};
-      matrix = [a, b, c, d, e, f];
+  translate: (current, args) => withArguments('translate', args, 2,
+    ([x, y]) => multiplyTransforms(current, [1, 0, 0, 1, x, y])),
+  scale: (current, args) => withArguments('scale', args, 2,
+    ([x, y]) => multiplyTransforms(current, [x, 0, 0, y, 0, 0])),
+  rotate: (current, args) => withArguments('rotate', args, 1,
+    ([angle]) => multiplyTransforms(current, [Math.cos(angle), Math.sin(angle), -Math.sin(angle), Math.cos(angle), 0, 0])),
+  transform: (current, args) => withArguments('transform', args, 6, matrix => multiplyTransforms(current, matrix)),
+  setTransform: (current, args) => {
+    if (args.length === 0) return IDENTITY_TRANSFORM;
+    if (args.length === 1) {
+      const { a, b, c, d, e, f, m11, m12, m21, m22, m41, m42 } = args[0] ?? {};
+      args = [a ?? m11 ?? 1, b ?? m12 ?? 0, c ?? m21 ?? 0, d ?? m22 ?? 1, e ?? m41 ?? 0, f ?? m42 ?? 0];
     }
-    return allFinite(matrix, 6) ? Object.freeze(matrix.slice(0, 6)) : null;
+    return withArguments('setTransform', args, 6, matrix => Object.freeze(matrix));
   },
   resetTransform: () => IDENTITY_TRANSFORM
 };
@@ -163,9 +174,11 @@ function describeValue(value) {
  * Per-canvas transcripts cannot show *interleaving*, and interleaving is what
  * decides the picture: compositing an offscreen layer before it is drawn, or
  * after it is cleared, leaves each canvas's own transcript unchanged and the
- * screen blank. Each entry is `[contextId, name, ...args]` (TST-02), and
- * carries the transform the call was made under as `entry.transform`, which
- * `drawLog.js` shows only when asked, so the goldens' text is unchanged.
+ * screen blank. Each entry is `[contextId, name, ...args]` (TST-02). It also
+ * carries the state the call was made in: `entry.transform`, `entry.depth`
+ * (saved states still open) and `entry.state` (every style away from its
+ * default, and the line dash). `drawLog.js` shows those only when asked, so
+ * the goldens' text is unchanged.
  */
 const orderedCalls = [];
 let recordingContexts = 0;
@@ -198,10 +211,32 @@ function createRecordingContext(canvas) {
   let gradients = 0;
   const recorderId = ++recordingContexts;
 
-  /** Every call is written twice: to this canvas, and to the shared order. */
+  // Rebuilt only after the drawing state changes, not once per call.
+  let drawingState = null;
+  const stateChanged = () => { drawingState = null; };
+  const currentDrawingState = () => {
+    if (!drawingState) {
+      const changed = {};
+      for (const [name, value] of Object.entries(style)) {
+        if (value !== CONTEXT_STYLE_DEFAULTS[name]) changed[name] = describeValue(value);
+      }
+      if (lineDash.length > 0) changed.lineDash = lineDash.slice();
+      drawingState = Object.freeze(changed);
+    }
+    return drawingState;
+  };
+
+  /**
+   * Every call is written twice: to this canvas, and to the shared order.
+   * Each is recorded before it takes effect, so it carries the state it was
+   * made in.
+   */
   const record = (call) => {
     calls.push(call);
-    if (recordingOrder) orderedCalls.push(Object.assign([recorderId, ...call], { transform }));
+    if (recordingOrder) {
+      orderedCalls.push(Object.assign([recorderId, ...call],
+        { transform, depth: stack.length, state: currentDrawingState() }));
+    }
   };
 
   const context = {
@@ -218,8 +253,10 @@ function createRecordingContext(canvas) {
     const result = CONTEXT_METHOD_RESULTS[name];
     const nextTransform = TRANSFORM_METHODS[name];
     context[name] = vi.fn((...args) => {
+      // A browser rejects a malformed transform call before it does anything.
+      const next = nextTransform ? nextTransform(transform, args) : null;
       record([name, ...args.map(describeValue)]);
-      if (nextTransform) transform = nextTransform(transform, ...args) ?? transform;
+      if (next) transform = next;
       return result ? result(...args) : undefined;
     });
   }
@@ -230,29 +267,32 @@ function createRecordingContext(canvas) {
       enumerable: true,
       get: () => style[name],
       set: (next) => {
-        style[name] = next;
         record([`set:${name}`, describeValue(next)]);
+        style[name] = next;
+        stateChanged();
       }
     });
   }
 
   context.save = vi.fn(() => {
-    stack.push({ style: { ...style }, lineDash: lineDash.slice(), transform });
     record(['save']);
+    stack.push({ style: { ...style }, lineDash: lineDash.slice(), transform });
   });
   context.restore = vi.fn(() => {
-    // Recorded first, like every call, so it carries the transform it undoes.
     record(['restore']);
     const previous = stack.pop();
     if (previous) {
       Object.assign(style, previous.style);
       lineDash = previous.lineDash;
       transform = previous.transform;
+      stateChanged();
     }
   });
   context.setLineDash = vi.fn((dash = []) => {
-    lineDash = Array.from(dash);
-    record(['setLineDash', lineDash.slice()]);
+    const next = Array.from(dash);
+    record(['setLineDash', next.slice()]);
+    lineDash = next;
+    stateChanged();
   });
   context.getLineDash = vi.fn(() => lineDash.slice());
 
@@ -275,6 +315,7 @@ function createRecordingContext(canvas) {
     stack.length = 0;
     lineDash = [];
     transform = IDENTITY_TRANSFORM;
+    stateChanged();
   };
 
   return context;

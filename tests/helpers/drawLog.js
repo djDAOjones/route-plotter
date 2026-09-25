@@ -111,25 +111,38 @@ export function discardFrame() {
 }
 
 /**
+ * The state a call was made in, as `setup.js` recorded it: `@ ` and its
+ * transform (`a b c d e f`, `DOMMatrix` order), `| saved ` and how many saved
+ * states were open, then every style away from its default, as `name=value`.
+ */
+function describeState(entry, gradients) {
+  const styles = Object.entries(entry.state).map(([name, value]) => (Array.isArray(value)
+    ? `${name}=${value.map(round).join(',')}`
+    : `${name}=${renameGradient(String(round(value)), gradients)}`));
+  const parts = [`@ ${entry.transform.map(round).join(' ')}`, `saved ${entry.depth}`];
+  if (styles.length > 0) parts.push(styles.join(' '));
+  return parts.join(' | ');
+}
+
+/**
  * Drain one frame as transcript lines, each prefixed by its surface.
  *
- * With `transforms`, each line ends with ` @ ` and the transform its call was
- * made under (`a b c d e f`, `DOMMatrix` order, rounded as the arguments are).
- * The goldens leave it off, since their calls already say every transform
- * they make; it is for a comparison that must also catch a transform left
- * over from an earlier frame, which changes no call (DEF-36).
+ * With `state`, each line ends with the state its call was made in
+ * (`describeState`). The goldens leave it off, since their calls already say
+ * every change they make; it is for a comparison that must also catch state
+ * left over from an earlier frame, which changes no call (DEF-36).
  *
  * @param {Object} host - A booted RoutePlotter or a loaded PlayerApp
- * @param {{transforms?: boolean}} [options]
+ * @param {{state?: boolean}} [options]
  * @returns {string[]}
  */
-export function takeFrame(host, { transforms = false } = {}) {
+export function takeFrame(host, { state = false } = {}) {
   const names = surfaceNames(host);
   const gradients = new Map();
   return takeOrderedCalls().map((entry) => {
     const [id, ...call] = entry;
     const line = `${surfaceLabel(names, id)} ${describeCall(call, gradients, names)}`;
-    return transforms ? `${line} @ ${entry.transform.map(round).join(' ')}` : line;
+    return state ? `${line} ${describeState(entry, gradients)}` : line;
   });
 }
 
@@ -142,7 +155,7 @@ export function takeFrame(host, { transforms = false } = {}) {
  *
  * @param {Object} host - A booted RoutePlotter or a loaded PlayerApp
  * @param {number} progress
- * @param {{transforms?: boolean}} [options] - As `takeFrame`
+ * @param {{state?: boolean}} [options] - As `takeFrame`
  */
 export function frameAt(host, progress, options) {
   host.animationEngine.seekToProgress(progress);
