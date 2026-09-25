@@ -311,7 +311,7 @@
 - `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
 - `tests/backgroundModeOverlay.test.js` — DEF-01: no background visibility mode draws text or a panel on the main canvas, with the reveal mask proved to have run
 - `tests/bootApp.test.js` — TST-01: the whole app boots from the shipped shell, sizes its canvas to the harness viewport, loads its bundled background, and carries an authoring intent from the bus to the model and the canvas
-- `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
+- `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms, and (DEF-35) handles dragged off the image stay there, as far as a project can store a point
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
 - `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); the DEF-31 regression (a crowd traced from the longest waypoint ids reloads); and the DEF-04 failures characterised with the reason the loader gives
@@ -380,7 +380,7 @@
 - `tests/reviewAccessibility.test.js` — Keyboard semantics, modal focus, responsive/support/privacy shell, disclosure, card-action and accessible crowd-variation/busyness UI contracts
 - `tests/reviewPersistence.test.js` — Autosave honesty, transactional load/rollback, save revisions and undo-image restoration regressions
 - `tests/reviewTimeline.test.js` — Stateless comet, canonical transport/export and timing-invalidation review regressions
-- `tests/routeAnchors.test.js` — COMPOSE-01 contract: node/emitter binding,
+- `tests/routeAnchors.test.js` — COMPOSE-01 contract: node/emitter binding, one-way ownership, the authored-position fallback and byte-identical unanchored crowds, and (DEF-35) a node or crowd bound to a waypoint off the image reaches it
 - `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
 - `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across linear and branched routes, a copy that never reaches back into the route, the save/load round trip, and (DEF-31) derived ids that fit the persisted limit
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
@@ -411,7 +411,7 @@
 - `tests/goldens/project-snapshot-uon-open-day.json` — TST-06 golden: the saved shape of the Open day route example (branched route, traced anchored crowd)
 - `tests/setup.js` — Vitest jsdom setup: getter-only jsdom globals via defineProperty, and one recording context per canvas, which writes a canvas argument with its recorder id (TST-17) and keeps the style stack and the transform as a real context does, giving each ordered entry the state its call was made in (DEF-36)
 - `tests/startup.test.js` — Recovery-before-default-image startup ordering contracts
-- `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation
+- `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation; and (DEF-35) dots follow a route off the image, held only to the range a project can store
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
 - `tests/undoService.test.js` — Prospective-save parity, natural rollover, extra oldest discard, redo preservation/invalidation and rejected-input immutability
 - `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets, and (TST-17) a transcript names a composited canvas while drawing label text as written, and (DEF-36) shows the state each call was made in, kept through save, restore and a resize
