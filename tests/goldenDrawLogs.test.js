@@ -526,7 +526,8 @@ describe('golden draw logs (TST-02)', () => {
         const throwAt = restoreCalls(fresh);
         expect(throwAt.length).toBeGreaterThanOrEqual(2);
         for (const index of throwAt) {
-          expect(renderThrowingAt(host, index).threw, `the throw at vector call ${index} reaches the caller`).toBe(true);
+          expect(renderThrowingAt(host, index).threw,
+            `the throw at vector call ${index} reaches the caller`).toBe(true);
           const next = frameAt(host, BEACON_INSTANT, { state: true });
           const differing = differingLines(next, fresh);
           expect(differing, `after a throw at vector call ${index}, "${next[differing[0]]}" ` +

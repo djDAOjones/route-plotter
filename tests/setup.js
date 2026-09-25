@@ -135,8 +135,10 @@ const TRANSFORM_METHODS = {
     ([x, y]) => multiplyTransforms(current, [1, 0, 0, 1, x, y])),
   scale: (current, args) => withArguments('scale', args, 2,
     ([x, y]) => multiplyTransforms(current, [x, 0, 0, y, 0, 0])),
-  rotate: (current, args) => withArguments('rotate', args, 1,
-    ([angle]) => multiplyTransforms(current, [Math.cos(angle), Math.sin(angle), -Math.sin(angle), Math.cos(angle), 0, 0])),
+  rotate: (current, args) => withArguments('rotate', args, 1, ([angle]) => {
+    const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
+    return multiplyTransforms(current, [cos, sin, -sin, cos, 0, 0]);
+  }),
   transform: (current, args) => withArguments('transform', args, 6, matrix => multiplyTransforms(current, matrix)),
   setTransform: (current, args) => {
     if (args.length === 0) return IDENTITY_TRANSFORM;
