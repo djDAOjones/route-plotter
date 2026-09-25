@@ -108,7 +108,8 @@ export class SwarmEngine {
    *                                             required for guideType 'route'.
    * @returns {Array<{x:number, y:number, size:number, color:string,
    *                  emitterId:string, dotIndex:number}>}
-   *          Dots in draw order, positions normalised 0–1.
+   *          Dots in draw order, positions in normalised image
+   *          coordinates (off the image where their guide is).
    */
   evaluate(timelineMs, layer, context = {}) {
     const durationMs = context.durationMs;

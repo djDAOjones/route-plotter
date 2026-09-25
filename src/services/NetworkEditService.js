@@ -319,7 +319,10 @@ export class NetworkEditService {
     let { x, y } = img;
     const penNode = this.penNodeId ? this.layer.graph.getNode(this.penNodeId) : null;
     if (shift && penNode) {
-      ({ x, y } = snapToAngle(penNode.x, penNode.y, x, y));
+      // From the pen node as drawn: an anchored node sits at its waypoint,
+      // which may lie off the image where its own position cannot (DEF-35)
+      const origin = penNode.position();
+      ({ x, y } = snapToAngle(origin.x, origin.y, x, y));
     }
 
     const node = this.layer.graph.addNode({ x, y });
@@ -589,9 +592,9 @@ export class NetworkEditService {
       if (!node) { this.drag = null; return; }
       let { x, y } = img;
       if (shift) {
-        // Snap against the first connected neighbour, so links land on
-        // clean angles — mirrors Shift while dragging a waypoint
-        const ref = this._firstNeighbour(node.id);
+        // Snap against the first connected neighbour as drawn, so links land
+        // on clean angles — mirrors Shift while dragging a waypoint
+        const ref = this._firstNeighbour(node.id)?.position();
         if (ref) ({ x, y } = snapToAngle(ref.x, ref.y, x, y));
       }
       node.moveTo(x, y);
@@ -921,7 +924,7 @@ export class NetworkEditService {
     // Pen: ring on the pen node + dashed preview line to the cursor
     const penNode = this.penNodeId ? graph.getNode(this.penNodeId) : null;
     if (penNode) {
-      const p = state.imageToCanvas(penNode.x, penNode.y);
+      const p = state.imageToCanvas(penNode.position().x, penNode.position().y);
       ctx.beginPath();
       ctx.arc(p.x, p.y, r + 2, 0, Math.PI * 2);
       ctx.strokeStyle = ink;
@@ -995,7 +998,9 @@ export class NetworkEditService {
 
     const selNode = this.selectedNode();
     if (selNode) {
-      const p = state.imageToCanvas(selNode.x, selNode.y);
+      // Rings sit on the node as drawn, as the pen's does: an anchored node
+      // is drawn at its waypoint, not at its own position (DEF-35)
+      const p = state.imageToCanvas(selNode.position().x, selNode.position().y);
       ctx.beginPath();
       ctx.arc(p.x, p.y, r + 5, 0, Math.PI * 2);
       ctx.strokeStyle = SELECTION_OUTER;

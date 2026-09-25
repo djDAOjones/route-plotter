@@ -2,8 +2,9 @@
  * Model representing a node in the crowd-flow graph.
  * Pure data model — no EventBus dependency.
  *
- * Positions are normalised image coordinates (0–1).
- * Canvas pixel coordinates are derived at render time
+ * Positions are normalised image coordinates. A node's own position is on
+ * the image (0–1); an anchored node resolves to its waypoint, which may lie
+ * off it (DEF-35). Canvas pixel coordinates are derived at render time
  * via CoordinateTransform.
  */
 
