@@ -13,11 +13,13 @@
  * - Renders edit handles via renderHandles() called by RenderingService
  * 
  * ## Coordinate System
- * All positions are normalized image coordinates (0-1).
+ * All positions are normalized image coordinates: 0-1 spans the image, and a
+ * point may sit off it (DEF-03), as far as a project can store one.
  * Handle hit-testing uses pixel distance after coordinate transform.
  */
 
 import { AREA_HIGHLIGHT } from '../config/constants.js';
+import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 
 /** @type {number} Pixel radius for handle hit detection */
 const HANDLE_HIT_RADIUS = 8;
@@ -194,8 +196,10 @@ export class AreaEditService {
     if (!this.isDragging || !this.activeWaypoint) return;
     
     const ah = this.activeWaypoint.areaHighlight;
-    const clampedX = Math.max(0, Math.min(1, imgX));
-    const clampedY = Math.max(0, Math.min(1, imgY));
+    // Where load stops, not the image's edge: zoomed out, a handle may be
+    // dragged into the margin round the image (DEF-35).
+    const clampedX = clampImageCoordinate(imgX);
+    const clampedY = clampImageCoordinate(imgY);
     
     if (this.dragTarget === 'center') {
       const changedNow = ah.centerX !== clampedX || ah.centerY !== clampedY;

@@ -3,6 +3,7 @@ import { EventBus } from '../src/core/EventBus.js';
 import { AreaEditService } from '../src/services/AreaEditService.js';
 import { AreaDrawingService } from '../src/services/AreaDrawingService.js';
 import { findAreaHandleAtScreen } from '../src/app/wiringControllers.js';
+import { IMAGE_COORDINATES } from '../src/config/constants.js';
 
 function makeAreaWaypoint(areaHighlight) {
   return {
@@ -83,6 +84,29 @@ describe('area edit handle coordinates', () => {
     expect(changed).toHaveBeenCalledWith({ waypoint });
     expect(selected).toHaveBeenCalledTimes(1);
     expect(selected).toHaveBeenCalledWith({ waypoint, index: 1 });
+  });
+
+  test('a vertex or centre dragged off the image stays where it is dropped (DEF-35)', () => {
+    // Zoomed out below 100% the canvas shows margin round the image, and
+    // since DEF-03 an area may be drawn there, but a drag snapped its handle
+    // back onto the image. A drag now stops only where a project can store it.
+    const bus = new EventBus();
+    new AreaEditService(bus);
+    const polygon = makeAreaWaypoint({
+      shape: 'polygon',
+      points: [{ x: -0.3, y: 0.2 }, { x: 1.4, y: 0.3 }, { x: 0.5, y: 1.6 }],
+    });
+    bus.emit('area:edit-start', { waypoint: polygon, imgX: 1.4, imgY: 0.3, imageToScreen });
+    bus.emit('area:edit-move', { imgX: 1.6, imgY: -0.25 });
+    bus.emit('area:edit-end');
+    expect(polygon.areaHighlight.points[1]).toEqual({ x: 1.6, y: -0.25 });
+
+    const { MIN, MAX } = IMAGE_COORDINATES;
+    const circle = makeAreaWaypoint({ shape: 'circle', centerX: 1.35, centerY: -0.2 });
+    bus.emit('area:edit-start', { waypoint: circle, imgX: 1.35, imgY: -0.2, imageToScreen });
+    bus.emit('area:edit-move', { imgX: -40, imgY: 55 });
+    bus.emit('area:edit-end');
+    expect([circle.areaHighlight.centerX, circle.areaHighlight.centerY]).toEqual([MIN, MAX]);
   });
 
   test('area drag release commits only when final geometry differs from drag start', () => {

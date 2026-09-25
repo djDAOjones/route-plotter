@@ -2,10 +2,13 @@
  * Model representing a node in the crowd-flow graph.
  * Pure data model — no EventBus dependency.
  *
- * Positions are normalised image coordinates (0–1).
- * Canvas pixel coordinates are derived at render time
+ * Positions are normalised image coordinates. A node's own position is on
+ * the image (0–1); an anchored node resolves to its waypoint, which may lie
+ * off it (DEF-35). Canvas pixel coordinates are derived at render time
  * via CoordinateTransform.
  */
+
+import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 
 const VALID_TYPES = ['normal', 'entry', 'exit'];
 
@@ -57,13 +60,16 @@ export class GraphNode {
   }
 
   /**
-   * Bind the resolved position to a waypoint's coordinates.
+   * Bind the resolved position to a waypoint's coordinates. A waypoint may
+   * sit off the image (DEF-03), so the node follows it as far as a project
+   * can store a point rather than stopping at the image's edge (DEF-35); the
+   * node's own authored position stays on the image.
    * @param {number} x
    * @param {number} y
    */
   applyAnchor(x, y) {
-    this._resolvedX = GraphNode._clamp01(x);
-    this._resolvedY = GraphNode._clamp01(y);
+    this._resolvedX = GraphNode._clampStored(x);
+    this._resolvedY = GraphNode._clampStored(y);
   }
 
   /** Drop the resolved position, falling the node back to where it was authored. */
@@ -124,6 +130,18 @@ export class GraphNode {
     const n = Number(v);
     if (Number.isNaN(n)) return 0.5;
     return Math.max(0, Math.min(1, n));
+  }
+
+  /**
+   * Clamp a value to the range a project can store a point in.
+   * @private
+   * @param {number} v
+   * @returns {number}
+   */
+  static _clampStored(v) {
+    const n = Number(v);
+    if (Number.isNaN(n)) return 0.5;
+    return clampImageCoordinate(n);
   }
 
   /**

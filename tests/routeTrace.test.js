@@ -175,6 +175,19 @@ describe('applyTraceToLayer', () => {
     expect([node.x, node.y]).toEqual([0.5, 0.5]);
   });
 
+  test('a crowd traced from a route off the image resolves to its waypoints there (DEF-35)', () => {
+    // Tracing is the one way to anchor a node. The nodes' own positions stay
+    // on the image; where they are drawn follows the waypoints off it.
+    const route = [major('a', -0.4, 0.5), major('b', 0.5, 1.35), major('c', 1.6, -0.2)];
+    const { scene, layer } = layerWithTrace(route);
+    resolveGraphAnchors(scene, new Map(route.map(waypoint => [waypoint.id, waypoint])));
+
+    const nodeFor = id => layer.graph.getNodes().find(each => each.anchorWaypointId === id);
+    expect(['a', 'b', 'c'].map(id => nodeFor(id).position()))
+      .toEqual([{ x: -0.4, y: 0.5 }, { x: 0.5, y: 1.35 }, { x: 1.6, y: -0.2 }]);
+    expect(['a', 'b', 'c'].map(id => [nodeFor(id).x, nodeFor(id).y])).toEqual([[0, 0.5], [0.5, 1], [1, 0]]);
+  });
+
   test('reshaping the traced network never reaches back into the route', () => {
     const route = linearRoute();
     const before = route.map(waypoint => waypoint.toJSON());
