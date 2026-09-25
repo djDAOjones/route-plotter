@@ -17,6 +17,8 @@ import { SCENE_LIMITS } from '../models/Scene.js';
 import { EMITTER_LIMITS } from '../models/Emitter.js';
 import { PROJECT_MODEL_LIMITS } from './persistence.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
+import { IMAGE_COORDINATES } from '../config/constants.js';
+import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 
 const NODE_TYPES = new Set(['normal', 'entry', 'exit']);
 const EDGE_DIRECTIONS = new Set(['one-way', 'two-way']);
@@ -54,6 +56,19 @@ function percentDraft(command, field, label) {
   return originalCanonical(command, field) ?? percent(command[field], label);
 }
 
+/**
+ * A waypoint's or polygon vertex's position, in percent of the image. Such a
+ * point may sit off the image (DEF-03), so this takes the range a project can
+ * store rather than 0–100 (DEF-35); network geometry uses `percent`.
+ */
+function imagePercent(value, label) {
+  return numberBetween(value, label, IMAGE_COORDINATES.MIN * 100, IMAGE_COORDINATES.MAX * 100) / 100;
+}
+
+function imagePercentDraft(command, field, label) {
+  return originalCanonical(command, field) ?? imagePercent(command[field], label);
+}
+
 function secondsDraft(command, field, label) {
   const canonicalMs = originalCanonical(command, field);
   return canonicalMs ?? numberBetween(command[field], label, 0, 600) * 1000;
@@ -79,10 +94,6 @@ function textDraft(command, field, label, options = {}) {
   return original.matches
     ? original.value
     : shortText(command[field], label, options);
-}
-
-function clamp01(value) {
-  return Math.max(0, Math.min(1, value));
 }
 
 export const sceneOutlineMixin = {
@@ -415,8 +426,8 @@ export const sceneOutlineMixin = {
     if (!isMajor && this.waypoints.length === 0) {
       throw new Error('Add a major waypoint before adding a minor geometry point.');
     }
-    const x = percentDraft(command, 'x', 'Horizontal position');
-    const y = percentDraft(command, 'y', 'Vertical position');
+    const x = imagePercentDraft(command, 'x', 'Horizontal position');
+    const y = imagePercentDraft(command, 'y', 'Vertical position');
     const hasExplicitInsertion = Object.prototype.hasOwnProperty.call(command, 'afterWaypointId');
     const afterWaypointId = hasExplicitInsertion ? String(command.afterWaypointId || '') : null;
     const afterWaypoint = afterWaypointId ? this._outlineWaypoint(afterWaypointId) : null;
@@ -443,8 +454,8 @@ export const sceneOutlineMixin = {
 
   _outlineUpdateWaypoint(command) {
     const waypoint = this._outlineWaypoint(command.waypointId);
-    const x = percentDraft(command, 'x', 'Horizontal position');
-    const y = percentDraft(command, 'y', 'Vertical position');
+    const x = imagePercentDraft(command, 'x', 'Horizontal position');
+    const y = imagePercentDraft(command, 'y', 'Vertical position');
     let waitMs = waypoint.pauseTime;
     let speed = waypoint.segmentSpeed;
     if (waypoint.isMajor) {
@@ -883,9 +894,9 @@ export const sceneOutlineMixin = {
     waypoint.areaHighlight.enabled = true;
     waypoint.areaHighlight.shape = 'polygon';
     waypoint.areaHighlight.points = [
-      { x: clamp01(x), y: clamp01(y - 0.04) },
-      { x: clamp01(x - 0.04), y: clamp01(y + 0.04) },
-      { x: clamp01(x + 0.04), y: clamp01(y + 0.04) },
+      { x: clampImageCoordinate(x), y: clampImageCoordinate(y - 0.04) },
+      { x: clampImageCoordinate(x - 0.04), y: clampImageCoordinate(y + 0.04) },
+      { x: clampImageCoordinate(x + 0.04), y: clampImageCoordinate(y + 0.04) },
     ];
     this.eventBus.emit('waypoint:selected', waypoint);
     const key = sceneOutlineKey('vertex', waypoint.id, 0);
@@ -923,8 +934,8 @@ export const sceneOutlineMixin = {
       throw new Error('The project polygon-vertex limit has been reached.');
     }
     points.push({
-      x: percentDraft(command, 'x', 'Horizontal position'),
-      y: percentDraft(command, 'y', 'Vertical position'),
+      x: imagePercentDraft(command, 'x', 'Horizontal position'),
+      y: imagePercentDraft(command, 'y', 'Vertical position'),
     });
     waypoint.areaHighlight.enabled = points.length >= 3;
     const index = points.length - 1;
@@ -942,8 +953,8 @@ export const sceneOutlineMixin = {
       throw new Error('That polygon vertex no longer exists.');
     }
     const point = {
-      x: percentDraft(command, 'x', 'Horizontal position'),
-      y: percentDraft(command, 'y', 'Vertical position'),
+      x: imagePercentDraft(command, 'x', 'Horizontal position'),
+      y: imagePercentDraft(command, 'y', 'Vertical position'),
     };
     if (points[index].x === point.x && points[index].y === point.y) return;
     points[index] = point;

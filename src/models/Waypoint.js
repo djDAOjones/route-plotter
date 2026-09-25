@@ -1,6 +1,6 @@
 import { RENDERING, ANIMATION, TEXT_LABEL, TEXT_VISIBILITY, AREA_HIGHLIGHT, AREA_VISIBILITY } from '../config/constants.js';
 import { CAMERA_DEFAULTS, ZOOM_MODE } from '../services/CameraService.js';
-import { isImageCoordinateInRange } from '../utils/imageCoordinates.js';
+import { clampImageCoordinate, isImageCoordinateInRange } from '../utils/imageCoordinates.js';
 
 /**
  * Model representing a waypoint on the route
@@ -202,13 +202,14 @@ export class Waypoint {
   }
   
   /**
-   * Set position
-   * @param {number} x - X coordinate (normalized 0-1)
-   * @param {number} y - Y coordinate (normalized 0-1)
+   * Set position. 0–1 spans the image; a waypoint may sit off it (DEF-03), so
+   * the position is held only to the range a project can store (DEF-35).
+   * @param {number} x - Normalised image x
+   * @param {number} y - Normalised image y
    */
   setPosition(x, y) {
-    this.imgX = Math.max(0, Math.min(1, x));
-    this.imgY = Math.max(0, Math.min(1, y));
+    this.imgX = clampImageCoordinate(x);
+    this.imgY = clampImageCoordinate(y);
     this.modified = Date.now();
   }
   

@@ -5,6 +5,7 @@ import { Waypoint } from '../src/models/Waypoint.js';
 import { NetworkEditService } from '../src/services/NetworkEditService.js';
 import { sceneOutlineMixin } from '../src/app/sceneOutline.js';
 import { sceneOutlineKey } from '../src/utils/sceneSemantics.js';
+import { IMAGE_COORDINATES } from '../src/config/constants.js';
 
 function makeApp() {
   const eventBus = new EventBus();
@@ -239,6 +240,73 @@ describe('scene-outline command adapter', () => {
     expect(waypoint.segmentSpeed).toBe(2);
     expect(app.undoSaves).toBe(1);
     expect(app.autoSaves).toBe(1);
+  });
+
+  test('edits and adds points off the image, as far as a project can store one (DEF-35)', () => {
+    // The adapter took positions of 0–100% only, and `Waypoint.setPosition`
+    // pulled a waypoint back onto the image, so a point off it could not keep
+    // its place, be typed there or be given a polygon around it.
+    const waypoint = new Waypoint({
+      id: 'wp-off', imgX: -0.4, imgY: 1.35, isMajor: true, pauseTime: 1000, segmentSpeed: 1,
+      areaHighlight: { shape: 'none' },
+    });
+    app.waypoints = [waypoint];
+    const error = vi.fn();
+    app.eventBus.on('scene-outline:error', error);
+    const update = (x, y, outlineOriginalValues) => app._handleSceneOutlineCommand({
+      action: 'update-waypoint', waypointId: waypoint.id, x, y, waitSeconds: '2', segmentSpeed: '1',
+      outlineFormKey: 'waypoint:wp-off:apply', ...(outlineOriginalValues ? { outlineOriginalValues } : {}),
+    });
+
+    // Its wait changes, and its position stays where it was.
+    update('-40', '135', {
+      x: { display: '-40', canonical: String(-0.4) },
+      y: { display: '135', canonical: String(1.35) },
+    });
+    expect([waypoint.imgX, waypoint.imgY, waypoint.pauseTime]).toEqual([-0.4, 1.35, 2000]);
+
+    // A position typed off the image is stored there, to the edge of the range.
+    const { MIN, MAX } = IMAGE_COORDINATES;
+    update(String(MIN * 100), String(MAX * 100));
+    expect([waypoint.imgX, waypoint.imgY]).toEqual([MIN, MAX]);
+    update('-20', '150');
+    expect([waypoint.imgX, waypoint.imgY]).toEqual([-0.2, 1.5]);
+    update(String(MIN * 100 - 1), '150');
+    expect(error).toHaveBeenLastCalledWith({
+      formKey: 'waypoint:wp-off:apply',
+      message: `Horizontal position must be between ${MIN * 100} and ${MAX * 100}.`,
+    });
+    expect([waypoint.imgX, waypoint.imgY]).toEqual([-0.2, 1.5]);
+
+    // A new polygon surrounds its waypoint off the image, and its vertices
+    // can be added and moved there.
+    app._handleSceneOutlineCommand({ action: 'create-polygon', waypointId: waypoint.id });
+    const [x, y] = [-0.2, 1.5];
+    expect(waypoint.areaHighlight.points).toEqual([
+      { x, y: y - 0.04 }, { x: x - 0.04, y: y + 0.04 }, { x: x + 0.04, y: y + 0.04 },
+    ]);
+    app._handleSceneOutlineCommand({ action: 'add-vertex', waypointId: waypoint.id, x: '-35', y: '160' });
+    expect(waypoint.areaHighlight.points.at(-1)).toEqual({ x: -0.35, y: 1.6 });
+    app._handleSceneOutlineCommand({
+      action: 'update-vertex', waypointId: waypoint.id, index: '0', x: '-30', y: '140',
+    });
+    expect(waypoint.areaHighlight.points[0]).toEqual({ x: -0.3, y: 1.4 });
+
+    // A waypoint is added off the image, and a polygon around one at the edge
+    // of the range stays inside it, so the project still reloads.
+    const added = vi.fn(({ imgX, imgY, isMajor }) => {
+      app.waypoints.push(new Waypoint({ id: 'wp-edge', imgX, imgY, isMajor, areaHighlight: { shape: 'none' } }));
+    });
+    app.eventBus.on('waypoint:add', added);
+    app._handleSceneOutlineCommand({
+      action: 'add-waypoint', kind: 'major', x: String(MIN * 100), y: String(MAX * 100),
+    });
+    expect(added.mock.lastCall[0]).toMatchObject({ imgX: MIN, imgY: MAX, isMajor: true });
+    const edge = app.waypoints.at(-1);
+    app._handleSceneOutlineCommand({ action: 'create-polygon', waypointId: edge.id });
+    expect(edge.areaHighlight.points).toEqual([
+      { x: MIN, y: MAX - 0.04 }, { x: MIN, y: MAX }, { x: MIN + 0.04, y: MAX },
+    ]);
   });
 
   test('preserves untouched long and whitespace-significant text in combined forms', () => {

@@ -5,6 +5,7 @@ import { Waypoint } from '../src/models/Waypoint.js';
 import { SceneOutlineController } from '../src/controllers/SceneOutlineController.js';
 import { buildSceneOutlineSnapshot, sceneOutlineKey } from '../src/utils/sceneSemantics.js';
 import { ENTITY_ID_LIMITS } from '../src/utils/entityId.js';
+import { IMAGE_COORDINATES } from '../src/config/constants.js';
 
 function makeFixture() {
   const major = new Waypoint({
@@ -581,6 +582,57 @@ describe('native scene outline DOM', () => {
     for (const input of decimalInputs) {
       input.value = '0.123456789012345';
       expect(input.validity.stepMismatch, input.dataset.outlineKey).toBe(false);
+    }
+  });
+
+  test('submits edits to points off the image, as far as a project can store one (DEF-35)', async () => {
+    // Since DEF-03 a waypoint or a polygon vertex may sit off the image, but
+    // every position field here stopped at 0–100%, so the browser refused to
+    // submit any edit to such a point, even to its wait alone.
+    fixture.major.imgX = -0.4;
+    fixture.major.imgY = 1.35;
+    fixture.minor.imgX = 1.25;
+    fixture.minor.areaHighlight.points[0] = { x: 1.4, y: -0.3 };
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    for (const key of ['waypoint:wp-major', 'waypoint:wp-minor', 'polygon:wp-minor', 'vertex:wp-minor:0',
+      'crowd:crowd-route', 'network:crowd-route', 'nodes:crowd-route', 'node:crowd-route:node-entry']) {
+      await openDisclosure(container, key);
+    }
+    const listener = vi.fn();
+    eventBus.on('scene-outline:command', listener);
+    const formFor = key => container.querySelector(`form[data-outline-form-key="${key}"]`);
+
+    const waypointForm = formFor('waypoint:wp-major:apply');
+    waypointForm.elements.waitSeconds.value = '4';
+    waypointForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener.mock.lastCall[0]).toMatchObject({
+      action: 'update-waypoint', waypointId: 'wp-major', waitSeconds: '4',
+    });
+
+    // The minor waypoint and the vertex off the image, and the new vertex
+    // form, which starts on its waypoint.
+    for (const key of ['waypoint:wp-minor:apply', 'vertex:wp-minor:0:apply', 'polygon:wp-minor:add']) {
+      expect(formFor(key).reportValidity(), key).toBe(true);
+    }
+
+    // Every such position field takes the whole range a project can store,
+    // and no more.
+    const { MIN, MAX } = IMAGE_COORDINATES;
+    const typed = [[MIN * 100, true], [MAX * 100, true], [MIN * 100 - 1, false], [MAX * 100 + 1, false]];
+    const inputFor = key => container.querySelector(`input[data-outline-key="${key}"]`);
+    for (const key of ['route:add-x', 'route:add-y', 'waypoint:wp-major:x', 'waypoint:wp-major:y',
+      'vertex:wp-minor:0:x', 'vertex:wp-minor:0:y', 'polygon:wp-minor:add-x', 'polygon:wp-minor:add-y']) {
+      const input = inputFor(key);
+      for (const [value, valid] of typed) {
+        input.value = String(value);
+        expect(input.validity.valid, `${key} at ${value}`).toBe(valid);
+      }
+    }
+
+    // Network geometry is authored on the image, and stays there.
+    for (const key of ['network:crowd-route:add-node-x', 'node:crowd-route:node-entry:y']) {
+      expect([inputFor(key).min, inputFor(key).max], key).toEqual(['0', '100']);
     }
   });
 
