@@ -176,6 +176,14 @@ globalThis.routePlotterBenchmark = async function routePlotterBenchmark(options 
       });
     }
     app.background.image = null;
+  } catch (error) {
+    // Autosave stays silenced once a run has started, so a failed run says
+    // so as a finished one does (DEF-30).
+    console.warn(
+      'Benchmark failed. Your project was restored and autosave is disabled ' +
+      'until you reload — reload the page now, before authoring anything.'
+    );
+    throw error;
   } finally {
     restore();
   }

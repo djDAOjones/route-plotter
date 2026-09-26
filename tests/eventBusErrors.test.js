@@ -76,13 +76,17 @@ describe('EventBus listener errors (ISO-02)', () => {
     const errors = [];
     const bus = new EventBus({ onListenerError: error => errors.push(error.message) });
     const listener = vi.fn(() => { throw new Error('boom'); });
+    const after = vi.fn();
     bus.once('project:saved', listener);
+    bus.on('project:saved', after);
 
     bus.emit('project:saved');
     bus.emit('project:saved');
 
     expect(listener).toHaveBeenCalledTimes(1);
     expect(errors).toEqual(['boom']);
+    // It removes only itself: the listener after it still hears every emit.
+    expect(after).toHaveBeenCalledTimes(2);
   });
 
   test('the count accumulates across events and starts at zero', () => {

@@ -325,8 +325,8 @@
 - `tests/consoleGuard.test.js` — TST-10: the rule deciding which console output fails a test, and the declaration a test uses for output it provokes
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
-- `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit; and (DEF-30) a once-listener that throws still fires only once
-- `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
+- `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit; and (DEF-30) a once-listener that throws still fires only once, removing only itself
+- `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.); (DEF-30) `once` runs once when its callback emits the same event or two async emits hold it, and `off` with its callback removes it
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
 - `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, and app == player for every fixture, at Graphics scales 0.5, 1.6 and 8 with labels (DEF-34), and after an anchored crowd's waypoint moves (DEF-02); the camera fixture's eased first frame is held to its scale-1 translations; every frame composites the vector layer by name, at its display size even at pixel density 2 (TST-17); and a frame that throws at any restore of the vector layer, in the editor, on the export canvas and in the player, leaves the next frame as a freshly sized layer draws it, state included (DEF-36)
@@ -358,7 +358,8 @@
 - `tests/perfHarness.test.js` — ICE-03 contract: the harness still loads and
   refuses safely, autosave suppression outlives the run, the restore sits in a
   `finally`, and no pass/fail timing threshold has crept in; and (DEF-30) a
-  refused run leaves autosave and the canvas as they were
+  refused run leaves autosave and the canvas as they were, and a run that
+  fails part-way says autosave stays off until a reload
 - `tests/pathHeadPresets.test.js` — Drone preset metadata, native control, loader ownership and renderer-transform contracts
 - `tests/performanceScheduling.test.js` — Manual-rAF scheduler contract: idle sleep, transport wake/coalescing, camera keepalive and export suspension/restore
 - `tests/playerBundleClosure.test.js` — TST-07: esbuild's metafile proves the exported player bundle carries no editor-only module, and that the editor's does
