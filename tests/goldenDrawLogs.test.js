@@ -48,6 +48,7 @@ import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { loadExampleBackground } from '../src/app/backgroundLoading.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
+import { BeaconRenderer } from '../src/services/BeaconRenderer.js';
 
 const goldenDir = join(dirname(fileURLToPath(import.meta.url)), 'goldens');
 const UPDATING = process.env.UPDATE_DRAW_GOLDENS === '1';
@@ -396,6 +397,68 @@ describe('golden draw logs (TST-02)', () => {
       for (const sized of ['arc', 'rect', 'set:lineWidth', 'setLineDash', 'set:font', 'fillText']) {
         expect(operations).toContain(sized);
       }
+    });
+
+    describe('DEF-29: a video export ignores the author\'s reduced-motion setting', () => {
+      // Under prefers-reduced-motion the pulse, ripple and glow beacons are held
+      // still, which is right for the editor and the live player. A video is
+      // watched elsewhere, by people whose setting it cannot know, so it bakes
+      // the beacons as authored (§20 Q7b, accepted 2026-09-22). Open day's
+      // camera never zooms, so frames at one instant differ only by beacons.
+      const STILLED = new Map([['ex-uon-1', 'ripple'], ['ex-uon-2', 'pulse'], ['ex-uon-3', 'glow']]);
+
+      function stilledFixture() {
+        const fixture = fixtures().find(each => each.id === 'uon-open-day');
+        for (const waypoint of fixture.project.waypoints) {
+          if (STILLED.has(waypoint.id)) waypoint.beaconStyle = STILLED.get(waypoint.id);
+        }
+        return fixture;
+      }
+
+      /**
+       * A quarter-second after each beacon's arrival, the frame drawn with
+       * reduced motion (from reset beacons, as when the setting is on from the
+       * start) and the frame drawn without it.
+       */
+      function withAndWithoutReducedMotion(host) {
+        const engine = host.animationEngine;
+        const offset = (engine.startHandleTime || 0) + (engine.introTime || 0);
+        const schedules = engine.beaconSchedules.filter(schedule => STILLED.has(schedule.waypointId));
+        expect(schedules.map(schedule => schedule.style).sort()).toEqual(['glow', 'pulse', 'ripple']);
+        const setting = BeaconRenderer.prefersReducedMotion;
+        try {
+          return schedules.map(schedule => {
+            const progress = (schedule.arrivalMs + 250 + offset) / engine.state.duration;
+            BeaconRenderer.prefersReducedMotion = true;
+            host.renderingService.resetBeacons();
+            const reduced = frameAt(host, progress);
+            BeaconRenderer.prefersReducedMotion = false;
+            const moving = frameAt(host, progress);
+            return { style: schedule.style, reduced, moving };
+          });
+        } finally {
+          BeaconRenderer.prefersReducedMotion = setting;
+        }
+      }
+
+      test('the export canvas draws its beacons as authored', async () => {
+        const { app } = await exportAndPlayer(stilledFixture());
+        for (const { style, reduced, moving } of withAndWithoutReducedMotion(app)) {
+          expect(differingLines(reduced, moving), `export: ${style}`).toEqual([]);
+        }
+      });
+
+      test('the editor and the exported player still hold them still', async () => {
+        const app = await appWithFixture(stilledFixture());
+        enterMode(app, 'preview');
+        const { player } = await exportAndPlayer(stilledFixture());
+        for (const [label, host] of [['preview', app], ['player', player]]) {
+          for (const { style, reduced, moving } of withAndWithoutReducedMotion(host)) {
+            expect(differingLines(reduced, moving).length, `${label}: ${style}`).toBeGreaterThan(0);
+          }
+        }
+      });
+
     });
 
     describe('DEF-36: a frame that throws leaves nothing behind', () => {
