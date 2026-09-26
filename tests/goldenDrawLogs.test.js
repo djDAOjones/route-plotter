@@ -568,6 +568,93 @@ describe('golden draw logs (TST-02)', () => {
 
     });
 
+    describe('DEF-08: a beacon scales its marker whether or not the transport runs', () => {
+      // Pop, grow and pulse beacons scale their waypoint's marker. The
+      // renderer applied that scale only while the transport ran
+      // (`isPlaying()`), so a scrubbed or paused editor, a video export (which
+      // suspends the transport) and a paused player drew the marker at its
+      // plain size. Open day's camera never zooms, so two frames at one
+      // instant can differ only through the renderer, not through easing.
+      const SCALING = new Map([['ex-uon-1', 'pop'], ['ex-uon-2', 'pulse'], ['ex-uon-3', 'grow']]);
+
+      function scalingFixture() {
+        const fixture = fixtures().find(each => each.id === 'uon-open-day');
+        for (const waypoint of fixture.project.waypoints) {
+          if (SCALING.has(waypoint.id)) waypoint.beaconStyle = SCALING.get(waypoint.id);
+        }
+        return fixture;
+      }
+
+      /** A frame scrubbed to a quarter-second after each arrival must match one played to it. */
+      function expectPlayingDrawsScrubbed(host, label) {
+        const engine = host.animationEngine;
+        const offset = (engine.startHandleTime || 0) + (engine.introTime || 0);
+        const schedules = engine.beaconSchedules.filter(schedule => SCALING.has(schedule.waypointId));
+        expect(schedules.map(schedule => schedule.style).sort(), label).toEqual(['grow', 'pop', 'pulse']);
+
+        for (const schedule of schedules) {
+          const progress = (schedule.arrivalMs + 250 + offset) / engine.state.duration;
+          const scrubbed = frameAt(host, progress);
+          engine.play();
+          discardFrame();
+          host.render();
+          const playing = takeFrame(host);
+          engine.pause();
+
+          // Not vacuous: the beacon really is scaling its marker here.
+          const waypoint = host.waypoints.find(each => each.id === schedule.waypointId);
+          const scale = host.renderingService.getBeaconScaleOverride(waypoint)?.scale;
+          expect(Math.abs(scale - 1), `${label}: ${schedule.style} scale`).toBeGreaterThan(0.1);
+          expect(differingLines(scrubbed, playing).map(index => [scrubbed[index], playing[index]]),
+            `${label}: ${schedule.style}`).toEqual([]);
+        }
+      }
+
+      test('in the editor and in preview', async () => {
+        const app = await appWithFixture(scalingFixture());
+        for (const mode of ['edit', 'preview']) {
+          enterMode(app, mode);
+          expectPlayingDrawsScrubbed(app, mode);
+        }
+      });
+
+      test('on the export canvas and in the exported player', async () => {
+        const { app, player } = await exportAndPlayer(scalingFixture());
+        expectPlayingDrawsScrubbed(app, 'export');
+        expectPlayingDrawsScrubbed(player, 'player');
+      });
+
+      test('a marker set to always hide stays hidden, playing or paused', async () => {
+        // Beacons are not synced while markers are always hidden, so the
+        // scale an earlier frame left must not bring a marker back. While
+        // playing, it did.
+        const app = await appWithFixture(scalingFixture());
+        enterMode(app, 'preview');
+        const engine = app.animationEngine;
+        const offset = (engine.startHandleTime || 0) + (engine.introTime || 0);
+        const pop = engine.beaconSchedules.find(schedule => schedule.style === 'pop');
+        const waypoint = app.waypoints.find(each => each.id === pop.waypointId);
+        const at = app.imageToCanvas(waypoint.imgX, waypoint.imgY);
+        const marker = `vector arc ${Number(at.x.toFixed(3))} ${Number(at.y.toFixed(3))} `;
+        const scaled = frameAt(app, (pop.arrivalMs + 250 + offset) / engine.state.duration);
+        expect(scaled.filter(line => line.startsWith(marker))).toHaveLength(1);
+
+        app.eventBus.emit('motion:waypoint-visibility-change', 'always-hide');
+        engine.play();
+        discardFrame();
+        app.render();
+        const playing = takeFrame(app);
+        engine.pause();
+        discardFrame();
+        app.render();
+        const paused = takeFrame(app);
+        expect(app.renderingService.getBeaconScaleOverride(waypoint)).not.toBeNull();
+        expect(playing.filter(line => line.startsWith(marker)), 'playing').toEqual([]);
+        expect(paused.filter(line => line.startsWith(marker)), 'paused').toEqual([]);
+      });
+
+    });
+
   });
 
   describe('the one expected difference', () => {

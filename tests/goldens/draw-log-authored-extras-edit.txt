@@ -1966,7 +1966,7 @@ vector set:fillStyle #CC79A7
 vector set:strokeStyle white
 vector set:lineWidth 3.2
 vector beginPath
-vector rect 457.75 365.35 44.8 44.8
+vector rect 437.076 344.676 86.148 86.148
 vector fill
 vector stroke
 vector save
@@ -3121,7 +3121,7 @@ vector set:fillStyle #CC79A7
 vector set:strokeStyle white
 vector set:lineWidth 3.2
 vector beginPath
-vector rect 631 215.2 44.8 44.8
+vector rect 575.827 160.027 155.145 155.145
 vector fill
 vector stroke
 main drawImage [canvas vector] 0 0 660 660
@@ -4154,7 +4154,7 @@ vector set:fillStyle #CC79A7
 vector set:strokeStyle white
 vector set:lineWidth 3.2
 vector beginPath
-vector rect 631 215.2 44.8 44.8
+vector rect 593.367 177.567 120.065 120.065
 vector fill
 vector stroke
 main drawImage [canvas vector] 0 0 660 660

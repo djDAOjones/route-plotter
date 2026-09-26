@@ -2194,18 +2194,20 @@ export class RenderingService {
           waypointScale = visibility.scale;
         }
         
-        // Apply beacon scale override (for pop, grow, pulse beacons)
-        // ONLY when animation is actually playing - not when paused or stopped
+        // Apply beacon scale override (for pop, grow, pulse beacons). Beacons
+        // are synced to the timeline instant every frame, so playing,
+        // scrubbing, pausing and export draw the same scale (DEF-08: it used to
+        // apply only while playing). They are not synced while markers are
+        // always hidden (the 'beacons' step), so a scale left from an earlier
+        // frame must not bring a hidden marker back.
         // NOTE: Beacon scale REPLACES visibility scale, not multiplies, because
         // beacons like Pop/Grow/Pulse handle the full scale animation themselves
         // (including hide-before/hide-after behavior)
-        const isAnimationPlaying = animationEngine?.isPlaying?.() === true;
-        if (isAnimationPlaying) {
-          const beaconOverride = this.getBeaconScaleOverride(waypoint);
-          if (beaconOverride && beaconOverride.scale !== undefined) {
-            waypointScale = beaconOverride.scale;
-            shouldRender = true;
-          }
+        const beaconsSynced = motionSettings?.waypointVisibility !== WAYPOINT_VISIBILITY.ALWAYS_HIDE;
+        const beaconOverride = beaconsSynced ? this.getBeaconScaleOverride(waypoint) : null;
+        if (beaconOverride && beaconOverride.scale !== undefined) {
+          waypointScale = beaconOverride.scale;
+          shouldRender = true;
         }
         
         // Render labels unless the export "Text labels" toggle is off (otherwise their
