@@ -36,7 +36,7 @@ describe('the whole app boots (TST-01)', () => {
     const app = await bootApp();
     await app.ready;
     const announcer = document.getElementById('announcer');
-    expect(announcer.textContent).not.toBe('Animation paused');
+    expect(announcer.textContent).toBe('');
     expect(app.elements.playBtn.style.display).not.toBe('none');
     expect(app.elements.pauseBtn.style.display).toBe('none');
 
@@ -46,6 +46,31 @@ describe('the whole app boots (TST-01)', () => {
     expect(announcer.textContent).toBe('Animation paused');
     expect(app.elements.playBtn.style.display).not.toBe('none');
     expect(app.elements.pauseBtn.style.display).toBe('none');
+  });
+
+  test('a restored session keeps its announcement (DEF-33)', async () => {
+    // The startup pause replaced "Previous session restored" a few
+    // milliseconds after it was announced. Announcements are recorded, not
+    // read back, because the live region clears itself after two seconds.
+    const first = await bootApp();
+    await first.ready;
+    first.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
+    first.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
+    first.storageService.flushAutoSave();
+    const saved = localStorage.setItem.mock.calls.findLast(([key]) => key === 'routePlotter_autosave')?.[1];
+    expect(saved).toEqual(expect.any(String));
+
+    const announce = vi.spyOn(Object.getPrototypeOf(first), 'announce');
+    localStorage.getItem.mockImplementation(key => (key === 'routePlotter_autosave' ? saved : null));
+    try {
+      const app = await bootApp();
+      await app.ready;
+      expect(app.waypoints).toHaveLength(2);
+      expect(announce.mock.calls.map(([message]) => message)).toEqual(['Previous session restored']);
+    } finally {
+      localStorage.getItem.mockImplementation(() => null);
+      announce.mockRestore();
+    }
   });
 
   test('a listener that throws fails the test instead of being swallowed', async () => {
