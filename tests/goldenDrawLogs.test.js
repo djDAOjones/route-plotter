@@ -601,10 +601,17 @@ describe('golden draw logs (TST-02)', () => {
           const playing = takeFrame(host);
           engine.pause();
 
-          // Not vacuous: the beacon really is scaling its marker here.
+          // Not vacuous: the beacon is scaling its marker here, and the frame
+          // draws that scale, so it differs from one with the scale withheld.
           const waypoint = host.waypoints.find(each => each.id === schedule.waypointId);
           const scale = host.renderingService.getBeaconScaleOverride(waypoint)?.scale;
           expect(Math.abs(scale - 1), `${label}: ${schedule.style} scale`).toBeGreaterThan(0.1);
+          const withheld = vi.spyOn(host.renderingService, 'getBeaconScaleOverride').mockReturnValue(null);
+          discardFrame();
+          host.render();
+          const unscaled = takeFrame(host);
+          withheld.mockRestore();
+          expect(differingLines(scrubbed, unscaled).length, `${label}: ${schedule.style} drawn`).toBeGreaterThan(0);
           expect(differingLines(scrubbed, playing).map(index => [scrubbed[index], playing[index]]),
             `${label}: ${schedule.style}`).toEqual([]);
         }
