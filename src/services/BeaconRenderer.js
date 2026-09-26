@@ -991,6 +991,13 @@ export class BeaconRenderer {
       'grow': () => new GrowBeacon(),
       'pulse': () => new PulseBeacon()
     };
+
+    /**
+     * Passes of `update` so far. A beacon stamped with the latest was synced
+     * for the frame being drawn; any other is stale (DEF-08).
+     * @type {number}
+     */
+    this.updateCount = 0;
   }
   
   /**
@@ -1074,6 +1081,7 @@ export class BeaconRenderer {
    */
   update(adjustedTimelineMs, waypoints, animationEngine, motionSettings, waypointProgressValues = null) {
     if (!waypoints || !animationEngine) return;
+    this.updateCount += 1;
 
     const { waypointVisibility } = motionSettings || {};
     const hidesBefore = waypointVisibility === 'hide-before' ||
@@ -1125,6 +1133,7 @@ export class BeaconRenderer {
         pulseAmplitude: waypoint.pulseAmplitude,
         pulseCycleSpeed: waypoint.pulseCycleSpeed,
       });
+      beacon.syncedUpdate = this.updateCount;
     });
   }
   

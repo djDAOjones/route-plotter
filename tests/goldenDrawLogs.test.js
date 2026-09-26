@@ -48,6 +48,7 @@ import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { loadExampleBackground } from '../src/app/backgroundLoading.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
+import { BeaconRenderer } from '../src/services/BeaconRenderer.js';
 
 const goldenDir = join(dirname(fileURLToPath(import.meta.url)), 'goldens');
 const UPDATING = process.env.UPDATE_DRAW_GOLDENS === '1';
@@ -576,45 +577,62 @@ describe('golden draw logs (TST-02)', () => {
       // plain size. Open day's camera never zooms, so two frames at one
       // instant can differ only through the renderer, not through easing.
       const SCALING = new Map([['ex-uon-1', 'pop'], ['ex-uon-2', 'pulse'], ['ex-uon-3', 'grow']]);
+      const VISIBILITY = ['always-show', 'hide-before', 'hide-after', 'hide-before-and-after'];
 
-      function scalingFixture() {
+      function scalingFixture(waypointVisibility = null) {
         const fixture = fixtures().find(each => each.id === 'uon-open-day');
         for (const waypoint of fixture.project.waypoints) {
           if (SCALING.has(waypoint.id)) waypoint.beaconStyle = SCALING.get(waypoint.id);
         }
+        if (waypointVisibility) fixture.project.motionSettings.waypointVisibility = waypointVisibility;
         return fixture;
       }
 
-      /** A frame scrubbed to a quarter-second after each arrival must match one played to it. */
+      function scaleOf(host, schedule) {
+        const waypoint = host.waypoints.find(each => each.id === schedule.waypointId);
+        return host.renderingService.getBeaconScaleOverride(waypoint)?.scale;
+      }
+
+      /** The same frame drawn with every beacon's scale withheld. */
+      function unscaledFrame(host) {
+        const withheld = vi.spyOn(host.renderingService, 'getBeaconScaleOverride').mockReturnValue(null);
+        discardFrame();
+        host.render();
+        const frame = takeFrame(host);
+        withheld.mockRestore();
+        return frame;
+      }
+
+      /**
+       * Wherever a beacon is scaling its marker — a quarter-second after its
+       * arrival, and before it while the beacon owns the marker's reveal — a
+       * frame scrubbed there draws that scale, and matches one played to it.
+       */
       function expectPlayingDrawsScrubbed(host, label) {
         const engine = host.animationEngine;
         const offset = (engine.startHandleTime || 0) + (engine.introTime || 0);
         const schedules = engine.beaconSchedules.filter(schedule => SCALING.has(schedule.waypointId));
         expect(schedules.map(schedule => schedule.style).sort(), label).toEqual(['grow', 'pop', 'pulse']);
+        const exercised = new Set();
 
         for (const schedule of schedules) {
-          const progress = (schedule.arrivalMs + 250 + offset) / engine.state.duration;
-          const scrubbed = frameAt(host, progress);
-          engine.play();
-          discardFrame();
-          host.render();
-          const playing = takeFrame(host);
-          engine.pause();
-
-          // Not vacuous: the beacon is scaling its marker here, and the frame
-          // draws that scale, so it differs from one with the scale withheld.
-          const waypoint = host.waypoints.find(each => each.id === schedule.waypointId);
-          const scale = host.renderingService.getBeaconScaleOverride(waypoint)?.scale;
-          expect(Math.abs(scale - 1), `${label}: ${schedule.style} scale`).toBeGreaterThan(0.1);
-          const withheld = vi.spyOn(host.renderingService, 'getBeaconScaleOverride').mockReturnValue(null);
-          discardFrame();
-          host.render();
-          const unscaled = takeFrame(host);
-          withheld.mockRestore();
-          expect(differingLines(scrubbed, unscaled).length, `${label}: ${schedule.style} drawn`).toBeGreaterThan(0);
-          expect(differingLines(scrubbed, playing).map(index => [scrubbed[index], playing[index]]),
-            `${label}: ${schedule.style}`).toEqual([]);
+          const instants = [schedule.arrivalMs + 250, (schedule.earlyOnsetStartMs + schedule.arrivalMs) / 2];
+          for (const ms of instants) {
+            const at = `${label}: ${schedule.style} at ${Math.round(ms)} ms`;
+            const scrubbed = frameAt(host, (ms + offset) / engine.state.duration);
+            const scale = scaleOf(host, schedule);
+            if (scale === undefined || Math.abs(scale - 1) < 0.1) continue;
+            exercised.add(schedule.style);
+            engine.play();
+            discardFrame();
+            host.render();
+            const playing = takeFrame(host);
+            engine.pause();
+            expect(differingLines(scrubbed, unscaledFrame(host)).length, `${at}: drawn`).toBeGreaterThan(0);
+            expect(differingLines(scrubbed, playing).map(index => [scrubbed[index], playing[index]]), at).toEqual([]);
+          }
         }
+        expect([...exercised].sort(), `${label}: every beacon scaled somewhere`).toEqual(['grow', 'pop', 'pulse']);
       }
 
       test('in the editor and in preview', async () => {
@@ -629,6 +647,16 @@ describe('golden draw logs (TST-02)', () => {
         const { app, player } = await exportAndPlayer(scalingFixture());
         expectPlayingDrawsScrubbed(app, 'export');
         expectPlayingDrawsScrubbed(player, 'player');
+      });
+
+      test('in every waypoint-visibility mode, where hide-before lets a beacon reveal its marker', async () => {
+        for (const visibility of VISIBILITY) {
+          const app = await appWithFixture(scalingFixture(visibility));
+          enterMode(app, 'preview');
+          expectPlayingDrawsScrubbed(app, `preview, ${visibility}`);
+          const { player } = await exportAndPlayer(scalingFixture(visibility));
+          expectPlayingDrawsScrubbed(player, `player, ${visibility}`);
+        }
       });
 
       test('a marker set to always hide stays hidden, playing or paused', async () => {
@@ -658,6 +686,38 @@ describe('golden draw logs (TST-02)', () => {
         expect(app.renderingService.getBeaconScaleOverride(waypoint)).not.toBeNull();
         expect(playing.filter(line => line.startsWith(marker)), 'playing').toEqual([]);
         expect(paused.filter(line => line.startsWith(marker)), 'paused').toEqual([]);
+      });
+
+      test('a beacon that is no longer synced leaves its marker alone', async () => {
+        // A beacon is cached per waypoint and only replaced when the waypoint
+        // still has a style, so one whose style was undone to none, or one
+        // held still for reduced motion, kept its last scale; now that the
+        // scale applies at every instant, it would have stuck to the marker.
+        const app = await appWithFixture(scalingFixture('hide-before'));
+        enterMode(app, 'preview');
+        const engine = app.animationEngine;
+        const offset = (engine.startHandleTime || 0) + (engine.introTime || 0);
+        const [pop, pulse] = ['pop', 'pulse'].map(style => engine.beaconSchedules.find(each => each.style === style));
+        const setting = BeaconRenderer.prefersReducedMotion;
+        try {
+          // The pop, mid-scale, then its style undone to none
+          const midScale = (pop.arrivalMs + 400 + offset) / engine.state.duration;
+          frameAt(app, midScale);
+          expect(Math.abs(scaleOf(app, pop) - 1)).toBeGreaterThan(0.1);
+          app.waypoints.find(each => each.id === pop.waypointId).beaconStyle = 'none';
+          const undone = frameAt(app, midScale);
+          expect(differingLines(undone, unscaledFrame(app)), 'style undone').toEqual([]);
+
+          // The pulse revealing its hidden marker, then reduced motion on
+          const early = (pulse.earlyOnsetStartMs + pulse.arrivalMs) / 2;
+          frameAt(app, (early + offset) / engine.state.duration);
+          expect(scaleOf(app, pulse)).toBeGreaterThan(0);
+          BeaconRenderer.prefersReducedMotion = true;
+          const stilled = frameAt(app, (early + offset) / engine.state.duration);
+          expect(differingLines(stilled, unscaledFrame(app)), 'reduced motion').toEqual([]);
+        } finally {
+          BeaconRenderer.prefersReducedMotion = setting;
+        }
       });
 
     });

@@ -2058,6 +2058,11 @@ export class RenderingService {
     // Direct beacon lookup - O(1) via Map
     const beacon = this.beaconRenderer.beacons.get(waypoint.id);
     if (!beacon || !beacon.isActive()) return null;
+
+    // Only a beacon synced for this frame speaks for its marker: one kept from
+    // an earlier style, or held still for reduced motion, has a stale scale
+    // (DEF-08)
+    if (beacon.syncedUpdate !== this.beaconRenderer.updateCount) return null;
     
     // Pop and Grow beacons: only return scale after 'started' flag is set
     // This ensures the scale has been initialized based on hidesBefore
