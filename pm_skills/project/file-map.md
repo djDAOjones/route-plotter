@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 337 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 339 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -14,9 +14,9 @@
 - `reviews` — 13 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
-- `src` — 98 file(s)
+- `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 108 file(s)
+- `tests` — 109 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -286,6 +286,7 @@
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
 - `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers)
+- `src/utils/sliderScales.js` — SPL-01: the pure slider scales (log2, bipolar log2 with its ±50 dead zone, the angle curve) and the readout format, moved out of MotionVisibilityService; imports nothing
 - `src/utils/snapToAngle.js` — Angle-snap geometry for shift-drag waypoint placement (moved out of main.js in the Phase 1 split)
 - `src/utils/uiReadouts.js` — Shared reference-pixel, effective-amplitude and background-overlay readout formatting with accessible range-value synchronisation
 - `src/utils/waypointCardActions.js` — Pure Reset/Apply-onward field ownership, target filtering, semantic no-op comparison and effect metadata for waypoint cards
@@ -389,6 +390,7 @@
 - `tests/scenePersistence.test.js` — coordVersion-9 scene variation/seed autosave, ZIP, migration and undo round-trip contracts
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts
 - `tests/shortHexGlow.test.js` — DEF-26: the glow draws every stored hex form with its own alpha, and one throwing frame stops neither playback nor editor redraws
+- `tests/sliderScales.test.js` — SPL-01: every slider scale pinned value for value from the code before the move, including `formatUIValue`'s two recorded quirks
 - `tests/helpers/consoleGuard.js` — TST-10 console guard: records console.error/warn, fails the test on anything undeclared, and holds the short allowlist of known warts
 - `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main, offscreen vector and reveal-mask canvases as rounded, diffable draw-log lines, names each composited canvas by its surface (TST-17), can end each line with the state its call was made in: transform, open saves and styles (DEF-36), and compares two frames
 - `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)

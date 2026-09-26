@@ -5,7 +5,9 @@
 
 import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT, PATH_VISIBILITY, BACKGROUND_VISIBILITY } from '../config/constants.js';
 import { getInlineHelpHTML, getSplashHelpHTML } from '../config/helpContent.js';
-import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
+import {
+  bipolarSliderToLog2Value, formatUIValue, log2ValueToSlider, sliderToAngle, sliderToLog2Value,
+} from '../utils/sliderScales.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 import { pathWidthToSlider } from '../utils/pathWidthScale.js';
@@ -643,7 +645,7 @@ export class UIController {
     if (trailFraction === 0) return 'Off';
     // Display as 1-100% even though actual range is 0.04-4.0
     const displayPercent = (trailFraction / MOTION.PATH_TRAIL_MAX) * 100;
-    return MotionVisibilityService.formatUIValue(displayPercent, '%');
+    return formatUIValue(displayPercent, '%');
   }
   
   /**
@@ -741,7 +743,7 @@ export class UIController {
     // Background tint (log2 scaled for fine control near 0)
     this.elements.bgOverlay?.addEventListener('input', (e) => {
       const sliderValue = parseInt(e.target.value);
-      const tintValue = MotionVisibilityService.bipolarSliderToLog2Value(
+      const tintValue = bipolarSliderToLog2Value(
         sliderValue,
         MOTION.TINT_MIN,
         MOTION.TINT_MAX
@@ -1074,24 +1076,24 @@ export class UIController {
     // Spotlight size (log2 scale slider)
     this.elements.revealSize?.addEventListener('input', (e) => {
       const sliderValue = parseInt(e.target.value);
-      const sizePercent = MotionVisibilityService.sliderToLog2Value(
+      const sizePercent = sliderToLog2Value(
         sliderValue,
         MOTION.SPOTLIGHT_SIZE_MIN,
         MOTION.SPOTLIGHT_SIZE_MAX
       );
-      this.elements.revealSizeValue.textContent = MotionVisibilityService.formatUIValue(sizePercent, '%');
+      this.elements.revealSizeValue.textContent = formatUIValue(sizePercent, '%');
       this.eventBus.emit('motion:reveal-size-change', sizePercent);
     });
     
     // Spotlight feather (log2 scale slider, % of spotlight size)
     this.elements.revealFeather?.addEventListener('input', (e) => {
       const sliderValue = parseInt(e.target.value);
-      const featherPercent = MotionVisibilityService.sliderToLog2Value(
+      const featherPercent = sliderToLog2Value(
         sliderValue,
         MOTION.SPOTLIGHT_FEATHER_MIN,
         MOTION.SPOTLIGHT_FEATHER_MAX
       );
-      this.elements.revealFeatherValue.textContent = MotionVisibilityService.formatUIValue(featherPercent, '%');
+      this.elements.revealFeatherValue.textContent = formatUIValue(featherPercent, '%');
       this.eventBus.emit('motion:reveal-feather-change', featherPercent);
     });
 
@@ -1099,7 +1101,7 @@ export class UIController {
     // the range the reveal never fades, so the readout says so in words rather
     // than showing a bare 100% that reads like "almost, but not quite".
     this.elements.revealTrail?.addEventListener('input', (e) => {
-      const trailPercent = MotionVisibilityService.sliderToLog2Value(
+      const trailPercent = sliderToLog2Value(
         parseInt(e.target.value),
         MOTION.SPOTLIGHT_TRAIL_MIN,
         MOTION.SPOTLIGHT_TRAIL_MAX
@@ -1111,24 +1113,24 @@ export class UIController {
     // Angle of View - angle (tan-based curve for perceptual smoothness)
     this.elements.aovAngle?.addEventListener('input', (e) => {
       const sliderValue = parseInt(e.target.value);
-      const angleDegrees = MotionVisibilityService.sliderToAngle(
+      const angleDegrees = sliderToAngle(
         sliderValue,
         MOTION.AOV_ANGLE_MIN,
         MOTION.AOV_ANGLE_MAX
       );
-      this.elements.aovAngleValue.textContent = MotionVisibilityService.formatUIValue(angleDegrees, '°');
+      this.elements.aovAngleValue.textContent = formatUIValue(angleDegrees, '°');
       this.eventBus.emit('motion:aov-angle-change', angleDegrees);
     });
     
     // Angle of View - distance (log2 scale, same as spotlight size)
     this.elements.aovDistance?.addEventListener('input', (e) => {
       const sliderValue = parseInt(e.target.value);
-      const distancePercent = MotionVisibilityService.sliderToLog2Value(
+      const distancePercent = sliderToLog2Value(
         sliderValue,
         MOTION.AOV_DISTANCE_MIN,
         MOTION.AOV_DISTANCE_MAX
       );
-      this.elements.aovDistanceValue.textContent = MotionVisibilityService.formatUIValue(distancePercent, '%');
+      this.elements.aovDistanceValue.textContent = formatUIValue(distancePercent, '%');
       this.eventBus.emit('motion:aov-distance-change', distancePercent);
     });
     
@@ -1137,7 +1139,7 @@ export class UIController {
       const sliderValue = parseInt(e.target.value);
       // Linear mapping: slider 0-1000 → value 0-100%
       const dropoffPercent = (sliderValue / 1000) * MOTION.AOV_DROPOFF_MAX;
-      this.elements.aovDropoffValue.textContent = MotionVisibilityService.formatUIValue(dropoffPercent, '%');
+      this.elements.aovDropoffValue.textContent = formatUIValue(dropoffPercent, '%');
       this.eventBus.emit('motion:aov-dropoff-change', dropoffPercent);
     });
     
@@ -1189,7 +1191,7 @@ export class UIController {
   setRevealTrailReadout(trailPercent) {
     const text = trailPercent >= MOTION.SPOTLIGHT_TRAIL_MAX
       ? 'Whole path'
-      : `${MotionVisibilityService.formatUIValue(trailPercent, '%')} of path`;
+      : `${formatUIValue(trailPercent, '%')} of path`;
     if (this.elements.revealTrailValue) this.elements.revealTrailValue.textContent = text;
     if (this.elements.revealTrail) this.elements.revealTrail.setAttribute('aria-valuetext', text);
   }
@@ -1211,13 +1213,13 @@ export class UIController {
     ];
     for (const [slider, readout, value, min, max] of pairs) {
       if (!slider || !Number.isFinite(value)) continue;
-      slider.value = String(MotionVisibilityService.log2ValueToSlider(value, min, max));
-      if (readout) readout.textContent = MotionVisibilityService.formatUIValue(value, '%');
+      slider.value = String(log2ValueToSlider(value, min, max));
+      if (readout) readout.textContent = formatUIValue(value, '%');
     }
 
     const trail = motionSettings.revealTrail;
     if (this.elements.revealTrail && Number.isFinite(trail)) {
-      this.elements.revealTrail.value = String(MotionVisibilityService.log2ValueToSlider(
+      this.elements.revealTrail.value = String(log2ValueToSlider(
         trail, MOTION.SPOTLIGHT_TRAIL_MIN, MOTION.SPOTLIGHT_TRAIL_MAX));
       this.setRevealTrailReadout(trail);
     }
@@ -1261,7 +1263,7 @@ export class UIController {
       const timeMs = timeSec * 1000;
 
       // Format display nicely
-      this.elements.waypointPauseTimeValue.textContent = MotionVisibilityService.formatUIValue(timeSec, 's');
+      this.elements.waypointPauseTimeValue.textContent = formatUIValue(timeSec, 's');
 
       const targets = this._bulkTargets(true);
       if (targets.length > 0) {
@@ -1287,7 +1289,7 @@ export class UIController {
       const speedMultiplier = this.sliderToSegmentSpeed(sliderValue);
 
       // Format display nicely (speed uses 2 decimal places when < 1 for precision)
-      const displaySpeed = speedMultiplier < 1 ? speedMultiplier.toFixed(2) : MotionVisibilityService.formatUIValue(speedMultiplier);
+      const displaySpeed = speedMultiplier < 1 ? speedMultiplier.toFixed(2) : formatUIValue(speedMultiplier);
       this.elements.waypointSegmentSpeedValue.textContent = `${displaySpeed}x`;
 
       const targets = this._bulkTargets(true);
@@ -2114,14 +2116,14 @@ export class UIController {
       // Convert seconds to slider value using logarithmic scale
       this.elements.waypointPauseTime.value = this.pauseTimeToSlider(pauseSeconds);
       // Format display nicely
-      this.elements.waypointPauseTimeValue.textContent = MotionVisibilityService.formatUIValue(pauseSeconds, 's');
+      this.elements.waypointPauseTimeValue.textContent = formatUIValue(pauseSeconds, 's');
     }
     
     // Update segment speed slider
     if (this.elements.waypointSegmentSpeed) {
       const speed = waypoint.segmentSpeed || 1.0;
       this.elements.waypointSegmentSpeed.value = this.segmentSpeedToSlider(speed);
-      const displaySpeed = speed < 1 ? speed.toFixed(2) : MotionVisibilityService.formatUIValue(speed);
+      const displaySpeed = speed < 1 ? speed.toFixed(2) : formatUIValue(speed);
       this.elements.waypointSegmentSpeedValue.textContent = `${displaySpeed}x`;
     }
     

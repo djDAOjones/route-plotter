@@ -16,7 +16,7 @@ import {
   VIDEO_EXPORT,
   WAYPOINT_VISIBILITY,
 } from '../config/constants.js';
-import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
+import { bipolarLog2ValueToSlider } from '../utils/sliderScales.js';
 import { Waypoint } from '../models/Waypoint.js';
 import { Scene } from '../models/Scene.js';
 import { ImageAsset, IMAGE_LIMITS } from '../models/ImageAsset.js';
@@ -829,7 +829,7 @@ function syncLoadedProjectControls(app, staged) {
     app.elements.bgFitToggle.dataset.mode = staged.background.fit;
   }
   if (app.elements?.bgOverlay) {
-    const sliderValue = MotionVisibilityService.bipolarLog2ValueToSlider(
+    const sliderValue = bipolarLog2ValueToSlider(
       staged.background.overlay, MOTION.TINT_MIN, MOTION.TINT_MAX
     );
     app.elements.bgOverlay.value = String(sliderValue);
