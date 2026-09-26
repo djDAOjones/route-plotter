@@ -116,7 +116,10 @@ export const sceneOutlineMixin = {
     });
     this.eventBus.on('area:changed', refreshDeferred);
     this.eventBus.on('area:draw-completed', ({ waypoint } = {}) => {
-      if (waypoint?.areaHighlight?.shape === 'polygon') {
+      // The selection can change during a draw; select the polygon only while
+      // its waypoint is still the sole selection.
+      if (waypoint?.areaHighlight?.shape === 'polygon'
+          && waypoint === this.selectedWaypoint && this.selectedWaypoints.length <= 1) {
         this._sceneOutlineSelectionKey = sceneOutlineKey('polygon', waypoint.id);
       }
       refresh();

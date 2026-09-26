@@ -4,6 +4,7 @@ import { AreaEditService } from '../src/services/AreaEditService.js';
 import { AreaDrawingService } from '../src/services/AreaDrawingService.js';
 import { findAreaHandleAtScreen } from '../src/app/wiringControllers.js';
 import { sceneOutlineKey } from '../src/utils/sceneSemantics.js';
+import { MIXED_OPTION_VALUE } from '../src/utils/mixedControlState.js';
 import { bootApp } from './helpers/bootApp.js';
 
 function makeAreaWaypoint(areaHighlight) {
@@ -204,14 +205,15 @@ describe('area edit handle coordinates', () => {
 });
 
 describe('drawing a polygon (DEF-17)', () => {
-  test('finishing one names its waypoint, so the sidebar and the outline follow it', async () => {
-    // The drawing tool forgot its waypoint before announcing the polygon, so
-    // both announcements named no waypoint: the waypoint editor did not
-    // refresh and the scene outline did not select the new polygon.
+  const TRIANGLE = [[0.2, 0.2], [0.4, 0.2], [0.3, 0.4]];
+
+  /** A ready app drawing a polygon for its first waypoint, three vertices placed. */
+  async function drawingThreeVertices() {
     const app = await bootApp();
+    await app.ready;
     app.eventBus.emit('waypoint:add', { imgX: 0.3, imgY: 0.3, isMajor: true });
     app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.7, isMajor: true });
-    const waypoint = app.waypoints[0];
+    const [waypoint, other] = app.waypoints;
     app.eventBus.emit('waypoint:selected', waypoint);
 
     // As an author does: choose Draw, then press Draw Area.
@@ -220,23 +222,76 @@ describe('drawing a polygon (DEF-17)', () => {
     shape.dispatchEvent(new Event('change'));
     document.getElementById('area-draw-btn').click();
     expect(app.areaDrawingService.isDrawing).toBe(true);
+    for (const [imgX, imgY] of TRIANGLE) {
+      app.eventBus.emit('area:draw-click', { imgX, imgY });
+    }
+    return { app, waypoint, other };
+  }
+
+  function closePolygon(app) {
+    const [imgX, imgY] = TRIANGLE[0];
+    app.eventBus.emit('area:draw-click', { imgX, imgY });
+    expect(app.areaDrawingService.isDrawing).toBe(false);
+  }
+
+  /** The outline's pressed Select buttons, once its queued redraw has run. */
+  async function pressedInOutline() {
+    await Promise.resolve();
+    return [...document.querySelectorAll('#scene-outline [aria-pressed="true"]')]
+      .map(select => select.dataset.outlineKey);
+  }
+
+  test('finishing one names its waypoint, so the sidebar and the outline follow it', async () => {
+    // The drawing tool forgot its waypoint before announcing the polygon, so
+    // both announcements named no waypoint: the waypoint editor did not
+    // refresh and the scene outline did not select the new polygon.
+    const { app, waypoint } = await drawingThreeVertices();
     // The banner promises only what closes a polygon.
-    expect(document.getElementById('area-draw-banner').textContent).not.toMatch(/double-click/i);
+    expect(document.getElementById('area-draw-banner').textContent)
+      .not.toMatch(/double[\s‐‑-]?(click|tap)|dbl/i);
 
     const changed = vi.fn();
     const completed = vi.fn();
     app.eventBus.on('area:changed', changed);
     app.eventBus.on('area:draw-completed', completed);
     const editorRefreshes = vi.spyOn(app.uiController, 'updateWaypointEditor');
-    for (const [imgX, imgY] of [[0.2, 0.2], [0.4, 0.2], [0.3, 0.4], [0.2, 0.2]]) {
-      app.eventBus.emit('area:draw-click', { imgX, imgY });
-    }
+    closePolygon(app);
 
-    expect(app.areaDrawingService.isDrawing).toBe(false);
     expect(waypoint.areaHighlight.points).toEqual([{ x: 0.2, y: 0.2 }, { x: 0.4, y: 0.2 }, { x: 0.3, y: 0.4 }]);
     expect(changed).toHaveBeenLastCalledWith({ waypoint });
     expect(completed).toHaveBeenCalledWith({ waypoint });
     expect(editorRefreshes).toHaveBeenCalledWith(waypoint);
-    expect(app._sceneOutlineSelectionKey).toBe(sceneOutlineKey('polygon', waypoint.id));
+    const polygon = sceneOutlineKey('polygon', waypoint.id);
+    expect(app._sceneOutlineSelectionKey).toBe(polygon);
+    expect(await pressedInOutline()).toEqual([`${polygon}:select`]);
+  });
+
+  // Drawing locks only the canvas's left click, so the list, the context menu
+  // and the keyboard can change the selection before the polygon closes.
+  test('a waypoint selected during the draw stays the selection', async () => {
+    const { app, waypoint, other } = await drawingThreeVertices();
+    app.eventBus.emit('waypoint:selected', other);
+    const editorRefreshes = vi.spyOn(app.uiController, 'updateWaypointEditor');
+    closePolygon(app);
+
+    expect(editorRefreshes.mock.calls.map(([shown]) => shown)).not.toContain(waypoint);
+    const selected = sceneOutlineKey('waypoint', other.id);
+    expect(app._sceneOutlineSelectionKey).toBe(selected);
+    expect(await pressedInOutline()).toEqual([`${selected}:select`]);
+  });
+
+  test('a multi-selection made during the draw keeps its scope and mixed states', async () => {
+    const { app, waypoint, other } = await drawingThreeVertices();
+    app.eventBus.emit('waypoint:multi-selected', { waypoints: [waypoint, other], primary: waypoint });
+    closePolygon(app);
+
+    expect(app.selectedWaypoints).toEqual([waypoint, other]);
+    expect(document.getElementById('scope-chip').dataset.scope).toBe('multi');
+    expect(document.getElementById('scope-chip-text').textContent).toContain('2 waypoints');
+    expect(document.getElementById('area-shape').value).toBe(MIXED_OPTION_VALUE);
+    expect(document.getElementById('area-draw-btn').disabled).toBe(true);
+    const selected = sceneOutlineKey('waypoint', waypoint.id);
+    expect(app._sceneOutlineSelectionKey).toBe(selected);
+    expect(await pressedInOutline()).toEqual([`${selected}:select`]);
   });
 });
