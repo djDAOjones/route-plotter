@@ -42,6 +42,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, test, expect, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 import { freezeClock, loadSnapshot } from './helpers/projectSnapshot.js';
 import { differingLines, discardFrame, frameAt, setUpFrame, takeFrame } from './helpers/drawLog.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
@@ -49,6 +50,7 @@ import { buildExampleProjects } from '../src/examples/index.js';
 import { loadExampleBackground } from '../src/app/backgroundLoading.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { BeaconRenderer } from '../src/services/BeaconRenderer.js';
+import { VideoExporter } from '../src/services/VideoExporter.js';
 
 const goldenDir = join(dirname(fileURLToPath(import.meta.url)), 'goldens');
 const UPDATING = process.env.UPDATE_DRAW_GOLDENS === '1';
@@ -407,58 +409,106 @@ describe('golden draw logs (TST-02)', () => {
       // camera never zooms, so frames at one instant differ only by beacons.
       const STILLED = new Map([['ex-uon-1', 'ripple'], ['ex-uon-2', 'pulse'], ['ex-uon-3', 'glow']]);
 
-      function stilledFixture() {
+      /** Open day with the stilled styles, or only `id`'s, so a check sees only its own beacon. */
+      function stilledFixture(id = null) {
         const fixture = fixtures().find(each => each.id === 'uon-open-day');
         for (const waypoint of fixture.project.waypoints) {
-          if (STILLED.has(waypoint.id)) waypoint.beaconStyle = STILLED.get(waypoint.id);
+          if (!STILLED.has(waypoint.id)) continue;
+          waypoint.beaconStyle = id === null || waypoint.id === id ? STILLED.get(waypoint.id) : 'none';
         }
         return fixture;
       }
 
       /**
-       * A quarter-second after each beacon's arrival, the frame drawn with
-       * reduced motion (from reset beacons, as when the setting is on from the
-       * start) and the frame drawn without it.
+       * A quarter-second after `id`'s arrival, the frame drawn with reduced
+       * motion (from reset beacons, as when the setting is on from the start)
+       * and the frame drawn without it. A pulse shows only through its marker's
+       * scale, which a paused frame did not draw before DEF-08, so a pulse's
+       * frames are drawn with the transport running.
        */
-      function withAndWithoutReducedMotion(host) {
+      function withAndWithoutReducedMotion(host, id) {
         const engine = host.animationEngine;
         const offset = (engine.startHandleTime || 0) + (engine.introTime || 0);
-        const schedules = engine.beaconSchedules.filter(schedule => STILLED.has(schedule.waypointId));
-        expect(schedules.map(schedule => schedule.style).sort()).toEqual(['glow', 'pulse', 'ripple']);
+        const schedule = engine.beaconSchedules.find(each => each.waypointId === id);
+        expect(schedule?.style).toBe(STILLED.get(id));
+        const progress = (schedule.arrivalMs + 250 + offset) / engine.state.duration;
+        const drawAt = () => {
+          const paused = frameAt(host, progress);
+          if (schedule.style !== 'pulse') return paused;
+          engine.play();
+          discardFrame();
+          host.render();
+          const playing = takeFrame(host);
+          engine.pause();
+          return playing;
+        };
         const setting = BeaconRenderer.prefersReducedMotion;
         try {
-          return schedules.map(schedule => {
-            const progress = (schedule.arrivalMs + 250 + offset) / engine.state.duration;
-            BeaconRenderer.prefersReducedMotion = true;
-            host.renderingService.resetBeacons();
-            const reduced = frameAt(host, progress);
-            BeaconRenderer.prefersReducedMotion = false;
-            const moving = frameAt(host, progress);
-            return { style: schedule.style, reduced, moving };
-          });
+          BeaconRenderer.prefersReducedMotion = true;
+          host.renderingService.resetBeacons();
+          const reduced = drawAt();
+          BeaconRenderer.prefersReducedMotion = false;
+          return { reduced, moving: drawAt() };
         } finally {
           BeaconRenderer.prefersReducedMotion = setting;
         }
       }
 
-      test('the export canvas draws its beacons as authored', async () => {
-        const { app } = await exportAndPlayer(stilledFixture());
-        for (const { style, reduced, moving } of withAndWithoutReducedMotion(app)) {
+      for (const [id, style] of STILLED) {
+        test(`the export canvas draws a ${style} as authored`, async () => {
+          const { app } = await exportAndPlayer(stilledFixture(id));
+          const { reduced, moving } = withAndWithoutReducedMotion(app, id);
           expect(differingLines(reduced, moving), `export: ${style}`).toEqual([]);
-        }
-      });
+        });
 
-      test('the editor and the exported player still hold them still', async () => {
-        const app = await appWithFixture(stilledFixture());
-        enterMode(app, 'preview');
-        const { player } = await exportAndPlayer(stilledFixture());
-        for (const [label, host] of [['preview', app], ['player', player]]) {
-          for (const { style, reduced, moving } of withAndWithoutReducedMotion(host)) {
+        test(`the editor and the exported player still hold a ${style} still`, async () => {
+          const app = await appWithFixture(stilledFixture(id));
+          enterMode(app, 'preview');
+          const { player } = await exportAndPlayer(stilledFixture(id));
+          for (const [label, host] of [['preview', app], ['player', player]]) {
+            const { reduced, moving } = withAndWithoutReducedMotion(host, id);
             expect(differingLines(reduced, moving).length, `${label}: ${style}`).toBeGreaterThan(0);
           }
-        }
-      });
+        });
+      }
 
+      // The editor's hold never syncs a beacon, so whatever an export frame
+      // left in one used to stay drawn, frozen, after the export ended.
+      for (const [outcome, lastProgress, error] of [
+        ['finished', 1, null], ['cancelled', 0.15, 'Export cancelled'], ['failed', 0.15, 'encoder failed'],
+      ]) {
+        test(`after a ${outcome} export, a reduced-motion editor draws what it drew before`, async () => {
+          const download = vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+          vi.stubGlobal('alert', vi.fn());
+          allowConsole(/export/i);
+          const setting = BeaconRenderer.prefersReducedMotion;
+          BeaconRenderer.prefersReducedMotion = true;
+          try {
+            const app = await appWithFixture(stilledFixture());
+            app.updateCanvasAspectRatio(); // the geometry leaving export mode restores
+            enterMode(app, 'preview');
+            const instants = [0.05, 0.15, 0.8, 1];
+            const before = instants.map(instant => frameAt(app, instant));
+            // The real exportVideo(), with only the encoder replaced
+            app.videoExporter = {
+              cancel() {},
+              async export({ renderFrame }) {
+                for (let step = 0; step <= 60; step += 1) await renderFrame((step / 60) * lastProgress);
+                if (error) throw new Error(error);
+                return new Blob(['video']);
+              },
+            };
+            await app.exportVideo();
+            instants.forEach((instant, index) => {
+              expect(differingLines(before[index], frameAt(app, instant)), `at ${instant}`).toEqual([]);
+            });
+          } finally {
+            BeaconRenderer.prefersReducedMotion = setting;
+            download.mockRestore();
+            vi.unstubAllGlobals();
+          }
+        });
+      }
     });
 
     describe('DEF-36: a frame that throws leaves nothing behind', () => {

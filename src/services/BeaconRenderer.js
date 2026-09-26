@@ -1113,7 +1113,9 @@ export class BeaconRenderer {
       if (BeaconRenderer.prefersReducedMotion && !ignoreReducedMotion) {
         const beaconType = waypoint.beaconStyle;
         if (beaconType === 'pulse' || beaconType === 'ripple' || beaconType === 'glow') {
-          beacon.scale = 1.0; // Hold marker at normal scale; skip the animated effect
+          // Held as if never synced, so nothing an export frame, or a frame
+          // from before the setting changed, stays drawn (DEF-29)
+          beacon.reset();
           return;
         }
       }
