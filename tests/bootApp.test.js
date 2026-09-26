@@ -30,6 +30,24 @@ describe('the whole app boots (TST-01)', () => {
     await vi.waitFor(() => expect(app.background.image).toBeTruthy());
   });
 
+  test('a cold start does not announce a pause, but a pause the author makes does (DEF-33)', async () => {
+    // Startup pauses the animation itself. It did so after the pause listener
+    // was registered, so every load told a screen reader "Animation paused".
+    const app = await bootApp();
+    await app.ready;
+    const announcer = document.getElementById('announcer');
+    expect(announcer.textContent).not.toBe('Animation paused');
+    expect(app.elements.playBtn.style.display).not.toBe('none');
+    expect(app.elements.pauseBtn.style.display).toBe('none');
+
+    app.animationEngine.play();
+    expect(announcer.textContent).toBe('Playing animation');
+    app.animationEngine.pause();
+    expect(announcer.textContent).toBe('Animation paused');
+    expect(app.elements.playBtn.style.display).not.toBe('none');
+    expect(app.elements.pauseBtn.style.display).toBe('none');
+  });
+
   test('a listener that throws fails the test instead of being swallowed', async () => {
     const app = await bootApp();
     app.eventBus.on('ui:toast', () => { throw new Error('handler is broken'); });

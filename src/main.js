@@ -613,13 +613,15 @@ class RoutePlotter {
     // background, and prevents user edits from being overwritten by hydration.
     await restoreStartupProject(this);
     
-    // Set up AnimationEngine event listeners
-    this.setupAnimationEngineListeners();
-    
     // Set default animation state: paused at END position
-    // This ensures the full path is visible on load for editing
+    // This ensures the full path is visible on load for editing. It happens
+    // before the engine's listeners exist, so a load announces no pause to a
+    // screen reader (DEF-33); the shell already shows Play and hides Pause.
     this.animationEngine.pause();
     this.animationEngine.seekToProgress(1.0);
+    
+    // Set up AnimationEngine event listeners
+    this.setupAnimationEngineListeners();
     
     // Sync UI with initial preview mode and path visibility settings
     this._syncInitialUIState();
