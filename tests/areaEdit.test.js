@@ -3,6 +3,8 @@ import { EventBus } from '../src/core/EventBus.js';
 import { AreaEditService } from '../src/services/AreaEditService.js';
 import { AreaDrawingService } from '../src/services/AreaDrawingService.js';
 import { findAreaHandleAtScreen } from '../src/app/wiringControllers.js';
+import { sceneOutlineKey } from '../src/utils/sceneSemantics.js';
+import { bootApp } from './helpers/bootApp.js';
 
 function makeAreaWaypoint(areaHighlight) {
   return {
@@ -198,5 +200,43 @@ describe('area edit handle coordinates', () => {
     bus.emit('app:cleared');
     expect(drawing.isDrawing).toBe(false);
     expect(editing.activeWaypoint).toBeNull();
+  });
+});
+
+describe('drawing a polygon (DEF-17)', () => {
+  test('finishing one names its waypoint, so the sidebar and the outline follow it', async () => {
+    // The drawing tool forgot its waypoint before announcing the polygon, so
+    // both announcements named no waypoint: the waypoint editor did not
+    // refresh and the scene outline did not select the new polygon.
+    const app = await bootApp();
+    app.eventBus.emit('waypoint:add', { imgX: 0.3, imgY: 0.3, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.7, isMajor: true });
+    const waypoint = app.waypoints[0];
+    app.eventBus.emit('waypoint:selected', waypoint);
+
+    // As an author does: choose Draw, then press Draw Area.
+    const shape = document.getElementById('area-shape');
+    shape.value = 'polygon';
+    shape.dispatchEvent(new Event('change'));
+    document.getElementById('area-draw-btn').click();
+    expect(app.areaDrawingService.isDrawing).toBe(true);
+    // The banner promises only what closes a polygon.
+    expect(document.getElementById('area-draw-banner').textContent).not.toMatch(/double-click/i);
+
+    const changed = vi.fn();
+    const completed = vi.fn();
+    app.eventBus.on('area:changed', changed);
+    app.eventBus.on('area:draw-completed', completed);
+    const editorRefreshes = vi.spyOn(app.uiController, 'updateWaypointEditor');
+    for (const [imgX, imgY] of [[0.2, 0.2], [0.4, 0.2], [0.3, 0.4], [0.2, 0.2]]) {
+      app.eventBus.emit('area:draw-click', { imgX, imgY });
+    }
+
+    expect(app.areaDrawingService.isDrawing).toBe(false);
+    expect(waypoint.areaHighlight.points).toEqual([{ x: 0.2, y: 0.2 }, { x: 0.4, y: 0.2 }, { x: 0.3, y: 0.4 }]);
+    expect(changed).toHaveBeenLastCalledWith({ waypoint });
+    expect(completed).toHaveBeenCalledWith({ waypoint });
+    expect(editorRefreshes).toHaveBeenCalledWith(waypoint);
+    expect(app._sceneOutlineSelectionKey).toBe(sceneOutlineKey('polygon', waypoint.id));
   });
 });
