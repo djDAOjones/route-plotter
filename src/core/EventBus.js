@@ -91,8 +91,13 @@ export class EventBus {
    */
   once(eventName, callback) {
     const wrapper = (...args) => {
-      callback(...args);
-      this.off(eventName, wrapper);
+      // Unsubscribe even when the callback throws, so it never runs twice
+      // (DEF-30); `emit` still reports the error.
+      try {
+        callback(...args);
+      } finally {
+        this.off(eventName, wrapper);
+      }
     };
     
     return this.on(eventName, wrapper);

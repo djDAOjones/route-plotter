@@ -70,6 +70,21 @@ describe('EventBus listener errors (ISO-02)', () => {
     expect(bus.listenerErrorCount).toBe(1);
   });
 
+  test('a once-listener that throws still fires only once (DEF-30)', () => {
+    // It unsubscribed only after its callback returned, so one that threw
+    // stayed subscribed and ran again on the next emit.
+    const errors = [];
+    const bus = new EventBus({ onListenerError: error => errors.push(error.message) });
+    const listener = vi.fn(() => { throw new Error('boom'); });
+    bus.once('project:saved', listener);
+
+    bus.emit('project:saved');
+    bus.emit('project:saved');
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(errors).toEqual(['boom']);
+  });
+
   test('the count accumulates across events and starts at zero', () => {
     const bus = new EventBus({ onListenerError: () => {} });
 

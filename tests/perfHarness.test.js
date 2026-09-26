@@ -56,6 +56,27 @@ describe('the performance harness', () => {
     expect(localStorage.removeItem).not.toHaveBeenCalled();
   });
 
+  test('a refusal leaves autosave and the canvas as they were (DEF-30)', async () => {
+    // It used to silence autosave and resize the canvas before it checked
+    // for a waypoint, so a refused run left the page not saving, and said
+    // nothing about it.
+    const fn = loadHarness();
+    const autoSave = () => {};
+    globalThis.app = {
+      waypoints: [],
+      canvas: { width: 800, height: 450 },
+      displayWidth: 800,
+      displayHeight: 450,
+      coordinateTransform: { setCanvasDimensions() { throw new Error('the surface was resized'); } },
+      autoSave,
+    };
+
+    await expect(fn()).rejects.toThrow(/at least one waypoint/i);
+    expect(globalThis.app.autoSave).toBe(autoSave);
+    expect(globalThis.app.canvas).toEqual({ width: 800, height: 450 });
+    expect([globalThis.app.displayWidth, globalThis.app.displayHeight]).toEqual([800, 450]);
+  });
+
   test('it silences autosave, and keeps it silenced afterwards', () => {
     // The defect this pins: restoring the backup is not enough on its own,
     // because the live app will autosave the synthetic project straight over

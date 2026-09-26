@@ -325,7 +325,7 @@
 - `tests/consoleGuard.test.js` — TST-10: the rule deciding which console output fails a test, and the declaration a test uses for output it provokes
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
-- `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit
+- `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit; and (DEF-30) a once-listener that throws still fires only once
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
@@ -357,7 +357,8 @@
   tooltip stays reachable by pointer and by keyboard focus
 - `tests/perfHarness.test.js` — ICE-03 contract: the harness still loads and
   refuses safely, autosave suppression outlives the run, the restore sits in a
-  `finally`, and no pass/fail timing threshold has crept in
+  `finally`, and no pass/fail timing threshold has crept in; and (DEF-30) a
+  refused run leaves autosave and the canvas as they were
 - `tests/pathHeadPresets.test.js` — Drone preset metadata, native control, loader ownership and renderer-transform contracts
 - `tests/performanceScheduling.test.js` — Manual-rAF scheduler contract: idle sleep, transport wake/coalescing, camera keepalive and export suspension/restore
 - `tests/playerBundleClosure.test.js` — TST-07: esbuild's metafile proves the exported player bundle carries no editor-only module, and that the editor's does
