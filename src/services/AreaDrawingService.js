@@ -5,7 +5,7 @@
  * 1. User clicks "Draw Area" → enters modal draw mode
  * 2. Each canvas click places a vertex (normalized image coords)
  * 3. Live preview shows edges + closing line to cursor
- * 4. Double-click or click near first vertex closes the polygon
+ * 4. A click near the first vertex closes the polygon
  * 5. ESC cancels drawing, removing all placed vertices
  * 
  * ## Integration
@@ -157,8 +157,12 @@ export class AreaDrawingService {
       return;
     }
     
+    // Leaving draw mode forgets the target, so keep it for the announcements
+    // below; without it they named no waypoint (DEF-17)
+    const waypoint = this.targetWaypoint;
+    
     // Write polygon data to waypoint
-    const ah = this.targetWaypoint.areaHighlight;
+    const ah = waypoint.areaHighlight;
     ah.shape = 'polygon';
     ah.enabled = true;
     ah.points = this.vertices.map(v => ({ x: v.x, y: v.y })); // Deep copy
@@ -169,10 +173,10 @@ export class AreaDrawingService {
     this._exitDrawMode();
     
     // Emit change event to trigger render + autosave
-    this.eventBus.emit('area:changed', { waypoint: this.targetWaypoint });
+    this.eventBus.emit('area:changed', { waypoint });
     
     // Refresh sidebar controls to show polygon shape selected
-    this.eventBus.emit('area:draw-completed', { waypoint: this.targetWaypoint });
+    this.eventBus.emit('area:draw-completed', { waypoint });
   }
   
   /**
@@ -223,7 +227,7 @@ export class AreaDrawingService {
     this._banner.innerHTML = `
       <span class="banner-text">
         <strong>Drawing polygon area</strong> — Click to place vertices. 
-        Click near the first point or double-click to close. 
+        Click near the first point to close. 
         <kbd>Esc</kbd> to cancel.
         <span class="banner-count">0 vertices</span>
       </span>
