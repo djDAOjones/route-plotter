@@ -284,6 +284,18 @@ describe('Waypoint (extended)', () => {
     expect(Waypoint.validate(null)).toBe(false);
   });
 
+  test('setPosition keeps a point off the image, as far as validate accepts (DEF-35)', () => {
+    // It pulled every point back onto the image, so the scene outline could
+    // not keep a waypoint off it.
+    const { MIN, MAX } = IMAGE_COORDINATES;
+    const wp = Waypoint.createMajor(0.5, 0.5);
+    wp.setPosition(-0.4, 1.35);
+    expect([wp.imgX, wp.imgY]).toEqual([-0.4, 1.35]);
+    wp.setPosition(MIN - 1, MAX + 1);
+    expect([wp.imgX, wp.imgY]).toEqual([MIN, MAX]);
+    expect(Waypoint.validate(wp.toJSON())).toBe(true);
+  });
+
   test('hasLabel reflects text presence and visibility mode', () => {
     const wp = Waypoint.createMajor(0.5, 0.5);
     wp.label = 'Town hall';
