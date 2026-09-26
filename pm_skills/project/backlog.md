@@ -55,10 +55,11 @@
      DEV-INFRASTRUCTURE.md → Deployment.
 
      W0 closed 2026-09-22, W1 2026-09-23, W2 2026-09-24 (released as
-     v3.2.692). Three groups, in the order to take them: what Joe approved or
-     accepted when W2 closed; the defects W1 released that are still open (plan
-     §13 ground rule 8, "After W1"); and W3, the pilot. Taking the first two
-     before W3 is a scheduling choice, not a dependency.
+     v3.2.692), and the post-W2 queue and W3's pilot on 2026-09-26 (merged, not
+     yet released). Two groups: what Joe accepted since W2 closed, and the one
+     defect W1 released that is still open (plan §13 ground rule 8, "After
+     W1"). §14.5 asks for the readout gap (TST-04) to close before W4; that,
+     and W4 itself, are Joe's calls.
 
      Nothing enters this lane until it is runnable, and the plan is never
      imported wholesale. A behaviour change is one PR that states its new
@@ -68,65 +69,25 @@
      the todo. Gate vocabulary is under Active; a gate is a claim, so check
      it. -->
 
-**Approved or accepted by Joe on 2026-09-24**
+**Accepted by Joe on 2026-09-25**
 
-- [ ] **DEF-34 The exported player ignores Graphics scale** · Live defect
-  [ready] — `PlayerApp` never calls `setGraphicsScale`, so an HTML export
-  draws every vector element at scale 1 while the editor and video export are
-  right. One call in `PlayerApp.load`; `goldenDrawLogs.test.js`
-  characterises it exactly. Approved. **P1**
-- [ ] **TST-17 The draw log cannot tell canvases apart** · Test harness
-  [ready] — The recorder writes every source canvas as `[canvas]`, so
-  compositing the wrong canvas passes all 11 draw goldens (reproduced
-  2026-09-23). Name the source surface, regenerate the goldens and justify
-  every changed line. Test-only; do it before the goldens multiply. **P1**
-- [ ] **DEF-36 A throwing frame leaves canvas state stacked** · Live defect
-  [ready] — A throw mid-render skips the vector layer's `restore()` and the
-  beacons' own, so later frames compound the camera zoom. Reset the drawing
-  context each frame; the goldens stay byte-identical when nothing throws.
-  **P2**
-- [ ] **DEF-35 Off-image points are pinned by four readers** · Live defect
-  [ready] — Since DEF-03 a point may sit off the image, but the scene outline
-  refuses any edit to such a waypoint, area-vertex and centre drags snap onto
-  the image, and crowd anchors and dots stop at its edge. One PR per reader is
-  fine. **P2**
+- [ ] **DEF-38 A throw on the main canvas leaves its state stacked** · Live
+  defect [ready] — DEF-36's exposure on the main canvas: a throw inside the
+  background pass's saves keeps that frame's zoom, camera transform or
+  `destination-in` for every later frame. The main canvas's base transform
+  belongs to its host, so DEF-36's cure does not carry over. No known
+  trigger. **P2**
+- [ ] **DEF-39 Vector styles carry from one frame to the next** · Live defect
+  [ready] — Area borders inherit the route's round caps and joins, so the
+  first frame after a resize or a throw draws them with butt caps and mitred
+  joins. Joe's call: keep the round look that steady frames draw today. **P3**
 
-**Released by W1, still open** (plan §13 ground rule 8; one PR each, any order)
+**Released by W1, still open** (plan §13 ground rule 8)
 
-- [ ] **DEF-08 Beacon scaling is missing outside playback** · Live defect
-  [ready] — Pop/grow/pulse marker scaling applies only while `isPlaying()`, so
-  it is absent from video export, scrubbing and paused preview. Remove the
-  gate; beacons are closed-form. Visible change: needs a golden cell update,
-  and active scaling cases **including `pop`**, which `authoredExtras` does not
-  yet carry. **P1**
-- [ ] **DEF-17 A finished polygon tells nobody which waypoint** · Live defect
-  [ready] — Completion nulls `targetWaypoint` before emitting, so
-  `area:changed` and `area:draw-completed` carry `null` and neither the
-  sidebar nor the outline refreshes. Capture first; correct the "double-click
-  closes" copy in the same PR. **P1**
-- [ ] **DEF-28 A failed recovery restore is silent** · Live defect [ready] —
-  It goes to the console only, and the next edit overwrites the record.
-  Announce it, and keep the record until the user acts. **P2**
-- [ ] **DEF-33 Every cold load announces "Animation paused"** · Live defect
-  [ready] — The startup `pause()` runs after the listener is registered, and
-  the live region sits outside the inert `#app`. Pause before subscribing, or
-  add a `silent` flag. **P3**
-- [ ] **DEF-30 The perf harness disables autosave before its own refusal
-  check** · Live defect [ready] — It also says nothing, and `EventBus.once`
-  refires when its callback throws (no production caller). Reorder and
-  restore; wrap `once` in try/finally. **P3**
-- [ ] **DEF-29 Reduced motion suppresses beacons in baked video exports** ·
-  Live defect [ready] — **Policy decided (§20 Q7b, accepted 2026-09-22):
-  ignore reduced motion when exporting video; keep it for the live editor and
-  player.** **P3**
-
-**W3 — the pilot** (plan §14; enters now that W2 is closed)
-
-- [ ] **SPL-01 The slider scales move to `utils/sliderScales`** · Refactor
-  [ready] — Move the six pure slider-scale functions out of
-  `MotionVisibilityService`, characterising `formatUIValue`'s existing
-  rounding rather than "fixing" it. Behaviour-preserving: the goldens stay
-  byte-identical. §14.6 lists what would invalidate the pilot.
+- [ ] **DEF-28 A failed recovery restore is silent** · Live defect
+  [owner: what the author sees, and how the record is kept] — It goes to the
+  console only, and the next edit overwrites the record. Announce it, and keep
+  the record until the user acts. **P2**
 
 ### Icebox
 

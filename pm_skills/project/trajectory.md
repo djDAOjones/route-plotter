@@ -17,6 +17,53 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## W3 — the pilot (closed 2026-09-26; merged, not yet released)
+
+Outcome: the slider scales live in their own pure module, and the pilot showed
+that nothing yet guards the sidebar's readouts.
+
+SPL-01 — The slider scales moved out of the visibility service into
+`utils/sliderScales`; every readout and restored value is unchanged.
+(2026-09-26) — see decision-log.
+
+## The post-W2 queue (2026-09-24 to 2026-09-26; merged, not yet released)
+
+Outcome: exports, the player and paused views draw what the editor draws,
+points off the image stay editable, and a small failure no longer passes
+silently or corrupts what follows.
+
+DEF-34 — An exported HTML player draws at the project's Graphics scale, as
+the editor and video do. (2026-09-24) — see decision-log.
+
+TST-17 — The draw log names the canvas each frame composites, so compositing
+the wrong canvas fails the draw goldens. (2026-09-24)
+
+DEF-36 — A frame that throws part-way no longer leaves the vector layer's
+transform stacked, so later frames draw at the right zoom. (2026-09-25) — see
+decision-log.
+
+DEF-35 — Crowd anchors, dots, area drags and the scene outline follow points
+off the image instead of pinning them to its edge. (2026-09-26) — see
+decision-log.
+
+DEF-08 — Pop, grow and pulse beacons scale their marker in video exports,
+scrubbing and pause, not only while playing. (2026-09-26)
+
+DEF-17 — A finished polygon names its waypoint, so the sidebar and the scene
+outline show it at once. (2026-09-26)
+
+DEF-33 — Loading the app no longer tells a screen reader "Animation paused",
+and a restored session is announced. (2026-09-26)
+
+DEF-30 — A refused benchmark changes nothing, a failed one says so, and
+`EventBus.once` runs once. (2026-09-26)
+
+DEF-37 — A project file whose Graphics scale is `null` opens at 1×, and its
+next save reopens. (2026-09-26)
+
+DEF-29 — Video exports show pulse, ripple and glow beacons whatever the
+author's reduced-motion setting. (2026-09-26) — see decision-log.
+
 ## W2 — the live defects, released as v3.2.692 (closed 2026-09-24)
 
 Outcome: projects that would not reopen now do, the exported player draws what
