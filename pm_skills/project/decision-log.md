@@ -2,6 +2,96 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-26 — W3's pilot: the slider scales move, and nothing guards the readouts
+
+SPL-01 (#43), behaviour-preserving. The six pure slider functions moved
+verbatim from `MotionVisibilityService` into `src/utils/sliderScales.js`,
+which imports nothing. `angleToSlider`, uncalled, was deleted as §14.1 says,
+and DEF-20's row says where to recover it.
+
+**Preserved contract** (`task.md` refactor mode): no `window.*` global, DOM
+id, EventBus event or persisted format changed. The review recorded the same
+bytes on both trees for every slider position, reveal sync, real project load
+and editor state it drove, and all 15 goldens regenerated identically.
+
+**§14.5's answers.**
+1. A reviewer still opens two or three files to understand a readout, but the
+   module is 137 lines instead of a 1,619-line service.
+2. Plain exported functions were enough: no state, options or imports.
+3. **No: nothing but the new table catches a readout regression.** Breaking
+   every non-integer readout failed only that table, and breaking three
+   migrated call sites failed nothing. The W1 goldens record canvas calls and
+   save shapes, not the sidebar. §14.5 makes this a W1 gap to close before
+   W4; TST-04 is its home, and it is put to Joe.
+4. The ceremony took about 80 minutes of wall-clock time for a 160-line move,
+   most of it the independent review; the move itself took about 15.
+
+**The process lesson.** §14.4's single non-vacuity mutation did not prove the
+table. Mutating each branch of each moved function found a rule nothing
+pinned, that positive readouts from 10 round up, and one row now pins it.
+Proposed for W4's characterisation step: mutate every branch of each moved
+function, and account for every survivor.
+
+**§14.6:** no invalidation criterion applies, so the broader approach stands.
+
+## 2026-09-26 — the post-W2 queue: the defects W1 left, and what their reviews found
+
+Eleven pull requests, one item each, merged on Joe's word and not yet
+released: DEF-34 (#31), TST-17 (#32), DEF-36 (#34), DEF-35 (#35, #36), DEF-08
+(#37), DEF-17 (#38), DEF-33 (#39), DEF-30 (#40), DEF-37 (#41) and DEF-29
+(#42). Gate at close: **86 test files · 1,239 tests · 2 todo · shell 0 ·
+build:check 0** (85 / 1,182 / 3 todo when W2 closed).
+
+**Each PR's stated behaviour change.**
+- **DEF-34** — the exported player draws at the project's Graphics scale.
+- **TST-17** — test-only: the draw log names the canvas each frame
+  composites; 78 golden lines changed by name only.
+- **DEF-36** — a frame that throws part-way leaves no stacked transform, and
+  a clean frame records exactly what it did.
+- **DEF-35** — crowd anchors, dots, area drags and the scene outline follow
+  points off the image, within `IMAGE_COORDINATES`.
+- **DEF-08** — pop, grow and pulse scale their marker in export, scrubbing and
+  pause, not only while playing; the named golden cells changed.
+- **DEF-17** — a finished polygon names its waypoint, so the sidebar and the
+  outline refresh; the banner no longer promises a double-click.
+- **DEF-33** — a cold start announces nothing, and a restored session keeps
+  "Previous session restored".
+- **DEF-30** — a refused benchmark changes nothing and a failed one says so;
+  `EventBus.once` runs at most once, and `off` removes it.
+- **DEF-37** — a `null` Graphics scale opens at 1×, and its next save reopens.
+- **DEF-29** — a video export draws pulse, ripple and glow as authored,
+  whatever the author's reduced-motion setting; the editor and the player
+  still hold them.
+
+**Joe, 2026-09-25:** merge #34; DEF-38 accepted at P2 and DEF-39 at P3,
+keeping the round caps and joins that steady frames draw; branches may carry
+their item's name; Claude watches the PRs it opens. DEF-28 waits on Joe's
+design call: what an author sees when a session cannot be restored.
+
+**Codex was unavailable in the cloud container**, so an independent Claude
+agent with Codex's falsification brief reviewed each PR from #34 on. It found
+a real hole in every one, each fixed before the PR opened. The worst: DEF-29's
+hold froze a ripple or glow in the editor after every export; DEF-08's stale
+beacons scaled paused frames; DEF-17's listeners trusted a waypoint that might
+no longer be selected; DEF-35's outline put a new polygon's corner off the
+image for a waypoint on it; DEF-30's `once` still re-ran; and DEF-37's tests
+reached the app only through recovery. Several suites were weaker than
+claimed, and a mutation now fails each.
+
+**Found, and proposed to Joe:** DEF-40 (an outline entry opens empty on a real
+click), DEF-41 (traced bends stay on the image), DEF-42 (a beacon-style change
+keeps the old schedule), DEF-43 (a polygon draw outlives its target), DEF-44
+(a paused editor never idles, against a hard rule), DEF-45 (announcements
+overwrite each other) and DEF-46 (a second export spoils the first). DEF-08's
+review made DEF-06's leak visible; its row has a dated note.
+
+**Metrics (§18):** open defects 28 → 29 (nine closed; DEF-37 to DEF-46 found);
+tests 1,182 → 1,239; test wall time on this cloud container 148 s at `2fb72ff`
+and 166 s with the whole queue (W2's 62.6 s came from another machine).
+**Budgets:** this log is 29/20 live entries, over by Joe's choice and
+reported; the wish-list is 32/25 open, so a triage pass is proposed; the
+trajectory is 2,046/2,000 words, so archiving its oldest phases is proposed;
+backlog Active is 822 words and 9 open items.
 ## 2026-09-24 — W2 closes: projects that would not reopen now do
 
 Seven pull requests (#22–#28), merged on Joe's word and released as
