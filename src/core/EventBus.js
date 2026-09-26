@@ -62,7 +62,8 @@ export class EventBus {
     if (!this.events.has(eventName)) return;
     
     const listeners = this.events.get(eventName);
-    const index = listeners.indexOf(callback);
+    // A once-listener is registered as a wrapper that names its callback
+    const index = listeners.findIndex(listener => listener === callback || listener.listener === callback);
     
     if (index > -1) {
       listeners.splice(index, 1);
@@ -90,10 +91,17 @@ export class EventBus {
    * @returns {Function} Unsubscribe function
    */
   once(eventName, callback) {
+    // Unsubscribe before the callback runs, so it runs once even when it
+    // throws, emits the same event, or two async emits hold it (DEF-30);
+    // `emit` still reports its error.
+    let fired = false;
     const wrapper = (...args) => {
-      callback(...args);
+      if (fired) return;
+      fired = true;
       this.off(eventName, wrapper);
+      callback(...args);
     };
+    wrapper.listener = callback;
     
     return this.on(eventName, wrapper);
   }

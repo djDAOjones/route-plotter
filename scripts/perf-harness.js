@@ -48,6 +48,11 @@ globalThis.routePlotterBenchmark = async function routePlotterBenchmark(options 
   const app = globalThis.app;
   if (!app) throw new Error('Route Plotter is not loaded on this page.');
 
+  // Refuse before touching anything, so a refused run leaves autosave and the
+  // canvas as they were (DEF-30).
+  const Waypoint = app.waypoints[0]?.constructor;
+  if (!Waypoint) throw new Error('Open a project with at least one waypoint first.');
+
   const backup = localStorage.getItem('routePlotter_autosave');
 
   // Silence autosave for the whole run AND leave it silenced afterwards. The
@@ -68,9 +73,6 @@ globalThis.routePlotterBenchmark = async function routePlotterBenchmark(options 
   app.displayWidth = width;
   app.displayHeight = height;
   app.coordinateTransform.setCanvasDimensions(width, height);
-
-  const Waypoint = app.waypoints[0]?.constructor;
-  if (!Waypoint) { restore(); throw new Error('Open a project with at least one waypoint first.'); }
 
   /** A sine-shaped route, so the path has real curvature rather than a straight line. */
   function buildRoute(n) {
@@ -174,6 +176,14 @@ globalThis.routePlotterBenchmark = async function routePlotterBenchmark(options 
       });
     }
     app.background.image = null;
+  } catch (error) {
+    // Autosave stays silenced once a run has started, so a failed run says
+    // so as a finished one does (DEF-30).
+    console.warn(
+      'Benchmark failed. Your project was restored and autosave is disabled ' +
+      'until you reload — reload the page now, before authoring anything.'
+    );
+    throw error;
   } finally {
     restore();
   }

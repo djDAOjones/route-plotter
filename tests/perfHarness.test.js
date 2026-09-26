@@ -16,6 +16,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, test, expect, beforeEach } from 'vitest';
+import { allowConsole, recordedConsole } from './helpers/consoleGuard.js';
 
 const harnessSource = readFileSync(resolve(process.cwd(), 'scripts/perf-harness.js'), 'utf8');
 
@@ -50,10 +51,47 @@ describe('the performance harness', () => {
     };
 
     await expect(fn()).rejects.toThrow(/at least one waypoint/i);
-    // It reads the recovery point to back it up, but must never write: an
-    // early return here used to restore an `undefined` over the real save.
+    // It must never write the recovery point: an early return here used to
+    // restore an `undefined` over the real save.
     expect(localStorage.setItem).not.toHaveBeenCalled();
     expect(localStorage.removeItem).not.toHaveBeenCalled();
+  });
+
+  test('a refusal leaves autosave and the canvas as they were (DEF-30)', async () => {
+    // It used to silence autosave and resize the canvas before it checked
+    // for a waypoint, so a refused run left the page not saving, and said
+    // nothing about it.
+    const fn = loadHarness();
+    const autoSave = () => {};
+    globalThis.app = {
+      waypoints: [],
+      canvas: { width: 800, height: 450 },
+      displayWidth: 800,
+      displayHeight: 450,
+      coordinateTransform: { setCanvasDimensions() { throw new Error('the surface was resized'); } },
+      autoSave,
+    };
+
+    await expect(fn()).rejects.toThrow(/at least one waypoint/i);
+    expect(globalThis.app.autoSave).toBe(autoSave);
+    expect(globalThis.app.canvas).toEqual({ width: 800, height: 450 });
+    expect([globalThis.app.displayWidth, globalThis.app.displayHeight]).toEqual([800, 450]);
+  });
+
+  test('a run that fails part-way says autosave stays off until a reload (DEF-30)', async () => {
+    // Autosave stays silenced once a run has started, so a failed run must say
+    // so, as a finished one does; it used to say nothing.
+    allowConsole(/reload the page/i);
+    const fn = loadHarness();
+    globalThis.app = {
+      waypoints: [{}], // no `createMajor` on its class, so the first route throws
+      canvas: {},
+      coordinateTransform: { setCanvasDimensions() {} },
+      autoSave() {},
+    };
+
+    await expect(fn()).rejects.toThrow(/createMajor/);
+    expect(recordedConsole()).toEqual([expect.stringMatching(/^warn: Benchmark failed.*reload the page/i)]);
   });
 
   test('it silences autosave, and keeps it silenced afterwards', () => {
