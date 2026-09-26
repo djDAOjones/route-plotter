@@ -6,8 +6,8 @@
  * user's work — so this file does three things. The property tests state the
  * invariant over the controls where it *does* hold; the known failures are
  * characterised exactly as they behave now, each with a `todo` naming the fix
- * that will replace it; and the fixed ones (DEF-03, DEF-31) keep their
- * regressions.
+ * that will replace it; and the fixed ones (DEF-03, DEF-31, DEF-37) keep
+ * their regressions.
  *
  * "Authorable" is taken literally: the controls are the real `<input>` and
  * `<select>` elements of the shipped shell, driven through the real wiring on
@@ -494,6 +494,67 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
         .toEqual(app.waypoints.map(waypoint => waypoint.id));
       expect(reloaded.getEdges()).toHaveLength(1);
       expect(app.anchorReport).toEqual({ bound: 2, broken: [] });
+    });
+
+  });
+
+  describe('DEF-37: a null Graphics scale reloads', () => {
+
+    test('a project whose Graphics scale is null opens at 1×, and its next save reopens', async () => {
+      const app = await bootWithRoute({ waypoints: 2 });
+      // Only a hand-edited or third-party file carries `null`. Load read
+      // `Number(null)` as 0 and stored it, so the editor drew at the
+      // renderer's 0.25× floor and read "0.0×", and the next save wrote 0,
+      // which load refuses ("Invalid graphics scale").
+      const project = app._buildProjectSnapshot();
+      project.styles.graphicsScale = null;
+      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(app.styles.graphicsScale).toBe(1);
+      expect(app.renderingService._graphicsScale).toBe(1);
+      expect(app.elements.graphicsScaleValue.textContent).toBe('1×');
+
+      const saved = app._buildProjectSnapshot();
+      expect(saved.styles.graphicsScale).toBe(1);
+      expect(await loadSnapshot(app, saved)).toBe(true);
+    });
+
+    test('a project file whose Graphics scale is null opens at 1× through Open Project', async () => {
+      // Open Project and the examples share recovery's staging; this pins them
+      // to the rule too, so the guard cannot move to one entry point unnoticed.
+      const app = await bootWithRoute({ waypoints: 2 });
+      const project = app._buildProjectSnapshot({ includeAssets: false });
+      project.styles.graphicsScale = null;
+      const archive = await app.imageAssetService.exportZip(project);
+      const file = new File([archive], 'null-scale.zip', { type: 'application/zip' });
+      expect(await app.loadProject(file)).toBe(true);
+      expect(app.styles.graphicsScale).toBe(1);
+      expect(app.renderingService._graphicsScale).toBe(1);
+      expect(app.elements.graphicsScaleValue.textContent).toBe('1×');
+      expect(app._buildProjectSnapshot().styles.graphicsScale).toBe(1);
+    });
+
+    test('the other null styles the row names still read as 0 and reopen', async () => {
+      // Left as they are until the owner widens DEF-37 (2026-09-24): pinned so
+      // a fix cannot widen to them unnoticed.
+      const app = await bootWithRoute({ waypoints: 2 });
+      const project = app._buildProjectSnapshot();
+      Object.assign(project.styles, { pathThickness: null, dotSize: null });
+      Object.assign(project.styles.pathHead, { size: null, rotationOffset: null });
+      project.styles.pathGlow = { ...project.styles.pathGlow, intensity: null };
+      expect(await loadSnapshot(app, project)).toBe(true);
+      expect([app.styles.pathThickness, app.styles.dotSize, app.styles.pathHead.size,
+        app.styles.pathHead.rotationOffset, app.styles.pathGlow.intensity]).toEqual([0, 0, 0, 0, 0]);
+      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+    });
+
+    test('a Graphics scale of 0 is still refused', async () => {
+      // Only `null` means "absent"; 0 is an invalid scale, as before.
+      allowConsole(LOAD_REFUSED);
+      const app = await bootWithRoute({ waypoints: 2 });
+      const project = app._buildProjectSnapshot();
+      project.styles.graphicsScale = 0;
+      expect(await loadSnapshot(app, project)).toBe(false);
+      expect(refusalReason()).toContain('Invalid graphics scale');
     });
 
   });
