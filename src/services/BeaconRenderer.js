@@ -1071,8 +1071,11 @@ export class BeaconRenderer {
    * @param {Object} animationEngine - Animation engine instance (schedule source)
    * @param {Object} motionSettings - Motion visibility settings
    * @param {Array} waypointProgressValues - Unused; kept for call-site stability
+   * @param {{ignoreReducedMotion?: boolean}} [options] - A video export bakes the beacons whatever the
+   *   author's reduced-motion setting (DEF-29)
    */
-  update(adjustedTimelineMs, waypoints, animationEngine, motionSettings, waypointProgressValues = null) {
+  update(adjustedTimelineMs, waypoints, animationEngine, motionSettings, waypointProgressValues = null,
+         { ignoreReducedMotion = false } = {}) {
     if (!waypoints || !animationEngine) return;
 
     const { waypointVisibility } = motionSettings || {};
@@ -1107,10 +1110,12 @@ export class BeaconRenderer {
       // prefers-reduced-motion. pulse/ripple loop continuously and glow is a
       // ~3s radial bloom — all skipped (marker held static). pop/grow are brief
       // one-shot reveal transitions and remain.
-      if (BeaconRenderer.prefersReducedMotion) {
+      if (BeaconRenderer.prefersReducedMotion && !ignoreReducedMotion) {
         const beaconType = waypoint.beaconStyle;
         if (beaconType === 'pulse' || beaconType === 'ripple' || beaconType === 'glow') {
-          beacon.scale = 1.0; // Hold marker at normal scale; skip the animated effect
+          // Held as if never synced, so nothing an export frame, or a frame
+          // from before the setting changed, stays drawn (DEF-29)
+          beacon.reset();
           return;
         }
       }

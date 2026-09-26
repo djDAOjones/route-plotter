@@ -938,6 +938,9 @@ class RoutePlotter {
       // Stable visual sizing reference, separate from timingReference.
       renderReference: this.renderReference,
       interactiveLabels: !this._isExportMode,
+      // A video export bakes beacons as authored, ignoring the author's
+      // reduced-motion setting; the editor and the player honour it (DEF-29)
+      exportingVideo: this._isExportMode,
       
       // Visible bounds for clipping (normalized 0-1 coordinates)
       visibleBounds: this.getVisibleBounds(),
