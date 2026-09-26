@@ -314,7 +314,7 @@
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
-- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); the DEF-31 regression (a crowd traced from the longest waypoint ids reloads); and the DEF-04 failures characterised with the reason the loader gives
+- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); the DEF-31 regression (a crowd traced from the longest waypoint ids reloads); the DEF-37 regression (a hand-edited `null` Graphics scale opens at 1× and its next save reopens); and the DEF-04 failures characterised with the reason the loader gives
 - `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
