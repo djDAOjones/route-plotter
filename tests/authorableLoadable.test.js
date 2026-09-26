@@ -518,6 +518,35 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       expect(await loadSnapshot(app, saved)).toBe(true);
     });
 
+    test('a project file whose Graphics scale is null opens at 1× through Open Project', async () => {
+      // Open Project and the examples share recovery's staging; this pins them
+      // to the rule too, so the guard cannot move to one entry point unnoticed.
+      const app = await bootWithRoute({ waypoints: 2 });
+      const project = app._buildProjectSnapshot({ includeAssets: false });
+      project.styles.graphicsScale = null;
+      const archive = await app.imageAssetService.exportZip(project);
+      const file = new File([archive], 'null-scale.zip', { type: 'application/zip' });
+      expect(await app.loadProject(file)).toBe(true);
+      expect(app.styles.graphicsScale).toBe(1);
+      expect(app.renderingService._graphicsScale).toBe(1);
+      expect(app.elements.graphicsScaleValue.textContent).toBe('1×');
+      expect(app._buildProjectSnapshot().styles.graphicsScale).toBe(1);
+    });
+
+    test('the other null styles the row names still read as 0 and reopen', async () => {
+      // Left as they are until the owner widens DEF-37 (2026-09-24): pinned so
+      // a fix cannot widen to them unnoticed.
+      const app = await bootWithRoute({ waypoints: 2 });
+      const project = app._buildProjectSnapshot();
+      Object.assign(project.styles, { pathThickness: null, dotSize: null });
+      Object.assign(project.styles.pathHead, { size: null, rotationOffset: null });
+      project.styles.pathGlow = { ...project.styles.pathGlow, intensity: null };
+      expect(await loadSnapshot(app, project)).toBe(true);
+      expect([app.styles.pathThickness, app.styles.dotSize, app.styles.pathHead.size,
+        app.styles.pathHead.rotationOffset, app.styles.pathGlow.intensity]).toEqual([0, 0, 0, 0, 0]);
+      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+    });
+
     test('a Graphics scale of 0 is still refused', async () => {
       // Only `null` means "absent"; 0 is an invalid scale, as before.
       allowConsole(LOAD_REFUSED);
