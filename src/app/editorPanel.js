@@ -8,7 +8,7 @@
  */
 import { TEXT_LABEL, TEXT_VISIBILITY } from '../config/constants.js';
 import { BEACON_TIMING } from '../services/BeaconRenderer.js';
-import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
+import { formatUIValue } from '../utils/sliderScales.js';
 import {
   setSwatchPickerEnabled,
   setSwatchPickerMixed,
@@ -459,7 +459,7 @@ export const editorPanelMixin = {
         ? this.uiController.pauseTimeToSlider(pauseSeconds)
         : pauseSeconds;
       this.elements.waypointPauseTimeValue.textContent =
-        MotionVisibilityService.formatUIValue(pauseSeconds, 's');
+        formatUIValue(pauseSeconds, 's');
     }
     if (this.elements.pauseTimeControl) this.elements.pauseTimeControl.style.display = 'flex';
 
@@ -468,7 +468,7 @@ export const editorPanelMixin = {
       this.elements.waypointSegmentSpeed.value = this.uiController?.segmentSpeedToSlider
         ? this.uiController.segmentSpeedToSlider(speed)
         : speed;
-      const display = speed < 1 ? speed.toFixed(2) : MotionVisibilityService.formatUIValue(speed);
+      const display = speed < 1 ? speed.toFixed(2) : formatUIValue(speed);
       this.elements.waypointSegmentSpeedValue.textContent = `${display}x`;
     }
     if (this.elements.segmentSpeedControl) this.elements.segmentSpeedControl.style.display = 'flex';

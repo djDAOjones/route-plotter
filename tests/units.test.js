@@ -11,7 +11,7 @@ import { AnimationState } from '../src/models/AnimationState.js';
 import { PathCalculator } from '../src/services/PathCalculator.js';
 import { CoordinateTransform } from '../src/services/CoordinateTransform.js';
 import { TextLabelService } from '../src/services/TextLabelService.js';
-import { MotionVisibilityService } from '../src/services/MotionVisibilityService.js';
+import { log2ValueToSlider, sliderToLog2Value } from '../src/utils/sliderScales.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { CameraService } from '../src/services/CameraService.js';
 import { RenderingService } from '../src/services/RenderingService.js';
@@ -343,16 +343,16 @@ describe('TextLabelService.getTextVisibility', () => {
   });
 });
 
-describe('MotionVisibilityService log2 slider mapping', () => {
+describe('sliderScales log2 slider mapping', () => {
   test('endpoints map to min/max', () => {
-    expect(MotionVisibilityService.sliderToLog2Value(0, 1, 100)).toBe(1);
-    expect(MotionVisibilityService.sliderToLog2Value(1000, 1, 100)).toBe(100);
+    expect(sliderToLog2Value(0, 1, 100)).toBe(1);
+    expect(sliderToLog2Value(1000, 1, 100)).toBe(100);
   });
 
   test('slider <-> value round-trips across the range', () => {
     for (const slider of [100, 250, 500, 750, 900]) {
-      const value = MotionVisibilityService.sliderToLog2Value(slider, 1, 100);
-      const back = MotionVisibilityService.log2ValueToSlider(value, 1, 100);
+      const value = sliderToLog2Value(slider, 1, 100);
+      const back = log2ValueToSlider(value, 1, 100);
       expect(back).toBeCloseTo(slider, 0);
     }
   });
