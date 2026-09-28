@@ -307,6 +307,15 @@ export class AreaDrawingService {
     
     ctx.save();
     
+    // The preview's own blue, set before its first stroke. The solid edges
+    // used to be stroked first, with whatever stroke the layer had last (a
+    // marker's outline, the route's colour and width), while the rest of the
+    // preview drew in this blue (DEF-47).
+    ctx.strokeStyle = '#0f62fe';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.8;
+    ctx.setLineDash([]);
+    
     // Draw placed edges
     ctx.beginPath();
     const first = imageToCanvas(this.vertices[0].x, this.vertices[0].y);
@@ -331,9 +340,6 @@ export class AreaDrawingService {
       ctx.lineTo(first.x, first.y);
     }
     
-    ctx.strokeStyle = '#0f62fe';
-    ctx.lineWidth = 2;
-    ctx.globalAlpha = 0.8;
     ctx.stroke();
     ctx.setLineDash([]);
     

@@ -1000,6 +1000,102 @@ describe('golden draw logs (TST-02)', () => {
 
     });
 
+    describe('DEF-47: a polygon being drawn draws in its own blue, whatever drew before it', () => {
+      // While an area was being drawn, the preview stroked its placed edges and
+      // the line to the cursor before setting its own style, so they drew with
+      // whatever stroke the layer last had: the last marker's white outline in
+      // `authored-extras`, the route's colour and width elsewhere, a black
+      // hairline on a freshly sized layer. The dashed line back to the first
+      // vertex and the vertex rings drew in the preview's blue, as did the same
+      // edges while the cursor was off the canvas; Joe chose that blue for the
+      // edges too (2026-09-28).
+
+      /** The preview's strokes: the last save on the vector layer is the preview's (`VECTOR_LAYERS`). */
+      function previewStrokes(frame) {
+        const vector = frame.filter(line => line.startsWith('vector '));
+        const opened = vector.findLastIndex(line => line === 'vector save');
+        const closed = vector.indexOf('vector restore', opened);
+        return vector.slice(opened, closed).filter(line => /^vector stroke /.test(line));
+      }
+
+      /** The blue each stroke of the preview draws with, solid or with the closing line's dashes. */
+      const BLUE = / strokeStyle=#0f62fe lineWidth=2 lineCap=round lineJoin=round (lineDash=4,4 )?globalAlpha=0\.8$/;
+
+      function expectPreviewInBlue(frame, label, { cursor, vertices = 2 }) {
+        const strokes = previewStrokes(frame);
+        // Non-vacuity: the placed edges, then the dashed line back to the
+        // first vertex while the cursor is on the canvas, then a ring for each
+        // vertex.
+        expect(strokes, label).toHaveLength(1 + (cursor ? 1 : 0) + vertices);
+        strokes.forEach((stroke, index) => {
+          expect(stroke, `${label}: "${stroke}"`).toMatch(BLUE);
+          // Only the line back is dashed; the edges and the rings are solid
+          if (cursor && index === 1) expect(stroke, `${label}: the line back`).toMatch(/ lineDash=4,4 /);
+          else expect(stroke, `${label}: stroke ${index}`).not.toMatch(/lineDash=/);
+        });
+      }
+
+      test('in the editor, whatever frame came before', async () => {
+        const app = await appWithFixture(fixtures().find(each => each.id === 'authored-extras'));
+        enterMode(app, 'edit');
+        const drawing = app.areaDrawingService;
+        app.eventBus.emit('area:draw-start', { waypoint: app.waypoints[1] });
+        try {
+          for (const [imgX, imgY] of [[0.2, 0.2], [0.4, 0.3]]) app.eventBus.emit('area:draw-click', { imgX, imgY });
+          expect(drawing.vertices).toHaveLength(2);
+          frameAt(app, 0.5);
+          expectPreviewInBlue(frameAt(app, 0.5, { state: 'drawn' }), 'before the cursor moves', { cursor: false });
+
+          app.eventBus.emit('area:draw-move', { imgX: 0.6, imgY: 0.4 });
+          frameAt(app, 0.5);
+          expectPreviewInBlue(frameAt(app, 0.5, { state: 'drawn' }), 'after a frame with the route', { cursor: true });
+          frameAt(app, 0);
+          expectPreviewInBlue(frameAt(app, 0, { state: 'drawn' }), 'after a frame with no route', { cursor: true });
+          app.renderingService.vectorCanvasScale = NaN;
+          expectPreviewInBlue(frameAt(app, 0.5, { state: 'drawn' }), 'on a freshly sized layer', { cursor: true });
+
+          // As a layer drawn before the preview would leave its own stroke, if
+          // it set it outside a save; between frames the route would clear it.
+          // What the preview hands back is read before this wrapper's own
+          // restore, which would otherwise hide a style the preview leaked.
+          frameAt(app, 0.5);
+          let handedBack = null;
+          drawing.renderPreview = function (ctx, ...args) {
+            ctx.save();
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 9;
+            ctx.globalAlpha = 0.3;
+            ctx.setLineDash([7, 3]);
+            try {
+              return Object.getPrototypeOf(drawing).renderPreview.call(this, ctx, ...args);
+            } finally {
+              handedBack = [ctx.strokeStyle, ctx.lineWidth, ctx.globalAlpha, ctx.getLineDash()];
+              ctx.restore();
+            }
+          };
+          // The preview's own save is still the last on the layer
+          const poisoned = frameAt(app, 0.5, { state: 'drawn' });
+          delete drawing.renderPreview;
+          expect(poisoned).toContain('vector setLineDash [7,3]');
+          expectPreviewInBlue(poisoned, 'after a layer that left another stroke', { cursor: true });
+          expect(handedBack, 'the preview hands the layer back as it found it').toEqual(['#ff0000', 9, 0.3, [7, 3]]);
+
+          // A third vertex adds the translucent fill, in the same blue
+          app.eventBus.emit('area:draw-click', { imgX: 0.5, imgY: 0.6 });
+          expect(drawing.vertices).toHaveLength(3);
+          frameAt(app, 0.5);
+          const withFill = frameAt(app, 0.5, { state: 'drawn' });
+          expectPreviewInBlue(withFill, 'with three vertices', { cursor: true, vertices: 3 });
+          expect(withFill.filter(line => line.endsWith('| fillStyle=rgba(15, 98, 254, 0.1) globalAlpha=0.8')),
+            'the fill').toHaveLength(1);
+        } finally {
+          delete drawing.renderPreview;
+          drawing.cancelDrawing();
+        }
+      });
+
+    });
+
     describe('DEF-08: a beacon scales its marker whether or not the transport runs', () => {
       // Pop, grow and pulse beacons scale their waypoint's marker. The
       // renderer applied that scale only while the transport ran
