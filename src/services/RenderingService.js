@@ -1240,7 +1240,8 @@ export class RenderingService {
                                      state.motionSettings.waypointVisibility !== WAYPOINT_VISIBILITY.ALWAYS_HIDE;
         if (!shouldRenderBeacons) return;
         svc.renderBeacons(ctx, state.waypoints, state.animationEngine, state.beaconAnimation, state.imageToCanvas, state.styles,
-                          frame.applyMotion ? state.motionSettings : null, state.waypointProgressValues);
+                          frame.applyMotion ? state.motionSettings : null, state.waypointProgressValues,
+                          { ignoreReducedMotion: state.exportingVideo === true });
       },
     },
     {
@@ -2002,8 +2003,10 @@ export class RenderingService {
    * @param {Object} styles - Style settings
    * @param {Object} motionSettings - Motion visibility settings
    * @param {Array} waypointProgressValues - Pre-calculated waypoint progress values
+   * @param {Object} [options] - Passed to `BeaconRenderer.update`
    */
-  renderBeacons(ctx, waypoints, animationEngine, beaconAnimation, imageToCanvas, styles, motionSettings = null, waypointProgressValues = null) {
+  renderBeacons(ctx, waypoints, animationEngine, beaconAnimation, imageToCanvas, styles, motionSettings = null,
+                waypointProgressValues = null, options = {}) {
     if (!waypoints.length || !animationEngine) return;
     
     // Sync beacons to the current timeline instant (pause-marker axis: raw
@@ -2011,7 +2014,8 @@ export class RenderingService {
     // timeline time, so play, scrub, and export all see identical beacons.
     const adjustedTimelineMs = animationEngine.state.currentTime -
       (animationEngine.startHandleTime || 0) - (animationEngine.introTime || 0);
-    this.beaconRenderer.update(adjustedTimelineMs, waypoints, animationEngine, motionSettings, waypointProgressValues);
+    this.beaconRenderer.update(adjustedTimelineMs, waypoints, animationEngine, motionSettings,
+                               waypointProgressValues, options);
     
     // Render beacons for each waypoint
     const currentProgress = animationEngine.getPathProgress();
