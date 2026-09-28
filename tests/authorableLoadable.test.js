@@ -498,6 +498,66 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
 
   });
 
+  describe('DEF-41: a traced bend off the image reloads', () => {
+
+    test('a crowd traced through a minor waypoint off the image keeps its bend there, and reloads', async () => {
+      const app = await bootWithRoute({ waypoints: 0 });
+      const project = {
+        coordVersion: 9,
+        waypoints: [
+          { id: 'wp-a', imgX: 0.3, imgY: 0.5, isMajor: true },
+          { id: 'wp-bend', imgX: 1.25, imgY: 0.15, isMajor: false },
+          { id: 'wp-b', imgX: 1.6, imgY: 0.5, isMajor: true },
+        ],
+      };
+      expect(await loadSnapshot(app, project)).toBe(true);
+
+      app.addCrowd({ enterNetworkEditor: false });
+      expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
+      const saved = app._buildProjectSnapshot();
+      expect(saved.scene.flowLayers[0].graph.edges[0].controlPoints).toEqual([{ x: 1.25, y: 0.15 }]);
+
+      // Widening the model alone would have saved a project load refuses.
+      expect(await loadSnapshot(app, saved)).toBe(true);
+      expect(app.scene.getFlowLayers()[0].graph.getEdges()[0].controlPoints).toEqual([{ x: 1.25, y: 0.15 }]);
+    });
+
+    test('the network pen places and drags on the image only', async () => {
+      // Its pointer positions are held to the image before any bend or node
+      // is made; the model no longer holds a bend there itself.
+      const app = await bootWithRoute({ waypoints: 0 });
+      // Zoomed out, the canvas shows past the image's edges, and a pointer
+      // there reads as a point off the image.
+      app.exportSettings.backgroundZoom = 50;
+      expect(app.screenToImage(-100000, 100000).x).toBeLessThan(0);
+      const far = app._networkImgPos(-100000, 100000);
+      const farther = app._networkImgPos(100000, -100000);
+
+      expect([far, farther]).toEqual([{ x: 0, y: 1 }, { x: 1, y: 0 }]);
+    });
+
+    test('a bend past the range a project can store is refused, as a waypoint there is', async () => {
+      const app = await bootWithRoute({ waypoints: 0 });
+      const project = {
+        coordVersion: 9,
+        waypoints: [
+          { id: 'wp-a', imgX: 0.3, imgY: 0.5, isMajor: true },
+          { id: 'wp-b', imgX: 0.6, imgY: 0.5, isMajor: true },
+        ],
+      };
+      expect(await loadSnapshot(app, project)).toBe(true);
+      app.addCrowd({ enterNetworkEditor: false });
+      expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
+      const saved = app._buildProjectSnapshot();
+      saved.scene.flowLayers[0].graph.edges[0].controlPoints = [{ x: 11.5, y: 0.5 }];
+
+      allowConsole(LOAD_REFUSED);
+      expect(await loadSnapshot(app, saved)).toBe(false);
+      expect(recordedConsole().some(line => line.includes('Invalid graph control point: expected coordinates from -10 to 11'))).toBe(true);
+    });
+
+  });
+
   describe('DEF-37: a null Graphics scale reloads', () => {
 
     test('a project whose Graphics scale is null opens at 1×, and its next save reopens', async () => {

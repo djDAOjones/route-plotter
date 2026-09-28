@@ -113,7 +113,6 @@ moved, and account for every survivor)
   report points to the notice. **P2**
 - [ ] **DEF-40 An outline entry opens empty on a real click** · Live defect
   [ready] **P2**
-- [ ] **DEF-41 Traced bends stay on the image** · Live defect [ready] **P2**
 - [ ] **DEF-44 A paused editor never idles** · Live defect [ready] **P2**
 - [ ] **DEF-46 A second export spoils the first** · Live defect [ready]
   **P2**
