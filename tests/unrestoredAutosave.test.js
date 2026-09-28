@@ -11,9 +11,10 @@
  * autosave's failure report points to the notice.
  *
  * Nothing but that Discard and Clear All may remove one or write over it: not
- * a second record that fails, not a move that fails for want of room (the
- * record is then held where it was, and autosave fails until the author
- * chooses), not a commit that rolls back.
+ * a second record that fails (each has a key of its own), not a store with no
+ * room for a copy (the record is then held where it was, and no tab writes
+ * there until the author chooses), not a commit that rolls back, not a later
+ * start.
  *
  * Each test boots the real app over an in-memory `localStorage`, so the
  * startup restore reads what a browser would have kept.
@@ -27,9 +28,11 @@ import { allowConsole } from './helpers/consoleGuard.js';
 import { LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { STORAGE } from '../src/config/constants.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
+import { StorageService } from '../src/services/StorageService.js';
 
 const AUTOSAVE = STORAGE.AUTOSAVE_KEY;
-const PARKED = STORAGE.PARKED_AUTOSAVE_KEY;
+const KEPT_PREFIX = STORAGE.KEPT_AUTOSAVE_PREFIX;
+const HELD_MARK = STORAGE.HELD_AUTOSAVE_KEY;
 const NOW = "Your previous session couldn't be restored.";
 const EARLIER = "An earlier session couldn't be restored.";
 const KEPT = 'Kept until you discard it. You can download a copy.';
@@ -37,7 +40,7 @@ const HELD = "Kept until you discard it, and new work isn't saved in this browse
 const UNKEPT = "This browser couldn't keep it, so download it now to keep a copy.";
 const DISCARDED = "The session that couldn't be restored was discarded.";
 const FREE_SPACE = " To free space, download the session that couldn't be restored, then discard it.";
-const RESUMES = " Auto-save resumes once you discard the session that couldn't be restored; download it first to keep a copy.";
+const OFF_UNTIL = " Auto-save is off until you discard the session that couldn't be restored; download it first to keep a copy.";
 const WRITE_FAILED = /Failed to save to localStorage/;
 /**
  * A store full to its last character also refuses the preview tip's
@@ -47,31 +50,40 @@ const WRITE_FAILED = /Failed to save to localStorage/;
 const TIP_SEEN = { routePlotter_previewTipDismissed: 'true' };
 const TIP_SIZE = Object.entries(TIP_SEEN).reduce((total, [key, value]) => total + key.length + value.length, 0);
 
+const isKept = key => key.startsWith(KEPT_PREFIX);
+/** A key an earlier start kept a record under. */
+const keptKey = (time, tag) => `${KEPT_PREFIX}${time}-${tag}`;
+
 /**
- * A browser's storage, in memory. A write to a key in `quotaFor`, or one that
- * would take the store past `capacity` characters (keys and values both, as
- * browsers count them), fails as a full store does; a removal from a key in
- * `removalFails`, or a read of one in `readFails`, throws.
+ * A browser's storage, in memory, searchable as `localStorage` is. A write to
+ * a key `quotaFor` names, or one that would take the store past `capacity`
+ * characters (keys and values both, as browsers count them), fails as a full
+ * store does; a removal from a key `removalFails` names, or a read of one
+ * `readFails` names, throws. Each names keys by value or by a test.
  */
 function useStorage(entries = {}, { quotaFor = [], capacity = Infinity, removalFails = [], readFails = [] } = {}) {
   const store = new Map(Object.entries(entries));
+  const names = list => key => list.some(entry => (typeof entry === 'function' ? entry(key) : entry === key));
+  const [refused, unremovable, unreadable] = [quotaFor, removalFails, readFails].map(names);
   const size = () => [...store].reduce((total, [key, value]) => total + key.length + value.length, 0);
   localStorage.getItem.mockImplementation((key) => {
-    if (readFails.includes(key)) throw new DOMException('The operation is insecure.', 'SecurityError');
+    if (unreadable(key)) throw new DOMException('The operation is insecure.', 'SecurityError');
     return store.has(key) ? store.get(key) : null;
   });
   localStorage.setItem.mockImplementation((key, value) => {
     const text = String(value);
     const replaced = store.has(key) ? key.length + store.get(key).length : 0;
-    if (quotaFor.includes(key) || size() - replaced + key.length + text.length > capacity) {
+    if (refused(key) || size() - replaced + key.length + text.length > capacity) {
       throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
     }
     store.set(key, text);
   });
   localStorage.removeItem.mockImplementation((key) => {
-    if (removalFails.includes(key)) throw new DOMException('The operation is insecure.', 'SecurityError');
+    if (unremovable(key)) throw new DOMException('The operation is insecure.', 'SecurityError');
     store.delete(key);
   });
+  Object.defineProperty(localStorage, 'length', { configurable: true, get: () => store.size });
+  localStorage.key = index => [...store.keys()][index] ?? null;
   return store;
 }
 
@@ -80,7 +92,14 @@ afterEach(() => {
   localStorage.getItem.mockImplementation(() => null);
   localStorage.setItem.mockImplementation(() => {});
   localStorage.removeItem.mockImplementation(() => {});
+  delete localStorage.length;
+  delete localStorage.key;
 });
+
+/** The records kept under keys of their own, newest first. */
+function kept(store) {
+  return [...store.keys()].filter(isKept).sort().reverse().map(key => store.get(key));
+}
 
 /** A saved project, as a booted app writes it. */
 async function savedProject() {
@@ -149,6 +168,7 @@ const notice = () => document.getElementById('unrestored-notice');
 const heading = () => document.getElementById('unrestored-notice-text').textContent;
 const status = () => document.getElementById('unrestored-notice-status').textContent;
 const clearNote = () => document.getElementById('clear-unrestored-note');
+const announcer = () => document.getElementById('announcer').textContent;
 const discard = () => document.getElementById('unrestored-discard').click();
 
 /** A change in the editor, and its autosave written at once. */
@@ -176,6 +196,18 @@ function download() {
   return handed;
 }
 
+/** Hold `loadAutosave`'s staging on a background image that decodes only when told. */
+function holdDecoding() {
+  let fail;
+  const reached = new Promise((resolveReached) => {
+    vi.spyOn(ImageAsset, 'decodeDataURL').mockImplementation(() => new Promise((_, reject) => {
+      fail = reject;
+      resolveReached();
+    }));
+  });
+  return { reached, fail: () => fail(new Error('the background could not be decoded')) };
+}
+
 describe('a record that cannot be restored (DEF-28)', () => {
   test('is set aside as it was stored, announced, and offered', async () => {
     allowConsole(LOAD_REFUSED);
@@ -184,7 +216,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
 
     expect(app.waypoints).toHaveLength(0);
     expect(store.has(AUTOSAVE)).toBe(false);
-    expect(store.get(PARKED)).toBe(record);
+    expect(kept(store)).toEqual([record]);
     expect(notice().hidden).toBe(false);
     expect(heading()).toBe(NOW);
     expect(status()).toBe(KEPT);
@@ -196,7 +228,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
     const { store } = await bootRecording({ [AUTOSAVE]: '{"coordVersion": 9, "waypoints": [' });
 
     expect(store.has(AUTOSAVE)).toBe(false);
-    expect(store.get(PARKED)).toBe('{"coordVersion": 9, "waypoints": [');
+    expect(kept(store)).toEqual(['{"coordVersion": 9, "waypoints": [']);
     expect(notice().hidden).toBe(false);
   });
 
@@ -206,7 +238,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
     const { store } = await bootRecording({ [AUTOSAVE]: record });
 
     expect(store.has(AUTOSAVE)).toBe(false);
-    expect(store.get(PARKED)).toBe(record);
+    expect(kept(store)).toEqual([record]);
     expect(notice().hidden).toBe(false);
   });
 
@@ -218,8 +250,8 @@ describe('a record that cannot be restored (DEF-28)', () => {
     editAndSave(app);
 
     expect(JSON.parse(store.get(AUTOSAVE)).waypoints).toHaveLength(1);
-    expect(store.get(PARKED)).toBe(record);
-    expect(localStorage.setItem.mock.calls.filter(([key]) => key === PARKED)).toHaveLength(1);
+    expect(kept(store)).toEqual([record]);
+    expect(localStorage.setItem.mock.calls.filter(([key]) => isKept(key))).toHaveLength(1);
   });
 
   test('downloads as it was stored, and stays until the author discards it', async () => {
@@ -233,29 +265,30 @@ describe('a record that cannot be restored (DEF-28)', () => {
     expect(blob.type).toBe('application/json');
     expect(await blob.text()).toBe(record);
     // Downloading is not choosing: the record waits for Discard or Clear All.
-    expect(store.get(PARKED)).toBe(record);
+    expect(kept(store)).toEqual([record]);
     expect(notice().hidden).toBe(false);
     await restart(prototype);
     expect(notice().hidden).toBe(false);
-    expect(store.get(PARKED)).toBe(record);
+    expect(kept(store)).toEqual([record]);
   });
 
-  test('goes when the author discards it', async () => {
+  test('goes when the author discards it, and the announcement says so', async () => {
     allowConsole(LOAD_REFUSED);
     const { store, app } = await bootRecording({ [AUTOSAVE]: await refusedRecord() });
     const announced = listen(app);
 
     discard();
 
-    expect(store.has(PARKED)).toBe(false);
+    expect(kept(store)).toEqual([]);
     expect(notice().hidden).toBe(true);
     expect(announced()).toEqual([{ message: DISCARDED, priority: 'polite' }]);
+    expect(announcer()).toBe(DISCARDED);
   });
 
   test('is offered again by the next start, as one kept earlier, until the author chooses', async () => {
-    const { store, announced } = await bootRecording({ [PARKED]: 'kept from an earlier session' });
+    const { store, announced } = await bootRecording({ [keptKey(1, 'a')]: 'kept from an earlier session' });
 
-    expect(store.get(PARKED)).toBe('kept from an earlier session');
+    expect(kept(store)).toEqual(['kept from an earlier session']);
     expect(notice().hidden).toBe(false);
     expect(heading()).toBe(EARLIER);
     expect(status()).toBe(KEPT);
@@ -278,11 +311,11 @@ describe('a record that cannot be restored (DEF-28)', () => {
     expect(await app.loadAutosave()).toBe(false);
 
     expect(app.waypoints).toHaveLength(0);
-    expect(store.get(PARKED)).toBe(record);
+    expect(kept(store)).toEqual([record]);
     expect(store.has(AUTOSAVE)).toBe(false);
     expect(notice().hidden).toBe(false);
     editAndSave(app);
-    expect(store.get(PARKED)).toBe(record);
+    expect(kept(store)).toEqual([record]);
   });
 
   test('is not kept when the project restored and only what follows the commit failed', async () => {
@@ -297,7 +330,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
     expect(await app.loadAutosave()).toBe(false);
 
     expect(app.waypoints).toHaveLength(2);
-    expect(store.has(PARKED)).toBe(false);
+    expect(kept(store)).toEqual([]);
     expect(notice().hidden).toBe(true);
   });
 
@@ -308,79 +341,130 @@ describe('a record that cannot be restored (DEF-28)', () => {
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED);
-    let failDecode;
-    const decoding = new Promise((reached) => {
-      vi.spyOn(ImageAsset, 'decodeDataURL').mockImplementation(() => new Promise((_, reject) => {
-        failDecode = reject;
-        reached();
-      }));
-    });
+    const decoding = holdDecoding();
 
     const restoring = app.loadAutosave();
-    await decoding;
+    await decoding.reached;
     store.set(AUTOSAVE, 'a newer record, written by another tab');
-    failDecode(new Error('the background could not be decoded'));
+    decoding.fail();
 
     expect(await restoring).toBe(false);
-    expect(store.get(PARKED)).toBe(record);
+    expect(kept(store)).toEqual([record]);
     expect(store.get(AUTOSAVE)).toBe('a newer record, written by another tab');
   });
 
-  test('is offered, and not called kept, when another tab writes the key and a record kept earlier fills its own', async () => {
-    // Nowhere is left to keep it: its own key is taken, and the recovery key
-    // now holds the other tab's record, which is not this one to hold.
-    const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
-    const store = useStorage({ [PARKED]: 'kept from an earlier session' });
+  test('is kept although the recovery key cannot be read again: the copy is made, and the key left alone', async () => {
+    const record = await refusedRecord();
+    const store = useStorage();
     const app = await bootApp();
     await app.ready;
     store.set(AUTOSAVE, record);
-    allowConsole(LOAD_REFUSED);
-    let failDecode;
-    const decoding = new Promise((reached) => {
-      vi.spyOn(ImageAsset, 'decodeDataURL').mockImplementation(() => new Promise((_, reject) => {
-        failDecode = reject;
-        reached();
-      }));
+    allowConsole(LOAD_REFUSED, /Failed to load from localStorage \(routePlotter_autosave\)/);
+    let reads = 0;
+    const read = localStorage.getItem.getMockImplementation();
+    localStorage.getItem.mockImplementation((key) => {
+      if (key === AUTOSAVE && ++reads > 1) throw new DOMException('The operation is insecure.', 'SecurityError');
+      return read(key);
     });
 
-    const restoring = app.loadAutosave();
-    await decoding;
-    store.set(AUTOSAVE, 'a newer record, written by another tab');
-    failDecode(new Error('the background could not be decoded'));
+    expect(await app.loadAutosave()).toBe(false);
 
-    expect(await restoring).toBe(false);
-    expect(store.get(PARKED)).toBe('kept from an earlier session');
-    expect(heading()).toBe(NOW);
-    expect(status()).toBe(UNKEPT);
-    const [blob] = download();
-    expect(await blob.text()).toBe(record);
-    // Nothing is held, so this tab's autosave writes as it always has.
-    editAndSave(app);
-    expect(JSON.parse(store.get(AUTOSAVE)).waypoints).toHaveLength(1);
+    expect(kept(store)).toEqual([record]);
+    expect(store.get(AUTOSAVE)).toBe(record);
+    expect(status()).toBe(KEPT);
   });
 });
 
-describe('a record that cannot move to its own key (DEF-28)', () => {
-  test('moves when the store has room for only one copy, by freeing the recovery key first', async () => {
-    allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to save section states/);
-    const record = await refusedRecord();
-    const { store } = await bootRecording(
-      { [AUTOSAVE]: record, ...TIP_SEEN },
-      { capacity: TIP_SIZE + PARKED.length + record.length + 10 }
-    );
+describe('more than one record that could not be restored (DEF-28)', () => {
+  test('are each kept under a key of their own, across starts, and offered one at a time, this start’s first', async () => {
+    const second = await olderRecord('second');
+    const { store, announced, prototype } = await bootRecording({
+      [keptKey(1, 'first')]: 'first record',
+      [AUTOSAVE]: second,
+    });
 
-    expect(store.get(PARKED)).toBe(record);
+    expect(kept(store)).toEqual([second, 'first record']);
     expect(store.has(AUTOSAVE)).toBe(false);
+    expect(heading()).toBe(NOW);
     expect(status()).toBe(KEPT);
+    expect(announced).toContainEqual({ message: `${NOW} ${KEPT}`, priority: 'assertive' });
+    expect(clearNote().textContent).toBe("The 2 sessions that couldn't be restored will be discarded too.");
+    const [blob] = download();
+    expect(await blob.text()).toBe(second);
+
+    const again = await restart(prototype);
+    expect(kept(store)).toEqual([second, 'first record']);
+    expect(heading()).toBe(EARLIER);
+
+    const later = listen(again.app);
+    editAndSave(again.app);
+    expect(JSON.parse(store.get(AUTOSAVE)).waypoints).toHaveLength(1);
+    discard();
+    expect(kept(store)).toEqual(['first record']);
+    expect(heading()).toBe(EARLIER);
+    expect(later()).toContainEqual({ message: `${DISCARDED} ${EARLIER} ${KEPT}`, priority: 'polite' });
+    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+
+    discard();
+    expect(kept(store)).toEqual([]);
+    expect(notice().hidden).toBe(true);
   });
 
-  test('is held where it was when the store cannot take it, and autosave leaves it until the author discards it', async () => {
-    allowConsole(LOAD_REFUSED, /Failed to save to localStorage \(routePlotter_parkedAutosave\)/);
+  test('are all kept when one fails at each of three starts', async () => {
+    const records = [await olderRecord('one'), await olderRecord('two'), await olderRecord('three')];
+    const { store, prototype } = await bootRecording({ [AUTOSAVE]: records[0] });
+    for (const record of records.slice(1)) {
+      store.set(AUTOSAVE, record);
+      await restart(prototype);
+    }
+
+    expect(kept(store).sort()).toEqual([...records].sort());
+    expect(clearNote().textContent).toBe("The 3 sessions that couldn't be restored will be discarded too.");
+  });
+
+  test('are one record when an earlier start kept it but could not clear the recovery key', async () => {
+    allowConsole(LOAD_REFUSED);
+    const { store } = await bootRecording({ [keptKey(1, 'a')]: 'the same record', [AUTOSAVE]: 'the same record' });
+
+    expect(kept(store)).toEqual(['the same record']);
+    expect(store.has(AUTOSAVE)).toBe(false);
+    expect(heading()).toBe(EARLIER);
+    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+  });
+
+  test('leave no copy in the recovery key for Discard to miss, so none returns on reload', async () => {
+    allowConsole(LOAD_REFUSED, /Failed to remove from localStorage \(routePlotter_autosave\)/);
     const record = await refusedRecord();
-    const { store, app, announced } = await bootRecording({ [AUTOSAVE]: record }, { quotaFor: [PARKED] });
+    const removal = { fails: true };
+    const { store, prototype } = await bootRecording(
+      { [AUTOSAVE]: record, [STORAGE.SPLASH_SHOWN_KEY]: 'true' },
+      { removalFails: [key => removal.fails && key === AUTOSAVE] }
+    );
+    expect(kept(store)).toEqual([record]);
+    expect(store.get(AUTOSAVE)).toBe(record);
+
+    // While the copy in the recovery key cannot go, Discard says it failed.
+    discard();
+    expect(notice().hidden).toBe(false);
+    expect(announcer()).toBe("The session that couldn't be restored could not be discarded.");
+
+    removal.fails = false;
+    discard();
+    expect(kept(store)).toEqual([]);
+    expect(store.has(AUTOSAVE)).toBe(false);
+    await restart(prototype);
+    expect(notice().hidden).toBe(true);
+  });
+});
+
+describe('a record no copy of which fits (DEF-28)', () => {
+  test('is held where it was, and autosave leaves it until the author discards it', async () => {
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    const record = await refusedRecord();
+    const { store, app, announced } = await bootRecording({ [AUTOSAVE]: record }, { quotaFor: [isKept] });
 
     expect(store.get(AUTOSAVE)).toBe(record);
-    expect(store.has(PARKED)).toBe(false);
+    expect(kept(store)).toEqual([]);
     expect(heading()).toBe(NOW);
     expect(status()).toBe(HELD);
     expect(announced).toContainEqual({ message: `${NOW} ${HELD}`, priority: 'assertive' });
@@ -388,18 +472,19 @@ describe('a record that cannot move to its own key (DEF-28)', () => {
     const later = listen(app);
     editAndSave(app);
     expect(store.get(AUTOSAVE)).toBe(record);
-    expect(later()).toContainEqual({ message: `Auto-save failed. Save a project file to keep your work.${RESUMES}`, priority: 'polite' });
+    expect(later()).toContainEqual({ message: `Auto-save failed. Save a project file to keep your work.${OFF_UNTIL}`, priority: 'polite' });
 
     discard();
     expect(notice().hidden).toBe(true);
+    expect(store.has(HELD_MARK)).toBe(false);
     // The work autosave could not write meanwhile is written now.
     app.storageService.flushAutoSave();
     expect(JSON.parse(store.get(AUTOSAVE)).waypoints).toHaveLength(1);
   });
 
-  test('is held when the store fits it exactly: the move would need six more characters', async () => {
-    // A full store, counted as browsers count it: the parked key is longer
-    // than the recovery key, so the record fits only where it already is.
+  test('is held, and nothing removed to make room, when the store fits it exactly', async () => {
+    // A full store, counted as browsers count it: a copy needs room the store
+    // has not got, and the original is never given up to find it.
     allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to save section states/);
     const record = await refusedRecord();
     const { store, app } = await bootRecording(
@@ -408,112 +493,182 @@ describe('a record that cannot move to its own key (DEF-28)', () => {
     );
 
     expect(store.get(AUTOSAVE)).toBe(record);
-    expect(store.has(PARKED)).toBe(false);
+    expect(localStorage.removeItem.mock.calls.filter(([key]) => key === AUTOSAVE)).toEqual([]);
     expect(status()).toBe(HELD);
     editAndSave(app);
     expect(store.get(AUTOSAVE)).toBe(record);
   });
 
-  test('is held, not written over what may be there, when its own key cannot be read', async () => {
-    allowConsole(LOAD_REFUSED, /Failed to load from localStorage \(routePlotter_parkedAutosave\)/);
-    const record = await refusedRecord();
-    const { store } = await bootRecording(
-      { [AUTOSAVE]: record, [PARKED]: 'kept from an earlier session' },
-      { readFails: [PARKED] }
-    );
-
-    expect(store.get(AUTOSAVE)).toBe(record);
-    expect(store.get(PARKED)).toBe('kept from an earlier session');
-    expect(localStorage.setItem.mock.calls.filter(([key]) => key === PARKED)).toHaveLength(0);
-    expect(status()).toBe(HELD);
-  });
-
-  test('is offered for download, and not called kept, when the store takes it nowhere', async () => {
+  test('is held against another tab of the app, which cannot write or clear the recovery key over it', async () => {
     allowConsole(LOAD_REFUSED, WRITE_FAILED);
     const record = await refusedRecord();
-    const { store, announced } = await bootRecording({ [AUTOSAVE]: record }, { quotaFor: [PARKED, AUTOSAVE] });
+    const { store } = await bootRecording({ [AUTOSAVE]: record }, { quotaFor: [isKept] });
+    const otherTab = new StorageService();
 
-    expect(store.has(PARKED)).toBe(false);
+    expect(otherTab.saveAutoSave({ coordVersion: 9, name: 'the other tab' })).toBe(false);
+    expect(otherTab.clearAutoSave()).toBe(false);
+    expect(store.get(AUTOSAVE)).toBe(record);
+  });
+
+  test('is still held, and offered, not tried again, at the next start', async () => {
+    const record = JSON.stringify(await savedProject(), null, 2);
+    const store = useStorage({}, { quotaFor: [isKept] });
+    const app = await bootApp();
+    await app.ready;
+    const prototype = Object.getPrototypeOf(app);
+    store.set(AUTOSAVE, record);
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    vi.spyOn(app.imageAssetService, 'replaceAssets').mockImplementationOnce(() => {
+      throw new Error('a commit failure that the next start would not meet');
+    });
+    expect(await app.loadAutosave()).toBe(false);
+    expect(status()).toBe(HELD);
+
+    const { app: next } = await restart(prototype);
+
+    expect(next.waypoints).toHaveLength(0);
+    expect(store.get(AUTOSAVE)).toBe(record);
+    expect(heading()).toBe(EARLIER);
+    expect(status()).toBe(HELD);
+    discard();
+    expect(store.has(AUTOSAVE)).toBe(false);
+  });
+
+  test('is offered for download, and not called kept, when no copy fits and another tab writes the key while it restores', async () => {
+    const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
+    const store = useStorage({}, { quotaFor: [isKept] });
+    const app = await bootApp();
+    await app.ready;
+    store.set(AUTOSAVE, record);
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    const decoding = holdDecoding();
+
+    const restoring = app.loadAutosave();
+    await decoding.reached;
+    store.set(AUTOSAVE, 'a newer record, written by another tab');
+    decoding.fail();
+
+    expect(await restoring).toBe(false);
+    expect(heading()).toBe(NOW);
     expect(status()).toBe(UNKEPT);
-    expect(announced).toContainEqual({ message: `${NOW} ${UNKEPT}`, priority: 'assertive' });
     const [blob] = download();
     expect(await blob.text()).toBe(record);
+    // Nothing is held, so this tab's autosave writes as it always has.
+    editAndSave(app);
+    expect(JSON.parse(store.get(AUTOSAVE)).waypoints).toHaveLength(1);
     discard();
     expect(notice().hidden).toBe(true);
   });
-});
 
-describe('two records that could not be restored (DEF-28)', () => {
-  test('are both kept, across starts, and offered one at a time, this start’s first', async () => {
-    const second = await olderRecord('second');
-    const { store, announced, prototype } = await bootRecording({
-      [PARKED]: 'first record',
-      [AUTOSAVE]: second,
+  test('is held, not called unkept, when no copy fits and the recovery key cannot be read again', async () => {
+    // It may still be there, so it is treated as there: held, not given up.
+    const record = await refusedRecord();
+    const store = useStorage({}, { quotaFor: [isKept] });
+    const app = await bootApp();
+    await app.ready;
+    store.set(AUTOSAVE, record);
+    allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to load from localStorage \(routePlotter_autosave\)/);
+    let reads = 0;
+    const read = localStorage.getItem.getMockImplementation();
+    localStorage.getItem.mockImplementation((key) => {
+      if (key === AUTOSAVE && ++reads > 1) throw new DOMException('The operation is insecure.', 'SecurityError');
+      return read(key);
     });
 
-    // The first keeps its key; the second is held where it was.
-    expect(store.get(PARKED)).toBe('first record');
-    expect(store.get(AUTOSAVE)).toBe(second);
-    expect(heading()).toBe(NOW);
+    expect(await app.loadAutosave()).toBe(false);
+
     expect(status()).toBe(HELD);
-    expect(announced).toContainEqual({ message: `${NOW} ${HELD}`, priority: 'assertive' });
-    expect(clearNote().textContent).toBe("The 2 sessions that couldn't be restored will be discarded too.");
-    const [blob] = download();
-    expect(await blob.text()).toBe(second);
-
-    const again = await restart(prototype);
-    expect(store.get(PARKED)).toBe('first record');
-    expect(store.get(AUTOSAVE)).toBe(second);
-    expect(heading()).toBe(NOW);
-
-    const later = listen(again.app);
-    discard();
-    expect(store.has(AUTOSAVE)).toBe(false);
-    expect(store.get(PARKED)).toBe('first record');
-    expect(heading()).toBe(EARLIER);
-    expect(status()).toBe(KEPT);
-    expect(later()).toEqual([{ message: `${DISCARDED} ${EARLIER} ${KEPT}`, priority: 'polite' }]);
-    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
-
-    editAndSave(again.app);
-    expect(JSON.parse(store.get(AUTOSAVE)).waypoints).toHaveLength(1);
-    expect(store.get(PARKED)).toBe('first record');
-
-    discard();
-    expect(store.has(PARKED)).toBe(false);
-    expect(notice().hidden).toBe(true);
+    editAndSave(app);
+    expect(store.get(AUTOSAVE)).toBe(record);
   });
 
-  test('are one record when an earlier start kept it but could not clear the recovery key', async () => {
-    allowConsole(LOAD_REFUSED);
-    const { store } = await bootRecording({ [PARKED]: 'the same record', [AUTOSAVE]: 'the same record' });
+  test('is out of reach of the storage service’s own import and clears, which say so', async () => {
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    const record = await refusedRecord();
+    const { store, app } = await bootRecording({ [AUTOSAVE]: record }, { quotaFor: [isKept] });
+    const service = app.storageService;
 
-    expect(store.get(PARKED)).toBe('the same record');
-    expect(store.has(AUTOSAVE)).toBe(false);
-    expect(heading()).toBe(EARLIER);
-    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+    expect(service.importData(JSON.stringify({ autosave: { name: 'imported' } }))).toBe(false);
+    expect(service.saveAutoSave({ name: 'saved' })).toBe(false);
+    expect(service.clearAutoSave()).toBe(false);
+    expect(service.clearAll()).toBe(false);
+    expect(store.get(AUTOSAVE)).toBe(record);
+  });
+
+  test('stays held when Discard cannot remove it', async () => {
+    allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to remove from localStorage \(routePlotter_autosave\)/);
+    const record = await refusedRecord();
+    const { store, app } = await bootRecording({ [AUTOSAVE]: record }, { quotaFor: [isKept], removalFails: [AUTOSAVE] });
+
+    discard();
+
+    expect(notice().hidden).toBe(false);
+    expect(status()).toBe(HELD);
+    editAndSave(app);
+    expect(store.get(AUTOSAVE)).toBe(record);
+  });
+
+  test('once discarded, leaves a record another writer put in its place', async () => {
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    const record = await refusedRecord();
+    const { store } = await bootRecording({ [AUTOSAVE]: record }, { quotaFor: [isKept] });
+    store.set(AUTOSAVE, 'written by a build that does not know the mark');
+
+    discard();
+
+    expect(store.get(AUTOSAVE)).toBe('written by a build that does not know the mark');
+    expect(notice().hidden).toBe(true);
+    expect(store.has(HELD_MARK)).toBe(false);
+  });
+
+  test('once discarded, lets a project opened meanwhile reach browser recovery, unsaved or not', async () => {
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    const { store, app } = await bootRecording({ [AUTOSAVE]: await refusedRecord() }, { quotaFor: [isKept] });
+    const project = app._buildProjectSnapshot();
+    project.waypoints = [{ id: 'opened', imgX: 0.2, imgY: 0.3, isMajor: true }];
+    vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({ projectData: project, imageAssets: [], backgroundBase64: null });
+    expect(await app.loadProject(new File([''], 'opened.zip'))).toBe(true);
+    expect(app._isDirty).toBe(false);
+
+    discard();
+    app.storageService.flushAutoSave();
+
+    expect(JSON.parse(store.get(AUTOSAVE)).waypoints.map(waypoint => waypoint.id)).toEqual(['opened']);
+  });
+
+  test('once discarded, is written over without the project being marked edited', async () => {
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    const { app } = await bootRecording({ [AUTOSAVE]: await refusedRecord() }, { quotaFor: [isKept] });
+    editAndSave(app);
+    const revision = app._editRevision;
+
+    discard();
+
+    expect(app._editRevision).toBe(revision);
   });
 });
 
 describe('Discard and a record that could not be restored (DEF-28)', () => {
-  test('removes only the record it offered, where it was kept', async () => {
-    const { store } = await bootRecording({ [PARKED]: 'kept from an earlier session' });
-    store.set(PARKED, 'another record, parked by another tab');
+  test('removes only the record it offered', async () => {
+    const { store } = await bootRecording({
+      [keptKey(2, 'b')]: 'offered first',
+      [keptKey(1, 'a')]: 'offered next',
+    });
 
     discard();
 
-    expect(store.get(PARKED)).toBe('another record, parked by another tab');
-    expect(notice().hidden).toBe(true);
+    expect(kept(store)).toEqual(['offered next']);
+    expect(heading()).toBe(EARLIER);
   });
 
   test('says so, and keeps the offer, when the record cannot be removed', async () => {
-    allowConsole(/Failed to remove from localStorage \(routePlotter_parkedAutosave\)/);
-    const { store, app } = await bootRecording({ [PARKED]: 'kept' }, { removalFails: [PARKED] });
+    allowConsole(/Failed to remove from localStorage \(routePlotter_keptAutosave:/);
+    const { store, app } = await bootRecording({ [keptKey(1, 'a')]: 'kept' }, { removalFails: [isKept] });
     const announced = listen(app);
 
     discard();
 
-    expect(store.get(PARKED)).toBe('kept');
+    expect(kept(store)).toEqual(['kept']);
     expect(notice().hidden).toBe(false);
     expect(announced()).toEqual([
       { message: "The session that couldn't be restored could not be discarded.", priority: 'assertive' },
@@ -522,7 +677,7 @@ describe('Discard and a record that could not be restored (DEF-28)', () => {
 
   test('moves focus on to the next control when the notice closes under it', async () => {
     // Seen before, so the splash does not open and hold focus itself.
-    await bootRecording({ [PARKED]: 'kept', [STORAGE.SPLASH_SHOWN_KEY]: 'true' });
+    await bootRecording({ [keptKey(1, 'a')]: 'kept', [STORAGE.SPLASH_SHOWN_KEY]: 'true' });
     const button = document.getElementById('unrestored-discard');
     button.focus();
 
@@ -536,6 +691,21 @@ describe('Discard and a record that could not be restored (DEF-28)', () => {
     expect(focused.disabled).toBeFalsy();
     expect(notice().compareDocumentPosition(focused) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
+
+  test('leaves focus where it was when the notice stays for the next record', async () => {
+    await bootRecording({
+      [keptKey(2, 'b')]: 'first',
+      [keptKey(1, 'a')]: 'next',
+      [STORAGE.SPLASH_SHOWN_KEY]: 'true',
+    });
+    const button = document.getElementById('unrestored-discard');
+    button.focus();
+
+    button.click();
+
+    expect(notice().hidden).toBe(false);
+    expect(document.activeElement).toBe(button);
+  });
 });
 
 describe('Clear All and a record that could not be restored (DEF-28)', () => {
@@ -547,7 +717,7 @@ describe('Clear All and a record that could not be restored (DEF-28)', () => {
     expect(clearNote().hidden).toBe(false);
     document.getElementById('clear-confirm').click();
 
-    expect(store.has(PARKED)).toBe(false);
+    expect(kept(store)).toEqual([]);
     expect(notice().hidden).toBe(true);
     expect(clearNote().hidden).toBe(true);
     expect(announced()).toContainEqual({
@@ -556,15 +726,20 @@ describe('Clear All and a record that could not be restored (DEF-28)', () => {
     });
   });
 
-  test('discards both records, the held one too, and autosave writes again', async () => {
-    const second = await olderRecord('second');
-    const { store, app } = await bootRecording({ [PARKED]: 'first record', [AUTOSAVE]: second });
+  test('discards every record, a held one too, and autosave writes again', async () => {
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    const { store, app } = await bootRecording(
+      { [keptKey(1, 'a')]: 'kept earlier', [AUTOSAVE]: await refusedRecord() },
+      { quotaFor: [isKept] }
+    );
+    expect(status()).toBe(HELD);
     const announced = listen(app);
 
     document.getElementById('clear-confirm').click();
 
-    expect(store.has(PARKED)).toBe(false);
+    expect(kept(store)).toEqual([]);
     expect(store.has(AUTOSAVE)).toBe(false);
+    expect(store.has(HELD_MARK)).toBe(false);
     expect(notice().hidden).toBe(true);
     expect(announced()).toContainEqual({
       message: "Project cleared, and the 2 sessions that couldn't be restored were discarded",
@@ -576,12 +751,28 @@ describe('Clear All and a record that could not be restored (DEF-28)', () => {
 
   test('discards a record kept after this start, and says so', async () => {
     const { store, app } = await bootRecording({});
-    store.set(PARKED, 'parked by another tab');
+    store.set(keptKey(9, 'late'), 'kept by another tab');
     const announced = listen(app);
 
     document.getElementById('clear-confirm').click();
 
-    expect(store.has(PARKED)).toBe(false);
+    expect(kept(store)).toEqual([]);
+    expect(announced()).toContainEqual({
+      message: "Project cleared, and the session that couldn't be restored was discarded",
+      priority: 'polite',
+    });
+  });
+
+  test('discards a kept record it cannot read, and says so', async () => {
+    allowConsole(/Failed to load from localStorage \(routePlotter_keptAutosave:/);
+    const unreadable = keptKey(1, 'unreadable');
+    const { store, app } = await bootRecording({ [unreadable]: 'kept' }, { readFails: [unreadable] });
+    expect(notice().hidden).toBe(true);
+    const announced = listen(app);
+
+    document.getElementById('clear-confirm').click();
+
+    expect(store.has(unreadable)).toBe(false);
     expect(announced()).toContainEqual({
       message: "Project cleared, and the session that couldn't be restored was discarded",
       priority: 'polite',
@@ -589,13 +780,13 @@ describe('Clear All and a record that could not be restored (DEF-28)', () => {
   });
 
   test('says so, and keeps the offer, when the record cannot be removed', async () => {
-    allowConsole(/Failed to remove from localStorage \(routePlotter_parkedAutosave\)/);
-    const { store, app } = await bootRecording({ [PARKED]: 'kept' }, { removalFails: [PARKED] });
+    allowConsole(/Failed to remove from localStorage \(routePlotter_keptAutosave:/);
+    const { store, app } = await bootRecording({ [keptKey(1, 'a')]: 'kept' }, { removalFails: [isKept] });
     const announced = listen(app);
 
     document.getElementById('clear-confirm').click();
 
-    expect(store.get(PARKED)).toBe('kept');
+    expect(kept(store)).toEqual(['kept']);
     expect(notice().hidden).toBe(false);
     expect(announced()).toContainEqual({
       message: 'Browser recovery could not be cleared; reload may restore old work.',
@@ -622,13 +813,13 @@ describe('what may never remove or overwrite a kept record (DEF-28)', () => {
     allowConsole(/Failed to save to localStorage \(routePlotter_autosave\)/);
     const valid = JSON.stringify(await savedProject());
     const { store, app, announced } = await bootRecording(
-      { [AUTOSAVE]: valid, [PARKED]: 'kept from an earlier session' },
+      { [AUTOSAVE]: valid, [keptKey(1, 'a')]: 'kept from an earlier session' },
       { quotaFor: [AUTOSAVE] }
     );
 
     expect(app.waypoints).toHaveLength(2);
     expect(store.has(AUTOSAVE)).toBe(false);
-    expect(store.get(PARKED)).toBe('kept from an earlier session');
+    expect(kept(store)).toEqual(['kept from an earlier session']);
     expect(announced.at(-1)).toEqual({
       message: `Previous session restored, but browser recovery is now unavailable. Save a project file to keep it safe.${FREE_SPACE}`,
       priority: 'polite',
@@ -637,9 +828,9 @@ describe('what may never remove or overwrite a kept record (DEF-28)', () => {
 
   test('a restore that works says a record kept earlier is still waiting', async () => {
     const valid = JSON.stringify(await savedProject());
-    const { store, announced } = await bootRecording({ [AUTOSAVE]: valid, [PARKED]: 'kept from an earlier session' });
+    const { store, announced } = await bootRecording({ [AUTOSAVE]: valid, [keptKey(1, 'a')]: 'kept from an earlier session' });
 
-    expect(store.get(PARKED)).toBe('kept from an earlier session');
+    expect(kept(store)).toEqual(['kept from an earlier session']);
     expect(announced.at(-1)).toEqual({
       message: "Previous session restored. An earlier session couldn't be restored, and is kept until you discard it.",
       priority: 'assertive',
@@ -648,12 +839,12 @@ describe('what may never remove or overwrite a kept record (DEF-28)', () => {
 
   test('a full store keeps it, and the failure report says how to free space', async () => {
     allowConsole(/Failed to save to localStorage \(routePlotter_autosave\)/);
-    const { store, app } = await bootRecording({ [PARKED]: 'kept from an earlier session' }, { quotaFor: [AUTOSAVE] });
+    const { store, app } = await bootRecording({ [keptKey(1, 'a')]: 'kept from an earlier session' }, { quotaFor: [AUTOSAVE] });
     const announced = listen(app);
 
     editAndSave(app);
 
-    expect(store.get(PARKED)).toBe('kept from an earlier session');
+    expect(kept(store)).toEqual(['kept from an earlier session']);
     expect(announced()).toContainEqual({
       message: `Auto-save failed. Save a project file to keep your work.${FREE_SPACE}`,
       priority: 'polite',
@@ -661,29 +852,34 @@ describe('what may never remove or overwrite a kept record (DEF-28)', () => {
   });
 
   test('clearing recovery, the storage service’s own clear, an edit and undo, and opening a project', async () => {
-    const second = await olderRecord('second');
-    const { store, app } = await bootRecording({ [PARKED]: 'first record', [AUTOSAVE]: second });
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    const record = await refusedRecord();
+    const { store, app } = await bootRecording(
+      { [keptKey(1, 'a')]: 'kept earlier', [AUTOSAVE]: record },
+      { quotaFor: [isKept] }
+    );
 
     expect(app.storageService.clearAutoSave()).toBe(false);
     expect(app.storageService.clearAll()).toBe(false);
-    expect(store.get(PARKED)).toBe('first record');
-    expect(store.get(AUTOSAVE)).toBe(second);
+    expect(kept(store)).toEqual(['kept earlier']);
+    expect(store.get(AUTOSAVE)).toBe(record);
 
     app.eventBus.emit('waypoint:add', { imgX: 0.5, imgY: 0.5, isMajor: true });
     app.eventBus.emit('history:undo');
     app.storageService.flushAutoSave();
-    expect(store.get(PARKED)).toBe('first record');
-    expect(store.get(AUTOSAVE)).toBe(second);
+    window.dispatchEvent(new Event('pagehide'));
+    expect(kept(store)).toEqual(['kept earlier']);
+    expect(store.get(AUTOSAVE)).toBe(record);
 
     vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
       projectData: app._buildProjectSnapshot(), imageAssets: [], backgroundBase64: null,
     });
     const announced = listen(app);
     expect(await app.loadProject(new File([''], 'project.zip'))).toBe(true);
-    expect(store.get(PARKED)).toBe('first record');
-    expect(store.get(AUTOSAVE)).toBe(second);
+    expect(kept(store)).toEqual(['kept earlier']);
+    expect(store.get(AUTOSAVE)).toBe(record);
     expect(announced()).toContainEqual({
-      message: `Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.${RESUMES}`,
+      message: `Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.${OFF_UNTIL}`,
       priority: 'polite',
     });
   });

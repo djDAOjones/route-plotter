@@ -48,8 +48,9 @@ function makeApp() {
     // The restore reads the record as text, once, and keeps that text when
     // it refuses it (DEF-28).
     loadAutoSaveText: vi.fn(() => null),
-    keepUnrestored: vi.fn(() => 'parked'),
-    loadParkedAutoSave: vi.fn(() => null),
+    keepUnrestored: vi.fn(() => ({ where: 'parked', key: 'routePlotter_keptAutosave:0-stub', existing: false })),
+    adoptHeld: vi.fn(() => null),
+    listKept: vi.fn(() => ({ ok: true, records: [] })),
   };
   const animationState = {
     mode: 'constant-speed', speed: 5, duration: 10, playbackSpeed: 1,

@@ -233,73 +233,111 @@ export class StorageService {
 
   /**
    * Keep a recovery record that could not be restored until the author
-   * chooses (DEF-28). It moves to its own key, which autosave never writes,
-   * so new work is still saved; the copy is made before the original goes,
-   * so a failed move leaves it where it was. Where it cannot move — a record
-   * kept earlier is waiting there, or the store has no room for it — it
-   * stays in the recovery key, held: nothing here writes over it or removes
-   * it until the author discards it, so autosave fails meanwhile.
+   * chooses (DEF-28). A copy goes under a key of its own, which autosave never
+   * writes, and only then does the original go, so new work is still saved; a
+   * record kept already is not copied again. Where no copy can be written,
+   * nothing is removed to make room: the record stays in the recovery key,
+   * held, and no write or clear reaches it, here or in another tab of this
+   * app, or at a later start, until the author discards it.
    * @param {string} text - The record exactly as the restore read it
-   * @returns {'parked'|'held'|'unkept'} Where it is now: under its own key,
-   *   held in the recovery key, or in neither (the store refused both, or the
-   *   recovery key holds another record now, written while it was restoring)
+   * @returns {{ where: 'parked', key: string, existing: boolean }
+   *   | { where: 'held' } | { where: 'unkept' }} Where it is now: under its own
+   *   key (one that held it already, if `existing`), held in the recovery key,
+   *   or in neither (no copy could be written, and the recovery key holds
+   *   another record now, written while this one was restoring)
    */
   keepUnrestored(text) {
-    const inRecovery = this._readText(STORAGE.AUTOSAVE_KEY) === text;
-    // A key that cannot be read is taken to be occupied: it may hold a record.
-    const parked = this._readKey(STORAGE.PARKED_AUTOSAVE_KEY);
-    if (parked.ok && parked.value === text) {
-      // Kept already, by a start that could not then clear the recovery key.
-      if (inRecovery && this._removeKey(STORAGE.AUTOSAVE_KEY)) this._lastSerialized = null;
-      return 'parked';
+    const existingKey = this.listKept().records.find(record => record.text === text)?.key;
+    const key = existingKey ?? this._copyToKept(text);
+    if (key) {
+      // A copy left in the recovery key would be tried, and kept, again.
+      this._removeIfHolding(STORAGE.AUTOSAVE_KEY, text);
+      if (this._heldAutoSave === text) this._releaseHold();
+      return { where: 'parked', key, existing: Boolean(existingKey) };
     }
-    if (parked.ok && parked.value === null) {
-      if (this._setKey(STORAGE.PARKED_AUTOSAVE_KEY, text)) {
-        if (inRecovery && this._removeKey(STORAGE.AUTOSAVE_KEY)) this._lastSerialized = null;
-        return 'parked';
-      }
-      // No room for a second copy: free the recovery key for it, and put the
-      // record back if even that is not room enough.
-      if (inRecovery && this._removeKey(STORAGE.AUTOSAVE_KEY)) {
-        this._lastSerialized = null;
-        if (this._setKey(STORAGE.PARKED_AUTOSAVE_KEY, text)) return 'parked';
-        if (!this._setKey(STORAGE.AUTOSAVE_KEY, text)) return 'unkept';
-      }
-    }
-    if (!inRecovery) return 'unkept';
-    this._heldAutoSave = text;
-    return 'held';
+    const recovery = this._readKey(STORAGE.AUTOSAVE_KEY);
+    // A key that cannot be read may still hold it, so it is held all the same.
+    if (recovery.ok && recovery.value !== text) return { where: 'unkept' };
+    this._hold(text);
+    return { where: 'held' };
   }
 
   /**
-   * The record an earlier start kept under its own key, exactly as stored
-   * (DEF-28).
-   * @returns {string|null} The stored text, or null
+   * Every record kept under a key of its own, newest first (DEF-28). A key
+   * that cannot be read is listed with no text: it can still be removed.
+   * @returns {{ ok: boolean, records: Array<{ key: string, text: string|null }> }}
+   *   `ok` is false when the store could not be searched
    */
-  loadParkedAutoSave() {
-    return this._readText(STORAGE.PARKED_AUTOSAVE_KEY);
+  listKept() {
+    const keys = [];
+    try {
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (key?.startsWith(STORAGE.KEPT_AUTOSAVE_PREFIX)) keys.push(key);
+      }
+    } catch (error) {
+      console.error('Failed to search localStorage for kept sessions:', error);
+      return { ok: false, records: [] };
+    }
+    const records = keys
+      .sort((a, b) => keptTime(b) - keptTime(a) || b.localeCompare(a))
+      .map(key => ({ key, text: this._readText(key) }));
+    return { ok: true, records };
   }
 
   /**
-   * Remove a kept record, for the author's Discard or Clear All — the only
-   * two ways one goes (DEF-28) — from where it was kept, and only while it is
-   * still the record there. A held record's removal ends the hold, so
-   * autosave writes again.
-   * @param {{ text: string, where: 'parked'|'held'|'unkept' }} kept - As
-   *   `keepUnrestored` placed it
-   * @returns {boolean} Whether it is gone from the store
+   * The record held in the recovery key, if one is (DEF-28): by this tab, or,
+   * by the mark it left, by another tab or an earlier start, whose hold this
+   * tab then takes on.
+   * @returns {string|null} The held record's text, or null
    */
-  discardKept({ text, where }) {
+  adoptHeld() {
+    if (this._heldAutoSave !== null) return this._heldAutoSave;
+    const text = this._heldElsewhere();
+    if (typeof text === 'string') this._heldAutoSave = text;
+    return this._heldAutoSave;
+  }
+
+  /**
+   * Remove a kept record, for the author's Discard — one of the two ways one
+   * goes (DEF-28) — from where it was kept, and any identical copy left in
+   * the recovery key, but never a different record written there since.
+   * Ending a hold lets autosave write again.
+   * @param {{ text: string, where: 'parked'|'held'|'unkept', key?: string }} kept
+   * @returns {boolean} Whether no copy of it is left in the store
+   */
+  discardKept({ text, where, key }) {
     if (where === 'unkept') return true;
-    const key = where === 'held' ? STORAGE.AUTOSAVE_KEY : STORAGE.PARKED_AUTOSAVE_KEY;
-    const stored = this._readKey(key);
-    if (!stored.ok) return false;
-    if (stored.value === text && !this._removeKey(key)) return false;
-    if (where === 'held') {
-      this._heldAutoSave = null;
-      this._lastSerialized = null;
+    // The recovery key's copy first: if it cannot go, the record stays on offer.
+    if (!this._removeIfHolding(STORAGE.AUTOSAVE_KEY, text)) return false;
+    if (this._heldAutoSave === text) this._releaseHold();
+    return where !== 'parked' || this._removeIfHolding(key, text);
+  }
+
+  /**
+   * Clear All's part (DEF-28): remove every kept record, readable or not,
+   * and a held one, and end the hold.
+   * @returns {{ ok: boolean, removed: number }} `ok` is false when a record
+   *   could not be found or removed
+   */
+  discardAllKept() {
+    const listed = this.listKept();
+    let ok = listed.ok;
+    let removed = 0;
+    for (const { key } of listed.records) {
+      if (this._removeKey(key)) removed += 1;
+      else ok = false;
     }
-    return true;
+    const held = this.adoptHeld();
+    if (held !== null) {
+      if (this._removeIfHolding(STORAGE.AUTOSAVE_KEY, held)) {
+        this._releaseHold();
+        removed += 1;
+      } else {
+        ok = false;
+      }
+    }
+    return { ok, removed };
   }
   
   /**
@@ -363,15 +401,16 @@ export class StorageService {
     try {
       const data = JSON.parse(jsonString);
       
+      let saved = true;
       if (data.autosave) {
-        this.save(STORAGE.AUTOSAVE_KEY, data.autosave);
+        saved = this.save(STORAGE.AUTOSAVE_KEY, data.autosave) && saved;
       }
       
       if (data.preferences) {
-        this.save(STORAGE.PREFERENCES_KEY, data.preferences);
+        saved = this.save(STORAGE.PREFERENCES_KEY, data.preferences) && saved;
       }
       
-      return true;
+      return saved;
     } catch (error) {
       console.error('Failed to import data:', error);
       return false;
@@ -440,7 +479,56 @@ export class StorageService {
    * could not be restored (DEF-28), which no ordinary write or removal reaches.
    */
   _isHeld(key) {
-    return key === STORAGE.AUTOSAVE_KEY && this._heldAutoSave !== null;
+    return key === STORAGE.AUTOSAVE_KEY && (this._heldAutoSave !== null || this._heldElsewhere() !== null);
+  }
+
+  /**
+   * @private The recovery key's text when the mark another tab or an earlier
+   * start left says it is held; null when it is not held. A mark that no
+   * longer matches the key is cleared. A store that cannot be read is taken
+   * to hold it (true): unknown ownership blocks the write.
+   */
+  _heldElsewhere() {
+    const mark = this._readKey(STORAGE.HELD_AUTOSAVE_KEY);
+    if (!mark.ok) return true;
+    if (mark.value === null) return null;
+    const recovery = this._readKey(STORAGE.AUTOSAVE_KEY);
+    if (!recovery.ok) return true;
+    if (recovery.value !== null && mark.value === fingerprint(recovery.value)) return recovery.value;
+    this._removeKey(STORAGE.HELD_AUTOSAVE_KEY);
+    return null;
+  }
+
+  /** @private Hold `text` in the recovery key, and mark it for other tabs and later starts. */
+  _hold(text) {
+    this._heldAutoSave = text;
+    this._setKey(STORAGE.HELD_AUTOSAVE_KEY, fingerprint(text));
+  }
+
+  /** @private End a hold: autosave writes the recovery key again. */
+  _releaseHold() {
+    this._heldAutoSave = null;
+    this._lastSerialized = null;
+    this._removeKey(STORAGE.HELD_AUTOSAVE_KEY);
+  }
+
+  /** @private Copy `text` to a new key of its own; the key, or null. */
+  _copyToKept(text) {
+    const key = `${STORAGE.KEPT_AUTOSAVE_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    return this._setKey(key, text) ? key : null;
+  }
+
+  /**
+   * @private Remove `key` if it holds exactly `text`. True when it no longer
+   * does; false when it could not be read, or could not be removed.
+   */
+  _removeIfHolding(key, text) {
+    const stored = this._readKey(key);
+    if (!stored.ok) return false;
+    if (stored.value !== text) return true;
+    if (!this._removeKey(key)) return false;
+    if (key === STORAGE.AUTOSAVE_KEY) this._lastSerialized = null;
+    return true;
   }
 
   /** @private A write the hold does not stop: only kept records use it. */
@@ -478,4 +566,24 @@ export class StorageService {
       return { ok: false, error };
     }
   }
+}
+
+/** A kept record's key names when it was kept. */
+function keptTime(key) {
+  return Number.parseInt(key.slice(STORAGE.KEPT_AUTOSAVE_PREFIX.length), 10) || 0;
+}
+
+/**
+ * A held record's mark: its length and an FNV-1a hash of its text, enough to
+ * tell it from whatever autosave writes later (DEF-28).
+ * @param {string} text
+ * @returns {string}
+ */
+function fingerprint(text) {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `${text.length}:${(hash >>> 0).toString(16)}`;
 }

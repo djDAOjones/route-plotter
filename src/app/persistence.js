@@ -1250,7 +1250,9 @@ export const persistenceMixin = {
     // A record that cannot be restored is kept for the author to download or
     // discard, never cleared or left for the next autosave to overwrite
     // (DEF-28). It is read once, as text, and each refusal below keeps that
-    // same text: a second read could find another record.
+    // same text: a second read could find another record. A record an
+    // earlier start held is on offer, not tried again.
+    if (typeof this.storageService.adoptHeld?.() === 'string') return false;
     const text = this.storageService.loadAutoSaveText();
     if (text === null) return false;
     const refuse = (error) => {

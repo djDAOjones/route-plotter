@@ -7,7 +7,7 @@ describe('startup recovery ordering', () => {
     const restoredImage = { id: 'restored' };
     const app = {
       background: { image: null },
-      storageService: { loadParkedAutoSave: vi.fn(() => null) },
+      storageService: { adoptHeld: vi.fn(() => null), listKept: vi.fn(() => ({ ok: true, records: [] })) },
       loadAutosave: vi.fn(() => new Promise(resolve => {
         finishRecovery = () => {
           app.background.image = restoredImage;
@@ -29,7 +29,7 @@ describe('startup recovery ordering', () => {
   test('preserves an intentionally backgroundless recovered project', async () => {
     const app = {
       background: { image: null },
-      storageService: { loadParkedAutoSave: vi.fn(() => null) },
+      storageService: { adoptHeld: vi.fn(() => null), listKept: vi.fn(() => ({ ok: true, records: [] })) },
       loadAutosave: vi.fn().mockResolvedValue(true),
       loadDefaultImage: vi.fn(),
     };
@@ -43,7 +43,7 @@ describe('startup recovery ordering', () => {
     let finishDefault;
     const app = {
       background: { image: null },
-      storageService: { loadParkedAutoSave: vi.fn(() => null) },
+      storageService: { adoptHeld: vi.fn(() => null), listKept: vi.fn(() => ({ ok: true, records: [] })) },
       loadAutosave: vi.fn().mockResolvedValue(false),
       loadDefaultImage: vi.fn(() => new Promise(resolve => {
         finishDefault = () => {
