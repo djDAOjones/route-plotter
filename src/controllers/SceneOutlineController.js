@@ -21,6 +21,17 @@ const IMAGE_POSITION_PERCENT = Object.freeze({
   max: IMAGE_COORDINATES.MAX * 100,
 });
 
+/**
+ * A bend point's position field: 0–100%, and the value it holds. A traced
+ * bend sits where its minor waypoint is, which may be off the image (DEF-41);
+ * left as it is, the app keeps it, and a new value is held to the image.
+ */
+function bendPercentRange(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return { min: 0, max: 100 };
+  return { min: Math.min(0, number), max: Math.max(100, number) };
+}
+
 function el(tag, { className = '', text = '', attrs = {}, data = {} } = {}) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -1074,10 +1085,10 @@ export class SceneOutlineController {
         index: point.index,
       }, [
         labelledInput('x', 'Horizontal position (%)', point.x, {
-          min: 0, max: 100, step: 'any', key: `${point.key}:x`, canonicalValue: point.xCanonical,
+          ...bendPercentRange(point.x), step: 'any', key: `${point.key}:x`, canonicalValue: point.xCanonical,
         }),
         labelledInput('y', 'Vertical position (%)', point.y, {
-          min: 0, max: 100, step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
+          ...bendPercentRange(point.y), step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
         }),
       ], 'Apply bend point', `${point.key}:apply`, controlDraftContext));
       pointContent.appendChild(button('Delete bend point', 'delete-control', {

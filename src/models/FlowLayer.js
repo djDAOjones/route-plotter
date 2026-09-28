@@ -1,6 +1,8 @@
 import { GraphModel } from './GraphModel.js';
 import { Emitter } from './Emitter.js';
 import { assertPersistedEntityId } from '../utils/entityId.js';
+import { isImageCoordinateInRange } from '../utils/imageCoordinates.js';
+import { IMAGE_COORDINATES } from '../config/constants.js';
 
 /**
  * Model representing one flow layer in the scene: a guide network plus the
@@ -229,8 +231,9 @@ export class FlowLayer {
         if (!point || !Number.isFinite(Number(point.x)) || !Number.isFinite(Number(point.y))) {
           throw new Error('Invalid graph control point: expected finite coordinates');
         }
-        if (Number(point.x) < 0 || Number(point.x) > 1 || Number(point.y) < 0 || Number(point.y) > 1) {
-          throw new Error('Invalid graph control point: expected coordinates from 0 to 1');
+        // A traced bend may sit off the image, as its waypoint does (DEF-41).
+        if (!isImageCoordinateInRange(Number(point.x)) || !isImageCoordinateInRange(Number(point.y))) {
+          throw new Error(`Invalid graph control point: expected coordinates from ${IMAGE_COORDINATES.MIN} to ${IMAGE_COORDINATES.MAX}`);
         }
       }
     }

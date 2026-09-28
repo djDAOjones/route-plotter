@@ -623,6 +623,19 @@ describe('drags', () => {
     expect(commits).toBe(commitsBefore + 1);
   });
 
+  test('a bend drawn by hand stays on the image, though the model keeps a traced one off it (DEF-41)', () => {
+    const layer = enterMode(app);
+    svc.placeNode({ x: 0.1, y: 0.5 });
+    svc.placeNode({ x: 0.9, y: 0.5 });
+    const edge = layer.graph.getEdges()[0];
+
+    svc.beginEdgeBend(edge, { x: 0.5, y: 0.5 }, 0);
+    svc.moveDrag({ x: 1.4, y: -0.2 });
+    svc.endDrag();
+
+    expect(edge.controlPoints).toEqual([{ x: 1, y: 0 }]);
+  });
+
   test('edge bend inserts a control point in chain order and drags it', () => {
     const layer = enterMode(app);
     svc.placeNode({ x: 0.1, y: 0.5 });

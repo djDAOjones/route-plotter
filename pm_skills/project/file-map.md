@@ -231,7 +231,7 @@
 - `src/config/helpContent.js` — Welcome modal and inline help HTML generators
 - `src/config/keybindings.js` — Shortcut table the help panel renders; key handling lives in `InteractionHandler` (README → Keybindings)
 - `src/config/tooltips.js` — Tooltip definitions
-- `src/controllers/SceneOutlineController.js` — Native-details/list/form renderer owning transient disclosure, focus and dirty-draft state while emitting model-free commands in the shared plain field vocabulary; it toggles its own entries, and reveals a selection or focus request once (DEF-40)
+- `src/controllers/SceneOutlineController.js` — Native-details/list/form renderer owning transient disclosure, focus and dirty-draft state while emitting model-free commands in the shared plain field vocabulary; it toggles its own entries, and reveals a selection or focus request once (DEF-40); a bend point's position field also takes the value it holds (DEF-41)
 - `src/controllers/SectionController.js` — Collapsible settings sections, waypoint/route/crowd/network scope switching, undo selection-state synchronization and deterministic native More keyboard activation
 - `src/controllers/UIController.js` — Sidebar/list/slider sync; stable multi-selection scope and Leg headings; selection gestures; whole-selection pause, speed and area writes
 - `src/core/EventBus.js` — Pub-sub event system
@@ -242,7 +242,7 @@
 - `src/models/AnimationState.js` — Playback state, canonical seek-derived timing/pause state and exact transport snapshots
 - `src/models/Emitter.js` — Persisted dot-stream parameters, two-to-eight-handle busyness envelope and guaranteed-changing authoring seed; no transient runtime state
 - `src/models/FlowLayer.js` — Bounded graph/hero-route guide plus emitters, with strict endpoint and persisted-data validation
-- `src/models/GraphEdge.js` — Weighted directed edge with control points
+- `src/models/GraphEdge.js` — Weighted directed edge with control points, which keep the range a project can store (DEF-41: a traced bend may sit off the image)
 - `src/models/GraphModel.js` — Node/edge collection: CRUD, referential integrity, adjacency (owned by FlowLayer)
 - `src/models/GraphNode.js` — Flow-network node (normalised pos, entry/exit type)
 - `src/models/ImageAsset.js` — Custom image references (marker, path head)
@@ -323,7 +323,7 @@
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms, (DEF-35) handles dragged off the image stay there, as far as a project can store a point, and (DEF-17) a polygon drawn in the booted app names its waypoint, so the editor and the outline follow it unless the selection changed during the draw
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
-- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); the DEF-31 regression (a crowd traced from the longest waypoint ids reloads); the DEF-37 regression (a hand-edited `null` Graphics scale opens at 1× through recovery and Open Project, and its next save reopens, while the other `null` styles still read as 0); and the DEF-04 failures characterised with the reason the loader gives
+- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); the DEF-31 regression (a crowd traced from the longest waypoint ids reloads); the DEF-37 regression (a hand-edited `null` Graphics scale opens at 1× through recovery and Open Project, and its next save reopens, while the other `null` styles still read as 0); and the DEF-04 failures characterised with the reason the loader gives; (DEF-41) a traced bend off the image, past any edge, saves and reloads, its guide is computed and drawn through it in the editor and computed through it in the exported player, its dots are drawn off the image in the editor, Preview, a video frame and the player, the outline keeps it or moves it onto the image, load's range is exact to the last representable step, and the network pen's pointer-to-image conversion stays on the image
 - `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
@@ -359,7 +359,7 @@
 - `tests/mixins.test.js` — Mixin split guards: cross-mixin name-collision check, cluster spot-checks, snapToAngle unit tests
 - `tests/modelBoundary.test.js` — Strict graph-endpoint and persisted emitter integer boundary contracts
 - `tests/multiSelect.test.js` — Multi-select write-target rules, gestures/bulk actions/persistence, undo scope restoration, stable headings and honest per-control mixed-state integration
-- `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding, and (DEF-35) the rings and Shift snaps of a node anchored off the image sit where it is drawn
+- `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding, and (DEF-35) the rings and Shift snaps of a node anchored off the image sit where it is drawn, and (DEF-41) a bend drawn by hand stays on the image
 - `tests/operationGeneration.test.js` — Latest-request/project-generation guards and original background-byte retention
 - `tests/paramTooltip.test.js` — A11Y-01 contract: hint labels carry no role
   or tab stop, each hint reaches its control as an appended
@@ -396,7 +396,7 @@
 - `tests/reviewTimeline.test.js` — Stateless comet, canonical transport/export and timing-invalidation review regressions
 - `tests/routeAnchors.test.js` — COMPOSE-01 contract: node/emitter binding, one-way ownership, the authored-position fallback and byte-identical unanchored crowds, and (DEF-35) a node or crowd bound to a waypoint off the image reaches it
 - `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
-- `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across linear and branched routes, a copy that never reaches back into the route, the save/load round trip, (DEF-31) derived ids that fit the persisted limit, and (DEF-35) a crowd traced off the image resolves to its waypoints there
+- `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across linear and branched routes, a copy that never reaches back into the route, the save/load round trip, (DEF-31) derived ids that fit the persisted limit, and (DEF-35) a crowd traced off the image resolves to its waypoints there, and (DEF-41) a traced bend off the image stays where its waypoint is
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
 - `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts, (DEF-35) position fields that take a point off the image, as far as a project can store one, and (DEF-40) entries that open and close on each click in a browser's order of events, those holding the selection too, with focus left where the author clicked
 - `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts, and (DEF-35) edits and adds that keep a point off the image, bounded by the storable range on every image-point command while network positions keep 0–100%, and (DEF-40) a focus request the app makes met once, and undo and redo in the booted app revealing the selection they bring back
