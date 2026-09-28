@@ -19,7 +19,8 @@
      the whole Phase 5 chain behind physical-device evidence that no successor
      actually needs; on 2026-09-23 two items carried `[gated: owner]` for
      decisions Joe had already made, and on 2026-09-28 the plan still did in
-     ten rows and two waves — a gate is a claim, so check it. -->
+     ten rows and three waves, and TST-11 read ready without its SPL-06 — a
+     gate is a claim, so check it. -->
 
 ### Current
 
@@ -57,11 +58,12 @@
 
      Closed: W0, W1, W2 (released as v3.2.692), the post-W2 queue, W3's
      pilot and their follow-ups (merged, unreleased). Here: W5, with TST-04
-     first; W4 behind TST-04 (§14.5); the defects runnable now; and those
-     waiting on a W5 test (§13 ground rule 8). W6 to W12 enter from plan §13
-     at each wave's close, once their prerequisites have merged — the run
-     promotes them itself. Nothing enters until it is runnable, and the plan
-     is never imported wholesale.
+     first and SPL-06 pulled forward for TST-11; W4 behind TST-04 (§14.5);
+     the defects runnable now; and those waiting on a W5 test (§13 ground
+     rule 8). W6 to W12 enter from plan §13 at a wave's close, once the waves
+     they depend on are complete — the run promotes them itself (DEP-03 now
+     opens W8). Nothing enters until it is runnable, and the plan is never
+     imported wholesale.
 
      A defect's approved behaviour is its plan row's stated treatment (Joe,
      2026-09-28, in advance; DEF-07's camera feel excepted). Its PR still
@@ -79,14 +81,17 @@
 - [ ] **TST-13 Key table, element IDs, HTML ranges** · Characterisation
   [ready] — Gates DEL-05, DEF-13, DEF-15 and DEF-32. **P1**
 - [ ] **TST-05 Event transcript golden** · Characterisation [ready] — Gates
-  DEF-22 and W6. **P1**
+  DEF-15, DEF-22 and W6. **P1**
 - [ ] **TST-09 Camera, dots, curvature, minor-end and time domains** ·
   Characterisation [ready] — With branched and intro/tail fixtures; gates
   W7 and W10. **P1**
 - [ ] **TST-03 Visibility mode matrix** · Characterisation [ready] **P1**
 - [ ] **TST-08 Mixin composition guards** · Characterisation [ready] **P1**
+- [ ] **SPL-06 `build.js` entry guard and exported functions** · Refactor
+  [ready] — Pulled forward from W9: TST-11 needs it, and `build.js` exports
+  nothing today. **P2**
 - [ ] **TST-11 Behavioural tests for source-text assertions** ·
-  Characterisation [ready] — May take SPL-06's entry guard. **P1**
+  Characterisation [gated: SPL-06 impl] **P1**
 - [ ] **TST-14 Shell and ContextMenu safety tests** · Characterisation
   [ready] **P1**
 - [ ] **TST-16 Tighten the round-2 predicates** · Characterisation [ready]
@@ -100,8 +105,8 @@ moved, and account for every survivor)
   [gated: TST-04 impl] **P1**
 - [ ] **DEL-04 Wiring dead code** · Dead code [gated: TST-04 impl] **P1**
 - [ ] **DEL-05 UI, config and CSS dead code** · Dead code
-  [gated: TST-04, TST-13 impl] — With a before/after visual check of the
-  CSS. **P1**
+  [gated: TST-04, TST-13 impl] — With a before/after browser check of the
+  Tooltip system and the CSS. **P1**
 - [ ] **DEL-06 Services dead API** · Dead code [gated: TST-04 impl] **P2**
 - [ ] **DEL-01 Unused barrels** · Dead code [gated: TST-04 impl] **P2**
 
@@ -109,7 +114,9 @@ moved, and account for every survivor)
 
 - [ ] **DEF-28 A failed recovery restore is silent** · Live defect [ready]
   — Option A (Joe, 2026-09-28): announce it, and a notice offers Download it
-  and Discard; the record moves to a second key autosave never writes. **P2**
+  and Discard; the record moves to a second key autosave never writes. Clear
+  All discards it too; if storage is full it stays, and the autosave failure
+  report points to the notice. **P2**
 - [ ] **DEF-40 An outline entry opens empty on a real click** · Live defect
   [ready] **P2**
 - [ ] **DEF-41 Traced bends stay on the image** · Live defect [ready] **P2**
@@ -122,6 +129,13 @@ moved, and account for every survivor)
   **P3**
 - [ ] **DEF-45 Announcements overwrite each other** · Accessibility [ready]
   **P3**
+- [ ] **DEF-06 Clear All leaves stale route state** · Live defect [ready] —
+  Visible since DEF-08 (#37, unreleased): a route cut to one waypoint draws
+  its last marker, paused, at a stale grow scale. Land it before the
+  release. **P3**
+- [ ] **DEF-27 Instant spotlight and AoV ignore camera zoom** · Live defect
+  [ready] — §20 Q17: the camera applies there too (ground rule 8; TST-02 has
+  shipped). **P3**
 
 **Defects after their W5 test** (§13 ground rule 8)
 
@@ -134,7 +148,7 @@ moved, and account for every survivor)
 - [ ] **DEF-14 A hint click stops a label toggling** · Accessibility
   [gated: TST-04 impl] **P1**
 - [ ] **DEF-15 L resumes at the old J/K/L speed** · Live defect
-  [gated: TST-13 impl] **P2**
+  [gated: TST-05, TST-13 impl] **P2**
 - [ ] **DEF-19 Camera-zoom edits skip undo** · Live defect
   [gated: TST-04 impl] **P2**
 - [ ] **DEF-22 An inserted waypoint splits a branch run** · Live defect

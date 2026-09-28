@@ -4,59 +4,60 @@
 
 ## 2026-09-28 — the big run: Joe answers the open calls, and delegates merges and planned fixes
 
-**Joe, 2026-09-28,** answering the open-calls prompt in one pass, so that one
-long development run can take the programme as far as it will go:
+**Joe's calls, 2026-09-28,** in two question rounds, for one long run:
 
-1. **DEF-28, option A** (from #44): announce the failed restore, and show a
-   notice with **Download it** and **Discard**; the record moves to a second
-   storage key that autosave never writes, and stays until the author
-   chooses.
-2. **DEF-40 to DEF-46 accepted**, each by its row's first remedy: P2 for
+1. **DEF-28, option A** (#44): announce a failed restore; a notice offers
+   **Download it** and **Discard**; the record moves to a storage key autosave
+   never writes. Clear All discards it too. If storage can't also hold a new
+   autosave, it stays, and the autosave failure report points to the notice.
+2. **DEF-40 to DEF-46 accepted,** each by its row's first remedy: P2 for
    DEF-40, 41, 44 and 46; P3 for DEF-42, 43 and 45.
-3. **TST-04 lands before W4** (§14.5), and **W4's characterisation mutates
-   every branch** of each moved function and accounts for every survivor.
-4. **Budgets:** the run may archive the trajectory's oldest phases at a wave
-   close, keeping any phase that feeds open work (the prune bar). This log
-   stays over its entry budget by Joe's choice; wish-list triage stays Joe's.
-5. **One release, at the run's end,** by DEV-INFRASTRUCTURE → Deployment, if
-   the gate, CI and the smoke test are green. Firefox and Safari evidence
-   stays Joe's.
+3. **TST-04 lands before W4,** and W4's characterisation mutates every branch
+   of each moved function and accounts for every survivor.
+4. **Budgets:** the run archives the trajectory's oldest phases at wave
+   closes without waiting, keeping phases that feed open work. This log stays
+   over budget by Joe's choice; wish-list triage stays Joe's.
+5. **Scope:** `### Next` through W12; the P3 rows beyond are follow-ups.
+6. **One release, at the run's end:** the exact candidate first passes a
+   Chromium smoke test with a real MP4 export, then DEV-INFRASTRUCTURE →
+   Deployment runs in full. If it fails after publishing, the run rolls back
+   as Deployment prescribes (a branch at `v3.2.692`, Pages pointed at it),
+   then stops. Firefox and Safari stay Joe's.
+7. **The Browser pane** may serve checks all run, through the temporary
+   parent-folder `launch.json` entry, restored after each use.
 
-**A standing merge authority, for this run only.** The agent squash-merges
-its own pull request when all of these hold: Verify is green on the head it
-merges; `npm run check` passes with the current `main` merged in; an
-independent review ran, and each finding is fixed or rebutted with evidence
-in the PR; the diff has no `docs/` or `version.json`; and the goldens moved
-only as the PR states — byte-identical for a behaviour-preserving PR, only
-the named cells for a defect. A PR that falls short stays open for Joe while
-the run moves on. The authority also covers the run's `PM:` close-outs,
-which touch only memory and need no review, and a revert PR for any merge
-that turns `main` red. It ends with the release. `AGENTS.md` and
-DEV-INFRASTRUCTURE → Deployment now allow such an advance grant.
+**A standing merge authority, for this run.** The agent squash-merges its own
+pull requests, close-outs and reverts included, when Verify is green on the
+head; `npm run check` passes with the current `main` merged in; an
+independent review saw that head, or every substantive change since, and
+each finding is fixed or rebutted; the mutation table is complete; the diff
+has no `docs/` or `version.json`; and the goldens moved only as the PR
+predicted. Merges are serialized, each new `main` verified. A PR short of
+that waits for Joe; the run moves on. It may strengthen its own gates (CI,
+`push.js`, test config and reporters, these rules), never loosen them. The
+authority ends when the release's record merges; `AGENTS.md` and
+DEV-INFRASTRUCTURE now allow such a grant.
 
-**Planned defects are approved in advance.** An open plan row's stated
-treatment is its approved behaviour, and so are the §20 choices of 2026-09-22
-that change behaviour (Q10–Q13, Q18, Q19); each of those becomes its own PR
-with a DEF row marked decided. Every PR still states its behaviour. Still
-Joe's: DEF-07's camera feel, seen side by side before it merges; any
-behaviour beyond a row's treatment; and defects found on the way, which
-become proposed rows, not fixes. The run is `task.md`'s gateless
-`auto-jazz`, keeping refactor mode's preservation contract; the
-persisted-format changes those rows state, and Q8's test deletions, count as
-approved.
+**Planned defects are approved in advance,** as their rows read when this
+entry merges, and so are §20's behaviour-changing defaults (Q10–Q13, Q18,
+Q19), each quoted word for word in its new DEF row. Still Joe's: DEF-07's
+camera feel; whatever a row or default leaves open (Q18's viewing mode, Q19's
+pause range); defects found on the way. The run is `task.md`'s gateless
+`auto-jazz` with refactor mode's contract, parking where task.md would stop;
+the rows' persisted-format changes, Q8's deletions and TST-11's replacements
+count as approved. Items close full; each wave gets one entry here.
 
-**Scheduling** (refines DOC-06 (i) and the 2026-09-23 entry on unwaved
-defects): `### Next` now holds W5, W4 behind TST-04, the eight defects
-runnable now and the seven waiting on a W5 test. W6 to W12 enter from plan
-§13 at each wave close, once their prerequisites have merged; the run
-promotes them itself. Nothing enters until runnable, and the plan is never
-imported wholesale.
+**Scheduling** (refines DOC-06 (i) and the 2026-09-23 entry): `### Next`
+holds W5 with SPL-06 (TST-11 needs it), W4 behind TST-04, ten defects
+runnable now, DEF-06 among them (DEF-08 made its leak visible, so it lands
+before the release), and seven awaiting a W5 test. Later waves enter as those
+they depend on complete. DEP-03 opens W8: CON-11 and CON-05 need it, so the
+plan's order was a cycle.
 
-**A gate is a claim.** Ten plan rows and two waves still read "owner
-decides" for questions Joe answered on 2026-09-22 (DEF-07, 11, 22, 24 and
-27; CON-14; DEL-03, 04 and 06; ABS-03; W4 and W10). Each now carries a dated
-note. W1's six rows and DEF-01 gained their shipped markers, and W1 and W3 a
-status line.
+**Gates that were claims:** ten plan rows and three waves read "owner
+decides" for questions answered on 2026-09-22, and TST-11 read ready without
+SPL-06; each now has a dated note. Codex and an independent Claude review
+found the rest; #51 lists what was adopted.
 
 **Link:** `reviews/route-plotter-continuation-prompt-big-run-2026-09-28.md`;
 plan §12, §13, §20.

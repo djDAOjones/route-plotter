@@ -13,16 +13,17 @@ v3.2.692. The post-W2 queue, W3's pilot and their follow-ups are merged on
 `main`, unreleased. **Joe has answered every open call and, for this run,
 delegated to you the merges and the planned behaviour changes** (decision
 log, 2026-09-28, "the big run"). Your job: take the backlog's `### Next`,
-then plan waves W6 to W12 as their prerequisites merge, one item per pull
-request, each reviewed and, once it clears the merge bar below, merged by
-you. Close each wave in project memory. Park whatever needs Joe and keep
-going. Release once, at the end.
+then plan waves W6 to W12 as the waves they depend on complete, one item per
+pull request, each reviewed and, once it clears the merge bar below, merged
+by you. Close each item, and each wave, in project memory. Park whatever
+needs Joe and keep going. Release once, at the end.
 
 **Repository:** `djDAOjones/route-plotter`.
 **Maintainer's working copy (OneDrive):** `/Users/joe/Library/CloudStorage/OneDrive-TheUniversityofNottingham/_Joe Bell UoN Files/2_Projects/2025-10-14 Gary Priestnall PARM Maps Encore/Route Plotter v3` — Joe's. Read it; never write it.
 
 The owner is Joe. Follow `AGENTS.md` (via `CLAUDE.md`). Where this prompt and
-the repository disagree, the repository wins, and you tell Joe.
+the repository disagree, the repository wins, except on what the decision-log
+entry "the big run" settles for this run; tell Joe of any disagreement.
 
 ## Purpose
 
@@ -41,31 +42,49 @@ its summary.
 - **The open calls.** DEF-28 takes option A: announce the failed restore and
   show a notice with **Download it** and **Discard**, and move the record to a
   second storage key that autosave never writes, until the author chooses.
-  DEF-40 to DEF-46 are accepted, each by its plan row's first remedy: P2 for
-  DEF-40, 41, 44 and 46; P3 for DEF-42, 43 and 45. TST-04 lands before W4,
-  and W4's characterisation mutates every branch of each moved function and
-  accounts for every survivor.
+  **Clear All discards the parked record too,** and says so. If storage can't
+  hold both the parked record and a new autosave, the parked record stays: the
+  autosave fails and is reported as today, and the report points to the
+  notice's Download it and Discard. DEF-40 to DEF-46 are accepted, each by its
+  plan row's first remedy: P2 for DEF-40, 41, 44 and 46; P3 for DEF-42, 43
+  and 45. TST-04 lands before W4, and W4's characterisation mutates every
+  branch of each moved function and accounts for every survivor.
 - **You merge your own pull requests** when they clear the merge bar. One
   that doesn't stays open for Joe, and the run moves on.
-- **Planned defects are approved in advance.** An open plan row's stated
-  treatment is its approved behaviour, and so are the §20 choices of
-  2026-09-22 that change behaviour: Q10 (one intro curve and time base), Q11
+- **Planned defects are approved in advance,** each by its plan row's stated
+  treatment **as it reads when #51 merged**. For DEF-40 to DEF-46 that means
+  the first remedy only, never a row's "or …" alternative. A row patched since
+  is not approved beyond its old text: a PR that relies on the patch parks.
+  Also approved are the §20 choices of 2026-09-22 that change behaviour: Q10
+  (one intro curve and time base), Q11
   (anchored crowd nodes can't be dragged, and say so), Q12 (a saved 0 stays
   0), Q13 (the drone image ships only when used), Q18 (a future-version file
-  opens for viewing, not editing) and Q19 (the UI's ranges are the true
-  ones). Each of those becomes its own PR with a DEF row marked decided.
-  Every defect PR still states its new behaviour.
+  opens for viewing, not editing; and diagnostics may carry an EventBus error
+  *count*, behind a `DIAGNOSTICS_SCHEMA_VERSION` bump, with no error text or
+  project content) and Q19 (the UI's ranges are the true ones). Each of those
+  becomes its own PR, with a DEF row marked decided that quotes §20's default
+  word for word; the reviewer checks the fix against that quote. Every defect
+  PR still states its new behaviour.
 - **Every §20 default** was accepted on 2026-09-22, and the plan rows that
   still read "owner decides" now carry a dated note saying so. Earlier calls
   stand: a `null` Graphics scale means 1× (DEF-37), round caps and joins
   (DEF-39), the preview's blue (DEF-47), branches named for their item, and
   pull requests watched once opened.
-- **Budgets.** At a wave close you may archive the trajectory's oldest phases,
-  keeping any phase that feeds open work (Joe's prune bar, decision log
-  2026-08-27). The decision log stays over its entry budget by Joe's choice.
-  Wish-list triage stays Joe's: append lines, never triage.
-- **One release, at the end of the run** (below). Firefox and Safari
-  evidence stays Joe's.
+- **Budgets.** At a wave's close-out, archive the trajectory's oldest phases
+  **without waiting**, keeping any phase that feeds open work (Joe's prune bar,
+  decision log 2026-08-27). `end-of-task.md`'s size check and the Prune verb
+  of `memory-maintenance.md` would propose and wait (Prune P2): Joe has
+  answered, so run P1 and P3 to P6, and put P2's table in the PR body. The
+  decision log stays over its entry budget by Joe's choice. Wish-list triage
+  stays Joe's: report the overrun, append lines, never triage.
+- **One release, at the end of the run,** after a smoke test of the exact
+  candidate (below). If it fails after publishing, **roll it back yourself**
+  as DEV-INFRASTRUCTURE prescribes, then stop. Firefox and Safari evidence
+  stays Joe's.
+- **The Browser pane, all run long.** Joe's permission for this run
+  (2026-09-28): you may add the temporary server entry to the parent folder's
+  `.claude/launch.json` whenever a check needs a browser, and you restore that
+  file byte-identical after each use (see Browser checks).
 
 ## The vendored workflows, in this run
 
@@ -83,17 +102,23 @@ approved:
   decision-log entry);
 - the persisted-format changes planned rows state (DEF-09 drops
   `styles.pathHead.rotation` from snapshots; Q12 keeps a saved 0 and restores
-  `modified`; DEF-28's new storage key; Q18 and ABS-06's version gate and
-  schema bump);
+  `modified`; DEF-28's new storage key; ABS-06's version gate, which names
+  the current `coordVersion` and does not bump it; Q18's diagnostics count
+  behind a `DIAGNOSTICS_SCHEMA_VERSION` bump);
 - more than five files, inside a row's declared surface.
 
 Anything else on that list (a runtime dependency, a never-edit file, a
-destructive migration, deleting data) still goes to Joe. An item closes with
-its PR. The wave close-outs are its memory writes (DOC-06 (j): one
-decision-log entry per wave), so its commit carries no `Close: lite` trailer.
-task.md's step 11 commits to the item's branch and pushes only that branch.
-The comparative review stands in for the `review.md` pass task.md suggests
-after a gateless run.
+destructive migration, deleting data) still goes to Joe. **Each item closes
+full, in its own PR** (`end-of-task.md`), with one exception: DOC-06 (j) gives
+each wave a single decision-log entry, written at the wave's close-out from
+its PRs' evidence. Nothing else is deferred, so no `Close: lite` trailer is
+needed. task.md's step 11 commits to the item's branch and pushes only that
+branch. The comparative review stands in for the `review.md` pass task.md
+suggests after a gateless run. **Where task.md would stop and ask** (step 7's
+blocking concern, or a hard prohibition not approved here), park instead. A
+source-text test that a row replaces with a behavioural one (TST-11) is
+replaced in the same PR, both named in it. The new test must fail on the
+mutation the old one caught.
 
 ## What still goes to Joe — park it, don't stop
 
@@ -106,7 +131,9 @@ ledger and the handoff; carry on with whatever doesn't depend on it.
   ABS-03 waits for it.
 - **Behaviour beyond a row's treatment,** or evidence that a row is wrong in a
   way that changes what users see: patch the row with a dated note, propose,
-  park.
+  park. The same goes for whatever a row or a §20 default leaves open: Q18's
+  "allow viewing" (the app has no view-only mode) and Q19's pause range (30 s
+  on the slider, 600 s in the scene outline, both UI).
 - **Defects found on the way** become proposed DEF rows (plan §12.1, the next
   free number) with their evidence. They are never fixed in this run.
 - **CON-01's two UI-only defaults** (`wiringBus.js:300` and
@@ -116,11 +143,24 @@ ledger and the handoff; carry on with whatever doesn't depend on it.
 - **Anything in `_Joe/`:** DEL-07's scripts, and the dev-guide file itself
   once DOC-08 has moved its valid parts out and retired the read. Also
   whether Devin and Windsurf are still used (`.devin/`, `.codeiumignore`).
-- **Owner-run evidence:** REV-03, REV-04 (Firefox, Safari) and REV-05. List
-  any manual browser check you cannot run in its PR; it does not block the
-  merge.
+- **Owner-run evidence:** REV-03, REV-04 (Firefox, Safari) and REV-05 stay
+  Joe's and never block the run. A browser check the plan names for an item
+  (its wave's Validation row, or a §2.9 probe for its defect) is part of that
+  item: run it (see Browser checks), and if your environment cannot, park the
+  item with the check listed. A check nobody requires, which you would like
+  Joe to see, goes in the PR and blocks nothing.
+- **The run's own gates may only be strengthened.** These are
+  `.github/workflows/`, `push.js`, `vitest.config.js`, `tests/setup.js`,
+  `tests/helpers/minCountReporter.js`, `tests/helpers/consoleGuard.js`, and
+  the rules that authorise this run (`AGENTS.md` → Commit, push and release;
+  DEV-INFRASTRUCTURE → Quality gate and Deployment; the decision-log entry). A
+  PR that touches them says what it adds, removes nothing that fails today,
+  and its review shows every existing check still fails on its old mutation.
+  Anything that loosens one parks.
 - **A new runtime dependency,** any change to repository settings, rulesets
-  or the Pages source, and anything else outside the authority.
+  or the Pages source, and anything else outside the authority. The one
+  exception is the rollback `DEV-INFRASTRUCTURE.md` prescribes when the release
+  fails (see The release).
 
 ## Where things stand (verify first; it may have moved)
 
@@ -131,8 +171,8 @@ GitHub MCP tools in a cloud container, which has no `gh`); a read-only
 working the repository (`ListAgents`; see Traps).
 
 - **`main`** ends with #51, which refactored the backlog and added this
-  prompt, on `ac80222` (#50). **If #51 is not merged, stop and ask Joe: the
-  authority begins with its decision-log entry on `main`.** `main` is
+  prompt, on `ac80222` (#50). **If the decision-log entry "the big run" is not
+  on `origin/main`, stop and ask Joe: the authority begins with it.** `main` is
   protected: no force-push, no deletion. Remote branches: `main` and the
   frozen `review-remediation`.
 - **Live: v3.2.692** (`14e3656`, tag `v3.2.692`), served by Pages from `main`
@@ -148,7 +188,7 @@ working the repository (`ListAgents`; see Traps).
 
 ## The queue, and the order to take it
 
-The backlog's `### Next` holds 30 items; each plan row is its item's detail.
+The backlog's `### Next` holds 33 items; each plan row is its item's detail.
 TST-04 and three other tests unblock the most, so a sensible order is:
 
 1. **TST-04** first (it gates W4, DEF-14, DEF-19 and DEF-20), one golden
@@ -156,31 +196,37 @@ TST-04 and three other tests unblock the most, so a sensible order is:
    selection path, readouts included (the pilot found nothing checks them).
    Pin observable end state, not call counts.
 2. **The ready defects,** interleaved with W5: DEF-28, DEF-44, DEF-46,
-   DEF-40, DEF-41, then DEF-42, DEF-43, DEF-45.
-3. **TST-13, TST-05 and TST-09,** then TST-03, TST-08, TST-11, TST-14 and
-   TST-16.
-4. **W4** as soon as TST-04's readout goldens merge; DEL-05 also waits for
-   TST-13.
+   DEF-40, DEF-41, then DEF-06 (before the release: DEF-08 made its leak
+   visible), DEF-42, DEF-43, DEF-45 and DEF-27.
+3. **TST-13, TST-05, TST-09 and TST-03,** then SPL-06 and TST-11, TST-08,
+   TST-14 and TST-16.
+4. **W4** once TST-04 has merged in full, both golden families; DEL-05 also
+   waits for TST-13.
 5. **The defects waiting on a W5 test,** as each test merges.
-6. **Then the later waves.** Each enters `### Next` at a close-out, once its
-   prerequisites have merged:
+6. **Then the later waves.** Each enters `### Next` at a close-out, once the
+   waves it depends on (§13's "Depends on" rows) are complete:
 
 | Wave | Enters when | Items (plan §13) |
 | --- | --- | --- |
-| W6 | W4 and TST-05 have merged | CLR-02 with DEF-16; ISO-01; ISO-03; ISO-04; DEP-01; DEP-02 |
-| W7 | TST-09 has merged, with the branched and intro/tail fixtures §13 W7 names | DOC-04; DOC-05; ABS-01 with DEF-12; ABS-02 with DEF-05 |
-| W8 | W6 and W7 have closed | CON-04; CON-07; CON-11 with DEF-04; CON-06, then DEP-05; CON-05 with DEF-24; CON-10; CON-12; CON-13; CON-09; CON-14 with Q19; DEF-06; DEF-09; DEF-25; DEF-27; Q11; Q12; Q13 |
-| W9 | W8 has closed | CON-01; CON-02; CON-03; CLR-01; SPL-02; DEP-03, then SPL-03, then ABS-06 with Q18; SPL-04; SPL-06; DEP-04 |
-| W10 | W7 has closed | DEF-10; CON-08 with DEF-11; Q10; DEF-07 (parked for Joe); ABS-03 once DEF-07 merges |
-| W11 | W6 to W10 are done | the compatibility exports and wrappers they left; the `setSelectedWaypoint` shim; deprecated aliases |
-| W12 | W11 is done | GOV-03; GOV-02 (after DOC-08's link fixes); TST-12; TST-15; DOC-07; DOC-08 outside `_Joe/`; `AGENTS.md` pointers to plan §15 and §16 |
+| W6 | W4 and W5 are complete | CLR-02 with DEF-16; ISO-01; ISO-03; ISO-04; DEP-01; DEP-02 |
+| W7 | W5 is complete, including TST-09 and the branched and intro/tail fixtures §13 W7 names | DOC-04; DOC-05; ABS-01 with DEF-12; ABS-02 with DEF-05 |
+| W8 | W6 and W7 are complete | **DEP-03 first** (moved up from W9 on 2026-09-28: CON-11 and CON-05 need it, which made W8 and W9 a cycle; its own prerequisite, TST-06, has shipped); then CON-04; CON-07; CON-11 with DEF-04; CON-06, then DEP-05; CON-05 with DEF-24; CON-10; CON-12; CON-13; CON-09; CON-14 with Q19; DEF-09; DEF-25; Q11; Q12; Q13 |
+| W9 | W5 and W8 are complete | the registration-order snapshot of the wired handlers first (§13 W9); CON-01; CON-02; CON-03; CLR-01; SPL-02; SPL-03 on DEP-03's extraction, then ABS-06 with Q18's future-version policy; SPL-04; DEP-04 (SPL-06 went ahead of TST-11) |
+| W10 | W7 is complete | DEF-10; CON-08 with DEF-11; Q10; DEF-07 (parked for Joe); ABS-03's timeline half once CON-08 merges, its camera half once DEF-07 does |
+| W11 | W6 to W10 are complete | the compatibility exports and wrappers they left; the `setSelectedWaypoint` shim; deprecated aliases |
+| W12 | W1 to W11 are complete | GOV-03; GOV-02 (after DOC-08's link fixes); TST-12; TST-15; DOC-07; DOC-08 outside `_Joe/`; Q18's diagnostics error count; `AGENTS.md` pointers to plan §15 and §16 |
 
-- CON-15 joins once DEL-05 and TST-13 have merged. The P3 rows (CLR-03,
-  ISO-05, SPL-05, SPL-07, SPL-08, ABS-04, ABS-05, CLR-04) come after W12 if
-  the run gets there, each only if §16 still justifies it. SPL-09 stays
-  deferred.
-- When a wave waits only on a parked item, take the parts of later waves that
-  don't depend on it.
+- §13's lists don't name CON-09, DEP-05, ABS-06 or CON-15; they sit where
+  their code and prerequisites put them. CON-15 joins once DEL-05 and TST-13
+  have merged.
+- **A row whose prerequisite sits in a later wave pulls that prerequisite
+  forward,** as its own PR (DEP-03 into W8; SPL-06 ahead of TST-11).
+- **Out of this run's scope:** the P3 rows CLR-03, ISO-05, SPL-05, SPL-07,
+  SPL-08, ABS-04, ABS-05 and CLR-04. List them in the final handoff as
+  follow-up candidates. SPL-09 stays deferred.
+- **A wave held up by a parked item.** A later item may go ahead only once its
+  own prerequisites and the characterisation it needs are listed and met. That
+  doesn't complete its wave, or satisfy any later wave's entry condition.
 - Keep `### Next` within the Active budget (`pm_skills/memory-policy.md`):
   promote a wave's rows when it enters, not before.
 
@@ -188,7 +234,11 @@ TST-04 and three other tests unblock the most, so a sensible order is:
 - DEF-28 and DEF-45 both touch what recovery announces: do DEF-28 first, and
   let DEF-45's queue carry its message.
 - DEF-28 adds a storage key: name it in `constants.STORAGE` beside
-  `AUTOSAVE_KEY`, and add it where `README.md` describes autosave.
+  `AUTOSAVE_KEY`, and add it where `README.md` describes autosave and Clear
+  All. Clear All's removal (`clearAutoSave`) must reach it too, per Joe's
+  call.
+- DEF-06 lands before the release: since DEF-08 (unreleased), a route cut to
+  one waypoint draws its last marker, paused, at a stale grow scale.
 - DEF-20 recovers `angleToSlider` from `2fb72ff`
   (`MotionVisibilityService.js:1579-1610`) rather than rewriting it.
 - DEF-41 widens `GraphEdge._clampPoint` and `FlowLayer`'s load check together,
@@ -202,9 +252,11 @@ TST-04 and three other tests unblock the most, so a sensible order is:
   test that pins only dead code goes with it, named with its symbol in the
   wave's decision-log entry; DEL-06's two tests that use a dead symbol inside a
   live assertion are rewritten, not deleted. DEL-05 changes the published
-  inventory (`tooltip.css`): update `build.js` and
-  `publicationBoundary.test.js` deliberately, and merge its CSS deletions only
-  with a before/after screenshot comparison, or park them.
+  inventory (`tooltip.css`): update `index.html`'s `<link>`, `build.js` and
+  `publicationBoundary.test.js` deliberately, and merge it only with a
+  before/after browser check of the Tooltip system and the CSS. §20 Q9's
+  `RoutePlotter.destroy()` (never called) goes with DEL-04's `main.js` dead
+  code.
 - DEF-04's fix retires the last two `todo`s, in `authorableLoadable.test.js`.
 
 ## The run loop
@@ -227,20 +279,30 @@ For each item:
    least one mutation per fix site (per branch, for moves), each run from a
    script that restores the file and checks it by SHA-256, under a watchdog.
    Record what caught each.
-6. **Goldens:** regenerate only those the change means to move, and read the
-   diff.
-7. **Review** (see The comparative reviewer) in the background. While it runs,
-   start the next item that touches different files, in a second clone: at
-   most one item in implementation and two in review.
-8. **Fix or rebut** each finding with evidence, re-run the mutation it used,
+6. **Goldens:** for a defect, write down the cells you expect to move (in
+   the PR) before you regenerate; regenerate only the goldens the change means
+   to move, and read the diff against that list.
+7. **Where a user sees the result, run the matching §2.9 probe** (or the
+   row's own) on `main` and on the branch, in a real browser (see Browser
+   checks), and record both. jsdom cannot show a real click's order of events:
+   DEF-40's jsdom tests pass on the broken code.
+8. **Review** (see The comparative reviewer) in the background, and record
+   the base and head SHAs the reviewer saw. While it runs, start the next item
+   that touches different files, in a second clone: at most one item in
+   implementation and two in review.
+9. **Fix or rebut** each finding with evidence, re-run the mutation it used,
    and push.
-9. **Open the pull request.** Title `<ITEM-ID>: summary`. The body: the
+10. **Open the pull request.** Title `<ITEM-ID>: summary`. The body: the
    behaviour statement (a defect) or the preserved contract (a refactor: no
    `window.*` global, DOM id, EventBus event or persisted format changed); the
-   evidence; the mutation table; which reviewer ran and what it found; the
-   manual checks left for Joe; and the merge bar, ticked.
-10. **Merge or park.** After a merge, update the ledger and merge `main` into
-   any open branch that touches the same files.
+   evidence; the mutation table; which reviewer ran, at which SHAs, and what
+   it found; the checks left for Joe; and the merge bar, ticked.
+11. **Close the item full, in the same PR** (see Closing items and waves; its
+   plan row needs the PR's number). These are memory lines, so they need no
+   second review.
+12. **Merge or park.** Before merging, merge the current `main` into the
+   branch, whatever files it touches, and re-run `npm run check`; after a
+   merge, update the ledger.
 
 ## The merge bar
 
@@ -253,84 +315,132 @@ from `git rev-parse`, never typed from a short one):
   something else and come back. Don't poll it in a loop.
 - `npm run check` passes on the branch with the current `main` merged in.
 - The independent review ran, and every finding is fixed or rebutted with
-  evidence in the PR.
+  evidence in the PR. The reviewer saw the PR's current head, or every
+  substantive change since the head it saw has had its own review. That
+  includes a conflict resolution in code or tests; one confined to memory
+  lines (backlog, trajectory, file-map rows and counts) needs none.
+- The mutation table is complete: every fix site's mutation killed and, for
+  a move or a deletion, every branch of each moved function mutated and every
+  survivor accounted for.
 - The diff has no `docs/` or `version.json`.
 - The goldens moved only as the PR states: byte-identical for a
-  behaviour-preserving PR; only the named cells for a defect.
-- A defect PR's behaviour is within its row's approved treatment, or a call
-  Joe made above.
+  behaviour-preserving PR; for a defect, only the cells it listed before
+  regenerating, each of which the reviewer agrees follows from the row.
+- A browser check the item's row, §2.9 probe or wave Validation names carries
+  its real-browser result; with no real browser available, the item parks.
+- A defect PR's behaviour is within its row's treatment as approved above, or
+  a call Joe made above.
 - Nothing in it waits on Joe.
 
-`PM:` close-outs need only the gate and Verify. **If `main` goes red after a
-merge,** open a revert PR at once, merge it when green, and park the item
-with the failure.
+The same bar applies to `PM:` close-outs and to revert PRs. A close-out
+changes documentation only, since a test or reporter change is an item PR,
+and a stand-in review is enough for it. A revert's review checks that it is
+the exact inverse of the merge.
 
-## Wave close-outs (you are the single memory writer)
+**Merges are serialized.** After each one, read Verify on the resulting
+`main` SHA before you merge another PR (CI cancels a superseded run on `main`,
+so merging quickly hides a failure); implementation and review carry on
+meanwhile. **If `main` goes red,** freeze merges, open a revert PR, merge it
+once it clears the bar, and park the item with the failure. In a cloud
+container, if the merge tool takes no head SHA, read the PR's head just
+before merging and confirm the merged content just after.
 
-An item's PR touches only its own plan row (a dated note of what was done),
-the `file-map.md` rows for files it adds or removes, and wish-list lines.
-Everything else waits for a `PM:` close-out PR, **at each wave's end and at
-least every ten merged PRs**, so memory never lags far behind `main`:
+## Closing items and waves (you are the single memory writer)
 
-- **Backlog:** remove merged items, promote the next runnable rows, and keep
-  every gate flag honest. A gate is a claim, so check it.
-- **Plan:** each merged row gets `Shipped <date> (<wave>, PR #N; unreleased)`;
-  proposed rows are added; each wave gets its `Status` line.
-- **Decision log:** one entry per wave, not per batch. Give each PR's stated
-  behaviour or preserved contract, what the reviews found, the §18 metrics
-  (open defects, tests, golden diffs, dependency edges changed, test wall
-  time, peak heap) and the budgets. Tests deleted under Q8 are each named with
-  their dead symbol. Keep an entry under 600 words, and never edit an old
-  one.
-- **Trajectory:** one line per shipped item, starting with its ID. Past 2,000
-  words, archive the oldest phases to `archive/trajectory/` and keep
-  `archive/INDEX.md` current, leaving any phase that feeds open work.
-- **File-map:** a row for every new file and the counts corrected. **Never run
-  `gen-file-map.mjs`.** Recount after merges.
-- **The min-count canary** (`tests/helpers/minCountReporter.js`, still 72
-  files / 1,000 tests): raise it as the suite grows; never lower it.
+**Each item closes full, in its own PR** (`end-of-task.md`), so the
+repository is the record after every merge:
+- **Backlog:** remove its line. A gate is a claim, so keep every other flag
+  honest.
+- **Trajectory:** one line, starting with its ID, under its wave's phase
+  (create the phase heading if it isn't there yet).
+- **Plan:** its row marked `Shipped (<wave>, PR #N; unreleased)` with a dated
+  note of what was done; a defect found on the way goes in as a proposed row.
+- **File-map:** a row for each file it adds, removes or re-roles, and the
+  counts corrected. **Never run `gen-file-map.mjs`**, and recount after
+  merges.
+- **Permanent documents** whose owned facts changed (README,
+  `architecture.md`, `conventions.md`, DEV-INFRASTRUCTURE, UI-STANDARDS);
+  wish-list lines for ideas it set aside.
+
+**Each wave closes in a `PM:` PR**, reviewed like any other:
+- **The decision log:** one entry for the wave (DOC-06 (j)). Give each PR's
+  stated behaviour or preserved contract, what the reviews found, the tests
+  deleted under Q8 (each named with its dead symbol), the §18 metrics (open
+  defects, tests, golden diffs, dependency edges changed, test wall time, peak
+  heap) and the budgets. Keep it under 600 words; never edit an old entry.
+- **The plan:** the wave's `Status` line.
+- **The backlog:** the next wave's rows promoted, once the waves it depends
+  on are complete.
+- **The trajectory:** the phase's one-line outcome. Past 2,000 words, archive
+  its oldest phases to `archive/trajectory/` and keep `archive/INDEX.md`
+  current, leaving any phase that feeds open work.
+
+**The min-count canary** (`tests/helpers/minCountReporter.js`, 72 files /
+1,000 tests): keep its floor, unless a reviewed item PR raises it with room to
+spare for W4's planned test deletions. A change to it is an executable change,
+never a close-out's.
 
 ## The release, at the end
 
-When every runnable item is merged or parked, or when the run must end, and
-`main` is green, release once by `DEV-INFRASTRUCTURE.md` → Deployment, steps 1
-to 8, in a fresh clone:
+**When:** once the run's scope is exhausted — every item from the backlog's
+`### Next` through W12 merged or parked — and `main` is green, or earlier if
+Joe calls it. An interruption,
+a context summary, a usage limit or a whole-run stop suspends the run; none of
+them triggers the release.
 
-- **Pre-flight:** the Pages source is `main` `/docs` and the latest build is
-  `built` at the SHA you expect; stop if either differs. That build's `docs/`
-  and `version.json` should be identical to tag `v3.2.692`'s (`git diff
-  --quiet v3.2.692 <live SHA> -- docs version.json`), so that tag stays the
-  rollback point, as it did at the last release; if they differ, stop.
-- `npm run check`, then `npm run push:dry-run`, then `npm run push`; note the
-  deploy commit.
-- **Confirm:** Verify on the deploy commit; the `github-pages` deployment at
-  that SHA; every published file's SHA-256 against `docs/`.
-- **Smoke test** the published bytes served locally, so the live site's
-  storage is never touched: load to ready (the title shows the new version),
-  play a built-in example, export HTML and open it as a recipient would, and
-  export video where the browser can encode it. Record what the environment
-  cannot run (an MP4 export in a cloud container) in the release entry as
-  Joe's.
-- **Any failure:** roll back by DEV-INFRASTRUCTURE, check the restored site
-  the same way, then stop and report.
-- **Tag** the deploy commit `v3.2.<build>` (annotated, from `package.json` and
-  the pushed `version.json`) and push that one tag.
-- **Record it** in a `PM:` PR: the release's own decision-log entry, listing
-  every user-visible change since v3.2.692 (#31 on), Q12's effect on old files
-  that saved a 0, and what was verified and what stays Joe's; its trajectory
-  phase; REV-04's Chromium evidence if you re-ran it.
+1. **Smoke-test the exact candidate first.** DEF-06 should have merged; if it
+   hasn't, the release entry names its effect. Build the `main` SHA you will
+   release in a separate throwaway clone, serve it, and check that it loads to
+   ready, that a built-in example plays, that an HTML export opens and plays as
+   a recipient would, and that a real MP4 export works in Chromium (`ftyp` at
+   offset 4). On Joe's Mac that means the Browser pane; a cloud container
+   cannot encode H.264. **Missing Chromium or MP4 evidence parks the release:**
+   ask Joe. Firefox and Safari stay Joe's.
+2. **Then release** from a fresh, clean clone at that SHA, by
+   `DEV-INFRASTRUCTURE.md` → Deployment, steps 1 to 8, exactly:
+   - **Step 1:** check the Pages source is `main` `/docs`, and that the latest
+     build is `built` at the SHA you expect. Stop if either differs. That
+     exact live SHA needs a pushed, annotated rollback tag. If it has none,
+     add one there (name it for what it is, e.g. `rollback-<short SHA>`;
+     existing tags never move), and confirm its `docs/` and `version.json`
+     match `v3.2.692`'s (`git diff --quiet v3.2.692 <live SHA> -- docs
+     version.json`).
+   - `npm run check`, `npm run push:dry-run`, then `npm run push`. Note the
+     deploy commit.
+   - **After publishing:** check Verify on the deploy commit, the
+     `github-pages` deployment at that SHA, and every published file's
+     SHA-256 against `docs/`. Then run step 5's checks on the published bytes,
+     served locally so the live site's storage is never touched.
+   - **Any failure:** roll back at once, as Deployment → Rollback prescribes
+     and Joe allowed: push a branch (e.g. `rollback-v3.2.692`) at tag
+     `v3.2.692`, point the Pages source at it, request a build
+     (`gh api -X POST repos/djDAOjones/route-plotter/pages/builds`), and
+     confirm the deployment SHA. That is the one Pages-source change this run
+     may make. Check the restored site the same way, then stop and report.
+   - **Tag** the deploy commit `v3.2.<build>`, annotated, from `package.json`
+     and the pushed `version.json`, and push that one tag.
+3. **Record it** in a `PM:` PR that clears the merge bar. It holds the
+   release's own decision-log entry: every user-visible change since v3.2.692
+   (#31 on), Q12's effect on old files that saved a 0, and what was verified
+   and what stays Joe's. It also adds the trajectory phase, and REV-04's
+   Chromium line if you re-ran it. **The run ends when that PR merges,** or
+   when Joe ends it without a release.
 
 ## Stop the whole run only when
 
 - `main`'s gate cannot be made green again by a revert;
 - another session is changing the repository (commits, branches or pull
-  requests that aren't yours): stop, report, wait;
+  requests that are neither yours nor Joe's): stop, report, wait. Joe merging
+  or closing one of your parked pull requests is an answer, not a collision;
 - a step would need a force-push, a history rewrite, a settings or ruleset
-  change, or `docs/` or `version.json` changed outside `npm run push`;
+  change, a Pages-source change other than the release's documented rollback,
+  or `docs/` or `version.json` changed outside `npm run push`;
 - the release needed a rollback;
+- the release is done and recorded: the run is over, so hand off;
 - Joe says so.
 
-Everything else is parked, not stopped. The plan's stop-and-re-plan
+A stop suspends the run; it never triggers the release. Everything else is
+parked, not stopped. The plan's stop-and-re-plan
 conditions (a §14.6 invalidation, a golden that cannot be made deterministic,
 a wave running past about twice its PR estimate, a finding that changes
 sequencing) park the wave concerned, with a dated plan note and a line for
@@ -347,8 +457,10 @@ Joe; the independent lanes carry on.
 - Send Joe a line as items merge and a short summary at each wave close.
   Don't wait for replies.
 - The scratchpad can be wiped between days, and a session can end abruptly.
-  The close-outs make the repository the durable record: a later session
-  resumes from the last handoff, the backlog and the open pull requests.
+  Full item closes make the repository the record after every merge. A later
+  session reconciles the merged and open pull requests against the backlog,
+  the plan rows and the ledger (if it survived), then takes the first
+  incomplete item.
 
 ## Reading order
 
@@ -460,8 +572,9 @@ release, `DEV-INFRASTRUCTURE.md` → Deployment, and the decision-log entry
 
 **Plan fidelity**
 - If evidence shows a row is wrong, patch it with a dated note, say so in the
-  wave's decision-log entry, and tell Joe in the handoff. A new behaviour
-  change becomes a proposed DEF row for Joe; it is not fixed in this run.
+  wave's decision-log entry, and tell Joe in the handoff. A patch never widens
+  what is approved. A new behaviour change becomes a proposed DEF row for Joe;
+  it is not fixed in this run.
 
 ## The comparative reviewer
 
@@ -494,19 +607,22 @@ independent Claude agent stood in and found a hole in each of #34 to #43.
 - **In a cloud container** there is no Browser pane: Playwright's headless
   Chromium stands in. Build `main` and the branch in throwaway clones, serve
   each `docs/` with a small Node server on its own port, and drive the real
-  app. Its WebCodecs has VP9 (WebM) but no H.264, so an MP4 export stays a
-  manual check; `page.emulateMedia({ reducedMotion })` fires the app's real
+  app. Its WebCodecs has VP9 (WebM) but no H.264. An item's frame-for-frame
+  export comparison may use WebM there, since the frames come from the same
+  render; say so in the PR. The release's MP4 check may not (see The
+  release). `page.emulateMedia({ reducedMotion })` fires the app's real
   `matchMedia` listener.
 - **On Joe's Mac:**
   - Build a throwaway clone (`npm run build`) and serve it through a
     **temporary** entry in the parent folder's `.claude/launch.json` (the
     session's working folder is the parent folder); restore that file
-    byte-identical afterwards (SHA-256 `d29f63e6…`; check it). Joe allowed
-    this on 2026-09-24, but a later session's permission mode refused it
-    ("Unauthorized Persistence") until Joe allowed it in that chat. **If it is
-    refused, don't wait:** use the headless route and list the check in the
-    PR for Joe. The one exception is the release's smoke test: ask Joe once in
-    the chat, because a real browser is worth waiting for there.
+    byte-identical afterwards (SHA-256 `d29f63e6…`; check it). **Joe has
+    allowed this for the whole run** (see What Joe has decided). A session's
+    permission mode once refused it ("Unauthorized Persistence") until Joe
+    allowed it in that chat: if that happens, quote Joe's permission above and
+    ask once. If it stays refused, the browser checks the plan names park
+    their items, and the release waits; everything else carries on, using the
+    headless route below where it suffices.
   - The headless route: drive the app's own `exportHTML()` with each build's
     `docs/player.js`, parse the embedded project out of the file, load it into
     `PlayerApp` and compare transcripts (#31 shows how).
@@ -539,10 +655,14 @@ independent Claude agent stood in and found a hole in each of #34 to #43.
   cloud container), so mutation tables are cheap; but a frame one test booked
   can fire after its environment is torn down (`requestAnimationFrame is not
   defined`, from `AnimationEngine._scheduleFrame`), and Vitest then reports
-  `Errors  N errors`. Read the result, not the exit code:
-  `--reporter=json --outputFile=<file>` gives `numFailedTests` and the failing
-  names. **Guard mutation runs with a watchdog:** a mutation can make a loop
-  infinite (DEF-31), and Vitest cannot time out a synchronous hang.
+  `Errors  N errors`. For a mutation run, `--reporter=json
+  --outputFile=<file>` gives `numFailedTests` and the failing names. It
+  replaces the configured reporters, the min-count canary included, so it
+  never stands in for the gate. A timeout, a worker crash, an unhandled error
+  or an incomplete collection makes that mutation's result inconclusive
+  unless the intended assertion failure is shown against a valid baseline.
+  **Guard mutation runs with a watchdog:** a mutation can make a loop infinite
+  (DEF-31), and Vitest cannot time out a synchronous hang.
 - **The camera** snaps to its target on a seek of more than 0.05 of the route
   and otherwise eases (at 1× it snaps once close). With the test clock frozen
   its zoom rate limiter never moves. To compare two frames at one instant,
@@ -604,4 +724,7 @@ question and your recommendation; memory written; plan rows patched; the
 metrics at each wave close; the exact next step; and anything waiting on Joe.
 
 **Begin** by verifying the state above, making the clone and the ledger, and
-starting TST-04. Ask Joe nothing this prompt already answers.
+reconciling: an `<ITEM-ID>:` commit on `origin/main` whose backlog line
+remains is merged work, so close it out first. Then take the first runnable
+item (TST-04, on the run's first day). Ask Joe nothing this prompt already
+answers.
