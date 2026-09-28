@@ -1,0 +1,18 @@
+# route-glow: the path glow switched on
+
+## #path-glow-intensity · set 33
+model ~ styles.pathGlow.intensity: 0.65 → 0.33
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" → div class="settings-section expanded" data-last="true" data-section="path-emphasis"
+ui ~ #path-glow-intensity: input aria-describedby="path-glow-intensity-tip" max="100" min="0" step="1" type="range" value="50" :value="65" → input aria-describedby="path-glow-intensity-tip" max="100" min="0" step="1" type="range" value="50" :value="33"
+ui ~ #path-glow-value: span class="slider-value" :text="65%" → span class="slider-value" :text="33%"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+
+## #path-glow-intensity · double-click
+model ~ styles.pathGlow.intensity: 0.65 → 0.5
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #path-glow-intensity: input aria-describedby="path-glow-intensity-tip" max="100" min="0" step="1" type="range" value="50" :value="65" → input aria-describedby="path-glow-intensity-tip" max="100" min="0" step="1" type="range" value="50" :value="50"
+ui ~ #path-glow-value: span class="slider-value" :text="65%" → span class="slider-value" :text="50%"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}

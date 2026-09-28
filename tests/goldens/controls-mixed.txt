@@ -58,7 +58,7 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].beaconStyle: "glow" → "none"
 model ~ waypoints[3].beaconStyle: "grow" → "none"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
+ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__" → select aria-describedby="editor-beacon-style-tip" :value="none"
 ui ~ #editor-beacon-style>option[0]: option data-mixed-option="true" disabled="" value="__mixed__" :text="Mixed" → option value="none" :text="None"
 ui ~ #editor-beacon-style>option[1]: option value="none" :text="None" → option value="ripple" :text="Ripple"
@@ -78,7 +78,7 @@ model ~ waypoints[2].pauseTime: 2750 → 1919.693253
 model ~ waypoints[3].pauseTime: 2750 → 1919.693253
 model ~ animationState.duration: 21429.352554 → 23349.045806
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
+ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #waypoint-pause-time: input aria-describedby="waypoint-pause-time-tip" max="1000" min="0" step="1" type="range" value="500" :value="384" → input aria-describedby="waypoint-pause-time-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #waypoint-pause-time-value: span :text="2.8s" → span :text="1.9s"
 ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:23"
@@ -92,7 +92,7 @@ settled:
 model ~ waypoints[2].camera.zoom: 1.95 → 2.496661
 model ~ waypoints[3].camera.zoom: 2.05 → 2.496661
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
+ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #camera-selected-zoom: input aria-describedby="camera-selected-zoom-value camera-selected-zoom-tip" aria-valuetext="Mixed" data-mixed="true" max="1" min="0" step="0.01" type="range" value="0" :value="0.2589059774326803" → input aria-describedby="camera-selected-zoom-value camera-selected-zoom-tip" aria-valuetext="2.5x" max="1" min="0" step="0.01" type="range" value="0" :value="0.33"
 ui ~ #camera-selected-zoom-value: span class="slider-value" :text="Mixed" → span class="slider-value" :text="2.5x"
 
@@ -101,7 +101,7 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].camera.zoomMode: "stepped" → "immediate"
 model ~ waypoints[3].camera.zoomMode: "stepped" → "immediate"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
+ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #camera-zoom-mode: select aria-describedby="camera-zoom-mode-tip" :value="continuous" → select aria-describedby="camera-zoom-mode-tip" :value="immediate"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -172,7 +172,7 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].labelMode: "on" → "off"
 model ~ waypoints[3].labelMode: "on" → "off"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[2]: div class="settings-section" data-section="label" → div class="settings-section" data-last="true" data-section="label"
+ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-mode: select aria-describedby="label-mode-tip" :value="on" → select aria-describedby="label-mode-tip" :value="off"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -183,7 +183,7 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].labelSize: 27 → 37
 model ~ waypoints[3].labelSize: 27 → 37
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[2]: div class="settings-section" data-section="label" → div class="settings-section" data-last="true" data-section="label"
+ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-size: input aria-describedby="label-size-value label-size-tip" aria-valuetext="27 reference px" max="48" min="16" step="1" type="range" value="16" :value="27" → input aria-describedby="label-size-value label-size-tip" aria-valuetext="37 reference px" max="48" min="16" step="1" type="range" value="16" :value="37"
 ui ~ #label-size-value: span :text="27 reference px" → span :text="37 reference px"
 settled:
@@ -195,10 +195,10 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].labelColor: "#009E73" → "#111111"
 model ~ waypoints[3].labelColor: "#009E73" → "#111111"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[2]: div class="settings-section" data-section="label" → div class="settings-section" data-last="true" data-section="label"
+ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#111111" :value="#111111"
 ui ~ #label-color-group-0: input class="swatch-radio" name="label-color-group" type="radio" value="#111111" :unchecked → input class="swatch-radio" name="label-color-group" type="radio" value="#111111" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background: rgb(0, 158, 115);" → span aria-hidden="true" class="swatch-current-chip" style="background: rgb(17, 17, 17);"
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[259 chars, cb47dd5e] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[257 chars, 4765ef18]
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #111111"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -209,10 +209,10 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].labelBgColor: "#F0E442" → "#111111"
 model ~ waypoints[3].labelBgColor: "#F0E442" → "#111111"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[2]: div class="settings-section" data-section="label" → div class="settings-section" data-last="true" data-section="label"
+ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input type="hidden" value="#111111" :value="#111111"
 ui ~ #label-bg-color-group-0: input class="swatch-radio" name="label-bg-color-group" type="radio" value="#111111" :unchecked → input class="swatch-radio" name="label-bg-color-group" type="radio" value="#111111" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background: rgb(240, 228, 66);" → span aria-hidden="true" class="swatch-current-chip" style="background: rgb(17, 17, 17);"
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, e69dccdc] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[257 chars, 4765ef18]
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #111111"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -223,7 +223,7 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].labelBgOpacity: 0.42 → 0.33
 model ~ waypoints[3].labelBgOpacity: 0.42 → 0.33
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[2]: div class="settings-section" data-section="label" → div class="settings-section" data-last="true" data-section="label"
+ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-bg-opacity: input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="42%" max="100" min="0" step="1" type="range" value="85" :value="42" → input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="85" :value="33"
 ui ~ #label-bg-opacity-value: span :text="42%" → span :text="33%"
 settled:
@@ -235,7 +235,7 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].labelWidth: 33 → 20
 model ~ waypoints[3].labelWidth: 33 → 20
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[2]: div class="settings-section" data-section="label" → div class="settings-section" data-last="true" data-section="label"
+ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-width: input aria-describedby="label-width-tip" max="50" min="5" step="1" type="range" value="15" :value="33" → input aria-describedby="label-width-tip" max="50" min="5" step="1" type="range" value="15" :value="20"
 ui ~ #label-width-value: span :text="33%" → span :text="20%"
 settled:
@@ -247,7 +247,7 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].labelOffsetX: 14 → -17
 model ~ waypoints[3].labelOffsetX: 15 → -17
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[2]: div class="settings-section" data-section="label" → div class="settings-section" data-last="true" data-section="label"
+ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-tip" max="50" min="-50" step="1" type="range" value="0" :value="-17"
 ui ~ #label-offset-x-value: span :text="Mixed" → span :text="-17%"
 settled:
@@ -259,7 +259,7 @@ emit waypoint:style-changed waypoint[3]
 model ~ waypoints[2].labelOffsetY: -11 → -17
 model ~ waypoints[3].labelOffsetY: -12 → -17
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[2]: div class="settings-section" data-section="label" → div class="settings-section" data-last="true" data-section="label"
+ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-tip" max="50" min="-50" step="1" type="range" value="-5" :value="-17"
 ui ~ #label-offset-y-value: span :text="Mixed" → span :text="-17%"
 settled:
@@ -288,11 +288,11 @@ ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title=
 ui ~ #label-size: input aria-describedby="label-size-value label-size-tip" aria-valuetext="27 reference px" max="48" min="16" step="1" type="range" value="16" :value="27" → input aria-describedby="label-size-value label-size-tip" aria-valuetext="16 reference px" max="48" min="16" step="1" type="range" value="16" :value="16"
 ui ~ #label-size-value: span :text="27 reference px" → span :text="16 reference px"
 ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#1a1a1a" :value="#1a1a1a"
-ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background: rgb(0, 158, 115);" → span aria-hidden="true" class="swatch-current-chip" style="background: rgb(26, 26, 26);"
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[259 chars, cb47dd5e] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[257 chars, dde75ffc]
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #1A1A1A"
 ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input type="hidden" value="#FFFFFF" :value="#FFFFFF"
 ui ~ #label-bg-color-group-3: input class="swatch-radio" name="label-bg-color-group" type="radio" value="#FFFFFF" :unchecked → input class="swatch-radio" name="label-bg-color-group" type="radio" value="#FFFFFF" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background: rgb(240, 228, 66);" → span aria-hidden="true" class="swatch-current-chip" style="background: rgb(255, 255, 255);"
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, e69dccdc] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[263 chars, 60e62d3a]
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #FFFFFF"
 ui ~ #label-bg-opacity: input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="42%" max="100" min="0" step="1" type="range" value="85" :value="42" → input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="85%" max="100" min="0" step="1" type="range" value="85" :value="85"
 ui ~ #label-bg-opacity-value: span :text="42%" → span :text="85%"
@@ -314,7 +314,7 @@ model ~ waypoints[1].segmentColor: "#0072B2" → "#ffffff"
 model ~ waypoints[2].segmentColor: "#0072B2" → "#ffffff"
 model ~ waypoints[3].segmentColor: "#0072B2" → "#ffffff"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[3]: div class="settings-section" data-section="leg" → div class="settings-section" data-last="true" data-section="leg"
+ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="#ffffff" :value="#ffffff"
 ui ~ #segment-color-group-0: input class="swatch-radio" name="segment-color-group" type="radio" value="#FFFFFF" :unchecked → input class="swatch-radio" name="segment-color-group" type="radio" value="#FFFFFF" :checked
 ui ~ #segment-color-group-7: input class="swatch-radio" name="segment-color-group" type="radio" value="#0072B2" :checked → input class="swatch-radio" name="segment-color-group" type="radio" value="#0072B2" :unchecked
@@ -328,7 +328,7 @@ model ~ waypoints[1].segmentWidth: 7 → 3.415749
 model ~ waypoints[2].segmentWidth: 7 → 3.415749
 model ~ waypoints[3].segmentWidth: 7 → 3.415749
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[3]: div class="settings-section" data-section="leg" → div class="settings-section" data-last="true" data-section="leg"
+ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-width: input aria-describedby="segment-width-value segment-width-tip" aria-valuetext="7.0 reference px" max="1000" min="0" step="1" type="range" value="333" :value="528" → input aria-describedby="segment-width-value segment-width-tip" aria-valuetext="3.4 reference px" max="1000" min="0" step="1" type="range" value="333" :value="333"
 ui ~ #segment-width-value: span :text="7.0 reference px" → span :text="3.4 reference px"
 settled:
@@ -341,7 +341,7 @@ model ~ waypoints[1].pathShape: "wave" → "line"
 model ~ waypoints[2].pathShape: "wave" → "line"
 model ~ waypoints[3].pathShape: "wave" → "line"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[3]: div class="settings-section" data-section="leg" → div class="settings-section" data-last="true" data-section="leg"
+ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #path-shape: select aria-describedby="path-shape-tip" :value="" → select aria-describedby="path-shape-tip" :value="line"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -353,7 +353,7 @@ model ~ waypoints[2].segmentSpeed: 2.5 → 0.463447
 model ~ waypoints[3].segmentSpeed: 2.5 → 0.463447
 model ~ animationState.duration: 21429.352554 → 22491.515061
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[3]: div class="settings-section" data-section="leg" → div class="settings-section" data-last="true" data-section="leg"
+ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #waypoint-segment-speed: input aria-describedby="waypoint-segment-speed-tip" max="1000" min="0" step="1" type="range" value="500" :value="699" → input aria-describedby="waypoint-segment-speed-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #waypoint-segment-speed-value: span :text="2.5x" → span :text="0.46x"
 ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:22"
@@ -369,7 +369,7 @@ model ~ waypoints[1].segmentStyle: "dashed" → "solid"
 model ~ waypoints[2].segmentStyle: "dashed" → "solid"
 model ~ waypoints[3].segmentStyle: "dashed" → "solid"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[3]: div class="settings-section" data-section="leg" → div class="settings-section" data-last="true" data-section="leg"
+ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-style: select aria-describedby="segment-style-tip" :value="dashed" → select aria-describedby="segment-style-tip" :value="solid"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -414,7 +414,7 @@ model ~ waypoints[2].areaHighlight.shape: "rectangle" → "none"
 model ~ waypoints[3].areaHighlight.enabled: true → false
 model ~ waypoints[3].areaHighlight.shape: "rectangle" → "none"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-shape: select aria-describedby="area-shape-tip" :value="rectangle" → select aria-describedby="area-shape-tip" :value="none"
 ui ~ #area-rect-controls: div style="" → div (not shown)
 ui ~ #area-delete-controls: div style="" → div (not shown)
@@ -433,14 +433,14 @@ ui - #area-rect-height-value: span :text="19%"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
 ui - #area-delete-btn: button aria-label="Delete area" class="btn btn-secondary btn-danger" style="width: 100%;" :text="Delete area"
 ui - #area-fill-color: input type="hidden" value="#E69F00" :value="#E69F00"
-ui - #area-fill-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Fill" data-mode="okabe-ito" data-target-input="#area-fill-color" (and 44 inside, c5bb12e7)
+ui - #area-fill-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Fill" data-mode="okabe-ito" data-target-input="#area-fill-color" (and 44 inside, 33537874)
 ui - #area-fill-controls>label[2]: label for="area-fill-opacity"
 ui - #area-fill-controls>label[2]>span[0]: span data-tip-desc="area-fill-opacity-tip" data-tip="Opacity of the area fill. Set to 0 for outline-only mode" :text="Fill Opacity"
 ui - #area-fill-opacity: input aria-describedby="area-fill-opacity-tip" max="100" min="0" step="1" type="range" value="30" :value="55"
 ui - #area-fill-opacity-value: span :text="55%"
 ui - #area-fill-opacity-tip: span class="sr-only" :text="Opacity of the area fill. Set to 0 for outline-only mode"
 ui - #area-border-color: input type="hidden" value="#D55E00" :value="#D55E00"
-ui - #area-border-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Border" data-mode="okabe-ito" data-target-input="#area-border-color" (and 44 inside, a0201bbb)
+ui - #area-border-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Border" data-mode="okabe-ito" data-target-input="#area-border-color" (and 44 inside, 4396aec4)
 ui - #area-border-controls>label[2]: label for="area-border-style"
 ui - #area-border-controls>label[2]>span[0]: span data-tip-desc="area-border-style-tip" data-tip="Line style of the area border" :text="Border Style"
 ui - #area-border-style: select aria-describedby="area-border-style-tip" :value="dashed"
@@ -484,7 +484,7 @@ model ~ waypoints[1].areaHighlight.width: 0.27 → 0.27307
 model ~ waypoints[2].areaHighlight.width: 0.27 → 0.27307
 model ~ waypoints[3].areaHighlight.width: 0.27 → 0.27307
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-rect-width: input aria-describedby="area-rect-width-tip" max="1000" min="0" step="1" type="range" value="125" :value="329" → input aria-describedby="area-rect-width-tip" max="1000" min="0" step="1" type="range" value="125" :value="333"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -497,7 +497,7 @@ model ~ waypoints[1].areaHighlight.height: 0.19 → 0.27307
 model ~ waypoints[2].areaHighlight.height: 0.19 → 0.27307
 model ~ waypoints[3].areaHighlight.height: 0.19 → 0.27307
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-rect-height: input aria-describedby="area-rect-height-tip" max="1000" min="0" step="1" type="range" value="125" :value="228" → input aria-describedby="area-rect-height-tip" max="1000" min="0" step="1" type="range" value="125" :value="333"
 ui ~ #area-rect-height-value: span :text="19%" → span :text="27%"
 settled:
@@ -511,7 +511,7 @@ model ~ waypoints[1].areaHighlight.fillColor: "#E69F00" → "#ffffff"
 model ~ waypoints[2].areaHighlight.fillColor: "#E69F00" → "#ffffff"
 model ~ waypoints[3].areaHighlight.fillColor: "#E69F00" → "#ffffff"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-fill-color: input type="hidden" value="#E69F00" :value="#E69F00" → input type="hidden" value="#ffffff" :value="#ffffff"
 ui ~ #area-fill-color-group-0: input class="swatch-radio" name="area-fill-color-group" type="radio" value="#FFFFFF" :unchecked → input class="swatch-radio" name="area-fill-color-group" type="radio" value="#FFFFFF" :checked
 ui ~ #area-fill-color-group-2: input class="swatch-radio" name="area-fill-color-group" type="radio" value="#E69F00" :checked → input class="swatch-radio" name="area-fill-color-group" type="radio" value="#E69F00" :unchecked
@@ -526,7 +526,7 @@ model ~ waypoints[1].areaHighlight.fillOpacity: 0.55 → 0.33
 model ~ waypoints[2].areaHighlight.fillOpacity: 0.55 → 0.33
 model ~ waypoints[3].areaHighlight.fillOpacity: 0.55 → 0.33
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-fill-opacity: input aria-describedby="area-fill-opacity-tip" max="100" min="0" step="1" type="range" value="30" :value="55" → input aria-describedby="area-fill-opacity-tip" max="100" min="0" step="1" type="range" value="30" :value="33"
 ui ~ #area-fill-opacity-value: span :text="55%" → span :text="33%"
 settled:
@@ -540,7 +540,7 @@ model ~ waypoints[1].areaHighlight.borderColor: "#D55E00" → "#ffffff"
 model ~ waypoints[2].areaHighlight.borderColor: "#D55E00" → "#ffffff"
 model ~ waypoints[3].areaHighlight.borderColor: "#D55E00" → "#ffffff"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-border-color: input type="hidden" value="#D55E00" :value="#D55E00" → input type="hidden" value="#ffffff" :value="#ffffff"
 ui ~ #area-border-color-group-0: input class="swatch-radio" name="area-border-color-group" type="radio" value="#FFFFFF" :unchecked → input class="swatch-radio" name="area-border-color-group" type="radio" value="#FFFFFF" :checked
 ui ~ #area-border-color-group-3: input class="swatch-radio" name="area-border-color-group" type="radio" value="#D55E00" :checked → input class="swatch-radio" name="area-border-color-group" type="radio" value="#D55E00" :unchecked
@@ -555,7 +555,7 @@ model ~ waypoints[1].areaHighlight.borderStyle: "dashed" → "solid"
 model ~ waypoints[2].areaHighlight.borderStyle: "dashed" → "solid"
 model ~ waypoints[3].areaHighlight.borderStyle: "dashed" → "solid"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-border-style: select aria-describedby="area-border-style-tip" :value="dashed" → select aria-describedby="area-border-style-tip" :value="solid"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -568,7 +568,7 @@ model ~ waypoints[1].areaHighlight.borderWidth: 6 → 4
 model ~ waypoints[2].areaHighlight.borderWidth: 6 → 4
 model ~ waypoints[3].areaHighlight.borderWidth: 6 → 4
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-border-width: input aria-describedby="area-border-width-value area-border-width-tip" aria-valuetext="6 reference px" max="10" min="1" step="1" type="range" value="2" :value="6" → input aria-describedby="area-border-width-value area-border-width-tip" aria-valuetext="4 reference px" max="10" min="1" step="1" type="range" value="2" :value="4"
 ui ~ #area-border-width-value: span :text="6 reference px" → span :text="4 reference px"
 settled:
@@ -582,7 +582,7 @@ model ~ waypoints[1].areaHighlight.visibility: "always-show" → "hide-before"
 model ~ waypoints[2].areaHighlight.visibility: "always-show" → "hide-before"
 model ~ waypoints[3].areaHighlight.visibility: "always-show" → "hide-before"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-visibility: select aria-describedby="area-visibility-tip" :value="always-show" → select aria-describedby="area-visibility-tip" :value="hide-before"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -595,7 +595,7 @@ model ~ waypoints[1].areaHighlight.fadeInMs: 1250 → 3300
 model ~ waypoints[2].areaHighlight.fadeInMs: 1250 → 3300
 model ~ waypoints[3].areaHighlight.fadeInMs: 1250 → 3300
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-fade-in: input aria-describedby="area-fade-in-tip" max="10000" min="0" step="100" type="range" value="500" :value="1250" → input aria-describedby="area-fade-in-tip" max="10000" min="0" step="100" type="range" value="500" :value="3300"
 ui ~ #area-fade-in-value: span :text="1.3s" → span :text="3.3s"
 settled:
@@ -609,7 +609,7 @@ model ~ waypoints[1].areaHighlight.fadeOutMs: 1750 → 3300
 model ~ waypoints[2].areaHighlight.fadeOutMs: 1750 → 3300
 model ~ waypoints[3].areaHighlight.fadeOutMs: 1750 → 3300
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-fade-out: input aria-describedby="area-fade-out-tip" max="10000" min="0" step="100" type="range" value="500" :value="1750" → input aria-describedby="area-fade-out-tip" max="10000" min="0" step="100" type="range" value="500" :value="3300"
 ui ~ #area-fade-out-value: span :text="1.8s" → span :text="3.3s"
 settled:

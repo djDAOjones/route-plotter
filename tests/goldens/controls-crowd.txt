@@ -7,20 +7,18 @@
 ## #scope-next-btn · disabled, not operated
 
 ## #crowd-scope>div[0]>div[0] · click
-ui ~ #crowd-scope>div[0]: div class="settings-section" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
-ui ~ #crowd-scope>div[0]>div[0]: div aria-controls="section-guide-content" aria-expanded="false" class="section-header" role="button" tabindex="0" → div aria-controls="section-guide-content" aria-expanded="true" class="section-header" role="button" tabindex="0"
+ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section" data-last="true" data-section="guide"
+ui ~ #crowd-scope>div[0]>div[0]: div aria-controls="section-guide-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-guide-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
 ## #section-guide-content>label[0]>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="What the dots travel along"
-settled:
-  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="What the dots travel along" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="What the dots travel along"
 
 ## #crowd-guide-type · choose "route"
 emit crowd:param-changed
 emit network:guide-changed layer[0]
 model ~ scene.flowLayers[0].guideType: "graph" → "route"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #crowd-scope>div[0]: div class="settings-section" data-section="guide" → div class="settings-section" data-last="true" data-section="guide"
+ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
 ui ~ #crowd-guide-type: select aria-describedby="crowd-guide-type-tip" :value="graph" → select aria-describedby="crowd-guide-type-tip" :value="route"
 ui ~ #network-edit-btn: button class="btn btn-secondary" title="Draw the network this crowd walks: nodes joined by edges" type="button" :text="Edit network" → button (not shown)
 ui ~ #crowd-trace-route-btn: button class="btn btn-secondary" title="Copy the route into this crowd’s network, so its dots follow the same shape and can branch where the route branches" type="button" :text="Trace route into network" → button (not shown)
@@ -36,12 +34,12 @@ emit network:edit-mode-changed {active: true, layer: layer[0]}
 emit render:request
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Network editing — click the map to place linked nodes. Escape lifts the pen."
 ui ~ #network-edit-btn: button class="btn btn-secondary" title="Draw the network this crowd walks: nodes joined by edges" type="button" :text="Edit network" → button class="btn btn-secondary" disabled="" title="Draw the network this crowd walks: nodes joined by edges" type="button" :text="Editing network…"
-ui + #network-edit-banner: div aria-live="polite" role="status" style="position: fixed; top: 0px; left: 0px; right: 0px; z-index: 1000; padding: 8px 16px; background: var(--scope-crowd-fg, #0E4A38); color: rgb(255, 255, 255); disp…[336 chars, f6f8706d]
+ui + #network-edit-banner: div aria-live="polite" role="status" style="position: fixed; z-index: 1000; padding-top: 8px; padding-right: 16px; padding-bottom: 8px; padding-left: 16px; padding: 8px 16px; background: var(--scope-crow…[383 chars, 51e295e3]
 ui + #network-edit-banner>span[0]: span class="banner-text" :text="— click places a linked node, click a node to continue from it, drag an edge to bend it. lifts the pen."
 ui + #network-edit-banner>span[0]>strong[0]: strong :text="Drawing network"
 ui + #network-edit-banner>span[0]>kbd[1]: kbd :text="Esc"
 ui + #network-edit-banner>span[0]>span[2]: span class="banner-count" :text="4 nodes · 4 edges"
-ui + #network-edit-banner>button[1]: button aria-label="Finish network editing" class="banner-done" style="background: transparent; border: 1px solid rgb(255, 255, 255); color: rgb(255, 255, 255); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 13px;" type="button" :text="Done"
+ui + #network-edit-banner>button[1]: button aria-label="Finish network editing" class="banner-done" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[1119 chars, cac27c42] type="button" :text="Done"
 settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Network editing — click the map to place linked nodes. Escape lifts the pen." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
@@ -253,7 +251,7 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-dots-content>label[2]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Dot size factor, scaled with the image like other elements"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dot size factor, scaled with the image like other elements"
 
 ## #crowd-dot-size · set 70
 emit crowd:param-changed
@@ -268,7 +266,7 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-dots-content>label[4]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Sideways walking variation as dots travel — 0% follows the line exactly"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Sideways walking variation as dots travel — 0% follows the line exactly"
 
 ## #crowd-wobble · set 33
 emit crowd:param-changed
@@ -287,7 +285,7 @@ ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #crowd-scope>div[2]>div[0]: div aria-controls="section-release-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-release-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
 ## #section-release-content>div[0]>label[0]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Total dots released across the window"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Total dots released across the window"
 
 ## #crowd-count · set 167
 emit crowd:param-changed
@@ -302,7 +300,7 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-release-content>div[0]>label[2]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="When the first dots set off, as a position in the timeline"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="When the first dots set off, as a position in the timeline"
 
 ## #crowd-release-start · set 33
 emit crowd:param-changed
@@ -317,7 +315,7 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-release-content>div[0]>label[4]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="How much of the timeline the release is spread across"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much of the timeline the release is spread across"
 
 ## #crowd-release-duration · set 33
 emit crowd:param-changed
@@ -332,10 +330,10 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-release-content>details[1]>summary[0] · click
-ui ~ #section-release-content>details[1]: details class="section-more" → details class="section-more" open=""
+ui ~ #section-release-content>details[1]: details class="section-more" open="" → details class="section-more"
 
 ## #section-release-content>details[1]>div[1]>label[0]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="How unevenly individual dots set off within the release window"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How unevenly individual dots set off within the release window"
 
 ## #crowd-onset-variance · set 33
 emit crowd:param-changed
@@ -350,7 +348,7 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-release-content>details[1]>div[1]>label[2]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Bias all set-offs toward the start or end before applying the busyness graph"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Bias all set-offs toward the start or end before applying the busyness graph"
 
 ## #crowd-intensity-ramp · set -33
 emit crowd:param-changed
@@ -364,13 +362,7 @@ settled:
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
-## #crowd-busyness-handles>div[0]>label[1]>input[0] · enter 24
-ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-busyness-handles>div[0]>label[1]>input[0]: input aria-label="Time for busyness handle 1, percent" data-busyness-field="time" data-busyness-index="0" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="0" → input aria-label="Time for busyness handle 1, percent" data-busyness-field="time" data-busyness-index="0" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="24"
-
-## #crowd-busyness-handles>div[0]>label[1]>input[0] · enter 99999
-ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-busyness-handles>div[0]>label[1]>input[0]: input aria-label="Time for busyness handle 1, percent" data-busyness-field="time" data-busyness-index="0" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="0" → input aria-label="Time for busyness handle 1, percent" data-busyness-field="time" data-busyness-index="0" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="99999"
+## #crowd-busyness-handles>div[0]>label[1]>input[0] · read-only, not operated
 
 ## #crowd-busyness-handles>div[0]>label[2]>input[0] · enter 24
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -382,6 +374,10 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="Even" → output aria-labelledby="crowd-busyness-label" :text="2 handles"
+ui ~ #crowd-busyness-graph: svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="2 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 282 16" → path class="crowd-busyness-line" d="M 18 98.08 L 282 16"
+ui ~ #crowd-busyness-graph>circle[2]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="18" cy="16" data-busyness-handle="0" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="18" cy="98.08" data-busyness-handle="0" r="22"
+ui ~ #crowd-busyness-graph>circle[3]: circle aria-hidden="true" class="crowd-busyness-handle" cx="18" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="18" cy="98.08" r="8"
 ui ~ #crowd-busyness-handles>div[0]>label[2]>input[0]: input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
 ui ~ #crowd-busyness-reset: button class="btn btn-ghost" disabled="" type="button" :text="Reset to even" → button class="btn btn-ghost" type="button" :text="Reset to even"
 settled:
@@ -400,18 +396,13 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 H 282 V 16"
 ui ~ #crowd-busyness-handles>div[0]>label[3]>select[0]: select data-busyness-field="transition" data-busyness-index="0" :value="gradual" → select data-busyness-field="transition" data-busyness-index="0" :value="step"
 ui ~ #crowd-busyness-reset: button class="btn btn-ghost" disabled="" type="button" :text="Reset to even" → button class="btn btn-ghost" type="button" :text="Reset to even"
 settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
-## #crowd-busyness-handles>div[1]>label[1]>input[0] · enter 24
-ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-busyness-handles>div[1]>label[1]>input[0]: input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100" → input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="24"
-
-## #crowd-busyness-handles>div[1]>label[1]>input[0] · enter 99999
-ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-busyness-handles>div[1]>label[1]>input[0]: input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100" → input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="99999"
+## #crowd-busyness-handles>div[1]>label[1]>input[0] · read-only, not operated
 
 ## #crowd-busyness-handles>div[1]>label[2]>input[0] · enter 24
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -423,6 +414,10 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="Even" → output aria-labelledby="crowd-busyness-label" :text="2 handles"
+ui ~ #crowd-busyness-graph: svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="2 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 282 98.08"
+ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="98.08" data-busyness-handle="1" r="22"
+ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="98.08" r="8"
 ui ~ #crowd-busyness-handles>div[1]>label[2]>input[0]: input aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
 ui ~ #crowd-busyness-reset: button class="btn btn-ghost" disabled="" type="button" :text="Reset to even" → button class="btn btn-ghost" type="button" :text="Reset to even"
 settled:
@@ -444,6 +439,12 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="Even" → output aria-labelledby="crowd-busyness-label" :text="3 handles"
+ui ~ #crowd-busyness-graph: svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="3 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16"
+ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22"
+ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8"
+ui + #crowd-busyness-graph>circle[6]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="2" r="22"
+ui + #crowd-busyness-graph>circle[7]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8"
 ui ~ #crowd-busyness-handles>div[1]>label[1]>input[0]: input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100" → input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50"
 ui + #crowd-busyness-handles>div[1]>label[3]: label :text="Change"
 ui + #crowd-busyness-handles>div[1]>label[3]>select[0]: select data-busyness-field="transition" data-busyness-index="1" :value="gradual"
@@ -477,17 +478,17 @@ settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Visitors pattern re-rolled. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-scope>div[3]>div[0] · click
-ui ~ #crowd-scope>div[3]: div class="settings-section" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
-ui ~ #crowd-scope>div[3]>div[0]: div aria-controls="section-motion-content" aria-expanded="false" class="section-header" role="button" tabindex="0" → div aria-controls="section-motion-content" aria-expanded="true" class="section-header" role="button" tabindex="0"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
+ui ~ #crowd-scope>div[3]>div[0]: div aria-controls="section-motion-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-motion-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
 ## #section-motion-content>label[0]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Dot travel speed in image-widths per second"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dot travel speed in image-widths per second"
 
 ## #crowd-speed · set 34
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].speed: 0.06 → 0.34
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #crowd-scope>div[3]: div class="settings-section" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-speed: input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.06 img/s" max="100" min="1" step="1" type="range" value="15" :value="6" → input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.34 img/s" max="100" min="1" step="1" type="range" value="15" :value="34"
 ui ~ #crowd-speed-value: span :text="0.06 img/s" → span :text="0.34 img/s"
 settled:
@@ -496,13 +497,13 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-motion-content>label[2]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Per-dot pace variation — 0% moves every dot at the same speed"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Per-dot pace variation — 0% moves every dot at the same speed"
 
 ## #crowd-speed-variance · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].speedVariance: 0.35 → 0.33
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #crowd-scope>div[3]: div class="settings-section" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-speed-variance: input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="35%" max="100" min="0" step="1" type="range" value="20" :value="35" → input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="20" :value="33"
 ui ~ #crowd-speed-variance-value: span :text="35%" → span :text="33%"
 settled:
@@ -511,13 +512,13 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-motion-content>label[4]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="What a dot does when it reaches the end of its journey"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="What a dot does when it reaches the end of its journey"
 
 ## #crowd-lifecycle · choose "respawn"
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].lifecycleMode: "disappear" → "respawn"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #crowd-scope>div[3]: div class="settings-section" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-lifecycle: select aria-describedby="crowd-lifecycle-tip" :value="disappear" → select aria-describedby="crowd-lifecycle-tip" :value="respawn"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -528,7 +529,7 @@ settled:
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].lifecycleMode: "disappear" → "loop"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #crowd-scope>div[3]: div class="settings-section" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-lifecycle: select aria-describedby="crowd-lifecycle-tip" :value="disappear" → select aria-describedby="crowd-lifecycle-tip" :value="loop"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -539,7 +540,7 @@ settled:
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].lifecycleMode: "disappear" → "collect"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #crowd-scope>div[3]: div class="settings-section" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-lifecycle: select aria-describedby="crowd-lifecycle-tip" :value="disappear" → select aria-describedby="crowd-lifecycle-tip" :value="collect"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}

@@ -1,0 +1,11 @@
+# area-drawing: a polygon area being drawn for waypoint 0
+
+## #area-draw-banner>button[1] · click
+emit area:draw-mode-changed {active: false}
+emit render:request
+ui - #area-draw-banner: div aria-live="polite" role="status" style="position: fixed; z-index: 1000; padding-top: 8px; padding-right: 16px; padding-bottom: 8px; padding-left: 16px; padding: 8px 16px; background: var(--cds-intera…[387 chars, fa0a4ef4]
+ui - #area-draw-banner>span[0]: span class="banner-text" :text="— Click to place vertices. Click near the first point to close. to cancel."
+ui - #area-draw-banner>span[0]>strong[0]: strong :text="Drawing polygon area"
+ui - #area-draw-banner>span[0]>kbd[1]: kbd :text="Esc"
+ui - #area-draw-banner>span[0]>span[2]: span class="banner-count" :text="0 vertices"
+ui - #area-draw-banner>button[1]: button aria-label="Cancel drawing" class="banner-cancel" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[1119 chars, cac27c42] :text="Cancel"

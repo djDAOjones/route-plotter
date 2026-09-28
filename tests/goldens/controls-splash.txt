@@ -7,7 +7,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
-ui - #splash>div[0]: div class="splash-content" (and 148 inside, 27560ad6)
+ui - #splash>div[0]: div class="splash-content" (and 148 inside, 03fcc657)
 
 ## #splash-close-x · click
 app ~ focus: "#splash-title" → "body"
@@ -16,10 +16,10 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
-ui - #splash>div[0]: div class="splash-content" (and 148 inside, 27560ad6)
+ui - #splash>div[0]: div class="splash-content" (and 148 inside, 03fcc657)
 
 ## #splash-help>div[0]>details[2]>summary[0] · click
-ui ~ #splash-help>div[0]>details[2]: details class="controls-accordion" → details class="controls-accordion" open=""
+ui ~ #splash-help>div[0]>details[2]: details class="controls-accordion" open="" → details class="controls-accordion"
 
 ## #splash-close · click
 app ~ focus: "#splash-title" → "body"
@@ -28,7 +28,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
-ui - #splash>div[0]: div class="splash-content" (and 148 inside, 27560ad6)
+ui - #splash>div[0]: div class="splash-content" (and 148 inside, 03fcc657)
 
 ## #splash-dont-show · click
 ui ~ #splash-dont-show: input type="checkbox" :unchecked → input type="checkbox" :checked

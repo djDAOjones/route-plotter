@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 364 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 373 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 131 file(s)
+- `tests` — 140 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -338,7 +338,7 @@
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.); (DEF-30) `once` runs once when its callback emits the same event or two async emits hold it, and `off` with its callback removes it
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
-- `tests/goldenControls.test.js` — TST-04 control → bus goldens: every control the app wires, operated as a user would (each other option of a select) in a context where it is shown, 20 contexts in all; each row records the events the control emitted outside any listener, how the saved project, the app's flags and the shell changed, and what its timers then changed. Each row starts from its context's baseline, reached again through the real recovery path and proved equal, else by a fresh app; an inventory fails on any wired control with neither a row nor a stated reason
+- `tests/goldenControls.test.js` — TST-04 control → bus goldens: every gesture the app wires on a control (a click, a double-click, each other option of a select, a value, a file) performed as a user would, in a context where the control is shown, 29 contexts and 514 rows; each row records the events the control emitted outside any listener, what it asked of the browser (a file dialog, a download's bytes, copied text, an alert), how the saved project, the app's flags and the shell changed, and what its timers then changed. Each row starts from its context's baseline, reached again through the real recovery path and proved equal on the whole shell, hidden parts included, else by a fresh app; `CONTROL_GOLDENS_ISOLATED=1` boots one per row. An inventory by gesture fails on any wired gesture with neither a row nor a stated reason
 - `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, and app == player for every fixture, at Graphics scales 0.5, 1.6 and 8 with labels (DEF-34), and after an anchored crowd's waypoint moves (DEF-02); the camera fixture's eased first frame is held to its scale-1 translations; every frame composites the vector layer by name, at its display size even at pixel density 2 (TST-17); a frame that throws at any restore of the vector layer, in the editor, on the export canvas and in the player, leaves the next frame as a freshly sized layer draws it, state included (DEF-36); a pop, grow or pulse beacon scales its marker alike whether the transport runs or not, in all four hosts, while a marker set to always hide stays hidden (DEF-08); a video export draws its beacons whatever the author's reduced-motion setting, which the editor and the player still honour, including after an export (DEF-29); and a frame that throws at any call it makes on the main canvas, or at any read its background pass makes of its inputs, in every background mode, under a viewport zoom, on the export canvas and in the player at its display size, leaves the next frame as a steady frame draws it, state included (DEF-38); and every instant draws alike after a frame at the same instant, after another instant, after a frame that left other caps and joins, and on a freshly sized layer, in every fixture and host and under a viewport zoom, with an area's border round (DEF-39); and a polygon being drawn strokes its edges in its own blue, whatever frame or layer came before (DEF-47)
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
@@ -403,27 +403,36 @@
 - `tests/shortHexGlow.test.js` — DEF-26: the glow draws every stored hex form with its own alpha, and one throwing frame stops neither playback nor editor redraws
 - `tests/sliderScales.test.js` — SPL-01: every slider scale pinned value for value from the code before the move, including `formatUIValue`'s two recorded quirks
 - `tests/helpers/consoleGuard.js` — TST-10 console guard: records console.error/warn, fails the test on anything undeclared, and holds the short allowlist of known warts
-- `tests/helpers/controlState.js` — TST-04 state vocabulary: the shell as a user perceives it (an element not shown is only said to be), the save shape and the app's flags as path → value maps, their diffs (a large subtree that appears whole folded to a count and checksum), payload summaries, a MutationObserver-backed reader that describes an element again only once it changes, and a recorder of the events emitted outside any listener
+- `tests/helpers/controlState.js` — TST-04 state vocabulary: the shell as a user perceives it (an element not shown is only said to be) or complete (hidden parts too, for proving a reset), the save shape and the app's flags as path → value maps, their diffs (a large subtree that appears whole folded to a count and checksum), payload summaries (an error by its message), a MutationObserver-backed reader that describes an element again only once it changes, and a recorder of the events emitted outside any listener
 - `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main, offscreen vector and reveal-mask canvases as rounded, diffable draw-log lines, names each composited canvas by its surface (TST-17), can end each line with the state its call was made in: transform, open saves and styles (DEF-36), can instead end each line that marks a canvas with just the state it draws with (DEF-39), drops a frame it takes from those canvases' own transcripts, which otherwise held a background's data URL per call (DEF-38), and compares two frames
 - `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)
-- `tests/helpers/bootApp.js` — TST-01 boot harness: builds the shipped index.html shell, stubs APP_VERSION/matchMedia/fetch/layout, and starts the real RoutePlotter
+- `tests/helpers/bootApp.js` — TST-01 boot harness: builds the shipped index.html shell, stubs APP_VERSION/matchMedia/fetch/layout, and starts the real RoutePlotter; `retireApp` stops one app before its test ends, for a test that boots many
 - `tests/fixtures/authoredExtras.js` — TST-06 fixture: the Open day example with every field of the save shape moved off its default, including two image assets and authored camera zooms
+- `tests/goldens/controls-area-drawing.txt` — TST-04 golden: what each control does while a polygon area is being drawn for waypoint 0
 - `tests/goldens/controls-clear.txt` — TST-04 golden: what each control does with Clear All asking to confirm
 - `tests/goldens/controls-codec-reduced.txt` — TST-04 golden: what each control does with an 8K MP4 export an encoder can make only at a reduced size (the reduced option)
 - `tests/goldens/controls-codec.txt` — TST-04 golden: what each control does with an MP4 export the browser cannot encode
+- `tests/goldens/controls-crowd-handles.txt` — TST-04 golden: what each control does with the crowd's busyness given a handle between its two ends: the handle's own controls
 - `tests/goldens/controls-crowd.txt` — TST-04 golden: what each control does with the crowd selected
+- `tests/goldens/controls-diagnostics-denied.txt` — TST-04 golden: what each control does with Report a bug open in a browser that refuses to write the clipboard
 - `tests/goldens/controls-diagnostics.txt` — TST-04 golden: what each control does with Report a bug open
+- `tests/goldens/controls-edge-junction.txt` — TST-04 golden: what each control does with a path leaving a junction inspected, where a weight changes the shares
 - `tests/goldens/controls-edge.txt` — TST-04 golden: what each control does with a network edge inspected
 - `tests/goldens/controls-export-menu.txt` — TST-04 golden: what each control does with the Export menu open
 - `tests/goldens/controls-file-menu.txt` — TST-04 golden: what each control does with the File menu open
+- `tests/goldens/controls-history-undone.txt` — TST-04 golden: what each control does with that edit undone, so there is one to redo
+- `tests/goldens/controls-history.txt` — TST-04 golden: what each control does with an edit to undo
 - `tests/goldens/controls-major-first.txt` — TST-04 golden: what each control does with waypoint 0 selected: the ripple and polygon controls it reveals
 - `tests/goldens/controls-major-last.txt` — TST-04 golden: what each control does with waypoint 5 selected: the pulse controls it reveals
 - `tests/goldens/controls-major-revealed.txt` — TST-04 golden: what each control does with waypoint 3 given a custom marker, a squiggle, a circle area and both custom colours: the controls those reveal
 - `tests/goldens/controls-major.txt` — TST-04 golden: what each control does with waypoint 3, a major, selected
 - `tests/goldens/controls-mixed.txt` — TST-04 golden: what each control does with a minor and a major selected: one write per value control, to show whom it reaches
+- `tests/goldens/controls-network-editing.txt` — TST-04 golden: what each control does while the crowd network is being drawn
+- `tests/goldens/controls-node-junction.txt` — TST-04 golden: what each control does with a junction node inspected: its path weights
 - `tests/goldens/controls-node.txt` — TST-04 golden: what each control does with a network node inspected
 - `tests/goldens/controls-playing.txt` — TST-04 golden: what each control does with playback running: Pause
 - `tests/goldens/controls-route-aov.txt` — TST-04 golden: what each control does with Angle of View chosen: its controls
+- `tests/goldens/controls-route-glow.txt` — TST-04 golden: what each control does with the path glow switched on: its intensity
 - `tests/goldens/controls-route-spotlight.txt` — TST-04 golden: what each control does with Spotlight Reveal and a custom head chosen: their controls
 - `tests/goldens/controls-route.txt` — TST-04 golden: what each control does with nothing selected: the header, transport, route scope, layers and waypoint list
 - `tests/goldens/controls-share.txt` — TST-04 golden: what each control does with Save Project's disclosure open

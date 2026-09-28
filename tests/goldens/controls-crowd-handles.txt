@@ -1,0 +1,137 @@
+# crowd-handles: the crowd selected, and a busyness handle added between its two ends
+
+## #crowd-busyness-handles>div[0]>label[1]>input[0] · read-only, not operated
+
+## #crowd-busyness-handles>div[1]>label[1]>input[0] · enter 24
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.24
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 81.36 16 L 282 16"
+ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="81.36" cy="16" data-busyness-handle="1" r="22"
+ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="81.36" cy="16" r="8"
+ui ~ #crowd-busyness-handles>div[1]>label[1]>input[0]: input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #crowd-busyness-handles>div[1]>label[1]>input[0] · enter 99999
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.99
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 279.36 16 L 282 16"
+ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="279.36" cy="16" data-busyness-handle="1" r="22"
+ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="279.36" cy="16" r="8"
+ui ~ #crowd-busyness-handles>div[1]>label[1]>input[0]: input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #crowd-busyness-handles>div[1]>label[3]>select[0] · choose "step"
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].transition: "gradual" → "step"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 150 16 H 282 V 16"
+ui ~ #crowd-busyness-handles>div[1]>label[3]>select[0]: select data-busyness-field="transition" data-busyness-index="1" :value="gradual" → select data-busyness-field="transition" data-busyness-index="1" :value="step"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #crowd-busyness-handles>div[1]>button[4] · click
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
+model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
+model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
+model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].transition: "gradual"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="3 handles" → output aria-labelledby="crowd-busyness-label" :text="Even"
+ui ~ #crowd-busyness-graph: svg aria-label="3 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 282 16"
+ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="1" r="22"
+ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8"
+ui ~ #crowd-busyness-handles>div[1]>label[1]>input[0]: input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
+ui ~ #crowd-busyness-reset: button class="btn btn-ghost" type="button" :text="Reset to even" → button class="btn btn-ghost" disabled="" type="button" :text="Reset to even"
+ui - #crowd-busyness-graph>circle[6]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="2" r="22"
+ui - #crowd-busyness-graph>circle[7]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8"
+ui - #crowd-busyness-handles>div[1]>label[3]: label :text="Change"
+ui - #crowd-busyness-handles>div[1]>label[3]>select[0]: select data-busyness-field="transition" data-busyness-index="1" :value="gradual"
+ui - #crowd-busyness-handles>div[1]>label[3]>select[0]>option[0]: option value="gradual" :text="Gradual"
+ui - #crowd-busyness-handles>div[1]>label[3]>select[0]>option[1]: option value="step" :text="Sudden"
+ui - #crowd-busyness-handles>div[1]>button[4]: button aria-label="Remove busyness handle 2" class="btn btn-ghost crowd-busyness-remove" data-busyness-field="remove" data-busyness-index="1" type="button" :text="Remove"
+ui - #crowd-busyness-handles>div[2]: div class="crowd-busyness-handle-row"
+ui - #crowd-busyness-handles>div[2]>span[0]: span class="crowd-busyness-handle-title" :text="Handle 3"
+ui - #crowd-busyness-handles>div[2]>label[1]: label :text="Time"
+ui - #crowd-busyness-handles>div[2]>label[1]>input[0]: input aria-label="Time for busyness handle 3, percent" data-busyness-field="time" data-busyness-index="2" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
+ui - #crowd-busyness-handles>div[2]>label[1]>span[1]: span :text="%"
+ui - #crowd-busyness-handles>div[2]>label[2]: label :text="Busy"
+ui - #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100"
+ui - #crowd-busyness-handles>div[2]>label[2]>span[1]: span :text="%"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #crowd-busyness-handles>div[2]>label[1]>input[0] · read-only, not operated
+
+## #crowd-busyness-handles>div[2]>label[2]>input[0] · enter 24
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1 → 0.24
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 98.08"
+ui ~ #crowd-busyness-graph>circle[6]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="2" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="98.08" data-busyness-handle="2" r="22"
+ui ~ #crowd-busyness-graph>circle[7]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="98.08" r="8"
+ui ~ #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #crowd-busyness-handles>div[2]>label[2]>input[0] · enter 99999
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
+
+## #crowd-busyness-reset · click
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
+model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
+model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
+model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].transition: "gradual"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness reset to even. Undo is available."
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="3 handles" → output aria-labelledby="crowd-busyness-label" :text="Even"
+ui ~ #crowd-busyness-graph: svg aria-label="3 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 282 16"
+ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="1" r="22"
+ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8"
+ui ~ #crowd-busyness-handles>div[1]>label[1]>input[0]: input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
+ui ~ #crowd-busyness-reset: button class="btn btn-ghost" type="button" :text="Reset to even" → button class="btn btn-ghost" disabled="" type="button" :text="Reset to even"
+ui - #crowd-busyness-graph>circle[6]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="2" r="22"
+ui - #crowd-busyness-graph>circle[7]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8"
+ui - #crowd-busyness-handles>div[1]>label[3]: label :text="Change"
+ui - #crowd-busyness-handles>div[1]>label[3]>select[0]: select data-busyness-field="transition" data-busyness-index="1" :value="gradual"
+ui - #crowd-busyness-handles>div[1]>label[3]>select[0]>option[0]: option value="gradual" :text="Gradual"
+ui - #crowd-busyness-handles>div[1]>label[3]>select[0]>option[1]: option value="step" :text="Sudden"
+ui - #crowd-busyness-handles>div[1]>button[4]: button aria-label="Remove busyness handle 2" class="btn btn-ghost crowd-busyness-remove" data-busyness-field="remove" data-busyness-index="1" type="button" :text="Remove"
+ui - #crowd-busyness-handles>div[2]: div class="crowd-busyness-handle-row"
+ui - #crowd-busyness-handles>div[2]>span[0]: span class="crowd-busyness-handle-title" :text="Handle 3"
+ui - #crowd-busyness-handles>div[2]>label[1]: label :text="Time"
+ui - #crowd-busyness-handles>div[2]>label[1]>input[0]: input aria-label="Time for busyness handle 3, percent" data-busyness-field="time" data-busyness-index="2" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
+ui - #crowd-busyness-handles>div[2]>label[1]>span[1]: span :text="%"
+ui - #crowd-busyness-handles>div[2]>label[2]: label :text="Busy"
+ui - #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100"
+ui - #crowd-busyness-handles>div[2]>label[2]>span[1]: span :text="%"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness reset to even. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

@@ -1,4 +1,4 @@
-# edge: the crowd network's first edge inspected
+# edge-junction: a path leaving that junction inspected
 
 ## #edge-scope>div[0]>div[0] · click
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section" data-last="true" data-section="edge"
@@ -9,38 +9,38 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #network-edge-direction · choose "two-way"
 emit network:changed {commit: true}
-emit network:edge-selected {edge: {id: "ge_trace_ex-uon-1__ex-uon-2", sourceId: "gn_trace_ex-uon-1", targetId: "gn_trace_ex-uon-2", weight: 1, direction: "two-way", controlPoints: [0 items]}}
-emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
-model ~ scene.flowLayers[0].graph.edges[0].direction: "one-way" → "two-way"
+emit network:edge-selected {edge: {id: "ge_trace_ex-uon-2__ex-uon-b1", sourceId: "gn_trace_ex-uon-2", targetId: "gn_trace_ex-uon-b1", weight: 1, direction: "two-way", controlPoints: [0 items]}}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-2__ex-uon-b1", focusKey: null}
+model ~ scene.flowLayers[0].graph.edges[2].direction: "one-way" → "two-way"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Edge · one-way" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Edge · two-way"
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
 ui ~ #network-edge-direction: select aria-describedby="network-edge-direction-tip" :value="one-way" → select aria-describedby="network-edge-direction-tip" :value="two-way"
 ui ~ #network-edge-swap: button class="btn btn-secondary" title="Reverse which way this one-way edge carries dots" type="button" :text="Swap direction" → button (not shown)
-ui ~ #network-edge-weight-value: span :text="100% configured share" → span :text="100% · 34% configured shares"
+ui ~ #network-edge-weight-value: span :text="50% configured share" → span :text="50% · 50% configured shares"
 
 ## #network-edge-swap · click
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
-model ~ scene.flowLayers[0].graph.edges[0].sourceId: "gn_trace_ex-uon-1" → "gn_trace_ex-uon-2"
-model ~ scene.flowLayers[0].graph.edges[0].targetId: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-1"
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-2__ex-uon-b1", focusKey: null}
+model ~ scene.flowLayers[0].graph.edges[2].sourceId: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-b1"
+model ~ scene.flowLayers[0].graph.edges[2].targetId: "gn_trace_ex-uon-b1" → "gn_trace_ex-uon-2"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
-ui ~ #network-edge-weight-value: span :text="100% configured share" → span :text="34% configured share"
 
 ## #section-edge-content>label[3]>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How strongly dots prefer this edge at a junction, shown as the share of departures that pick it"
 
 ## #network-edge-weight · set 17
 emit crowd:param-changed
-model ~ scene.flowLayers[0].graph.edges[0].weight: 1 → 1.7
+model ~ scene.flowLayers[0].graph.edges[2].weight: 1 → 1.7
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
 ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-tip" max="50" min="1" step="1" type="range" value="10" :value="10" → input aria-describedby="network-edge-weight-tip" max="50" min="1" step="1" type="range" value="10" :value="17"
+ui ~ #network-edge-weight-value: span :text="50% configured share" → span :text="63% configured share"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
+  emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-2__ex-uon-b1", focusKey: null}
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #network-edge-delete · click
@@ -48,24 +48,9 @@ emit network:edge-deselected
 emit network:changed {commit: true}
 emit ui:toast {message: "Deleted edge — press Ctrl+Z to undo"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
-model ~ scene.flowLayers[0].graph.edges[0].id: "ge_trace_ex-uon-1__ex-uon-2" → "ge_trace_ex-uon-2__ex-uon-3"
-model ~ scene.flowLayers[0].graph.edges[0].sourceId: "gn_trace_ex-uon-1" → "gn_trace_ex-uon-2"
-model ~ scene.flowLayers[0].graph.edges[0].targetId: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-3"
-model + scene.flowLayers[0].graph.edges[0].controlPoints[0].x: 0.52
-model + scene.flowLayers[0].graph.edges[0].controlPoints[0].y: 0.58
-model + scene.flowLayers[0].graph.edges[0].controlPoints[1].x: 0.63
-model + scene.flowLayers[0].graph.edges[0].controlPoints[1].y: 0.55
-model ~ scene.flowLayers[0].graph.edges[1].id: "ge_trace_ex-uon-2__ex-uon-3" → "ge_trace_ex-uon-2__ex-uon-b1"
-model ~ scene.flowLayers[0].graph.edges[1].targetId: "gn_trace_ex-uon-3" → "gn_trace_ex-uon-b1"
-model + scene.flowLayers[0].graph.edges[1].controlPoints: []
 model ~ scene.flowLayers[0].graph.edges[2].id: "ge_trace_ex-uon-2__ex-uon-b1" → "ge_trace_ex-uon-b1__ex-uon-3"
 model ~ scene.flowLayers[0].graph.edges[2].sourceId: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-b1"
 model ~ scene.flowLayers[0].graph.edges[2].targetId: "gn_trace_ex-uon-b1" → "gn_trace_ex-uon-3"
-model - scene.flowLayers[0].graph.edges[0].controlPoints: []
-model - scene.flowLayers[0].graph.edges[1].controlPoints[0].x: 0.52
-model - scene.flowLayers[0].graph.edges[1].controlPoints[0].y: 0.58
-model - scene.flowLayers[0].graph.edges[1].controlPoints[1].x: 0.63
-model - scene.flowLayers[0].graph.edges[1].controlPoints[1].y: 0.55
 model - scene.flowLayers[0].graph.edges[3].id: "ge_trace_ex-uon-b1__ex-uon-3"
 model - scene.flowLayers[0].graph.edges[3].sourceId: "gn_trace_ex-uon-b1"
 model - scene.flowLayers[0].graph.edges[3].targetId: "gn_trace_ex-uon-3"
@@ -83,7 +68,7 @@ ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="do
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 77 inside, cb2b8637)
 ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 24 inside, 555e9c87)
 ui ~ #edge-scope: div class="scope-group" → div (not shown)
-ui - #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" (and 20 inside, c8961aff)
+ui - #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" (and 20 inside, dd3426f5)
 settled:
   ui - #toast-container>div[0]: div class="toast" :text="Deleted edge — press Ctrl+Z to undo"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

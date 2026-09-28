@@ -6,8 +6,6 @@ ui ~ #node-scope>div[0]>div[0]: div aria-controls="section-node-content" aria-ex
 
 ## #section-node-content>label[0]>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward"
-settled:
-  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward"
 
 ## #network-node-type · choose "normal"
 emit network:changed {commit: true}
@@ -90,12 +88,12 @@ ui + #toast-container>div[0]: div class="toast" :text="Deleted node — press Ct
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
-ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 14 inside, f56844ce)
-ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 60 inside, 224c775c)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 68 inside, aa999416)
-ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 22 inside, 8d5e2b8d)
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 16 inside, 6848a81c)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 62 inside, be3e6597)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 77 inside, cb2b8637)
+ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 24 inside, 555e9c87)
 ui ~ #node-scope: div class="scope-group" → div (not shown)
-ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 14 inside, 3f34c1e9)
+ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 16 inside, c25049b1)
 settled:
   ui - #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

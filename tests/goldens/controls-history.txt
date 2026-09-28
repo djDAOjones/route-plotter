@@ -1,0 +1,39 @@
+# history: waypoint 3 given a dot marker, so there is an edit to undo
+
+## #undo-btn · click
+emit history:undo
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[0].modified: 1790154000000 → 1790154060000
+model ~ waypoints[1].modified: 1790154000000 → 1790154060000
+model ~ waypoints[2].modified: 1790154000000 → 1790154060000
+model ~ waypoints[3].markerStyle: "dot" → "square"
+model ~ waypoints[3].modified: 1790154000000 → 1790154060000
+model ~ waypoints[4].modified: 1790154000000 → 1790154060000
+model ~ waypoints[5].modified: 1790154000000 → 1790154060000
+app ~ selected: "waypoint[3]" → null
+app ~ selection: "waypoint[3]" → ""
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Undo"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)"
+ui ~ #redo-btn: button aria-label="Redo" class="btn btn-icon" disabled="" title="Redo (Cmd+Shift+Z)" → button aria-label="Redo" class="btn btn-icon" title="Redo (Cmd+Shift+Z)"
+ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
+ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button class="scope-route-btn" disabled="" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
+ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
+ui ~ #route-scope: div (not shown) → div class="scope-group"
+ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 22 inside, eec85b79)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 18 inside, 3cb1562c)
+ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
+ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, ad009232)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 46 inside, fd52c3c6)
+ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
+ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 70 inside, f60a863a)
+ui - #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 51 inside, 8e0fe1bc)
+ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 108 inside, e0c49539)
+ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 84 inside, 69bcaf7d)
+ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 165 inside, 319c7ed8)
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Undo" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

@@ -68,7 +68,9 @@ export function installConsoleGuard() {
   for (const level of LEVELS) {
     original[level] = console[level];
     capture[level] = (...args) => {
-      const entry = { level, message: format(args), args };
+      // Only the text is kept: a logged error's stack keeps what its frames
+      // held, and a test that boots app after app would keep every one.
+      const entry = { level, message: format(args) };
       (inTest ? recorded : unowned).push(entry);
     };
     console[level] = capture[level];

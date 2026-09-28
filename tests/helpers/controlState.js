@@ -35,11 +35,28 @@ export function applyMapPalette() {
 }
 
 /**
- * Drawn surfaces are never described: the canvas and the busyness graph's SVG
- * are pinned by the draw logs, and `<template>`, `<script>` and `<style>` show
- * nothing.
+ * Never described: the canvas is pinned by the draw logs, and `<template>`,
+ * `<script>` and `<style>` show nothing. SVG is DOM, so the busyness graph
+ * is described like any other element.
  */
-const NOT_DESCRIBED = new Set(['canvas', 'svg', 'template', 'script', 'style']);
+const NOT_DESCRIBED = new Set(['canvas', 'template', 'script', 'style']);
+
+/**
+ * Offsets that code measures from the layout to place a tooltip or a menu.
+ * jsdom lays nothing out, so they measure nothing; where a popup sits belongs
+ * to a browser check, and whether it shows stays in the line.
+ */
+const MEASURED_OFFSETS = ['top', 'right', 'bottom', 'left'];
+
+function styleOf(element) {
+  const style = element.style;
+  const kept = [];
+  for (let index = 0; index < style.length; index += 1) {
+    const property = style.item(index);
+    if (!MEASURED_OFFSETS.includes(property)) kept.push(`${property}: ${style.getPropertyValue(property)};`);
+  }
+  return kept.join(' ');
+}
 
 /**
  * Not shown at all: hidden, or not displayed. Nothing of such an element — its
@@ -55,17 +72,15 @@ function isUnshown(element) {
  * One line per element: every attribute but `id`, its form state, and its own
  * text (a container's text is its children's). Attributes carry the rest of
  * what a user perceives — inline `display`, `disabled`, the `aria-*` state and
- * the classes that style a pressed or active control. An element not shown is
- * only said to be so.
+ * the classes that style a pressed or active control.
  */
 function describe(element, tag) {
-  if (isUnshown(element)) return `${tag} (not shown)`;
   const attributes = [];
   for (const attribute of element.attributes) {
     if (attribute.name === 'id') continue;
     // `display:none` in the shell and `display: none` set from code look the
     // same; the parsed declaration is what the browser applies.
-    const value = attribute.name === 'style' ? element.style.cssText : attribute.value;
+    const value = attribute.name === 'style' ? styleOf(element) : attribute.value;
     attributes.push(`${attribute.name}=${quote(value)}`);
   }
   attributes.sort();
@@ -81,6 +96,9 @@ function describe(element, tag) {
   } else if (tag === 'select' || tag === 'textarea') {
     line += ` :value=${quote(element.value)}`;
   }
+  // A browser shows a control's validation message when it is checked; the
+  // handlers that set one expect the author to see it.
+  if (FORM_TAGS.has(tag) && element.validity.customError) line += ` :invalid=${quote(element.validationMessage)}`;
   let text = '';
   for (let node = element.firstChild; node; node = node.nextSibling) {
     if (node.nodeType === Node.TEXT_NODE) text += node.data;
@@ -90,17 +108,21 @@ function describe(element, tag) {
 }
 
 /**
- * The shell as a user perceives it: every element outside the drawn surfaces
- * and outside elements not shown, keyed by its id or by its path from the
- * nearest ancestor with one. Rows built at run time (the waypoint list, the
- * layer strip) carry no ids, and their positions are what a user sees.
+ * The shell as a user perceives it: every element outside the drawn surfaces,
+ * keyed by its id or by its path from the nearest ancestor with one; an
+ * element not shown is only said to be so, and what it holds is left out.
+ * Rows built at run time (the waypoint list, the layer strip) carry no ids,
+ * and their positions are what a user sees. `complete` describes hidden
+ * elements and their contents too: what a hidden panel still holds can show
+ * again later, so a test that must start from the same state compares that.
  *
  * @param {Element} [root]
- * @param {{ opaque?: string, cached?: Function }} [options] - `opaque` names
- *   elements described only by their own line, for a region another suite pins
+ * @param {{ opaque?: string, cached?: Function, complete?: boolean }} [options] -
+ *   `opaque` names elements described only by their own line, for a region
+ *   another suite pins
  * @returns {Map<string, string>}
  */
-export function uiState(root = document.body, { opaque = null, cached = null } = {}) {
+export function uiState(root = document.body, { opaque = null, cached = null, complete = false } = {}) {
   const state = new Map();
   // Each key's parent key, so a diff can fold a subtree that appeared whole.
   state.parents = new Map();
@@ -111,9 +133,10 @@ export function uiState(root = document.body, { opaque = null, cached = null } =
       const tag = element.localName;
       if (NOT_DESCRIBED.has(tag)) continue;
       const key = element.id ? `#${element.id}` : `${parentKey}>${tag}[${index}]`;
-      state.set(key, cached ? cached(element, tag) : describe(element, tag));
+      const unshown = !complete && isUnshown(element);
+      state.set(key, unshown ? `${tag} (not shown)` : cached ? cached(element, tag) : describe(element, tag));
       state.parents.set(key, parentKey);
-      if (!element.firstElementChild || isUnshown(element)) continue;
+      if (!element.firstElementChild || unshown) continue;
       if (opaque && element.matches(opaque)) continue;
       walk(element, key);
     }
@@ -200,9 +223,9 @@ export function watchUi(root = document.body, { opaque = null } = {}) {
     return line;
   };
   return {
-    capture() {
+    capture({ complete = false } = {}) {
       forget(observer.takeRecords());
-      return uiState(root, { opaque, cached });
+      return uiState(root, { opaque, cached, complete });
     },
     disconnect() {
       observer.disconnect();
@@ -401,6 +424,8 @@ export function summarise(app, value, depth = 0) {
   if (typeof File !== 'undefined' && value instanceof File) return `[file ${value.name} ${value.type}]`;
   if (typeof Blob !== 'undefined' && value instanceof Blob) return `[blob ${value.type}]`;
   if (typeof Element !== 'undefined' && value instanceof Element) return `[element ${keyFor(value)}]`;
+  // An error's message is not an own enumerable property, so it would read `{}`.
+  if (value instanceof Error) return `${value.name}(${quote(value.message)})`;
   if (app.waypoints.includes(value)) return waypointRef(app, value);
   if (app.scene?.flowLayers?.includes?.(value)) return layerRef(app, value);
   if (Array.isArray(value)) {

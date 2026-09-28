@@ -1,14 +1,93 @@
 # codec-reduced: an 8K MP4 export in a browser that encodes H.264 only up to 9 megapixels
 
+## #codec-unsupported-modal · click
+app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+ui ~ #app: div inert="" → div
+ui ~ #codec-unsupported-modal: div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #codec-unsupported-modal>div[0]: div class="modal-content"
+ui - #codec-unsupported-modal>div[0]>button[0]: button aria-label="Close" class="modal-close-x" data-modal-close="" title="Close" :text="×"
+ui - #modal-title-codec: h3 tabindex="-1" :text="MP4 resolution too large"
+ui - #codec-modal-message: p :text="H.264 encoding does not support 7680×4320 on this device. You can export MP4 at a reduced resolution, or export as WebM at full resolution."
+ui - #codec-unsupported-modal>div[0]>div[3]: div class="modal-buttons"
+ui - #codec-cancel: button class="btn btn-secondary" :text="Cancel"
+ui - #codec-mp4-reduced: button class="btn btn-secondary" style="" :text="Export MP4 at 4000×2250"
+ui - #codec-webm: button class="btn btn-primary" :text="Export WebM at 7680×4320"
+
+## #codec-unsupported-modal>div[0]>button[0] · click
+app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+ui ~ #app: div inert="" → div
+ui ~ #codec-unsupported-modal: div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #codec-unsupported-modal>div[0]: div class="modal-content"
+ui - #codec-unsupported-modal>div[0]>button[0]: button aria-label="Close" class="modal-close-x" data-modal-close="" title="Close" :text="×"
+ui - #modal-title-codec: h3 tabindex="-1" :text="MP4 resolution too large"
+ui - #codec-modal-message: p :text="H.264 encoding does not support 7680×4320 on this device. You can export MP4 at a reduced resolution, or export as WebM at full resolution."
+ui - #codec-unsupported-modal>div[0]>div[3]: div class="modal-buttons"
+ui - #codec-cancel: button class="btn btn-secondary" :text="Cancel"
+ui - #codec-mp4-reduced: button class="btn btn-secondary" style="" :text="Export MP4 at 4000×2250"
+ui - #codec-webm: button class="btn btn-primary" :text="Export WebM at 7680×4320"
+
+## #codec-cancel · click
+app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+ui ~ #app: div inert="" → div
+ui ~ #codec-unsupported-modal: div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #codec-unsupported-modal>div[0]: div class="modal-content"
+ui - #codec-unsupported-modal>div[0]>button[0]: button aria-label="Close" class="modal-close-x" data-modal-close="" title="Close" :text="×"
+ui - #modal-title-codec: h3 tabindex="-1" :text="MP4 resolution too large"
+ui - #codec-modal-message: p :text="H.264 encoding does not support 7680×4320 on this device. You can export MP4 at a reduced resolution, or export as WebM at full resolution."
+ui - #codec-unsupported-modal>div[0]>div[3]: div class="modal-buttons"
+ui - #codec-cancel: button class="btn btn-secondary" :text="Cancel"
+ui - #codec-mp4-reduced: button class="btn btn-secondary" style="" :text="Export MP4 at 4000×2250"
+ui - #codec-webm: button class="btn btn-primary" :text="Export WebM at 7680×4320"
+
 ## #codec-mp4-reduced · click
 emit video:resolution-change {width: 4000, height: 2250}
 emit video:export-request "mp4"
-emit video:export-error {error: {}}
+emit video:export-error {error: Error("Video export not supported: MP4 export requires a supported H.264 WebCodecs encoder")}
 emit motion:preview-mode-change false
 emit animation:seek 0
+alert "Export failed: Video export not supported: MP4 export requires a supported H.264 WebCodecs encoder"
 model ~ animationState.duration: 21429.352554 → 21807.894043
 model ~ exportSettings.resolutionX: 7680 → 4000
 model ~ exportSettings.resolutionY: 4320 → 2250
+app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Video export failed"
+ui ~ #app: div inert="" → div
+ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #animation-speed-value-right: span class="slider-value" :text="21.4s" → span class="slider-value" :text="21.8s"
+ui ~ #codec-unsupported-modal: div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #codec-unsupported-modal>div[0]: div class="modal-content"
+ui - #codec-unsupported-modal>div[0]>button[0]: button aria-label="Close" class="modal-close-x" data-modal-close="" title="Close" :text="×"
+ui - #modal-title-codec: h3 tabindex="-1" :text="MP4 resolution too large"
+ui - #codec-modal-message: p :text="H.264 encoding does not support 7680×4320 on this device. You can export MP4 at a reduced resolution, or export as WebM at full resolution."
+ui - #codec-unsupported-modal>div[0]>div[3]: div class="modal-buttons"
+ui - #codec-cancel: button class="btn btn-secondary" :text="Cancel"
+ui - #codec-mp4-reduced: button class="btn btn-secondary" style="" :text="Export MP4 at 4000×2250"
+ui - #codec-webm: button class="btn btn-primary" :text="Export WebM at 7680×4320"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Video export failed" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui - #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+
+## #codec-webm · click
+emit video:export-request "webm"
+emit video:export-error {error: Error("Video export not supported: WebM export requires WebCodecs or MediaRecorder support")}
+emit motion:preview-mode-change false
+emit animation:seek 0
+alert "Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
+model ~ animationState.duration: 21429.352554 → 21807.894043
 app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
