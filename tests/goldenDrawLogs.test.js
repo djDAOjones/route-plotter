@@ -48,6 +48,7 @@ import { differingLines, discardFrame, frameAt, setUpFrame, takeFrame } from './
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { loadExampleBackground } from '../src/app/backgroundLoading.js';
+import { BACKGROUND_VISIBILITY } from '../src/config/constants.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { BeaconRenderer } from '../src/services/BeaconRenderer.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
@@ -167,6 +168,56 @@ async function loadedPlayer(project, app) {
   await player.load(project, app.background.image);
   setUpFrame(player);
   return player;
+}
+
+/**
+ * The calls a frame makes on one surface's context (`main` or `vector`), in
+ * order. A `set:` is a property, not a call, and an `addColorStop` is a
+ * gradient's.
+ */
+function surfaceCalls(frame, surface) {
+  const notCalls = new RegExp(`^${surface} (set:|canvas\\.|\\[gradient )`);
+  return frame.filter(line => line.startsWith(`${surface} `) && !notCalls.test(line));
+}
+
+/** How deep one surface's saves nest in a frame. */
+function deepestSave(frame, surface) {
+  let depth = 0;
+  let deepest = 0;
+  for (const line of frame) {
+    if (line.startsWith(`${surface} save`)) deepest = Math.max(deepest, ++depth);
+    else if (line.startsWith(`${surface} restore`)) depth -= 1;
+  }
+  return deepest;
+}
+
+/**
+ * Render a frame whose call `index` on one surface's context throws (none,
+ * for -1). Returns how many calls the frame made on that context, and whether
+ * the error reached the caller.
+ */
+function renderThrowingAt(host, surface, index) {
+  const canvas = surface === 'main' ? host.canvas : host.renderingService.vectorCanvas;
+  const context = canvas.getContext('2d');
+  const thrown = new Error(`${surface} call ${index} throws`);
+  const names = Object.keys(context).filter(name => vi.isMockFunction(context[name]));
+  const methods = names.map(name => context[name]);
+  let calls = 0;
+  names.forEach((name, n) => {
+    context[name] = (...args) => {
+      if (calls++ === index) throw thrown;
+      return methods[n](...args);
+    };
+  });
+  try {
+    host.render();
+    return { calls, threw: false };
+  } catch (error) {
+    if (error !== thrown) throw error;
+    return { calls, threw: true };
+  } finally {
+    names.forEach((name, n) => { context[name] = methods[n]; });
+  }
 }
 
 describe('golden draw logs (TST-02)', () => {
@@ -536,54 +587,9 @@ describe('golden draw logs (TST-02)', () => {
       /** The instant at which `authored-extras`'s first ripple is still drawing. */
       const BEACON_INSTANT = 0.005;
 
-      /** The calls a frame makes on the vector layer's context, in order. */
-      function vectorCalls(frame) {
-        // A `set:` is a property, not a call, and an `addColorStop` is a gradient's.
-        return frame.filter(line => line.startsWith('vector ') && !/^vector (set:|canvas\.|\[gradient )/.test(line));
-      }
-
-      /** Where those calls `restore`, by their index among them. */
+      /** Where the vector layer's calls `restore`, by their index among them. */
       function restoreCalls(frame) {
-        return vectorCalls(frame).flatMap((line, index) => (line.startsWith('vector restore') ? [index] : []));
-      }
-
-      /** How deep the vector layer's saves nest in a frame. */
-      function deepestSave(frame) {
-        let depth = 0;
-        let deepest = 0;
-        for (const line of frame) {
-          if (line.startsWith('vector save')) deepest = Math.max(deepest, ++depth);
-          else if (line.startsWith('vector restore')) depth -= 1;
-        }
-        return deepest;
-      }
-
-      /**
-       * Render a frame whose vector-layer call `index` throws (none, for -1).
-       * Returns how many calls the frame made on that context, and whether
-       * the error reached the caller.
-       */
-      function renderThrowingAt(host, index) {
-        const context = host.renderingService.vectorCanvas.getContext('2d');
-        const thrown = new Error(`vector call ${index} throws`);
-        const names = Object.keys(context).filter(name => vi.isMockFunction(context[name]));
-        const methods = names.map(name => context[name]);
-        let calls = 0;
-        names.forEach((name, n) => {
-          context[name] = (...args) => {
-            if (calls++ === index) throw thrown;
-            return methods[n](...args);
-          };
-        });
-        try {
-          host.render();
-          return { calls, threw: false };
-        } catch (error) {
-          if (error !== thrown) throw error;
-          return { calls, threw: true };
-        } finally {
-          names.forEach((name, n) => { context[name] = methods[n]; });
-        }
+        return surfaceCalls(frame, 'vector').flatMap((line, index) => (line.startsWith('vector restore') ? [index] : []));
       }
 
       /**
@@ -629,17 +635,17 @@ describe('golden draw logs (TST-02)', () => {
         // Non-vacuity: the layer draws under its own transform, with saves
         // nested inside it, one of them a beacon's where the host draws one.
         expect(fresh.some(line => line.startsWith(`${layerScale} @ `)), layerScale).toBe(true);
-        expect(deepestSave(fresh)).toBeGreaterThanOrEqual(2);
+        expect(deepestSave(fresh, 'vector')).toBeGreaterThanOrEqual(2);
         if (beacon) expect(beaconSaves).toBeGreaterThan(0);
 
         // A throw is placed by counting calls, so the count must be the
         // transcript's, or the throws below would land beside the restores.
-        expect(renderThrowingAt(host, -1).calls).toBe(vectorCalls(fresh).length);
+        expect(renderThrowingAt(host, 'vector', -1).calls).toBe(surfaceCalls(fresh, 'vector').length);
 
         const throwAt = restoreCalls(fresh);
         expect(throwAt.length).toBeGreaterThanOrEqual(2);
         for (const index of throwAt) {
-          expect(renderThrowingAt(host, index).threw,
+          expect(renderThrowingAt(host, 'vector', index).threw,
             `the throw at vector call ${index} reaches the caller`).toBe(true);
           const next = frameAt(host, BEACON_INSTANT, { state: true });
           const differing = differingLines(next, fresh);
@@ -676,6 +682,115 @@ describe('golden draw logs (TST-02)', () => {
         const { app, player } = await exportAndPlayer(fixtures().find(each => each.id === 'authored-extras'));
         for (const host of [app, player]) {
           expectEachThrowForgotten(host, { layerScale: 'vector scale 1.75 1.75', beacon: true });
+        }
+      });
+
+    });
+
+    describe('DEF-38: a throw in the background pass leaves nothing behind', () => {
+      // Before the vector layer is composited, the main canvas draws the
+      // background inside saves of its own: the viewport zoom's around the
+      // whole pass, the camera's around the image, a mask mode's around the
+      // image and the `destination-in` that cuts it to the mask, and the
+      // contrast overlay's. A throw inside one skipped every `restore` still
+      // owed, so each later frame drew through that frame's zoom or camera,
+      // and after a mask mode under `destination-in`, until a resize: on a 2×
+      // display under the 1.75× camera, at 3.5× where a steady frame draws at
+      // 2×. DEF-36's cure, a resize, does not carry over, because the main
+      // canvas's base transform and smoothing belong to its host.
+      //
+      // The frame after a throw must draw exactly what a steady frame at the
+      // same instant draws, state included. The throw goes to each call the
+      // frame makes on the main canvas in turn, except a `restore`, which
+      // takes no argument, so cannot throw in a browser. The error must
+      // still reach the caller.
+
+      /** Past the reveal's intro, with the camera at its authored 1.75×. */
+      const INSTANT = 0.5;
+
+      /**
+       * Every background mode: how deep its saves nest at least (the overlay
+       * opens one in each), whether it cuts the image to a mask, and whether
+       * it draws the image under the camera, which the instant spotlight and
+       * angle of view do not (DEF-27).
+       */
+      const BACKGROUND_MODES = new Map([
+        ['always-show', { nesting: 1, masked: false, underCamera: true }],
+        ['spotlight', { nesting: 1, masked: true, underCamera: false }],
+        ['spotlight-reveal', { nesting: 2, masked: true, underCamera: true }],
+        ['angle-of-view', { nesting: 1, masked: true, underCamera: false }],
+        ['angle-of-view-reveal', { nesting: 2, masked: true, underCamera: true }],
+        ['always-hide', { nesting: 1, masked: false, underCamera: false }],
+      ]);
+
+      /**
+       * Throw at each call a steady frame makes on the main canvas in turn,
+       * and draw the frame again after each: it must be the steady frame,
+       * state included. `transform` names a zoom the pass must really apply.
+       */
+      function expectEachBackgroundThrowForgotten(host, { nesting, masked, transform = null }) {
+        frameAt(host, INSTANT);
+        const steady = frameAt(host, INSTANT, { state: true });
+        const calls = surfaceCalls(steady, 'main');
+
+        // Non-vacuity: the pass opens its saves, nested where they nest, a
+        // mask mode masks, and the zoom or camera is really there.
+        expect(deepestSave(steady, 'main')).toBeGreaterThanOrEqual(nesting);
+        expect(steady.some(line => line.split(' @ ')[0] === 'main set:globalCompositeOperation destination-in'),
+          'masked').toBe(masked);
+        if (transform) expect(calls.some(line => line.split(' @ ')[0] === `main ${transform}`), transform).toBe(true);
+
+        // A throw is placed by counting calls, so the count must be the transcript's.
+        expect(renderThrowingAt(host, 'main', -1).calls).toBe(calls.length);
+
+        for (const [index, call] of calls.entries()) {
+          if (call.startsWith('main restore')) continue;
+          expect(renderThrowingAt(host, 'main', index).threw,
+            `the throw at main call ${index} reaches the caller`).toBe(true);
+          const next = frameAt(host, INSTANT, { state: true });
+          const differing = differingLines(next, steady);
+          expect(differing, `after a throw at main call ${index} (${call.split(' ')[1]}), ` +
+            `"${next[differing[0]]}" was "${steady[differing[0]]}"`).toEqual([]);
+        }
+        return steady;
+      }
+
+      test('in the editor, in every background mode and under a viewport zoom, at pixel density 2', async () => {
+        // At density 1 the main canvas's base transform is the identity, which
+        // a context reset to its defaults would also leave; at 2 it is the
+        // editor's `scale(2, 2)`.
+        expect([...BACKGROUND_MODES.keys()].sort()).toEqual(Object.values(BACKGROUND_VISIBILITY).sort());
+        const density = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+        Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 2 });
+        try {
+          const app = await appWithFixture(fixtures().find(each => each.id === 'authored-extras'));
+
+          enterMode(app, 'preview');
+          for (const [mode, { underCamera, ...expected }] of BACKGROUND_MODES) {
+            app.motionSettings.backgroundVisibility = mode;
+            const steady = expectEachBackgroundThrowForgotten(app,
+              { ...expected, transform: underCamera ? 'scale 1.75 1.75' : null });
+            expect(steady.find(line => line.startsWith('main clearRect')), mode).toMatch(/ @ 2 0 0 2 0 0 \| saved 0 /);
+          }
+
+          enterMode(app, 'edit');
+          app.setZoom(2, app.waypoints[1]);
+          expectEachBackgroundThrowForgotten(app, { nesting: 2, masked: false, transform: 'scale 2 2' });
+        } finally {
+          if (density) Object.defineProperty(window, 'devicePixelRatio', density);
+          else delete window.devicePixelRatio;
+        }
+      });
+
+      test('on the export canvas and in the exported player, in every background mode', async () => {
+        for (const [mode, { underCamera, ...expected }] of BACKGROUND_MODES) {
+          const fixture = fixtures().find(each => each.id === 'authored-extras');
+          fixture.project.motionSettings.backgroundVisibility = mode;
+          const { app, player } = await exportAndPlayer(fixture);
+          for (const host of [app, player]) {
+            expect(host.motionSettings.backgroundVisibility).toBe(mode);
+            expectEachBackgroundThrowForgotten(host, { ...expected, transform: underCamera ? 'scale 1.75 1.75' : null });
+          }
         }
       });
 
