@@ -120,10 +120,6 @@ moved, and account for every survivor)
   **P3**
 - [ ] **DEF-45 Announcements overwrite each other** · Accessibility [ready]
   **P3**
-- [ ] **DEF-06 Clear All leaves stale route state** · Live defect [ready] —
-  Visible since DEF-08 (#37, unreleased): a route cut to one waypoint draws
-  its last marker, paused, at a stale grow scale. Land it before the
-  release. **P3**
 - [ ] **DEF-27 Instant spotlight and AoV ignore camera zoom** · Live defect
   [ready] — §20 Q17: the camera applies there too (ground rule 8; TST-02 has
   shipped). **P3**

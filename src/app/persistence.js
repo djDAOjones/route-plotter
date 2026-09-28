@@ -911,7 +911,9 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     if (app.interactionHandler?.setSelection) app.interactionHandler.setSelection([], null);
     else app.interactionHandler?.setSelectedWaypoint?.(null);
 
-    if (staged.waypoints.length >= 2) app.calculatePath?.();
+    // Always: a project of fewer than two waypoints clears what the last
+    // route fed (DEF-06).
+    app.calculatePath?.();
     syncLoadedProjectUI(app, staged);
     app.updateWaypointList?.();
     app.render?.();

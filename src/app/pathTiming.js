@@ -81,6 +81,28 @@ const splineInput = wp => ({
   shapeFrequency: wp.shapeFrequency,
 });
 
+/**
+ * With no route to travel, nothing the last route fed may outlive it: its
+ * path, its trunk, and the timeline the engine built from it (duration,
+ * pauses, speed segments and beacon schedules, by which a paused marker was
+ * still drawn, DEF-06). A duration update still pending finds no path, and
+ * changes nothing. A module helper, as `routeOf` is, for the hosts that
+ * borrow `calculatePath` alone.
+ * @param {Object} app
+ */
+function clearRouteTiming(app) {
+  app.pathPoints = [];
+  app._trunkWaypoints = null;
+  const engine = app.animationEngine;
+  if (engine) {
+    engine.clearPauseMarkers?.();
+    engine.clearSegmentMarkers?.();
+    if (engine.pathDuration !== undefined) engine.pathDuration = 0;
+    engine.setDuration?.(0);
+  }
+  app.queueRender?.();
+}
+
 export const pathTimingMixin = {
   
   calculatePath() {
@@ -106,7 +128,7 @@ export const pathTimingMixin = {
     announceBrokenAnchors(this, this.anchorReport);
 
     if (this.waypoints.length < 2) {
-      this.pathPoints = [];
+      clearRouteTiming(this);
       return;
     }
 
@@ -115,7 +137,7 @@ export const pathTimingMixin = {
     // an unsplit project changes (ROUTE-01b).
     const trunkRoute = trunkWaypoints(this.waypoints);
     if (trunkRoute.length < 2) {
-      this.pathPoints = [];
+      clearRouteTiming(this);
       return;
     }
 

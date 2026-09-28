@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 344 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 345 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 111 file(s)
+- `tests` — 112 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -424,6 +424,7 @@
 - `tests/goldens/project-snapshot-parm-aerial-walk.json` — TST-06 golden: the saved shape of the Site walk example (plain labelled chain)
 - `tests/goldens/project-snapshot-uon-open-day.json` — TST-06 golden: the saved shape of the Open day route example (branched route, traced anchored crowd)
 - `tests/setup.js` — Vitest jsdom setup: getter-only jsdom globals via defineProperty, and one recording context per canvas, which writes a canvas argument with its recorder id (TST-17) and keeps the style stack and the transform as a real context does, giving each ordered entry the state its call was made in (DEF-36)
+- `tests/staleRouteState.test.js` — DEF-06: Clear All, deleting a route down to one waypoint, undo and redo, and opening a one-waypoint project leave nothing the route fed (path, branches, structure, anchors, timeline, beacon schedules), and a marker is drawn at rest
 - `tests/startup.test.js` — Recovery-before-default-image startup ordering contracts
 - `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation; and (DEF-35) dots follow a route off the image, held only to the range a project can store
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts

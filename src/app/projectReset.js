@@ -17,7 +17,9 @@ export function clearProject(app) {
   app.waypoints = [];
   app.waypointsById.clear();
   app.scene.clear();
-  app.pathPoints = [];
+  // With no waypoints, this clears everything the route fed: its path and
+  // branches, its structure, its anchors and its timeline (DEF-06).
+  app.calculatePath();
   app.renderReference = resolveRenderReference(
     { width: app.displayWidth, height: app.displayHeight },
     { width: app.exportSettings?.resolutionX, height: app.exportSettings?.resolutionY }

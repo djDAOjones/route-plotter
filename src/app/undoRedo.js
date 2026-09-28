@@ -383,12 +383,9 @@ export const undoRedoMixin = {
     // Invalidate caches
     this._majorWaypointsCache = null;
     
-    // Recalculate and render
-    if (this.waypoints.length >= 2) {
-      this.calculatePath();
-    } else {
-      this.pathPoints = [];
-    }
+    // Recalculate and render; with fewer than two waypoints this clears what
+    // the last route fed (DEF-06).
+    this.calculatePath();
     this.updateWaypointList();
     this.uiController?.updateWaypointEditor?.(
       this.selectedWaypoint,
