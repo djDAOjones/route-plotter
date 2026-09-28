@@ -24,7 +24,7 @@
  * Part 1 is `tests/projectSnapshotShape.test.js`.
  */
 
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole, recordedConsole } from './helpers/consoleGuard.js';
 import {
@@ -35,6 +35,8 @@ import { IMAGE_COORDINATES } from '../src/config/constants.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { CoordinateTransform } from '../src/services/CoordinateTransform.js';
 import { PathCalculator } from '../src/services/PathCalculator.js';
+import { DotRenderer } from '../src/services/DotRenderer.js';
+import { setUpFrame, frameAt } from './helpers/drawLog.js';
 
 /**
  * A booted app with enough route for the per-waypoint controls to act on.
@@ -562,40 +564,108 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
         expect(await loadSnapshot(app, withBend(point))).toBe(false);
         expect(recordedConsole().slice(before).some(line => line.includes('Invalid graph control point: expected coordinates from -10 to 11'))).toBe(true);
       }
-      // At the range's ends, it loads, in both opposite corners.
-      for (const point of [{ x: 11, y: -10 }, { x: -10, y: 11 }]) {
+      // The boundary is exact: one representable step past either end is
+      // refused, and each end, and one step inside it, loads as it was.
+      const step = 2 ** -49;
+      for (const point of [{ x: -10 - step, y: 0.5 }, { x: 11 + step, y: 0.5 }, { x: 0.5, y: -10 - step }, { x: 0.5, y: 11 + step }]) {
+        expect(await loadSnapshot(app, withBend(point))).toBe(false);
+      }
+      for (const point of [{ x: 11, y: -10 }, { x: -10, y: 11 }, { x: 11 - step, y: -10 + step }, { x: -10 + step, y: 11 - step }]) {
         expect(await loadSnapshot(app, withBend(point))).toBe(true);
         expect(app._buildProjectSnapshot().scene.flowLayers[0].graph.edges[0].controlPoints).toEqual([point]);
       }
     });
 
-    test('the editor and the exported player draw the guide through a traced bend off the image', async () => {
+    /** A crowd traced from a route that bends through `bend`. */
+    async function tracedThrough(bend, end = { x: 0.8, y: 0.5 }) {
       const app = await bootWithRoute({ waypoints: 0 });
-      const route = [{ x: 0.3, y: 0.5 }, { x: 1.25, y: 0.15 }, { x: 1.6, y: 0.5 }];
       expect(await loadSnapshot(app, {
         coordVersion: 9,
         waypoints: [
           { id: 'wp-a', imgX: 0.3, imgY: 0.5, isMajor: true },
-          { id: 'wp-bend', imgX: 1.25, imgY: 0.15, isMajor: false },
-          { id: 'wp-b', imgX: 1.6, imgY: 0.5, isMajor: true },
+          { id: 'wp-bend', imgX: bend.x, imgY: bend.y, isMajor: false },
+          { id: 'wp-b', imgX: end.x, imgY: end.y, isMajor: true },
         ],
       })).toBe(true);
       app.addCrowd({ enterNetworkEditor: false });
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
-      // The curve a route's own path would take through those points.
-      const expected = new PathCalculator().calculatePath(route);
-      expect(Math.max(...expected.map(point => point.x))).toBeGreaterThan(1.2);
+      return app;
+    }
 
+    test.each([
+      ['right', { x: 1.25, y: 0.15 }],
+      ['left', { x: -0.25, y: 0.15 }],
+      ['bottom', { x: 0.55, y: 1.25 }],
+      ['top', { x: 0.55, y: -0.25 }],
+    ])('a traced bend off the image, past its %s edge: its guide passes through it, in the editor, as drawn, and in the exported player', async (edgeName, bend) => {
+      const app = await tracedThrough(bend);
+      // The curve a route's own path takes through those points.
+      const expected = new PathCalculator().calculatePath([{ x: 0.3, y: 0.5 }, bend, { x: 0.8, y: 0.5 }]);
       const [layer] = app.scene.getFlowLayers();
       const [edge] = layer.graph.getEdges();
       expect(app.swarmEngine.edgeGeometry(layer.graph, edge).points).toEqual(expected);
+
+      // The line the editor draws for it, through a plain transform.
+      const calls = [];
+      const ctx = new Proxy({}, { get: (target, name) => (name in target ? target[name] : (...args) => calls.push([name, ...args])) });
+      const toCanvas = (x, y) => ({ x: x * 500, y: y * 400 });
+      app.networkEditService.renderGuide({ scaleSizeClamped: size => size }, ctx, { swarmEngine: app.swarmEngine, imageToCanvas: toCanvas }, layer);
+      const pathStart = calls.findIndex(([name]) => name === 'beginPath');
+      const pathEnd = calls.findIndex(([name], index) => index > pathStart && name === 'stroke');
+      const line = calls.slice(pathStart + 1, pathEnd).map(([, x, y]) => ({ x, y }));
+      expect(line).toEqual(expected.map(point => toCanvas(point.x, point.y)));
 
       const player = new PlayerApp(document.createElement('canvas'));
       await player.load(JSON.parse(JSON.stringify(app._buildProjectSnapshot())), null);
       const [playerLayer] = player.scene.getFlowLayers();
       const [playerEdge] = playerLayer.graph.getEdges();
-      expect(playerEdge.controlPoints).toEqual([{ x: 1.25, y: 0.15 }]);
+      expect(playerEdge.controlPoints).toEqual([bend]);
       expect(player.swarmEngine.edgeGeometry(playerLayer.graph, playerEdge).points).toEqual(expected);
+    });
+
+    test('its dots are drawn off the image too, in the editor, Preview, a video frame and the exported player', async () => {
+      const app = await tracedThrough({ x: 1.25, y: 0.15 }, { x: 1.6, y: 0.5 });
+      const [layer] = app.scene.getFlowLayers();
+      // One dot, released at once, at a steady pace: at 1 s it is at the bend.
+      layer.emitters[0].update({
+        dotCount: 1, speed: 1, speedVariance: 0, releaseStart: 0, releaseDuration: 0,
+        onsetVariance: 0, wobble: 0, lifecycle: 'collect',
+      });
+      app.invalidateAnimationTiming();
+      const player = new PlayerApp(document.createElement('canvas'));
+      await player.load(JSON.parse(JSON.stringify(app._buildProjectSnapshot())), null);
+      player.resize(app.displayWidth, app.displayHeight);
+
+      // Each arc the dot renderer draws, and where the image's right edge is.
+      const render = DotRenderer.render;
+      let drawn = [];
+      vi.spyOn(DotRenderer, 'render').mockImplementation((ctx, dots, imageToCanvas, svc) => {
+        const recording = new Proxy(ctx, {
+          get(target, name) {
+            if (name === 'arc') return (x, y, ...rest) => { drawn.push({ x, edge: imageToCanvas(1, y).x }); return target.arc(x, y, ...rest); };
+            const value = target[name];
+            return typeof value === 'function' ? value.bind(target) : value;
+          },
+          set(target, name, value) { target[name] = value; return true; },
+        });
+        return render.call(DotRenderer, recording, dots, imageToCanvas, svc);
+      });
+      try {
+        for (const mode of ['edit', 'preview', 'video', 'player']) {
+          const host = mode === 'player' ? player : app;
+          if (mode !== 'player') app._setPreviewMode(mode !== 'edit');
+          if (mode === 'video') app._enterExportMode(app.exportSettings.resolutionX, app.exportSettings.resolutionY);
+          setUpFrame(host);
+          drawn = [];
+          frameAt(host, 1000 / host.animationEngine.state.duration);
+          if (mode === 'video') app._exitExportMode();
+          // (A video frame draws it more than once.)
+          expect(drawn.length, mode).toBeGreaterThan(0);
+          for (const arc of drawn) expect(arc.x, mode).toBeGreaterThan(arc.edge);
+        }
+      } finally {
+        vi.restoreAllMocks();
+      }
     });
 
     test('a traced bend off the image is kept, or moved onto the image, from the outline', async () => {
