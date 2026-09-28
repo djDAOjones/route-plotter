@@ -16,7 +16,9 @@
    with a clear message and never re-saved; Q18's "allow viewing" is
    withdrawn. An earlier-version file no longer has to load: the run may drop
    old-format handling, naming each drop in its PR, and refuses such a file
-   with a clear message. DEP-03 and ABS-06 plan compatibility from here on:
+   with a clear message; a refused autosave gets DEF-28's notice, never
+   today's silent clear of an older record (DEF-28's own treatment, applied).
+   DEP-03 and ABS-06 plan compatibility from here on:
    one format version, one gate, and a version bump with a tested upgrade step
    for each later format change, written into `architecture.md`. **The
    agent's reading, for Joe to confirm:** the promise starts with the run's
@@ -39,8 +41,8 @@
 
 **Approval.** "The big run" approved each row's treatment as it read when #51
 merged; it now reads as of this entry's merge (#53), which adds the above as
-dated notes on CON-14, ABS-06, DEF-07, DOC-08, DEL-07, §12.1, §13 rule 3, W10
-and §20 Q5, Q16, Q18 and Q19. The run's hard-prohibition approvals gain the
+dated notes on CON-14, ABS-06, DEF-07, DOC-08, DEL-07, §12.1, §13 rule 3, W10,
+§17 and §20 Q5, Q16, Q18 and Q19. The run's hard-prohibition approvals gain the
 old-format drops and the three `_Joe/` deletions. The rest of "the big run"
 stands, its merge authority included.
 

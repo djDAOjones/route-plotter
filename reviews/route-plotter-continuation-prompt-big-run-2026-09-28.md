@@ -57,7 +57,7 @@ The decision-log entries "the big run" and "the big run, amended" (both
 - **Planned defects are approved in advance,** each by its plan row's stated
   treatment **as it reads when #53 merged** (#53 added Joe's answers below as
   dated notes on CON-14, ABS-06, DEF-07, DOC-08, DEL-07, §12.1, §13 rule 3,
-  W10 and §20 Q5, Q16, Q18 and Q19). For DEF-40 to DEF-46 that means
+  W10, §17 and §20 Q5, Q16, Q18 and Q19). For DEF-40 to DEF-46 that means
   the first remedy only, never a row's "or …" alternative. A row patched since
   is not approved beyond its old text: a PR that relies on the patch parks.
   Also approved are the §20 choices of 2026-09-22 that change behaviour: Q10
@@ -84,7 +84,10 @@ The decision-log entries "the big run" and "the big run, amended" (both
   message and never re-saved; nothing opens it for viewing. A file from an
   earlier version no longer has to load: where old-format handling
   complicates a change, drop it, name the drop in the PR, and refuse such a
-  file with a clear message rather than misread it. Plan compatibility from
+  file with a clear message rather than misread it. For an autosave, refusing
+  means DEF-28's notice and parked record, never a silent clear: that
+  includes the older-version path in `loadAutosave` (`persistence.js`), which
+  clears the record today. Plan compatibility from
   here on, in DEP-03 and ABS-06: one version for the persisted format, one
   gate for autosave, ZIP and player, and, for each later change to the format,
   a version bump with a tested step that upgrades the previous version's
