@@ -7,7 +7,7 @@
 ## Active
 
 <!-- Current is the active lane or has a named residual gate — today it holds
-     the three assurance items whose only remaining work is owner evidence, so
+     the two assurance items whose only remaining work is owner evidence, so
      Next reads as the genuinely schedulable queue. Next is ordered by
      dependency chain rather than deadline; [ready] marks runnable successors.
      Quarantine is not schedulable.
@@ -24,19 +24,12 @@
 
 ### Current
 
-- [~] **REV-04 Cross-browser and offline export evidence** · Review assurance
-  [verify: Chromium/Firefox/Safari + offline] — Runtime probes, format-locked
-  strategy selection, cached player loading and one endpoint-inclusive frame
-  plan are implemented. Publish real-browser codec/container and genuinely
-  offline standalone-export evidence. Chromium is done (2026-09-24, v3.2.692):
-  an HTML export with a traced crowd, opened from another origin, made one
-  request (the page itself), and an MP4 export carried `ftyp` at offset 4.
-  Firefox and Safari remain owner-run.
 - [~] **REV-03 Unified pointer transactions** · Review assurance
-  [[detail]](tickets/REV-03.md) [verify: physical iOS Safari + Android Chrome]
-  — Unified Pointer Events, captured group drag and cancel/no-op transactions
-  are implemented and green in automation plus production Chromium. Record the
-  physical mobile pass.
+  [[detail]](tickets/REV-03.md) [verify: physical Android Chrome] — Unified
+  Pointer Events, captured group drag and cancel/no-op transactions are
+  implemented and green in automation plus production Chromium. Record the
+  physical Android Chrome pass (iOS Safari is no longer checked: Route
+  Plotter is Chromium-only for now, Joe, 2026-09-28).
 - [~] **REV-05 Accessibility assurance** · Accessibility assurance
   [verify: NVDA/VoiceOver + forced-colours + reduced-motion emulation] —
   Everything automatable is done and green: structural audit, AAA contrast
@@ -66,7 +59,8 @@
      imported wholesale.
 
      A defect's approved behaviour is its plan row's stated treatment (Joe,
-     2026-09-28, in advance; DEF-07's camera feel excepted). Its PR still
+     2026-09-28, in advance; amended the same day, DEF-07 included). A defect
+     found on the way is fixed too, with its own row and PR. Its PR still
      states that behaviour and moves only the goldens it means to. Where a
      defect is characterised, an active test asserts today's BROKEN
      behaviour beside an empty `test.todo`: turn that test into a regression

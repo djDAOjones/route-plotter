@@ -17,6 +17,16 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## Before the big run (2026-09-28)
+
+Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its
+Firefox and Safari evidence waived, not supplied.
+
+REV-04 — Closed on Joe's call that Route Plotter is Chromium-only for now:
+Chromium's codec, container and offline export evidence (2026-09-24,
+v3.2.692) stands, and Firefox and Safari are no longer checked. (2026-09-28) —
+see decision-log.
+
 ## The post-W2 follow-ups (2026-09-28; merged, not yet released)
 
 Outcome: no frame draws with state that an earlier frame or layer left
