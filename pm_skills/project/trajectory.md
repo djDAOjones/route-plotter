@@ -29,6 +29,11 @@ DEF-49 — A failed load's rollback keeps going when a step fails: a failure
 restoring the image assets or the undo history no longer leaves the previous
 waypoints beside the failed project's styles and settings. (2026-09-28)
 
+DEF-40 — An outline entry opens with its content on one click or key press,
+and closes on the next, one holding the selection too: the outline toggles its
+entries itself, a selection or focus request opens entries once, and a
+redraw's focus no longer reopens the entry just closed. (2026-09-28)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its
