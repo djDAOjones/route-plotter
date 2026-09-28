@@ -6,6 +6,7 @@ import {
   compileBusynessEnvelope,
   sampleBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
+import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 
 /**
  * Deterministic swarm evaluator for flow layers (Phase 3).
@@ -22,7 +23,7 @@ import {
  * negative hop indices are reserved channels for per-dot constants
  * (onset jitter, speed multiplier, wobble phase/frequency).
  *
- * Geometry: everything is in normalised image coordinates (0–1), the same
+ * Geometry: everything is in normalised image coordinates, the same
  * space as GraphNode positions and hero-route path points. Each graph edge
  * gets its own PathCalculator instance (backlog Phase 3) whose polyline is
  * cached against a signature of the edge's geometry, so authoring edits
@@ -30,6 +31,10 @@ import {
  * PathCalculator applies to the hero route is deliberately kept for edge
  * paths: dots ease through sharp corners with the same motion language as
  * the hero head.
+ *
+ * 0–1 spans the image, but a route or an anchored node may run off it
+ * (DEF-03), so a dot is held only to the range a project can store a point
+ * in, never to the image's edge (DEF-35).
  *
  * The caches hold derived geometry only — two calls with identical inputs
  * return identical outputs whether or not the cache was warm.
@@ -103,7 +108,8 @@ export class SwarmEngine {
    *                                             required for guideType 'route'.
    * @returns {Array<{x:number, y:number, size:number, color:string,
    *                  emitterId:string, dotIndex:number}>}
-   *          Dots in draw order, positions normalised 0–1.
+   *          Dots in draw order, positions in normalised image
+   *          coordinates (off the image where their guide is).
    */
   evaluate(timelineMs, layer, context = {}) {
     const durationMs = context.durationMs;
@@ -283,8 +289,8 @@ export class SwarmEngine {
       }
 
       out.push({
-        x: Math.max(0, Math.min(1, x)),
-        y: Math.max(0, Math.min(1, y)),
+        x: clampImageCoordinate(x),
+        y: clampImageCoordinate(y),
         size: emitter.dotSize,
         color: emitter.dotColor,
         emitterId: emitter.id,

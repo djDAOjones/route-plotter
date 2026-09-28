@@ -23,6 +23,7 @@ import { Emitter } from '../src/models/Emitter.js';
 import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import { pathTimingMixin } from '../src/app/pathTiming.js';
+import { IMAGE_COORDINATES } from '../src/config/constants.js';
 
 /**
  * Drive just the anchor-resolution step of calculatePath against a stub app,
@@ -69,6 +70,20 @@ describe('GraphNode anchoring', () => {
     node.clearAnchorResolution();
 
     expect(node.position()).toEqual({ x: 0.2, y: 0.3 });
+  });
+
+  test('an anchor off the image resolves there, as far as a project can store (DEF-35)', () => {
+    // Since DEF-03 a waypoint may sit off the image. The resolution clamped
+    // to 0–1, so a node bound to such a waypoint sat on the image's edge.
+    const node = new GraphNode({ x: 0.2, y: 0.3, anchorWaypointId: 'wp-1' });
+    node.applyAnchor(-0.4, 1.35);
+    expect(node.position()).toEqual({ x: -0.4, y: 1.35 });
+
+    const { MIN, MAX } = IMAGE_COORDINATES;
+    node.applyAnchor(MIN - 1, MAX + 1);
+    expect(node.position()).toEqual({ x: MIN, y: MAX });
+    // The node's own, authored position stays on the image.
+    expect([node.x, node.y]).toEqual([0.2, 0.3]);
   });
 
   test('the anchor round-trips through serialisation', () => {
@@ -126,6 +141,21 @@ describe('resolveGraphAnchors', () => {
 
   test('a missing scene or waypoint map is not an error', () => {
     expect(resolveGraphAnchors(null, null)).toEqual({ bound: 0, broken: [] });
+  });
+
+  test('a crowd bound to a waypoint off the image walks all the way to it (DEF-35)', () => {
+    // Two readers stood in the way: the anchor clamped the node to the image,
+    // and the engine clamped every dot to it. The collected dot parks on the
+    // exit node, so it lands exactly where the waypoint is.
+    const { scene, layer, node: exit } = sceneWithNode({ x: 0.9, y: 0.5, type: 'exit', anchorWaypointId: 'wp-1' });
+    const entry = layer.graph.addNode(new GraphNode({ x: 0.5, y: 0.5, type: 'entry' }));
+    layer.graph.addEdge({ sourceId: entry.id, targetId: exit.id, direction: 'one-way' });
+    layer.addEmitter({ seed: 7, dotCount: 1, speed: 5, releaseStart: 0, releaseDuration: 0, lifecycleMode: 'collect' });
+    resolveGraphAnchors(scene, new Map([['wp-1', waypointAt('wp-1', 1.3, -0.2)]]));
+
+    const [dot] = new SwarmEngine().evaluate(8000, layer, { durationMs: 10000 });
+    expect(dot.x).toBeCloseTo(1.3, 9);
+    expect(dot.y).toBeCloseTo(-0.2, 9);
   });
 
   test('binding never writes to the waypoint', () => {
