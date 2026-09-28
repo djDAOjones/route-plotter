@@ -231,7 +231,7 @@
 - `src/config/helpContent.js` — Welcome modal and inline help HTML generators
 - `src/config/keybindings.js` — Shortcut table the help panel renders; key handling lives in `InteractionHandler` (README → Keybindings)
 - `src/config/tooltips.js` — Tooltip definitions
-- `src/controllers/SceneOutlineController.js` — Native-details/list/form renderer owning transient disclosure, focus and dirty-draft state while emitting model-free commands in the shared plain field vocabulary
+- `src/controllers/SceneOutlineController.js` — Native-details/list/form renderer owning transient disclosure, focus and dirty-draft state while emitting model-free commands in the shared plain field vocabulary; it toggles its own entries, and reveals a selection or focus request once (DEF-40)
 - `src/controllers/SectionController.js` — Collapsible settings sections, waypoint/route/crowd/network scope switching, undo selection-state synchronization and deterministic native More keyboard activation
 - `src/controllers/UIController.js` — Sidebar/list/slider sync; stable multi-selection scope and Leg headings; selection gestures; whole-selection pause, speed and area writes
 - `src/core/EventBus.js` — Pub-sub event system
@@ -395,8 +395,8 @@
 - `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
 - `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across linear and branched routes, a copy that never reaches back into the route, the save/load round trip, (DEF-31) derived ids that fit the persisted limit, and (DEF-35) a crowd traced off the image resolves to its waypoints there
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
-- `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts, (DEF-35) position fields that take a point off the image, as far as a project can store one, and (DEF-40) entries that open and close on each click in a browser's order of events
-- `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts, and (DEF-35) edits and adds that keep a point off the image, bounded by the storable range on every image-point command while network positions keep 0–100%
+- `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts, (DEF-35) position fields that take a point off the image, as far as a project can store one, and (DEF-40) entries that open and close on each click in a browser's order of events, those holding the selection too, with focus left where the author clicked
+- `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts, and (DEF-35) edits and adds that keep a point off the image, bounded by the storable range on every image-point command while network positions keep 0–100%, and (DEF-40) a focus request the app makes met once
 - `tests/scenePersistence.test.js` — coordVersion-9 scene variation/seed autosave, ZIP, migration and undo round-trip contracts
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts
 - `tests/shortHexGlow.test.js` — DEF-26: the glow draws every stored hex form with its own alpha, and one throwing frame stops neither playback nor editor redraws

@@ -871,6 +871,41 @@ describe('scene-outline command adapter', () => {
     expect(app._sceneOutlineFocusKey).toBeNull();
   });
 
+  test('meets a focus request once: a click on another entry keeps focus there, and the requested entry closes (DEF-40)', async () => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    const first = new Waypoint({ id: 'wp-first', isMajor: true });
+    const second = new Waypoint({ id: 'wp-second', isMajor: true });
+    app.waypoints = [first, second];
+    app.setupSceneOutline();
+    const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+    const container = document.getElementById('scene-outline');
+    const entry = waypoint => [...container.querySelectorAll('details[data-outline-disclosure]')]
+      .find(details => details.dataset.outlineDisclosure === sceneOutlineKey('waypoint', waypoint.id));
+    const summaryOf = waypoint => entry(waypoint).querySelector(':scope > summary');
+    // A click as a browser delivers it: the listeners, their microtasks, then
+    // the summary's toggle unless a listener cancelled it.
+    const browserClick = async (summary) => {
+      summary.focus();
+      const click = new Event('click', { bubbles: true, cancelable: true });
+      summary.dispatchEvent(click);
+      await nextTask();
+      if (!click.defaultPrevented) summary.parentElement.open = !summary.parentElement.open;
+      await nextTask();
+    };
+
+    app._queueSceneOutlineRefresh(`${sceneOutlineKey('waypoint', first.id)}:select`);
+    await nextTask();
+    expect(document.activeElement.dataset.outlineKey).toBe(`${sceneOutlineKey('waypoint', first.id)}:select`);
+
+    await browserClick(summaryOf(second));
+    expect(entry(second).open).toBe(true);
+    expect(document.activeElement).toBe(summaryOf(second));
+
+    await browserClick(summaryOf(first));
+    expect(entry(first).open).toBe(false);
+    expect(document.activeElement).toBe(summaryOf(first));
+  });
+
   test('keeps adversarial persisted IDs synchronized across app and outline keys', async () => {
     document.body.innerHTML = '<div id="scene-outline"></div>';
     const layer = app.scene.addFlowLayer({

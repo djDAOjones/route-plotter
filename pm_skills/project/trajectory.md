@@ -22,8 +22,9 @@
 Outcome: written when the run's last such defect has merged.
 
 DEF-40 — An outline entry opens with its content on one click or key press,
-and closes on the next: the outline toggles its entries itself, and a redraw's
-focus no longer reopens the entry just closed. (2026-09-28)
+and closes on the next, one holding the selection too: the outline toggles its
+entries itself, a selection or focus request opens entries once, and a
+redraw's focus no longer reopens the entry just closed. (2026-09-28)
 
 ## Before the big run (2026-09-28)
 

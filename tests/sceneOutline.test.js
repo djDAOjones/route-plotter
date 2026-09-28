@@ -944,13 +944,16 @@ describe('an outline entry opens and closes as a browser clicks it (DEF-40)', ()
    * the microtasks, which is why the defect never showed in tests. Enter and
    * Space on a summary arrive as the same click.
    */
-  async function browserClick(summary) {
-    summary.focus();
+  async function browserClick(summary, { focus = true } = {}) {
+    if (focus) summary.focus();
     const click = new Event('click', { bubbles: true, cancelable: true });
     summary.dispatchEvent(click);
     await nextTask();
     if (!click.defaultPrevented) summary.parentElement.open = !summary.parentElement.open;
     await nextTask();
+    // The outline toggles the entry itself; the browser's toggle would land
+    // on the entry the redraw replaced.
+    expect(click.defaultPrevented).toBe(true);
   }
 
   const entry = () => disclosure(container, sceneOutlineKey('waypoint', fixture.major.id));
@@ -976,6 +979,96 @@ describe('an outline entry opens and closes as a browser clicks it (DEF-40)', ()
   test('the clicked entry keeps focus on its summary', async () => {
     await browserClick(summaryOf(entry()));
 
+    expect(document.activeElement).toBe(summaryOf(entry()));
+  });
+
+  const select = selectionKey => eventBus.emit('scene-outline:update', snapshotFor(fixture, { selectionKey }));
+  const control = 'control:crowd-route:edge-a:0';
+
+  // [the entry closed, the selection it holds]: each selected entity, then
+  // each entry around a selected bend point.
+  test.each([
+    ['waypoint:wp-major', 'waypoint:wp-major'],
+    ['polygon:wp-minor', 'polygon:wp-minor'],
+    ['vertex:wp-minor:0', 'vertex:wp-minor:0'],
+    ['crowd:crowd-route', 'crowd:crowd-route'],
+    ['emitter:crowd-route:emitter-primary', 'emitter:crowd-route:emitter-primary'],
+    ['node:crowd-route:node-entry', 'node:crowd-route:node-entry'],
+    ['edge:crowd-route:edge-a', 'edge:crowd-route:edge-a'],
+    [control, control],
+    ['route', 'waypoint:wp-minor'],
+    ['crowds', control],
+    ['crowd:crowd-route', control],
+    ['network:crowd-route', control],
+    ['edges:crowd-route', control],
+    ['edge:crowd-route:edge-a', control],
+    ['controls:crowd-route:edge-a', control],
+  ])('%s closes, and opens again, though it holds the selection (%s)', async (key, selectionKey) => {
+    select(selectionKey);
+    expect(disclosure(container, key).open).toBe(true);
+
+    await browserClick(summaryOf(disclosure(container, key)));
+    expect(disclosure(container, key).open).toBe(false);
+    expect(disclosure(container, key).querySelector('.scene-outline-content')).toBeNull();
+    expect(document.activeElement).toBe(summaryOf(disclosure(container, key)));
+
+    await browserClick(summaryOf(disclosure(container, key)));
+    expect(disclosure(container, key).open).toBe(true);
+    expect(disclosure(container, key).querySelector('.scene-outline-content')).not.toBeNull();
+  });
+
+  test('an entry the author closed stays closed while its selection stands, and a new selection opens it again', async () => {
+    select('waypoint:wp-major');
+    await browserClick(summaryOf(disclosure(container, 'route')));
+    expect(disclosure(container, 'route').open).toBe(false);
+
+    // The app sends the outline again, the selection unchanged: after an
+    // edit, say, or a second click on the same waypoint on the canvas.
+    select('waypoint:wp-major');
+    expect(disclosure(container, 'route').open).toBe(false);
+
+    select('waypoint:wp-minor');
+    expect(disclosure(container, 'route').open).toBe(true);
+    expect(disclosure(container, 'waypoint:wp-minor').open).toBe(true);
+
+    // Nothing selected, then the first waypoint again: that is new too.
+    await browserClick(summaryOf(disclosure(container, 'route')));
+    select(null);
+    select('waypoint:wp-minor');
+    expect(disclosure(container, 'route').open).toBe(true);
+  });
+
+  test('a focus request opens its entry once: the entry then closes, and a click elsewhere keeps focus', async () => {
+    eventBus.emit('scene-outline:update', snapshotFor(fixture, { focusKey: 'waypoint:wp-major:select' }));
+    await nextTask();
+    expect(entry().open).toBe(true);
+    expect(document.activeElement.dataset.outlineKey).toBe('waypoint:wp-major:select');
+
+    const minor = () => disclosure(container, 'waypoint:wp-minor');
+    await browserClick(summaryOf(minor()));
+    expect(minor().open).toBe(true);
+    expect(document.activeElement).toBe(summaryOf(minor()));
+
+    await browserClick(summaryOf(entry()));
+    expect(entry().open).toBe(false);
+    expect(document.activeElement).toBe(summaryOf(entry()));
+
+    // A new request, even for the same control, is met.
+    eventBus.emit('scene-outline:update', snapshotFor(fixture, { focusKey: 'waypoint:wp-major:select' }));
+    await nextTask();
+    expect(entry().open).toBe(true);
+    expect(document.activeElement.dataset.outlineKey).toBe('waypoint:wp-major:select');
+  });
+
+  test('an entry activated while a field inside it has focus closes, and focus goes to its summary', async () => {
+    // Assistive technology may activate a summary without moving focus to it.
+    await browserClick(summaryOf(entry()));
+    const field = entry().querySelector('[data-outline-key="waypoint:wp-major:x"]');
+    field.focus();
+
+    await browserClick(summaryOf(entry()), { focus: false });
+
+    expect(entry().open).toBe(false);
     expect(document.activeElement).toBe(summaryOf(entry()));
   });
 });
