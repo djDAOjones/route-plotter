@@ -154,21 +154,27 @@ reported.
 
 A recovery record that cannot be restored (the loader refuses it, it is not
 valid JSON, its format is older than the app reads, or the commit fails and
-rolls back) is never cleared or overwritten. It is copied, exactly as read,
-to a key of its own (`routePlotter_keptAutosave:` and when it was kept), which
-autosave never writes, and only then removed from the recovery key; the
+rolls back) is kept until the author chooses. It is copied, exactly as read,
+to a key of its own (`routePlotter_keptAutosave:`, when it was kept, a count
+and a random part), which autosave never writes, and only then removed from the recovery key; the
 author is told, and a notice offers **Download it** and **Discard**, again at
 each start, until they choose. Each such record has its own key, so a second
 one never displaces the first. Where no copy fits, nothing is removed to make
 room: the record stays in the recovery key, held, marked in
 `routePlotter_heldAutosave` (its length and two hashes) so that no tab of the
 app writes or clears it there and no later start restores it; autosave fails,
-and says so, until the author discards it. If even the mark cannot be written,
-the notice says only this tab is keeping the record, and to download it now.
-Tabs open at the same time share no lock (`localStorage` has none), so the
-mark narrows, and cannot close, the moment in which a tab that has not yet
-seen it writes over the record. The notice offers one record at a time, this
-start's first, and follows what other tabs keep, hold or discard. Only that
+and says so, until the author discards it. A mark goes only on a recovery key
+read to hold that record, so a tab that cannot read it never takes another
+record's mark. If the mark cannot be written, or the key cannot be read, the
+notice says only this tab is keeping the record, and to download it now; if
+the record then leaves the recovery key, this tab still offers it. Tabs open
+at the same time share no lock (`localStorage` has none), so the mark
+narrows, and cannot close, the moment in which a tab that has not yet seen it
+writes over the record; two tabs choosing the same key for a kept record at
+the same moment could likewise collide. The notice offers one record at a
+time, this start's first, and follows what other tabs keep, hold, discard or
+write over. Discard removes every copy of the record it can read, wherever it
+has moved, and says it failed if the store cannot be searched. Only that
 Discard and **Clear All** remove one, and Clear All's dialog says so. When storage cannot hold both a kept record and a new autosave, the
 record stays, and the autosave's failure report says how to free space.
 

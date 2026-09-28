@@ -121,8 +121,9 @@ export class StorageService {
       return { ok: false, error };
     }
 
-    // Skip if nothing changed - pure optimization with no downside.
-    if (newSerialized === this._lastSerialized) {
+    // Skip if nothing changed and the recovery key still holds it: another
+    // tab may have written over it or discarded it since (DEF-28).
+    if (newSerialized === this._lastSerialized && this._readText(STORAGE.AUTOSAVE_KEY) === newSerialized) {
       // A different state may already be pending. Reverting to the last
       // durable state must cancel that stale write.
       this.cancelAutoSave();
@@ -245,8 +246,8 @@ export class StorageService {
    * @returns {{ where: 'parked', key: string, existing: boolean }
    *   | { where: 'held', durable: boolean } | { where: 'unkept' }} Where it is
    *   now: under its own key (one that held it already, if `existing`); held
-   *   in the recovery key, `durable` when its mark was written and the key
-   *   was read to hold it, so other tabs and later starts know; or in neither
+   *   in the recovery key, `durable` when the key was read to hold it and its
+   *   mark was written, so other tabs and later starts know; or in neither
    *   (no copy could be written, and the recovery key holds another record)
    */
   keepUnrestored(text) {
@@ -259,11 +260,14 @@ export class StorageService {
       return { where: 'parked', key, existing: Boolean(existingKey) };
     }
     const recovery = this._readKey(STORAGE.AUTOSAVE_KEY);
-    // A key that cannot be read may still hold it, so it is held all the
-    // same, but not as known to be kept.
     if (recovery.ok && recovery.value !== text) return { where: 'unkept' };
-    const marked = this._hold(text);
-    return { where: 'held', durable: marked && recovery.ok };
+    // A key that cannot be read may still hold it, so this tab holds it all
+    // the same; but its mark goes only on a key read to hold it, since one
+    // that cannot be read may hold another tab's held record, whose mark
+    // must stay.
+    this._heldAutoSave = text;
+    const marked = recovery.ok && this._setKey(STORAGE.HELD_AUTOSAVE_KEY, fingerprint(text));
+    return { where: 'held', durable: marked };
   }
 
   /**
@@ -286,7 +290,13 @@ export class StorageService {
     }
     const local = this._heldAutoSave;
     if (local !== null) {
-      if (recovery.value === local) return { state: 'held', text: local, durable: mark.value === fingerprint(local) };
+      if (recovery.value === local) {
+        const durable = mark.value === fingerprint(local);
+        // Held without its mark, it may since have been kept under a key of
+        // its own by a tab that could not remove this copy: safe there, this
+        // copy no longer stops a write.
+        if (durable || !this._isKept(local)) return { state: 'held', text: local, durable };
+      }
       // It has gone, or moved: another tab chose, or kept it after all.
       this._heldAutoSave = null;
       this._lastSerialized = null;
@@ -317,16 +327,21 @@ export class StorageService {
    * can be read, but never a different record written there since. Ending a
    * hold removes its mark only while the mark is this record's.
    * @param {{ text: string, where: 'parked'|'held'|'unkept', key?: string }} kept
-   * @returns {boolean} Whether no readable copy of it is left in the store
+   * @returns {boolean} Whether no readable copy of it is left in the store,
+   *   as far as the store could be searched
    */
   discardKept({ text, where, key }) {
     if (where === 'unkept') return true;
     // The recovery key's copy first: if it cannot go, the record stays on offer.
     if (!this._removeIfHolding(STORAGE.AUTOSAVE_KEY, text)) return false;
     this._releaseHold(text);
-    if (where !== 'parked') return true;
-    if (!this._removeIfHolding(key, text)) return false;
-    for (const record of this.listKept().records) {
+    if (where === 'parked' && !this._removeIfHolding(key, text)) return false;
+    // Every other copy, wherever it has gone since it was offered: another tab
+    // may have kept a held record under a key of its own. A search that fails
+    // cannot say none is left.
+    const kept = this.listKept();
+    if (!kept.ok) return false;
+    for (const record of kept.records) {
       if (record.text === text && !this._removeKey(record.key)) return false;
     }
     return true;
@@ -503,13 +518,9 @@ export class StorageService {
     return key === STORAGE.AUTOSAVE_KEY && this.holdState().state !== 'none';
   }
 
-  /**
-   * @private Hold `text` in the recovery key, and mark it for other tabs and
-   * later starts. Whether the mark was written.
-   */
-  _hold(text) {
-    this._heldAutoSave = text;
-    return this._setKey(STORAGE.HELD_AUTOSAVE_KEY, fingerprint(text));
+  /** @private Whether `text` is kept under a key of its own that can be read. */
+  _isKept(text) {
+    return this.listKept().records.some(record => record.text === text);
   }
 
   /**

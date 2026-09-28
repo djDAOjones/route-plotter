@@ -44,7 +44,7 @@ function offersOf(app) {
  * own sentence, and can be downloaded even if the store cannot read them back.
  */
 function thisStart(app) {
-  app._unrestoredThisStart ??= { keys: new Map(), heldText: null, unkept: [] };
+  app._unrestoredThisStart ??= { keys: new Map(), heldText: null, heldDurable: false, unkept: [] };
   return app._unrestoredThisStart;
 }
 
@@ -82,6 +82,14 @@ function readStore(app) {
   for (const { key, text } of kept.records) {
     const known = text ?? started.keys.get(key) ?? null;
     if (known !== null) offers.push({ text: known, where: 'parked', key, earlier: !started.keys.has(key) });
+  }
+  // A record this start held without its mark, which the recovery key no
+  // longer holds: another tab or build wrote there, not the author choosing,
+  // so it is still this tab's to offer.
+  const held = started.heldText;
+  if (held !== null && !started.heldDurable && !offers.some(offer => offer.text === held)) {
+    offers.push({ text: held, where: 'unkept', earlier: false });
+    discardable += 1;
   }
   return {
     offers: [...offers.filter(offer => !offer.earlier), ...offers.filter(offer => offer.earlier)],
@@ -132,8 +140,10 @@ export function keepUnrestoredAutosave(app, text) {
     return false;
   }
   if (kept.where === 'parked') started.keys.set(kept.key, text);
-  else if (kept.where === 'held') started.heldText = text;
-  else started.unkept.unshift(text);
+  else if (kept.where === 'held') {
+    started.heldText = text;
+    started.heldDurable = kept.durable;
+  } else started.unkept.unshift(text);
   showOffers(app);
   app.announce(messageFor({ where: kept.where, durable: kept.durable, earlier: false }), 'assertive');
   return false;
@@ -186,6 +196,7 @@ export function discardForClearAll(app) {
   const started = thisStart(app);
   const unkept = started.unkept.length;
   started.unkept = [];
+  started.heldText = null;
   const { ok, removed } = app.storageService.discardAllKept();
   showOffers(app);
   return { discarded: removed + unkept, failed: !ok };
@@ -208,8 +219,10 @@ function focusPastNotice(notice) {
 }
 
 /** Whether a change another tab made to storage may change what is on offer. */
-function changesOffers(key) {
-  return key === null || key === STORAGE.HELD_AUTOSAVE_KEY || key.startsWith(STORAGE.KEPT_AUTOSAVE_PREFIX);
+function changesOffers(app, key) {
+  if (key === null || key === STORAGE.HELD_AUTOSAVE_KEY || key.startsWith(STORAGE.KEPT_AUTOSAVE_PREFIX)) return true;
+  // A held record written over by a build that knows no mark has gone.
+  return key === STORAGE.AUTOSAVE_KEY && offersOf(app).some(offer => offer.where === 'held');
 }
 
 /** Wire the notice's two choices, and keep it true to the store. */
@@ -229,7 +242,8 @@ export function setupUnrestoredNotice(app) {
       return;
     }
     const started = thisStart(app);
-    if (offer.where === 'unkept') started.unkept = started.unkept.filter(text => text !== offer.text);
+    started.unkept = started.unkept.filter(text => text !== offer.text);
+    if (started.heldText === offer.text) started.heldText = null;
     const notice = document.getElementById('unrestored-notice');
     const focusInNotice = Boolean(notice?.contains(document.activeElement));
     const [next] = showOffers(app);
@@ -243,6 +257,6 @@ export function setupUnrestoredNotice(app) {
   document.getElementById('clear-btn')?.addEventListener('click', () => showOffers(app));
   // Another tab of the app may keep, hold or discard a record meanwhile.
   window.addEventListener('storage', (event) => {
-    if (changesOffers(event.key)) showOffers(app);
+    if (changesOffers(app, event.key)) showOffers(app);
   });
 }
