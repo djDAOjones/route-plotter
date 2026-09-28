@@ -1021,15 +1021,18 @@ describe('golden draw logs (TST-02)', () => {
       /** The blue each stroke of the preview draws with, solid or with the closing line's dashes. */
       const BLUE = / strokeStyle=#0f62fe lineWidth=2 lineCap=round lineJoin=round (lineDash=4,4 )?globalAlpha=0\.8$/;
 
-      function expectPreviewInBlue(frame, label, { cursor }) {
+      function expectPreviewInBlue(frame, label, { cursor, vertices = 2 }) {
         const strokes = previewStrokes(frame);
         // Non-vacuity: the placed edges, then the dashed line back to the
         // first vertex while the cursor is on the canvas, then a ring for each
-        // of the two vertices.
-        expect(strokes, label).toHaveLength(cursor ? 4 : 3);
-        for (const stroke of strokes) expect(stroke, `${label}: "${stroke}"`).toMatch(BLUE);
-        expect(strokes[0], `${label}: the placed edges are solid`).not.toMatch(/lineDash=/);
-        if (cursor) expect(strokes[1], `${label}: the line back is dashed`).toMatch(/ lineDash=4,4 /);
+        // vertex.
+        expect(strokes, label).toHaveLength(1 + (cursor ? 1 : 0) + vertices);
+        strokes.forEach((stroke, index) => {
+          expect(stroke, `${label}: "${stroke}"`).toMatch(BLUE);
+          // Only the line back is dashed; the edges and the rings are solid
+          if (cursor && index === 1) expect(stroke, `${label}: the line back`).toMatch(/ lineDash=4,4 /);
+          else expect(stroke, `${label}: stroke ${index}`).not.toMatch(/lineDash=/);
+        });
       }
 
       test('in the editor, whatever frame came before', async () => {
@@ -1052,8 +1055,11 @@ describe('golden draw logs (TST-02)', () => {
           expectPreviewInBlue(frameAt(app, 0.5, { state: 'drawn' }), 'on a freshly sized layer', { cursor: true });
 
           // As a layer drawn before the preview would leave its own stroke, if
-          // it set it outside a save; between frames the route would clear it
+          // it set it outside a save; between frames the route would clear it.
+          // What the preview hands back is read before this wrapper's own
+          // restore, which would otherwise hide a style the preview leaked.
           frameAt(app, 0.5);
+          let handedBack = null;
           drawing.renderPreview = function (ctx, ...args) {
             ctx.save();
             ctx.strokeStyle = '#ff0000';
@@ -1063,6 +1069,7 @@ describe('golden draw logs (TST-02)', () => {
             try {
               return Object.getPrototypeOf(drawing).renderPreview.call(this, ctx, ...args);
             } finally {
+              handedBack = [ctx.strokeStyle, ctx.lineWidth, ctx.globalAlpha, ctx.getLineDash()];
               ctx.restore();
             }
           };
@@ -1071,6 +1078,16 @@ describe('golden draw logs (TST-02)', () => {
           delete drawing.renderPreview;
           expect(poisoned).toContain('vector setLineDash [7,3]');
           expectPreviewInBlue(poisoned, 'after a layer that left another stroke', { cursor: true });
+          expect(handedBack, 'the preview hands the layer back as it found it').toEqual(['#ff0000', 9, 0.3, [7, 3]]);
+
+          // A third vertex adds the translucent fill, in the same blue
+          app.eventBus.emit('area:draw-click', { imgX: 0.5, imgY: 0.6 });
+          expect(drawing.vertices).toHaveLength(3);
+          frameAt(app, 0.5);
+          const withFill = frameAt(app, 0.5, { state: 'drawn' });
+          expectPreviewInBlue(withFill, 'with three vertices', { cursor: true, vertices: 3 });
+          expect(withFill.filter(line => line.endsWith('| fillStyle=rgba(15, 98, 254, 0.1) globalAlpha=0.8')),
+            'the fill').toHaveLength(1);
         } finally {
           delete drawing.renderPreview;
           drawing.cancelDrawing();
