@@ -173,6 +173,10 @@ export class SceneOutlineController {
     this.eventBus = eventBus;
     this._open = new Map();
     this._snapshot = null;
+    // The selection last revealed, and whether the render under way reveals
+    // a new one (set as each render starts).
+    this._revealedSelection = null;
+    this._revealing = false;
     this._error = null;
     this._errorSerial = 0;
     this._drafts = new Map();
@@ -207,10 +211,10 @@ export class SceneOutlineController {
   }
 
   _isOpen(key, defaultOpen = false, selected = false) {
-    // Selection/focus recovery must reveal its target even when the author
-    // previously collapsed this branch. A remembered disclosure preference
-    // applies only while nothing inside the branch requires attention.
-    if (selected) return true;
+    // A new selection reveals its target, even inside a branch the author
+    // collapsed. After that the author's own opening and closing win, so an
+    // entry holding the selection closes like any other (DEF-40).
+    if (selected && this._revealing) return true;
     return this._open.has(key) ? this._open.get(key) : defaultOpen;
   }
 
@@ -274,13 +278,24 @@ export class SceneOutlineController {
     }
   }
 
-  render(snapshot) {
+  /**
+   * @param {Object} snapshot
+   * @param {string|null} [disclosureFocus] - The summary an author just
+   *   opened or closed, which keeps focus though focus was elsewhere
+   */
+  render(snapshot, disclosureFocus = null) {
     if (!this.container || !snapshot) return;
     const priorFocus = this._focusedKey();
     this._captureDirtyDrafts();
     this._pruneDrafts(snapshot);
     this._rememberOpenState();
-    this._snapshot = snapshot;
+    // A snapshot's selection is revealed, and its focus request met, once: a
+    // redraw of the same snapshot replays neither, or the entries they opened
+    // could never close and focus would leave what the author clicked (DEF-40).
+    const selection = snapshot.selectionKey ?? null;
+    this._revealing = selection !== this._revealedSelection;
+    this._revealedSelection = selection;
+    this._snapshot = snapshot.focusKey ? { ...snapshot, focusKey: null } : snapshot;
     this._openFocusAncestry(snapshot);
 
     const fragment = document.createDocumentFragment();
@@ -289,13 +304,19 @@ export class SceneOutlineController {
     this._restoreDirtyDrafts();
     this._renderCommandError();
 
-    const requested = snapshot.focusKey || priorFocus;
+    const requested = disclosureFocus || snapshot.focusKey || priorFocus;
     if (requested) {
       queueMicrotask(() => {
         const target = this._findKey(requested)
           || this._findKey(snapshot.selectionKey ? `${snapshot.selectionKey}:select` : null)
           || this._findKey('route:summary');
         let ancestor = target?.closest('details[data-outline-disclosure]');
+        // A summary shows while its own entry is closed, so only the entries
+        // around it are opened: opening its own reopened an entry the author
+        // had just closed (DEF-40).
+        if (ancestor && target.parentElement === ancestor && target.matches('summary')) {
+          ancestor = ancestor.parentElement?.closest('details[data-outline-disclosure]');
+        }
         while (ancestor) {
           ancestor.open = true;
           this._open.set(ancestor.dataset.outlineDisclosure, true);
@@ -1114,9 +1135,15 @@ export class SceneOutlineController {
   _onClick(event) {
     const summary = event.target.closest('summary[data-outline-key]');
     if (summary && this.container.contains(summary)) {
-      queueMicrotask(() => {
-        if (summary.isConnected && this._snapshot) this.render(this._snapshot);
-      });
+      // The outline, not the browser, opens and closes its entries (DEF-40).
+      // A browser toggles an entry only after the click's microtasks, so a
+      // redraw queued here drew the entry as it was, empty, and the toggle
+      // then landed on the element the redraw had replaced. Enter and Space
+      // on a summary arrive as this same click.
+      event.preventDefault();
+      const details = summary.parentElement;
+      details.open = !details.open;
+      if (this._snapshot) this.render(this._snapshot, summary.dataset.outlineKey);
       return;
     }
     const target = event.target.closest('button[data-outline-action]');

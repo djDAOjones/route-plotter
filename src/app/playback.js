@@ -155,12 +155,25 @@ export const playbackMixin = {
    */
   _showPreviewTipToast() {
     const STORAGE_KEY = 'routePlotter_previewTipDismissed';
-    if (localStorage.getItem(STORAGE_KEY) === 'true') return;
+    // Storage a browser blocks or has filled throws. The tip then shows at
+    // each visit, rather than stopping the app starting or throwing from its
+    // timer (DEF-48).
+    let seen = false;
+    try {
+      seen = localStorage.getItem(STORAGE_KEY) === 'true';
+    } catch (error) {
+      console.warn('Could not read whether the preview tip was seen:', error);
+    }
+    if (seen) return;
     
     // Show after a brief delay so UI settles first
     setTimeout(() => {
       this.showToast('Tip: Check your sequence in Preview mode before exporting', 8000);
-      localStorage.setItem(STORAGE_KEY, 'true');
+      try {
+        localStorage.setItem(STORAGE_KEY, 'true');
+      } catch (error) {
+        console.warn('Could not remember that the preview tip was seen:', error);
+      }
     }, 1500);
   },
   
