@@ -1,0 +1,101 @@
+# node: the crowd network's first node inspected
+
+## #node-scope>div[0]>div[0] · click
+ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section" data-last="true" data-section="node"
+ui ~ #node-scope>div[0]>div[0]: div aria-controls="section-node-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-node-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
+
+## #section-node-content>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward"
+
+## #network-node-type · choose "normal"
+emit network:changed {commit: true}
+emit network:node-selected {node: {id: "gn_trace_ex-uon-1", x: 0.16, y: 0.63, type: "normal", label: "Main entrance", anchorWaypointId: "ex-uon-1", _resolvedX: 0.16, _resolvedY: 0.63}}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+model ~ scene.flowLayers[0].graph.nodes[0].type: "entry" → "normal"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · pass-through"
+ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
+ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="normal"
+
+## #network-node-type · choose "exit"
+emit network:changed {commit: true}
+emit network:node-selected {node: {id: "gn_trace_ex-uon-1", x: 0.16, y: 0.63, type: "exit", label: "Main entrance", anchorWaypointId: "ex-uon-1", _resolvedX: 0.16, _resolvedY: 0.63}}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+model ~ scene.flowLayers[0].graph.nodes[0].type: "entry" → "exit"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · exit"
+ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
+ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="exit"
+
+## #network-node-delete · click
+emit network:node-deselected
+emit network:changed {commit: true}
+emit ui:toast {message: "Deleted node — press Ctrl+Z to undo"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ scene.flowLayers[0].graph.nodes[0].id: "gn_trace_ex-uon-1" → "gn_trace_ex-uon-2"
+model ~ scene.flowLayers[0].graph.nodes[0].x: 0.16 → 0.4
+model ~ scene.flowLayers[0].graph.nodes[0].y: 0.63 → 0.47
+model ~ scene.flowLayers[0].graph.nodes[0].type: "entry" → "normal"
+model ~ scene.flowLayers[0].graph.nodes[0].label: "Main entrance" → "Trent Building"
+model ~ scene.flowLayers[0].graph.nodes[0].anchorWaypointId: "ex-uon-1" → "ex-uon-2"
+model ~ scene.flowLayers[0].graph.nodes[1].id: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-3"
+model ~ scene.flowLayers[0].graph.nodes[1].x: 0.4 → 0.78
+model ~ scene.flowLayers[0].graph.nodes[1].y: 0.47 → 0.42
+model ~ scene.flowLayers[0].graph.nodes[1].type: "normal" → "exit"
+model ~ scene.flowLayers[0].graph.nodes[1].label: "Trent Building" → "Library"
+model ~ scene.flowLayers[0].graph.nodes[1].anchorWaypointId: "ex-uon-2" → "ex-uon-3"
+model ~ scene.flowLayers[0].graph.nodes[2].id: "gn_trace_ex-uon-3" → "gn_trace_ex-uon-b1"
+model ~ scene.flowLayers[0].graph.nodes[2].x: 0.78 → 0.44
+model ~ scene.flowLayers[0].graph.nodes[2].y: 0.42 → 0.24
+model ~ scene.flowLayers[0].graph.nodes[2].type: "exit" → "normal"
+model ~ scene.flowLayers[0].graph.nodes[2].label: "Library" → "Sports fields"
+model ~ scene.flowLayers[0].graph.nodes[2].anchorWaypointId: "ex-uon-3" → "ex-uon-b1"
+model ~ scene.flowLayers[0].graph.edges[0].id: "ge_trace_ex-uon-1__ex-uon-2" → "ge_trace_ex-uon-2__ex-uon-3"
+model ~ scene.flowLayers[0].graph.edges[0].sourceId: "gn_trace_ex-uon-1" → "gn_trace_ex-uon-2"
+model ~ scene.flowLayers[0].graph.edges[0].targetId: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-3"
+model + scene.flowLayers[0].graph.edges[0].controlPoints[0].x: 0.52
+model + scene.flowLayers[0].graph.edges[0].controlPoints[0].y: 0.58
+model + scene.flowLayers[0].graph.edges[0].controlPoints[1].x: 0.63
+model + scene.flowLayers[0].graph.edges[0].controlPoints[1].y: 0.55
+model ~ scene.flowLayers[0].graph.edges[1].id: "ge_trace_ex-uon-2__ex-uon-3" → "ge_trace_ex-uon-2__ex-uon-b1"
+model ~ scene.flowLayers[0].graph.edges[1].targetId: "gn_trace_ex-uon-3" → "gn_trace_ex-uon-b1"
+model + scene.flowLayers[0].graph.edges[1].controlPoints: []
+model ~ scene.flowLayers[0].graph.edges[2].id: "ge_trace_ex-uon-2__ex-uon-b1" → "ge_trace_ex-uon-b1__ex-uon-3"
+model ~ scene.flowLayers[0].graph.edges[2].sourceId: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-b1"
+model ~ scene.flowLayers[0].graph.edges[2].targetId: "gn_trace_ex-uon-b1" → "gn_trace_ex-uon-3"
+model - scene.flowLayers[0].graph.nodes[3].id: "gn_trace_ex-uon-b1"
+model - scene.flowLayers[0].graph.nodes[3].x: 0.44
+model - scene.flowLayers[0].graph.nodes[3].y: 0.24
+model - scene.flowLayers[0].graph.nodes[3].type: "normal"
+model - scene.flowLayers[0].graph.nodes[3].label: "Sports fields"
+model - scene.flowLayers[0].graph.nodes[3].anchorWaypointId: "ex-uon-b1"
+model - scene.flowLayers[0].graph.edges[0].controlPoints: []
+model - scene.flowLayers[0].graph.edges[1].controlPoints[0].x: 0.52
+model - scene.flowLayers[0].graph.edges[1].controlPoints[0].y: 0.58
+model - scene.flowLayers[0].graph.edges[1].controlPoints[1].x: 0.63
+model - scene.flowLayers[0].graph.edges[1].controlPoints[1].y: 0.55
+model - scene.flowLayers[0].graph.edges[3].id: "ge_trace_ex-uon-b1__ex-uon-3"
+model - scene.flowLayers[0].graph.edges[3].sourceId: "gn_trace_ex-uon-b1"
+model - scene.flowLayers[0].graph.edges[3].targetId: "gn_trace_ex-uon-3"
+model - scene.flowLayers[0].graph.edges[3].weight: 1
+model - scene.flowLayers[0].graph.edges[3].direction: "one-way"
+model - scene.flowLayers[0].graph.edges[3].controlPoints: []
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui + #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
+ui ~ #crowd-scope: div (not shown) → div class="scope-group"
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 14 inside, f56844ce)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 60 inside, 224c775c)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 68 inside, aa999416)
+ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 22 inside, 8d5e2b8d)
+ui ~ #node-scope: div class="scope-group" → div (not shown)
+ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 14 inside, 3f34c1e9)
+settled:
+  ui - #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

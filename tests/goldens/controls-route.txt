@@ -1,0 +1,1997 @@
+# route: nothing selected
+
+## body>a[0] · click
+
+## body>a[1] · click
+
+## #mode-toggle-btn · click
+emit motion:preview-mode-change true
+model ~ animationState.duration: 21429.352554 → 491872.854816
+app ~ previewMode: false → true
+ui ~ #mode-switch>span[0]: span class="mode-label mode-label-edit active" :text="Edit" → span class="mode-label mode-label-edit" :text="Edit"
+ui ~ #mode-toggle-btn: button aria-checked="false" aria-label="Toggle preview mode" class="mode-toggle" role="switch" type="button" → button aria-checked="true" aria-label="Toggle preview mode" class="mode-toggle" role="switch" type="button"
+ui ~ #mode-switch>span[2]: span class="mode-label mode-label-preview" :text="Preview" → span class="mode-label mode-label-preview active" :text="Preview"
+ui ~ #animation-speed-value-right: span class="slider-value" :text="21.4s" → span class="slider-value" :text="491.9s"
+ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="8:11"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 491872.854816, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #undo-btn · disabled, not operated
+
+## #redo-btn · disabled, not operated
+
+## #file-dropdown-btn · click
+app ~ focus: "body" → "#save-project-btn"
+ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"
+ui ~ #file-menu: div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu" → div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu"
+
+## #export-dropdown-btn · click
+app ~ focus: "body" → "#export-mp4-btn"
+ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
+ui ~ #export-menu: div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu" → div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu"
+
+## #report-bug-btn · click
+app ~ focus: "body" → "#diagnostics-title"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" :text="Skip to main content" → a class="skip-link" href="#main-content" inert="" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
+ui ~ #app: div → div inert=""
+ui ~ #diagnostics-modal: div (not shown) → div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;"
+ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 43af509a)
+
+## #help-btn · click
+app ~ focus: "body" → "#splash-title"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" :text="Skip to main content" → a class="skip-link" href="#main-content" inert="" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
+ui ~ #app: div → div inert=""
+ui ~ #splash: div (not shown) → div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;"
+ui + #splash>div[0]: div class="splash-content" (and 148 inside, 27560ad6)
+
+## #scope-route-btn · disabled, not operated
+
+## #scope-prev-btn · disabled, not operated
+
+## #scope-next-btn · click
+emit waypoint:selected waypoint[0]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+app ~ selected: null → "waypoint[0]"
+app ~ selection: "" → "waypoint[0]"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
+ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major"
+ui ~ #waypoint-scope: div (not shown) → div class="scope-group" data-mixed-reset-bound="true"
+ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 68 inside, 3b44facc)
+ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 62 inside, 4f68e402)
+ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 106 inside, abe78989)
+ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 82 inside, 2b3dd1cd)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 154 inside, 4a4c85c4)
+ui ~ #route-scope: div class="scope-group" → div (not shown)
+ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
+ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 20 inside, 709e61cb)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 16 inside, faa1abc6)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 43 inside, 73fb0d08)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 18 inside, acbf7cfd)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 19 inside, 70167be8)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 44 inside, 3e93cb78)
+
+## #route-scope>div[0]>div[0] · click
+ui ~ #route-scope>div[0]: div class="settings-section" data-section="head" → div class="settings-section expanded" data-last="true" data-section="head"
+ui ~ #route-scope>div[0]>div[0]: div aria-controls="section-head-content" aria-expanded="false" class="section-header" role="button" tabindex="0" → div aria-controls="section-head-content" aria-expanded="true" class="section-header" role="button" tabindex="0"
+
+## #section-head-content>label[1]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Shape of the animated path head indicator"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Shape of the animated path head indicator" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Shape of the animated path head indicator"
+
+## #path-head-style · choose "arrow"
+model ~ styles.pathHead.style: "custom-image" → "arrow"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[0]: div class="settings-section" data-section="head" → div class="settings-section" data-last="true" data-section="head"
+ui ~ #path-head-style: select aria-describedby="path-head-style-tip" :value="" → select aria-describedby="path-head-style-tip" :value="arrow"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #path-head-style · choose "dot"
+model ~ styles.pathHead.style: "custom-image" → "dot"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[0]: div class="settings-section" data-section="head" → div class="settings-section" data-last="true" data-section="head"
+ui ~ #path-head-style: select aria-describedby="path-head-style-tip" :value="" → select aria-describedby="path-head-style-tip" :value="dot"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #path-head-style · choose "drone"
+model ~ styles.pathHead.style: "custom-image" → "drone"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[0]: div class="settings-section" data-section="head" → div class="settings-section" data-last="true" data-section="head"
+ui ~ #path-head-style: select aria-describedby="path-head-style-tip" :value="" → select aria-describedby="path-head-style-tip" :value="drone"
+ui ~ #custom-head-controls: div (not shown) → div style="display: block;"
+ui + #custom-head-upload-controls: div (not shown)
+ui + #custom-head-controls>label[1]: label for="head-rotation-mode"
+ui + #custom-head-controls>label[1]>span[0]: span data-tip-desc="head-rotation-mode-tip" data-tip="Whether the image rotates to follow the path direction" :text="Rotation"
+ui + #head-rotation-mode: select aria-describedby="head-rotation-mode-tip" :value="auto"
+ui + #head-rotation-mode>option[0]: option value="auto" :text="Follow Path"
+ui + #head-rotation-mode>option[1]: option value="fixed" :text="Fixed"
+ui + #head-rotation-mode-tip: span class="sr-only" :text="Whether the image rotates to follow the path direction"
+ui + #head-rotation-offset-control: label for="head-rotation-offset"
+ui + #head-rotation-offset-control>span[0]: span data-tip-desc="head-rotation-offset-tip" data-tip="Degrees added to the auto-rotation angle" :text="Offset"
+ui + #head-rotation-offset: input aria-describedby="head-rotation-offset-tip" max="180" min="-180" step="5" type="range" value="0" :value="45"
+ui + #head-rotation-offset-value: span :text="45°"
+ui + #head-rotation-offset-tip: span class="sr-only" :text="Degrees added to the auto-rotation angle"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #path-head-style · choose "custom"
+model ~ styles.pathHead.style: "custom-image" → "custom"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[0]: div class="settings-section" data-section="head" → div class="settings-section" data-last="true" data-section="head"
+ui ~ #path-head-style: select aria-describedby="path-head-style-tip" :value="" → select aria-describedby="path-head-style-tip" :value="custom"
+ui ~ #custom-head-controls: div (not shown) → div style="display: block;"
+ui + #custom-head-upload-controls: div style="display: block;"
+ui + #custom-head-upload-controls>div[0]: div class="upload-row"
+ui + #head-upload-btn: button aria-label="Upload custom path head image" class="btn btn-secondary" :text="Upload Image"
+ui + #head-upload: input (not shown)
+ui + #head-preview: div class="preview-box" style="display: block;"
+ui + #head-filename: p :text="asset-extras-head.png"
+ui + #head-preview-img: img alt="Custom path head preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" style="max-width: 100%; max-height: 100px; margin: 0.5rem 0px;"
+ui + #custom-head-controls>label[1]: label for="head-rotation-mode"
+ui + #custom-head-controls>label[1]>span[0]: span data-tip-desc="head-rotation-mode-tip" data-tip="Whether the image rotates to follow the path direction" :text="Rotation"
+ui + #head-rotation-mode: select aria-describedby="head-rotation-mode-tip" :value="auto"
+ui + #head-rotation-mode>option[0]: option value="auto" :text="Follow Path"
+ui + #head-rotation-mode>option[1]: option value="fixed" :text="Fixed"
+ui + #head-rotation-mode-tip: span class="sr-only" :text="Whether the image rotates to follow the path direction"
+ui + #head-rotation-offset-control: label for="head-rotation-offset"
+ui + #head-rotation-offset-control>span[0]: span data-tip-desc="head-rotation-offset-tip" data-tip="Degrees added to the auto-rotation angle" :text="Offset"
+ui + #head-rotation-offset: input aria-describedby="head-rotation-offset-tip" max="180" min="-180" step="5" type="range" value="0" :value="45"
+ui + #head-rotation-offset-value: span :text="45°"
+ui + #head-rotation-offset-tip: span class="sr-only" :text="Degrees added to the auto-rotation angle"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #path-head-style · choose "none"
+model ~ styles.pathHead.style: "custom-image" → "none"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[0]: div class="settings-section" data-section="head" → div class="settings-section" data-last="true" data-section="head"
+ui ~ #path-head-style: select aria-describedby="path-head-style-tip" :value="" → select aria-describedby="path-head-style-tip" :value="none"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #section-head-content>label[4]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Path-head size in project reference pixels; exports scale from the reference short edge"
+
+## #path-head-size · set 11
+model ~ styles.pathHead.size: 21 → 11
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[0]: div class="settings-section" data-section="head" → div class="settings-section" data-last="true" data-section="head"
+ui ~ #path-head-size: input aria-describedby="path-head-size-value path-head-size-tip" aria-valuetext="21 reference px" max="24" min="4" step="1" type="range" value="8" :value="21" → input aria-describedby="path-head-size-value path-head-size-tip" aria-valuetext="11 reference px" max="24" min="4" step="1" type="range" value="8" :value="11"
+ui ~ #path-head-size-value: span :text="21 reference px" → span :text="11 reference px"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #route-scope>div[1]>div[0] · click
+ui ~ #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" → div class="settings-section" data-last="true" data-section="pacing"
+ui ~ #route-scope>div[1]>div[0]: div aria-controls="section-pacing-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-pacing-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
+
+## #speed-control-right>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Total animation playback time. Adjusts the base speed of all path segments"
+
+## #animation-speed-right · set 1336
+emit animation:speed-change 251
+model ~ animationState.speed: 275 → 250
+model ~ animationState.duration: 21429.352554 → 21497.287809
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" → div class="settings-section expanded" data-last="true" data-section="pacing"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-right-tip" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-right-tip" max="4000" min="1" step="5" type="range" :value="1336"
+ui ~ #animation-speed-value-right: span class="slider-value" :text="21.4s" → span class="slider-value" :text="21.5s"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21497.287809, mode: "constant-time", speed: 250, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #graphics-scale-label · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Scales all graphics (paths, markers, labels, beacons) uniformly. Adjust individual sizes first, then fine-tune overall scale"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Scales all graphics (paths, markers, labels, beacons) uniformly. Adjust individual sizes first, then fine-tune overall scale" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Scales all graphics (paths, markers, labels, beacons) uniformly. Adjust individual sizes first, then fine-tune overall scale"
+
+## #graphics-scale · set -67
+model ~ styles.graphicsScale: 1.6 → 0.628507
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" → div class="settings-section expanded" data-last="true" data-section="pacing"
+ui ~ #graphics-scale: input aria-describedby="graphics-scale-tip" max="200" min="-200" step="1" type="range" value="0" :value="68" → input aria-describedby="graphics-scale-tip" max="200" min="-200" step="1" type="range" value="0" :value="-67"
+ui ~ #graphics-scale-value: span class="slider-value" :text="1.6×" → span class="slider-value" :text="0.63×"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #route-scope>div[2]>div[0] · click
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #route-scope>div[2]>div[0]: div aria-controls="section-reveal-content" aria-expanded="false" class="section-header" role="button" tabindex="0" → div aria-controls="section-reveal-content" aria-expanded="true" class="section-header" role="button" tabindex="0"
+
+## #section-reveal-content>div[0]>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="When waypoint markers are visible during animation"
+
+## #waypoint-visibility · choose "always-show"
+emit motion:waypoint-visibility-change "always-show"
+model ~ motionSettings.waypointVisibility: "hide-before" → "always-show"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #waypoint-visibility: select aria-describedby="waypoint-visibility-tip" :value="hide-before" → select aria-describedby="waypoint-visibility-tip" :value="always-show"
+
+## #waypoint-visibility · choose "hide-after"
+emit motion:waypoint-visibility-change "hide-after"
+model ~ motionSettings.waypointVisibility: "hide-before" → "hide-after"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #waypoint-visibility: select aria-describedby="waypoint-visibility-tip" :value="hide-before" → select aria-describedby="waypoint-visibility-tip" :value="hide-after"
+
+## #waypoint-visibility · choose "hide-before-and-after"
+emit motion:waypoint-visibility-change "hide-before-and-after"
+model ~ motionSettings.waypointVisibility: "hide-before" → "hide-before-and-after"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #waypoint-visibility: select aria-describedby="waypoint-visibility-tip" :value="hide-before" → select aria-describedby="waypoint-visibility-tip" :value="hide-before-and-after"
+
+## #waypoint-visibility · choose "always-hide"
+emit motion:waypoint-visibility-change "always-hide"
+model ~ motionSettings.waypointVisibility: "hide-before" → "always-hide"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #waypoint-visibility: select aria-describedby="waypoint-visibility-tip" :value="hide-before" → select aria-describedby="waypoint-visibility-tip" :value="always-hide"
+
+## #section-reveal-content>div[0]>label[2]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="How the path line appears during animation"
+
+## #path-visibility · choose "always-show"
+emit motion:path-visibility-change "always-show"
+model ~ motionSettings.pathVisibility: "instantaneous" → "always-show"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #pacing-comet-hint: p class="section-hint" :text="In Preview, a non-zero Comet trail extends Duration while the tail clears after the route head reaches the end." → p (not shown)
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #path-visibility: select aria-describedby="path-visibility-tip" :value="instantaneous" → select aria-describedby="path-visibility-tip" :value="always-show"
+ui ~ #path-trail-control: label for="path-trail" style="display: flex; opacity: 1;" → label (not shown)
+ui - #path-trail-control>span[0]: span data-tip-desc="path-trail-tip" data-tip="Length of the visible path trail in comet mode" :text="Trail size"
+ui - #path-trail: input aria-describedby="path-trail-tip" max="1000" min="0" step="1" type="range" value="590" :value="1000"
+ui - #path-trail-value: span :text="16000%"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #path-visibility · choose "show-on-progression"
+emit motion:path-visibility-change "show-on-progression"
+model ~ motionSettings.pathVisibility: "instantaneous" → "show-on-progression"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #pacing-comet-hint: p class="section-hint" :text="In Preview, a non-zero Comet trail extends Duration while the tail clears after the route head reaches the end." → p (not shown)
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #path-visibility: select aria-describedby="path-visibility-tip" :value="instantaneous" → select aria-describedby="path-visibility-tip" :value="show-on-progression"
+ui ~ #path-trail-control: label for="path-trail" style="display: flex; opacity: 1;" → label (not shown)
+ui - #path-trail-control>span[0]: span data-tip-desc="path-trail-tip" data-tip="Length of the visible path trail in comet mode" :text="Trail size"
+ui - #path-trail: input aria-describedby="path-trail-tip" max="1000" min="0" step="1" type="range" value="590" :value="1000"
+ui - #path-trail-value: span :text="16000%"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #path-visibility · choose "hide-on-progression"
+emit motion:path-visibility-change "hide-on-progression"
+model ~ motionSettings.pathVisibility: "instantaneous" → "hide-on-progression"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #pacing-comet-hint: p class="section-hint" :text="In Preview, a non-zero Comet trail extends Duration while the tail clears after the route head reaches the end." → p (not shown)
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #path-visibility: select aria-describedby="path-visibility-tip" :value="instantaneous" → select aria-describedby="path-visibility-tip" :value="hide-on-progression"
+ui ~ #path-trail-control: label for="path-trail" style="display: flex; opacity: 1;" → label (not shown)
+ui - #path-trail-control>span[0]: span data-tip-desc="path-trail-tip" data-tip="Length of the visible path trail in comet mode" :text="Trail size"
+ui - #path-trail: input aria-describedby="path-trail-tip" max="1000" min="0" step="1" type="range" value="590" :value="1000"
+ui - #path-trail-value: span :text="16000%"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #path-visibility · choose "always-hide"
+emit motion:path-visibility-change "always-hide"
+model ~ motionSettings.pathVisibility: "instantaneous" → "always-hide"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #pacing-comet-hint: p class="section-hint" :text="In Preview, a non-zero Comet trail extends Duration while the tail clears after the route head reaches the end." → p (not shown)
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #path-visibility: select aria-describedby="path-visibility-tip" :value="instantaneous" → select aria-describedby="path-visibility-tip" :value="always-hide"
+ui ~ #path-trail-control: label for="path-trail" style="display: flex; opacity: 1;" → label (not shown)
+ui - #path-trail-control>span[0]: span data-tip-desc="path-trail-tip" data-tip="Length of the visible path trail in comet mode" :text="Trail size"
+ui - #path-trail: input aria-describedby="path-trail-tip" max="1000" min="0" step="1" type="range" value="590" :value="1000"
+ui - #path-trail-value: span :text="16000%"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #section-reveal-content>div[0]>label[4]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Visibility effect applied to the background during animation"
+
+## #background-visibility · choose "always-show"
+emit motion:background-visibility-change "always-show"
+model ~ animationState.duration: 21429.352554 → 20429.352554
+model ~ motionSettings.backgroundVisibility: "spotlight-reveal" → "always-show"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #animation-speed-value-right: span class="slider-value" :text="21.4s" → span class="slider-value" :text="20.4s"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="always-show"
+ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:20"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 20429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #background-visibility · choose "spotlight"
+emit motion:background-visibility-change "spotlight"
+model ~ animationState.duration: 21429.352554 → 20429.352554
+model ~ motionSettings.backgroundVisibility: "spotlight-reveal" → "spotlight"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #animation-speed-value-right: span class="slider-value" :text="21.4s" → span class="slider-value" :text="20.4s"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="spotlight"
+ui ~ #spotlight-controls: div (not shown) → div style="display: block;"
+ui + #spotlight-controls>label[0]: label for="reveal-size"
+ui + #spotlight-controls>label[0]>span[0]: span data-tip-desc="reveal-size-tip" data-tip="Radius of the visible area around the path head" :text="Spotlight Size"
+ui + #reveal-size: input aria-describedby="reveal-size-tip" max="1000" min="0" step="1" type="range" value="500" :value="715"
+ui + #reveal-size-value: span :text="10%"
+ui + #reveal-size-tip: span class="sr-only" :text="Radius of the visible area around the path head"
+ui + #spotlight-controls>label[2]: label for="reveal-feather"
+ui + #spotlight-controls>label[2]>span[0]: span data-tip-desc="reveal-feather-tip" data-tip="Softness of the spotlight edge" :text="Spotlight Feather"
+ui + #reveal-feather: input aria-describedby="reveal-feather-tip" max="1000" min="0" step="1" type="range" value="500" :value="0"
+ui + #reveal-feather-value: span :text="0.0%"
+ui + #reveal-feather-tip: span class="sr-only" :text="Softness of the spotlight edge"
+ui + #reveal-trail-control: label (not shown)
+ui + #reveal-trail-tip: span class="sr-only" :text="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades"
+ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:20"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 20429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #background-visibility · choose "angle-of-view"
+emit motion:background-visibility-change "angle-of-view"
+model ~ animationState.duration: 21429.352554 → 20429.352554
+model ~ motionSettings.backgroundVisibility: "spotlight-reveal" → "angle-of-view"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #animation-speed-value-right: span class="slider-value" :text="21.4s" → span class="slider-value" :text="20.4s"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="angle-of-view"
+ui ~ #aov-controls: div (not shown) → div style="display: block;"
+ui + #aov-controls>label[0]: label for="aov-angle"
+ui + #aov-controls>label[0]>span[0]: span data-tip-desc="aov-angle-tip" data-tip="Width of the angle-of-view cone in degrees" :text="View Angle"
+ui + #aov-angle: input aria-describedby="aov-angle-tip" max="1000" min="0" step="1" type="range" value="500" :value="500"
+ui + #aov-angle-value: span :text="60°"
+ui + #aov-angle-tip: span class="sr-only" :text="Width of the angle-of-view cone in degrees"
+ui + #aov-controls>label[2]: label for="aov-distance"
+ui + #aov-controls>label[2]>span[0]: span data-tip-desc="aov-distance-tip" data-tip="How far the view cone extends from the path head" :text="View Distance"
+ui + #aov-distance: input aria-describedby="aov-distance-tip" max="1000" min="0" step="1" type="range" value="500" :value="500"
+ui + #aov-distance-value: span :text="10%"
+ui + #aov-distance-tip: span class="sr-only" :text="How far the view cone extends from the path head"
+ui + #aov-controls>label[4]: label for="aov-dropoff"
+ui + #aov-controls>label[4]>span[0]: span data-tip-desc="aov-dropoff-tip" data-tip="How quickly visibility fades at the cone edges" :text="View Dropoff"
+ui + #aov-dropoff: input aria-describedby="aov-dropoff-tip" max="1000" min="0" step="1" type="range" value="500" :value="500"
+ui + #aov-dropoff-value: span :text="25%"
+ui + #aov-dropoff-tip: span class="sr-only" :text="How quickly visibility fades at the cone edges"
+ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:20"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 20429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #background-visibility · choose "angle-of-view-reveal"
+emit motion:background-visibility-change "angle-of-view-reveal"
+model ~ motionSettings.backgroundVisibility: "spotlight-reveal" → "angle-of-view-reveal"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="angle-of-view-reveal"
+ui ~ #aov-controls: div (not shown) → div style="display: block;"
+ui + #aov-controls>label[0]: label for="aov-angle"
+ui + #aov-controls>label[0]>span[0]: span data-tip-desc="aov-angle-tip" data-tip="Width of the angle-of-view cone in degrees" :text="View Angle"
+ui + #aov-angle: input aria-describedby="aov-angle-tip" max="1000" min="0" step="1" type="range" value="500" :value="500"
+ui + #aov-angle-value: span :text="60°"
+ui + #aov-angle-tip: span class="sr-only" :text="Width of the angle-of-view cone in degrees"
+ui + #aov-controls>label[2]: label for="aov-distance"
+ui + #aov-controls>label[2]>span[0]: span data-tip-desc="aov-distance-tip" data-tip="How far the view cone extends from the path head" :text="View Distance"
+ui + #aov-distance: input aria-describedby="aov-distance-tip" max="1000" min="0" step="1" type="range" value="500" :value="500"
+ui + #aov-distance-value: span :text="10%"
+ui + #aov-distance-tip: span class="sr-only" :text="How far the view cone extends from the path head"
+ui + #aov-controls>label[4]: label for="aov-dropoff"
+ui + #aov-controls>label[4]>span[0]: span data-tip-desc="aov-dropoff-tip" data-tip="How quickly visibility fades at the cone edges" :text="View Dropoff"
+ui + #aov-dropoff: input aria-describedby="aov-dropoff-tip" max="1000" min="0" step="1" type="range" value="500" :value="500"
+ui + #aov-dropoff-value: span :text="25%"
+ui + #aov-dropoff-tip: span class="sr-only" :text="How quickly visibility fades at the cone edges"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #background-visibility · choose "always-hide"
+emit motion:background-visibility-change "always-hide"
+model ~ animationState.duration: 21429.352554 → 20429.352554
+model ~ motionSettings.backgroundVisibility: "spotlight-reveal" → "always-hide"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #animation-speed-value-right: span class="slider-value" :text="21.4s" → span class="slider-value" :text="20.4s"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="always-hide"
+ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:20"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 20429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #section-reveal-content>details[1]>summary[0] · click
+ui ~ #section-reveal-content>details[1]: details class="section-more" → details class="section-more" open=""
+
+## #path-trail-control>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Length of the visible path trail in comet mode"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Length of the visible path trail in comet mode" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Length of the visible path trail in comet mode"
+
+## #path-trail · set 333
+emit motion:path-trail-change 0.056053
+model ~ motionSettings.pathTrail: 640 → 0.056053
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
+ui ~ #path-trail: input aria-describedby="path-trail-tip" max="1000" min="0" step="1" type="range" value="590" :value="1000" → input aria-describedby="path-trail-tip" max="1000" min="0" step="1" type="range" value="590" :value="333"
+ui ~ #path-trail-value: span :text="16000%" → span :text="1.4%"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+
+## #route-scope>div[3]>div[0] · click
+ui ~ #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" → div class="settings-section expanded" data-last="true" data-section="path-emphasis"
+ui ~ #route-scope>div[3]>div[0]: div aria-controls="section-path-emphasis-content" aria-expanded="false" class="section-header" role="button" tabindex="0" → div aria-controls="section-path-emphasis-content" aria-expanded="true" class="section-header" role="button" tabindex="0"
+
+## #path-casing-toggle · click
+model ~ styles.showPathCasing: false → true
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" → div class="settings-section" data-last="true" data-section="path-emphasis"
+ui ~ #path-casing-toggle: input aria-describedby="path-casing-toggle-tip" checked="" type="checkbox" :unchecked → input aria-describedby="path-casing-toggle-tip" checked="" type="checkbox" :checked
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #section-path-emphasis-content>fieldset[0]>label[0]>span[1] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Show white outline behind path for contrast on busy backgrounds"
+
+## #path-glow-toggle · click
+model ~ styles.pathGlow.enabled: false → true
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" → div class="settings-section" data-last="true" data-section="path-emphasis"
+ui ~ #path-glow-toggle: input aria-describedby="path-glow-toggle-tip" type="checkbox" :unchecked → input aria-describedby="path-glow-toggle-tip" type="checkbox" :checked
+ui ~ #path-glow-intensity: input aria-describedby="path-glow-intensity-tip" disabled="" max="100" min="0" step="1" type="range" value="50" :value="65" → input aria-describedby="path-glow-intensity-tip" max="100" min="0" step="1" type="range" value="50" :value="65"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #section-path-emphasis-content>fieldset[0]>label[2]>span[1] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Show a soft coloured halo around the path (distinct from the beacon glow effect)"
+
+## #section-path-emphasis-content>fieldset[0]>label[4]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="How far the path glow spreads outward from the path"
+
+## #path-glow-intensity · disabled, not operated
+
+## #route-scope>div[4]>div[0] · click
+ui ~ #route-scope>div[4]: div class="settings-section expanded" data-section="background" → div class="settings-section" data-last="true" data-section="background"
+ui ~ #route-scope>div[4]>div[0]: div aria-controls="section-background-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-background-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
+
+## #section-background-content>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Adds a black (left) or white (right) overlay; rendered opacity is capped at 60%"
+
+## #bg-overlay · set -333
+emit background:overlay-change -3.942661
+model ~ background.overlay: 0.45 → -3.942661
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[4]: div class="settings-section expanded" data-section="background" → div class="settings-section expanded" data-last="true" data-section="background"
+ui ~ #bg-overlay: input aria-describedby="bg-overlay-value bg-overlay-tip" aria-valuetext="0.5% lighter" max="1000" min="-1000" step="1" type="range" value="0" :value="50" → input aria-describedby="bg-overlay-value bg-overlay-tip" aria-valuetext="3.9% darker" max="1000" min="-1000" step="1" type="range" value="0" :value="-333"
+ui ~ #bg-overlay-value: span :text="0.5% lighter" → span :text="3.9% darker"
+
+## #section-background-content>label[2]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Scale of the background image"
+
+## #background-zoom · set 167
+emit background:zoom-change 167
+model ~ exportSettings.backgroundZoom: 175 → 167
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[4]: div class="settings-section expanded" data-section="background" → div class="settings-section expanded" data-last="true" data-section="background"
+ui ~ #background-zoom: input aria-describedby="background-zoom-tip" max="400" min="50" step="1" style="flex: 1 1 0%;" type="range" value="100" :value="175" → input aria-describedby="background-zoom-tip" max="400" min="50" step="1" style="flex: 1 1 0%;" type="range" value="100" :value="167"
+ui ~ #background-zoom-value: span :text="175%" → span :text="167%"
+
+## #bg-upload-btn · click
+file dialog #bg-upload
+
+## #bg-upload · choose nothing
+
+## #bg-upload · choose picked.png
+emit background:upload [file picked.png image/png]
+settled:
+  model ~ exportSettings.resolutionX: 1280 → 100
+  model ~ exportSettings.resolutionY: 720 → 100
+  ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
+  ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
+
+## #route-scope>div[5]>div[0] · click
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section expanded" data-last="true" data-section="video"
+ui ~ #route-scope>div[5]>div[0]: div aria-controls="section-video-content" aria-expanded="false" class="section-header" role="button" tabindex="0" → div aria-controls="section-video-content" aria-expanded="true" class="section-header" role="button" tabindex="0"
+
+## #section-video-content>div[0]>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Horizontal resolution of exported video in pixels"
+
+## #export-res-x · enter 24
+emit video:resolution-change {width: 100, height: null}
+model ~ exportSettings.resolutionX: 1280 → 100
+model ~ timingReference.width: 660 → 91.666667
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section" data-last="true" data-section="video"
+ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
+ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 91.66666666666667px;"
+
+## #export-res-x · enter 99999
+emit video:resolution-change {width: 7680, height: null}
+model ~ exportSettings.resolutionX: 1280 → 7680
+model ~ timingReference.width: 660 → 1280
+model ~ timingReference.height: 660 → 120
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section" data-last="true" data-section="video"
+ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="7680"
+ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 1280px;"
+
+## #section-video-content>div[0]>label[2]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Vertical resolution of exported video in pixels"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Vertical resolution of exported video in pixels" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Vertical resolution of exported video in pixels"
+
+## #export-res-y · enter 24
+emit video:resolution-change {width: null, height: 100}
+model ~ exportSettings.resolutionY: 720 → 100
+model ~ timingReference.width: 660 → 1280
+model ~ timingReference.height: 660 → 100
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section" data-last="true" data-section="video"
+ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
+ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 1280px;"
+
+## #export-res-y · enter 99999
+emit video:resolution-change {width: null, height: 4320}
+model ~ exportSettings.resolutionY: 720 → 4320
+model ~ timingReference.width: 660 → 195.555556
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section" data-last="true" data-section="video"
+ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="4320"
+ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 195.55555555555554px;"
+
+## #preset-native · click
+emit video:resolution-native
+
+## #preset-16-9 · click
+emit video:resolution-change {width: 1920, height: 1080}
+model ~ exportSettings.resolutionX: 1280 → 1920
+model ~ exportSettings.resolutionY: 720 → 1080
+model ~ timingReference.width: 660 → 1173.333333
+ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1920"
+ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="1080"
+ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 1173.3333333333333px;"
+
+## #preset-1-1 · click
+emit video:resolution-change {width: 1080, height: 1080}
+model ~ exportSettings.resolutionX: 1280 → 1080
+model ~ exportSettings.resolutionY: 720 → 1080
+ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1080"
+ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="1080"
+
+## #preset-9-16 · click
+emit video:resolution-change {width: 1080, height: 1920}
+model ~ exportSettings.resolutionX: 1280 → 1080
+model ~ exportSettings.resolutionY: 720 → 1920
+model ~ timingReference.width: 660 → 371.25
+ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1080"
+ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="1920"
+ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 371.25px;"
+
+## #section-video-content>div[0]>label[5]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Frames per second in the exported video"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Frames per second in the exported video" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Frames per second in the exported video"
+
+## #export-frame-rate · enter 24
+emit video:frame-rate-change 24
+model ~ exportSettings.frameRate: 60 → 24
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section" data-last="true" data-section="video"
+ui ~ #export-frame-rate: input aria-describedby="export-frame-rate-tip" max="60" min="10" step="1" type="number" value="25" :value="60" → input aria-describedby="export-frame-rate-tip" max="60" min="10" step="1" type="number" value="25" :value="24"
+
+## #export-frame-rate · enter 99999
+emit video:frame-rate-change 60
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section" data-last="true" data-section="video"
+
+## #section-video-content>details[1]>summary[0] · click
+ui ~ #section-video-content>details[1]: details class="section-more" → details class="section-more" open=""
+
+## #export-include-image · click
+emit video:layers-change false
+model ~ exportSettings.pathOnly: true → false
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section" data-last="true" data-section="video"
+ui ~ #export-include-image: input aria-describedby="export-include-image-tip" checked="" type="checkbox" :unchecked → input aria-describedby="export-include-image-tip" checked="" type="checkbox" :checked
+
+## #section-video-content>details[1]>div[1]>fieldset[0]>label[1]>span[1] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Include the background image. Uncheck to export the path only (transparent)."
+
+## #export-include-camera · click
+emit video:camera-change false
+model ~ exportSettings.includeCamera: true → false
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section" data-last="true" data-section="video"
+ui ~ #export-include-camera: input aria-describedby="export-include-camera-tip" checked="" type="checkbox" :checked → input aria-describedby="export-include-camera-tip" checked="" type="checkbox" :unchecked
+
+## #section-video-content>details[1]>div[1]>fieldset[0]>label[3]>span[1] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Include per-waypoint camera zoom and pan in the export. Uncheck for a flat, fixed view."
+
+## #export-include-text · click
+emit video:text-change true
+model ~ exportSettings.includeText: false → true
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[5]: div class="settings-section" data-section="video" → div class="settings-section" data-last="true" data-section="video"
+ui ~ #export-include-text: input aria-describedby="export-include-text-tip" checked="" type="checkbox" :unchecked → input aria-describedby="export-include-text-tip" checked="" type="checkbox" :checked
+
+## #section-video-content>details[1]>div[1]>fieldset[0]>label[5]>span[1] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Include waypoint text labels in the export. Uncheck to hide all labels."
+
+## #skip-start-btn · click
+emit ui:animation:skip-start
+model ~ animationState.mode: "constant-time" → "constant-speed"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation reset"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-right-tip" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-right-tip" max="4000" min="1" step="5" type="range" :value="1292"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-speed", speed: 275, playbackSpeed: 1, isPaused: false, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0} (repeatedly)
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation reset" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #play-btn · click
+emit ui:animation:play
+app ~ playing: false → true
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Playing animation"
+ui ~ #play-btn: button aria-label="Play" class="btn btn-icon btn-primary" style="display: inline-block;" title="Play" type="button" :text="▶" → button (not shown)
+ui ~ #pause-btn: button (not shown) → button aria-label="Pause" class="btn btn-icon btn-primary" style="display: inline-block;" title="Pause" type="button" :text="⏸"
+settled:
+  emit animation:update {isPlaying: true, progress: 0.096004, pathProgress: 0.376559, currentTime: 2057.296875, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: false, isWaitingAtWaypoint: true, pauseWaypointIndex: 1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 1790154060000} (repeatedly)
+  emit animation:waypointWaitStart {index: 1, duration: 7500, progress: 0.376559}
+  model + styles.pathHead.rotation: -1.398606
+  app ~ progress: 0 → 0.096004
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Playing animation" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #current-time: span class="time" :text="0:00" → span class="time" :text="0:02"
+  ui ~ #timeline-slider: input aria-label="Timeline position" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-label="Timeline position" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="96.00368792572776"
+
+## #skip-end-btn · click
+emit ui:animation:skip-end
+app ~ progress: 0 → 1
+settled:
+  emit animation:update {isPlaying: false, progress: 1, pathProgress: 1, currentTime: 21429.352554, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  model + styles.pathHead.rotation: 0.486899
+  ui ~ #current-time: span class="time" :text="0:00" → span class="time" :text="0:21"
+  ui ~ #timeline-slider: input aria-label="Timeline position" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-label="Timeline position" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="1000"
+
+## #timeline-slider · set 333
+emit ui:animation:seek 0.333
+app ~ progress: 0 → 0.333
+ui ~ #timeline-slider: input aria-label="Timeline position" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-label="Timeline position" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="333"
+settled:
+  emit animation:update {isPlaying: false, progress: 0.333, pathProgress: 0.376559, currentTime: 7135.9744, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: true, pauseWaypointIndex: 1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  model + styles.pathHead.rotation: -1.398606
+  ui ~ #current-time: span class="time" :text="0:00" → span class="time" :text="0:07"
+
+## #layers-strip>li[0]>button[0] · click
+
+## #layers-strip>li[1]>button[0] · click
+emit crowd:selected layer[0]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+app ~ crowd: null → "layer[0]"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="crowd"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
+ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
+ui ~ #route-scope: div class="scope-group" → div (not shown)
+ui ~ #crowd-scope: div (not shown) → div class="scope-group"
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 14 inside, 47fd6320)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 60 inside, 224c775c)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 68 inside, aa999416)
+ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 22 inside, 8d5e2b8d)
+ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
+ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
+ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item selected"
+ui ~ #layers-strip>li[1]>button[0]: button aria-pressed="false" class="layer-row" type="button" → button aria-pressed="true" class="layer-row" type="button"
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 20 inside, 709e61cb)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 16 inside, faa1abc6)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 43 inside, 73fb0d08)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 18 inside, acbf7cfd)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 19 inside, 70167be8)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 44 inside, 3e93cb78)
+
+## #layers-strip>li[1]>button[1] · click
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-visibility", layerId: "ex-uon-crowd"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ scene.flowLayers[0].visible: true → false
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Visitors hidden"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item layer-hidden"
+ui ~ #layers-strip>li[1]>button[1]: button aria-label="Hide Visitors" aria-pressed="true" class="layer-visibility" title="Hide crowd" type="button" → button aria-label="Show Visitors" aria-pressed="false" class="layer-visibility" title="Show crowd" type="button"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Visitors hidden" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #layers-strip>li[1]>button[2] · click
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-deleted", layerId: "ex-uon-crowd"}
+emit ui:toast {message: "Deleted Visitors — press Ctrl+Z to undo"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model + scene.flowLayers: []
+model - scene.flowLayers[0]: 76 values (8e75d5cf)
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui + #toast-container>div[0]: div class="toast" :text="Deleted Visitors — press Ctrl+Z to undo"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui - #layers-strip>li[1]: li class="layer-item"
+ui - #layers-strip>li[1]>button[0]: button aria-pressed="false" class="layer-row" type="button"
+ui - #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="background-color: rgb(86, 180, 233);"
+ui - #layers-strip>li[1]>button[0]>span[1]: span class="layer-title" title="Double-click to rename" :text="Visitors"
+ui - #layers-strip>li[1]>button[1]: button aria-label="Hide Visitors" aria-pressed="true" class="layer-visibility" title="Hide crowd" type="button"
+ui - #layers-strip>li[1]>button[2]: button aria-label="Delete Visitors" class="layer-delete" title="Delete crowd" type="button" :text="×"
+settled:
+  ui - #toast-container>div[0]: div class="toast" :text="Deleted Visitors — press Ctrl+Z to undo"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+
+## #add-crowd-btn · click
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-added", layerId: "fl_1790154060000_kynqlqqyk"}
+emit crowd:selected layer[1]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}, {9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:fl_1790154060000_kynqlqqyk", focusKey: null}
+model + scene.flowLayers[1]: 25 values (65247b44)
+app ~ crowd: null → "layer[1]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Crowd 1 added — dots follow the route"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="crowd"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Crowd 1 · crowd"
+ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
+ui ~ #route-scope: div class="scope-group" → div (not shown)
+ui ~ #crowd-scope: div (not shown) → div class="scope-group"
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 14 inside, a7c11c7d)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 60 inside, 72c7353d)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 68 inside, 2bddbf6d)
+ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 22 inside, cb226f36)
+ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
+ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
+ui + #layers-strip>li[2]: li class="layer-item selected"
+ui + #layers-strip>li[2]>button[0]: button aria-pressed="true" class="layer-row" type="button"
+ui + #layers-strip>li[2]>button[0]>span[0]: span class="layer-swatch" style="background-color: rgb(86, 180, 233);"
+ui + #layers-strip>li[2]>button[0]>span[1]: span class="layer-title" title="Double-click to rename" :text="Crowd 1"
+ui + #layers-strip>li[2]>button[1]: button aria-label="Hide Crowd 1" aria-pressed="true" class="layer-visibility" title="Hide crowd" type="button"
+ui + #layers-strip>li[2]>button[2]: button aria-label="Delete Crowd 1" class="layer-delete" title="Delete crowd" type="button" :text="×"
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 20 inside, 709e61cb)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 16 inside, faa1abc6)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 43 inside, 73fb0d08)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 18 inside, acbf7cfd)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 19 inside, 70167be8)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 44 inside, 3e93cb78)
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Crowd 1 added — dots follow the route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #waypoint-list>li[0]>button[0] · click
+emit waypoint:add-at-center
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 6, minorCount: 1, selectionKey: null, focusKey: null}
+model + waypoints[6]: 57 values (a7079ff3)
+app ~ selected: null → "waypoint[6]"
+app ~ selection: "" → "waypoint[6]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint added at center"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
+ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 6 · major"
+ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
+ui ~ #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼" → button aria-label="Move Extras 6 down" class="waypoint-move-btn" type="button" :text="▼"
+ui + #waypoint-list>li[7]: li class="waypoint-item selected is-selected" data-original-index="4" data-route-index="6" draggable="true"
+ui + #waypoint-list>li[7]>button[0]: button aria-pressed="true" class="waypoint-row" type="button"
+ui + #waypoint-list>li[7]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui + #waypoint-list>li[7]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui + #waypoint-list>li[7]>button[0]>span[2]: span class="waypoint-title" :text="Waypoint 5"
+ui + #waypoint-list>li[7]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[7]>span[1]>button[0]: button aria-label="Move Waypoint 5 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[7]>span[1]>button[1]: button aria-label="Move Waypoint 5 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[7]>button[2]: button aria-label="Delete Waypoint 5" class="waypoint-delete" type="button" :text="×"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint added at center" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #waypoint-list>li[1]>button[0] · click
+emit waypoint:selected waypoint[0]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+app ~ selected: null → "waypoint[0]"
+app ~ selection: "" → "waypoint[0]"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
+ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major"
+ui ~ #waypoint-scope: div (not shown) → div class="scope-group" data-mixed-reset-bound="true"
+ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 68 inside, 3b44facc)
+ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 62 inside, 4f68e402)
+ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 106 inside, abe78989)
+ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 82 inside, 2b3dd1cd)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 154 inside, 4a4c85c4)
+ui ~ #route-scope: div class="scope-group" → div (not shown)
+ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
+ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 20 inside, 709e61cb)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 16 inside, faa1abc6)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 43 inside, 73fb0d08)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 18 inside, acbf7cfd)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 19 inside, 70167be8)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 44 inside, 3e93cb78)
+
+## #waypoint-list>li[1]>span[1]>button[0] · disabled, not operated
+
+## #waypoint-list>li[1]>span[1]>button[1] · click
+emit waypoints:reordered [waypoint[2], waypoint[0], waypoint[3], waypoint[5]]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2a"
+model ~ waypoints[0].imgX: 0.16 → 0.52
+model ~ waypoints[0].imgY: 0.63 → 0.58
+model ~ waypoints[0].markerStyle: "custom-image" → "square"
+model ~ waypoints[0].beaconStyle: "ripple" → "glow"
+model ~ waypoints[0].name: "Extras 1" → "Extras 3"
+model ~ waypoints[0].label: "Label 1" → "Label 3"
+model ~ waypoints[0].labelOffsetX: 12 → 14
+model ~ waypoints[0].labelOffsetY: -9 → -11
+model ~ waypoints[0].customImageAssetId: "asset-extras-marker" → null
+model ~ waypoints[0].camera.zoom: 1.75 → 1.95
+model ~ waypoints[0].areaHighlight.shape: "polygon" → "rectangle"
+model + waypoints[0].areaHighlight.points: []
+model ~ waypoints[1].id: "ex-uon-2" → "ex-uon-1"
+model ~ waypoints[1].imgX: 0.4 → 0.16
+model ~ waypoints[1].imgY: 0.47 → 0.63
+model ~ waypoints[1].isMajor: false → true
+model ~ waypoints[1].markerStyle: "square" → "custom-image"
+model ~ waypoints[1].beaconStyle: "pulse" → "ripple"
+model ~ waypoints[1].name: "Extras 2" → "Extras 1"
+model ~ waypoints[1].label: "Label 2" → "Label 1"
+model ~ waypoints[1].labelOffsetX: 13 → 12
+model ~ waypoints[1].labelOffsetY: -10 → -9
+model ~ waypoints[1].pauseMode: "timed" → "none"
+model ~ waypoints[1].customImageAssetId: null → "asset-extras-marker"
+model ~ waypoints[1].camera.zoom: 1.85 → 1.75
+model ~ waypoints[1].areaHighlight.shape: "rectangle" → "polygon"
+model + waypoints[1].areaHighlight.points[0].x: 0.2
+model + waypoints[1].areaHighlight.points[0].y: 0.2
+model + waypoints[1].areaHighlight.points[1].x: 0.6
+model + waypoints[1].areaHighlight.points[1].y: 0.25
+model + waypoints[1].areaHighlight.points[2].x: 0.45
+model + waypoints[1].areaHighlight.points[2].y: 0.7
+model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2"
+model ~ waypoints[2].imgX: 0.52 → 0.4
+model ~ waypoints[2].imgY: 0.58 → 0.47
+model ~ waypoints[2].isMajor: true → false
+model ~ waypoints[2].beaconStyle: "glow" → "pulse"
+model ~ waypoints[2].name: "Extras 3" → "Extras 2"
+model ~ waypoints[2].label: "Label 3" → "Label 2"
+model ~ waypoints[2].labelOffsetX: 14 → 13
+model ~ waypoints[2].labelOffsetY: -11 → -10
+model ~ waypoints[2].pauseMode: "none" → "timed"
+model ~ waypoints[2].camera.zoom: 1.95 → 1.85
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
+model ~ waypoints[4].imgX: 0.44 → 0.78
+model ~ waypoints[4].imgY: 0.24 → 0.42
+model ~ waypoints[4].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[4].name: "Extras 5" → "Extras 6"
+model ~ waypoints[4].label: "Label 5" → "Label 6"
+model ~ waypoints[4].labelOffsetX: 16 → 17
+model ~ waypoints[4].labelOffsetY: -13 → -14
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.25
+model ~ waypoints[5].id: "ex-uon-3" → "ex-uon-b1"
+model ~ waypoints[5].imgX: 0.78 → 0.44
+model ~ waypoints[5].imgY: 0.42 → 0.24
+model + waypoints[5].branchId: "ex-uon-branch"
+model + waypoints[5].branchFrom: "ex-uon-2"
+model + waypoints[5].branchRejoin: "ex-uon-3"
+model ~ waypoints[5].beaconStyle: "pulse" → "ripple"
+model ~ waypoints[5].name: "Extras 6" → "Extras 5"
+model ~ waypoints[5].label: "Label 6" → "Label 5"
+model ~ waypoints[5].labelOffsetX: 17 → 16
+model ~ waypoints[5].labelOffsetY: -14 → -13
+model ~ waypoints[5].pauseMode: "timed" → "none"
+model ~ waypoints[5].camera.zoom: 2.25 → 2.15
+model - waypoints[0].areaHighlight.points[0].x: 0.2
+model - waypoints[0].areaHighlight.points[0].y: 0.2
+model - waypoints[0].areaHighlight.points[1].x: 0.6
+model - waypoints[0].areaHighlight.points[1].y: 0.25
+model - waypoints[0].areaHighlight.points[2].x: 0.45
+model - waypoints[0].areaHighlight.points[2].y: 0.7
+model - waypoints[1].areaHighlight.points: []
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 1 moved down"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-list>li[1]>button[0]>span[2]: span class="waypoint-title" :text="Extras 1" → span class="waypoint-title" :text="Extras 3"
+ui ~ #waypoint-list>li[1]>span[1]>button[0]: button aria-label="Move Extras 1 up" class="waypoint-move-btn" disabled="" type="button" :text="▲" → button aria-label="Move Extras 3 up" class="waypoint-move-btn" disabled="" type="button" :text="▲"
+ui ~ #waypoint-list>li[1]>span[1]>button[1]: button aria-label="Move Extras 1 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[1]>button[2]: button aria-label="Delete Extras 1" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item" data-original-index="1" data-route-index="1" draggable="true"
+ui ~ #waypoint-list>li[2]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[2]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[2]>button[0]>span[2]: span class="waypoint-title" :text="Extras 2" → span class="waypoint-title" :text="Extras 1"
+ui + #waypoint-list>li[2]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[2]>span[1]>button[0]: button aria-label="Move Extras 1 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[2]>span[1]>button[1]: button aria-label="Move Extras 1 down" class="waypoint-move-btn" type="button" :text="▼"
+ui + #waypoint-list>li[2]>button[2]: button aria-label="Delete Extras 1" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item waypoint-item-minor" data-route-index="2" draggable="false"
+ui ~ #waypoint-list>li[3]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[3]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 2"
+ui + #waypoint-list>li[3]>button[0]>span[3]: span aria-hidden="true" class="waypoint-fork-mark" :text="⑂"
+ui + #waypoint-list>li[3]>button[0]>span[4]: span class="sr-only" :text=", a branch leaves here"
+ui + #waypoint-list>li[3]>button[0]>span[5]: span class="waypoint-minor-tag" :text="minor"
+ui + #waypoint-list>li[3]>button[0]>span[6]: span class="sr-only" :text=", minor waypoint shaping the leg after waypoint 2, reorders with it"
+ui + #waypoint-list>li[3]>button[1]: button aria-label="Delete Extras 2" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="3" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 6"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="5" draggable="false"
+ui ~ #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[6]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[6]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 2.1, rejoins at Extras 6"
+ui + #waypoint-list>li[6]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[2]>button[0]>span[3]: span aria-hidden="true" class="waypoint-fork-mark" :text="⑂"
+ui - #waypoint-list>li[2]>button[0]>span[4]: span class="sr-only" :text=", a branch leaves here"
+ui - #waypoint-list>li[2]>button[0]>span[5]: span class="waypoint-minor-tag" :text="minor"
+ui - #waypoint-list>li[2]>button[0]>span[6]: span class="sr-only" :text=", minor waypoint shaping the leg after waypoint 1, reorders with it"
+ui - #waypoint-list>li[2]>button[1]: button aria-label="Delete Extras 2" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[3]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[3]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[3]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+
+## #waypoint-list>li[1]>button[2] · click
+emit waypoint:delete waypoint[0]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2"
+model ~ waypoints[0].imgX: 0.16 → 0.4
+model ~ waypoints[0].imgY: 0.63 → 0.47
+model ~ waypoints[0].isMajor: true → false
+model ~ waypoints[0].markerStyle: "custom-image" → "square"
+model ~ waypoints[0].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[0].name: "Extras 1" → "Extras 2"
+model ~ waypoints[0].label: "Label 1" → "Label 2"
+model ~ waypoints[0].labelOffsetX: 12 → 13
+model ~ waypoints[0].labelOffsetY: -9 → -10
+model ~ waypoints[0].pauseMode: "none" → "timed"
+model ~ waypoints[0].customImageAssetId: "asset-extras-marker" → null
+model ~ waypoints[0].camera.zoom: 1.75 → 1.85
+model ~ waypoints[0].areaHighlight.shape: "polygon" → "rectangle"
+model + waypoints[0].areaHighlight.points: []
+model ~ waypoints[1].id: "ex-uon-2" → "ex-uon-2a"
+model ~ waypoints[1].imgX: 0.4 → 0.52
+model ~ waypoints[1].imgY: 0.47 → 0.58
+model ~ waypoints[1].isMajor: false → true
+model ~ waypoints[1].beaconStyle: "pulse" → "glow"
+model ~ waypoints[1].name: "Extras 2" → "Extras 3"
+model ~ waypoints[1].label: "Label 2" → "Label 3"
+model ~ waypoints[1].labelOffsetX: 13 → 14
+model ~ waypoints[1].labelOffsetY: -10 → -11
+model ~ waypoints[1].pauseMode: "timed" → "none"
+model ~ waypoints[1].camera.zoom: 1.85 → 1.95
+model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
+model ~ waypoints[2].imgX: 0.52 → 0.63
+model ~ waypoints[2].imgY: 0.58 → 0.55
+model ~ waypoints[2].beaconStyle: "glow" → "grow"
+model ~ waypoints[2].name: "Extras 3" → "Extras 4"
+model ~ waypoints[2].label: "Label 3" → "Label 4"
+model ~ waypoints[2].labelOffsetX: 14 → 15
+model ~ waypoints[2].labelOffsetY: -11 → -12
+model ~ waypoints[2].pauseMode: "none" → "timed"
+model ~ waypoints[2].camera.zoom: 1.95 → 2.05
+model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-b1"
+model ~ waypoints[3].imgX: 0.63 → 0.44
+model ~ waypoints[3].imgY: 0.55 → 0.24
+model + waypoints[3].branchId: "ex-uon-branch"
+model + waypoints[3].branchFrom: "ex-uon-2"
+model + waypoints[3].branchRejoin: "ex-uon-3"
+model ~ waypoints[3].beaconStyle: "grow" → "ripple"
+model ~ waypoints[3].name: "Extras 4" → "Extras 5"
+model ~ waypoints[3].label: "Label 4" → "Label 5"
+model ~ waypoints[3].labelOffsetX: 15 → 16
+model ~ waypoints[3].labelOffsetY: -12 → -13
+model ~ waypoints[3].pauseMode: "timed" → "none"
+model ~ waypoints[3].camera.zoom: 2.05 → 2.15
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
+model ~ waypoints[4].imgX: 0.44 → 0.78
+model ~ waypoints[4].imgY: 0.24 → 0.42
+model ~ waypoints[4].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[4].name: "Extras 5" → "Extras 6"
+model ~ waypoints[4].label: "Label 5" → "Label 6"
+model ~ waypoints[4].labelOffsetX: 16 → 17
+model ~ waypoints[4].labelOffsetY: -13 → -14
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.25
+model - waypoints[0].areaHighlight.points[0].x: 0.2
+model - waypoints[0].areaHighlight.points[0].y: 0.2
+model - waypoints[0].areaHighlight.points[1].x: 0.6
+model - waypoints[0].areaHighlight.points[1].y: 0.25
+model - waypoints[0].areaHighlight.points[2].x: 0.45
+model - waypoints[0].areaHighlight.points[2].y: 0.7
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+model - waypoints[5]: 57 values (42c9f4ff)
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item waypoint-item-minor" data-route-index="0" draggable="false"
+ui ~ #waypoint-list>li[1]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[1]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[1]>button[0]>span[2]: span class="waypoint-title" :text="Extras 1" → span class="waypoint-title" :text="Extras 2"
+ui + #waypoint-list>li[1]>button[0]>span[3]: span aria-hidden="true" class="waypoint-fork-mark" :text="⑂"
+ui + #waypoint-list>li[1]>button[0]>span[4]: span class="sr-only" :text=", a branch leaves here"
+ui + #waypoint-list>li[1]>button[0]>span[5]: span class="waypoint-minor-tag" :text="minor"
+ui + #waypoint-list>li[1]>button[0]>span[6]: span class="sr-only" :text=", minor waypoint before waypoint 1, reorders with it"
+ui + #waypoint-list>li[1]>button[1]: button aria-label="Delete Extras 2" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item" data-original-index="0" data-route-index="1" draggable="true"
+ui ~ #waypoint-list>li[2]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[2]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[2]>button[0]>span[2]: span class="waypoint-title" :text="Extras 2" → span class="waypoint-title" :text="Extras 3"
+ui + #waypoint-list>li[2]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[2]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" disabled="" type="button" :text="▲"
+ui + #waypoint-list>li[2]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼"
+ui + #waypoint-list>li[2]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 4"
+ui ~ #waypoint-list>li[3]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲" → button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui ~ #waypoint-list>li[3]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="3" draggable="false"
+ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[4]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[4]>button[0]>span[2]: span class="waypoint-title" :text="Extras 4" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[4]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[4]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 0.1, rejoins at Extras 6"
+ui + #waypoint-list>li[4]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="2" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 6"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[1]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[1]>span[1]>button[0]: button aria-label="Move Extras 1 up" class="waypoint-move-btn" disabled="" type="button" :text="▲"
+ui - #waypoint-list>li[1]>span[1]>button[1]: button aria-label="Move Extras 1 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[1]>button[2]: button aria-label="Delete Extras 1" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[2]>button[0]>span[3]: span aria-hidden="true" class="waypoint-fork-mark" :text="⑂"
+ui - #waypoint-list>li[2]>button[0]>span[4]: span class="sr-only" :text=", a branch leaves here"
+ui - #waypoint-list>li[2]>button[0]>span[5]: span class="waypoint-minor-tag" :text="minor"
+ui - #waypoint-list>li[2]>button[0]>span[6]: span class="sr-only" :text=", minor waypoint shaping the leg after waypoint 1, reorders with it"
+ui - #waypoint-list>li[2]>button[1]: button aria-label="Delete Extras 2" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[4]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true"
+ui - #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui - #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+
+## #waypoint-list>li[2]>button[0] · click
+emit waypoint:selected waypoint[1]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+app ~ selected: null → "waypoint[1]"
+app ~ selection: "" → "waypoint[1]"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
+ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · minor 'Extras 2'"
+ui ~ #waypoint-scope: div (not shown) → div class="scope-group" data-mixed-reset-bound="true"
+ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 68 inside, f3b3a96b)
+ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 46 inside, e875455a)
+ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 106 inside, 682cc028)
+ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 79 inside, b42ff87b)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 163 inside, fe53e632)
+ui ~ #route-scope: div class="scope-group" → div (not shown)
+ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
+ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 20 inside, 709e61cb)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 16 inside, faa1abc6)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 43 inside, 73fb0d08)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 18 inside, acbf7cfd)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 19 inside, 70167be8)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 44 inside, 3e93cb78)
+
+## #waypoint-list>li[2]>button[1] · click
+emit waypoint:delete waypoint[1]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 0, selectionKey: null, focusKey: null}
+model ~ waypoints[1].id: "ex-uon-2" → "ex-uon-2a"
+model ~ waypoints[1].imgX: 0.4 → 0.52
+model ~ waypoints[1].imgY: 0.47 → 0.58
+model ~ waypoints[1].isMajor: false → true
+model ~ waypoints[1].beaconStyle: "pulse" → "glow"
+model ~ waypoints[1].name: "Extras 2" → "Extras 3"
+model ~ waypoints[1].label: "Label 2" → "Label 3"
+model ~ waypoints[1].labelOffsetX: 13 → 14
+model ~ waypoints[1].labelOffsetY: -10 → -11
+model ~ waypoints[1].pauseMode: "timed" → "none"
+model ~ waypoints[1].camera.zoom: 1.85 → 1.95
+model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
+model ~ waypoints[2].imgX: 0.52 → 0.63
+model ~ waypoints[2].imgY: 0.58 → 0.55
+model ~ waypoints[2].beaconStyle: "glow" → "grow"
+model ~ waypoints[2].name: "Extras 3" → "Extras 4"
+model ~ waypoints[2].label: "Label 3" → "Label 4"
+model ~ waypoints[2].labelOffsetX: 14 → 15
+model ~ waypoints[2].labelOffsetY: -11 → -12
+model ~ waypoints[2].pauseMode: "none" → "timed"
+model ~ waypoints[2].camera.zoom: 1.95 → 2.05
+model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-b1"
+model ~ waypoints[3].imgX: 0.63 → 0.44
+model ~ waypoints[3].imgY: 0.55 → 0.24
+model + waypoints[3].branchId: "ex-uon-branch"
+model + waypoints[3].branchFrom: "ex-uon-2"
+model + waypoints[3].branchRejoin: "ex-uon-3"
+model ~ waypoints[3].beaconStyle: "grow" → "ripple"
+model ~ waypoints[3].name: "Extras 4" → "Extras 5"
+model ~ waypoints[3].label: "Label 4" → "Label 5"
+model ~ waypoints[3].labelOffsetX: 15 → 16
+model ~ waypoints[3].labelOffsetY: -12 → -13
+model ~ waypoints[3].pauseMode: "timed" → "none"
+model ~ waypoints[3].camera.zoom: 2.05 → 2.15
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
+model ~ waypoints[4].imgX: 0.44 → 0.78
+model ~ waypoints[4].imgY: 0.24 → 0.42
+model ~ waypoints[4].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[4].name: "Extras 5" → "Extras 6"
+model ~ waypoints[4].label: "Label 5" → "Label 6"
+model ~ waypoints[4].labelOffsetX: 16 → 17
+model ~ waypoints[4].labelOffsetY: -13 → -14
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.25
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+model - waypoints[5]: 57 values (42c9f4ff)
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item" data-original-index="1" data-route-index="1" draggable="true"
+ui ~ #waypoint-list>li[2]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[2]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[2]>button[0]>span[2]: span class="waypoint-title" :text="Extras 2" → span class="waypoint-title" :text="Extras 3"
+ui + #waypoint-list>li[2]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[2]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[2]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼"
+ui + #waypoint-list>li[2]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="2" draggable="true"
+ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 4"
+ui ~ #waypoint-list>li[3]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲" → button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui ~ #waypoint-list>li[3]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="3" draggable="false"
+ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[4]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[4]>button[0]>span[2]: span class="waypoint-title" :text="Extras 4" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[4]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[4]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving an earlier waypoint, rejoins at Extras 6"
+ui + #waypoint-list>li[4]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="3" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 6"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[2]>button[0]>span[3]: span aria-hidden="true" class="waypoint-fork-mark" :text="⑂"
+ui - #waypoint-list>li[2]>button[0]>span[4]: span class="sr-only" :text=", a branch leaves here"
+ui - #waypoint-list>li[2]>button[0]>span[5]: span class="waypoint-minor-tag" :text="minor"
+ui - #waypoint-list>li[2]>button[0]>span[6]: span class="sr-only" :text=", minor waypoint shaping the leg after waypoint 1, reorders with it"
+ui - #waypoint-list>li[2]>button[1]: button aria-label="Delete Extras 2" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[4]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true"
+ui - #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui - #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+
+## #waypoint-list>li[3]>button[0] · click
+emit waypoint:selected waypoint[2]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+app ~ selected: null → "waypoint[2]"
+app ~ selection: "" → "waypoint[2]"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
+ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 2 'Extras 3' · major"
+ui ~ #waypoint-scope: div (not shown) → div class="scope-group" data-mixed-reset-bound="true"
+ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 68 inside, f83bf957)
+ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 49 inside, f435c738)
+ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 106 inside, 09b74295)
+ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 82 inside, 8240f370)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 163 inside, fe53e632)
+ui ~ #route-scope: div class="scope-group" → div (not shown)
+ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="1" data-route-index="2" draggable="true"
+ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 20 inside, 709e61cb)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 16 inside, faa1abc6)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 43 inside, 73fb0d08)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 18 inside, acbf7cfd)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 19 inside, 70167be8)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 44 inside, 3e93cb78)
+
+## #waypoint-list>li[3]>span[1]>button[0] · click
+emit waypoints:reordered [waypoint[2], waypoint[0], waypoint[3], waypoint[5]]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2a"
+model ~ waypoints[0].imgX: 0.16 → 0.52
+model ~ waypoints[0].imgY: 0.63 → 0.58
+model ~ waypoints[0].markerStyle: "custom-image" → "square"
+model ~ waypoints[0].beaconStyle: "ripple" → "glow"
+model ~ waypoints[0].name: "Extras 1" → "Extras 3"
+model ~ waypoints[0].label: "Label 1" → "Label 3"
+model ~ waypoints[0].labelOffsetX: 12 → 14
+model ~ waypoints[0].labelOffsetY: -9 → -11
+model ~ waypoints[0].customImageAssetId: "asset-extras-marker" → null
+model ~ waypoints[0].camera.zoom: 1.75 → 1.95
+model ~ waypoints[0].areaHighlight.shape: "polygon" → "rectangle"
+model + waypoints[0].areaHighlight.points: []
+model ~ waypoints[1].id: "ex-uon-2" → "ex-uon-1"
+model ~ waypoints[1].imgX: 0.4 → 0.16
+model ~ waypoints[1].imgY: 0.47 → 0.63
+model ~ waypoints[1].isMajor: false → true
+model ~ waypoints[1].markerStyle: "square" → "custom-image"
+model ~ waypoints[1].beaconStyle: "pulse" → "ripple"
+model ~ waypoints[1].name: "Extras 2" → "Extras 1"
+model ~ waypoints[1].label: "Label 2" → "Label 1"
+model ~ waypoints[1].labelOffsetX: 13 → 12
+model ~ waypoints[1].labelOffsetY: -10 → -9
+model ~ waypoints[1].pauseMode: "timed" → "none"
+model ~ waypoints[1].customImageAssetId: null → "asset-extras-marker"
+model ~ waypoints[1].camera.zoom: 1.85 → 1.75
+model ~ waypoints[1].areaHighlight.shape: "rectangle" → "polygon"
+model + waypoints[1].areaHighlight.points[0].x: 0.2
+model + waypoints[1].areaHighlight.points[0].y: 0.2
+model + waypoints[1].areaHighlight.points[1].x: 0.6
+model + waypoints[1].areaHighlight.points[1].y: 0.25
+model + waypoints[1].areaHighlight.points[2].x: 0.45
+model + waypoints[1].areaHighlight.points[2].y: 0.7
+model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2"
+model ~ waypoints[2].imgX: 0.52 → 0.4
+model ~ waypoints[2].imgY: 0.58 → 0.47
+model ~ waypoints[2].isMajor: true → false
+model ~ waypoints[2].beaconStyle: "glow" → "pulse"
+model ~ waypoints[2].name: "Extras 3" → "Extras 2"
+model ~ waypoints[2].label: "Label 3" → "Label 2"
+model ~ waypoints[2].labelOffsetX: 14 → 13
+model ~ waypoints[2].labelOffsetY: -11 → -10
+model ~ waypoints[2].pauseMode: "none" → "timed"
+model ~ waypoints[2].camera.zoom: 1.95 → 1.85
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
+model ~ waypoints[4].imgX: 0.44 → 0.78
+model ~ waypoints[4].imgY: 0.24 → 0.42
+model ~ waypoints[4].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[4].name: "Extras 5" → "Extras 6"
+model ~ waypoints[4].label: "Label 5" → "Label 6"
+model ~ waypoints[4].labelOffsetX: 16 → 17
+model ~ waypoints[4].labelOffsetY: -13 → -14
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.25
+model ~ waypoints[5].id: "ex-uon-3" → "ex-uon-b1"
+model ~ waypoints[5].imgX: 0.78 → 0.44
+model ~ waypoints[5].imgY: 0.42 → 0.24
+model + waypoints[5].branchId: "ex-uon-branch"
+model + waypoints[5].branchFrom: "ex-uon-2"
+model + waypoints[5].branchRejoin: "ex-uon-3"
+model ~ waypoints[5].beaconStyle: "pulse" → "ripple"
+model ~ waypoints[5].name: "Extras 6" → "Extras 5"
+model ~ waypoints[5].label: "Label 6" → "Label 5"
+model ~ waypoints[5].labelOffsetX: 17 → 16
+model ~ waypoints[5].labelOffsetY: -14 → -13
+model ~ waypoints[5].pauseMode: "timed" → "none"
+model ~ waypoints[5].camera.zoom: 2.25 → 2.15
+model - waypoints[0].areaHighlight.points[0].x: 0.2
+model - waypoints[0].areaHighlight.points[0].y: 0.2
+model - waypoints[0].areaHighlight.points[1].x: 0.6
+model - waypoints[0].areaHighlight.points[1].y: 0.25
+model - waypoints[0].areaHighlight.points[2].x: 0.45
+model - waypoints[0].areaHighlight.points[2].y: 0.7
+model - waypoints[1].areaHighlight.points: []
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 3 moved up"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-list>li[1]>button[0]>span[2]: span class="waypoint-title" :text="Extras 1" → span class="waypoint-title" :text="Extras 3"
+ui ~ #waypoint-list>li[1]>span[1]>button[0]: button aria-label="Move Extras 1 up" class="waypoint-move-btn" disabled="" type="button" :text="▲" → button aria-label="Move Extras 3 up" class="waypoint-move-btn" disabled="" type="button" :text="▲"
+ui ~ #waypoint-list>li[1]>span[1]>button[1]: button aria-label="Move Extras 1 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[1]>button[2]: button aria-label="Delete Extras 1" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item" data-original-index="1" data-route-index="1" draggable="true"
+ui ~ #waypoint-list>li[2]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[2]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[2]>button[0]>span[2]: span class="waypoint-title" :text="Extras 2" → span class="waypoint-title" :text="Extras 1"
+ui + #waypoint-list>li[2]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[2]>span[1]>button[0]: button aria-label="Move Extras 1 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[2]>span[1]>button[1]: button aria-label="Move Extras 1 down" class="waypoint-move-btn" type="button" :text="▼"
+ui + #waypoint-list>li[2]>button[2]: button aria-label="Delete Extras 1" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item waypoint-item-minor" data-route-index="2" draggable="false"
+ui ~ #waypoint-list>li[3]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[3]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 2"
+ui + #waypoint-list>li[3]>button[0]>span[3]: span aria-hidden="true" class="waypoint-fork-mark" :text="⑂"
+ui + #waypoint-list>li[3]>button[0]>span[4]: span class="sr-only" :text=", a branch leaves here"
+ui + #waypoint-list>li[3]>button[0]>span[5]: span class="waypoint-minor-tag" :text="minor"
+ui + #waypoint-list>li[3]>button[0]>span[6]: span class="sr-only" :text=", minor waypoint shaping the leg after waypoint 2, reorders with it"
+ui + #waypoint-list>li[3]>button[1]: button aria-label="Delete Extras 2" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="3" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 6"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="5" draggable="false"
+ui ~ #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[6]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[6]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 2.1, rejoins at Extras 6"
+ui + #waypoint-list>li[6]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[2]>button[0]>span[3]: span aria-hidden="true" class="waypoint-fork-mark" :text="⑂"
+ui - #waypoint-list>li[2]>button[0]>span[4]: span class="sr-only" :text=", a branch leaves here"
+ui - #waypoint-list>li[2]>button[0]>span[5]: span class="waypoint-minor-tag" :text="minor"
+ui - #waypoint-list>li[2]>button[0]>span[6]: span class="sr-only" :text=", minor waypoint shaping the leg after waypoint 1, reorders with it"
+ui - #waypoint-list>li[2]>button[1]: button aria-label="Delete Extras 2" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[3]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[3]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[3]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+
+## #waypoint-list>li[3]>span[1]>button[1] · click
+emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
+model ~ waypoints[2].imgX: 0.52 → 0.63
+model ~ waypoints[2].imgY: 0.58 → 0.55
+model ~ waypoints[2].beaconStyle: "glow" → "grow"
+model ~ waypoints[2].name: "Extras 3" → "Extras 4"
+model ~ waypoints[2].label: "Label 3" → "Label 4"
+model ~ waypoints[2].labelOffsetX: 14 → 15
+model ~ waypoints[2].labelOffsetY: -11 → -12
+model ~ waypoints[2].pauseMode: "none" → "timed"
+model ~ waypoints[2].camera.zoom: 1.95 → 2.05
+model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-2a"
+model ~ waypoints[3].imgX: 0.63 → 0.52
+model ~ waypoints[3].imgY: 0.55 → 0.58
+model ~ waypoints[3].beaconStyle: "grow" → "glow"
+model ~ waypoints[3].name: "Extras 4" → "Extras 3"
+model ~ waypoints[3].label: "Label 4" → "Label 3"
+model ~ waypoints[3].labelOffsetX: 15 → 14
+model ~ waypoints[3].labelOffsetY: -12 → -11
+model ~ waypoints[3].pauseMode: "timed" → "none"
+model ~ waypoints[3].camera.zoom: 2.05 → 1.95
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
+model ~ waypoints[4].imgX: 0.44 → 0.78
+model ~ waypoints[4].imgY: 0.24 → 0.42
+model ~ waypoints[4].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[4].name: "Extras 5" → "Extras 6"
+model ~ waypoints[4].label: "Label 5" → "Label 6"
+model ~ waypoints[4].labelOffsetX: 16 → 17
+model ~ waypoints[4].labelOffsetY: -13 → -14
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.25
+model ~ waypoints[5].id: "ex-uon-3" → "ex-uon-b1"
+model ~ waypoints[5].imgX: 0.78 → 0.44
+model ~ waypoints[5].imgY: 0.42 → 0.24
+model + waypoints[5].branchId: "ex-uon-branch"
+model + waypoints[5].branchFrom: "ex-uon-2"
+model + waypoints[5].branchRejoin: "ex-uon-3"
+model ~ waypoints[5].beaconStyle: "pulse" → "ripple"
+model ~ waypoints[5].name: "Extras 6" → "Extras 5"
+model ~ waypoints[5].label: "Label 6" → "Label 5"
+model ~ waypoints[5].labelOffsetX: 17 → 16
+model ~ waypoints[5].labelOffsetY: -14 → -13
+model ~ waypoints[5].pauseMode: "timed" → "none"
+model ~ waypoints[5].camera.zoom: 2.25 → 2.15
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 3 moved down"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 4"
+ui ~ #waypoint-list>li[3]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲" → button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui ~ #waypoint-list>li[3]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[4]>button[0]>span[2]: span class="waypoint-title" :text="Extras 4" → span class="waypoint-title" :text="Extras 3"
+ui ~ #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲" → button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲"
+ui ~ #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="3" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 6"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="5" draggable="false"
+ui ~ #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[6]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[6]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui + #waypoint-list>li[6]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+
+## #waypoint-list>li[3]>button[2] · click
+emit waypoint:delete waypoint[2]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
+model ~ waypoints[2].imgX: 0.52 → 0.63
+model ~ waypoints[2].imgY: 0.58 → 0.55
+model ~ waypoints[2].beaconStyle: "glow" → "grow"
+model ~ waypoints[2].name: "Extras 3" → "Extras 4"
+model ~ waypoints[2].label: "Label 3" → "Label 4"
+model ~ waypoints[2].labelOffsetX: 14 → 15
+model ~ waypoints[2].labelOffsetY: -11 → -12
+model ~ waypoints[2].pauseMode: "none" → "timed"
+model ~ waypoints[2].camera.zoom: 1.95 → 2.05
+model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-b1"
+model ~ waypoints[3].imgX: 0.63 → 0.44
+model ~ waypoints[3].imgY: 0.55 → 0.24
+model + waypoints[3].branchId: "ex-uon-branch"
+model + waypoints[3].branchFrom: "ex-uon-2"
+model + waypoints[3].branchRejoin: "ex-uon-3"
+model ~ waypoints[3].beaconStyle: "grow" → "ripple"
+model ~ waypoints[3].name: "Extras 4" → "Extras 5"
+model ~ waypoints[3].label: "Label 4" → "Label 5"
+model ~ waypoints[3].labelOffsetX: 15 → 16
+model ~ waypoints[3].labelOffsetY: -12 → -13
+model ~ waypoints[3].pauseMode: "timed" → "none"
+model ~ waypoints[3].camera.zoom: 2.05 → 2.15
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
+model ~ waypoints[4].imgX: 0.44 → 0.78
+model ~ waypoints[4].imgY: 0.24 → 0.42
+model ~ waypoints[4].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[4].name: "Extras 5" → "Extras 6"
+model ~ waypoints[4].label: "Label 5" → "Label 6"
+model ~ waypoints[4].labelOffsetX: 16 → 17
+model ~ waypoints[4].labelOffsetY: -13 → -14
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.25
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+model - waypoints[5]: 57 values (42c9f4ff)
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 4"
+ui ~ #waypoint-list>li[3]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲" → button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui ~ #waypoint-list>li[3]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="3" draggable="false"
+ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[4]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[4]>button[0]>span[2]: span class="waypoint-title" :text="Extras 4" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[4]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[4]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui + #waypoint-list>li[4]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="2" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 6"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[4]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true"
+ui - #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #waypoint-list>li[4]>button[0] · click
+emit waypoint:selected waypoint[3]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+app ~ selected: null → "waypoint[3]"
+app ~ selection: "" → "waypoint[3]"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
+ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major"
+ui ~ #waypoint-scope: div (not shown) → div class="scope-group" data-mixed-reset-bound="true"
+ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 68 inside, f83bf957)
+ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 49 inside, 5a5b79dc)
+ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 106 inside, 38424ea6)
+ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 82 inside, df9f24f4)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 163 inside, fe53e632)
+ui ~ #route-scope: div class="scope-group" → div (not shown)
+ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true"
+ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 20 inside, 709e61cb)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 16 inside, faa1abc6)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 43 inside, 73fb0d08)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 18 inside, acbf7cfd)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 19 inside, 70167be8)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 44 inside, 3e93cb78)
+
+## #waypoint-list>li[4]>span[1]>button[0] · click
+emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
+model ~ waypoints[2].imgX: 0.52 → 0.63
+model ~ waypoints[2].imgY: 0.58 → 0.55
+model ~ waypoints[2].beaconStyle: "glow" → "grow"
+model ~ waypoints[2].name: "Extras 3" → "Extras 4"
+model ~ waypoints[2].label: "Label 3" → "Label 4"
+model ~ waypoints[2].labelOffsetX: 14 → 15
+model ~ waypoints[2].labelOffsetY: -11 → -12
+model ~ waypoints[2].pauseMode: "none" → "timed"
+model ~ waypoints[2].camera.zoom: 1.95 → 2.05
+model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-2a"
+model ~ waypoints[3].imgX: 0.63 → 0.52
+model ~ waypoints[3].imgY: 0.55 → 0.58
+model ~ waypoints[3].beaconStyle: "grow" → "glow"
+model ~ waypoints[3].name: "Extras 4" → "Extras 3"
+model ~ waypoints[3].label: "Label 4" → "Label 3"
+model ~ waypoints[3].labelOffsetX: 15 → 14
+model ~ waypoints[3].labelOffsetY: -12 → -11
+model ~ waypoints[3].pauseMode: "timed" → "none"
+model ~ waypoints[3].camera.zoom: 2.05 → 1.95
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
+model ~ waypoints[4].imgX: 0.44 → 0.78
+model ~ waypoints[4].imgY: 0.24 → 0.42
+model ~ waypoints[4].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[4].name: "Extras 5" → "Extras 6"
+model ~ waypoints[4].label: "Label 5" → "Label 6"
+model ~ waypoints[4].labelOffsetX: 16 → 17
+model ~ waypoints[4].labelOffsetY: -13 → -14
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.25
+model ~ waypoints[5].id: "ex-uon-3" → "ex-uon-b1"
+model ~ waypoints[5].imgX: 0.78 → 0.44
+model ~ waypoints[5].imgY: 0.42 → 0.24
+model + waypoints[5].branchId: "ex-uon-branch"
+model + waypoints[5].branchFrom: "ex-uon-2"
+model + waypoints[5].branchRejoin: "ex-uon-3"
+model ~ waypoints[5].beaconStyle: "pulse" → "ripple"
+model ~ waypoints[5].name: "Extras 6" → "Extras 5"
+model ~ waypoints[5].label: "Label 6" → "Label 5"
+model ~ waypoints[5].labelOffsetX: 17 → 16
+model ~ waypoints[5].labelOffsetY: -14 → -13
+model ~ waypoints[5].pauseMode: "timed" → "none"
+model ~ waypoints[5].camera.zoom: 2.25 → 2.15
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 4 moved up"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 4"
+ui ~ #waypoint-list>li[3]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲" → button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui ~ #waypoint-list>li[3]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[4]>button[0]>span[2]: span class="waypoint-title" :text="Extras 4" → span class="waypoint-title" :text="Extras 3"
+ui ~ #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲" → button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲"
+ui ~ #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="3" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 6"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="5" draggable="false"
+ui ~ #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[6]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[6]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui + #waypoint-list>li[6]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+
+## #waypoint-list>li[4]>span[1]>button[1] · click
+emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[5], waypoint[3]]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-3"
+model ~ waypoints[3].imgX: 0.63 → 0.78
+model ~ waypoints[3].imgY: 0.55 → 0.42
+model ~ waypoints[3].beaconStyle: "grow" → "pulse"
+model ~ waypoints[3].name: "Extras 4" → "Extras 6"
+model ~ waypoints[3].label: "Label 4" → "Label 6"
+model ~ waypoints[3].labelOffsetX: 15 → 17
+model ~ waypoints[3].labelOffsetY: -12 → -14
+model ~ waypoints[3].camera.zoom: 2.05 → 2.25
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-2b"
+model ~ waypoints[4].imgX: 0.44 → 0.63
+model ~ waypoints[4].imgY: 0.24 → 0.55
+model ~ waypoints[4].beaconStyle: "ripple" → "grow"
+model ~ waypoints[4].name: "Extras 5" → "Extras 4"
+model ~ waypoints[4].label: "Label 5" → "Label 4"
+model ~ waypoints[4].labelOffsetX: 16 → 15
+model ~ waypoints[4].labelOffsetY: -13 → -12
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.05
+model ~ waypoints[5].id: "ex-uon-3" → "ex-uon-b1"
+model ~ waypoints[5].imgX: 0.78 → 0.44
+model ~ waypoints[5].imgY: 0.42 → 0.24
+model + waypoints[5].branchId: "ex-uon-branch"
+model + waypoints[5].branchFrom: "ex-uon-2"
+model + waypoints[5].branchRejoin: "ex-uon-3"
+model ~ waypoints[5].beaconStyle: "pulse" → "ripple"
+model ~ waypoints[5].name: "Extras 6" → "Extras 5"
+model ~ waypoints[5].label: "Label 6" → "Label 5"
+model ~ waypoints[5].labelOffsetX: 17 → 16
+model ~ waypoints[5].labelOffsetY: -14 → -13
+model ~ waypoints[5].pauseMode: "timed" → "none"
+model ~ waypoints[5].camera.zoom: 2.25 → 2.15
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 4 moved down"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-list>li[4]>button[0]>span[2]: span class="waypoint-title" :text="Extras 4" → span class="waypoint-title" :text="Extras 6"
+ui ~ #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲" → button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui ~ #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 6 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="3" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 4"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="5" draggable="false"
+ui ~ #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[6]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[6]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui + #waypoint-list>li[6]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+
+## #waypoint-list>li[4]>button[2] · click
+emit waypoint:delete waypoint[3]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-b1"
+model ~ waypoints[3].imgX: 0.63 → 0.44
+model ~ waypoints[3].imgY: 0.55 → 0.24
+model + waypoints[3].branchId: "ex-uon-branch"
+model + waypoints[3].branchFrom: "ex-uon-2"
+model + waypoints[3].branchRejoin: "ex-uon-3"
+model ~ waypoints[3].beaconStyle: "grow" → "ripple"
+model ~ waypoints[3].name: "Extras 4" → "Extras 5"
+model ~ waypoints[3].label: "Label 4" → "Label 5"
+model ~ waypoints[3].labelOffsetX: 15 → 16
+model ~ waypoints[3].labelOffsetY: -12 → -13
+model ~ waypoints[3].pauseMode: "timed" → "none"
+model ~ waypoints[3].camera.zoom: 2.05 → 2.15
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
+model ~ waypoints[4].imgX: 0.44 → 0.78
+model ~ waypoints[4].imgY: 0.24 → 0.42
+model ~ waypoints[4].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[4].name: "Extras 5" → "Extras 6"
+model ~ waypoints[4].label: "Label 5" → "Label 6"
+model ~ waypoints[4].labelOffsetX: 16 → 17
+model ~ waypoints[4].labelOffsetY: -13 → -14
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.25
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+model - waypoints[5]: 57 values (42c9f4ff)
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="3" draggable="false"
+ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[4]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[4]>button[0]>span[2]: span class="waypoint-title" :text="Extras 4" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[4]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[4]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui + #waypoint-list>li[4]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="2" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 6"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[4]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true"
+ui - #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #waypoint-list>li[5]>button[0] · click
+emit waypoint:selected waypoint[4]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+app ~ selected: null → "waypoint[4]"
+app ~ selection: "" → "waypoint[4]"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
+ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1.1·B1 'Extras 5' · branch B"
+ui ~ #waypoint-scope: div (not shown) → div class="scope-group" data-mixed-reset-bound="true"
+ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 68 inside, f83bf957)
+ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 62 inside, a9bc46d5)
+ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 106 inside, 27289c57)
+ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 82 inside, 79b4a34d)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 163 inside, fe53e632)
+ui ~ #route-scope: div class="scope-group" → div (not shown)
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
+ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 20 inside, 709e61cb)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 16 inside, faa1abc6)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 43 inside, 73fb0d08)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 18 inside, acbf7cfd)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 19 inside, 70167be8)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 44 inside, 3e93cb78)
+
+## #waypoint-list>li[5]>button[1] · click
+emit waypoint:delete waypoint[4]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
+model ~ waypoints[4].imgX: 0.44 → 0.78
+model ~ waypoints[4].imgY: 0.24 → 0.42
+model ~ waypoints[4].beaconStyle: "ripple" → "pulse"
+model ~ waypoints[4].name: "Extras 5" → "Extras 6"
+model ~ waypoints[4].label: "Label 5" → "Label 6"
+model ~ waypoints[4].labelOffsetX: 16 → 17
+model ~ waypoints[4].labelOffsetY: -13 → -14
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.25
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+model - waypoints[5]: 57 values (42c9f4ff)
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #waypoint-list>li[2]>button[0]>span[3]: span aria-hidden="true" class="waypoint-fork-mark" :text="⑂" → span class="waypoint-minor-tag" :text="minor"
+ui ~ #waypoint-list>li[2]>button[0]>span[4]: span class="sr-only" :text=", a branch leaves here" → span class="sr-only" :text=", minor waypoint shaping the leg after waypoint 1, reorders with it"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="3" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 6"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[2]>button[0]>span[5]: span class="waypoint-minor-tag" :text="minor"
+ui - #waypoint-list>li[2]>button[0]>span[6]: span class="sr-only" :text=", minor waypoint shaping the leg after waypoint 1, reorders with it"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true"
+ui - #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui - #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+
+## #waypoint-list>li[6]>button[0] · click
+emit waypoint:selected waypoint[5]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+app ~ selected: null → "waypoint[5]"
+app ~ selection: "" → "waypoint[5]"
+ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
+ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 4 'Extras 6' · major"
+ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
+ui ~ #waypoint-scope: div (not shown) → div class="scope-group" data-mixed-reset-bound="true"
+ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 68 inside, cfe109bb)
+ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 60 inside, 13b6825d)
+ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 106 inside, 76fa269e)
+ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 82 inside, d3c734c9)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 163 inside, fe53e632)
+ui ~ #route-scope: div class="scope-group" → div (not shown)
+ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true"
+ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 20 inside, 709e61cb)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 16 inside, faa1abc6)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 43 inside, 73fb0d08)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 18 inside, acbf7cfd)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 19 inside, 70167be8)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 44 inside, 3e93cb78)
+
+## #waypoint-list>li[6]>span[1]>button[0] · click
+emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[5], waypoint[3]]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-3"
+model ~ waypoints[3].imgX: 0.63 → 0.78
+model ~ waypoints[3].imgY: 0.55 → 0.42
+model ~ waypoints[3].beaconStyle: "grow" → "pulse"
+model ~ waypoints[3].name: "Extras 4" → "Extras 6"
+model ~ waypoints[3].label: "Label 4" → "Label 6"
+model ~ waypoints[3].labelOffsetX: 15 → 17
+model ~ waypoints[3].labelOffsetY: -12 → -14
+model ~ waypoints[3].camera.zoom: 2.05 → 2.25
+model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-2b"
+model ~ waypoints[4].imgX: 0.44 → 0.63
+model ~ waypoints[4].imgY: 0.24 → 0.55
+model ~ waypoints[4].beaconStyle: "ripple" → "grow"
+model ~ waypoints[4].name: "Extras 5" → "Extras 4"
+model ~ waypoints[4].label: "Label 5" → "Label 4"
+model ~ waypoints[4].labelOffsetX: 16 → 15
+model ~ waypoints[4].labelOffsetY: -13 → -12
+model ~ waypoints[4].pauseMode: "none" → "timed"
+model ~ waypoints[4].camera.zoom: 2.15 → 2.05
+model ~ waypoints[5].id: "ex-uon-3" → "ex-uon-b1"
+model ~ waypoints[5].imgX: 0.78 → 0.44
+model ~ waypoints[5].imgY: 0.42 → 0.24
+model + waypoints[5].branchId: "ex-uon-branch"
+model + waypoints[5].branchFrom: "ex-uon-2"
+model + waypoints[5].branchRejoin: "ex-uon-3"
+model ~ waypoints[5].beaconStyle: "pulse" → "ripple"
+model ~ waypoints[5].name: "Extras 6" → "Extras 5"
+model ~ waypoints[5].label: "Label 6" → "Label 5"
+model ~ waypoints[5].labelOffsetX: 17 → 16
+model ~ waypoints[5].labelOffsetY: -14 → -13
+model ~ waypoints[5].pauseMode: "timed" → "none"
+model ~ waypoints[5].camera.zoom: 2.25 → 2.15
+model - waypoints[4].branchId: "ex-uon-branch"
+model - waypoints[4].branchFrom: "ex-uon-2"
+model - waypoints[4].branchRejoin: "ex-uon-3"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 6 moved up"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-list>li[4]>button[0]>span[2]: span class="waypoint-title" :text="Extras 4" → span class="waypoint-title" :text="Extras 6"
+ui ~ #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲" → button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui ~ #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 6 down" class="waypoint-move-btn" type="button" :text="▼"
+ui ~ #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item" data-original-index="3" data-route-index="4" draggable="true"
+ui ~ #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui ~ #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed" → span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Extras 4"
+ui + #waypoint-list>li[5]>span[1]: span class="waypoint-move-btns"
+ui + #waypoint-list>li[5]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui + #waypoint-list>li[5]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui + #waypoint-list>li[5]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="5" draggable="false"
+ui ~ #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-minor-dot"
+ui ~ #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡" → span aria-hidden="true" class="waypoint-handle is-fixed"
+ui ~ #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6" → span class="waypoint-title" :text="Extras 5"
+ui + #waypoint-list>li[6]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui + #waypoint-list>li[6]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui + #waypoint-list>li[6]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+
+## #waypoint-list>li[6]>span[1]>button[1] · disabled, not operated
+
+## #waypoint-list>li[6]>button[2] · click
+emit waypoint:delete waypoint[5]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+model - waypoints[5]: 57 values (42c9f4ff)
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Extras 4 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui ~ #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6" → span class="sr-only" :text=", branch B leaving waypoint 1.1, ends the branch here"
+ui - #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true"
+ui - #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui - #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+
+## #scene-outline-title · click
+ui ~ #scene-outline-panel: details open="" → details

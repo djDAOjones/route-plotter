@@ -1,0 +1,58 @@
+# major-first: waypoint 0 (ripple beacon, polygon area) selected
+
+## #ripple-controls>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Line thickness of the ripple rings"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Line thickness of the ripple rings" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Line thickness of the ripple rings"
+
+## #ripple-thickness · set 4
+emit waypoint:style-changed waypoint[0]
+model ~ waypoints[0].rippleThickness: 5 → 4
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
+ui ~ #ripple-thickness: input aria-describedby="ripple-thickness-value ripple-thickness-tip" aria-valuetext="5 reference px" max="10" min="1" step="0.5" type="range" value="2" :value="5" → input aria-describedby="ripple-thickness-value ripple-thickness-tip" aria-valuetext="4 reference px" max="10" min="1" step="0.5" type="range" value="2" :value="4"
+ui ~ #ripple-thickness-value: span :text="5 reference px" → span :text="4 reference px"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #ripple-controls>label[2]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Maximum expansion radius of the ripple effect"
+
+## #ripple-max-scale · set 1700
+emit animation:durationChange 21429.352554
+emit waypoint:style-changed waypoint[0]
+model ~ waypoints[0].rippleMaxScale: 2400 → 1700
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
+ui ~ #ripple-max-scale: input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" max="4000" min="500" step="100" type="range" value="1000" :value="2400" → input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" max="4000" min="500" step="100" type="range" value="1000" :value="1700"
+ui ~ #ripple-max-scale-value: span :text="2400%" → span :text="1700%"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #ripple-wait · click
+emit animation:durationChange 21429.352554
+emit waypoint:path-property-changed waypoint[0]
+model ~ waypoints[0].rippleWait: false → true
+model ~ waypoints[0].pauseMode: "none" → "timed"
+model ~ waypoints[0].pauseTime: 2750 → 9600
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
+ui ~ #waypoint-pause-time: input aria-describedby="waypoint-pause-time-tip" max="1000" min="0" step="1" type="range" value="500" :value="384" → input aria-describedby="waypoint-pause-time-tip" max="1000" min="0" step="1" type="range" value="500" :value="634"
+ui ~ #waypoint-pause-time-value: span :text="2.8s" → span :text="9.6s"
+ui ~ #ripple-wait: input checked="" type="checkbox" :unchecked → input checked="" type="checkbox" :checked
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #area-draw-btn · click
+emit area:draw-start {waypoint: waypoint[0]}
+ui + #area-draw-banner: div aria-live="polite" role="status" style="position: fixed; top: 0px; left: 0px; right: 0px; z-index: 1000; padding: 8px 16px; background: var(--cds-interactive-01, #0f62fe); color: rgb(255, 255, 255); …[340 chars, 039c0fb6]
+ui + #area-draw-banner>span[0]: span class="banner-text" :text="— Click to place vertices. Click near the first point to close. to cancel."
+ui + #area-draw-banner>span[0]>strong[0]: strong :text="Drawing polygon area"
+ui + #area-draw-banner>span[0]>kbd[1]: kbd :text="Esc"
+ui + #area-draw-banner>span[0]>span[2]: span class="banner-count" :text="0 vertices"
+ui + #area-draw-banner>button[1]: button aria-label="Cancel drawing" class="banner-cancel" style="background: transparent; border: 1px solid rgb(255, 255, 255); color: rgb(255, 255, 255); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 13px;" :text="Cancel"

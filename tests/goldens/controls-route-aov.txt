@@ -1,0 +1,37 @@
+# route-aov: the background set to Angle of View
+
+## #aov-controls>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Width of the angle-of-view cone in degrees"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Width of the angle-of-view cone in degrees" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Width of the angle-of-view cone in degrees"
+
+## #aov-angle · set 333
+emit motion:aov-angle-change 47.35769
+model ~ motionSettings.aovAngle: 95 → 47.35769
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #aov-angle: input aria-describedby="aov-angle-tip" max="1000" min="0" step="1" type="range" value="500" :value="500" → input aria-describedby="aov-angle-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #aov-angle-value: span :text="60°" → span :text="48°"
+
+## #aov-controls>label[2]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How far the view cone extends from the path head"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How far the view cone extends from the path head" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="How far the view cone extends from the path head"
+
+## #aov-distance · set 333
+emit motion:aov-distance-change 4.634469
+model ~ motionSettings.aovDistance: 66 → 4.634469
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #aov-distance: input aria-describedby="aov-distance-tip" max="1000" min="0" step="1" type="range" value="500" :value="500" → input aria-describedby="aov-distance-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #aov-distance-value: span :text="10%" → span :text="4.6%"
+
+## #aov-controls>label[4]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How quickly visibility fades at the cone edges"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How quickly visibility fades at the cone edges" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="How quickly visibility fades at the cone edges"
+
+## #aov-dropoff · set 333
+emit motion:aov-dropoff-change 33.3
+model ~ motionSettings.aovDropoff: 23 → 33.3
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #aov-dropoff: input aria-describedby="aov-dropoff-tip" max="1000" min="0" step="1" type="range" value="500" :value="500" → input aria-describedby="aov-dropoff-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #aov-dropoff-value: span :text="25%" → span :text="34%"

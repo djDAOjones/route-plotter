@@ -1,0 +1,31 @@
+# major-last: waypoint 5 (pulse beacon) selected
+
+## #pulse-controls>label[1]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much the marker grows and shrinks during pulse"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much the marker grows and shrinks during pulse" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="How much the marker grows and shrinks during pulse"
+
+## #pulse-amplitude · set 1
+emit waypoint:style-changed waypoint[5]
+model ~ waypoints[5].pulseAmplitude: 2.5 → 1
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
+ui ~ #pulse-amplitude: input aria-describedby="pulse-amplitude-value pulse-amplitude-tip" max="3" min="0" step="0.1" type="range" value="1" :value="2.5" → input aria-describedby="pulse-amplitude-value pulse-amplitude-tip" max="3" min="0" step="0.1" type="range" value="1" :value="1"
+ui ~ #pulse-amplitude-value: span :text="2.5" → span :text="1.0"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #pulse-controls>label[3]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Duration of one complete pulse cycle"
+
+## #pulse-cycle-speed · set 4
+emit waypoint:style-changed waypoint[5]
+model ~ waypoints[5].pulseCycleSpeed: 7 → 4
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
+ui ~ #pulse-cycle-speed: input aria-describedby="pulse-cycle-speed-value pulse-cycle-speed-tip" max="10" min="1" step="0.5" type="range" value="4" :value="7" → input aria-describedby="pulse-cycle-speed-value pulse-cycle-speed-tip" max="10" min="1" step="0.5" type="range" value="4" :value="4"
+ui ~ #pulse-cycle-speed-value: span :text="7s" → span :text="4s"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"

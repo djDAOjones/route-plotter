@@ -1,0 +1,94 @@
+# major-revealed: waypoint 3 selected, then given a custom marker, a squiggle, a circle area and both custom colours
+
+## #marker-upload-btn · click
+file dialog #marker-upload
+
+## #marker-upload · choose nothing
+
+## #marker-upload · choose picked.png
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  emit waypoint:style-changed waypoint[3], {historyAlreadySaved: true}
+  model ~ waypoints[3].customImageAssetId: null → "9a30e678948ebf32"
+  model + imageAssets[2].id: "9a30e678948ebf32"
+  model + imageAssets[2].base64: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+  model + imageAssets[2].name: "picked.png"
+  model + imageAssets[2].width: 100
+  model + imageAssets[2].height: 100
+  model + imageAssets[2].mimeType: "image/png"
+  model + imageAssets[2].size: 68
+  ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #marker-preview: div (not shown) → div style="display: block; margin-bottom: 0.5rem;"
+  ui + #marker-filename: span style="font-size: 0.75rem; opacity: 0.7;" :text="picked.png"
+  ui + #marker-preview-img: img alt="Marker preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" style="max-width: 48px; max-height: 48px; margin-left: 0.5rem; vertical-align: middle;"
+
+## #label-color-custom-disclosure>label[0]>input[1] · pick #56b4e9
+emit waypoint:style-changed waypoint[3]
+model ~ waypoints[3].labelColor: "#009E73" → "#56b4e9"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#56b4e9" :value="#56b4e9"
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background: rgb(0, 158, 115);" → span aria-hidden="true" class="swatch-current-chip" style="background: rgb(86, 180, 233);"
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #56B4E9"
+ui ~ #label-color-custom-disclosure>label[0]>input[1]: input type="color" :value="#009e73" → input type="color" :value="#56b4e9"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+
+## #label-bg-color-custom-disclosure>label[0]>input[1] · pick #56b4e9
+emit waypoint:style-changed waypoint[3]
+model ~ waypoints[3].labelBgColor: "#F0E442" → "#56b4e9"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input type="hidden" value="#56b4e9" :value="#56b4e9"
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background: rgb(240, 228, 66);" → span aria-hidden="true" class="swatch-current-chip" style="background: rgb(86, 180, 233);"
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #56B4E9"
+ui ~ #label-bg-color-custom-disclosure>label[0]>input[1]: input type="color" :value="#f0e442" → input type="color" :value="#56b4e9"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+
+## #shape-params-controls>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Peak sideways displacement as a percentage of the source-image coordinate scale"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Peak sideways displacement as a percentage of the source-image coordinate scale" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Peak sideways displacement as a percentage of the source-image coordinate scale"
+
+## #shape-amplitude · set 17
+emit waypoint:path-property-changed waypoint[3]
+model ~ waypoints[3].shapeAmplitude: 22 → 17
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[2]: div class="settings-section" data-last="true" data-section="label" → div class="settings-section" data-section="label"
+ui ~ #waypoint-scope>div[3]: div class="settings-section" data-section="leg" → div class="settings-section" data-last="true" data-section="leg"
+ui ~ #shape-amplitude: input aria-describedby="shape-amplitude-value shape-amplitude-tip" aria-valuetext="4.4%" max="50" min="1" step="1" type="range" value="10" :value="22" → input aria-describedby="shape-amplitude-value shape-amplitude-tip" aria-valuetext="3.4%" max="50" min="1" step="1" type="range" value="10" :value="17"
+ui ~ #shape-amplitude-value: span :text="4.4%" → span :text="3.4%"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+
+## #shape-params-controls>label[2]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Number of squiggle waves per path segment"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Number of squiggle waves per path segment" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Number of squiggle waves per path segment"
+
+## #shape-frequency · set 7
+emit waypoint:path-property-changed waypoint[3]
+model ~ waypoints[3].shapeFrequency: 9 → 7
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[2]: div class="settings-section" data-last="true" data-section="label" → div class="settings-section" data-section="label"
+ui ~ #waypoint-scope>div[3]: div class="settings-section" data-section="leg" → div class="settings-section" data-last="true" data-section="leg"
+ui ~ #shape-frequency: input aria-describedby="shape-frequency-tip" max="20" min="1" step="1" type="range" value="5" :value="9" → input aria-describedby="shape-frequency-tip" max="20" min="1" step="1" type="range" value="5" :value="7"
+ui ~ #shape-frequency-value: span :text="9" → span :text="7"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+
+## #area-circle-controls>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Radius of the circular highlight area"
+settled:
+  ui ~ #param-tooltip: div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Radius of the circular highlight area" → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block; top: 6px; left: 12px;" :text="Radius of the circular highlight area"
+
+## #area-circle-radius · set 333
+emit area:changed {waypoint: waypoint[3]}
+model ~ waypoints[3].areaHighlight.radius: 0.11 → 0.17317
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[2]: div class="settings-section" data-last="true" data-section="label" → div class="settings-section" data-section="label"
+ui ~ #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
+ui ~ #area-circle-radius: input aria-describedby="area-circle-radius-tip" max="1000" min="0" step="1" type="range" value="100" :value="204" → input aria-describedby="area-circle-radius-tip" max="1000" min="0" step="1" type="range" value="100" :value="333"
+ui ~ #area-circle-radius-value: span :text="11%" → span :text="17%"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
