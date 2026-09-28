@@ -296,6 +296,12 @@ export class SceneOutlineController {
           || this._findKey(snapshot.selectionKey ? `${snapshot.selectionKey}:select` : null)
           || this._findKey('route:summary');
         let ancestor = target?.closest('details[data-outline-disclosure]');
+        // A summary shows while its own entry is closed, so only the entries
+        // around it are opened: opening its own reopened an entry the author
+        // had just closed (DEF-40).
+        if (ancestor && target.parentElement === ancestor && target.matches('summary')) {
+          ancestor = ancestor.parentElement?.closest('details[data-outline-disclosure]');
+        }
         while (ancestor) {
           ancestor.open = true;
           this._open.set(ancestor.dataset.outlineDisclosure, true);
@@ -1114,9 +1120,15 @@ export class SceneOutlineController {
   _onClick(event) {
     const summary = event.target.closest('summary[data-outline-key]');
     if (summary && this.container.contains(summary)) {
-      queueMicrotask(() => {
-        if (summary.isConnected && this._snapshot) this.render(this._snapshot);
-      });
+      // The outline, not the browser, opens and closes its entries (DEF-40).
+      // A browser toggles an entry only after the click's microtasks, so a
+      // redraw queued here drew the entry as it was, empty, and the toggle
+      // then landed on the element the redraw had replaced. Enter and Space
+      // on a summary arrive as this same click.
+      event.preventDefault();
+      const details = summary.parentElement;
+      details.open = !details.open;
+      if (this._snapshot) this.render(this._snapshot);
       return;
     }
     const target = event.target.closest('button[data-outline-action]');

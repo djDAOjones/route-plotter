@@ -395,7 +395,7 @@
 - `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
 - `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across linear and branched routes, a copy that never reaches back into the route, the save/load round trip, (DEF-31) derived ids that fit the persisted limit, and (DEF-35) a crowd traced off the image resolves to its waypoints there
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
-- `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts, and (DEF-35) position fields that take a point off the image, as far as a project can store one
+- `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts, (DEF-35) position fields that take a point off the image, as far as a project can store one, and (DEF-40) entries that open and close on each click in a browser's order of events
 - `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts, and (DEF-35) edits and adds that keep a point off the image, bounded by the storable range on every image-point command while network positions keep 0–100%
 - `tests/scenePersistence.test.js` — coordVersion-9 scene variation/seed autosave, ZIP, migration and undo round-trip contracts
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts

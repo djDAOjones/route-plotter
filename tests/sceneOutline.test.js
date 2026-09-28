@@ -920,3 +920,62 @@ describe('native scene outline DOM', () => {
     expect(document.activeElement.dataset.outlineKey).toBe('node:crowd-large:node-1999:select');
   });
 });
+
+describe('an outline entry opens and closes as a browser clicks it (DEF-40)', () => {
+  let eventBus;
+  let container;
+  let fixture;
+
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    eventBus = new EventBus();
+    container = document.getElementById('scene-outline');
+    new SceneOutlineController(container, eventBus);
+    fixture = makeFixture();
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+  });
+
+  const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+
+  /**
+   * A click as a browser delivers it: the listeners, then every microtask they
+   * queued, and only then the summary's own action, which toggles its entry
+   * unless a listener cancelled the click. jsdom's `click()` toggles before
+   * the microtasks, which is why the defect never showed in tests. Enter and
+   * Space on a summary arrive as the same click.
+   */
+  async function browserClick(summary) {
+    summary.focus();
+    const click = new Event('click', { bubbles: true, cancelable: true });
+    summary.dispatchEvent(click);
+    await nextTask();
+    if (!click.defaultPrevented) summary.parentElement.open = !summary.parentElement.open;
+    await nextTask();
+  }
+
+  const entry = () => disclosure(container, sceneOutlineKey('waypoint', fixture.major.id));
+  const summaryOf = details => details.querySelector(':scope > summary');
+  const form = details => details.querySelector('form[data-outline-action="update-waypoint"]');
+
+  test('one click opens an entry with its content, the next closes it, and another opens it again', async () => {
+    expect(entry().open).toBe(false);
+
+    await browserClick(summaryOf(entry()));
+    expect(entry().open).toBe(true);
+    expect(form(entry())).not.toBeNull();
+
+    await browserClick(summaryOf(entry()));
+    expect(entry().open).toBe(false);
+    expect(form(entry())).toBeNull();
+
+    await browserClick(summaryOf(entry()));
+    expect(entry().open).toBe(true);
+    expect(form(entry())).not.toBeNull();
+  });
+
+  test('the clicked entry keeps focus on its summary', async () => {
+    await browserClick(summaryOf(entry()));
+
+    expect(document.activeElement).toBe(summaryOf(entry()));
+  });
+});
