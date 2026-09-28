@@ -556,11 +556,12 @@ export class RenderingService {
     const clearWidth = this.vectorCanvasCssWidth || vCanvas.width;
     const clearHeight = this.vectorCanvasCssHeight || vCanvas.height;
     vctx.clearRect(0, 0, clearWidth, clearHeight);
-    // Each frame starts from the round caps and joins a steady frame always
-    // drew with. The route sets them outside any save, and an outline that
-    // sets neither (an area's border, a marker's ring) inherited whatever the
-    // frame before had left: square on a freshly sized layer, the first frame
-    // after a resize or a throw, and at an instant with no route (DEF-39).
+    // Each frame starts with round caps and joins, the look the route leaves
+    // when it draws (Joe's choice). An outline that sets neither (an area's
+    // border, a marker's outline) used to inherit what the layer kept between
+    // frames: square on a freshly sized layer, until a route drawn with no
+    // viewport zoom or camera left round there, since with either the route
+    // is drawn inside a save that puts its own back (DEF-39).
     vctx.lineCap = 'round';
     vctx.lineJoin = 'round';
 

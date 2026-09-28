@@ -136,8 +136,11 @@ const LETTERING = ['font', 'textAlign', 'textBaseline', 'direction'];
 
 /**
  * The styles each call that marks the canvas draws with, beyond its
- * arguments. A path point and a `clearRect` use only the transform; a call
- * not listed here marks nothing.
+ * arguments, among those `setup.js` records. A path point and a `clearRect`
+ * use only the transform. Out of its sight, because the recorder keeps none
+ * of it and nothing in `src/` uses it: a clip region, a pattern fill's
+ * smoothing, `putImageData`, and text's `letterSpacing`, `wordSpacing` and
+ * `fontKerning` (Codex's review of DEF-39).
  */
 const DRAWN_WITH = new Map([
   ...['moveTo', 'lineTo', 'bezierCurveTo', 'quadraticCurveTo', 'arc', 'arcTo', 'ellipse', 'rect', 'roundRect',

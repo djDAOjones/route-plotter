@@ -987,6 +987,11 @@ describe('golden draw logs (TST-02)', () => {
             enterMode(app, mode);
             expectEveryInstantAlike(app, mode, border);
           }
+          // Under a viewport zoom the layer is drawn inside a save, which put
+          // the route's round caps back at the end of every frame (Codex).
+          enterMode(app, 'edit');
+          app.setZoom(2, app.waypoints[1]);
+          expectEveryInstantAlike(app, 'edit under a 2× zoom', border);
           const { app: exporter, player } = await exportAndPlayer(fixture);
           expectEveryInstantAlike(exporter, 'export', border);
           expectEveryInstantAlike(player, 'player', border);
