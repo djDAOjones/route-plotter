@@ -37,6 +37,7 @@ const NOW = "Your previous session couldn't be restored.";
 const EARLIER = "An earlier session couldn't be restored.";
 const KEPT = 'Kept until you discard it. You can download a copy.';
 const HELD = "Kept until you discard it, and new work isn't saved in this browser until then. You can download a copy.";
+const HELD_HERE = "Kept by this tab only, so download it now to keep a copy. New work isn't saved in this browser until you discard it.";
 const UNKEPT = "This browser couldn't keep it, so download it now to keep a copy.";
 const DISCARDED = "The session that couldn't be restored was discarded.";
 const FREE_SPACE = " To free space, download the session that couldn't be restored, then discard it.";
@@ -59,11 +60,12 @@ const keptKey = (time, tag) => `${KEPT_PREFIX}${time}-${tag}`;
  * a key `quotaFor` names, or one that would take the store past `capacity`
  * characters (keys and values both, as browsers count them), fails as a full
  * store does; a removal from a key `removalFails` names, or a read of one
- * `readFails` names, throws. Each names keys by value or by a test.
+ * `readFails` names, throws; so does a search while `searchFails()` says so.
+ * Each names keys by value or by a test, which is given the store too.
  */
-function useStorage(entries = {}, { quotaFor = [], capacity = Infinity, removalFails = [], readFails = [] } = {}) {
+function useStorage(entries = {}, { quotaFor = [], capacity = Infinity, removalFails = [], readFails = [], searchFails = () => false } = {}) {
   const store = new Map(Object.entries(entries));
-  const names = list => key => list.some(entry => (typeof entry === 'function' ? entry(key) : entry === key));
+  const names = list => key => list.some(entry => (typeof entry === 'function' ? entry(key, store) : entry === key));
   const [refused, unremovable, unreadable] = [quotaFor, removalFails, readFails].map(names);
   const size = () => [...store].reduce((total, [key, value]) => total + key.length + value.length, 0);
   localStorage.getItem.mockImplementation((key) => {
@@ -82,7 +84,13 @@ function useStorage(entries = {}, { quotaFor = [], capacity = Infinity, removalF
     if (unremovable(key)) throw new DOMException('The operation is insecure.', 'SecurityError');
     store.delete(key);
   });
-  Object.defineProperty(localStorage, 'length', { configurable: true, get: () => store.size });
+  Object.defineProperty(localStorage, 'length', {
+    configurable: true,
+    get: () => {
+      if (searchFails()) throw new DOMException('The operation is insecure.', 'SecurityError');
+      return store.size;
+    },
+  });
   localStorage.key = index => [...store.keys()][index] ?? null;
   return store;
 }
@@ -482,19 +490,21 @@ describe('a record no copy of which fits (DEF-28)', () => {
     expect(JSON.parse(store.get(AUTOSAVE)).waypoints).toHaveLength(1);
   });
 
-  test('is held, and nothing removed to make room, when the store fits it exactly', async () => {
+  test('is held, and nothing removed to make room, when the store fits it exactly, and said to be kept by this tab only', async () => {
     // A full store, counted as browsers count it: a copy needs room the store
-    // has not got, and the original is never given up to find it.
+    // has not got, and the original is never given up to find it. Nor has it
+    // room for the mark, so other tabs and later starts cannot know of it.
     allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to save section states/);
     const record = await refusedRecord();
-    const { store, app } = await bootRecording(
+    const { store, app, announced } = await bootRecording(
       { [AUTOSAVE]: record, ...TIP_SEEN },
       { capacity: TIP_SIZE + AUTOSAVE.length + record.length }
     );
 
     expect(store.get(AUTOSAVE)).toBe(record);
     expect(localStorage.removeItem.mock.calls.filter(([key]) => key === AUTOSAVE)).toEqual([]);
-    expect(status()).toBe(HELD);
+    expect(status()).toBe(HELD_HERE);
+    expect(announced).toContainEqual({ message: `${NOW} ${HELD_HERE}`, priority: 'assertive' });
     editAndSave(app);
     expect(store.get(AUTOSAVE)).toBe(record);
   });
@@ -575,9 +585,11 @@ describe('a record no copy of which fits (DEF-28)', () => {
       return read(key);
     });
 
+    const heard = listen(app);
     expect(await app.loadAutosave()).toBe(false);
 
-    expect(status()).toBe(HELD);
+    expect(status()).toBe(HELD_HERE);
+    expect(heard()).toContainEqual({ message: `${NOW} ${HELD_HERE}`, priority: 'assertive' });
     editAndSave(app);
     expect(store.get(AUTOSAVE)).toBe(record);
   });
@@ -885,6 +897,243 @@ describe('what may never remove or overwrite a kept record (DEF-28)', () => {
   });
 });
 
+describe('several tabs, and a store that cannot always be read (DEF-28)', () => {
+  const noCopies = { quotaFor: [isKept] };
+
+  test('discarding a record another tab already discarded leaves a newer held record, and its mark, alone', () => {
+    allowConsole(WRITE_FAILED);
+    const store = useStorage({ [AUTOSAVE]: 'first held' }, noCopies);
+    const firstTab = new StorageService();
+    expect(firstTab.keepUnrestored('first held')).toEqual({ where: 'held', durable: true });
+    const secondTab = new StorageService();
+    expect(secondTab.discardKept({ text: 'first held', where: 'held' })).toBe(true);
+    expect(secondTab.saveAutoSave({ coordVersion: 9, name: 'second' })).toBe(true);
+    const second = store.get(AUTOSAVE);
+    expect(secondTab.keepUnrestored(second).where).toBe('held');
+    const secondMark = store.get(HELD_MARK);
+
+    // The first tab still offers the first record, and its author discards it.
+    expect(firstTab.discardKept({ text: 'first held', where: 'held' })).toBe(true);
+
+    expect(store.get(AUTOSAVE)).toBe(second);
+    expect(store.get(HELD_MARK)).toBe(secondMark);
+    expect(new StorageService().saveAutoSave({ name: 'a third tab' })).toBe(false);
+    expect(store.get(AUTOSAVE)).toBe(second);
+  });
+
+  test('a hold another tab ended ends here too, and this tab saves again', () => {
+    allowConsole(WRITE_FAILED);
+    useStorage({ [AUTOSAVE]: 'held' }, noCopies);
+    const here = new StorageService();
+    here.keepUnrestored('held');
+    const otherTab = new StorageService();
+    expect(otherTab.holdState()).toEqual({ state: 'held', text: 'held', durable: true });
+    expect(otherTab.discardKept({ text: 'held', where: 'held' })).toBe(true);
+
+    expect(here.holdState()).toEqual({ state: 'none' });
+    expect(here.saveAutoSave({ name: 'new work' })).toBe(true);
+  });
+
+  test('a hold ends when a build that knows no mark writes over it, and the stale mark goes', () => {
+    allowConsole(WRITE_FAILED);
+    const store = useStorage({ [AUTOSAVE]: 'held' }, noCopies);
+    const here = new StorageService();
+    here.keepUnrestored('held');
+    store.set(AUTOSAVE, 'written by an older build');
+
+    expect(here.saveAutoSave({ name: 'new work' })).toBe(true);
+    expect(store.has(HELD_MARK)).toBe(false);
+  });
+
+  test('a held record that finds room under its own key is no longer held, here or in the tab that held it', () => {
+    allowConsole(WRITE_FAILED);
+    const room = { forCopies: false };
+    const store = useStorage({ [AUTOSAVE]: 'held' }, { quotaFor: [key => isKept(key) && !room.forCopies] });
+    const here = new StorageService();
+    here.keepUnrestored('held');
+    room.forCopies = true;
+
+    expect(new StorageService().keepUnrestored('held').where).toBe('parked');
+    expect(store.has(AUTOSAVE)).toBe(false);
+    expect(here.saveAutoSave({ name: 'new work' })).toBe(true);
+
+    here.keepUnrestored(store.get(AUTOSAVE));
+    expect(here.holdState()).toEqual({ state: 'none' });
+  });
+
+  test('keeping a held record again, once there is room, ends its hold', () => {
+    allowConsole(WRITE_FAILED);
+    const room = { forCopies: false };
+    const store = useStorage({ [AUTOSAVE]: 'held' }, { quotaFor: [key => isKept(key) && !room.forCopies] });
+    const here = new StorageService();
+    here.keepUnrestored('held');
+    room.forCopies = true;
+
+    expect(here.keepUnrestored('held').where).toBe('parked');
+    expect(here.saveAutoSave({ name: 'new work' })).toBe(true);
+    expect(store.has(HELD_MARK)).toBe(false);
+  });
+
+  test('a held record kept under a key of its own is no longer held, though its recovery copy cannot be removed', () => {
+    // It is safe under its own key, so autosave may write over the old copy.
+    allowConsole(WRITE_FAILED, /Failed to remove from localStorage \(routePlotter_autosave\)/);
+    const room = { forCopies: false };
+    const store = useStorage(
+      { [AUTOSAVE]: 'held' },
+      { quotaFor: [key => isKept(key) && !room.forCopies], removalFails: [AUTOSAVE] }
+    );
+    const here = new StorageService();
+    here.keepUnrestored('held');
+    room.forCopies = true;
+
+    expect(here.keepUnrestored('held').where).toBe('parked');
+    expect(store.get(AUTOSAVE)).toBe('held');
+    expect(store.has(HELD_MARK)).toBe(false);
+    expect(here.holdState()).toEqual({ state: 'none' });
+    expect(here.saveAutoSave({ name: 'new work' })).toBe(true);
+    expect(kept(store)).toEqual(['held']);
+  });
+
+  test('a mark, or a marked recovery key, that cannot be read stops every write', () => {
+    allowConsole(/Failed to load from localStorage/);
+    const unreadable = { key: HELD_MARK };
+    useStorage({ [HELD_MARK]: 'a mark' }, { readFails: [key => key === unreadable.key] });
+    const service = new StorageService();
+
+    expect(service.saveAutoSave({ name: 'new work' })).toBe(false);
+    unreadable.key = AUTOSAVE;
+    expect(service.saveAutoSave({ name: 'new work' })).toBe(false);
+  });
+
+  test('a record is offered, and not restored, while its mark cannot be read', async () => {
+    allowConsole(/Failed to load from localStorage \(routePlotter_heldAutosave\)/);
+    const record = JSON.stringify(await savedProject());
+    const { store, app } = await bootRecording(
+      { [AUTOSAVE]: record, [HELD_MARK]: 'a mark' },
+      { readFails: [HELD_MARK] }
+    );
+
+    expect(app.waypoints).toHaveLength(0);
+    expect(store.get(AUTOSAVE)).toBe(record);
+    expect(notice().hidden).toBe(false);
+    expect(status()).toBe(HELD_HERE);
+  });
+
+  test('a mark whose record has gone does not stop saving, even when it cannot be removed', () => {
+    allowConsole(/Failed to remove from localStorage \(routePlotter_heldAutosave\)/);
+    useStorage({ [HELD_MARK]: 'a mark left behind' }, { removalFails: [HELD_MARK] });
+
+    expect(new StorageService().saveAutoSave({ name: 'new work' })).toBe(true);
+  });
+
+  test('a record written over a held one is not taken for it', () => {
+    // Two records the first version's 32-bit mark could not tell apart.
+    allowConsole(WRITE_FAILED);
+    const held = '{"coordVersion":9,"name":"6d0a83f534f412e9def98860"}';
+    const replacement = '{"coordVersion":9,"name":"d3698241ec6f9382fa5f51e1"}';
+    const store = useStorage({ [AUTOSAVE]: held }, noCopies);
+    new StorageService().keepUnrestored(held);
+    store.set(AUTOSAVE, replacement);
+
+    expect(new StorageService().holdState()).toEqual({ state: 'none' });
+  });
+
+  test('records kept in the same millisecond each get a key of their own, newest first', () => {
+    useStorage();
+    vi.spyOn(Date, 'now').mockReturnValue(12345);
+    vi.spyOn(Math, 'random').mockReturnValue(0.125);
+    const service = new StorageService();
+    const first = service.keepUnrestored('first');
+    const second = service.keepUnrestored('second');
+
+    expect(first.key).not.toBe(second.key);
+    expect(service.listKept().records.map(record => record.text)).toEqual(['second', 'first']);
+  });
+
+  test('Discard removes every readable copy of the record it offered', async () => {
+    const { store } = await bootRecording({
+      [keptKey(2, 'b')]: 'the same record',
+      [keptKey(1, 'a')]: 'the same record',
+    });
+
+    discard();
+
+    expect(kept(store)).toEqual([]);
+    expect(notice().hidden).toBe(true);
+  });
+
+  test('a record another tab holds shows here, and a failure to save here says why', async () => {
+    allowConsole(WRITE_FAILED);
+    const { store, app } = await bootRecording({}, noCopies);
+    store.set(AUTOSAVE, 'held by another tab');
+    new StorageService().keepUnrestored('held by another tab');
+    window.dispatchEvent(new StorageEvent('storage', { key: HELD_MARK, newValue: store.get(HELD_MARK) }));
+
+    expect(notice().hidden).toBe(false);
+    expect(status()).toBe(HELD);
+    const later = listen(app);
+    editAndSave(app);
+    expect(store.get(AUTOSAVE)).toBe('held by another tab');
+    expect(later()).toContainEqual({ message: `Auto-save failed. Save a project file to keep your work.${OFF_UNTIL}`, priority: 'polite' });
+  });
+
+  test('a failure to save names a hold another tab made, though no storage event came', async () => {
+    allowConsole(WRITE_FAILED);
+    const { store, app } = await bootRecording({}, noCopies);
+    store.set(AUTOSAVE, 'held by another tab');
+    new StorageService().keepUnrestored('held by another tab');
+    const later = listen(app);
+
+    editAndSave(app);
+
+    expect(later()).toContainEqual({ message: `Auto-save failed. Save a project file to keep your work.${OFF_UNTIL}`, priority: 'polite' });
+    expect(notice().hidden).toBe(false);
+  });
+
+  test('a record this start kept can be downloaded even when its key cannot be read back', async () => {
+    allowConsole(LOAD_REFUSED, /Failed to load from localStorage \(routePlotter_keptAutosave:/);
+    const record = await refusedRecord();
+    const { store } = await bootRecording(
+      { [AUTOSAVE]: record },
+      { readFails: [(key, entries) => isKept(key) && entries.has(key)] }
+    );
+
+    expect(kept(store)).toEqual([record]);
+    expect(notice().hidden).toBe(false);
+    expect(status()).toBe(KEPT);
+    const [blob] = download();
+    expect(await blob.text()).toBe(record);
+  });
+
+  test('Clear All’s dialog counts a kept record it cannot read', async () => {
+    allowConsole(/Failed to load from localStorage \(routePlotter_keptAutosave:/);
+    const unreadable = keptKey(1, 'unreadable');
+    await bootRecording({ [unreadable]: 'kept' }, { readFails: [unreadable] });
+
+    expect(notice().hidden).toBe(true);
+    expect(clearNote().hidden).toBe(false);
+    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+  });
+
+  test('Clear All says it failed when it cannot search the store', async () => {
+    allowConsole(/Failed to search localStorage for kept sessions/);
+    const faults = { search: false };
+    const { app } = await bootRecording({}, { searchFails: () => faults.search });
+    faults.search = true;
+    const announced = listen(app);
+
+    document.getElementById('clear-btn').click();
+    expect(clearNote().hidden).toBe(false);
+    expect(clearNote().textContent).toBe("Any session that couldn't be restored will be discarded too.");
+    document.getElementById('clear-confirm').click();
+
+    expect(announced()).toContainEqual({
+      message: 'Browser recovery could not be cleared; reload may restore old work.',
+      priority: 'assertive',
+    });
+  });
+});
+
 describe('the notice, as the markup and styles declare it (DEF-28)', () => {
   const tokensCss = readFileSync(resolve(process.cwd(), 'styles/tokens.css'), 'utf8');
   const mainCss = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8')
@@ -937,5 +1186,50 @@ describe('the notice, as the markup and styles declare it (DEF-28)', () => {
       expect(selector).not.toMatch(/\.btn|button|unrestored-download|unrestored-discard/);
       expect(body).not.toMatch(/(?:^|[\s;])(?:min-|max-)?height\s*:/);
     }
+  });
+});
+
+describe('two tabs keeping records at once (DEF-28)', () => {
+  // Last in this file: each tab is a fresh copy of the storage module, as a
+  // second tab's is, so each numbers its keys from the start.
+  async function anotherTab() {
+    vi.resetModules();
+    const { StorageService: Service } = await import('../src/services/StorageService.js');
+    return new Service();
+  }
+
+  test('a key another tab has taken is never written over, even one made in the same millisecond with the same chance', async () => {
+    const store = useStorage();
+    vi.spyOn(Date, 'now').mockReturnValue(12345);
+    vi.spyOn(Math, 'random').mockReturnValue(0.125);
+    const [first, second] = [await anotherTab(), await anotherTab()];
+
+    expect(first.keepUnrestored('from the first tab').where).toBe('parked');
+    expect(second.keepUnrestored('from the second tab').where).toBe('parked');
+    expect(kept(store).sort()).toEqual(['from the first tab', 'from the second tab']);
+  });
+
+  test('two tabs writing in the same millisecond keep both records, though each looked before the other wrote', async () => {
+    const store = useStorage();
+    vi.spyOn(Date, 'now').mockReturnValue(12345);
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.25).mockReturnValueOnce(0.75);
+    const [here, there] = [await anotherTab(), await anotherTab()];
+    // The other tab keeps its record between this tab's look at a key and
+    // its write there, as tabs may: storage has no lock across them.
+    const read = localStorage.getItem.getMockImplementation();
+    let between = () => there.keepUnrestored('from the other tab');
+    localStorage.getItem.mockImplementation((key) => {
+      const value = read(key);
+      if (isKept(key) && between) {
+        const run = between;
+        between = null;
+        run();
+      }
+      return value;
+    });
+
+    expect(here.keepUnrestored('from this tab').where).toBe('parked');
+    expect(between).toBe(null);
+    expect(kept(store).sort()).toEqual(['from the other tab', 'from this tab']);
   });
 });

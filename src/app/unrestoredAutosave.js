@@ -5,18 +5,19 @@
  * autosave overwrote the record, so the work in it was lost without the
  * author learning of it. Now the record is kept (`StorageService.keepUnrestored`):
  * under a key of its own, which autosave never writes, or, where no copy can
- * be written, held in the recovery key, which no tab then writes. The author
- * is told, and a notice offers Download it and Discard until they choose; a
- * later start offers it again. Only that Discard and Clear All remove one
- * (Joe, decision log 2026-09-28, "the big run").
+ * be written, held in the recovery key under a mark every tab's writer
+ * respects. The author is told, and a notice offers Download it and Discard
+ * until they choose; a later start offers it again. Only that Discard and
+ * Clear All remove one (Joe, decision log 2026-09-28, "the big run").
  *
  * The notice offers one record at a time: those this start could not
  * restore first, then those kept earlier, newest first. What is on offer is
- * read back from the store after every change, so it is always what the
- * store holds; `app._unrestoredOffers` lists it as `{ text, where, key?,
- * earlier }`.
+ * read back from the store after every change, and when another tab changes
+ * it, so it is what the store holds; `app._unrestoredOffers` lists it as
+ * `{ text, where, durable?, key?, earlier }`.
  */
 import { downloadText } from './privacy.js';
+import { STORAGE } from '../config/constants.js';
 
 const HEADING = {
   now: "Your previous session couldn't be restored.",
@@ -26,6 +27,9 @@ const HEADING = {
 const STATUS = {
   parked: 'Kept until you discard it. You can download a copy.',
   held: "Kept until you discard it, and new work isn't saved in this browser until then. You can download a copy.",
+  // Held without its mark, or where the store cannot be read: this tab keeps
+  // it from being written over, but another tab or the next start might not.
+  heldHere: "Kept by this tab only, so download it now to keep a copy. New work isn't saved in this browser until you discard it.",
   unkept: "This browser couldn't keep it, so download it now to keep a copy.",
 };
 
@@ -35,41 +39,64 @@ function offersOf(app) {
   return app._unrestoredOffers ?? [];
 }
 
-/** What this start kept, so its records are offered first, under the row's own sentence. */
+/**
+ * What this start kept, so its records are offered first, under the row's
+ * own sentence, and can be downloaded even if the store cannot read them back.
+ */
 function thisStart(app) {
-  app._unrestoredThisStart ??= { keys: new Set(), held: false, unkept: [] };
+  app._unrestoredThisStart ??= { keys: new Map(), heldText: null, unkept: [] };
   return app._unrestoredThisStart;
+}
+
+function statusFor(offer) {
+  if (offer.where === 'held') return offer.durable ? STATUS.held : STATUS.heldHere;
+  return STATUS[offer.where];
 }
 
 /** What the notice, and an announcement, say of one offer. */
 function messageFor(offer) {
-  return `${offer.earlier ? HEADING.earlier : HEADING.now} ${STATUS[offer.where]}`;
+  return `${offer.earlier ? HEADING.earlier : HEADING.now} ${statusFor(offer)}`;
 }
 
 /**
  * What is on offer now, read back from the store: the records this start
- * could keep only in memory, a held one, then those under keys of their own.
- * A record whose key cannot be read cannot be offered; Clear All still
- * removes it.
+ * could keep only in memory, a held one, then those under keys of their own;
+ * and how many records Clear All would discard, readable or not.
  */
-function readOffers(app) {
+function readStore(app) {
   const started = thisStart(app);
   const offers = started.unkept.map(text => ({ text, where: 'unkept', earlier: false }));
-  const held = app.storageService.adoptHeld();
-  if (held !== null) offers.push({ text: held, where: 'held', earlier: !started.held });
-  for (const { key, text } of app.storageService.listKept().records) {
-    if (text !== null) offers.push({ text, where: 'parked', key, earlier: !started.keys.has(key) });
+  let discardable = started.unkept.length;
+  const hold = app.storageService.holdState();
+  if (hold.state !== 'none') discardable += 1;
+  if (hold.text !== null && hold.text !== undefined) {
+    offers.push({
+      text: hold.text,
+      where: 'held',
+      durable: hold.state === 'held' && hold.durable,
+      earlier: started.heldText !== hold.text,
+    });
   }
-  return [...offers.filter(offer => !offer.earlier), ...offers.filter(offer => offer.earlier)];
+  const kept = app.storageService.listKept();
+  discardable += kept.records.length;
+  for (const { key, text } of kept.records) {
+    const known = text ?? started.keys.get(key) ?? null;
+    if (known !== null) offers.push({ text: known, where: 'parked', key, earlier: !started.keys.has(key) });
+  }
+  return {
+    offers: [...offers.filter(offer => !offer.earlier), ...offers.filter(offer => offer.earlier)],
+    discardable,
+    searched: kept.ok,
+  };
 }
 
 /**
  * Show what is on offer: the first record in the notice, and the line in
- * Clear All's dialog that goes with them.
+ * Clear All's dialog, which counts every record Clear All would discard.
  * @returns {Array<Object>} The offers, first shown first
  */
 function showOffers(app) {
-  const offers = readOffers(app);
+  const { offers, discardable, searched } = readStore(app);
   app._unrestoredOffers = offers;
   const [first] = offers;
   const notice = document.getElementById('unrestored-notice');
@@ -78,14 +105,14 @@ function showOffers(app) {
     const heading = document.getElementById('unrestored-notice-text');
     if (heading) heading.textContent = first.earlier ? HEADING.earlier : HEADING.now;
     const status = document.getElementById('unrestored-notice-status');
-    if (status) status.textContent = STATUS[first.where];
+    if (status) status.textContent = statusFor(first);
   }
   const clearNote = document.getElementById('clear-unrestored-note');
   if (clearNote) {
-    clearNote.hidden = !first;
-    clearNote.textContent = offers.length > 1
-      ? `The ${offers.length} sessions that couldn't be restored will be discarded too.`
-      : "The session that couldn't be restored will be discarded too.";
+    clearNote.hidden = discardable === 0 && searched;
+    if (!searched) clearNote.textContent = "Any session that couldn't be restored will be discarded too.";
+    else if (discardable > 1) clearNote.textContent = `The ${discardable} sessions that couldn't be restored will be discarded too.`;
+    else clearNote.textContent = "The session that couldn't be restored will be discarded too.";
   }
   return offers;
 }
@@ -104,11 +131,11 @@ export function keepUnrestoredAutosave(app, text) {
     showOffers(app);
     return false;
   }
-  if (kept.where === 'parked') started.keys.add(kept.key);
-  else if (kept.where === 'held') started.held = true;
+  if (kept.where === 'parked') started.keys.set(kept.key, text);
+  else if (kept.where === 'held') started.heldText = text;
   else started.unkept.unshift(text);
   showOffers(app);
-  app.announce(messageFor({ where: kept.where, earlier: false }), 'assertive');
+  app.announce(messageFor({ where: kept.where, durable: kept.durable, earlier: false }), 'assertive');
   return false;
 }
 
@@ -135,11 +162,12 @@ export function keptEarlierNote(app) {
 
 /**
  * What a report that browser recovery could not be written adds while a
- * record is kept, since keeping it may be what stopped the write.
+ * record is kept, since keeping it may be what stopped the write. It reads
+ * the store first: another tab may have held a record since.
  * @returns {string} A sentence to append, or ''
  */
 export function recoveryFailureGuidance(app) {
-  const offers = offersOf(app);
+  const offers = showOffers(app);
   if (offers.some(offer => offer.where === 'held')) {
     return " Auto-save is off until you discard the session that couldn't be restored; download it first to keep a copy.";
   }
@@ -179,7 +207,12 @@ function focusPastNotice(notice) {
   }
 }
 
-/** Wire the notice's two choices. */
+/** Whether a change another tab made to storage may change what is on offer. */
+function changesOffers(key) {
+  return key === null || key === STORAGE.HELD_AUTOSAVE_KEY || key.startsWith(STORAGE.KEPT_AUTOSAVE_PREFIX);
+}
+
+/** Wire the notice's two choices, and keep it true to the store. */
 export function setupUnrestoredNotice(app) {
   app._unrestoredOffers = [];
   document.getElementById('unrestored-download')?.addEventListener('click', () => {
@@ -205,5 +238,11 @@ export function setupUnrestoredNotice(app) {
     // to browser recovery now, not at the next change.
     if (offer.where === 'held') app.saveRecovery?.();
     app.announce(next ? `${DISCARDED} ${messageFor(next)}` : DISCARDED);
+  });
+  // Clear All's dialog says how many it would discard, as the store has it now.
+  document.getElementById('clear-btn')?.addEventListener('click', () => showOffers(app));
+  // Another tab of the app may keep, hold or discard a record meanwhile.
+  window.addEventListener('storage', (event) => {
+    if (changesOffers(event.key)) showOffers(app);
   });
 }

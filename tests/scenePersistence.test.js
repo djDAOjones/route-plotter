@@ -62,7 +62,7 @@ function makeFakeApp() {
       autoSave(data) { captured.autosaved = data; },
       loadAutoSaveText() { return app._autosavePayload ? JSON.stringify(app._autosavePayload) : null; },
       keepUnrestored(text) { captured.parked = text; return { where: 'parked', key: 'routePlotter_keptAutosave:0-fake', existing: false }; },
-      adoptHeld() { return null; },
+      holdState() { return { state: 'none' }; },
       listKept() { return { ok: true, records: [] }; },
       clearAutoSave() { captured.cleared = true; },
     },

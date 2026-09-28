@@ -49,7 +49,7 @@ function makeApp() {
     // it refuses it (DEF-28).
     loadAutoSaveText: vi.fn(() => null),
     keepUnrestored: vi.fn(() => ({ where: 'parked', key: 'routePlotter_keptAutosave:0-stub', existing: false })),
-    adoptHeld: vi.fn(() => null),
+    holdState: vi.fn(() => ({ state: 'none' })),
     listKept: vi.fn(() => ({ ok: true, records: [] })),
   };
   const animationState = {

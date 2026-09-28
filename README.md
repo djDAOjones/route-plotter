@@ -161,11 +161,15 @@ author is told, and a notice offers **Download it** and **Discard**, again at
 each start, until they choose. Each such record has its own key, so a second
 one never displaces the first. Where no copy fits, nothing is removed to make
 room: the record stays in the recovery key, held, marked in
-`routePlotter_heldAutosave` so that no tab of the app writes or clears it
-there and no later start restores it; autosave fails, and says so, until the
-author discards it. The notice offers one record at a time, this start's
-first. Only that Discard and **Clear All** remove one, and Clear All's dialog
-says so. When storage cannot hold both a kept record and a new autosave, the
+`routePlotter_heldAutosave` (its length and two hashes) so that no tab of the
+app writes or clears it there and no later start restores it; autosave fails,
+and says so, until the author discards it. If even the mark cannot be written,
+the notice says only this tab is keeping the record, and to download it now.
+Tabs open at the same time share no lock (`localStorage` has none), so the
+mark narrows, and cannot close, the moment in which a tab that has not yet
+seen it writes over the record. The notice offers one record at a time, this
+start's first, and follows what other tabs keep, hold or discard. Only that
+Discard and **Clear All** remove one, and Clear All's dialog says so. When storage cannot hold both a kept record and a new autosave, the
 record stays, and the autosave's failure report says how to free space.
 
 Other localStorage keys: `routePlotter_splashShown`, `routePlotter_previewTipDismissed`, `routePlotter_sectionState` and `routePlotter_lastSection`. `routePlotter_customKeybindings` is read only by the help panel (Keybindings below); `routePlotter_preferences` has read/write helpers in `StorageService` with no callers.
