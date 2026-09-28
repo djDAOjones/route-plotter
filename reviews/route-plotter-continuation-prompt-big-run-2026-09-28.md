@@ -67,6 +67,34 @@ its summary.
 - **One release, at the end of the run** (below). Firefox and Safari
   evidence stays Joe's.
 
+## The vendored workflows, in this run
+
+`AGENTS.md` sends non-trivial work through `pm_skills/integrations/task.md`,
+whose default mode, `checkpoint`, waits for approval at a scope gate and an
+option gate. **This run is `auto-jazz`:** no gates. At each skipped gate,
+make task.md's conservative choice and state it in one line in the PR. A
+behaviour-preserving item also keeps `refactor` mode's preservation contract,
+with its declared surface (the plan row's paths and the tests that pin them)
+named in the PR rather than approved at a gate.
+
+task.md's hard prohibitions stand. Three of them this run meets are already
+approved:
+- deleting a test that pins only dead code (Q8, each named in the wave's
+  decision-log entry);
+- the persisted-format changes planned rows state (DEF-09 drops
+  `styles.pathHead.rotation` from snapshots; Q12 keeps a saved 0 and restores
+  `modified`; DEF-28's new storage key; Q18 and ABS-06's version gate and
+  schema bump);
+- more than five files, inside a row's declared surface.
+
+Anything else on that list (a runtime dependency, a never-edit file, a
+destructive migration, deleting data) still goes to Joe. An item closes with
+its PR. The wave close-outs are its memory writes (DOC-06 (j): one
+decision-log entry per wave), so its commit carries no `Close: lite` trailer.
+task.md's step 11 commits to the item's branch and pushes only that branch.
+The comparative review stands in for the `review.md` pass task.md suggests
+after a gateless run.
+
 ## What still goes to Joe — park it, don't stop
 
 To park: leave the pull request (if there is one) open, with a first line

@@ -40,7 +40,10 @@ that change behaviour (Q10–Q13, Q18, Q19); each of those becomes its own PR
 with a DEF row marked decided. Every PR still states its behaviour. Still
 Joe's: DEF-07's camera feel, seen side by side before it merges; any
 behaviour beyond a row's treatment; and defects found on the way, which
-become proposed rows, not fixes.
+become proposed rows, not fixes. The run is `task.md`'s gateless
+`auto-jazz`, keeping refactor mode's preservation contract; the
+persisted-format changes those rows state, and Q8's test deletions, count as
+approved.
 
 **Scheduling** (refines DOC-06 (i) and the 2026-09-23 entry on unwaved
 defects): `### Next` now holds W5, W4 behind TST-04, the eight defects
