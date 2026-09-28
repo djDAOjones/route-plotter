@@ -982,6 +982,13 @@ describe('an outline entry opens and closes as a browser clicks it (DEF-40)', ()
     expect(document.activeElement).toBe(summaryOf(entry()));
   });
 
+  test('an entry has its content as soon as it is opened, for a script that acts on it next', () => {
+    summaryOf(entry()).click();
+
+    expect(entry().open).toBe(true);
+    expect(form(entry())).not.toBeNull();
+  });
+
   const select = selectionKey => eventBus.emit('scene-outline:update', snapshotFor(fixture, { selectionKey }));
   const control = 'control:crowd-route:edge-a:0';
 
@@ -1036,6 +1043,19 @@ describe('an outline entry opens and closes as a browser clicks it (DEF-40)', ()
     select(null);
     select('waypoint:wp-minor');
     expect(disclosure(container, 'route').open).toBe(true);
+  });
+
+  test('a new selection opens its entries, whatever was selected before', async () => {
+    select(control);
+    await browserClick(summaryOf(disclosure(container, 'crowds')));
+    expect(disclosure(container, 'crowds').open).toBe(false);
+
+    select('waypoint:wp-major');
+    expect(disclosure(container, 'crowds').open).toBe(false);
+
+    select(control);
+    expect(disclosure(container, 'crowds').open).toBe(true);
+    expect(disclosure(container, control).querySelector('form[data-outline-action="update-control"]')).not.toBeNull();
   });
 
   test('a focus request opens its entry once: the entry then closes, and a click elsewhere keeps focus', async () => {

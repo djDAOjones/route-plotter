@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { bootApp } from './helpers/bootApp.js';
 import { EventBus } from '../src/core/EventBus.js';
 import { Scene } from '../src/models/Scene.js';
 import { Waypoint } from '../src/models/Waypoint.js';
@@ -844,6 +845,22 @@ describe('scene-outline command adapter', () => {
       .toBe(sceneOutlineKey('control', layer.id, edge.id, 0));
   });
 
+  test('sends the outline the selection a restore brings back, so it can reveal it (DEF-40)', async () => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    const waypoint = new Waypoint({ id: 'restored-waypoint', isMajor: true });
+    app.waypoints = [waypoint];
+    app.setupSceneOutline();
+    await Promise.resolve();
+    const sent = [];
+    app.eventBus.on('scene-outline:update', snapshot => sent.push(snapshot.selectionKey));
+
+    app.selectedWaypoint = waypoint;
+    app._syncSceneOutlineSelectionAfterRestore();
+    await Promise.resolve();
+
+    expect(sent).toEqual([sceneOutlineKey('waypoint', waypoint.id)]);
+  });
+
   test('clears transient outline selection and focus only at successful project boundaries', async () => {
     document.body.innerHTML = '<div id="scene-outline"></div>';
     const waypoint = new Waypoint({ id: 'same-id', isMajor: true });
@@ -1003,5 +1020,51 @@ describe('scene-outline command adapter', () => {
     await Promise.resolve();
     expect(updates).toHaveBeenCalledTimes(5);
     vi.useRealTimers();
+  });
+});
+
+describe('the outline in the booted app (DEF-40)', () => {
+  const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+
+  /** A click as a browser delivers it: the listeners, their microtasks, then the toggle unless cancelled. */
+  async function browserClick(summary) {
+    summary.focus();
+    const click = new Event('click', { bubbles: true, cancelable: true });
+    summary.dispatchEvent(click);
+    await nextTask();
+    if (!click.defaultPrevented) summary.parentElement.open = !summary.parentElement.open;
+    await nextTask();
+  }
+
+  test('undo and redo reveal the selection they bring back', async () => {
+    const app = await bootApp();
+    await app.ready;
+    document.getElementById('splash-close').click();
+    const outline = document.getElementById('scene-outline');
+    const route = () => outline.querySelector('details[data-outline-disclosure="route"]');
+    const add = async (x) => {
+      const form = outline.querySelector('form[data-outline-form-key="route:add-submit"]');
+      form.elements.x.value = String(x);
+      form.querySelector('[type="submit"]').click();
+      await nextTask();
+    };
+    await add(25);
+    await add(75);
+    const [first, second] = app.waypoints;
+    expect(app.selectedWaypoint).toBe(second);
+
+    await browserClick(route().querySelector(':scope > summary'));
+    expect(route().open).toBe(false);
+    app.undo();
+    await nextTask();
+    expect(app.selectedWaypoint?.id).toBe(first.id);
+    expect(route().open).toBe(true);
+
+    await browserClick(route().querySelector(':scope > summary'));
+    expect(route().open).toBe(false);
+    app.redo();
+    await nextTask();
+    expect(app.selectedWaypoint?.id).toBe(second.id);
+    expect(route().open).toBe(true);
   });
 });
