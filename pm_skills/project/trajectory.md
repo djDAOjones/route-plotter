@@ -19,8 +19,8 @@
 
 ## Before the big run (2026-09-28)
 
-Outcome: Route Plotter is a Chromium-only app for now, so its cross-browser
-evidence is complete.
+Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its
+Firefox and Safari evidence waived, not supplied.
 
 REV-04 — Closed on Joe's call that Route Plotter is Chromium-only for now:
 Chromium's codec, container and offline export evidence (2026-09-24,

@@ -59,7 +59,8 @@ The decision-log entries "the big run" and "the big run, amended" (both
   dated notes on CON-14, ABS-06, DEF-07, DOC-08, DEL-07, §12.1, §13 rule 3,
   W10, §17 and §20 Q5, Q16, Q18 and Q19). For DEF-40 to DEF-46 that means
   the first remedy only, never a row's "or …" alternative. A row patched since
-  is not approved beyond its old text: a PR that relies on the patch parks.
+  is not approved beyond its old text: a PR that relies on the patch parks. A
+  note marked as a proposal, or as the agent's reading, approves nothing.
   Also approved are the §20 choices of 2026-09-22 that change behaviour: Q10
   (one intro curve and time base), Q11
   (anchored crowd nodes can't be dragged, and say so), Q12 (a saved 0 stays
@@ -80,32 +81,43 @@ The decision-log entries "the big run" and "the big run, amended" (both
   pull requests watched once opened.
 - **Files from other versions** (Joe: "refuse newer, drop older. for now.
   start to plan compatibility so that from now on old versions can be
-  imported and upgraded"). A file from a newer version is refused with a clear
-  message and never re-saved; nothing opens it for viewing. A file from an
-  earlier version no longer has to load: where old-format handling
-  complicates a change, drop it, name the drop in the PR, and refuse such a
-  file with a clear message rather than misread it. For an autosave, refusing
-  means DEF-28's notice and parked record, never a silent clear: that
-  includes the older-version path in `loadAutosave` (`persistence.js`), which
-  clears the record today. Plan compatibility from
-  here on, in DEP-03 and ABS-06: one version for the persisted format, one
-  gate for autosave, ZIP and player, and, for each later change to the format,
-  a version bump with a tested step that upgrades the previous version's
-  files, all written into `architecture.md`. The promise starts with this
-  run's release: from it on, every later version imports and upgrades every
-  earlier file. That starting point is this prompt's reading of Joe's words,
-  and he may move it.
+  imported and upgraded"). Compatibility goes by the persisted format's
+  version (`coordVersion`), not the app's build. A file in a newer format is
+  refused, and so is one in a format the app has stopped reading: the message
+  names the file's format and the one the app reads, and the refusal comes
+  before the app or the player takes anything from the file (`PlayerApp.load`
+  starts hydrating at once today). A refused file is never re-saved, and
+  nothing opens it for viewing. For an autosave, refusing means DEF-28's
+  notice and parked record, never a silent clear: that includes the
+  older-format path in `loadAutosave` (`persistence.js`), which clears the
+  record today. **You may drop formats older than today's 9,** naming each
+  drop in its PR. **Format 9 keeps loading** (every file v3.2.692 saves is
+  format 9) until Joe says whether "drop older" reaches it; that is a
+  proposal, not a decision, so ask it in the handoff, recommending that format
+  9 stay. Any change a format-9 file can't take therefore bumps the format
+  first, with a tested step that upgrades format 9. That is the compatibility
+  plan, from here on, in DEP-03 and ABS-06: one format version, one gate for
+  autosave, ZIP and player, and, for each later format change, a bump with a
+  tested upgrade step from the previous format, all written into
+  `architecture.md`.
 - **Defects found on the way are fixed** (Joe: "fix defects along the way"),
-  including a defect a wish-list line records in code your work reaches. Each
-  gets a DEF row (plan §12.1, the next free number) with its evidence, marked
-  decided by this call, and its own PR that states the new behaviour and pins
-  it with a regression test; it merges under the bar like a planned defect.
-  Where the fix is a real choice between behaviours users would notice, make
-  the smallest change that removes the defect and say so in the PR. Delete the
-  wish-list line it resolves.
-- **DEF-07 needs no side-by-side** (Joe: "I dont need to see the old camera
-  feel"). It merges under the bar like any planned defect, and ABS-03's
-  camera half follows it.
+  including a defect a wish-list line records in code your work reaches. A
+  defect breaks a promise the code, its docs or its tests already make: name
+  that promise and reproduce the failure. Each gets a DEF row (plan §12.1, the
+  next free number) with its evidence, marked decided by this call, and its
+  own PR that states the new behaviour and pins it with a regression test; it
+  merges under the bar like a planned defect. Where the fix is a real choice
+  between behaviours users would notice, make the smallest change that
+  removes the defect and say so in the PR. It is not a back door: a defect a
+  planned row covers takes that row's treatment, a choice parked for Joe stays
+  parked, the out-of-scope P3 rows stay out, and an enhancement or an
+  unverified idea stays on the wish-list. Delete the wish-list line a fix
+  resolves.
+- **DEF-07 no longer waits for Joe** (Joe: "I dont need to see the old camera
+  feel"). Still compare it yourself (the same instants on `main` and the
+  branch, played and exported), with the captures in the PR as its evidence.
+  It merges under the bar like any planned defect, and ABS-03's camera half
+  follows it.
 - **Devin, Windsurf and `_Joe/`.** Devin and Windsurf are no longer used
   (Joe: "dont use anymore"), so DOC-08 deletes `.devin/` and
   `.codeiumignore`. In `_Joe/`, delete DEL-07's two scripts and, once DOC-08
@@ -263,7 +275,7 @@ TST-04 and three other tests unblock the most, so a sensible order is:
 | W7 | W5 is complete, including TST-09 and the branched and intro/tail fixtures §13 W7 names | DOC-04; DOC-05; ABS-01 with DEF-12; ABS-02 with DEF-05 |
 | W8 | W6 and W7 are complete | **DEP-03 first** (moved up from W9 on 2026-09-28: CON-11 and CON-05 need it, which made W8 and W9 a cycle; its own prerequisite, TST-06, has shipped); then CON-04; CON-07; CON-11 with DEF-04; CON-06, then DEP-05; CON-05 with DEF-24; CON-10; CON-12; CON-13; CON-09; CON-14 with Q19; DEF-09; DEF-25; Q11; Q12; Q13 |
 | W9 | W5 and W8 are complete | the registration-order snapshot of the wired handlers first (§13 W9); CON-01; CON-02; CON-03; CLR-01; SPL-02; SPL-03 on DEP-03's extraction, then ABS-06 with Q18's future-version policy and the upgrade path (Joe, 2026-09-28); SPL-04; DEP-04 (SPL-06 went ahead of TST-11) |
-| W10 | W7 is complete | DEF-10; CON-08 with DEF-11; Q10; DEF-07 (no side-by-side for Joe); ABS-03's timeline half once CON-08 merges, its camera half once DEF-07 does |
+| W10 | W7 is complete | DEF-10; CON-08 with DEF-11; Q10; DEF-07 (Joe needn't see it; you still compare it); ABS-03's timeline half once CON-08 merges, its camera half once DEF-07 does |
 | W11 | W6 to W10 are complete | the compatibility exports and wrappers they left; the `setSelectedWaypoint` shim; deprecated aliases |
 | W12 | W1 to W11 are complete | GOV-03; GOV-02 (after DOC-08's link fixes); TST-12; TST-15; DOC-07; DOC-08, with the deletions Joe allowed (`.devin/`, `.codeiumignore`, then the `_Joe` dev guide once its valid parts have moved); DEL-07 (delete its two `_Joe/` scripts); Q18's diagnostics error count; `AGENTS.md` pointers to plan §15 and §16 |
 
@@ -286,8 +298,11 @@ TST-04 and three other tests unblock the most, so a sensible order is:
   let DEF-45's queue carry its message.
 - DEF-28 adds a storage key: name it in `constants.STORAGE` beside
   `AUTOSAVE_KEY`, and add it where `README.md` describes autosave and Clear
-  All. Clear All's removal (`clearAutoSave`) must reach it too, per Joe's
-  call.
+  All. Only Clear All (`projectReset.js`) and the notice's Discard may remove
+  the parked record, per Joe's calls. Don't widen `clearAutoSave` to reach
+  it: that also runs when a recovery write fails (`persistence.js:667`) and on
+  the older-format path in `loadAutosave`, where the parked record must stay.
+  Test a failed write and a refused format apart from Clear All.
 - DEF-06 lands before the release: since DEF-08 (unreleased), a route cut to
   one waypoint draws its last marker, paused, at a stale grow scale.
 - DEF-20 recovers `angleToSlider` from `2fb72ff`

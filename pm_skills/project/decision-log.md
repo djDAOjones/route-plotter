@@ -12,17 +12,17 @@
 2. **Files from other versions (Q18):** "no backwards compatibility needed
    now, but we should start to design with it in mind", then "refuse newer,
    drop older. for now. start to plan compatibility so that from now on old
-   versions can be imported and upgraded". A newer-version file is refused
-   with a clear message and never re-saved; Q18's "allow viewing" is
-   withdrawn. An earlier-version file no longer has to load: the run may drop
-   old-format handling, naming each drop in its PR, and refuses such a file
-   with a clear message; a refused autosave gets DEF-28's notice, never
-   today's silent clear of an older record (DEF-28's own treatment, applied).
-   DEP-03 and ABS-06 plan compatibility from here on:
-   one format version, one gate, and a version bump with a tested upgrade step
-   for each later format change, written into `architecture.md`. **The
-   agent's reading, for Joe to confirm:** the promise starts with the run's
-   release, so files saved by v3.2.692 aren't covered.
+   versions can be imported and upgraded". Compatibility goes by format
+   (`coordVersion`). A newer-format file is refused with a message naming
+   both formats, before anything is taken from it, and never re-saved; Q18's
+   "allow viewing" is withdrawn. Formats older than 9 may be dropped, each
+   drop named in its PR; a refused autosave gets DEF-28's notice, never
+   today's silent clear (DEF-28's treatment, applied). DEP-03 and ABS-06 plan
+   the upgrade path: one format version, one gate, and a bump with a tested
+   upgrade step for each later format change, in `architecture.md`.
+   **Proposed, for Joe to confirm:** whether "drop older" reaches format 9,
+   which every v3.2.692 save uses. Until he answers, format 9 keeps loading,
+   and a change it can't take bumps the format first.
 3. **Devin and Windsurf:** "dont use anymore". DOC-08 deletes `.devin/` and
    `.codeiumignore`.
 4. **`_Joe/`:** "you rename or delete". The run deletes DEL-07's two scripts
@@ -30,9 +30,13 @@
    read, the dev guide. Nothing else in `_Joe/` changes.
 5. **Defects found on the way:** "fix defects along the way". Each gets a DEF
    row with its evidence and its own PR stating the new behaviour, under the
-   merge bar; no longer proposed and parked.
-6. **DEF-07:** "I dont need to see the old camera feel". No side-by-side; it
-   merges under the bar, and ABS-03's camera half follows it.
+   merge bar; no longer proposed and parked. A defect breaks a promise the
+   code, docs or tests already make; one a planned row covers takes that
+   row's treatment, and parked choices, out-of-scope rows and enhancements
+   stay where they are.
+6. **DEF-07:** "I dont need to see the old camera feel". It no longer waits
+   for Joe; the run still compares it side by side itself, and it merges
+   under the bar. ABS-03's camera half follows it.
 7. **Browsers:** "we can skip firefox and safari checks and call this a
    chromium only app for now". REV-04 closes on its Chromium evidence
    (2026-09-24), REV-03's physical pass is Android Chrome alone, and README
@@ -43,8 +47,9 @@
 merged; it now reads as of this entry's merge (#53), which adds the above as
 dated notes on CON-14, ABS-06, DEF-07, DOC-08, DEL-07, §12.1, §13 rule 3, W10,
 §17 and §20 Q5, Q16, Q18 and Q19. The run's hard-prohibition approvals gain the
-old-format drops and the three `_Joe/` deletions. The rest of "the big run"
-stands, its merge authority included.
+old-format drops and the three `_Joe/` deletions. A note marked as a
+proposal approves nothing. The rest of "the big run" stands, its merge
+authority included.
 
 ## 2026-09-28 — memory maintenance: the era before the programme goes cold
 
