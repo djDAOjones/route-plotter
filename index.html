@@ -93,10 +93,11 @@
     <main class="main" id="main-content" role="main" aria-labelledby="app-title">
       <!-- Left Sidebar - Settings with Collapsible Sections -->
       <aside class="sidebar" role="complementary" aria-label="Settings panel">
-        <!-- DEF-28: a recovery record that could not be restored waits under
-             its own key until the author downloads or discards it -->
-        <div id="unrestored-notice" class="unrestored-notice" role="region" aria-labelledby="unrestored-notice-text" hidden>
-          <p id="unrestored-notice-text">Your previous session couldn't be restored.</p>
+        <!-- DEF-28: a recovery record that could not be restored is kept
+             until the author discards it -->
+        <div id="unrestored-notice" class="unrestored-notice" role="region" aria-labelledby="unrestored-notice-text" aria-describedby="unrestored-notice-status" hidden>
+          <p id="unrestored-notice-text" class="unrestored-notice-title">Your previous session couldn't be restored.</p>
+          <p id="unrestored-notice-status">Kept until you discard it. You can download a copy.</p>
           <div class="unrestored-notice-actions">
             <button id="unrestored-download" class="btn btn-secondary" type="button">Download it</button>
             <button id="unrestored-discard" class="btn btn-secondary" type="button">Discard</button>

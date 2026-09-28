@@ -73,18 +73,21 @@ export function clearProject(app) {
     app._undoDebounceTimer = null;
   }
   app.undoService.reset(app._getUndoableState());
-  const recoveryCleared = app.storageService.clearAutoSave();
-  // Clear All discards a kept record that could not be restored too, as its
-  // dialog says, so cleared work cannot come back on reload (DEF-28).
+  // Clear All discards what was kept because it could not be restored too,
+  // as its dialog says, so cleared work cannot come back on reload (DEF-28).
+  // First: a record held in the recovery key keeps it from being cleared.
   const unrestored = discardForClearAll(app);
+  const recoveryCleared = app.storageService.clearAutoSave();
   app._isDirty = false;
   app.updateTitleIndicator();
-  if (!recoveryCleared || !unrestored.discarded) {
+  if (!recoveryCleared || unrestored.failed) {
     app.announce(
       'Browser recovery could not be cleared; reload may restore old work.',
       'assertive'
     );
-  } else if (unrestored.offered) {
+  } else if (unrestored.discarded > 1) {
+    app.announce(`Project cleared, and the ${unrestored.discarded} sessions that couldn't be restored were discarded`);
+  } else if (unrestored.discarded === 1) {
     app.announce("Project cleared, and the session that couldn't be restored was discarded");
   } else {
     app.announce('Project cleared');

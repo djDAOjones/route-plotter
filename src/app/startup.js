@@ -1,4 +1,4 @@
-import { offerParkedAutosave } from './unrestoredAutosave.js';
+import { offerKeptAutosave } from './unrestoredAutosave.js';
 
 /**
  * Restore browser recovery before choosing a default background. Keeping this
@@ -7,9 +7,10 @@ import { offerParkedAutosave } from './unrestoredAutosave.js';
  * @returns {Promise<boolean>} Whether an autosave was restored
  */
 export async function restoreStartupProject(app) {
+  // A record an earlier start could not restore is offered again, before
+  // this start's restore, so what the restore reports can point to it (DEF-28).
+  offerKeptAutosave(app);
   const restored = await app.loadAutosave();
-  // A record an earlier session could not restore is offered again (DEF-28).
-  offerParkedAutosave(app);
   if (!restored && !app.background.image) {
     await app.loadDefaultImage();
   }

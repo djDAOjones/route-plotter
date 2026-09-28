@@ -60,9 +60,8 @@ function makeFakeApp() {
     },
     storageService: {
       autoSave(data) { captured.autosaved = data; },
-      loadAutoSave() { return app._autosavePayload; },
       loadAutoSaveText() { return app._autosavePayload ? JSON.stringify(app._autosavePayload) : null; },
-      parkAutoSave(text) { captured.parked = text; return true; },
+      keepUnrestored(text) { captured.parked = text; return 'parked'; },
       clearAutoSave() { captured.cleared = true; },
     },
     imageAssetService: {

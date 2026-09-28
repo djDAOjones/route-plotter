@@ -18,6 +18,9 @@ export class StorageService {
     this._pendingAutoSave = null;
     this._lifecycleTarget = null;
     this._pageHideHandler = null;
+    // A record that could not be restored, held in the recovery key because
+    // it could not move to its own (DEF-28). Nothing writes over it meanwhile.
+    this._heldAutoSave = null;
   }
 
   /**
@@ -81,13 +84,8 @@ export class StorageService {
    * @returns {boolean} True if successful
    */
   remove(key) {
-    try {
-      localStorage.removeItem(key);
-      return true;
-    } catch (error) {
-      console.error(`Failed to remove from localStorage (${key}):`, error);
-      return false;
-    }
+    if (this._isHeld(key)) return false;
+    return this._removeKey(key);
   }
   
   /**
@@ -224,9 +222,9 @@ export class StorageService {
   }
 
   /**
-   * The recovery record exactly as stored. `loadAutoSave` reads a record that
-   * is not valid JSON as no record at all, and a record that cannot be
-   * restored is kept byte for byte (DEF-28), so this reads it raw.
+   * The recovery record exactly as stored. A record that cannot be restored
+   * is kept byte for byte (DEF-28), so the restore reads it raw, once, and
+   * parses that same text.
    * @returns {string|null} The stored text, or null
    */
   loadAutoSaveText() {
@@ -234,23 +232,48 @@ export class StorageService {
   }
 
   /**
-   * Move a recovery record that could not be restored to its own key, which
-   * autosave never writes, so new work is saved while the record waits for
-   * the author (DEF-28). Freeing the recovery key first makes room for the
-   * copy; if the copy still cannot be written, the record goes back.
-   * @param {string} text - The record exactly as stored
-   * @returns {boolean} Whether the record is now parked
+   * Keep a recovery record that could not be restored until the author
+   * chooses (DEF-28). It moves to its own key, which autosave never writes,
+   * so new work is still saved; the copy is made before the original goes,
+   * so a failed move leaves it where it was. Where it cannot move — a record
+   * kept earlier is waiting there, or the store has no room for it — it
+   * stays in the recovery key, held: nothing here writes over it or removes
+   * it until the author discards it, so autosave fails meanwhile.
+   * @param {string} text - The record exactly as the restore read it
+   * @returns {'parked'|'held'|'unkept'} Where it is now: under its own key,
+   *   held in the recovery key, or in neither (the store refused both, or the
+   *   recovery key holds another record now, written while it was restoring)
    */
-  parkAutoSave(text) {
-    if (!this.remove(STORAGE.AUTOSAVE_KEY)) return false;
-    this._lastSerialized = null;
-    if (this._writeSerialized(STORAGE.PARKED_AUTOSAVE_KEY, text).ok) return true;
-    this._writeSerialized(STORAGE.AUTOSAVE_KEY, text);
-    return false;
+  keepUnrestored(text) {
+    const inRecovery = this._readText(STORAGE.AUTOSAVE_KEY) === text;
+    // A key that cannot be read is taken to be occupied: it may hold a record.
+    const parked = this._readKey(STORAGE.PARKED_AUTOSAVE_KEY);
+    if (parked.ok && parked.value === text) {
+      // Kept already, by a start that could not then clear the recovery key.
+      if (inRecovery && this._removeKey(STORAGE.AUTOSAVE_KEY)) this._lastSerialized = null;
+      return 'parked';
+    }
+    if (parked.ok && parked.value === null) {
+      if (this._setKey(STORAGE.PARKED_AUTOSAVE_KEY, text)) {
+        if (inRecovery && this._removeKey(STORAGE.AUTOSAVE_KEY)) this._lastSerialized = null;
+        return 'parked';
+      }
+      // No room for a second copy: free the recovery key for it, and put the
+      // record back if even that is not room enough.
+      if (inRecovery && this._removeKey(STORAGE.AUTOSAVE_KEY)) {
+        this._lastSerialized = null;
+        if (this._setKey(STORAGE.PARKED_AUTOSAVE_KEY, text)) return 'parked';
+        if (!this._setKey(STORAGE.AUTOSAVE_KEY, text)) return 'unkept';
+      }
+    }
+    if (!inRecovery) return 'unkept';
+    this._heldAutoSave = text;
+    return 'held';
   }
 
   /**
-   * The parked record exactly as stored (DEF-28).
+   * The record an earlier start kept under its own key, exactly as stored
+   * (DEF-28).
    * @returns {string|null} The stored text, or null
    */
   loadParkedAutoSave() {
@@ -258,12 +281,25 @@ export class StorageService {
   }
 
   /**
-   * Remove the parked record. Only the author's Discard and Clear All may:
-   * a recovery write that fails clears the recovery key alone (DEF-28).
-   * @returns {boolean} True if successful
+   * Remove a kept record, for the author's Discard or Clear All — the only
+   * two ways one goes (DEF-28) — from where it was kept, and only while it is
+   * still the record there. A held record's removal ends the hold, so
+   * autosave writes again.
+   * @param {{ text: string, where: 'parked'|'held'|'unkept' }} kept - As
+   *   `keepUnrestored` placed it
+   * @returns {boolean} Whether it is gone from the store
    */
-  discardParkedAutoSave() {
-    return this.remove(STORAGE.PARKED_AUTOSAVE_KEY);
+  discardKept({ text, where }) {
+    if (where === 'unkept') return true;
+    const key = where === 'held' ? STORAGE.AUTOSAVE_KEY : STORAGE.PARKED_AUTOSAVE_KEY;
+    const stored = this._readKey(key);
+    if (!stored.ok) return false;
+    if (stored.value === text && !this._removeKey(key)) return false;
+    if (where === 'held') {
+      this._heldAutoSave = null;
+      this._lastSerialized = null;
+    }
+    return true;
   }
   
   /**
@@ -386,16 +422,54 @@ export class StorageService {
 
   /** @private */
   _readText(key) {
+    return this._readKey(key).value;
+  }
+
+  /** @private */
+  _readKey(key) {
     try {
-      return localStorage.getItem(key);
+      return { ok: true, value: localStorage.getItem(key) };
     } catch (error) {
       console.error(`Failed to load from localStorage (${key}):`, error);
-      return null;
+      return { ok: false, value: null };
+    }
+  }
+
+  /**
+   * @private Whether `key` is the recovery key while it holds a record that
+   * could not be restored (DEF-28), which no ordinary write or removal reaches.
+   */
+  _isHeld(key) {
+    return key === STORAGE.AUTOSAVE_KEY && this._heldAutoSave !== null;
+  }
+
+  /** @private A write the hold does not stop: only kept records use it. */
+  _setKey(key, text) {
+    try {
+      localStorage.setItem(key, text);
+      return true;
+    } catch (error) {
+      console.error(`Failed to save to localStorage (${key}):`, error);
+      return false;
+    }
+  }
+
+  /** @private A removal the hold does not stop. */
+  _removeKey(key) {
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      console.error(`Failed to remove from localStorage (${key}):`, error);
+      return false;
     }
   }
 
   /** @private */
   _writeSerialized(key, serialized) {
+    if (this._isHeld(key)) {
+      return { ok: false, error: new Error("Browser recovery holds a session that couldn't be restored") };
+    }
     try {
       localStorage.setItem(key, serialized);
       return { ok: true };

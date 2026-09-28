@@ -215,7 +215,7 @@
 - `src/app/projectReset.js` — Testable Clear All transaction: invalidate async work, clear bytes/model/UI, reset the visual reference, cancel writers and establish one empty baseline
 - `src/app/sceneOutline.js` — EventBus integration and sole mutation/undo/autosave owner for stable-ID semantic scene-outline commands, with shared plain crowd-field vocabulary
 - `src/app/startup.js` — Testable startup sequence: await autosave recovery before selecting a default background
-- `src/app/unrestoredAutosave.js` — DEF-28: a recovery record that could not be restored — its parking, the author's notice (Download it, Discard), its offer at each start, and Clear All's part in discarding it
+- `src/app/unrestoredAutosave.js` — DEF-28: recovery records that could not be restored — keeping them, the author's notice (Download it, Discard) one record at a time, their offer at each start, what a failed recovery write adds about them, and Clear All's part in discarding them
 - `src/app/undoRedo.js` — Undo/redo model, selection and inspector-scope restoration; reference-aware asset sweeping and rollback-safe interactive image admission with minimum history loss
 - `src/app/viewport.js` — Responsive canvas/panel bounds, first-authored-canvas visual-reference seeding, coordinate conversion, aspect handling and manual zoom
 - `src/app/wiringBus.js` — EventBus + AnimationEngine subscriptions, including card-action availability refresh and compatible already-saved image-edit signalling
@@ -268,7 +268,7 @@
 - `src/services/NetworkEditService.js` — Network edit mode (Phase 4): pen state machine (chaining, drags, bends, Esc ladder, mode keys), banner, node/edge selection events, and the guide/overlay canvas rendering (edge geometry via SwarmEngine's cache)
 - `src/services/PathCalculator.js` — Catmull-Rom spline, corner-slowing reparameterisation, curvature; `legTimingLengths()` gives per-major-leg timing lengths (progress-span basis)
 - `src/services/RenderingService.js` — Canvas drawing and stable short-edge reference scaling for path, markers, labels, effects and overlays; static `VECTOR_LAYERS` drives draw order
-- `src/services/StorageService.js` — Honest bounded localStorage writes with debounce, change detection, deterministic flush/cancel and clear
+- `src/services/StorageService.js` — Honest bounded localStorage writes with debounce, change detection, deterministic flush/cancel and clear; DEF-28's kept records (copied before the original goes; held in the recovery key, which no write then reaches, when they cannot move)
 - `src/services/SwarmEngine.js` — Deterministic flow-layer dot evaluator: pure `evaluate(timelineMs, layer, context)`, seeded release-density inversion, weighted graph walks, four lifecycle modes and per-edge PathCalculator caches
 - `src/services/TextLabelService.js` — Text label layout, fade, auto-positioning
 - `src/services/UndoService.js` — 150-state undo/redo history with non-mutating save previews and validated additional oldest-prefix discard
@@ -428,7 +428,7 @@
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
 - `tests/undoService.test.js` — Prospective-save parity, natural rollover, extra oldest discard, redo preservation/invalidation and rejected-input immutability
 - `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets, and (TST-17) a transcript names a composited canvas while drawing label text as written, and (DEF-36) shows the state each call was made in, kept through save, restore and a resize, and (DEF-39) just the state each call draws with
-- `tests/unrestoredAutosave.test.js` — DEF-28: a refused, unreadable or older-format recovery record is kept byte for byte and offered; new work autosaves beside it; Download it, Discard, a later start and Clear All; a failed recovery write and a full store leave it alone
+- `tests/unrestoredAutosave.test.js` — DEF-28: a refused, unreadable, older-format or rolled-back recovery record is kept as read and offered; held when it cannot move, two at once, a tab that writes mid-restore; Download it, Discard (its target, failure, focus), a later start and Clear All; what may never remove it; the notice's name, contrast and targets
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
 - `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch
 - `tests/videoExporter.test.js` — Endpoint-inclusive frame planning, visibility throttling, cancellation and complete MediaRecorder/WebCodecs cleanup

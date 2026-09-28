@@ -153,13 +153,18 @@ at startup clears the old point if the new one cannot be written. Real storage f
 reported.
 
 A recovery record that cannot be restored (the loader refuses it, it is not
-valid JSON, or its format is older than the app reads) is never cleared or
-overwritten. It moves to `routePlotter_parkedAutosave`, which autosave never
-writes; the author is told, and a notice offers **Download it** (the record
-exactly as stored) and **Discard**, again at each start, until they choose.
-Only that Discard and **Clear All** remove it, and Clear All's dialog says so.
-When storage cannot hold both it and a new autosave, it stays, and the
-autosave's failure report says how to make room.
+valid JSON, its format is older than the app reads, or the commit fails and
+rolls back) is never cleared or overwritten. It moves to
+`routePlotter_parkedAutosave`, which autosave never writes, copied before the
+original is removed; the author is told, and a notice offers **Download it**
+(the record exactly as read) and **Discard**, again at each start, until they
+choose. Where it cannot move (a record kept earlier is already waiting there,
+or the store has no room for it) it is held in the recovery key instead, and
+autosave fails, and says so, until the author discards it. The notice offers
+one record at a time, this start's first. Only that Discard and **Clear All**
+remove one, and Clear All's dialog says so. When storage cannot hold both a
+kept record and a new autosave, the record stays, and the autosave's failure
+report says how to free space.
 
 Other localStorage keys: `routePlotter_splashShown`, `routePlotter_previewTipDismissed`, `routePlotter_sectionState` and `routePlotter_lastSection`. `routePlotter_customKeybindings` is read only by the help panel (Keybindings below); `routePlotter_preferences` has read/write helpers in `StorageService` with no callers.
 

@@ -21,10 +21,11 @@
 
 Outcome: written when the run's last such defect has merged.
 
-DEF-28 — A recovery record that cannot be restored is kept under its own key
-and offered to the author (Download it, Discard) instead of being cleared or
-overwritten; Clear All discards it and says so. (2026-09-28) — see
-decision-log.
+DEF-28 — A recovery record that cannot be restored is kept under its own key,
+or held in the recovery key when it cannot move there, and offered to the
+author (Download it, Discard) instead of being cleared or overwritten; a
+second waits behind the first; Clear All discards them and says so.
+(2026-09-28) — see decision-log.
 
 ## Before the big run (2026-09-28)
 
