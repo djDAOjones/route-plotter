@@ -1240,7 +1240,8 @@ export class RenderingService {
                                      state.motionSettings.waypointVisibility !== WAYPOINT_VISIBILITY.ALWAYS_HIDE;
         if (!shouldRenderBeacons) return;
         svc.renderBeacons(ctx, state.waypoints, state.animationEngine, state.beaconAnimation, state.imageToCanvas, state.styles,
-                          frame.applyMotion ? state.motionSettings : null, state.waypointProgressValues);
+                          frame.applyMotion ? state.motionSettings : null, state.waypointProgressValues,
+                          { ignoreReducedMotion: state.exportingVideo === true });
       },
     },
     {
@@ -2002,8 +2003,10 @@ export class RenderingService {
    * @param {Object} styles - Style settings
    * @param {Object} motionSettings - Motion visibility settings
    * @param {Array} waypointProgressValues - Pre-calculated waypoint progress values
+   * @param {Object} [options] - Passed to `BeaconRenderer.update`
    */
-  renderBeacons(ctx, waypoints, animationEngine, beaconAnimation, imageToCanvas, styles, motionSettings = null, waypointProgressValues = null) {
+  renderBeacons(ctx, waypoints, animationEngine, beaconAnimation, imageToCanvas, styles, motionSettings = null,
+                waypointProgressValues = null, options = {}) {
     if (!waypoints.length || !animationEngine) return;
     
     // Sync beacons to the current timeline instant (pause-marker axis: raw
@@ -2011,7 +2014,8 @@ export class RenderingService {
     // timeline time, so play, scrub, and export all see identical beacons.
     const adjustedTimelineMs = animationEngine.state.currentTime -
       (animationEngine.startHandleTime || 0) - (animationEngine.introTime || 0);
-    this.beaconRenderer.update(adjustedTimelineMs, waypoints, animationEngine, motionSettings, waypointProgressValues);
+    this.beaconRenderer.update(adjustedTimelineMs, waypoints, animationEngine, motionSettings,
+                               waypointProgressValues, options);
     
     // Render beacons for each waypoint
     const currentProgress = animationEngine.getPathProgress();
@@ -2058,6 +2062,11 @@ export class RenderingService {
     // Direct beacon lookup - O(1) via Map
     const beacon = this.beaconRenderer.beacons.get(waypoint.id);
     if (!beacon || !beacon.isActive()) return null;
+
+    // Only a beacon synced for this frame speaks for its marker: one kept from
+    // an earlier style, or held still for reduced motion, has a stale scale
+    // (DEF-08)
+    if (beacon.syncedUpdate !== this.beaconRenderer.updateCount) return null;
     
     // Pop and Grow beacons: only return scale after 'started' flag is set
     // This ensures the scale has been initialized based on hidesBefore
@@ -2194,18 +2203,20 @@ export class RenderingService {
           waypointScale = visibility.scale;
         }
         
-        // Apply beacon scale override (for pop, grow, pulse beacons)
-        // ONLY when animation is actually playing - not when paused or stopped
+        // Apply beacon scale override (for pop, grow, pulse beacons). Beacons
+        // are synced to the timeline instant every frame, so playing,
+        // scrubbing, pausing and export draw the same scale (DEF-08: it used to
+        // apply only while playing). They are not synced while markers are
+        // always hidden (the 'beacons' step), so a scale left from an earlier
+        // frame must not bring a hidden marker back.
         // NOTE: Beacon scale REPLACES visibility scale, not multiplies, because
         // beacons like Pop/Grow/Pulse handle the full scale animation themselves
         // (including hide-before/hide-after behavior)
-        const isAnimationPlaying = animationEngine?.isPlaying?.() === true;
-        if (isAnimationPlaying) {
-          const beaconOverride = this.getBeaconScaleOverride(waypoint);
-          if (beaconOverride && beaconOverride.scale !== undefined) {
-            waypointScale = beaconOverride.scale;
-            shouldRender = true;
-          }
+        const beaconsSynced = motionSettings?.waypointVisibility !== WAYPOINT_VISIBILITY.ALWAYS_HIDE;
+        const beaconOverride = beaconsSynced ? this.getBeaconScaleOverride(waypoint) : null;
+        if (beaconOverride && beaconOverride.scale !== undefined) {
+          waypointScale = beaconOverride.scale;
+          shouldRender = true;
         }
         
         // Render labels unless the export "Text labels" toggle is off (otherwise their

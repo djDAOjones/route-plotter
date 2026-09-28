@@ -11,7 +11,7 @@ import { AnimationState } from '../src/models/AnimationState.js';
 import { PathCalculator } from '../src/services/PathCalculator.js';
 import { CoordinateTransform } from '../src/services/CoordinateTransform.js';
 import { TextLabelService } from '../src/services/TextLabelService.js';
-import { MotionVisibilityService } from '../src/services/MotionVisibilityService.js';
+import { log2ValueToSlider, sliderToLog2Value } from '../src/utils/sliderScales.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { CameraService } from '../src/services/CameraService.js';
 import { RenderingService } from '../src/services/RenderingService.js';
@@ -284,6 +284,18 @@ describe('Waypoint (extended)', () => {
     expect(Waypoint.validate(null)).toBe(false);
   });
 
+  test('setPosition keeps a point off the image, as far as validate accepts (DEF-35)', () => {
+    // It pulled every point back onto the image, so the scene outline could
+    // not keep a waypoint off it.
+    const { MIN, MAX } = IMAGE_COORDINATES;
+    const wp = Waypoint.createMajor(0.5, 0.5);
+    wp.setPosition(-0.4, 1.35);
+    expect([wp.imgX, wp.imgY]).toEqual([-0.4, 1.35]);
+    wp.setPosition(MIN - 1, MAX + 1);
+    expect([wp.imgX, wp.imgY]).toEqual([MIN, MAX]);
+    expect(Waypoint.validate(wp.toJSON())).toBe(true);
+  });
+
   test('hasLabel reflects text presence and visibility mode', () => {
     const wp = Waypoint.createMajor(0.5, 0.5);
     wp.label = 'Town hall';
@@ -343,16 +355,16 @@ describe('TextLabelService.getTextVisibility', () => {
   });
 });
 
-describe('MotionVisibilityService log2 slider mapping', () => {
+describe('sliderScales log2 slider mapping', () => {
   test('endpoints map to min/max', () => {
-    expect(MotionVisibilityService.sliderToLog2Value(0, 1, 100)).toBe(1);
-    expect(MotionVisibilityService.sliderToLog2Value(1000, 1, 100)).toBe(100);
+    expect(sliderToLog2Value(0, 1, 100)).toBe(1);
+    expect(sliderToLog2Value(1000, 1, 100)).toBe(100);
   });
 
   test('slider <-> value round-trips across the range', () => {
     for (const slider of [100, 250, 500, 750, 900]) {
-      const value = MotionVisibilityService.sliderToLog2Value(slider, 1, 100);
-      const back = MotionVisibilityService.log2ValueToSlider(value, 1, 100);
+      const value = sliderToLog2Value(slider, 1, 100);
+      const back = log2ValueToSlider(value, 1, 100);
       expect(back).toBeCloseTo(slider, 0);
     }
   });

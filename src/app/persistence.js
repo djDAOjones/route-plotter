@@ -16,7 +16,7 @@ import {
   VIDEO_EXPORT,
   WAYPOINT_VISIBILITY,
 } from '../config/constants.js';
-import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
+import { bipolarLog2ValueToSlider } from '../utils/sliderScales.js';
 import { Waypoint } from '../models/Waypoint.js';
 import { Scene } from '../models/Scene.js';
 import { ImageAsset, IMAGE_LIMITS } from '../models/ImageAsset.js';
@@ -437,6 +437,10 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
   }
 
   const stylesData = safeClone(projectData.styles || {});
+  // A null Graphics scale is an absent one, so it takes the default 1×
+  // (DEF-37): `Number(null)` stored 0, which the next save would write and
+  // load refuses.
+  if (stylesData.graphicsScale === null) delete stylesData.graphicsScale;
   const styles = {
     ...CANONICAL_PROJECT_DEFAULTS.styles,
     ...stylesData,
@@ -829,7 +833,7 @@ function syncLoadedProjectControls(app, staged) {
     app.elements.bgFitToggle.dataset.mode = staged.background.fit;
   }
   if (app.elements?.bgOverlay) {
-    const sliderValue = MotionVisibilityService.bipolarLog2ValueToSlider(
+    const sliderValue = bipolarLog2ValueToSlider(
       staged.background.overlay, MOTION.TINT_MIN, MOTION.TINT_MAX
     );
     app.elements.bgOverlay.value = String(sliderValue);

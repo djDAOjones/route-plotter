@@ -12,6 +12,7 @@
 
 import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import { FlowLayer } from '../src/models/FlowLayer.js';
+import { IMAGE_COORDINATES } from '../src/config/constants.js';
 
 const DURATION_MS = 10000;
 
@@ -420,6 +421,32 @@ describe('SwarmEngine.evaluate — route guide', () => {
     const later = engine.evaluate(5000, layer, context)[0];
     expect(early.y).toBeCloseTo(0.3, 5);
     expect(later.x).toBeGreaterThan(early.x);
+  });
+
+  test('dots follow a route that runs off the image (DEF-35)', () => {
+    // Since DEF-03 a route may leave the image. Every dot was clamped to 0–1,
+    // so a crowd on such a route slid along the image's edge instead.
+    const offImage = [];
+    for (let i = 0; i <= 100; i++) offImage.push({ x: -0.5 + (i / 100) * 0.8, y: 1.25 });
+    const layer = new FlowLayer({ guideType: 'route' });
+    layer.addEmitter({ ...CALM, dotCount: 1, speed: 0.1 });
+    const [dot] = new SwarmEngine().evaluate(1000, layer, { durationMs: DURATION_MS, routePathPoints: offImage });
+    expect(dot.x).toBeLessThan(0);
+    expect(dot.y).toBeCloseTo(1.25, 5);
+  });
+
+  test('a wobbling dot stops where a project can store a point (DEF-35)', () => {
+    // A route along the very edge of that range: the wobble pushes dots
+    // across it both ways, and the ones pushed out are held on it.
+    const { MIN } = IMAGE_COORDINATES;
+    const edge = [];
+    for (let i = 0; i <= 100; i++) edge.push({ x: MIN, y: 0.1 + (i / 100) * 0.8 });
+    const layer = new FlowLayer({ guideType: 'route' });
+    layer.addEmitter({ ...CALM, dotCount: 8, speed: 0.05, releaseDuration: 1, lifecycleMode: 'respawn', wobble: 1 });
+    const dots = new SwarmEngine().evaluate(6000, layer, { durationMs: DURATION_MS, routePathPoints: edge });
+    expect(dots.every(dot => dot.x >= MIN)).toBe(true);
+    expect(dots.some(dot => dot.x === MIN)).toBe(true);
+    expect(dots.some(dot => dot.x > MIN)).toBe(true);
   });
 
   test('lifecycles apply at the route end', () => {
