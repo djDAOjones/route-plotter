@@ -1,6 +1,8 @@
 # node: the crowd network's first node inspected
 
 ## #node-scope>div[0]>div[0] · click
+storage + routePlotter_lastSection: "node"
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[259 chars, 62292118] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[260 chars, 7424b4d9]
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section" data-last="true" data-section="node"
 ui ~ #node-scope>div[0]>div[0]: div aria-controls="section-node-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-node-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
@@ -12,22 +14,28 @@ emit network:changed {commit: true}
 emit network:node-selected {node: {id: "gn_trace_ex-uon-1", x: 0.16, y: 0.63, type: "normal", label: "Main entrance", anchorWaypointId: "ex-uon-1", _resolvedX: 0.16, _resolvedY: 0.63}}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 model ~ scene.flowLayers[0].graph.nodes[0].type: "entry" → "normal"
+storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · pass-through"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="normal"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9685 chars, 5ff527c9]
 
 ## #network-node-type · choose "exit"
 emit network:changed {commit: true}
 emit network:node-selected {node: {id: "gn_trace_ex-uon-1", x: 0.16, y: 0.63, type: "exit", label: "Main entrance", anchorWaypointId: "ex-uon-1", _resolvedX: 0.16, _resolvedY: 0.63}}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 model ~ scene.flowLayers[0].graph.nodes[0].type: "entry" → "exit"
+storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · exit"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="exit"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, ff0d8be8]
 
 ## #network-node-delete · click
 emit network:node-deselected
@@ -89,11 +97,12 @@ ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 16 inside, 6848a81c)
-ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 62 inside, be3e6597)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 62 inside, eba53f30)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 77 inside, cb2b8637)
 ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 24 inside, 555e9c87)
 ui ~ #node-scope: div class="scope-group" → div (not shown)
 ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 16 inside, c25049b1)
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9419 chars, 71b9fc32]
   ui - #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

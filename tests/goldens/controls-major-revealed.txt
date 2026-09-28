@@ -20,31 +20,35 @@ settled:
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #marker-preview: div (not shown) → div style="display: block; margin-bottom: 0.5rem;"
   ui + #marker-filename: span style="font-size: 0.75rem; opacity: 0.7;" :text="picked.png"
-  ui + #marker-preview-img: img alt="Marker preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" style="max-width: 48px; max-height: 48px; margin-left: 0.5rem; vertical-align: middle;"
+  ui + #marker-preview-img: img alt="Marker preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" style="margin-left: 0.5rem; max-height: 48px; max-width: 48px; vertical-align: middle;"
 
 ## #label-color-custom-disclosure>label[0]>input[1] · pick #56b4e9
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelColor: "#009E73" → "#56b4e9"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#56b4e9" :value="#56b4e9"
-ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[259 chars, cb47dd5e] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, 03f703ea]
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(0, 158, 115); background-image: none; background-origin: padding-box; backgro…[259 chars, 47261216] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(86, 180, 233); background-image: none; background-origin: padding-box; backgr…[261 chars, f7fbfd10]
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #56B4E9"
 ui ~ #label-color-custom-disclosure>label[0]>input[1]: input type="color" :value="#009e73" → input type="color" :value="#56b4e9"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 558ee059] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, b4c7d402]
 
 ## #label-bg-color-custom-disclosure>label[0]>input[1] · pick #56b4e9
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelBgColor: "#F0E442" → "#56b4e9"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input type="hidden" value="#56b4e9" :value="#56b4e9"
-ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, e69dccdc] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, 03f703ea]
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(240, 228, 66); background-image: none; background-origin: padding-box; backgr…[261 chars, 28ba8d62] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(86, 180, 233); background-image: none; background-origin: padding-box; backgr…[261 chars, f7fbfd10]
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #56B4E9"
 ui ~ #label-bg-color-custom-disclosure>label[0]>input[1]: input type="color" :value="#f0e442" → input type="color" :value="#56b4e9"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 558ee059] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 550c0a3f]
 
 ## #shape-params-controls>label[0]>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Peak sideways displacement as a percentage of the source-image coordinate scale"
@@ -52,12 +56,14 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #shape-amplitude · set 17
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].shapeAmplitude: 22 → 17
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #shape-amplitude: input aria-describedby="shape-amplitude-value shape-amplitude-tip" aria-valuetext="4.4%" max="50" min="1" step="1" type="range" value="10" :value="22" → input aria-describedby="shape-amplitude-value shape-amplitude-tip" aria-valuetext="3.4%" max="50" min="1" step="1" type="range" value="10" :value="17"
 ui ~ #shape-amplitude-value: span :text="4.4%" → span :text="3.4%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 558ee059] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 560132e9]
 
 ## #shape-params-controls>label[2]>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Number of squiggle waves per path segment"
@@ -65,12 +71,14 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #shape-frequency · set 7
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].shapeFrequency: 9 → 7
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #shape-frequency: input aria-describedby="shape-frequency-tip" max="20" min="1" step="1" type="range" value="5" :value="9" → input aria-describedby="shape-frequency-tip" max="20" min="1" step="1" type="range" value="5" :value="7"
 ui ~ #shape-frequency-value: span :text="9" → span :text="7"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 558ee059] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, e211d1c7]
 
 ## #section-leg-content>div[2]>button[1] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
@@ -80,6 +88,7 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 558ee059] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9690 chars, d8272fa9]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Leg applied to 2 later waypoints. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #area-circle-controls>label[0]>span[0] · click
@@ -95,3 +104,4 @@ ui ~ #area-circle-radius-value: span :text="11%" → span :text="17%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 558ee059] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 0787067c]

@@ -78,6 +78,7 @@ settled:
   emit video:resolution-native
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
@@ -90,6 +91,7 @@ settled:
   emit video:resolution-native
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
@@ -102,6 +104,7 @@ settled:
   emit video:resolution-native
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
@@ -114,6 +117,7 @@ settled:
   emit video:resolution-native
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
@@ -126,6 +130,7 @@ settled:
   emit video:resolution-native
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
@@ -138,6 +143,7 @@ settled:
   emit video:resolution-native
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"

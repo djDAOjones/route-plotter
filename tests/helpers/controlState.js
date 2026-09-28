@@ -48,14 +48,20 @@ const NOT_DESCRIBED = new Set(['canvas', 'template', 'script', 'style']);
  */
 const MEASURED_OFFSETS = ['top', 'right', 'bottom', 'left'];
 
+/**
+ * An element's inline declarations, by property name: each property is
+ * declared once, so the order they were set in draws nothing different.
+ */
 function styleOf(element) {
   const style = element.style;
   const kept = [];
   for (let index = 0; index < style.length; index += 1) {
     const property = style.item(index);
-    if (!MEASURED_OFFSETS.includes(property)) kept.push(`${property}: ${style.getPropertyValue(property)};`);
+    if (MEASURED_OFFSETS.includes(property)) continue;
+    const priority = style.getPropertyPriority(property);
+    kept.push(`${property}: ${style.getPropertyValue(property)}${priority ? ` !${priority}` : ''};`);
   }
-  return kept.join(' ');
+  return kept.sort().join(' ');
 }
 
 /**

@@ -4,9 +4,9 @@
 emit network:edit-mode-changed {active: false, layer: null}
 emit render:request
 ui ~ #network-edit-btn: button class="btn btn-secondary" disabled="" title="Draw the network this crowd walks: nodes joined by edges" type="button" :text="Editing network…" → button class="btn btn-secondary" title="Draw the network this crowd walks: nodes joined by edges" type="button" :text="Edit network"
-ui - #network-edit-banner: div aria-live="polite" role="status" style="position: fixed; z-index: 1000; padding-top: 8px; padding-right: 16px; padding-bottom: 8px; padding-left: 16px; padding: 8px 16px; background: var(--scope-crow…[383 chars, 51e295e3]
+ui - #network-edit-banner: div aria-live="polite" role="status" style="align-items: center; background: var(--scope-crowd-fg, #0E4A38); box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: rgb(255, 255, 255); display: flex; font-family: …[383 chars, 0303c501]
 ui - #network-edit-banner>span[0]: span class="banner-text" :text="— click places a linked node, click a node to continue from it, drag an edge to bend it. lifts the pen."
 ui - #network-edit-banner>span[0]>strong[0]: strong :text="Drawing network"
 ui - #network-edit-banner>span[0]>kbd[1]: kbd :text="Esc"
 ui - #network-edit-banner>span[0]>span[2]: span class="banner-count" :text="4 nodes · 4 edges"
-ui - #network-edit-banner>button[1]: button aria-label="Finish network editing" class="banner-done" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[1119 chars, cac27c42] type="button" :text="Done"
+ui - #network-edit-banner>button[1]: button aria-label="Finish network editing" class="banner-done" style="background-attachment: scroll; background-clip: border-box; background-color: transparent; background-image: none; background-origin: padding-box; background-p…[1119 chars, fa48a91a] type="button" :text="Done"

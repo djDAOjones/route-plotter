@@ -26,14 +26,15 @@ ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 
 ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 18 inside, 3cb1562c)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, ad009232)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, 107b52a2)
 ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 46 inside, fd52c3c6)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
-ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 70 inside, f60a863a)
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 70 inside, 9637dc11)
 ui - #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 51 inside, 8e0fe1bc)
-ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 108 inside, e0c49539)
-ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 84 inside, 69bcaf7d)
-ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 165 inside, 319c7ed8)
+ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 108 inside, e74e57f2)
+ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 84 inside, 48ad0cf0)
+ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 165 inside, c1054ca2)
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, e782bb4a] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 9496c026]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Undo" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

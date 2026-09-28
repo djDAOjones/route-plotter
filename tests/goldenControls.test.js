@@ -11,9 +11,13 @@
  * Each row operates one control as a user would, in a context where it is
  * shown and its card is open: a range is set and released, a select chooses
  * each of its other options, a number or text field is typed into and
- * committed, a file input is given a file, a control that renames on a double
- * click is double-clicked as well, and anything else is clicked. A disabled or
- * read-only control is listed, not operated. The row records:
+ * committed, a file input is given a file, a radio already chosen is chosen
+ * from another of its group as well, a control that renames on a double click
+ * is double-clicked, and renamed and clicked away from, a waypoint row is
+ * Shift- and Cmd-clicked too, a list row is dragged onto the next, the
+ * busyness graph is dragged by a handle (and a drag cancelled), and anything
+ * else is clicked. A disabled or read-only control is listed, not operated.
+ * The row records:
  *
  * - `emit`: each event the handling emitted outside a listener, with its
  *   payload. What the app's listeners emit in turn is the event transcript's
@@ -21,8 +25,9 @@
  * - `file dialog`, `download`, `clipboard`: what it asked of the browser — a
  *   file picker, a file to save (its name, type, size and a checksum of its
  *   bytes), text to copy.
- * - `model`, `app`, `ui`: how the saved project, the app's own flags and the
- *   shell changed once every promise it started had settled.
+ * - `model`, `app`, `storage`, `ui`: how the saved project, the app's own
+ *   flags, what it keeps in the browser's storage and the shell changed once
+ *   every promise it started had settled.
  * - after `settled:`, what the timers it left then did, each event once, and
  *   anything still pending when the frame budget ran out.
  *
@@ -38,9 +43,12 @@
  * schedule, not a browser's frame timings.
  *
  * `every wired control has a row` fails when an element gets a listener for a
- * user gesture that no row performs on it and no stated reason excuses, and
- * it watches for controls a row itself creates. Keyboard gestures belong to
- * the key table (TST-13), and are excused by gesture, not by a click row.
+ * user gesture that no row delivered to it and no stated reason excuses, and
+ * it watches for controls a row itself creates. A row is credited with the
+ * events its gesture actually delivered, not those it was meant to send, and
+ * every event type the app listens for on a control is either a gesture or
+ * says what it is instead. Keyboard gestures belong to the key table
+ * (TST-13), and are excused by gesture, not by a click row.
  *
  * Regenerate deliberately: `UPDATE_CONTROL_GOLDENS=1 npx vitest run
  * tests/goldenControls.test.js`, read the diff, then run it once more with
@@ -48,8 +56,8 @@
  */
 
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { bootApp, retireApp } from './helpers/bootApp.js';
@@ -171,7 +179,30 @@ function seededRandom(seedText) {
 // What the app wires, and what each app registers on the document and window.
 // ---------------------------------------------------------------------------
 
-const USER_EVENTS = new Set(['click', 'dblclick', 'input', 'change', 'submit', 'contextmenu', 'keydown']);
+/**
+ * What a user's input can deliver to a control. The app's listeners for any
+ * other type are not gestures, and each such type says what it is in
+ * `NOT_GESTURES`, so a listener of a new kind cannot go unnoticed.
+ */
+const GESTURE_TYPES = new Set([
+  'click', 'dblclick', 'auxclick', 'contextmenu',
+  'input', 'beforeinput', 'change', 'submit', 'reset', 'toggle', 'select',
+  'keydown', 'keyup', 'keypress',
+  'focus', 'blur', 'focusin', 'focusout',
+  'pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'pointerover', 'pointerout',
+  'pointerenter', 'pointerleave', 'gotpointercapture', 'lostpointercapture',
+  'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave',
+  'touchstart', 'touchmove', 'touchend', 'touchcancel', 'wheel', 'scroll',
+  'dragstart', 'drag', 'dragend', 'dragenter', 'dragover', 'dragleave', 'drop',
+  'copy', 'cut', 'paste',
+]);
+
+/** Types the app listens for on its controls that no user's input delivers. */
+const NOT_GESTURES = new Map([
+  ['transitionend', "a toast's own fade ending"],
+  ['focustrap:escape', 'the focus trap telling its dialog that Escape closed it: a key press (TST-13)'],
+]);
+
 const wiredEvents = new WeakMap();
 const originalAddEventListener = EventTarget.prototype.addEventListener;
 
@@ -189,7 +220,7 @@ const originalWindowAddEventListener = window.addEventListener;
 
 function recordWiring() {
   EventTarget.prototype.addEventListener = function addEventListener(type, listener, options) {
-    if (USER_EVENTS.has(type) && this instanceof Element) {
+    if (this instanceof Element) {
       if (!wiredEvents.has(this)) wiredEvents.set(this, new Set());
       wiredEvents.get(this).add(type);
     }
@@ -211,10 +242,64 @@ function recordWiring() {
   };
 }
 
+/**
+ * What a row's gesture delivered: each event of a gesture type, the key of
+ * its target and the keys it passed through, taken as it was dispatched. A
+ * row is credited only with what reached a control, not with what its
+ * gesture was meant to send: a click on a radio already chosen fires no
+ * `change`.
+ */
+let delivered = null;
+
+function noteDelivery(event) {
+  if (!delivered || !(event.target instanceof Element)) return;
+  const path = event.composedPath().filter(node => node instanceof Element).map(keyFor);
+  delivered.push({ type: event.type, target: keyFor(event.target), path });
+}
+
+function watchDelivery() {
+  for (const type of GESTURE_TYPES) originalWindowAddEventListener.call(window, type, noteDelivery, true);
+}
+
+function unwatchDelivery() {
+  for (const type of GESTURE_TYPES) window.removeEventListener(type, noteDelivery, true);
+}
+
 // ---------------------------------------------------------------------------
 // What a row asks of the browser beyond the page: file pickers, saved files,
-// copied text.
+// copied text, and what it keeps in the browser's storage.
 // ---------------------------------------------------------------------------
+
+/**
+ * The browser's storage, in memory, as a browser keeps it: what a row writes
+ * there (a section folded, the recovery record, a tip seen) is part of what
+ * it does, and a later start reads it back.
+ */
+const stored = new Map();
+
+function installStorage() {
+  localStorage.getItem.mockImplementation(key => (stored.has(key) ? stored.get(key) : null));
+  localStorage.setItem.mockImplementation((key, value) => { stored.set(key, String(value)); });
+  localStorage.removeItem.mockImplementation((key) => { stored.delete(key); });
+  localStorage.clear.mockImplementation(() => stored.clear());
+  Object.defineProperty(localStorage, 'length', { configurable: true, get: () => stored.size });
+  localStorage.key = index => [...stored.keys()][index] ?? null;
+}
+
+function uninstallStorage() {
+  localStorage.getItem.mockImplementation(() => null);
+  localStorage.setItem.mockImplementation(() => {});
+  localStorage.removeItem.mockImplementation(() => {});
+  localStorage.clear.mockImplementation(() => {});
+  delete localStorage.length;
+  delete localStorage.key;
+  stored.clear();
+}
+
+/** What storage holds, as a golden can read it: each key, its value quoted, a long one elided. */
+function storageState() {
+  return new Map([...stored].sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => [key, quote(value)]));
+}
 
 const browserRequests = [];
 const blobsByUrl = new Map();
@@ -294,6 +379,7 @@ const NOT_OPERATED = [
 /** Gestures no row performs anywhere, each with the reason. */
 const GESTURES_NOT_PERFORMED = new Map([
   ['keydown', 'keyboard: the key table (TST-13)'],
+  ['keyup', 'keyboard: the key table (TST-13)'],
 ]);
 
 function exclusionFor(element) {
@@ -336,7 +422,6 @@ function chooseFile(element, file) {
   delete element.files;
 }
 
-/** A double click as a browser delivers it: two clicks, then `dblclick`. */
 /**
  * A double-click as a pointer gives it: each click goes to what is under the
  * pointer then. A first click that rebuilds its control (a list redrawn as it
@@ -351,22 +436,155 @@ function doubleClick(element) {
   target.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
 }
 
-const CLICK = ['click'];
-const EDIT = ['input', 'change'];
-
 /** Toggles are undone by the same gesture, which spares a reload. */
-const click = { label: 'click', events: CLICK, run: element => element.click() };
+const click = { label: 'click', run: element => element.click() };
 const toggle = { ...click, undo: element => element.click() };
-const doubleClicking = { label: 'double-click', events: ['click', 'dblclick'], run: doubleClick };
+const doubleClicking = { label: 'double-click', run: doubleClick };
 
 /** Rows rename on a double click the app times itself (`UIController`) or hears as `dblclick`. */
 const RENAMES_ON_DOUBLE_CLICK = '.waypoint-row';
+/**
+ * Rows whose double-click opens a name field, which a click away commits: a
+ * waypoint's, and a crowd's (the route's row has none, nor the add row).
+ */
+const RENAMES = 'li.waypoint-item > .waypoint-row:not(.waypoint-add-btn), #layers-strip > li:not(:first-child) > button:first-child';
+
+/** Double-click, type a new name, and click away: the field commits on `blur`. */
+const renaming = {
+  label: 'double-click, type "Renamed", click away',
+  run: (element) => {
+    const key = keyFor(element);
+    doubleClick(element);
+    // A waypoint row opens it a frame later, once the list is rebuilt.
+    let field = elementAt(key)?.querySelector('input');
+    for (let frame = 0; !field && frame < 3; frame += 1) {
+      vi.advanceTimersToNextTimer();
+      field = elementAt(key)?.querySelector('input');
+    }
+    if (!field) throw new Error(`${key}: a double-click opened no name field`);
+    field.value = 'Renamed';
+    fire(field, 'input');
+    field.focus();
+    field.blur();
+  },
+};
+
+/**
+ * The only click handler in the sidebar that reads a modifier key: a waypoint
+ * row's, where Shift selects the rows between and Cmd (Ctrl elsewhere) adds
+ * or removes one (see `the only sidebar click that reads a modifier`).
+ */
+const MODIFIED_CLICKS = '.waypoint-row:not(.waypoint-add-btn)';
+const modifiedClick = (label, modifiers) => ({
+  label,
+  run: element => element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ...modifiers })),
+});
+const shiftClicking = modifiedClick('shift-click', { shiftKey: true });
+const commandClicking = modifiedClick('Cmd-click', { metaKey: true });
+
+/** Every read of a modifier key in `src/`, by file, and where each is pinned. */
+const MODIFIER_READS = {
+  'app/pointer.js': 1, // the canvas: interactionPointer.test.js
+  'app/wiringBus.js': 1, // a payload from the canvas's drag
+  'app/wiringControllers.js': 1, // a payload from the canvas's click
+  'app/wiringDom.js': 1, // the arrow keys' nudge: TST-13
+  'config/keybindings.js': 8, // the key table: TST-13
+  'controllers/UIController.js': 3, // a waypoint row's click: rows here
+  'handlers/InteractionHandler.js': 43, // the canvas: interactionPointer.test.js
+  'utils/focusTrap.js': 2, // Tab in a dialog: TST-13
+};
+
+/**
+ * A radio already chosen fires nothing when clicked again, so it is chosen
+ * from another of its group too: the other is chosen first, as part of the
+ * row's starting point, and the row records choosing this one.
+ */
+function otherChoiceOf(radio) {
+  return [...document.querySelectorAll('input[type=radio]')]
+    .find(each => each.name === radio.name && each !== radio && !each.disabled && isShown(each)) ?? null;
+}
+
+function choosingFromAnother(radio) {
+  const other = otherChoiceOf(radio);
+  if (!other) return [];
+  const otherKey = keyFor(other);
+  return [{
+    label: `click, from ${otherKey}`,
+    prepare: () => elementAt(otherKey).click(),
+    run: element => element.click(),
+  }];
+}
+
+/** A waypoint list row a user can drag: a major, with its leg. */
+const DRAGGABLE_ROW = '#waypoint-list > li[draggable="true"]';
+
+/** Drag a row by its handle onto the next major's row (the one before, for the last). */
+const draggingOntoNext = {
+  label: 'drag onto the next major’s row',
+  run: (row) => {
+    const rows = [...row.parentElement.querySelectorAll(':scope > li[draggable="true"]')];
+    const onto = rows[rows.indexOf(row) + 1] ?? rows[rows.indexOf(row) - 1];
+    const transfer = { effectAllowed: 'none', dropEffect: 'none', setData() {}, getData: () => '' };
+    const drag = (target, type, init = {}) => {
+      const event = new MouseEvent(type, { bubbles: true, cancelable: true, ...init });
+      Object.defineProperty(event, 'dataTransfer', { value: transfer });
+      target.dispatchEvent(event);
+    };
+    const rowKey = keyFor(row);
+    drag(row, 'dragstart');
+    drag(onto, 'dragover', { clientY: 1 });
+    drag(onto, 'drop', { clientY: 1 });
+    // The drop rebuilds the list, and the drag ends at the row it started
+    // from, as a browser ends it, though that row has left the page, where
+    // the window does not see the event reach it.
+    drag(row, 'dragend');
+    if (!row.isConnected) delivered?.push({ type: 'dragend', target: rowKey, path: [rowKey] });
+  },
+};
+
+/**
+ * The busyness graph is dragged by its handles. jsdom lays nothing out, so
+ * the graph is given a size for the gesture, and the pointer goes a third of
+ * the way down it.
+ */
+const BUSYNESS_GRAPH = '#crowd-busyness-graph';
+
+function busynessGesture(label, finish) {
+  return {
+    label,
+    run: (graph) => {
+      const handle = graph.querySelector('[data-busyness-handle]');
+      if (!handle) throw new Error('the busyness graph has no handle');
+      const rect = { left: 0, top: 0, right: 300, bottom: 150, width: 300, height: 150, x: 0, y: 0 };
+      const measure = vi.spyOn(graph, 'getBoundingClientRect').mockReturnValue(rect);
+      const pointer = (target, type, clientY) => {
+        const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: 0, clientY });
+        Object.defineProperty(event, 'pointerId', { value: 1 });
+        target.dispatchEvent(event);
+      };
+      try {
+        pointer(handle, 'pointerdown', 10);
+        pointer(graph, 'pointermove', 50);
+        pointer(graph, finish, 50);
+      } finally {
+        measure.mockRestore();
+      }
+    },
+  };
+}
+
+const busynessDrag = busynessGesture('drag its first handle a third of the way down', 'pointerup');
+const busynessCancel = busynessGesture('drag its first handle, then the drag is cancelled', 'pointercancel');
 
 function operationsFor(element) {
-  if (element.disabled) return [{ label: 'disabled, not operated', events: [], run: () => {} }];
-  if (element.readOnly) return [{ label: 'read-only, not operated', events: [], run: () => {} }];
-  const extra = wiredEvents.get(element)?.has('dblclick') || element.matches(RENAMES_ON_DOUBLE_CLICK)
-    ? [doubleClicking] : [];
+  if (element.disabled) return [{ label: 'disabled, not operated', notOperated: true, run: () => {} }];
+  if (element.readOnly) return [{ label: 'read-only, not operated', notOperated: true, run: () => {} }];
+  if (element.matches(DRAGGABLE_ROW)) return [draggingOntoNext];
+  if (element.matches(BUSYNESS_GRAPH)) return [busynessDrag, busynessCancel];
+  const extra = [];
+  if (wiredEvents.get(element)?.has('dblclick') || element.matches(RENAMES_ON_DOUBLE_CLICK)) extra.push(doubleClicking);
+  if (element.matches(RENAMES)) extra.push(renaming);
+  if (element.matches(MODIFIED_CLICKS)) extra.push(shiftClicking, commandClicking);
   return [...singleGestures(element), ...extra];
 }
 
@@ -375,31 +593,30 @@ function singleGestures(element) {
   if (element instanceof HTMLSelectElement) {
     return [...element.options]
       .filter(option => !option.disabled && option.value !== element.value)
-      .map(option => ({ label: `choose ${JSON.stringify(option.value)}`, events: EDIT, run: each => commit(each, option.value) }));
+      .map(option => ({ label: `choose ${JSON.stringify(option.value)}`, run: each => commit(each, option.value) }));
   }
   if (element instanceof HTMLInputElement) {
     switch (element.type) {
       case 'range': {
         const target = rangeTarget(element);
-        return [{ label: `set ${target}`, events: EDIT, run: each => commit(each, String(target)) }];
+        return [{ label: `set ${target}`, run: each => commit(each, String(target)) }];
       }
       case 'number':
         return [
-          { label: 'enter 24', events: EDIT, run: each => commit(each, '24') },
-          { label: 'enter 99999', events: EDIT, run: each => commit(each, '99999') },
+          { label: 'enter 24', run: each => commit(each, '24') },
+          { label: 'enter 99999', run: each => commit(each, '99999') },
         ];
       case 'text':
-        return [{ label: 'type "Typed"', events: EDIT, run: each => commit(each, 'Typed') }];
+        return [{ label: 'type "Typed"', run: each => commit(each, 'Typed') }];
       case 'color':
-        return [{ label: 'pick #56b4e9', events: EDIT, run: each => commit(each, '#56b4e9') }];
+        return [{ label: 'pick #56b4e9', run: each => commit(each, '#56b4e9') }];
       case 'file':
         return [
-          { label: 'choose nothing', events: ['change'], run: each => chooseFile(each, null) },
-          { label: `choose ${pickedFile(element).name}`, events: ['change'], run: each => chooseFile(each, pickedFile(each)) },
+          { label: 'choose nothing', run: each => chooseFile(each, null) },
+          { label: `choose ${pickedFile(element).name}`, run: each => chooseFile(each, pickedFile(each)) },
         ];
-      case 'checkbox':
       case 'radio':
-        return [{ ...click, events: ['click', 'input', 'change'] }];
+        return element.checked ? [click, ...choosingFromAnother(element)] : [click];
       default:
         return [click];
     }
@@ -407,7 +624,7 @@ function singleGestures(element) {
   return [click];
 }
 
-const INTERACTIVE = 'button, input, select, textarea, a[href], summary, [role=button], [data-tip], [role=listitem]';
+const INTERACTIVE = `button, input, select, textarea, a[href], summary, [role=button], [data-tip], [role=listitem], ${DRAGGABLE_ROW}, ${BUSYNESS_GRAPH}`;
 
 /**
  * Shown to a user: nothing on the way up hides it, makes it inert or hides it
@@ -703,9 +920,12 @@ function controlOf(key) {
   return key.replace(/^(#waypoint-list|#layers-strip)>li\[\d+\]/, '$1>li[*]');
 }
 
-/** Whether a row has already performed some gesture on this control. */
+/**
+ * Whether a row has already operated this control itself. (What reached it
+ * from another control's row is credited to it, but did not operate it.)
+ */
 function operatedBefore(key) {
-  return (coverage.get(controlOf(key))?.size ?? 0) > 0;
+  return operatedControls.has(controlOf(key));
 }
 
 /** The element a key names in the current document (keys are `keyFor`'s). */
@@ -808,6 +1028,10 @@ async function establish(app, context) {
     app.sectionController.lastInteracted = null;
     app.sectionController._applyLastInteractedIndicator();
   }
+  // Nor the waypoint row last clicked, which a second click on it soon after
+  // takes for a double-click and a rename (UIController times it itself).
+  app.uiController._renameLastClickWaypoint = null;
+  app.uiController._renameLastClickTime = 0;
   await settle(50);
   app.markClean();
   forgetDrawing(app);
@@ -818,6 +1042,8 @@ async function establish(app, context) {
 async function openSession(context) {
   const session = { context, listeners: [], canvases: new Set() };
   owner = session;
+  // Every app starts from the same storage: none of its own.
+  stored.clear();
   session.app = await drive(bootApp().then(async (booted) => {
     await booted.ready;
     return booted;
@@ -834,6 +1060,9 @@ async function openSession(context) {
  * one's.
  */
 function retire(session) {
+  // An open name field commits when it loses focus, and needs the app to:
+  // it loses it while the app is still whole.
+  document.activeElement?.blur();
   session.emits.restore();
   session.app.destroy();
   retireApp(session.app);
@@ -868,13 +1097,20 @@ function retire(session) {
  * reproduce it: a hidden panel's leftover values can show in a later row.
  */
 function capture(session, { complete = false } = {}) {
-  return { model: modelState(session.app), app: appState(session.app), ui: session.ui.capture({ complete }) };
+  const app = appState(session.app);
+  if (complete) {
+    const ui = session.app.uiController;
+    const waypoint = ui._renameLastClickWaypoint;
+    app.set('renameClick', JSON.stringify([waypoint ? session.app.waypoints.indexOf(waypoint) : null, ui._renameLastClickTime]));
+  }
+  return { model: modelState(session.app), app, storage: storageState(), ui: session.ui.capture({ complete }) };
 }
 
 function changes(before, after) {
   return [
     ...modelChanges(before.model, after.model),
     ...changedLines(before.app, after.app, 'app'),
+    ...changedLines(before.storage, after.storage, 'storage'),
     ...uiChanges(before.ui, after.ui),
   ];
 }
@@ -893,17 +1129,36 @@ function onceEach(emitted) {
   return [...byEvent.values()].map(({ line, repeated }) => (repeated ? `${line} (repeatedly)` : line));
 }
 
-/** Operate one control and record what it did. */
-async function runRow(session, element, operation, name) {
+/**
+ * Operate one control and record what it did, and what its gesture delivered.
+ * A gesture that starts from somewhere else (a radio chosen from another) is
+ * taken there first, and the row records only its own part.
+ */
+async function runRow(session, key, operation, name) {
   session.emits.take();
   await takeBrowserRequests();
   vi.setSystemTime(ROW_NOW);
   const random = vi.spyOn(Math, 'random').mockImplementation(seededRandom(name));
-  operation.run(element);
+  let base = session.base;
+  if (operation.prepare) {
+    operation.prepare(elementAt(key));
+    await settle();
+    vi.setSystemTime(ROW_NOW);
+    session.emits.take();
+    await takeBrowserRequests();
+    base = capture(session);
+  }
+  delivered = [];
+  try {
+    operation.run(elementAt(key));
+  } finally {
+    session.delivered = delivered;
+    delivered = null;
+  }
   await flush();
   const asked = await takeBrowserRequests();
   const after = capture(session);
-  const lines = [...session.emits.take(), ...asked, ...changes(session.base, after)];
+  const lines = [...session.emits.take(), ...asked, ...changes(base, after)];
   await settle();
   const askedLater = await takeBrowserRequests();
   const settled = capture(session);
@@ -925,7 +1180,7 @@ async function restore(session, element, operation, settled) {
   const complete = { complete: true };
   if (!ISOLATED) {
     if (changes(session.baseComplete, settled).length === 0) return session;
-    if (operation.undo && element.isConnected) {
+    if (operation.undo && element?.isConnected) {
       operation.undo(element);
       await settle();
       const atRest = vi.getTimerCount() === 0;
@@ -933,6 +1188,8 @@ async function restore(session, element, operation, settled) {
       if (atRest && changes(session.baseComplete, capture(session, complete)).length === 0) return session;
     }
     forgetDrawing(session.app);
+    stored.clear();
+    for (const [key, value] of session.baseStored) stored.set(key, value);
     const atRest = await establish(session.app, session.context);
     session.emits.take();
     if (atRest && changes(session.baseComplete, capture(session, complete)).length === 0) return session;
@@ -942,6 +1199,7 @@ async function restore(session, element, operation, settled) {
   fresh.ui = session.ui;
   fresh.base = session.base;
   fresh.baseComplete = session.baseComplete;
+  fresh.baseStored = session.baseStored;
   const drift = changes(fresh.baseComplete, capture(fresh, complete));
   expect(drift, `a fresh app in ${session.context.name} does not match the baseline`).toEqual([]);
   return fresh;
@@ -957,6 +1215,10 @@ async function restore(session, element, operation, settled) {
  */
 const wiredSeen = new Map();
 const coverage = new Map();
+/** Each control and gesture a row has recorded, as `control · label`. */
+const recordedLabels = new Set();
+/** The controls rows have operated. */
+const operatedControls = new Set();
 
 function noteWiring(context) {
   for (const element of document.querySelectorAll('*')) {
@@ -969,10 +1231,20 @@ function noteWiring(context) {
   }
 }
 
-function noteCoverage(key, operation) {
-  const control = controlOf(key);
-  if (!coverage.has(control)) coverage.set(control, new Set());
-  for (const type of operation.events) coverage.get(control).add(type);
+/**
+ * Credit what a row's gesture delivered: each event's type, to the control it
+ * was sent to, and to the operated control when the event passed through it
+ * (a drag's pointer events go to a handle inside the graph).
+ */
+function noteCoverage(key, events) {
+  const credit = (control, type) => {
+    if (!coverage.has(control)) coverage.set(control, new Set());
+    coverage.get(control).add(type);
+  };
+  for (const { type, target, path } of events) {
+    credit(controlOf(target), type);
+    if (path.includes(key)) credit(controlOf(key), type);
+  }
 }
 
 function expectGolden(name, text) {
@@ -998,6 +1270,8 @@ describe('control → bus goldens (TST-04)', () => {
     globalThis.APP_VERSION = '0.0.0-test';
     await import('../src/main.js');
     recordWiring();
+    watchDelivery();
+    installStorage();
     removePalette = applyMapPalette();
     document.addEventListener('click', noteFileDialog, true);
     digests = answerDigestsAtOnce();
@@ -1010,6 +1284,8 @@ describe('control → bus goldens (TST-04)', () => {
   });
 
   afterAll(() => {
+    unwatchDelivery();
+    uninstallStorage();
     EventTarget.prototype.addEventListener = originalAddEventListener;
     HTMLCanvasElement.prototype.getContext = originalGetContext;
     window.addEventListener = originalWindowAddEventListener;
@@ -1032,6 +1308,7 @@ describe('control → bus goldens (TST-04)', () => {
       session.ui = watchUi(document.body, { opaque: OUTLINE });
       session.base = capture(session);
       session.baseComplete = capture(session, { complete: true });
+      session.baseStored = new Map(stored);
       noteWiring(context);
 
       const sections = [`# ${context.name}: ${context.about}`];
@@ -1040,13 +1317,14 @@ describe('control → bus goldens (TST-04)', () => {
         // operated; a repeated context needs one write to show whom it reaches.
         const operations = operationsFor(elementAt(key)).slice(0, context.values ? 1 : undefined);
         for (const operation of operations) {
-          const element = elementAt(key);
-          noteCoverage(key, operation);
-          const { lines, settled } = await runRow(session, element, operation, `${context.name} ${key} ${operation.label}`);
+          const { lines, settled } = await runRow(session, key, operation, `${context.name} ${key} ${operation.label}`);
+          noteCoverage(key, session.delivered);
+          recordedLabels.add(`${controlOf(key)} · ${operation.label}`);
+          if (!operation.notOperated) operatedControls.add(controlOf(key));
           sections.push(`\n## ${key} · ${operation.label}${lines.length ? `\n${lines.join('\n')}` : ''}`);
           // Controls a row creates (a handle, an editor) are wired too.
           noteWiring(context);
-          session = await restore(session, element, operation, settled);
+          session = await restore(session, elementAt(key), operation, settled);
         }
       }
       // The watcher describes each element again only after a mutation reaches
@@ -1062,19 +1340,72 @@ describe('control → bus goldens (TST-04)', () => {
     }, 180_000);
   }
 
-  test('every wired control has a row for each gesture, or a reason it has none', () => {
+  test('every wired control has a row that delivers each gesture it is wired for, or a reason it has none', () => {
     // Were the wiring not recorded, nothing would be missing either: the app
     // wires about 300 elements across these contexts.
     expect(wiredSeen.size).toBeGreaterThan(200);
     const missing = [];
+    const unclassified = [];
     for (const [key, { excluded, context, events }] of wiredSeen) {
       if (excluded) continue;
       for (const type of events) {
+        if (!GESTURE_TYPES.has(type)) {
+          if (!NOT_GESTURES.has(type)) unclassified.push(`${key} ${type} (seen in ${context})`);
+          continue;
+        }
         if (GESTURES_NOT_PERFORMED.has(type) || coverage.get(key)?.has(type)) continue;
         // (keys here are already controls: `noteWiring` stores them so)
         missing.push(`${key} ${type} (seen in ${context})`);
       }
     }
+    expect(unclassified).toEqual([]);
     expect(missing).toEqual([]);
+  });
+
+  test('a click on the selected waypoint\'s row leaves no double-click for the next row to finish', async () => {
+    // A second click on the same row within 400 ms renames it (UIController
+    // times it), so a row that clicked it must not hand that on.
+    const context = CONTEXTS.find(each => each.name === 'major');
+    vi.useFakeTimers(FAKE_TIMERS);
+    installClipboard(copying);
+    let session = await openSession(context);
+    session.ui = watchUi(document.body, { opaque: OUTLINE });
+    session.base = capture(session);
+    session.baseComplete = capture(session, { complete: true });
+    session.baseStored = new Map(stored);
+    const key = keyFor(document.querySelector('#waypoint-list > li.selected > .waypoint-row'));
+
+    const first = await runRow(session, key, click, 'the selected row, clicked');
+    session = await restore(session, elementAt(key), click, first.settled);
+    const second = await runRow(session, key, click, 'the selected row, clicked');
+
+    expect(second.lines).toEqual(first.lines);
+    expect(document.querySelector('.waypoint-rename-input')).toBeNull();
+    session.ui.disconnect();
+    retire(session);
+  }, 60_000);
+
+  test('the only sidebar click that reads a modifier key is a waypoint row\'s, and it has rows', () => {
+    // Every read of a modifier key in the app, by file. The keyboard's are
+    // TST-13's; the canvas's are its own suites'; the bus payloads that carry
+    // one come from the canvas. A new one fails here until it is placed.
+    const srcDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'src');
+    const reads = {};
+    const walk = (dir) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const path = join(dir, entry.name);
+        if (entry.isDirectory()) walk(path);
+        else if (entry.name.endsWith('.js')) {
+          const count = (readFileSync(path, 'utf8').match(/\.(?:shiftKey|metaKey|ctrlKey|altKey)\b/g) ?? []).length;
+          if (count) reads[relative(srcDir, path)] = count;
+        }
+      }
+    };
+    walk(srcDir);
+    expect(reads).toEqual(MODIFIER_READS);
+    expect(coverage.get('#waypoint-list>li[*]>button[0]')).toEqual(expect.any(Set));
+    for (const label of [shiftClicking.label, commandClicking.label]) {
+      expect(recordedLabels.has(`#waypoint-list>li[*]>button[0] · ${label}`), label).toBe(true);
+    }
   });
 });

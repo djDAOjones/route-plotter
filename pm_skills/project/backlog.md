@@ -69,7 +69,7 @@
 **W5 — deepen the characterisation** (TST-04 first)
 
 - [~] **TST-04 Sidebar control and readout goldens** · Characterisation
-  [ready] — Control→bus: PR #N (every wired gesture, 29 contexts).
+  [ready] — Control→bus: PR #57 (every wired gesture, as delivered; 29 contexts).
   Left: model→control state per selection path, readouts included. First,
   because nothing guards the readouts (§14.5), so W4 waits on it. **P1**
 - [ ] **TST-13 Key table, element IDs, HTML ranges** · Characterisation

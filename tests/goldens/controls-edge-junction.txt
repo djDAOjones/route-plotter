@@ -1,6 +1,8 @@
 # edge-junction: a path leaving that junction inspected
 
 ## #edge-scope>div[0]>div[0] · click
+storage + routePlotter_lastSection: "edge"
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[259 chars, 62292118] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[260 chars, d8d460af]
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section" data-last="true" data-section="edge"
 ui ~ #edge-scope>div[0]>div[0]: div aria-controls="section-edge-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-edge-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
@@ -12,6 +14,7 @@ emit network:changed {commit: true}
 emit network:edge-selected {edge: {id: "ge_trace_ex-uon-2__ex-uon-b1", sourceId: "gn_trace_ex-uon-2", targetId: "gn_trace_ex-uon-b1", weight: 1, direction: "two-way", controlPoints: [0 items]}}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-2__ex-uon-b1", focusKey: null}
 model ~ scene.flowLayers[0].graph.edges[2].direction: "one-way" → "two-way"
+storage + routePlotter_lastSection: "edge"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Edge · one-way" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Edge · two-way"
@@ -19,6 +22,8 @@ ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edg
 ui ~ #network-edge-direction: select aria-describedby="network-edge-direction-tip" :value="one-way" → select aria-describedby="network-edge-direction-tip" :value="two-way"
 ui ~ #network-edge-swap: button class="btn btn-secondary" title="Reverse which way this one-way edge carries dots" type="button" :text="Swap direction" → button (not shown)
 ui ~ #network-edge-weight-value: span :text="50% configured share" → span :text="50% · 50% configured shares"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, cdb133bc]
 
 ## #network-edge-swap · click
 emit network:changed {commit: true}
@@ -27,6 +32,8 @@ model ~ scene.flowLayers[0].graph.edges[2].sourceId: "gn_trace_ex-uon-2" → "gn
 model ~ scene.flowLayers[0].graph.edges[2].targetId: "gn_trace_ex-uon-b1" → "gn_trace_ex-uon-2"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 9a91cbe6]
 
 ## #section-edge-content>label[3]>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How strongly dots prefer this edge at a junction, shown as the share of departures that pick it"
@@ -34,6 +41,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #network-edge-weight · set 17
 emit crowd:param-changed
 model ~ scene.flowLayers[0].graph.edges[2].weight: 1 → 1.7
+storage + routePlotter_lastSection: "edge"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
 ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-tip" max="50" min="1" step="1" type="range" value="10" :value="10" → input aria-describedby="network-edge-weight-tip" max="50" min="1" step="1" type="range" value="10" :value="17"
@@ -41,6 +49,7 @@ ui ~ #network-edge-weight-value: span :text="50% configured share" → span :tex
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-2__ex-uon-b1", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9686 chars, ea6dc6f5]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #network-edge-delete · click
@@ -64,11 +73,12 @@ ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Edge · one-way" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 16 inside, 3d5e2bfd)
-ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 62 inside, be3e6597)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 62 inside, eba53f30)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 77 inside, cb2b8637)
 ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 24 inside, 555e9c87)
 ui ~ #edge-scope: div class="scope-group" → div (not shown)
 ui - #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" (and 20 inside, dd3426f5)
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9531 chars, 27808df2]
   ui - #toast-container>div[0]: div class="toast" :text="Deleted edge — press Ctrl+Z to undo"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

@@ -15,15 +15,15 @@ ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 
 ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 18 inside, 3cb1562c)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, ad009232)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, 107b52a2)
 ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 46 inside, fd52c3c6)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
-ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 70 inside, f44ca4a6)
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 70 inside, 25e74567)
 ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" (and 51 inside, 8f5eb093)
-ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 108 inside, d48a5036)
-ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 84 inside, 1755ed92)
-ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 165 inside, 45fea66d)
+ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 108 inside, 6dda2949)
+ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 84 inside, b7affd43)
+ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 165 inside, 132e0e7f)
 
 ## #scope-prev-btn · click
 emit waypoint:selected waypoint[2]
@@ -84,12 +84,15 @@ ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 
 ## #waypoint-scope>div[0]>div[0] · click
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[255 chars, c01ab07a] → "{\"marker\":false,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[256 chars, 966b4a6f]
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section" data-last="true" data-section="marker"
 ui ~ #waypoint-scope>div[0]>div[0]: div aria-controls="section-marker-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-marker-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
 ## #dot-color-group-0 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotColor: "#CC79A7" → "#ffffff"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input type="hidden" value="#ffffff" :value="#ffffff"
@@ -99,11 +102,13 @@ ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker o
 ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(255, 255, 255);"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, cbeba3e4]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #dot-color-group-1 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotColor: "#CC79A7" → "#f0e442"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input type="hidden" value="#f0e442" :value="#f0e442"
@@ -113,11 +118,13 @@ ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker o
 ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(240, 228, 66);"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 891639f5]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #dot-color-group-2 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotColor: "#CC79A7" → "#e69f00"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input type="hidden" value="#e69f00" :value="#e69f00"
@@ -127,11 +134,13 @@ ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker o
 ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(230, 159, 0);"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 7f373f38]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #dot-color-group-3 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotColor: "#CC79A7" → "#d55e00"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input type="hidden" value="#d55e00" :value="#d55e00"
@@ -141,13 +150,27 @@ ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker o
 ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(213, 94, 0);"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 1670a0c1]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #dot-color-group-4 · click
 
+## #dot-color-group-4 · click, from #dot-color-group-0
+emit waypoint:style-changed waypoint[3]
+model ~ waypoints[3].dotColor: "#ffffff" → "#cc79a7"
+ui ~ #dot-color: input type="hidden" value="#ffffff" :value="#ffffff" → input type="hidden" value="#cc79a7" :value="#cc79a7"
+ui ~ #dot-color-group-0: input class="swatch-radio" name="dot-color-group" type="radio" value="#FFFFFF" :checked → input class="swatch-radio" name="dot-color-group" type="radio" value="#FFFFFF" :unchecked
+ui ~ #dot-color-group-4: input class="swatch-radio" name="dot-color-group" type="radio" value="#CC79A7" :unchecked → input class="swatch-radio" name="dot-color-group" type="radio" value="#CC79A7" :checked
+ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
+ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(255, 255, 255);" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, cbeba3e4] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, beca7d02]
+
 ## #dot-color-group-5 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotColor: "#CC79A7" → "#000000"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input type="hidden" value="#000000" :value="#000000"
@@ -157,11 +180,13 @@ ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker o
 ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(0, 0, 0);"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 50e86da8]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #dot-color-group-6 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotColor: "#CC79A7" → "#56b4e9"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input type="hidden" value="#56b4e9" :value="#56b4e9"
@@ -171,11 +196,13 @@ ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker o
 ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(86, 180, 233);"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 8389ba1b]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #dot-color-group-7 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotColor: "#CC79A7" → "#0072b2"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input type="hidden" value="#0072b2" :value="#0072b2"
@@ -185,11 +212,13 @@ ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker o
 ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(0, 114, 178);"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, ceea9a31]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #dot-color-group-8 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotColor: "#CC79A7" → "#009e73"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input type="hidden" value="#009e73" :value="#009e73"
@@ -199,11 +228,13 @@ ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker o
 ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(0, 158, 115);"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, f5ed9d6c]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #dot-color-group-9 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotColor: "#CC79A7" → "transparent"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input type="hidden" value="transparent" :value="transparent"
@@ -213,6 +244,7 @@ ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker o
 ui ~ #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);" → span aria-hidden="true" class="waypoint-color-dot is-none" style="background-color: rgb(255, 255, 255);"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9688 chars, 51b7bf8f]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-marker-content>label[2]>span[0] · click
@@ -221,28 +253,33 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #marker-style · choose "dot"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].markerStyle: "square" → "dot"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="square" → select aria-describedby="marker-style-tip" :value="dot"
 ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, e782bb4a]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #marker-style · choose "flag"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].markerStyle: "square" → "flag"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="square" → select aria-describedby="marker-style-tip" :value="flag"
 ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, dde062cd]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #marker-style · choose "custom"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].markerStyle: "square" → "custom"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="square" → select aria-describedby="marker-style-tip" :value="custom"
@@ -254,17 +291,20 @@ ui + #marker-preview: div (not shown)
 ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, e782bb4a]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #marker-style · choose "none"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].markerStyle: "square" → "none"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="square" → select aria-describedby="marker-style-tip" :value="none"
 ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 1419b08d]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-marker-content>label[5]>span[0] · click
@@ -273,6 +313,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #dot-size · set 8
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].dotSize: 14 → 8
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-size: input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="14 reference px" max="16" min="4" step="1" type="range" value="8" :value="14" → input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="8 reference px" max="16" min="4" step="1" type="range" value="8" :value="8"
@@ -280,6 +321,7 @@ ui ~ #dot-size-value: span :text="14 reference px" → span :text="8 reference p
 ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 90ccfd67]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-marker-content>div[7]>button[0] · click
@@ -293,11 +335,14 @@ ui ~ #dot-size-value: span :text="14 reference px" → span :text="13 reference 
 ui ~ #section-marker-content>div[7]>button[0]: button aria-label="Reset Marker to route style" class="btn btn-secondary" data-card-action="reset" data-card="marker" title="Reset this card to route style" type="button" :text="Reset" → button aria-label="Reset Marker: Already uses route style" class="btn btn-secondary" data-card-action="reset" data-card="marker" disabled="" title="Already uses route style" type="button" :text="Reset"
 ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 6079814f]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Marker reset for 1 waypoint. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #section-marker-content>div[7]>button[1] · disabled, not operated
 
 ## #waypoint-scope>div[1]>div[0] · click
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[255 chars, c01ab07a] → "{\"marker\":true,\"on-arrival\":false,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[256 chars, 1c082a59]
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
 ui ~ #waypoint-scope>div[1]>div[0]: div aria-controls="section-on-arrival-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-on-arrival-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
@@ -307,11 +352,13 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #editor-beacon-style · choose "none"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].beaconStyle: "grow" → "none"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" :value="none"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 858f8ebf]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #editor-beacon-style · choose "ripple"
@@ -319,6 +366,7 @@ emit animation:durationChange 26834.286722
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].beaconStyle: "grow" → "ripple"
 model ~ animationState.duration: 21429.352554 → 26834.286722
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" :value="ripple"
@@ -340,31 +388,37 @@ ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 26834.286722, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9685 chars, fd12db67]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #editor-beacon-style · choose "glow"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].beaconStyle: "grow" → "glow"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" :value="glow"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, ef62bf58]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #editor-beacon-style · choose "pop"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].beaconStyle: "grow" → "pop"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" :value="pop"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, c413aeae]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #editor-beacon-style · choose "pulse"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].beaconStyle: "grow" → "pulse"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" :value="pulse"
@@ -382,6 +436,7 @@ ui + #pulse-cycle-speed-value: span :text="7s"
 ui + #pulse-cycle-speed-tip: span class="sr-only" :text="Duration of one complete pulse cycle"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9685 chars, 3cff9914]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #pause-time-control>span[0] · click
@@ -390,6 +445,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #waypoint-pause-time · set 333
 emit waypoint:pause-changed {waypoint: waypoint[3], pauseTime: 1919.693253, pauseMode: "timed"}
 model ~ waypoints[3].pauseTime: 2750 → 1919.693253
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #waypoint-pause-time: input aria-describedby="waypoint-pause-time-tip" max="1000" min="0" step="1" type="range" value="500" :value="384" → input aria-describedby="waypoint-pause-time-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
@@ -398,6 +454,7 @@ settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, a09d4e03]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #camera-single-controls>div[1]>label[0] · click
@@ -405,10 +462,13 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #camera-zoom · set 0.33
 model ~ waypoints[3].camera.zoom: 2.05 → 2.496661
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #camera-zoom: input aria-describedby="camera-zoom-value camera-zoom-tip" aria-valuetext="2.0x" max="1" min="0" step="0.01" type="range" value="0" :value="0.2589059774326803" → input aria-describedby="camera-zoom-value camera-zoom-tip" aria-valuetext="2.5x" max="1" min="0" step="0.01" type="range" value="0" :value="0.33"
 ui ~ #camera-zoom-value: span class="slider-value" :text="2.0x" → span class="slider-value" :text="2.5x"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, dc88e4cb]
 
 ## #section-on-arrival-content>details[1]>summary[0] · click
 ui ~ #section-on-arrival-content>details[1]: details class="section-more" open="" → details class="section-more"
@@ -419,11 +479,13 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #camera-zoom-mode · choose "immediate"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].camera.zoomMode: "stepped" → "immediate"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #camera-zoom-mode: select aria-describedby="camera-zoom-mode-tip" :value="continuous" → select aria-describedby="camera-zoom-mode-tip" :value="immediate"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9686 chars, e1b75af0]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-on-arrival-content>div[2]>button[0] · click
@@ -463,6 +525,7 @@ ui + #ripple-controls>label[4]>span[1]: span :text="Wait during ripple"
 ui ~ #section-on-arrival-content>div[2]>button[0]: button aria-label="Reset On arrival to route style" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" title="Reset this card to route style" type="button" :text="Reset" → button aria-label="Reset On arrival: Already uses route style" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" disabled="" title="Already uses route style" type="button" :text="Reset"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 0239ce37]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="On arrival reset for 1 waypoint. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #section-on-arrival-content>div[2]>button[1] · click
@@ -480,9 +543,12 @@ ui ~ #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui ~ #section-on-arrival-content>div[2]>button[1]: button aria-label="Apply On arrival onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply On arrival onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, bdf892b7]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="On arrival applied to 2 later waypoints. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-scope>div[2]>div[0] · click
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[255 chars, c01ab07a] → "{\"marker\":true,\"on-arrival\":true,\"label\":false,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[256 chars, 5af8654b]
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section" data-last="true" data-section="label"
 ui ~ #waypoint-scope>div[2]>div[0]: div aria-controls="section-label-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-label-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
@@ -493,6 +559,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 emit scene:semantic-changed {kind: "waypoint-label", waypointId: "ex-uon-2b"}
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].label: "Label 4" → "Typed"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui + #toast-container>div[0]: div class="toast" :text="This label overlaps something."
 ui + #toast-container>div[0]>button[0]: button class="toast-action" type="button" :text="Auto-position"
@@ -502,6 +569,7 @@ ui ~ #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="E
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 7cffcd28]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
   ui - #toast-container>div[0]: div class="toast" :text="This label overlaps something."
   ui - #toast-container>div[0]>button[0]: button class="toast-action" type="button" :text="Auto-position"
@@ -513,31 +581,37 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #label-mode · choose "off"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelMode: "on" → "off"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-mode: select aria-describedby="label-mode-tip" :value="on" → select aria-describedby="label-mode-tip" :value="off"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9685 chars, 60f62978]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #label-mode · choose "fade-up"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelMode: "on" → "fade-up"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-mode: select aria-describedby="label-mode-tip" :value="on" → select aria-describedby="label-mode-tip" :value="fade-up"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9689 chars, 213d5787]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #label-mode · choose "fade-up-down"
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelMode: "on" → "fade-up-down"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-mode: select aria-describedby="label-mode-tip" :value="on" → select aria-describedby="label-mode-tip" :value="fade-up-down"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9694 chars, 0ba3b9dc]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-label-content>div[0]>label[4]>span[0] · click
@@ -546,12 +620,14 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #label-size · set 37
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelSize: 27 → 37
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-size: input aria-describedby="label-size-value label-size-tip" aria-valuetext="27 reference px" max="48" min="16" step="1" type="range" value="16" :value="27" → input aria-describedby="label-size-value label-size-tip" aria-valuetext="37 reference px" max="48" min="16" step="1" type="range" value="16" :value="37"
 ui ~ #label-size-value: span :text="27 reference px" → span :text="37 reference px"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 0cff2c01]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #label-auto-position · click
@@ -565,6 +641,7 @@ ui ~ #label-offset-y: input aria-describedby="label-offset-y-tip" max="50" min="
 ui ~ #label-offset-y-value: span :text="-12%" → span :text="8%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, f1ccf702]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-label-content>details[1]>summary[0] · click
@@ -573,57 +650,66 @@ ui ~ #section-label-content>details[1]: details class="section-more" open="" →
 ## #label-color-group-0 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelColor: "#009E73" → "#111111"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#111111" :value="#111111"
 ui ~ #label-color-group-0: input class="swatch-radio" name="label-color-group" type="radio" value="#111111" :unchecked → input class="swatch-radio" name="label-color-group" type="radio" value="#111111" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[259 chars, cb47dd5e] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[257 chars, 4765ef18]
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(0, 158, 115); background-image: none; background-origin: padding-box; backgro…[259 chars, 47261216] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(17, 17, 17); background-image: none; background-origin: padding-box; backgrou…[257 chars, ca25c13e]
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #111111"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 7b936908]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #label-color-group-1 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelColor: "#009E73" → "#595959"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#595959" :value="#595959"
 ui ~ #label-color-group-1: input class="swatch-radio" name="label-color-group" type="radio" value="#595959" :unchecked → input class="swatch-radio" name="label-color-group" type="radio" value="#595959" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[259 chars, cb47dd5e] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[257 chars, f227c102]
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(0, 158, 115); background-image: none; background-origin: padding-box; backgro…[259 chars, 47261216] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(89, 89, 89); background-image: none; background-origin: padding-box; backgrou…[257 chars, f4ab8bfc]
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #595959"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, d096c0a4]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #label-color-group-2 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelColor: "#009E73" → "#6f6f6f"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#6f6f6f" :value="#6f6f6f"
 ui ~ #label-color-group-2: input class="swatch-radio" name="label-color-group" type="radio" value="#6F6F6F" :unchecked → input class="swatch-radio" name="label-color-group" type="radio" value="#6F6F6F" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[259 chars, cb47dd5e] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[263 chars, da8b2166]
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(0, 158, 115); background-image: none; background-origin: padding-box; backgro…[259 chars, 47261216] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(111, 111, 111); background-image: none; background-origin: padding-box; backg…[263 chars, 01a702ee]
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #6F6F6F"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, d923ecda]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #label-color-group-3 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelColor: "#009E73" → "#ffffff"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#ffffff" :value="#ffffff"
 ui ~ #label-color-group-3: input class="swatch-radio" name="label-color-group" type="radio" value="#FFFFFF" :unchecked → input class="swatch-radio" name="label-color-group" type="radio" value="#FFFFFF" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[259 chars, cb47dd5e] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[263 chars, 60e62d3a]
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(0, 158, 115); background-image: none; background-origin: padding-box; backgro…[259 chars, 47261216] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(255, 255, 255); background-image: none; background-origin: padding-box; backg…[263 chars, 08924a32]
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #FFFFFF"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 2e43ecca]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>button[0] · click
 app ~ focus: "body" → "#label-color-custom-disclosure>label[0]>input[1]"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>button[0]: button aria-controls="label-color-custom-disclosure" aria-expanded="false" class="btn btn-secondary btn-sm" type="button" :text="Custom colour…" → button aria-controls="label-color-custom-disclosure" aria-expanded="true" class="btn btn-secondary btn-sm" type="button" :text="Custom colour…"
 ui ~ #label-color-custom-disclosure: div (not shown) → div class="swatch-disclosure"
@@ -634,57 +720,66 @@ ui + #label-color-custom-disclosure>label[0]>input[1]: input type="color" :value
 ## #label-bg-color-group-0 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelBgColor: "#F0E442" → "#111111"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input type="hidden" value="#111111" :value="#111111"
 ui ~ #label-bg-color-group-0: input class="swatch-radio" name="label-bg-color-group" type="radio" value="#111111" :unchecked → input class="swatch-radio" name="label-bg-color-group" type="radio" value="#111111" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, e69dccdc] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[257 chars, 4765ef18]
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(240, 228, 66); background-image: none; background-origin: padding-box; backgr…[261 chars, 28ba8d62] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(17, 17, 17); background-image: none; background-origin: padding-box; backgrou…[257 chars, ca25c13e]
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #111111"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 14d9de95]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #label-bg-color-group-1 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelBgColor: "#F0E442" → "#595959"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input type="hidden" value="#595959" :value="#595959"
 ui ~ #label-bg-color-group-1: input class="swatch-radio" name="label-bg-color-group" type="radio" value="#595959" :unchecked → input class="swatch-radio" name="label-bg-color-group" type="radio" value="#595959" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, e69dccdc] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[257 chars, f227c102]
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(240, 228, 66); background-image: none; background-origin: padding-box; backgr…[261 chars, 28ba8d62] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(89, 89, 89); background-image: none; background-origin: padding-box; backgrou…[257 chars, f4ab8bfc]
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #595959"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, bf0997b1]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #label-bg-color-group-2 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelBgColor: "#F0E442" → "#6f6f6f"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input type="hidden" value="#6f6f6f" :value="#6f6f6f"
 ui ~ #label-bg-color-group-2: input class="swatch-radio" name="label-bg-color-group" type="radio" value="#6F6F6F" :unchecked → input class="swatch-radio" name="label-bg-color-group" type="radio" value="#6F6F6F" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, e69dccdc] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[263 chars, da8b2166]
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(240, 228, 66); background-image: none; background-origin: padding-box; backgr…[261 chars, 28ba8d62] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(111, 111, 111); background-image: none; background-origin: padding-box; backg…[263 chars, 01a702ee]
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #6F6F6F"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 43ff9b0f]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #label-bg-color-group-3 · click
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelBgColor: "#F0E442" → "#ffffff"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input type="hidden" value="#ffffff" :value="#ffffff"
 ui ~ #label-bg-color-group-3: input class="swatch-radio" name="label-bg-color-group" type="radio" value="#FFFFFF" :unchecked → input class="swatch-radio" name="label-bg-color-group" type="radio" value="#FFFFFF" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, e69dccdc] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[263 chars, 60e62d3a]
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(240, 228, 66); background-image: none; background-origin: padding-box; backgr…[261 chars, 28ba8d62] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(255, 255, 255); background-image: none; background-origin: padding-box; backg…[263 chars, 08924a32]
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #FFFFFF"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 13861c7f]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>button[0] · click
 app ~ focus: "body" → "#label-bg-color-custom-disclosure>label[0]>input[1]"
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>button[0]: button aria-controls="label-bg-color-custom-disclosure" aria-expanded="false" class="btn btn-secondary btn-sm" type="button" :text="Custom colour…" → button aria-controls="label-bg-color-custom-disclosure" aria-expanded="true" class="btn btn-secondary btn-sm" type="button" :text="Custom colour…"
 ui ~ #label-bg-color-custom-disclosure: div (not shown) → div class="swatch-disclosure"
@@ -698,12 +793,14 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #label-bg-opacity · set 33
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelBgOpacity: 0.42 → 0.33
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-bg-opacity: input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="42%" max="100" min="0" step="1" type="range" value="85" :value="42" → input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="85" :value="33"
 ui ~ #label-bg-opacity-value: span :text="42%" → span :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, c9a7e482]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-label-content>details[1]>div[1]>label[6]>span[0] · click
@@ -712,12 +809,14 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #label-width · set 20
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelWidth: 33 → 20
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-width: input aria-describedby="label-width-tip" max="50" min="5" step="1" type="range" value="15" :value="33" → input aria-describedby="label-width-tip" max="50" min="5" step="1" type="range" value="15" :value="20"
 ui ~ #label-width-value: span :text="33%" → span :text="20%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, fc0b56ae]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-label-content>details[1]>div[1]>label[8]>span[0] · click
@@ -726,12 +825,14 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #label-offset-x · set -17
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelOffsetX: 15 → -17
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-tip" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-tip" max="50" min="-50" step="1" type="range" value="0" :value="-17"
 ui ~ #label-offset-x-value: span :text="15%" → span :text="-17%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9685 chars, cea9dab9]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-label-content>details[1]>div[1]>label[10]>span[0] · click
@@ -740,12 +841,14 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #label-offset-y · set -17
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelOffsetY: -12 → -17
+storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-tip" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-tip" max="50" min="-50" step="1" type="range" value="-5" :value="-17"
 ui ~ #label-offset-y-value: span :text="-12%" → span :text="-17%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 097802b7]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-label-content>div[2]>button[0] · click
@@ -763,11 +866,11 @@ ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title=
 ui ~ #label-size: input aria-describedby="label-size-value label-size-tip" aria-valuetext="27 reference px" max="48" min="16" step="1" type="range" value="16" :value="27" → input aria-describedby="label-size-value label-size-tip" aria-valuetext="16 reference px" max="48" min="16" step="1" type="range" value="16" :value="16"
 ui ~ #label-size-value: span :text="27 reference px" → span :text="16 reference px"
 ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#1a1a1a" :value="#1a1a1a"
-ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[259 chars, cb47dd5e] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[257 chars, dde75ffc]
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(0, 158, 115); background-image: none; background-origin: padding-box; backgro…[259 chars, 47261216] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(26, 26, 26); background-image: none; background-origin: padding-box; backgrou…[257 chars, 81813442]
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #1A1A1A"
 ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input type="hidden" value="#FFFFFF" :value="#FFFFFF"
 ui ~ #label-bg-color-group-3: input class="swatch-radio" name="label-bg-color-group" type="radio" value="#FFFFFF" :unchecked → input class="swatch-radio" name="label-bg-color-group" type="radio" value="#FFFFFF" :checked
-ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[261 chars, e69dccdc] → span aria-hidden="true" class="swatch-current-chip" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[263 chars, 60e62d3a]
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(240, 228, 66); background-image: none; background-origin: padding-box; backgr…[261 chars, 28ba8d62] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(255, 255, 255); background-image: none; background-origin: padding-box; backg…[263 chars, 08924a32]
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]>div[3]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #FFFFFF"
 ui ~ #label-bg-opacity: input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="42%" max="100" min="0" step="1" type="range" value="85" :value="42" → input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="85%" max="100" min="0" step="1" type="range" value="85" :value="85"
 ui ~ #label-bg-opacity-value: span :text="42%" → span :text="85%"
@@ -779,6 +882,7 @@ ui ~ #label-offset-y: input aria-describedby="label-offset-y-tip" max="50" min="
 ui ~ #label-offset-y-value: span :text="-12%" → span :text="0%"
 ui ~ #section-label-content>div[2]>button[0]: button aria-label="Reset Label style to route style" class="btn btn-secondary" data-card-action="reset" data-card="label" title="Reset this card to route style" type="button" :text="Reset" → button aria-label="Reset Label style: Already uses route style" class="btn btn-secondary" data-card-action="reset" data-card="label" disabled="" title="Already uses route style" type="button" :text="Reset"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, c20b5b0e]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Label style reset for 1 waypoint. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #section-label-content>div[2]>button[1] · click
@@ -792,15 +896,19 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #section-label-content>div[2]>button[1]: button aria-label="Apply Label style onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply Label style onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, ef4744b6]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Label style applied to 2 later waypoints. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-scope>div[3]>div[0] · click
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[255 chars, c01ab07a] → "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":false,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[256 chars, 216d3721]
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section" data-last="true" data-section="leg"
 ui ~ #waypoint-scope>div[3]>div[0]: div aria-controls="section-leg-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-leg-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
 ## #segment-color-group-0 · click
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentColor: "#0072B2" → "#ffffff"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="#ffffff" :value="#ffffff"
@@ -809,11 +917,13 @@ ui ~ #segment-color-group-7: input class="swatch-radio" name="segment-color-grou
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 093e97e7]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-color-group-1 · click
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentColor: "#0072B2" → "#f0e442"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="#f0e442" :value="#f0e442"
@@ -822,11 +932,13 @@ ui ~ #segment-color-group-7: input class="swatch-radio" name="segment-color-grou
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, b3729472]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-color-group-2 · click
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentColor: "#0072B2" → "#e69f00"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="#e69f00" :value="#e69f00"
@@ -835,11 +947,13 @@ ui ~ #segment-color-group-7: input class="swatch-radio" name="segment-color-grou
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, e5c1b36f]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-color-group-3 · click
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentColor: "#0072B2" → "#d55e00"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="#d55e00" :value="#d55e00"
@@ -848,11 +962,13 @@ ui ~ #segment-color-group-7: input class="swatch-radio" name="segment-color-grou
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, d94f230a]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-color-group-4 · click
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentColor: "#0072B2" → "#cc79a7"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="#cc79a7" :value="#cc79a7"
@@ -861,11 +977,13 @@ ui ~ #segment-color-group-7: input class="swatch-radio" name="segment-color-grou
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 3cf24651]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-color-group-5 · click
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentColor: "#0072B2" → "#000000"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="#000000" :value="#000000"
@@ -874,11 +992,13 @@ ui ~ #segment-color-group-7: input class="swatch-radio" name="segment-color-grou
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 946173f7]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-color-group-6 · click
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentColor: "#0072B2" → "#56b4e9"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="#56b4e9" :value="#56b4e9"
@@ -887,13 +1007,26 @@ ui ~ #segment-color-group-7: input class="swatch-radio" name="segment-color-grou
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, df49d2d0]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-color-group-7 · click
 
+## #segment-color-group-7 · click, from #segment-color-group-0
+emit waypoint:path-property-changed waypoint[3]
+model ~ waypoints[3].segmentColor: "#ffffff" → "#0072b2"
+ui ~ #segment-color: input type="hidden" value="#ffffff" :value="#ffffff" → input type="hidden" value="#0072b2" :value="#0072b2"
+ui ~ #segment-color-group-0: input class="swatch-radio" name="segment-color-group" type="radio" value="#FFFFFF" :checked → input class="swatch-radio" name="segment-color-group" type="radio" value="#FFFFFF" :unchecked
+ui ~ #segment-color-group-7: input class="swatch-radio" name="segment-color-group" type="radio" value="#0072B2" :unchecked → input class="swatch-radio" name="segment-color-group" type="radio" value="#0072B2" :checked
+ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 093e97e7] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, be944842]
+
 ## #segment-color-group-8 · click
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentColor: "#0072B2" → "#009e73"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="#009e73" :value="#009e73"
@@ -902,11 +1035,13 @@ ui ~ #segment-color-group-8: input class="swatch-radio" name="segment-color-grou
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 7008a5df]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-color-group-9 · click
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentColor: "#0072B2" → "transparent"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-color: input type="hidden" value="#0072B2" :value="#0072B2" → input type="hidden" value="transparent" :value="transparent"
@@ -915,6 +1050,7 @@ ui ~ #segment-color-group-9: input class="swatch-radio" name="segment-color-grou
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9688 chars, bbe286a8]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-leg-content>div[0]>label[2]>span[0] · click
@@ -923,6 +1059,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #segment-width · set 333
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentWidth: 7 → 3.415749
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-width: input aria-describedby="segment-width-value segment-width-tip" aria-valuetext="7.0 reference px" max="1000" min="0" step="1" type="range" value="333" :value="528" → input aria-describedby="segment-width-value segment-width-tip" aria-valuetext="3.4 reference px" max="1000" min="0" step="1" type="range" value="333" :value="333"
@@ -930,6 +1067,7 @@ ui ~ #segment-width-value: span :text="7.0 reference px" → span :text="3.4 ref
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9701 chars, 1cd770a7]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-leg-content>div[0]>label[4]>span[0] · click
@@ -938,17 +1076,20 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #path-shape · choose "line"
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].pathShape: "wave" → "line"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #path-shape: select aria-describedby="path-shape-tip" :value="" → select aria-describedby="path-shape-tip" :value="line"
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, ff62426b]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #path-shape · choose "squiggle"
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].pathShape: "wave" → "squiggle"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #path-shape: select aria-describedby="path-shape-tip" :value="" → select aria-describedby="path-shape-tip" :value="squiggle"
@@ -966,11 +1107,13 @@ ui + #shape-frequency-tip: span class="sr-only" :text="Number of squiggle waves 
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9688 chars, fe4ae91c]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #path-shape · choose "randomised"
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].pathShape: "wave" → "randomised"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #path-shape: select aria-describedby="path-shape-tip" :value="" → select aria-describedby="path-shape-tip" :value="randomised"
@@ -988,6 +1131,7 @@ ui + #shape-frequency-tip: span class="sr-only" :text="Number of squiggle waves 
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9690 chars, 5e89fad3]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-speed-control>span[0] · click
@@ -997,6 +1141,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 emit waypoint:speed-changed {waypoint: waypoint[3], segmentSpeed: 0.463447}
 model ~ waypoints[3].segmentSpeed: 2.5 → 0.463447
 model ~ animationState.duration: 21429.352554 → 22250.114491
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #waypoint-segment-speed: input aria-describedby="waypoint-segment-speed-tip" max="1000" min="0" step="1" type="range" value="500" :value="699" → input aria-describedby="waypoint-segment-speed-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
@@ -1007,6 +1152,7 @@ settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 22250.114491, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 122db7a8]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-leg-content>details[1]>summary[0] · click
@@ -1018,23 +1164,27 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #segment-style · choose "solid"
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentStyle: "dashed" → "solid"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-style: select aria-describedby="segment-style-tip" :value="dashed" → select aria-describedby="segment-style-tip" :value="solid"
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 06179b90]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #segment-style · choose "dotted"
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].segmentStyle: "dashed" → "dotted"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-style: select aria-describedby="segment-style-tip" :value="dashed" → select aria-describedby="segment-style-tip" :value="dotted"
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 5cf922e9]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-leg-content>div[2]>button[0] · click
@@ -1055,11 +1205,13 @@ ui ~ #segment-style: select aria-describedby="segment-style-tip" :value="dashed"
 ui ~ #section-leg-content>div[2]>button[0]: button aria-label="Reset Leg to route style" class="btn btn-secondary" data-card-action="reset" data-card="leg" title="Reset this card to route style" type="button" :text="Reset" → button aria-label="Reset Leg: Already uses route style" class="btn btn-secondary" data-card-action="reset" data-card="leg" disabled="" title="Already uses route style" type="button" :text="Reset"
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward" → button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 29d0f95e]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Leg reset for 1 waypoint. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #section-leg-content>div[2]>button[1] · disabled, not operated
 
 ## #waypoint-scope>div[4]>div[0] · click
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[255 chars, c01ab07a] → "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[256 chars, 7f82e0b1]
 ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
 ui ~ #waypoint-scope>div[4]>div[0]: div aria-controls="section-area-highlight-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-area-highlight-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
@@ -1090,14 +1242,14 @@ ui - #area-rect-height-value: span :text="19%"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
 ui - #area-delete-btn: button aria-label="Delete area" class="btn btn-secondary btn-danger" style="width: 100%;" :text="Delete area"
 ui - #area-fill-color: input type="hidden" value="#E69F00" :value="#E69F00"
-ui - #area-fill-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Fill" data-mode="okabe-ito" data-target-input="#area-fill-color" (and 44 inside, 33537874)
+ui - #area-fill-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Fill" data-mode="okabe-ito" data-target-input="#area-fill-color" (and 44 inside, dad614ad)
 ui - #area-fill-controls>label[2]: label for="area-fill-opacity"
 ui - #area-fill-controls>label[2]>span[0]: span data-tip-desc="area-fill-opacity-tip" data-tip="Opacity of the area fill. Set to 0 for outline-only mode" :text="Fill Opacity"
 ui - #area-fill-opacity: input aria-describedby="area-fill-opacity-tip" max="100" min="0" step="1" type="range" value="30" :value="55"
 ui - #area-fill-opacity-value: span :text="55%"
 ui - #area-fill-opacity-tip: span class="sr-only" :text="Opacity of the area fill. Set to 0 for outline-only mode"
 ui - #area-border-color: input type="hidden" value="#D55E00" :value="#D55E00"
-ui - #area-border-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Border" data-mode="okabe-ito" data-target-input="#area-border-color" (and 44 inside, 4396aec4)
+ui - #area-border-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Border" data-mode="okabe-ito" data-target-input="#area-border-color" (and 44 inside, 1a70d68d)
 ui - #area-border-controls>label[2]: label for="area-border-style"
 ui - #area-border-controls>label[2]>span[0]: span data-tip-desc="area-border-style-tip" data-tip="Line style of the area border" :text="Border Style"
 ui - #area-border-style: select aria-describedby="area-border-style-tip" :value="dashed"
@@ -1133,6 +1285,7 @@ ui - #area-fade-out-tip: span class="sr-only" :text="Duration of the fade-out an
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9680 chars, e21a0158]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-shape · choose "circle"
@@ -1161,6 +1314,7 @@ ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangula
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, 583b7647]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-shape · choose "polygon"
@@ -1185,6 +1339,7 @@ ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangula
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, ef0f4005]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-rect-controls>label[0]>span[0] · click
@@ -1199,6 +1354,7 @@ ui ~ #area-rect-width: input aria-describedby="area-rect-width-tip" max="1000" m
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, 497c807d]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-rect-controls>label[2]>span[0] · click
@@ -1214,6 +1370,7 @@ ui ~ #area-rect-height-value: span :text="19%" → span :text="27%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, 3a69c100]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-delete-btn · click
@@ -1239,14 +1396,14 @@ ui - #area-rect-height-value: span :text="19%"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
 ui - #area-delete-btn: button aria-label="Delete area" class="btn btn-secondary btn-danger" style="width: 100%;" :text="Delete area"
 ui - #area-fill-color: input type="hidden" value="#E69F00" :value="#E69F00"
-ui - #area-fill-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Fill" data-mode="okabe-ito" data-target-input="#area-fill-color" (and 44 inside, 33537874)
+ui - #area-fill-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Fill" data-mode="okabe-ito" data-target-input="#area-fill-color" (and 44 inside, dad614ad)
 ui - #area-fill-controls>label[2]: label for="area-fill-opacity"
 ui - #area-fill-controls>label[2]>span[0]: span data-tip-desc="area-fill-opacity-tip" data-tip="Opacity of the area fill. Set to 0 for outline-only mode" :text="Fill Opacity"
 ui - #area-fill-opacity: input aria-describedby="area-fill-opacity-tip" max="100" min="0" step="1" type="range" value="30" :value="55"
 ui - #area-fill-opacity-value: span :text="55%"
 ui - #area-fill-opacity-tip: span class="sr-only" :text="Opacity of the area fill. Set to 0 for outline-only mode"
 ui - #area-border-color: input type="hidden" value="#D55E00" :value="#D55E00"
-ui - #area-border-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Border" data-mode="okabe-ito" data-target-input="#area-border-color" (and 44 inside, 4396aec4)
+ui - #area-border-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label="Border" data-mode="okabe-ito" data-target-input="#area-border-color" (and 44 inside, 1a70d68d)
 ui - #area-border-controls>label[2]: label for="area-border-style"
 ui - #area-border-controls>label[2]>span[0]: span data-tip-desc="area-border-style-tip" data-tip="Line style of the area border" :text="Border Style"
 ui - #area-border-style: select aria-describedby="area-border-style-tip" :value="dashed"
@@ -1282,6 +1439,7 @@ ui - #area-fade-out-tip: span class="sr-only" :text="Duration of the fade-out an
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9680 chars, e21a0158]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-area-highlight-content>details[1]>summary[0] · click
@@ -1298,6 +1456,7 @@ ui ~ #area-fill-color-group-2: input class="swatch-radio" name="area-fill-color-
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 24dcd25e]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-fill-color-group-1 · click
@@ -1311,9 +1470,21 @@ ui ~ #area-fill-color-group-2: input class="swatch-radio" name="area-fill-color-
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, a86ad641]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-fill-color-group-2 · click
+
+## #area-fill-color-group-2 · click, from #area-fill-color-group-0
+emit area:changed {waypoint: waypoint[3]}
+model ~ waypoints[3].areaHighlight.fillColor: "#ffffff" → "#e69f00"
+ui ~ #area-fill-color: input type="hidden" value="#ffffff" :value="#ffffff" → input type="hidden" value="#e69f00" :value="#e69f00"
+ui ~ #area-fill-color-group-0: input class="swatch-radio" name="area-fill-color-group" type="radio" value="#FFFFFF" :checked → input class="swatch-radio" name="area-fill-color-group" type="radio" value="#FFFFFF" :unchecked
+ui ~ #area-fill-color-group-2: input class="swatch-radio" name="area-fill-color-group" type="radio" value="#E69F00" :unchecked → input class="swatch-radio" name="area-fill-color-group" type="radio" value="#E69F00" :checked
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 24dcd25e] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 0f87ef22]
 
 ## #area-fill-color-group-3 · click
 emit area:changed {waypoint: waypoint[3]}
@@ -1326,6 +1497,7 @@ ui ~ #area-fill-color-group-3: input class="swatch-radio" name="area-fill-color-
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, c0226b05]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-fill-color-group-4 · click
@@ -1339,6 +1511,7 @@ ui ~ #area-fill-color-group-4: input class="swatch-radio" name="area-fill-color-
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, aff07390]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-fill-color-group-5 · click
@@ -1352,6 +1525,7 @@ ui ~ #area-fill-color-group-5: input class="swatch-radio" name="area-fill-color-
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, a8ca3a2a]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-fill-color-group-6 · click
@@ -1365,6 +1539,7 @@ ui ~ #area-fill-color-group-6: input class="swatch-radio" name="area-fill-color-
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 312d1283]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-fill-color-group-7 · click
@@ -1378,6 +1553,7 @@ ui ~ #area-fill-color-group-7: input class="swatch-radio" name="area-fill-color-
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 42f3a16d]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-fill-color-group-8 · click
@@ -1391,6 +1567,7 @@ ui ~ #area-fill-color-group-8: input class="swatch-radio" name="area-fill-color-
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 5e26ec36]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-fill-color-group-9 · click
@@ -1404,6 +1581,7 @@ ui ~ #area-fill-color-group-9: input class="swatch-radio" name="area-fill-color-
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9688 chars, 50bfd497]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-fill-controls>label[2]>span[0] · click
@@ -1419,6 +1597,7 @@ ui ~ #area-fill-opacity-value: span :text="55%" → span :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, b6450fd2]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-color-group-0 · click
@@ -1432,6 +1611,7 @@ ui ~ #area-border-color-group-3: input class="swatch-radio" name="area-border-co
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, a9fea233]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-color-group-1 · click
@@ -1445,6 +1625,7 @@ ui ~ #area-border-color-group-3: input class="swatch-radio" name="area-border-co
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 5e3de916]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-color-group-2 · click
@@ -1458,9 +1639,21 @@ ui ~ #area-border-color-group-3: input class="swatch-radio" name="area-border-co
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, e611ef0f]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-color-group-3 · click
+
+## #area-border-color-group-3 · click, from #area-border-color-group-0
+emit area:changed {waypoint: waypoint[3]}
+model ~ waypoints[3].areaHighlight.borderColor: "#ffffff" → "#d55e00"
+ui ~ #area-border-color: input type="hidden" value="#ffffff" :value="#ffffff" → input type="hidden" value="#d55e00" :value="#d55e00"
+ui ~ #area-border-color-group-0: input class="swatch-radio" name="area-border-color-group" type="radio" value="#FFFFFF" :checked → input class="swatch-radio" name="area-border-color-group" type="radio" value="#FFFFFF" :unchecked
+ui ~ #area-border-color-group-3: input class="swatch-radio" name="area-border-color-group" type="radio" value="#D55E00" :unchecked → input class="swatch-radio" name="area-border-color-group" type="radio" value="#D55E00" :checked
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, a9fea233] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, b4e37062]
 
 ## #area-border-color-group-4 · click
 emit area:changed {waypoint: waypoint[3]}
@@ -1473,6 +1666,7 @@ ui ~ #area-border-color-group-4: input class="swatch-radio" name="area-border-co
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 5f7b6bd5]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-color-group-5 · click
@@ -1486,6 +1680,7 @@ ui ~ #area-border-color-group-5: input class="swatch-radio" name="area-border-co
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 5e82cb07]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-color-group-6 · click
@@ -1499,6 +1694,7 @@ ui ~ #area-border-color-group-6: input class="swatch-radio" name="area-border-co
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 1d4a55a8]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-color-group-7 · click
@@ -1512,6 +1708,7 @@ ui ~ #area-border-color-group-7: input class="swatch-radio" name="area-border-co
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 8592e1fa]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-color-group-8 · click
@@ -1525,6 +1722,7 @@ ui ~ #area-border-color-group-8: input class="swatch-radio" name="area-border-co
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 3b826913]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-color-group-9 · click
@@ -1538,6 +1736,7 @@ ui ~ #area-border-color-group-9: input class="swatch-radio" name="area-border-co
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9688 chars, 9442b294]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-controls>label[2]>span[0] · click
@@ -1552,6 +1751,7 @@ ui ~ #area-border-style: select aria-describedby="area-border-style-tip" :value=
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 59ba7b60]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-style · choose "dotted"
@@ -1563,6 +1763,7 @@ ui ~ #area-border-style: select aria-describedby="area-border-style-tip" :value=
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, bbd7a671]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-style · choose "none"
@@ -1574,6 +1775,7 @@ ui ~ #area-border-style: select aria-describedby="area-border-style-tip" :value=
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 2fce36cf]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-border-controls>label[4]>span[0] · click
@@ -1589,6 +1791,7 @@ ui ~ #area-border-width-value: span :text="6 reference px" → span :text="4 ref
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 4ca1b940]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-visibility-controls>label[0]>span[0] · click
@@ -1603,6 +1806,7 @@ ui ~ #area-visibility: select aria-describedby="area-visibility-tip" :value="alw
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 967fc013]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-visibility · choose "hide-after"
@@ -1614,6 +1818,7 @@ ui ~ #area-visibility: select aria-describedby="area-visibility-tip" :value="alw
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, a9eef5ae]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-visibility · choose "hide-before-and-after"
@@ -1625,6 +1830,7 @@ ui ~ #area-visibility: select aria-describedby="area-visibility-tip" :value="alw
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9694 chars, 060e7528]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-visibility · choose "always-hide"
@@ -1636,6 +1842,7 @@ ui ~ #area-visibility: select aria-describedby="area-visibility-tip" :value="alw
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 17dd5473]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-visibility-controls>label[2]>span[0] · click
@@ -1651,6 +1858,7 @@ ui ~ #area-fade-in-value: span :text="1.3s" → span :text="3.3s"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 1a17ee5e]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #area-visibility-controls>label[4]>span[0] · click
@@ -1666,4 +1874,5 @@ ui ~ #area-fade-out-value: span :text="1.8s" → span :text="3.3s"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 1c1d66a9]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"

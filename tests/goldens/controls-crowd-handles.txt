@@ -7,6 +7,7 @@ emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.24
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
@@ -15,6 +16,7 @@ ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-bus
 ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="81.36" cy="16" r="8"
 ui ~ #crowd-busyness-handles>div[1]>label[1]>input[0]: input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9731 chars, 97e74678]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[1]>label[1]>input[0] · enter 99999
@@ -22,6 +24,7 @@ emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.99
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
@@ -30,6 +33,7 @@ ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-bus
 ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="279.36" cy="16" r="8"
 ui ~ #crowd-busyness-handles>div[1]>label[1]>input[0]: input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9731 chars, 4e1cbe58]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[1]>label[3]>select[0] · choose "step"
@@ -37,12 +41,14 @@ emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].transition: "gradual" → "step"
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 150 16 H 282 V 16"
 ui ~ #crowd-busyness-handles>div[1]>label[3]>select[0]: select data-busyness-field="transition" data-busyness-index="1" :value="gradual" → select data-busyness-field="transition" data-busyness-index="1" :value="step"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9727 chars, 4b1fdbe3]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[1]>button[4] · click
@@ -78,6 +84,7 @@ ui - #crowd-busyness-handles>div[2]>label[2]: label :text="Busy"
 ui - #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100"
 ui - #crowd-busyness-handles>div[2]>label[2]>span[1]: span :text="%"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, bbb93da2]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[2]>label[1]>input[0] · read-only, not operated
@@ -87,6 +94,7 @@ emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1 → 0.24
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
@@ -95,9 +103,11 @@ ui ~ #crowd-busyness-graph>circle[6]: circle aria-hidden="true" class="crowd-bus
 ui ~ #crowd-busyness-graph>circle[7]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="98.08" r="8"
 ui ~ #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9733 chars, 142239ac]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[2]>label[2]>input[0] · enter 99999
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
 
@@ -134,4 +144,5 @@ ui - #crowd-busyness-handles>div[2]>label[2]: label :text="Busy"
 ui - #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100"
 ui - #crowd-busyness-handles>div[2]>label[2]>span[1]: span :text="%"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, bbb93da2]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness reset to even. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

@@ -7,6 +7,8 @@
 ## #scope-next-btn · disabled, not operated
 
 ## #crowd-scope>div[0]>div[0] · click
+storage ~ routePlotter_lastSection: "motion" → "guide"
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 5c9a7faf]
 ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section" data-last="true" data-section="guide"
 ui ~ #crowd-scope>div[0]>div[0]: div aria-controls="section-guide-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-guide-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
@@ -17,6 +19,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 emit crowd:param-changed
 emit network:guide-changed layer[0]
 model ~ scene.flowLayers[0].guideType: "graph" → "route"
+storage ~ routePlotter_lastSection: "motion" → "guide"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
 ui ~ #crowd-guide-type: select aria-describedby="crowd-guide-type-tip" :value="graph" → select aria-describedby="crowd-guide-type-tip" :value="route"
@@ -27,6 +30,7 @@ ui ~ #crowd-pattern-hint: p class="section-hint" :text="Junction shares set rout
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 81d2ee8b]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #network-edit-btn · click
@@ -34,12 +38,12 @@ emit network:edit-mode-changed {active: true, layer: layer[0]}
 emit render:request
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Network editing — click the map to place linked nodes. Escape lifts the pen."
 ui ~ #network-edit-btn: button class="btn btn-secondary" title="Draw the network this crowd walks: nodes joined by edges" type="button" :text="Edit network" → button class="btn btn-secondary" disabled="" title="Draw the network this crowd walks: nodes joined by edges" type="button" :text="Editing network…"
-ui + #network-edit-banner: div aria-live="polite" role="status" style="position: fixed; z-index: 1000; padding-top: 8px; padding-right: 16px; padding-bottom: 8px; padding-left: 16px; padding: 8px 16px; background: var(--scope-crow…[383 chars, 51e295e3]
+ui + #network-edit-banner: div aria-live="polite" role="status" style="align-items: center; background: var(--scope-crowd-fg, #0E4A38); box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: rgb(255, 255, 255); display: flex; font-family: …[383 chars, 0303c501]
 ui + #network-edit-banner>span[0]: span class="banner-text" :text="— click places a linked node, click a node to continue from it, drag an edge to bend it. lifts the pen."
 ui + #network-edit-banner>span[0]>strong[0]: strong :text="Drawing network"
 ui + #network-edit-banner>span[0]>kbd[1]: kbd :text="Esc"
 ui + #network-edit-banner>span[0]>span[2]: span class="banner-count" :text="4 nodes · 4 edges"
-ui + #network-edit-banner>button[1]: button aria-label="Finish network editing" class="banner-done" style="background-image: none; background-position: 0% 0%; background-size: auto; background-repeat: repeat; background-origin: padding-box; background-clip: border-b…[1119 chars, cac27c42] type="button" :text="Done"
+ui + #network-edit-banner>button[1]: button aria-label="Finish network editing" class="banner-done" style="background-attachment: scroll; background-clip: border-box; background-color: transparent; background-image: none; background-origin: padding-box; background-p…[1119 chars, fa48a91a] type="button" :text="Done"
 settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Network editing — click the map to place linked nodes. Escape lifts the pen." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
@@ -94,6 +98,7 @@ ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title=
 ui + #toast-container>div[0]: div class="toast" :text="Traced the route into Visitors — 5 nodes, 4 paths"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9768 chars, 582aba3b]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Traced the route into Visitors — 5 nodes, 4 paths" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="Traced the route into Visitors — 5 nodes, 4 paths"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
@@ -114,17 +119,21 @@ ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast
 ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:41"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 41090.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 8d86ed4d]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 6 now waits 27.2s for Visitors" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="Extras 6 now waits 27.2s for Visitors"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
 ## #crowd-scope>div[1]>div[0] · click
+storage ~ routePlotter_lastSection: "motion" → "dots"
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, ee9e1b07]
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section" data-last="true" data-section="dots"
 ui ~ #crowd-scope>div[1]>div[0]: div aria-controls="section-dots-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-dots-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
 ## #crowd-dot-color-group-0 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#ffffff"
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-color: input type="hidden" value="#56B4E9" :value="#56B4E9" → input type="hidden" value="#ffffff" :value="#ffffff"
@@ -134,11 +143,13 @@ ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="bac
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 2b5f688b]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-dot-color-group-1 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#f0e442"
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-color: input type="hidden" value="#56B4E9" :value="#56B4E9" → input type="hidden" value="#f0e442" :value="#f0e442"
@@ -148,11 +159,13 @@ ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="bac
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 0b10073c]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-dot-color-group-2 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#e69f00"
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-color: input type="hidden" value="#56B4E9" :value="#56B4E9" → input type="hidden" value="#e69f00" :value="#e69f00"
@@ -162,11 +175,13 @@ ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="bac
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 704cdc27]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-dot-color-group-3 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#d55e00"
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-color: input type="hidden" value="#56B4E9" :value="#56B4E9" → input type="hidden" value="#d55e00" :value="#d55e00"
@@ -176,11 +191,13 @@ ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="bac
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 0f40ced8]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-dot-color-group-4 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#cc79a7"
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-color: input type="hidden" value="#56B4E9" :value="#56B4E9" → input type="hidden" value="#cc79a7" :value="#cc79a7"
@@ -190,11 +207,13 @@ ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="bac
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 70477281]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-dot-color-group-5 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#000000"
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-color: input type="hidden" value="#56B4E9" :value="#56B4E9" → input type="hidden" value="#000000" :value="#000000"
@@ -204,13 +223,27 @@ ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="bac
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 659d3aef]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-dot-color-group-6 · click
 
+## #crowd-dot-color-group-6 · click, from #crowd-dot-color-group-0
+emit crowd:param-changed
+model ~ scene.flowLayers[0].emitters[0].dotColor: "#ffffff" → "#56b4e9"
+ui ~ #crowd-dot-color: input type="hidden" value="#ffffff" :value="#ffffff" → input type="hidden" value="#56b4e9" :value="#56b4e9"
+ui ~ #crowd-dot-color-group-0: input class="swatch-radio" name="crowd-dot-color-group" type="radio" value="#FFFFFF" :checked → input class="swatch-radio" name="crowd-dot-color-group" type="radio" value="#FFFFFF" :unchecked
+ui ~ #crowd-dot-color-group-6: input class="swatch-radio" name="crowd-dot-color-group" type="radio" value="#56B4E9" :unchecked → input class="swatch-radio" name="crowd-dot-color-group" type="radio" value="#56B4E9" :checked
+ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="background-color: rgb(255, 255, 255);" → span class="layer-swatch" style="background-color: rgb(86, 180, 233);"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 2b5f688b] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 22bd1322]
+
 ## #crowd-dot-color-group-7 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#0072b2"
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-color: input type="hidden" value="#56B4E9" :value="#56B4E9" → input type="hidden" value="#0072b2" :value="#0072b2"
@@ -220,11 +253,13 @@ ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="bac
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, e1777460]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-dot-color-group-8 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#009e73"
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-color: input type="hidden" value="#56B4E9" :value="#56B4E9" → input type="hidden" value="#009e73" :value="#009e73"
@@ -234,11 +269,13 @@ ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="bac
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 9fdae4c3]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-dot-color-group-9 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "transparent"
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-color: input type="hidden" value="#56B4E9" :value="#56B4E9" → input type="hidden" value="transparent" :value="transparent"
@@ -248,6 +285,7 @@ ui ~ #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="bac
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9688 chars, 000d961e]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-dots-content>label[2]>span[0] · click
@@ -256,6 +294,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-dot-size · set 70
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotSize: 0.45 → 0.7
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-size: input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="0.45×" max="200" min="5" step="5" type="range" value="40" :value="45" → input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="0.70×" max="200" min="5" step="5" type="range" value="40" :value="70"
@@ -263,6 +302,7 @@ ui ~ #crowd-dot-size-value: span :text="0.45×" → span :text="0.70×"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, ede0a348]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-dots-content>label[4]>span[0] · click
@@ -271,6 +311,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-wobble · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].wobble: 0 → 0.33
+storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-wobble: input aria-describedby="crowd-wobble-value crowd-wobble-tip" aria-valuetext="0%" max="100" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-wobble-value crowd-wobble-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="0" :value="33"
@@ -278,9 +319,12 @@ ui ~ #crowd-wobble-value: span :text="0%" → span :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, bb9fc560]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-scope>div[2]>div[0] · click
+storage ~ routePlotter_lastSection: "motion" → "release"
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 6e43a33f]
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section" data-last="true" data-section="release"
 ui ~ #crowd-scope>div[2]>div[0]: div aria-controls="section-release-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-release-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
@@ -290,6 +334,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-count · set 167
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotCount: 60 → 167
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-count: input aria-describedby="crowd-count-value crowd-count-tip" aria-valuetext="60" max="500" min="1" step="1" type="range" value="50" :value="60" → input aria-describedby="crowd-count-value crowd-count-tip" aria-valuetext="167" max="500" min="1" step="1" type="range" value="50" :value="167"
@@ -297,6 +342,7 @@ ui ~ #crowd-count-value: span :text="60" → span :text="167"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9685 chars, 218dd91a]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-release-content>div[0]>label[2]>span[0] · click
@@ -305,6 +351,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-release-start · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].releaseStart: 0 → 0.33
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-release-start: input aria-describedby="crowd-release-start-value crowd-release-start-tip" aria-valuetext="0%" max="100" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-release-start-value crowd-release-start-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="0" :value="33"
@@ -312,6 +359,7 @@ ui ~ #crowd-release-start-value: span :text="0%" → span :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 8eb19752]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-release-content>div[0]>label[4]>span[0] · click
@@ -320,6 +368,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-release-duration · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].releaseDuration: 0.45 → 0.33
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-release-duration: input aria-describedby="crowd-release-duration-value crowd-release-duration-tip" aria-valuetext="45%" max="100" min="0" step="1" type="range" value="100" :value="45" → input aria-describedby="crowd-release-duration-value crowd-release-duration-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="100" :value="33"
@@ -327,6 +376,7 @@ ui ~ #crowd-release-duration-value: span :text="45%" → span :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 39e15f4b]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-release-content>details[1]>summary[0] · click
@@ -338,6 +388,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-onset-variance · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].onsetVariance: 0.6 → 0.33
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-onset-variance: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="60% uneven" max="100" min="0" step="1" type="range" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="33% uneven" max="100" min="0" step="1" type="range" value="20" :value="33"
@@ -345,6 +396,7 @@ ui ~ #crowd-onset-variance-value: span :text="60% uneven" → span :text="33% un
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9685 chars, c99d3dce]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-release-content>details[1]>div[1]>label[2]>span[0] · click
@@ -353,6 +405,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-intensity-ramp · set -33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].intensityRamp: 0 → -0.33
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-intensity-ramp: input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-valuetext="Even" max="100" min="-100" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-valuetext="Earlier 33%" max="100" min="-100" step="1" type="range" value="0" :value="-33"
@@ -360,7 +413,29 @@ ui ~ #crowd-intensity-ramp-value: span :text="Even" → span :text="Earlier 33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9688 chars, b5cf9487]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #crowd-busyness-graph · drag its first handle a third of the way down
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[0].value: 1 → 0.716049
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available."
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="Even" → output aria-labelledby="crowd-busyness-label" :text="2 handles"
+ui ~ #crowd-busyness-graph: svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="2 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 282 16" → path class="crowd-busyness-line" d="M 18 46.66666666666666 L 282 16"
+ui ~ #crowd-busyness-graph>circle[2]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="18" cy="16" data-busyness-handle="0" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="18" cy="46.66666666666666" data-busyness-handle="0" r="22"
+ui ~ #crowd-busyness-graph>circle[3]: circle aria-hidden="true" class="crowd-busyness-handle" cx="18" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="18" cy="46.66666666666666" r="8"
+ui ~ #crowd-busyness-handles>div[0]>label[2]>input[0]: input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="71.6"
+ui ~ #crowd-busyness-reset: button class="btn btn-ghost" disabled="" type="button" :text="Reset to even" → button class="btn btn-ghost" type="button" :text="Reset to even"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9701 chars, d5bbecb3]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #crowd-busyness-graph · drag its first handle, then the drag is cancelled
 
 ## #crowd-busyness-handles>div[0]>label[1]>input[0] · read-only, not operated
 
@@ -369,6 +444,7 @@ emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[0].value: 1 → 0.24
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
@@ -381,9 +457,11 @@ ui ~ #crowd-busyness-graph>circle[3]: circle aria-hidden="true" class="crowd-bus
 ui ~ #crowd-busyness-handles>div[0]>label[2]>input[0]: input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
 ui ~ #crowd-busyness-reset: button class="btn btn-ghost" disabled="" type="button" :text="Reset to even" → button class="btn btn-ghost" type="button" :text="Reset to even"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 72765c0d]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[0]>label[2]>input[0] · enter 99999
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[0]>label[2]>input[0]: input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
 
@@ -392,6 +470,7 @@ emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[0].transition: "gradual" → "step"
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
@@ -400,6 +479,7 @@ ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 
 ui ~ #crowd-busyness-handles>div[0]>label[3]>select[0]: select data-busyness-field="transition" data-busyness-index="0" :value="gradual" → select data-busyness-field="transition" data-busyness-index="0" :value="step"
 ui ~ #crowd-busyness-reset: button class="btn btn-ghost" disabled="" type="button" :text="Reset to even" → button class="btn btn-ghost" type="button" :text="Reset to even"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, 4a338744]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[1]>label[1]>input[0] · read-only, not operated
@@ -409,6 +489,7 @@ emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].value: 1 → 0.24
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
@@ -421,9 +502,11 @@ ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-bus
 ui ~ #crowd-busyness-handles>div[1]>label[2]>input[0]: input aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
 ui ~ #crowd-busyness-reset: button class="btn btn-ghost" disabled="" type="button" :text="Reset to even" → button class="btn btn-ghost" type="button" :text="Reset to even"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 451d60db]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[1]>label[2]>input[0] · enter 99999
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[1]>label[2]>input[0]: input aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
 
@@ -461,6 +544,7 @@ ui + #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy fo
 ui + #crowd-busyness-handles>div[2]>label[2]>span[1]: span :text="%"
 ui ~ #crowd-busyness-reset: button class="btn btn-ghost" disabled="" type="button" :text="Reset to even" → button class="btn btn-ghost" type="button" :text="Reset to even"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle added at 50%. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-reset · disabled, not operated
@@ -475,9 +559,11 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #crowd-seed-value: output aria-labelledby="crowd-seed-label" :text="20260827" → output aria-labelledby="crowd-seed-label" :text="2109913163"
 settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9686 chars, f27fa380]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Visitors pattern re-rolled. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-scope>div[3]>div[0] · click
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 216d91a3]
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
 ui ~ #crowd-scope>div[3]>div[0]: div aria-controls="section-motion-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-motion-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
@@ -494,6 +580,7 @@ ui ~ #crowd-speed-value: span :text="0.06 img/s" → span :text="0.34 img/s"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, b4787f81]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-motion-content>label[2]>span[0] · click
@@ -509,6 +596,7 @@ ui ~ #crowd-speed-variance-value: span :text="35%" → span :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 8355c1bc]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-motion-content>label[4]>span[0] · click
@@ -523,6 +611,7 @@ ui ~ #crowd-lifecycle: select aria-describedby="crowd-lifecycle-tip" :value="dis
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 36ec2dbd]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-lifecycle · choose "loop"
@@ -534,6 +623,7 @@ ui ~ #crowd-lifecycle: select aria-describedby="crowd-lifecycle-tip" :value="dis
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9679 chars, 55e5ac0b]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-lifecycle · choose "collect"
@@ -545,4 +635,5 @@ ui ~ #crowd-lifecycle: select aria-describedby="crowd-lifecycle-tip" :value="dis
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 353219ff]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
