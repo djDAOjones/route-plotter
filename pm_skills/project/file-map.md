@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 341 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 342 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -11,7 +11,7 @@
 - `_Joe` — 45 file(s)
 - `docs` — 22 file(s)
 - `images` — 6 file(s)
-- `reviews` — 15 file(s)
+- `reviews` — 16 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
@@ -146,9 +146,12 @@
   Full historical Route Plotter review at commit cec0191, public-path sanitised
 - `reviews/route-plotter-continuation-prompt-2026-08-27.md` — Superseded
   continuation prompt, kept as provenance for the backlog-driven era
+- `reviews/route-plotter-continuation-prompt-big-run-2026-09-28.md` —
+  Current paste-ready prompt for the big run: W4 to W12 merged under the
+  run's standing authority, parking what needs Joe, one release at the end
 - `reviews/route-plotter-continuation-prompt-open-calls-2026-09-28.md` —
-  Current paste-ready prompt, once the post-W2 follow-ups had merged: the
-  calls waiting on Joe, then DEF-28 and whatever Joe accepts of the proposals
+  Superseded continuation prompt, kept as provenance for the calls Joe
+  answered on 2026-09-28
 - `reviews/route-plotter-continuation-prompt-2026-09-28.md` — Superseded
   continuation prompt, kept as provenance for DEF-38 and DEF-39
 - `reviews/route-plotter-continuation-prompt-2026-09-25.md` — Superseded
@@ -164,8 +167,9 @@
 - `reviews/route-plotter-continuation-prompt-2026-09-22.md` — Superseded
   continuation prompt, kept as provenance for W0
 - `reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md` —
-  Adopted refactoring programme (waves W0–W12); the backlog carries the current
-  wave plus any unwaved defects whose prerequisite has landed
+  Adopted refactoring programme (waves W0–W12); the backlog carries the
+  runnable waves and defects, and later waves enter as their prerequisites
+  merge
 
 ## scripts
 

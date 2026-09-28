@@ -11,14 +11,15 @@ hand-edited under `docs/`.
 
 | File | Role |
 | --- | --- |
-| `route-plotter-continuation-prompt-open-calls-2026-09-28.md` | **Current** paste-ready prompt for the next development chat, written once the post-W2 follow-ups had merged (unreleased): nothing is ready, so it opens with the calls waiting on Joe, then DEF-28 once Joe has made its design call, and whatever Joe accepts of DEF-40 to DEF-46 and TST-04. |
+| `route-plotter-continuation-prompt-big-run-2026-09-28.md` | **Current** paste-ready prompt for the big run, written once Joe had answered the open calls: W5, W4 and the runnable defects, then W6 to W12 as their prerequisites merge, merged by the agent under the standing authority in the decision log ("the big run"), with one release at the end. It stays current for every session of the run. |
+| `route-plotter-continuation-prompt-open-calls-2026-09-28.md` | Superseded by the big-run prompt of the same day. Historical provenance: it put the calls waiting on Joe, which Joe answered on 2026-09-28. |
 | `route-plotter-continuation-prompt-2026-09-28.md` | Superseded by the open-calls prompt of the same day. Historical provenance: it briefed DEF-38 and DEF-39, which merged on 2026-09-28 (#46, #47) with DEF-47 (#48), unreleased. |
 | `route-plotter-continuation-prompt-2026-09-25.md` | Superseded by the 2026-09-28 prompt. Historical provenance: it briefed the rest of the post-W2 queue and the W3 pilot, all of which merged (#34 on 2026-09-25, #35 to #44 on 2026-09-28), unreleased. |
 | `route-plotter-continuation-prompt-2026-09-24.md` | Superseded by the 2026-09-25 prompt. Historical provenance: it briefed the post-W2 queue; DEF-34 (#31) and TST-17 (#32) merged from it on 2026-09-24, unreleased. |
 | `route-plotter-continuation-prompt-w2-2026-09-23.md` | Superseded by the 2026-09-24 prompt. Historical provenance: it briefed W2 (the live defects), released as v3.2.692. |
 | `route-plotter-continuation-prompt-2026-09-23.md` | Superseded by the W2 prompt. Historical provenance: it briefed W1 (the safety net). |
 | `route-plotter-continuation-prompt-2026-09-22.md` | Superseded by the 2026-09-23 prompt. Historical provenance: it briefed W0. |
-| `codebase-abstraction-and-auditability-plan-2026-09-22.md` | **Adopted** refactoring programme (2026-09-22): a two-round Claude and Codex abstraction and auditability review of `main` @ `2e4d78e`, with 111 items in waves W0–W12. The owner accepted every §20 default. The backlog carries the current wave plus any unwaved defects whose prerequisite has landed. |
+| `codebase-abstraction-and-auditability-plan-2026-09-22.md` | **Adopted** refactoring programme (2026-09-22): a two-round Claude and Codex abstraction and auditability review of `main` @ `2e4d78e`, with 111 items in waves W0–W12. The owner accepted every §20 default. The backlog carries the runnable waves and defects; later waves enter as their prerequisites merge (decision log, 2026-09-28, "the big run"). |
 | `route-plotter-continuation-prompt-2026-08-27.md` | Superseded by the 2026-09-22 prompt. Historical provenance: every original review finding was dispositioned into the PM-Skills backlog. |
 | `route-plotter-review-remediation-continuation-prompt-2026-08-26.md` | Superseded. Historical provenance for the remediation run it briefed. |
 | `route-plotter-v3-comprehensive-repository-review-2026-08-26.md` | Full read-only review of Route Plotter at commit `cec0191`. This is historical evidence, not a description of the remediated branch's present health. |

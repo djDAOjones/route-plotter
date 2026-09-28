@@ -2,6 +2,68 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-28 — the big run: Joe answers the open calls, and delegates merges and planned fixes
+
+**Joe's calls, 2026-09-28,** in two question rounds:
+
+1. **DEF-28, option A** (#44): announce a failed restore; a notice offers
+   **Download it** and **Discard**; the record moves to a storage key autosave
+   never writes. Clear All discards it too. If storage can't also hold a new
+   autosave, it stays, and the autosave failure report points to the notice.
+2. **DEF-40 to DEF-46 accepted,** each by its row's first remedy: P2 for
+   DEF-40, 41, 44 and 46; P3 for DEF-42, 43 and 45.
+3. **TST-04 lands before W4,** and W4's characterisation mutates every branch
+   of each moved function and accounts for every survivor.
+4. **Budgets:** the run archives the trajectory's oldest phases at wave
+   closes without waiting, keeping phases that feed open work. This log stays
+   over budget by Joe's choice; wish-list triage stays Joe's.
+5. **Scope:** `### Next` through W12; later P3 rows are follow-ups.
+6. **One release, at the run's end:** the exact candidate first passes a
+   Chromium smoke test with a real MP4 export, then DEV-INFRASTRUCTURE →
+   Deployment runs in full. If it fails after publishing, the run rolls back
+   as Deployment prescribes (a branch at `v3.2.692`, Pages pointed at it),
+   then stops. Firefox and Safari stay Joe's.
+7. **The Browser pane** may serve checks all run, through the temporary
+   `launch.json` entry, restored after each use.
+
+**A standing merge authority, for this run.** The agent squash-merges its own
+pull requests, close-outs and reverts included, when Verify is green on the
+head; `npm run check` passes with the current `main` merged in; an
+independent review saw that head, or every substantive change since, and
+each finding is fixed or rebutted; the mutation table is complete; the diff
+has no `docs/` or `version.json`; and the goldens moved only as the PR
+predicted. Merges are serialized, each new `main` verified. A PR short of
+that waits for Joe; the run moves on. It may strengthen its own gates (CI,
+`push.js`, test config and reporters, these rules), never loosen them, save
+by an exact revert of its own merge that turned `main` red. The authority
+ends when the release's record merges, or when Joe ends the run without one;
+`AGENTS.md` and DEV-INFRASTRUCTURE now allow such a grant.
+
+**Planned defects are approved in advance,** as their rows read when this
+entry merges, and so are §20's behaviour-changing defaults (Q10–Q13, Q18,
+Q19), each quoted word for word in its new DEF row. Still Joe's: DEF-07's
+camera feel; whatever a row or default leaves open (Q18's viewing mode, Q19's
+pause range); defects found on the way. The run is `task.md`'s gateless
+`auto-jazz` with refactor mode's contract, parking where task.md would stop;
+the rows' persisted-format changes, Q8's deletions and TST-11's replacements
+count as approved. Each PR closes full; an item closes when its whole scope
+has merged; each wave gets one entry here.
+
+**Scheduling** (refines DOC-06 (i) and the 2026-09-23 entry): `### Next`
+holds W5 with SPL-06 (TST-11 needs it), W4 behind TST-04, ten defects
+runnable now, DEF-06 among them (DEF-08 made its leak visible, so it lands
+before the release), and seven awaiting a W5 test. Later waves enter as those
+they depend on complete. DEP-03 opens W8: CON-11 and CON-05 need it, so the
+plan's order was a cycle.
+
+**Gates that were claims:** ten plan rows and three waves read "owner
+decides" for questions answered on 2026-09-22, and TST-11 read ready without
+SPL-06; each now has a dated note. #51 lists what two independent reviews
+found.
+
+**Link:** `reviews/route-plotter-continuation-prompt-big-run-2026-09-28.md`;
+plan §12, §13, §20.
+
 ## 2026-09-28 — the post-W2 follow-ups: what a frame leaves behind no longer decides the next
 
 Three pull requests, one item each, merged on Joe's word and not yet released:
