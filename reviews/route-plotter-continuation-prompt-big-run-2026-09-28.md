@@ -108,11 +108,12 @@ approved:
 - more than five files, inside a row's declared surface.
 
 Anything else on that list (a runtime dependency, a never-edit file, a
-destructive migration, deleting data) still goes to Joe. **Each item closes
-full, in its own PR** (`end-of-task.md`), with one exception: DOC-06 (j) gives
-each wave a single decision-log entry, written at the wave's close-out from
-its PRs' evidence. Nothing else is deferred, so no `Close: lite` trailer is
-needed. task.md's step 11 commits to the item's branch and pushes only that
+destructive migration, deleting data) still goes to Joe. **Each PR closes
+full** (`end-of-task.md`), with one exception: DOC-06 (j) gives each wave a
+single decision-log entry, written at the wave's close-out from its PRs'
+evidence. Nothing else is deferred, so no `Close: lite` trailer is needed. An
+item that takes several PRs stays open until the last one (see Closing items
+and waves). task.md's step 11 commits to the item's branch and pushes only that
 branch. The comparative review stands in for the `review.md` pass task.md
 suggests after a gateless run. **Where task.md would stop and ask** (step 7's
 blocking concern, or a hard prohibition not approved here), park instead. A
@@ -127,8 +128,8 @@ To park: leave the pull request (if there is one) open, with a first line
 ledger and the handoff; carry on with whatever doesn't depend on it.
 
 - **DEF-07's camera feel.** Build it, attach side-by-side captures (the same
-  instants on `main` and the branch, played and exported), and park it.
-  ABS-03 waits for it.
+  instants on `main` and the branch, played and exported), and park it. Only
+  ABS-03's camera half waits for it; its timeline half follows CON-08.
 - **Behaviour beyond a row's treatment,** or evidence that a row is wrong in a
   way that changes what users see: patch the row with a dated note, propose,
   park. The same goes for whatever a row or a §20 default leaves open: Q18's
@@ -156,7 +157,9 @@ ledger and the handoff; carry on with whatever doesn't depend on it.
   DEV-INFRASTRUCTURE → Quality gate and Deployment; the decision-log entry). A
   PR that touches them says what it adds, removes nothing that fails today,
   and its review shows every existing check still fails on its old mutation.
-  Anything that loosens one parks.
+  Anything that loosens one parks, with one exception: a reviewed,
+  exact-inverse revert of this run's own merge that turned `main` red may
+  restore the green gate before it. Nothing else may weaken one.
 - **A new runtime dependency,** any change to repository settings, rulesets
   or the Pages source, and anything else outside the authority. The one
   exception is the rollback `DEV-INFRASTRUCTURE.md` prescribes when the release
@@ -297,9 +300,12 @@ For each item:
    `window.*` global, DOM id, EventBus event or persisted format changed); the
    evidence; the mutation table; which reviewer ran, at which SHAs, and what
    it found; the checks left for Joe; and the merge bar, ticked.
-11. **Close the item full, in the same PR** (see Closing items and waves; its
-   plan row needs the PR's number). These are memory lines, so they need no
-   second review.
+11. **Close the PR full** (see Closing items and waves). Write the plan note,
+   and any permanent-document change, before the review, so the reviewer sees
+   them. Only mechanical updates made after it (the PR's number, a shipped
+   status, a count) need no further review. A change to behaviour, scope,
+   prerequisites, authority or a permanent contract needs review on the head
+   that results.
 12. **Merge or park.** Before merging, merge the current `main` into the
    branch, whatever files it touches, and re-run `npm run check`; after a
    merge, update the ledger.
@@ -317,8 +323,9 @@ from `git rev-parse`, never typed from a short one):
 - The independent review ran, and every finding is fixed or rebutted with
   evidence in the PR. The reviewer saw the PR's current head, or every
   substantive change since the head it saw has had its own review. That
-  includes a conflict resolution in code or tests; one confined to memory
-  lines (backlog, trajectory, file-map rows and counts) needs none.
+  includes a conflict resolution in code or tests; one confined to
+  mechanical memory lines (backlog ticks, trajectory lines, file-map rows and
+  counts) needs none.
 - The mutation table is complete: every fix site's mutation killed and, for
   a move or a deletion, every branch of each moved function mutated and every
   survivor accounted for.
@@ -347,14 +354,19 @@ before merging and confirm the merged content just after.
 
 ## Closing items and waves (you are the single memory writer)
 
-**Each item closes full, in its own PR** (`end-of-task.md`), so the
-repository is the record after every merge:
-- **Backlog:** remove its line. A gate is a claim, so keep every other flag
-  honest.
+**Each PR closes full** (`end-of-task.md`), so the repository is the record
+after every merge. **An item closes only when its whole scope has merged:**
+TST-04's two golden families, DEL-02's two or three PRs, DEL-04's three or
+four, and any other item whose row or wave says it takes several PRs. Until
+then, its backlog row reads `[~]` with the merged PRs and the work left, and
+its plan row gets a dated progress note, not a shipped marker.
+- **Backlog:** when the item is complete, remove its line; until then, keep
+  its `[~]` row current. A gate is a claim, so keep every other flag honest.
 - **Trajectory:** one line, starting with its ID, under its wave's phase
-  (create the phase heading if it isn't there yet).
-- **Plan:** its row marked `Shipped (<wave>, PR #N; unreleased)` with a dated
-  note of what was done; a defect found on the way goes in as a proposed row.
+  (create the phase heading if it isn't there yet), when the item completes.
+- **Plan:** a dated note of what each PR did. When the item completes, mark
+  its row `Shipped (<wave>, PRs #N…; unreleased)`. A defect found on the way
+  goes in as a proposed row.
 - **File-map:** a row for each file it adds, removes or re-roles, and the
   counts corrected. **Never run `gen-file-map.mjs`**, and recount after
   merges.
@@ -388,11 +400,11 @@ Joe calls it. An interruption,
 a context summary, a usage limit or a whole-run stop suspends the run; none of
 them triggers the release.
 
-1. **Smoke-test the exact candidate first.** DEF-06 should have merged; if it
-   hasn't, the release entry names its effect. Build the `main` SHA you will
-   release in a separate throwaway clone, serve it, and check that it loads to
-   ready, that a built-in example plays, that an HTML export opens and plays as
-   a recipient would, and that a real MP4 export works in Chromium (`ftyp` at
+1. **Smoke-test the exact candidate first.** DEF-06 must have merged. If it
+   is still parked, park the release unless Joe waives it. Build the `main`
+   SHA you will release in a separate throwaway clone, serve it, and check
+   that it loads to ready, that a built-in example plays, that an HTML export
+   opens and plays as a recipient would, and that a real MP4 export works in Chromium (`ftyp` at
    offset 4). On Joe's Mac that means the Browser pane; a cloud container
    cannot encode H.264. **Missing Chromium or MP4 evidence parks the release:**
    ask Joe. Firefox and Safari stay Joe's.
@@ -724,7 +736,9 @@ question and your recommendation; memory written; plan rows patched; the
 metrics at each wave close; the exact next step; and anything waiting on Joe.
 
 **Begin** by verifying the state above, making the clone and the ledger, and
-reconciling: an `<ITEM-ID>:` commit on `origin/main` whose backlog line
-remains is merged work, so close it out first. Then take the first runnable
-item (TST-04, on the run's first day). Ask Joe nothing this prompt already
+reconciling. For each `<ITEM-ID>:` commit on `origin/main` that memory
+doesn't yet record, judge from its merged diff and the row's acceptance
+criteria what it completed; a title proves neither completion nor that the
+change wasn't reverted. Record it, then take the first runnable item (TST-04,
+on the run's first day). Ask Joe nothing this prompt already
 answers.
