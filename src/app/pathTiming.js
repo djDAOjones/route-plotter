@@ -86,9 +86,13 @@ const splineInput = wp => ({
  * its path and trunk, and in the engine its pauses, beacon schedules (by
  * which a paused marker was still drawn, DEF-06), speed segments and any wait
  * at one of its waypoints, and the renderer's beacons. The duration is left:
- * in constant-time mode it is the author's setting, and a constant-speed
- * route rebuilds its own when it returns. A module helper, as `routeOf` is,
- * for the hosts that borrow `calculatePath` alone.
+ * a constant-speed route rebuilds its own when it returns, and in
+ * constant-time mode it may be the author's. A route's schedules come only
+ * with a timing rebuild, which sets the duration too, so a constant-time
+ * route that returns to schedules cleared here is rebuilt the same way
+ * (`_routeTimingCleared`), and one whose author's duration was never
+ * replaced keeps it. A module helper, as `routeOf` is, for the hosts that
+ * borrow `calculatePath` alone.
  * @param {Object} app
  */
 function clearRouteTiming(app) {
@@ -96,6 +100,8 @@ function clearRouteTiming(app) {
   app._trunkWaypoints = null;
   const engine = app.animationEngine;
   if (engine) {
+    const scheduled = Boolean(engine.pauseMarkers?.length || engine.beaconSchedules?.length || engine.segmentMarkers?.length);
+    if (scheduled) app._routeTimingCleared = true;
     engine.clearPauseMarkers?.();
     engine.clearSegmentMarkers?.();
     engine.clearWaypointWait?.();
@@ -183,8 +189,10 @@ export const pathTimingMixin = {
     }
     
     this._durationUpdateTimeout = setTimeout(() => {
-      // Calculate duration based on animation mode
-      if (this.animationEngine.state.mode === 'constant-speed') {
+      // Calculate duration based on animation mode; and in constant-time
+      // mode, for a route come back to the schedules the no-route clear took
+      // away (DEF-06), rebuilt as they were built.
+      if (this.animationEngine.state.mode === 'constant-speed' || this._routeTimingCleared) {
         const currentSpeed = this.animationEngine.state.speed;
         // Convert normalized path points to canvas coords for length calculation
         const canvasPathPoints = this.pathPoints.map(p => this.imageToCanvas(p.x, p.y));
@@ -194,7 +202,7 @@ export const pathTimingMixin = {
         // Use unified duration update (accounts for segment speeds)
         this.updateAnimationDuration(currentSpeed);
       }
-      // For constant-time mode, duration is already set by the slider
+      // Otherwise, in constant-time mode, the duration is the author's.
     }, 50); // Wait 50ms for batch changes
   },
   
@@ -654,6 +662,8 @@ export const pathTimingMixin = {
 
     // Set the final total duration
     this.animationEngine.setDuration(totalDuration);
+    // The route's schedules are built again (DEF-06).
+    this._routeTimingCleared = false;
     
     // Log timeline breakdown
     console.debug(`📍 [AnimationEngine] Timeline: ${(startHandleTime/1000).toFixed(1)}s start + ${(this.animationEngine.introTime/1000).toFixed(1)}s intro + ${(pathDuration/1000).toFixed(1)}s path + ${(this.animationEngine.totalPauseTime/1000).toFixed(1)}s pauses + ${(this.animationEngine.totalTailTime/1000).toFixed(1)}s tail = ${(totalDuration/1000).toFixed(1)}s total`);

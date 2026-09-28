@@ -9,8 +9,9 @@
  * (Clear All, deleting down to one, undo and redo, a load, an outline edit),
  * so what the last route fed survived; once DEF-08 drew a paused beacon's
  * scale, a route cut to one waypoint drew that marker, paused, at the grow
- * scale of a route that no longer existed. The duration is left: in
- * constant-time mode it is the author's setting.
+ * scale of a route that no longer existed. The duration is left; a route
+ * that comes back to schedules the clear took away has its timing rebuilt,
+ * in either timing mode.
  */
 
 import { expect, test } from 'vitest';
@@ -187,4 +188,73 @@ test('a project of one waypoint, opened over a route, leaves nothing of that rou
 
   expect(routeState(app)).toEqual(NO_ROUTE);
   expect(app.renderingService.getBeaconScaleOverride(app.waypoints[0])).toBeNull();
+});
+
+test('a constant-time route deleted down to one and undone gets back its pauses and beacons, as it had them', async () => {
+  const app = await bootApp();
+  await app.ready;
+  expect(await loadSnapshot(app, {
+    coordVersion: 9,
+    animationState: { mode: 'constant-time', speed: 200, duration: 12000 },
+    waypoints: [
+      { id: 'a', imgX: 0.2, imgY: 0.2, isMajor: true, pauseTime: 0 },
+      { id: 'b', imgX: 0.5, imgY: 0.5, isMajor: true, pauseTime: 3000, beaconStyle: 'grow' },
+      { id: 'c', imgX: 0.8, imgY: 0.8, isMajor: true, pauseTime: 0 },
+    ],
+  })).toBe(true);
+  // Preview builds the route's timeline, as it does on main.
+  app.eventBus.emit('motion:preview-mode-change', true);
+  await timingSettled();
+  const engine = app.animationEngine;
+  const grow = engine.beaconSchedules.find(each => each.waypointId === 'b');
+  const instant = grow.arrivalMs + 1000 + engine.startHandleTime + engine.introTime;
+  const at = () => {
+    engine.seekToTime(instant);
+    app.render();
+    return {
+      duration: engine.state.duration,
+      pauses: engine.pauseMarkers.length,
+      beacons: engine.beaconSchedules.length,
+      waiting: engine.state.isWaiting(),
+      pathProgress: engine.state.pathProgress,
+      scale: app.renderingService.getBeaconScaleOverride(app.getWaypointById('b'))?.scale,
+    };
+  };
+  const before = at();
+  expect(before).toMatchObject({ pauses: 1, beacons: 1, waiting: true });
+  expect(before.scale).toBeGreaterThan(1.1);
+
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('c'));
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('a'));
+  await timingSettled();
+  expect(routeState(app)).toEqual(NO_ROUTE);
+  app.undo();
+  app.undo();
+  await timingSettled();
+
+  expect(app.waypoints.map(each => each.id)).toEqual(['a', 'b', 'c']);
+  expect(engine.state.mode).toBe('constant-time');
+  expect(at()).toEqual(before);
+});
+
+test('an outline edit to the one waypoint left moves the crowd node anchored to it', async () => {
+  const app = await bootApp();
+  await app.ready;
+  const project = structuredClone(buildExampleProjects().find(each => each.id === 'uon-open-day').project);
+  expect(await loadSnapshot(app, project)).toBe(true);
+  const layer = app.scene.getFlowLayers().find(each => each.graph.getNodes().some(node => node.anchorWaypointId));
+  const node = layer.graph.getNodes().find(each => each.anchorWaypointId);
+  const anchor = app.getWaypointById(node.anchorWaypointId);
+  for (const waypoint of [...app.waypoints]) {
+    if (waypoint !== anchor) app.eventBus.emit('waypoint:delete', waypoint);
+  }
+  await nextTask();
+
+  app.eventBus.emit('scene-outline:command', {
+    action: 'update-waypoint', waypointId: anchor.id, x: 23, y: 34, waitSeconds: 0, segmentSpeed: 1,
+  });
+
+  expect(app.waypoints).toEqual([anchor]);
+  expect({ x: anchor.imgX, y: anchor.imgY }).toEqual({ x: 0.23, y: 0.34 });
+  expect(node.position()).toEqual({ x: 0.23, y: 0.34 });
 });
