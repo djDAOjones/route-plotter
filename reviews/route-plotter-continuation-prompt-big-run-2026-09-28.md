@@ -2,8 +2,10 @@
 # Continue Route Plotter v3: the big run, W4 to W12, merged as you go
 
 This supersedes `route-plotter-continuation-prompt-open-calls-2026-09-28.md`,
-whose calls Joe answered on 2026-09-28; it remains as provenance. Paste
-everything below into a fresh chat. It stays the current prompt for every
+whose calls Joe answered on 2026-09-28; it remains as provenance. The same
+day, #53 amended it with Joe's answers to the calls the run would have parked
+(decision log, "the big run, amended"). Paste everything below into a fresh
+chat. It stays the current prompt for every
 session of the run until one supersedes it: a session that picks the run up
 again starts from the last handoff, the backlog and the open pull requests.
 
@@ -12,7 +14,7 @@ a **long, low-gate run**. W0, W1 and W2 are closed, and W2's fixes are live as
 v3.2.692. The post-W2 queue, W3's pilot and their follow-ups are merged on
 `main`, unreleased. **Joe has answered every open call and, for this run,
 delegated to you the merges and the planned behaviour changes** (decision
-log, 2026-09-28, "the big run"). Your job: take the backlog's `### Next`,
+log, 2026-09-28, "the big run" and "the big run, amended"). Your job: take the backlog's `### Next`,
 then plan waves W6 to W12 as the waves they depend on complete, one item per
 pull request, each reviewed and, once it clears the merge bar below, merged
 by you. Close each item, and each wave, in project memory. Park whatever
@@ -23,7 +25,8 @@ needs Joe and keep going. Release once, at the end.
 
 The owner is Joe. Follow `AGENTS.md` (via `CLAUDE.md`). Where this prompt and
 the repository disagree, the repository wins, except on what the decision-log
-entry "the big run" settles for this run; tell Joe of any disagreement.
+entries "the big run" and "the big run, amended" settle for this run; tell Joe
+of any disagreement.
 
 ## Purpose
 
@@ -36,8 +39,8 @@ wave done well beats three done loosely.
 
 ## What Joe has decided — don't ask again
 
-The decision-log entry "the big run" (2026-09-28) is the authority; this is
-its summary.
+The decision-log entries "the big run" and "the big run, amended" (both
+2026-09-28) are the authority; this is their summary.
 
 - **The open calls.** DEF-28 takes option A: announce the failed restore and
   show a notice with **Download it** and **Discard**, and move the record to a
@@ -52,16 +55,21 @@ its summary.
 - **You merge your own pull requests** when they clear the merge bar. One
   that doesn't stays open for Joe, and the run moves on.
 - **Planned defects are approved in advance,** each by its plan row's stated
-  treatment **as it reads when #51 merged**. For DEF-40 to DEF-46 that means
+  treatment **as it reads when #53 merged** (#53 added Joe's answers below as
+  dated notes on CON-14, ABS-06, DEF-07, DOC-08, DEL-07, §12.1, §13 rule 3,
+  W10 and §20 Q5, Q16, Q18 and Q19). For DEF-40 to DEF-46 that means
   the first remedy only, never a row's "or …" alternative. A row patched since
   is not approved beyond its old text: a PR that relies on the patch parks.
   Also approved are the §20 choices of 2026-09-22 that change behaviour: Q10
   (one intro curve and time base), Q11
   (anchored crowd nodes can't be dragged, and say so), Q12 (a saved 0 stays
-  0), Q13 (the drone image ships only when used), Q18 (a future-version file
-  opens for viewing, not editing; and diagnostics may carry an EventBus error
-  *count*, behind a `DIAGNOSTICS_SCHEMA_VERSION` bump, with no error text or
-  project content) and Q19 (the UI's ranges are the true ones). Each of those
+  0), Q13 (the drone image ships only when used), Q18 (diagnostics may carry
+  an EventBus error *count*, behind a `DIAGNOSTICS_SCHEMA_VERSION` bump, with
+  no error text or project content; its future-version half is now Joe's
+  refusal, under Files from other versions) and Q19 (the UI's ranges are the
+  true ones; the pause's is the scene outline's 0–600 s, and the slider stays
+  a 0–30 s fine control, so nothing that loads or can be entered today is
+  refused or cut short). Each of those
   becomes its own PR, with a DEF row marked decided that quotes §20's default
   word for word; the reviewer checks the fix against that quote. Every defect
   PR still states its new behaviour.
@@ -70,17 +78,55 @@ its summary.
   stand: a `null` Graphics scale means 1× (DEF-37), round caps and joins
   (DEF-39), the preview's blue (DEF-47), branches named for their item, and
   pull requests watched once opened.
+- **Files from other versions** (Joe: "refuse newer, drop older. for now.
+  start to plan compatibility so that from now on old versions can be
+  imported and upgraded"). A file from a newer version is refused with a clear
+  message and never re-saved; nothing opens it for viewing. A file from an
+  earlier version no longer has to load: where old-format handling
+  complicates a change, drop it, name the drop in the PR, and refuse such a
+  file with a clear message rather than misread it. Plan compatibility from
+  here on, in DEP-03 and ABS-06: one version for the persisted format, one
+  gate for autosave, ZIP and player, and, for each later change to the format,
+  a version bump with a tested step that upgrades the previous version's
+  files, all written into `architecture.md`. The promise starts with this
+  run's release: from it on, every later version imports and upgrades every
+  earlier file. That starting point is this prompt's reading of Joe's words,
+  and he may move it.
+- **Defects found on the way are fixed** (Joe: "fix defects along the way"),
+  including a defect a wish-list line records in code your work reaches. Each
+  gets a DEF row (plan §12.1, the next free number) with its evidence, marked
+  decided by this call, and its own PR that states the new behaviour and pins
+  it with a regression test; it merges under the bar like a planned defect.
+  Where the fix is a real choice between behaviours users would notice, make
+  the smallest change that removes the defect and say so in the PR. Delete the
+  wish-list line it resolves.
+- **DEF-07 needs no side-by-side** (Joe: "I dont need to see the old camera
+  feel"). It merges under the bar like any planned defect, and ABS-03's
+  camera half follows it.
+- **Devin, Windsurf and `_Joe/`.** Devin and Windsurf are no longer used
+  (Joe: "dont use anymore"), so DOC-08 deletes `.devin/` and
+  `.codeiumignore`. In `_Joe/`, delete DEL-07's two scripts and, once DOC-08
+  has moved the dev guide's valid parts out and retired AGENTS.md's read, the
+  dev guide itself (Joe: "you rename or delete"). Nothing else in `_Joe/`
+  changes.
+- **Chromium only, for now** (Joe: "we can skip firefox and safari checks and
+  call this a chromium only app for now"). No check needs Firefox or Safari.
+  REV-04 closed on its Chromium evidence, REV-03's physical pass is Android
+  Chrome alone, and README says so (#53).
 - **Budgets.** At a wave's close-out, archive the trajectory's oldest phases
   **without waiting**, keeping any phase that feeds open work (Joe's prune bar,
   decision log 2026-08-27). `end-of-task.md`'s size check and the Prune verb
   of `memory-maintenance.md` would propose and wait (Prune P2): Joe has
   answered, so run P1 and P3 to P6, and put P2's table in the PR body. The
-  decision log stays over its entry budget by Joe's choice. Wish-list triage
-  stays Joe's: report the overrun, append lines, never triage.
+  decision log was pruned on 2026-09-28 (#52), leaving 18 live entries after
+  #53; if the run's entries take it over budget again, it stays over by Joe's
+  choice. The wish-list keeps its items, by Joe's call: append lines, and
+  consolidate or delete one only where that is natural (a duplicate, or a
+  line your work resolves); never triage.
 - **One release, at the end of the run,** after a smoke test of the exact
   candidate (below). If it fails after publishing, **roll it back yourself**
-  as DEV-INFRASTRUCTURE prescribes, then stop. Firefox and Safari evidence
-  stays Joe's.
+  as DEV-INFRASTRUCTURE prescribes, then stop. Nothing needs Firefox or
+  Safari.
 - **The Browser pane, all run long.** Joe's permission for this run
   (2026-09-28): you may add the temporary server entry to the parent folder's
   `.claude/launch.json` whenever a check needs a browser, and you restore that
@@ -96,18 +142,23 @@ behaviour-preserving item also keeps `refactor` mode's preservation contract,
 with its declared surface (the plan row's paths and the tests that pin them)
 named in the PR rather than approved at a gate.
 
-task.md's hard prohibitions stand. Three of them this run meets are already
+task.md's hard prohibitions stand. Five of them this run meets are already
 approved:
 - deleting a test that pins only dead code (Q8, each named in the wave's
   decision-log entry);
 - the persisted-format changes planned rows state (DEF-09 drops
   `styles.pathHead.rotation` from snapshots; Q12 keeps a saved 0 and restores
   `modified`; DEF-28's new storage key; ABS-06's version gate, which names
-  the current `coordVersion` and does not bump it; Q18's diagnostics count
-  behind a `DIAGNOSTICS_SCHEMA_VERSION` bump);
+  the current `coordVersion`, and the upgrade path Joe asked for, in which a
+  later change to the format bumps it with a tested upgrade step; Q18's
+  diagnostics count behind a `DIAGNOSTICS_SCHEMA_VERSION` bump);
+- dropping old-format handling under Joe's "drop older", each drop named in
+  its PR;
+- deleting three never-edit files in `_Joe/`: DEL-07's two scripts, and the
+  dev guide once DOC-08 has moved its valid parts out;
 - more than five files, inside a row's declared surface.
 
-Anything else on that list (a runtime dependency, a never-edit file, a
+Anything else on that list (a runtime dependency, any other never-edit file, a
 destructive migration, deleting data) still goes to Joe. **Each PR closes
 full** (`end-of-task.md`), with one exception: DOC-06 (j) gives each wave a
 single decision-log entry, written at the wave's close-out from its PRs'
@@ -127,25 +178,17 @@ To park: leave the pull request (if there is one) open, with a first line
 `Waiting on Joe: <the question, and your recommendation>`; put it in the
 ledger and the handoff; carry on with whatever doesn't depend on it.
 
-- **DEF-07's camera feel.** Build it, attach side-by-side captures (the same
-  instants on `main` and the branch, played and exported), and park it. Only
-  ABS-03's camera half waits for it; its timeline half follows CON-08.
 - **Behaviour beyond a row's treatment,** or evidence that a row is wrong in a
   way that changes what users see: patch the row with a dated note, propose,
-  park. The same goes for whatever a row or a §20 default leaves open: Q18's
-  "allow viewing" (the app has no view-only mode) and Q19's pause range (30 s
-  on the slider, 600 s in the scene outline, both UI).
-- **Defects found on the way** become proposed DEF rows (plan §12.1, the next
-  free number) with their evidence. They are never fixed in this run.
+  park. The same goes for whatever a row or a §20 default leaves open. (A
+  defect found on the way is not this: fix it, as What Joe has decided says.)
 - **CON-01's two UI-only defaults** (`wiringBus.js:300` and
   `sceneOutline.js:867` at `2e4d78e`): keep today's values, so the PR
   preserves behaviour. If that proves impossible, park it with the values
   stated.
-- **Anything in `_Joe/`:** DEL-07's scripts, and the dev-guide file itself
-  once DOC-08 has moved its valid parts out and retired the read. Also
-  whether Devin and Windsurf are still used (`.devin/`, `.codeiumignore`).
-- **Owner-run evidence:** REV-03, REV-04 (Firefox, Safari) and REV-05 stay
-  Joe's and never block the run. A browser check the plan names for an item
+- **Anything else in `_Joe/`,** beyond the three deletions Joe allowed.
+- **Owner-run evidence:** REV-03's physical Android Chrome pass and REV-05
+  stay Joe's and never block the run. A browser check the plan names for an item
   (its wave's Validation row, or a §2.9 probe for its defect) is part of that
   item: run it (see Browser checks), and if your environment cannot, park the
   item with the check listed. A check nobody requires, which you would like
@@ -154,7 +197,7 @@ ledger and the handoff; carry on with whatever doesn't depend on it.
   `.github/workflows/`, `push.js`, `vitest.config.js`, `tests/setup.js`,
   `tests/helpers/minCountReporter.js`, `tests/helpers/consoleGuard.js`, and
   the rules that authorise this run (`AGENTS.md` → Commit, push and release;
-  DEV-INFRASTRUCTURE → Quality gate and Deployment; the decision-log entry). A
+  DEV-INFRASTRUCTURE → Quality gate and Deployment; the decision-log entries). A
   PR that touches them says what it adds, removes nothing that fails today,
   and its review shows every existing check still fails on its old mutation.
   Anything that loosens one parks, with one exception: a reviewed,
@@ -173,9 +216,11 @@ GitHub MCP tools in a cloud container, which has no `gh`); a read-only
 `git status` in the OneDrive copy; and whether another agent session is
 working the repository (`ListAgents`; see Traps).
 
-- **`main`** ends with #51, which refactored the backlog and added this
-  prompt, on `ac80222` (#50). **If the decision-log entry "the big run" is not
-  on `origin/main`, stop and ask Joe: the authority begins with it.** `main` is
+- **`main`** ends with #53, which recorded Joe's answers and amended this
+  prompt, on #52 (a memory maintenance pass) and #51 (the backlog refactor and
+  this prompt). **If the decision-log entries "the big run" and "the big run,
+  amended" are not on `origin/main`, stop and ask Joe: the authority begins
+  with them.** `main` is
   protected: no force-push, no deletion. Remote branches: `main` and the
   frozen `review-remediation`.
 - **Live: v3.2.692** (`14e3656`, tag `v3.2.692`), served by Pages from `main`
@@ -214,10 +259,10 @@ TST-04 and three other tests unblock the most, so a sensible order is:
 | W6 | W4 and W5 are complete | CLR-02 with DEF-16; ISO-01; ISO-03; ISO-04; DEP-01; DEP-02 |
 | W7 | W5 is complete, including TST-09 and the branched and intro/tail fixtures §13 W7 names | DOC-04; DOC-05; ABS-01 with DEF-12; ABS-02 with DEF-05 |
 | W8 | W6 and W7 are complete | **DEP-03 first** (moved up from W9 on 2026-09-28: CON-11 and CON-05 need it, which made W8 and W9 a cycle; its own prerequisite, TST-06, has shipped); then CON-04; CON-07; CON-11 with DEF-04; CON-06, then DEP-05; CON-05 with DEF-24; CON-10; CON-12; CON-13; CON-09; CON-14 with Q19; DEF-09; DEF-25; Q11; Q12; Q13 |
-| W9 | W5 and W8 are complete | the registration-order snapshot of the wired handlers first (§13 W9); CON-01; CON-02; CON-03; CLR-01; SPL-02; SPL-03 on DEP-03's extraction, then ABS-06 with Q18's future-version policy; SPL-04; DEP-04 (SPL-06 went ahead of TST-11) |
-| W10 | W7 is complete | DEF-10; CON-08 with DEF-11; Q10; DEF-07 (parked for Joe); ABS-03's timeline half once CON-08 merges, its camera half once DEF-07 does |
+| W9 | W5 and W8 are complete | the registration-order snapshot of the wired handlers first (§13 W9); CON-01; CON-02; CON-03; CLR-01; SPL-02; SPL-03 on DEP-03's extraction, then ABS-06 with Q18's future-version policy and the upgrade path (Joe, 2026-09-28); SPL-04; DEP-04 (SPL-06 went ahead of TST-11) |
+| W10 | W7 is complete | DEF-10; CON-08 with DEF-11; Q10; DEF-07 (no side-by-side for Joe); ABS-03's timeline half once CON-08 merges, its camera half once DEF-07 does |
 | W11 | W6 to W10 are complete | the compatibility exports and wrappers they left; the `setSelectedWaypoint` shim; deprecated aliases |
-| W12 | W1 to W11 are complete | GOV-03; GOV-02 (after DOC-08's link fixes); TST-12; TST-15; DOC-07; DOC-08 outside `_Joe/`; Q18's diagnostics error count; `AGENTS.md` pointers to plan §15 and §16 |
+| W12 | W1 to W11 are complete | GOV-03; GOV-02 (after DOC-08's link fixes); TST-12; TST-15; DOC-07; DOC-08, with the deletions Joe allowed (`.devin/`, `.codeiumignore`, then the `_Joe` dev guide once its valid parts have moved); DEL-07 (delete its two `_Joe/` scripts); Q18's diagnostics error count; `AGENTS.md` pointers to plan §15 and §16 |
 
 - §13's lists don't name CON-09, DEP-05, ABS-06 or CON-15; they sit where
   their code and prerequisites put them. CON-15 joins once DEL-05 and TST-13
@@ -366,7 +411,7 @@ its plan row gets a dated progress note, not a shipped marker.
   (create the phase heading if it isn't there yet), when the item completes.
 - **Plan:** a dated note of what each PR did. When the item completes, mark
   its row `Shipped (<wave>, PRs #N…; unreleased)`. A defect found on the way
-  goes in as a proposed row.
+  goes in as a row decided by Joe's "fix defects along the way".
 - **File-map:** a row for each file it adds, removes or re-roles, and the
   counts corrected. **Never run `gen-file-map.mjs`**, and recount after
   merges.
@@ -407,7 +452,8 @@ them triggers the release.
    opens and plays as a recipient would, and that a real MP4 export works in Chromium (`ftyp` at
    offset 4). On Joe's Mac that means the Browser pane; a cloud container
    cannot encode H.264. **Missing Chromium or MP4 evidence parks the release:**
-   ask Joe. Firefox and Safari stay Joe's.
+   ask Joe. Route Plotter is Chromium-only for now, so no other browser is
+   checked.
 2. **Then release** from a fresh, clean clone at that SHA, by
    `DEV-INFRASTRUCTURE.md` → Deployment, steps 1 to 8, exactly:
    - **Step 1:** check the Pages source is `main` `/docs`, and that the latest
@@ -434,8 +480,8 @@ them triggers the release.
 3. **Record it** in a `PM:` PR that clears the merge bar. It holds the
    release's own decision-log entry: every user-visible change since v3.2.692
    (#31 on), Q12's effect on old files that saved a 0, and what was verified
-   and what stays Joe's. It also adds the trajectory phase, and REV-04's
-   Chromium line if you re-ran it. **The run ends when that PR merges,** or
+   and what stays Joe's. It also adds the trajectory phase. **The run ends
+   when that PR merges,** or
    when Joe ends it without a release.
 
 ## Stop the whole run only when
@@ -478,7 +524,7 @@ Joe; the independent lanes carry on.
 
 1. **`AGENTS.md` tiers:** README, brief, architecture and conventions whole;
    the backlog Active section; the latest decision-log headings, starting with
-   "the big run" and the other 2026-09-28 entries.
+   "the big run, amended", "the big run" and the other 2026-09-28 entries.
 2. **From the plan, only what the current item needs:** its §12.1 or §12.2
    row; §13's ground rules and its wave's table; §17 (testing); §18
    (metrics); §20 before calling anything open; §2.9 for the round-2 browser
@@ -579,14 +625,16 @@ release, `DEV-INFRASTRUCTURE.md` → Deployment, and the decision-log entry
   import when code moves, assertions unchanged, is not weakening; deleting a
   test that pins only dead code is allowed under Q8, named in the decision
   log.
-- Never touch `docs/`, `_Joe/`, `version.json` or `node_modules/` by hand.
+- Never touch `docs/`, `version.json` or `node_modules/` by hand, nor `_Joe/`
+  beyond the three deletions Joe allowed.
 - A compatibility export or wrapper lives for at most one wave (§13 rule 7).
 
 **Plan fidelity**
 - If evidence shows a row is wrong, patch it with a dated note, say so in the
   wave's decision-log entry, and tell Joe in the handoff. A patch never widens
-  what is approved. A new behaviour change becomes a proposed DEF row for Joe;
-  it is not fixed in this run.
+  what is approved. A defect found on the way is fixed (see What Joe has
+  decided); any other new behaviour change becomes a proposed row for Joe and
+  is not made in this run.
 
 ## The comparative reviewer
 
@@ -616,6 +664,8 @@ independent Claude agent stood in and found a hole in each of #34 to #43.
 
 ## Browser checks
 
+- **Chromium only.** Route Plotter is a Chromium-only app for now (Joe,
+  2026-09-28): every check runs in Chromium, and none needs Firefox or Safari.
 - **In a cloud container** there is no Browser pane: Playwright's headless
   Chromium stands in. Build `main` and the branch in throwaway clones, serve
   each `docs/` with a small Node server on its own port, and drive the real

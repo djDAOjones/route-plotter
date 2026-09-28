@@ -4,6 +4,8 @@ An animated route editor for maps and images. Drop in a background, click to pla
 
 **[Live demo](https://djdaojones.github.io/route-plotter/)** *(the frozen v2 line remains at [router-plotter-02](https://djdaojones.github.io/router-plotter-02/))*
 
+**Browser support:** Chromium-based browsers, such as Chrome and Edge, only for now. Firefox and Safari are not tested.
+
 ---
 
 ## What it does

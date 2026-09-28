@@ -39,8 +39,9 @@ single physical action cannot mutate the project twice or leave a drag stuck.
 - Waypoint group drag, area centre/vertex drag and network node/control/edge
   drag share the same commit/cancel boundary; no-op releases commit nothing.
 - Focused suites, the canonical gate and production Chromium checks are green.
-- A real iOS Safari and Android Chrome pass records tap, drag, cancellation,
-  page navigation and rotation behaviour before REV-03 is evicted as shipped.
+- A real Android Chrome pass records tap, drag, cancellation, page navigation
+  and rotation behaviour before REV-03 is evicted as shipped. (2026-09-28: iOS
+  Safari is no longer checked; Route Plotter is Chromium-only for now.)
 - That pass also taps the branch "+" handle on a bound entry waypoint
   (COMPOSE-04 hit-tests it so touch and pen reach it without hover), as a test
   of the shipped gesture, not a reopening of branch interaction design.
@@ -70,6 +71,8 @@ an explicitly approved temporary LAN route.
   canvas computes `touch-action: none`, and the browser console is clean.
 - Still required before eviction: real iOS Safari and Android Chrome tap,
   drag, cancellation, page-navigation and rotation evidence.
+- 2026-09-28: iOS Safari is no longer required (Chromium only, Joe's call);
+  the Android Chrome pass remains.
 
 ## Constraints
 
