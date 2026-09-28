@@ -167,6 +167,9 @@ export const exportingMixin = {
     const originalBackgroundImage = this.background.image;
 
     this._videoExportRunning = true;
+    // A codec probe still out for an export asked for before this one asks
+    // for nothing now, nor once this one ends (DEF-46).
+    this.uiController?.exportStarted?.();
     try {
       // Use the same mode transition as the UI. Its event chain rebuilds the
       // preview timeline; the explicit invalidation also covers exports that

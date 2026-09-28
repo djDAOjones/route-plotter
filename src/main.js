@@ -544,7 +544,6 @@ class RoutePlotter {
     
     // Initialize UI Controller and Interaction Handler
     this.uiController = new UIController(this.elements, this.eventBus);
-    this.uiController.isVideoExportRunning = () => Boolean(this._videoExportRunning);
     this.interactionHandler = new InteractionHandler(this.canvas, this.eventBus);
     this.interactionHandler.setEnabled(false);
     

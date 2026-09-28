@@ -235,11 +235,12 @@ export class UIController {
     this._waypointsCache = [];
 
     /**
-     * Whether a video export is running: the app answers (main.js). A codec
-     * probe that answers once one has started opens no dialog over it (DEF-46).
-     * @type {() => boolean}
+     * Each export the author asks for, counted: a codec probe still out for
+     * one asked for before a later one, or before an export started, asks for
+     * nothing when it answers (DEF-46).
+     * @private @type {number}
      */
-    this.isVideoExportRunning = () => false;
+    this._exportIntent = 0;
 
     // Bind methods that are passed as callbacks
     this.updateWaypointList = this.updateWaypointList.bind(this);
@@ -544,6 +545,15 @@ export class UIController {
     this._codecModal.addEventListener('focustrap:escape', () => closeModal());
   }
   
+  /**
+   * An export has started (the app calls this): a codec probe still out for
+   * an export asked for before it asks for nothing when it answers, now or
+   * after this export ends (DEF-46).
+   */
+  exportStarted() {
+    this._exportIntent += 1;
+  }
+
   /**
    * Show the codec-unsupported modal configured for the appropriate scenario.
    * @param {Object} [opts] - Options for the modal
@@ -896,12 +906,15 @@ export class UIController {
       const h = parseInt(this.elements.exportResY?.value) || 1080;
       console.log(`🎬 [Export] MP4 probe at ${w}×${h}`);
       
-      // 1. Probe at actual export dimensions. (An export that started while
-      //    a probe was out, from a double click or WebM chosen meanwhile,
-      //    refuses the request.)
+      // 1. Probe at actual export dimensions. The answer counts only while
+      //    this is the export the author last asked for, and none has started
+      //    since: a double click asks once, and a probe that answers after
+      //    WebM was chosen, or after an export ended, asks for nothing.
+      const intent = ++this._exportIntent;
       const fullConfig = await VideoExporter._testWebCodecsConfig(
         w, h, undefined, undefined, 'mp4'
       );
+      if (intent !== this._exportIntent) return;
       if (fullConfig) {
         this.eventBus.emit('video:export-request', 'mp4');
         return;
@@ -934,12 +947,7 @@ export class UIController {
       const reducedConfig = await VideoExporter._testWebCodecsConfig(
         rW, rH, undefined, undefined, 'mp4'
       );
-      // An answer that comes once an export has started opens no dialog
-      // over it: the request goes to the app, which refuses it.
-      if (this.isVideoExportRunning()) {
-        this.eventBus.emit('video:export-request', 'mp4');
-        return;
-      }
+      if (intent !== this._exportIntent) return;
       if (reducedConfig) {
         this._showCodecModal({ fullW: w, fullH: h, reducedW: rW, reducedH: rH });
         return;
@@ -949,8 +957,9 @@ export class UIController {
       this._showCodecModal();
     });
     
-    // Export WebM button
+    // Export WebM button: the export the author now asks for (DEF-46)
     this.elements.exportWebmBtn?.addEventListener('click', () => {
+      this._exportIntent += 1;
       this.eventBus.emit('video:export-request', 'webm');
     });
     
