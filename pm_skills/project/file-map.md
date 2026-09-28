@@ -377,7 +377,7 @@
 - `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts, and the player's Graphics scale fallback (DEF-34)
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings
 - `tests/playerEntryAccessibility.test.js` — Exported-player summary, keyboard/transport live-region and playback-speed integration contracts
-- `tests/previewTipStorage.test.js` — DEF-48: the app starts with site storage blocked, and a full store does not throw from the preview tip's timer; a tip already seen stays quiet
+- `tests/previewTipStorage.test.js` — DEF-48: the app starts, and shows the preview tip, with every storage call blocked or `localStorage` itself unreachable; a full store does not throw from the tip's timer; a tip shown once is remembered
 - `tests/privacy.test.js` — Export disclosures, byte-identical diagnostics, support navigation/address fallback, mode isolation, focus recovery and no automatic sharing
 - `tests/projectSnapshotShape.test.js` — TST-06 save-shape goldens: a file snapshot per bundled example, `load(save(x))` idempotence, the assets-included/excluded shape, and the `modified` restamp characterised
 - `tests/projectLimits.test.js` — Adversarial image, model, ZIP/ZIP64 and detached-import resource-limit contracts
