@@ -25,7 +25,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** What a rollback must give back, and how the renderer and controls show it. */
+/**
+ * What these tests compare after a rollback: the waypoints, the Graphics
+ * scale as the model, the renderer and its control hold it, the timing mode,
+ * the image assets with their contents, and the whole undo history.
+ */
 function stateOf(app) {
   return {
     waypointIds: app.waypoints.map(waypoint => waypoint.id),
@@ -33,23 +37,28 @@ function stateOf(app) {
     rendererScale: app.renderingService._graphicsScale,
     scaleControl: app.elements.graphicsScale.value,
     mode: app.animationEngine.state.mode,
-    assetIds: [...app.imageAssetService.getAssetIds()].sort(),
-    undo: { canUndo: app.undoService.canUndo(), canRedo: app.undoService.canRedo() },
+    assets: JSON.stringify(app.imageAssetService.toJSON()),
+    history: app.undoService.createSnapshot(),
   };
 }
 
 /**
- * An app with a project of its own (custom images, an edit to undo), and a
- * project file that differs from it in every surface a rollback restores.
+ * An app with a project of its own (custom images; two edits, one undone, so
+ * there is history to undo and to redo), and a project file that differs
+ * from it in each surface `stateOf` compares.
  */
 async function appAndIncomingProject() {
   const app = await bootApp();
   await app.ready;
   expect(await loadSnapshot(app, authoredExtrasProject())).toBe(true);
   app.eventBus.emit('waypoint:add', { imgX: 0.4, imgY: 0.5, isMajor: true });
+  app.eventBus.emit('waypoint:add', { imgX: 0.6, imgY: 0.5, isMajor: true });
+  const redone = app.waypoints.map(waypoint => waypoint.id);
+  app.undo();
   const before = stateOf(app);
-  expect(before.assetIds.length).toBeGreaterThan(0);
-  expect(before.undo.canUndo).toBe(true);
+  expect(app.imageAssetService.getAssetIds().length).toBeGreaterThan(0);
+  expect(before.history.undoStack.length).toBeGreaterThan(0);
+  expect(before.history.redoStack.length).toBeGreaterThan(0);
 
   const incoming = app._buildProjectSnapshot({ includeAssets: false });
   incoming.imageAssets = [];
@@ -67,7 +76,7 @@ async function appAndIncomingProject() {
   vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
     projectData: incoming, imageAssets: [], backgroundBase64: null,
   });
-  return { app, before };
+  return { app, before, redone };
 }
 
 /**
@@ -91,9 +100,9 @@ function failCall(target, method, n) {
   });
 }
 
-test('a failed load with no failing rollback step gives every surface back', async () => {
+test('a failed load with no failing rollback step gives back what these tests compare, and the edit undone can be redone', async () => {
   allowConsole(/Failed to load project/);
-  const { app, before } = await appAndIncomingProject();
+  const { app, before, redone } = await appAndIncomingProject();
   failLate(app);
 
   const prune = vi.spyOn(app, 'pruneImageAssets');
@@ -103,11 +112,13 @@ test('a failed load with no failing rollback step gives every surface back', asy
   // The commit reached its last step, so everything had switched before it rolled back.
   expect(prune).toHaveBeenCalled();
   expect(stateOf(app)).toEqual(before);
+  app.redo();
+  expect(app.waypoints.map(waypoint => waypoint.id)).toEqual(redone);
 });
 
 test('a rollback whose image-asset step fails still restores the rest: model, history, renderer and controls (DEF-49)', async () => {
   allowConsole(/Failed to load project/, /Project rollback could not restore the image assets/);
-  const { app, before } = await appAndIncomingProject();
+  const { app, before, redone } = await appAndIncomingProject();
   failLate(app);
   // The commit replaces the assets first (call 1); the rollback's is call 2.
   failCall(app.imageAssetService, 'replaceAssets', 2);
@@ -115,8 +126,10 @@ test('a rollback whose image-asset step fails still restores the rest: model, hi
   expect(await app.loadProject(new File([''], 'incoming.zip'))).toBe(false);
 
   const after = stateOf(app);
-  expect({ ...after, assetIds: before.assetIds }).toEqual(before);
+  expect({ ...after, assets: before.assets }).toEqual(before);
   expect(recordedConsole()).toContainEqual(expect.stringMatching(/Project rollback could not restore the image assets/));
+  app.redo();
+  expect(app.waypoints.map(waypoint => waypoint.id)).toEqual(redone);
 });
 
 test('a rollback whose undo step fails still restores the rest: model, assets, transport, renderer and controls (DEF-49)', async () => {
@@ -128,6 +141,6 @@ test('a rollback whose undo step fails still restores the rest: model, assets, t
   expect(await app.loadProject(new File([''], 'incoming.zip'))).toBe(false);
 
   const after = stateOf(app);
-  expect({ ...after, undo: before.undo }).toEqual(before);
+  expect({ ...after, history: before.history }).toEqual(before);
   expect(recordedConsole()).toContainEqual(expect.stringMatching(/Project rollback could not restore the undo history/));
 });

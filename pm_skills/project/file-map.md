@@ -381,7 +381,7 @@
 - `tests/privacy.test.js` — Export disclosures, byte-identical diagnostics, support navigation/address fallback, mode isolation, focus recovery and no automatic sharing
 - `tests/projectSnapshotShape.test.js` — TST-06 save-shape goldens: a file snapshot per bundled example, `load(save(x))` idempotence, the assets-included/excluded shape, and the `modified` restamp characterised
 - `tests/projectLimits.test.js` — Adversarial image, model, ZIP/ZIP64 and detached-import resource-limit contracts
-- `tests/projectRollback.test.js` — DEF-49: an Open Project that fails at the commit's last step gives every surface back, and the rest still, when the rollback's image-asset or undo step fails
+- `tests/projectRollback.test.js` — DEF-49: an Open Project that fails at the commit's last step gives back the waypoints, the Graphics scale (model, renderer and control), the timing mode, the image assets with their contents and the whole undo history (a redo still redoes), and the rest of those still when the rollback's image-asset or undo step fails
 - `tests/projectReset.test.js` — Behavioral Clear All proof for stale writers/tokens, asset/reference removal and one empty non-undoable baseline
 - `tests/publicationBoundary.test.js` — Approved-image hashes, CSP/same-origin shell, exact Pages inventory and manifest-tamper rejection
 - `tests/releaseSafety.test.js` — Clean-build rollback, versioned CSS references, dry-run deployment safety, and the DEF-18 refusals (unknown options, mistyped npm settings) and check-gate contracts
