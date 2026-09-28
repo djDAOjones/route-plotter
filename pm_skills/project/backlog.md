@@ -55,7 +55,7 @@
      DEV-INFRASTRUCTURE.md → Deployment.
 
      W0 closed 2026-09-22, W1 2026-09-23, W2 2026-09-24 (released as
-     v3.2.692), and the post-W2 queue and W3's pilot on 2026-09-26 (merged, not
+     v3.2.692), and the post-W2 queue and W3's pilot on 2026-09-28 (merged, not
      yet released). Two groups: what Joe accepted since W2 closed, and the one
      defect W1 released that is still open (plan §13 ground rule 8, "After
      W1"). §14.5 asks for the readout gap (TST-04) to close before W4; that,

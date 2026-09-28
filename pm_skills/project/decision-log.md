@@ -2,7 +2,7 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
-## 2026-09-26 — W3's pilot: the slider scales move, and nothing guards the readouts
+## 2026-09-28 — W3's pilot: the slider scales move, and nothing guards the readouts
 
 SPL-01 (#43), behaviour-preserving. The six pure slider functions moved
 verbatim from `MotionVisibilityService` into `src/utils/sliderScales.js`,
@@ -34,7 +34,7 @@ function, and account for every survivor.
 
 **§14.6:** no invalidation criterion applies, so the broader approach stands.
 
-## 2026-09-26 — the post-W2 queue: the defects W1 left, and what their reviews found
+## 2026-09-28 — the post-W2 queue: the defects W1 left, and what their reviews found
 
 Eleven pull requests, one item each, merged on Joe's word and not yet
 released: DEF-34 (#31), TST-17 (#32), DEF-36 (#34), DEF-35 (#35, #36), DEF-08
