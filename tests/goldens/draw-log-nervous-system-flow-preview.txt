@@ -4,6 +4,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector setLineDash []
 main drawImage [canvas vector] 0 0 660 660
 
@@ -13,6 +15,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector setLineDash []
 main drawImage [canvas vector] 0 0 660 660
 
@@ -22,6 +26,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector set:fillStyle #56B4E9
 vector beginPath
@@ -74,6 +80,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector set:fillStyle #56B4E9
 vector beginPath
@@ -209,6 +217,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector set:fillStyle #56B4E9
 vector beginPath
@@ -352,6 +362,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 190120 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector set:fillStyle #56B4E9
 vector beginPath

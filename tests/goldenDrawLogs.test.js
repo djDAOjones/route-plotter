@@ -634,9 +634,9 @@ describe('golden draw logs (TST-02)', () => {
       //
       // The frame after a throw must draw what a freshly sized layer draws,
       // as the first frame after any resize does. A steady-state frame can
-      // differ from that, because the layer's styles carry from one frame to
-      // the next (DEF-39, proposed); that is older than this, and not its
-      // subject.
+      // differ from that in styles no call draws with, which the layer
+      // carries from one frame to the next; since DEF-39 (below) it draws the
+      // same.
       //
       // A browser throws from a context call given a bad argument (an `arc`
       // with a negative radius, a gradient given NaN, DEF-26's colour), so the
@@ -899,6 +899,104 @@ describe('golden draw logs (TST-02)', () => {
         app.setZoom(2, app.waypoints[1]);
         return expectEachBackgroundThrowForgotten(app, { nesting: 2, masked: false, transform: 'scale 2 2', reads: true });
       }));
+
+    });
+
+    describe('DEF-39: a frame draws the same, whatever frame came before it', () => {
+      // The vector layer keeps its styles from one frame to the next, and the
+      // route sets its caps and joins outside any save. An area's border,
+      // drawn before the route, set neither, so it drew with whatever the frame
+      // before had left: round in a steady frame, but butt caps and mitred
+      // corners on a freshly sized layer (the first frame after a resize, and
+      // the frame after a throw, DEF-36), which drew a dotted border's dots
+      // square. Joe chose the round look steady frames draw (2026-09-25).
+      //
+      // Every instant is drawn four ways: after a frame at the same instant,
+      // after a frame at another, after a frame that left other caps and joins
+      // behind, and on a freshly sized layer. Each call must draw with the
+      // same state every time (`takeFrame`'s drawn view); a style no call
+      // draws with may differ.
+
+      /**
+       * The frame at `instant` on a freshly sized layer, less the resize that
+       * sized it, which is the branch a window resize takes.
+       */
+      function freshFrameAt(host, instant) {
+        host.renderingService.vectorCanvasScale = NaN;
+        const frame = frameAt(host, instant, { state: 'drawn' });
+        const cleared = frame.findIndex(line => line.startsWith('vector clearRect'));
+        expect(frame.slice(0, cleared).some(line => line.startsWith('vector canvas.width'))).toBe(true);
+        return frame.filter((line, index) => index >= cleared || !line.startsWith('vector '));
+      }
+
+      /** `frame` must draw everything as `steady` does; the message names the first line that does not. */
+      function expectDrawnAlike(frame, steady, label) {
+        const differing = differingLines(frame, steady);
+        expect(differing, `${label}: "${frame[differing[0]]}" where the steady frame has ` +
+          `"${steady[differing[0]]}"`).toEqual([]);
+      }
+
+      /**
+       * Every instant, drawn the four ways, must draw alike; and where the
+       * fixture has areas (`border` is their colour), each stroke of a border
+       * must be round, the look Joe chose, not merely the same each time.
+       */
+      function expectEveryInstantAlike(host, label, border) {
+        let marks = 0;
+        let borderStrokes = 0;
+        for (const [index, instant] of INSTANTS.entries()) {
+          // Each way arrives by a seek from another instant, which snaps the
+          // camera there; a camera left easing would differ for its own reasons.
+          const other = INSTANTS[(index + 2) % INSTANTS.length];
+          frameAt(host, other);
+          frameAt(host, instant);
+          const steady = frameAt(host, instant, { state: 'drawn' });
+          frameAt(host, other);
+          expectDrawnAlike(frameAt(host, instant, { state: 'drawn' }), steady, `${label} at ${instant}, after another instant`);
+          // As any outline that set its own caps and joins outside a save would
+          frameAt(host, other);
+          const layer = host.renderingService.vectorCanvas.getContext('2d');
+          layer.lineCap = 'square';
+          layer.lineJoin = 'bevel';
+          expectDrawnAlike(frameAt(host, instant, { state: 'drawn' }), steady,
+            `${label} at ${instant}, after a frame that left square caps and bevelled joins`);
+          frameAt(host, other);
+          const fresh = freshFrameAt(host, instant);
+          expectDrawnAlike(fresh, steady, `${label} at ${instant}, on a freshly sized layer`);
+          marks += steady.filter(line => line.startsWith('vector ') && line.includes(' @ ')).length;
+
+          if (!border) continue;
+          for (const line of [...steady, ...fresh]) {
+            if (!/^vector stroke(Rect)? /.test(line) || !line.includes(` strokeStyle=${border} `)) continue;
+            borderStrokes += 1;
+            expect(line, `${label} at ${instant}: an area's border strokes round`).toMatch(/ lineCap=round lineJoin=round /);
+          }
+        }
+        // Non-vacuity: the vector layer's marks are compared by the state they
+        // draw with (`testHarness.test.js` pins what that view shows), and a
+        // fixture with areas really strokes their borders.
+        expect(marks, label).toBeGreaterThan(0);
+        if (border) expect(borderStrokes, `${label}: area borders`).toBeGreaterThan(0);
+      }
+
+      for (const fixture of fixtures()) {
+        test(`${fixture.id}: in the editor, in preview, on the export canvas and in the player`, async () => {
+          const border = fixture.project.waypoints.find(each => each.areaHighlight?.enabled)?.areaHighlight.borderColor;
+          const app = await appWithFixture(fixture);
+          for (const mode of ['edit', 'preview']) {
+            enterMode(app, mode);
+            expectEveryInstantAlike(app, mode, border);
+          }
+          // Under a viewport zoom the layer is drawn inside a save, which put
+          // the route's round caps back at the end of every frame (Codex).
+          enterMode(app, 'edit');
+          app.setZoom(2, app.waypoints[1]);
+          expectEveryInstantAlike(app, 'edit under a 2× zoom', border);
+          const { app: exporter, player } = await exportAndPlayer(fixture);
+          expectEveryInstantAlike(exporter, 'export', border);
+          expectEveryInstantAlike(player, 'player', border);
+        });
+      }
 
     });
 

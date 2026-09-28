@@ -182,4 +182,53 @@ describe('test harness fidelity', () => {
     expect(() => ctx.translate(1)).toThrow(TypeError);
     expect(takeFrame({ canvas })).toEqual([]);
   });
+
+  test('a transcript can show just the state each call draws with', () => {
+    // DEF-39 compares frames by what they draw: a stroke's colour, width, caps
+    // and joins count, a fill colour the stroke never uses does not.
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 1, 0);
+
+    discardFrame();
+    ctx.scale(2, 2);
+    ctx.fillStyle = '#f00';
+    ctx.strokeStyle = '#00f';
+    ctx.lineCap = 'round';
+    ctx.setLineDash([4, 2]);
+    ctx.font = '12px serif';
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.stroke();
+    ctx.fill();
+    ctx.fillText('A', 0, 0);
+    ctx.clearRect(0, 0, 1, 1);
+    ctx.drawImage(canvas, 0, 0);
+    ctx.save();
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 1, 1);
+    ctx.restore();
+
+    expect(takeFrame({ canvas }, { state: 'drawn' })).toEqual([
+      'main scale 2 2',
+      'main set:fillStyle #f00',
+      'main set:strokeStyle #00f',
+      'main set:lineCap round',
+      'main setLineDash [4,2]',
+      'main set:font 12px serif',
+      'main set:globalAlpha 0.5',
+      'main beginPath',
+      'main moveTo 0 0 @ 2 0 0 2 0 0',
+      'main stroke @ 2 0 0 2 0 0 | strokeStyle=#00f lineCap=round lineDash=4,2 globalAlpha=0.5',
+      'main fill @ 2 0 0 2 0 0 | fillStyle=#f00 globalAlpha=0.5',
+      'main fillText A 0 0 @ 2 0 0 2 0 0 | fillStyle=#f00 font=12px serif globalAlpha=0.5',
+      'main clearRect 0 0 1 1 @ 2 0 0 2 0 0',
+      'main drawImage [canvas main] 0 0 @ 2 0 0 2 0 0 | globalAlpha=0.5',
+      'main save',
+      'main set:fillStyle [gradient 1]',
+      'main fillRect 0 0 1 1 @ 2 0 0 2 0 0 | fillStyle=[gradient 1] globalAlpha=0.5',
+      'main restore',
+    ]);
+  });
 });

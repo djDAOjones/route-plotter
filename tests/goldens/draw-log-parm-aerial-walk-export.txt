@@ -8,6 +8,8 @@ vector canvas.height 1080
 vector setTransform 1 0 0 1 0 0
 vector scale 1 1
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector setLineDash []
 vector save
 vector set:globalAlpha 1
@@ -118,6 +120,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector setLineDash []
 vector save
 vector set:globalAlpha 1
@@ -228,6 +232,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector set:strokeStyle #FFFFFF
 vector set:lineWidth 8.182
 vector setLineDash []
@@ -806,6 +812,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector set:strokeStyle #FFFFFF
 vector set:lineWidth 8.182
 vector setLineDash []
@@ -1384,6 +1392,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector set:strokeStyle #FFFFFF
 vector set:lineWidth 8.182
 vector setLineDash []
@@ -2104,6 +2114,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector set:strokeStyle #FFFFFF
 vector set:lineWidth 8.182
 vector setLineDash []
