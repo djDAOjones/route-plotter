@@ -38,6 +38,11 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
+DEF-42 — The editor times a beacon by the style the inspector shows: a new
+style or pulse cycle rebuilds timing at once, and on a branched route every
+timing rebuild composes the branches afresh, so a pause or beacon edit there
+changes the total too. (2026-09-29)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its

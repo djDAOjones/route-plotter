@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 344 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 345 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 111 file(s)
+- `tests` — 112 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -325,6 +325,7 @@
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
 - `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); the DEF-31 regression (a crowd traced from the longest waypoint ids reloads); the DEF-37 regression (a hand-edited `null` Graphics scale opens at 1× through recovery and Open Project, and its next save reopens, while the other `null` styles still read as 0); and the DEF-04 failures characterised with the reason the loader gives; (DEF-41) a traced bend off the image, past any edge, saves and reloads, its guide is computed and drawn through it in the editor and computed through it in the exported player, its dots are drawn off the image in the editor, Preview, a video frame and the player, the outline keeps it or moves it onto the image, load's range is exact to the last representable step, and the network pen's pointer-to-image conversion stays on the image
 - `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
+- `tests/beaconTimingEdits.test.js` — DEF-42: a beacon style or pulse cycle chosen in the inspector, and a pause on a branched route, give at once the timeline (duration, pauses, beacon schedules) a project saved with them opens with
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
 - `tests/branchHandle.test.js` — COMPOSE-04 contract: which waypoints are
