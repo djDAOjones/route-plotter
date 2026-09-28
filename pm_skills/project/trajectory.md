@@ -17,6 +17,14 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
+
+Outcome: written when the run's last such defect has merged.
+
+DEF-48 — The preview tip's storage access is guarded, as every other the app
+reaches is: a browser that blocks site storage no longer stops the app
+starting, and a full store no longer throws from the tip's timer. (2026-09-28)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its
