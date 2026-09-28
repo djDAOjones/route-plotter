@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 338 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 340 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -14,9 +14,9 @@
 - `reviews` — 14 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
-- `src` — 98 file(s)
+- `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 108 file(s)
+- `tests` — 109 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -289,6 +289,7 @@
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
 - `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers)
+- `src/utils/sliderScales.js` — SPL-01: the pure slider scales (log2, bipolar log2 with its ±50 dead zone, the angle curve) and the readout format, moved out of MotionVisibilityService; imports nothing
 - `src/utils/snapToAngle.js` — Angle-snap geometry for shift-drag waypoint placement (moved out of main.js in the Phase 1 split)
 - `src/utils/uiReadouts.js` — Shared reference-pixel, effective-amplitude and background-overlay readout formatting with accessible range-value synchronisation
 - `src/utils/waypointCardActions.js` — Pure Reset/Apply-onward field ownership, target filtering, semantic no-op comparison and effect metadata for waypoint cards
@@ -313,11 +314,11 @@
 - `tests/Scene.test.js` — Ordered flow-layer CRUD, movement, clearing and persistence contracts
 - `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
 - `tests/backgroundModeOverlay.test.js` — DEF-01: no background visibility mode draws text or a panel on the main canvas, with the reveal mask proved to have run
-- `tests/bootApp.test.js` — TST-01: the whole app boots from the shipped shell, sizes its canvas to the harness viewport, loads its bundled background, and carries an authoring intent from the bus to the model and the canvas
-- `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms
+- `tests/bootApp.test.js` — TST-01: the whole app boots from the shipped shell, sizes its canvas to the harness viewport, loads its bundled background, and carries an authoring intent from the bus to the model and the canvas, and (DEF-33) a cold start announces nothing and a restored session only its restore, while a pause the author makes is announced
+- `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms, (DEF-35) handles dragged off the image stay there, as far as a project can store a point, and (DEF-17) a polygon drawn in the booted app names its waypoint, so the editor and the outline follow it unless the selection changed during the draw
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
-- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); the DEF-31 regression (a crowd traced from the longest waypoint ids reloads); and the DEF-04 failures characterised with the reason the loader gives
+- `tests/authorableLoadable.test.js` — TST-06 property tests: every shipped slider and select, at its bounds and over three seeds, saves a project that loads; DEF-03 regressions (points authored off the image reload in the app and the exported player, and authoring stops where load does); the DEF-31 regression (a crowd traced from the longest waypoint ids reloads); the DEF-37 regression (a hand-edited `null` Graphics scale opens at 1× through recovery and Open Project, and its next save reopens, while the other `null` styles still read as 0); and the DEF-04 failures characterised with the reason the loader gives
 - `tests/axeAudit.test.js` — Standing axe-core gate over the app shell across
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
@@ -328,11 +329,11 @@
 - `tests/consoleGuard.test.js` — TST-10: the rule deciding which console output fails a test, and the declaration a test uses for output it provokes
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
-- `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit
-- `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.)
+- `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit; and (DEF-30) a once-listener that throws still fires only once, removing only itself
+- `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.); (DEF-30) `once` runs once when its callback emits the same event or two async emits hold it, and `off` with its callback removes it
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
-- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, and app == player for every fixture, at Graphics scales 0.5, 1.6 and 8 with labels (DEF-34), and after an anchored crowd's waypoint moves (DEF-02); the camera fixture's eased first frame is held to its scale-1 translations; every frame composites the vector layer by name, at its display size even at pixel density 2 (TST-17); and a frame that throws at any restore of the vector layer, in the editor, on the export canvas and in the player, leaves the next frame as a freshly sized layer draws it, state included (DEF-36)
+- `tests/goldenDrawLogs.test.js` — TST-02 draw-log goldens: 3 examples plus `authoredExtras` × 5 instants × editor/preview/export, plus play == seek, and app == player for every fixture, at Graphics scales 0.5, 1.6 and 8 with labels (DEF-34), and after an anchored crowd's waypoint moves (DEF-02); the camera fixture's eased first frame is held to its scale-1 translations; every frame composites the vector layer by name, at its display size even at pixel density 2 (TST-17); a frame that throws at any restore of the vector layer, in the editor, on the export canvas and in the player, leaves the next frame as a freshly sized layer draws it, state included (DEF-36); a pop, grow or pulse beacon scales its marker alike whether the transport runs or not, in all four hosts, while a marker set to always hide stays hidden (DEF-08); and a video export draws its beacons whatever the author's reduced-motion setting, which the editor and the player still honour, including after an export (DEF-29)
 - `tests/goldenFrames.test.js` — Scrub-vs-play golden harness: sequential/reverse/export-step == direct seek (full scene state incl. beacons); evaluation never mutates the timeline
 - `tests/governance.test.js` — MIT metadata, exact dependency notices and approved security/support route contracts
 - `tests/graphRouting.test.js` — Directed graph choices, backtrack avoidance, overflow-safe shares and stable 100-percent rounding
@@ -352,7 +353,7 @@
 - `tests/mixins.test.js` — Mixin split guards: cross-mixin name-collision check, cluster spot-checks, snapToAngle unit tests
 - `tests/modelBoundary.test.js` — Strict graph-endpoint and persisted emitter integer boundary contracts
 - `tests/multiSelect.test.js` — Multi-select write-target rules, gestures/bulk actions/persistence, undo scope restoration, stable headings and honest per-control mixed-state integration
-- `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding
+- `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding, and (DEF-35) the rings and Shift snaps of a node anchored off the image sit where it is drawn
 - `tests/operationGeneration.test.js` — Latest-request/project-generation guards and original background-byte retention
 - `tests/paramTooltip.test.js` — A11Y-01 contract: hint labels carry no role
   or tab stop, each hint reaches its control as an appended
@@ -360,7 +361,9 @@
   tooltip stays reachable by pointer and by keyboard focus
 - `tests/perfHarness.test.js` — ICE-03 contract: the harness still loads and
   refuses safely, autosave suppression outlives the run, the restore sits in a
-  `finally`, and no pass/fail timing threshold has crept in
+  `finally`, and no pass/fail timing threshold has crept in; and (DEF-30) a
+  refused run leaves autosave and the canvas as they were, and a run that
+  fails part-way says autosave stays off until a reload
 - `tests/pathHeadPresets.test.js` — Drone preset metadata, native control, loader ownership and renderer-transform contracts
 - `tests/performanceScheduling.test.js` — Manual-rAF scheduler contract: idle sleep, transport wake/coalescing, camera keepalive and export suspension/restore
 - `tests/playerBundleClosure.test.js` — TST-07: esbuild's metafile proves the exported player bundle carries no editor-only module, and that the editor's does
@@ -383,15 +386,16 @@
 - `tests/reviewAccessibility.test.js` — Keyboard semantics, modal focus, responsive/support/privacy shell, disclosure, card-action and accessible crowd-variation/busyness UI contracts
 - `tests/reviewPersistence.test.js` — Autosave honesty, transactional load/rollback, save revisions and undo-image restoration regressions
 - `tests/reviewTimeline.test.js` — Stateless comet, canonical transport/export and timing-invalidation review regressions
-- `tests/routeAnchors.test.js` — COMPOSE-01 contract: node/emitter binding,
+- `tests/routeAnchors.test.js` — COMPOSE-01 contract: node/emitter binding, one-way ownership, the authored-position fallback and byte-identical unanchored crowds, and (DEF-35) a node or crowd bound to a waypoint off the image reaches it
 - `tests/routeBranches.test.js` — ROUTE-01a contract: branch resolution and
-- `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across linear and branched routes, a copy that never reaches back into the route, the save/load round trip, and (DEF-31) derived ids that fit the persisted limit
+- `tests/routeTrace.test.js` — COMPOSE-03 contract: trace fidelity across linear and branched routes, a copy that never reaches back into the route, the save/load round trip, (DEF-31) derived ids that fit the persisted limit, and (DEF-35) a crowd traced off the image resolves to its waypoints there
 - `tests/safeColor.test.js` — Accepted hexadecimal forms, hostile CSS rejection and exact transparent-sentinel opt-in
-- `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts
-- `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts
+- `tests/sceneOutline.test.js` — Semantic projection/controller security, focus, disclosure, draft, stable-key and bounded-scale contracts, and (DEF-35) position fields that take a point off the image, as far as a project can store one
+- `tests/sceneOutlineApp.test.js` — App command mutation, selection, undo/autosave, reset and model-boundary integration contracts, and (DEF-35) edits and adds that keep a point off the image, bounded by the storable range on every image-point command while network positions keep 0–100%
 - `tests/scenePersistence.test.js` — coordVersion-9 scene variation/seed autosave, ZIP, migration and undo round-trip contracts
 - `tests/segmentHitTest.test.js` — Pure polyline projection, leg ownership and midpoint geometry contracts
 - `tests/shortHexGlow.test.js` — DEF-26: the glow draws every stored hex form with its own alpha, and one throwing frame stops neither playback nor editor redraws
+- `tests/sliderScales.test.js` — SPL-01: every slider scale pinned value for value from the code before the move, including `formatUIValue`'s two recorded quirks
 - `tests/helpers/consoleGuard.js` — TST-10 console guard: records console.error/warn, fails the test on anything undeclared, and holds the short allowlist of known warts
 - `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main, offscreen vector and reveal-mask canvases as rounded, diffable draw-log lines, names each composited canvas by its surface (TST-17), can end each line with the state its call was made in: transform, open saves and styles (DEF-36), and compares two frames
 - `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)
@@ -414,7 +418,7 @@
 - `tests/goldens/project-snapshot-uon-open-day.json` — TST-06 golden: the saved shape of the Open day route example (branched route, traced anchored crowd)
 - `tests/setup.js` — Vitest jsdom setup: getter-only jsdom globals via defineProperty, and one recording context per canvas, which writes a canvas argument with its recorder id (TST-17) and keeps the style stack and the transform as a real context does, giving each ordered entry the state its call was made in (DEF-36)
 - `tests/startup.test.js` — Recovery-before-default-image startup ordering contracts
-- `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation
+- `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation; and (DEF-35) dots follow a route off the image, held only to the range a project can store
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
 - `tests/undoService.test.js` — Prospective-save parity, natural rollover, extra oldest discard, redo preservation/invalidation and rejected-input immutability
 - `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets, and (TST-17) a transcript names a composited canvas while drawing label text as written, and (DEF-36) shows the state each call was made in, kept through save, restore and a resize

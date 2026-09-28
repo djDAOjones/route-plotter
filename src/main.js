@@ -613,13 +613,15 @@ class RoutePlotter {
     // background, and prevents user edits from being overwritten by hydration.
     await restoreStartupProject(this);
     
-    // Set up AnimationEngine event listeners
-    this.setupAnimationEngineListeners();
-    
     // Set default animation state: paused at END position
-    // This ensures the full path is visible on load for editing
+    // This ensures the full path is visible on load for editing. It happens
+    // before the transport listeners below exist, so a load announces no pause
+    // to a screen reader (DEF-33); the shell already shows Play and hides Pause.
     this.animationEngine.pause();
     this.animationEngine.seekToProgress(1.0);
+    
+    // Set up AnimationEngine event listeners
+    this.setupAnimationEngineListeners();
     
     // Sync UI with initial preview mode and path visibility settings
     this._syncInitialUIState();
@@ -938,6 +940,9 @@ class RoutePlotter {
       // Stable visual sizing reference, separate from timingReference.
       renderReference: this.renderReference,
       interactiveLabels: !this._isExportMode,
+      // A video export bakes beacons as authored, ignoring the author's
+      // reduced-motion setting; the editor and the player honour it (DEF-29)
+      exportingVideo: this._isExportMode,
       
       // Visible bounds for clipping (normalized 0-1 coordinates)
       visibleBounds: this.getVisibleBounds(),
