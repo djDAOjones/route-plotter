@@ -7,9 +7,19 @@
  */
 
 import { sceneOutlineKey } from '../utils/sceneSemantics.js';
+import { IMAGE_COORDINATES } from '../config/constants.js';
 
 const OUTLINE_CANONICAL_VALUE = Symbol('outlineCanonicalValue');
 const OUTLINE_DRAFT_CONTEXT = Symbol('outlineDraftContext');
+
+// Waypoints and polygon vertices may sit off the image (DEF-03), as far as a
+// project can store a point, so their position fields take that range; 0–100%
+// is the image itself (DEF-35). Network nodes and bend points are authored on
+// the image and keep 0–100.
+const IMAGE_POSITION_PERCENT = Object.freeze({
+  min: IMAGE_COORDINATES.MIN * 100,
+  max: IMAGE_COORDINATES.MAX * 100,
+});
 
 function el(tag, { className = '', text = '', attrs = {}, data = {} } = {}) {
   const node = document.createElement(tag);
@@ -496,8 +506,8 @@ export class SceneOutlineController {
         { value: 'major', label: 'Major waypoint' },
         { value: 'minor', label: 'Minor waypoint', disabled: snapshot.route.length === 0 },
       ], { key: 'route:add-kind' }),
-      labelledInput('x', 'Horizontal position (%)', 50, { min: 0, max: 100, step: 'any', key: 'route:add-x' }),
-      labelledInput('y', 'Vertical position (%)', 50, { min: 0, max: 100, step: 'any', key: 'route:add-y' }),
+      labelledInput('x', 'Horizontal position (%)', 50, { ...IMAGE_POSITION_PERCENT, step: 'any', key: 'route:add-x' }),
+      labelledInput('y', 'Vertical position (%)', 50, { ...IMAGE_POSITION_PERCENT, step: 'any', key: 'route:add-y' }),
     ], 'Add waypoint', 'route:add-submit'));
 
     if (snapshot.route.length === 0) {
@@ -533,10 +543,10 @@ export class SceneOutlineController {
 
     const fields = [
       labelledInput('x', 'Horizontal position (%)', waypoint.x, {
-        min: 0, max: 100, step: 'any', key: `${waypoint.key}:x`, canonicalValue: waypoint.xCanonical,
+        ...IMAGE_POSITION_PERCENT, step: 'any', key: `${waypoint.key}:x`, canonicalValue: waypoint.xCanonical,
       }),
       labelledInput('y', 'Vertical position (%)', waypoint.y, {
-        min: 0, max: 100, step: 'any', key: `${waypoint.key}:y`, canonicalValue: waypoint.yCanonical,
+        ...IMAGE_POSITION_PERCENT, step: 'any', key: `${waypoint.key}:y`, canonicalValue: waypoint.yCanonical,
       }),
     ];
     if (waypoint.isMajor) {
@@ -632,10 +642,10 @@ export class SceneOutlineController {
       }));
       pointContent.appendChild(form('update-vertex', { waypointId: waypoint.id, index: point.index }, [
         labelledInput('x', 'Horizontal position (%)', point.x, {
-          min: 0, max: 100, step: 'any', key: `${point.key}:x`, canonicalValue: point.xCanonical,
+          ...IMAGE_POSITION_PERCENT, step: 'any', key: `${point.key}:x`, canonicalValue: point.xCanonical,
         }),
         labelledInput('y', 'Vertical position (%)', point.y, {
-          min: 0, max: 100, step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
+          ...IMAGE_POSITION_PERCENT, step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
         }),
       ], 'Apply vertex', `${point.key}:apply`, vertexDraftContext));
       pointContent.appendChild(button('Delete vertex', 'delete-vertex', {
@@ -655,10 +665,10 @@ export class SceneOutlineController {
     content.appendChild(list);
     content.appendChild(form('add-vertex', { waypointId: waypoint.id }, [
       labelledInput('x', 'New vertex horizontal position (%)', waypoint.x, {
-        min: 0, max: 100, step: 'any', key: `${area.key}:add-x`,
+        ...IMAGE_POSITION_PERCENT, step: 'any', key: `${area.key}:add-x`,
       }),
       labelledInput('y', 'New vertex vertical position (%)', waypoint.y, {
-        min: 0, max: 100, step: 'any', key: `${area.key}:add-y`,
+        ...IMAGE_POSITION_PERCENT, step: 'any', key: `${area.key}:add-y`,
       }),
     ], 'Add vertex', `${area.key}:add`));
     details.appendChild(content);

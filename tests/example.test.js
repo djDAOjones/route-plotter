@@ -306,6 +306,44 @@ describe('EventBus', () => {
     
     expect(handler).toHaveBeenCalledTimes(1);
   });
+
+  test('once runs once even when its callback emits the same event (DEF-30)', () => {
+    // It stayed subscribed until its callback returned, so an emit made inside
+    // the callback found it again.
+    const bus = new EventBus();
+    const handler = vi.fn(() => {
+      if (handler.mock.calls.length < 5) bus.emit('test-event');
+    });
+
+    bus.once('test-event', handler);
+    bus.emit('test-event');
+
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  test('once runs once when two async emits are in flight (DEF-30)', async () => {
+    // `emitAsync` copies the listeners and calls each later, so both copies
+    // held it.
+    const bus = new EventBus();
+    const handler = vi.fn();
+
+    bus.once('test-event', handler);
+    await Promise.all([bus.emitAsync('test-event'), bus.emitAsync('test-event')]);
+
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  test('off with the callback given to once removes it (DEF-30)', () => {
+    const bus = new EventBus();
+    const handler = vi.fn();
+
+    bus.once('test-event', handler);
+    bus.off('test-event', handler);
+    bus.emit('test-event');
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(bus.listenerCount('test-event')).toBe(0);
+  });
 });
 
 // Example test suite for Easing functions
