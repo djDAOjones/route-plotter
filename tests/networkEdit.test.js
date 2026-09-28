@@ -760,6 +760,55 @@ describe('drags', () => {
   });
 });
 
+describe('a node anchored off the image (DEF-35)', () => {
+  // A traced node is drawn at its waypoint, which may sit off the image,
+  // while its own position stays on the image. Its rings and every Shift
+  // snap from it belong where it is drawn.
+  function addAnchoredNode(layer) {
+    const node = layer.graph.addNode({ x: 1, y: 0.5, anchorWaypointId: 'wp-off' });
+    node.applyAnchor(1.6, 0.5);
+    return node;
+  }
+  const around = (degrees, distance) => ({
+    x: 1.6 + distance * Math.cos(degrees * Math.PI / 180),
+    y: 0.5 + distance * Math.sin(degrees * Math.PI / 180),
+  });
+
+  test('its selection and pen rings sit on it', () => {
+    const layer = enterMode(app);
+    const node = addAnchoredNode(layer);
+    svc.selectNode(node);
+    svc.penNodeId = node.id;
+    const recording = makeCanvasRecorder();
+    svc.renderOverlay(
+      { scaleSizeClamped: value => value },
+      recording.ctx,
+      {
+        swarmEngine: app.swarmEngine,
+        imageToCanvas: (x, y) => ({ x: x * SCALE, y: y * SCALE }),
+      }
+    );
+    // The selection ring's two strokes, then the pen ring
+    expect(recording.calls.arcs).toEqual([
+      { x: 1600, y: 500, radius: 12 }, { x: 1600, y: 500, radius: 12 }, { x: 1600, y: 500, radius: 9 },
+    ]);
+  });
+
+  test('Shift snaps from it, placing from the pen or dragging a linked node', () => {
+    const layer = enterMode(app);
+    svc.penNodeId = addAnchoredNode(layer).id;
+    const placed = svc.placeNode(around(160, 0.8), true);
+    expect(placed.x).toBeCloseTo(around(165, 0.8).x, 10);
+    expect(placed.y).toBeCloseTo(around(165, 0.8).y, 10);
+
+    svc.beginNodeDrag(placed);
+    svc.moveDrag(around(200, 0.9), true);
+    expect(placed.x).toBeCloseTo(around(195, 0.9).x, 10);
+    expect(placed.y).toBeCloseTo(around(195, 0.9).y, 10);
+    svc.endDrag();
+  });
+});
+
 describe('Escape ladder and keys', () => {
   const escape = () => document.dispatchEvent(
     new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
