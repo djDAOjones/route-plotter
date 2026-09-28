@@ -82,12 +82,13 @@ const splineInput = wp => ({
 });
 
 /**
- * With no route to travel, nothing the last route fed may outlive it: its
- * path, its trunk, and the timeline the engine built from it (duration,
- * pauses, speed segments and beacon schedules, by which a paused marker was
- * still drawn, DEF-06). A duration update still pending finds no path, and
- * changes nothing. A module helper, as `routeOf` is, for the hosts that
- * borrow `calculatePath` alone.
+ * With no route to travel, what the last route scheduled may not outlive it:
+ * its path and trunk, and in the engine its pauses, beacon schedules (by
+ * which a paused marker was still drawn, DEF-06), speed segments and any wait
+ * at one of its waypoints, and the renderer's beacons. The duration is left:
+ * in constant-time mode it is the author's setting, and a constant-speed
+ * route rebuilds its own when it returns. A module helper, as `routeOf` is,
+ * for the hosts that borrow `calculatePath` alone.
  * @param {Object} app
  */
 function clearRouteTiming(app) {
@@ -97,9 +98,9 @@ function clearRouteTiming(app) {
   if (engine) {
     engine.clearPauseMarkers?.();
     engine.clearSegmentMarkers?.();
-    if (engine.pathDuration !== undefined) engine.pathDuration = 0;
-    engine.setDuration?.(0);
+    engine.clearWaypointWait?.();
   }
+  app.renderingService?.resetBeacons?.();
   app.queueRender?.();
 }
 

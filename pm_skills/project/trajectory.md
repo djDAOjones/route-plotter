@@ -38,10 +38,11 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
-DEF-06 — Nothing a route fed outlives it: Clear All, deleting down to one
-waypoint, undo, redo and loading a one-waypoint project clear its path,
-branches, structure, anchors and timeline, so no marker is drawn at the grow
-scale of a route that is gone. (2026-09-28)
+DEF-06 — What a route scheduled no longer outlives it: Clear All, deleting
+down to one waypoint, undo, redo and loading a one-waypoint project clear its
+path, branches, structure, anchors, pauses, beacons and waits, so no marker is
+drawn at the grow scale of a route that is gone; an author's constant-time
+duration is kept. (2026-09-28)
 
 ## Before the big run (2026-09-28)
 
