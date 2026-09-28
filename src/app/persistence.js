@@ -437,6 +437,10 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
   }
 
   const stylesData = safeClone(projectData.styles || {});
+  // A null Graphics scale is an absent one, so it takes the default 1×
+  // (DEF-37): `Number(null)` stored 0, which the next save would write and
+  // load refuses.
+  if (stylesData.graphicsScale === null) delete stylesData.graphicsScale;
   const styles = {
     ...CANONICAL_PROJECT_DEFAULTS.styles,
     ...stylesData,
