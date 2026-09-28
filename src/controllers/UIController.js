@@ -234,6 +234,13 @@ export class UIController {
     /** @private @type {Array<Object>} */
     this._waypointsCache = [];
 
+    /**
+     * Whether a video export is running: the app answers (main.js). A codec
+     * probe that answers once one has started opens no dialog over it (DEF-46).
+     * @type {() => boolean}
+     */
+    this.isVideoExportRunning = () => false;
+
     // Bind methods that are passed as callbacks
     this.updateWaypointList = this.updateWaypointList.bind(this);
     this.updateWaypointEditor = this.updateWaypointEditor.bind(this);
@@ -519,14 +526,12 @@ export class UIController {
     
     this._codecMp4Btn?.addEventListener('click', () => {
       closeModal();
-      // Apply the reduced resolution stored when modal was configured
-      if (this._codecReducedRes) {
-        this.eventBus.emit('video:resolution-change', {
-          width: this._codecReducedRes.w,
-          height: this._codecReducedRes.h
-        });
-      }
-      this.eventBus.emit('video:export-request', 'mp4');
+      // At the reduced resolution stored when the modal was configured: one
+      // request, so the app applies the size only if it starts the export.
+      const resolution = this._codecReducedRes
+        ? { width: this._codecReducedRes.w, height: this._codecReducedRes.h }
+        : undefined;
+      this.eventBus.emit('video:export-request', { format: 'mp4', resolution });
     });
     
     cancelBtn.addEventListener('click', () => closeModal());
@@ -891,7 +896,9 @@ export class UIController {
       const h = parseInt(this.elements.exportResY?.value) || 1080;
       console.log(`🎬 [Export] MP4 probe at ${w}×${h}`);
       
-      // 1. Probe at actual export dimensions
+      // 1. Probe at actual export dimensions. (An export that started while
+      //    a probe was out, from a double click or WebM chosen meanwhile,
+      //    refuses the request.)
       const fullConfig = await VideoExporter._testWebCodecsConfig(
         w, h, undefined, undefined, 'mp4'
       );
@@ -927,6 +934,12 @@ export class UIController {
       const reducedConfig = await VideoExporter._testWebCodecsConfig(
         rW, rH, undefined, undefined, 'mp4'
       );
+      // An answer that comes once an export has started opens no dialog
+      // over it: the request goes to the app, which refuses it.
+      if (this.isVideoExportRunning()) {
+        this.eventBus.emit('video:export-request', 'mp4');
+        return;
+      }
       if (reducedConfig) {
         this._showCodecModal({ fullW: w, fullH: h, reducedW: rW, reducedH: rH });
         return;

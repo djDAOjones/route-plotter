@@ -39,8 +39,9 @@ too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
 DEF-46 — A second video export asked for while one runs, as a double click
-on Export MP4 can, is refused before it touches anything, so it no longer
-spoils the running one's frames, mode and buttons. (2026-09-28)
+on Export MP4 or the codec dialog's reduced MP4 can, is refused before it
+touches anything, its size included, so it no longer spoils the running
+one's frames, mode and buttons. (2026-09-28)
 
 ## Before the big run (2026-09-28)
 

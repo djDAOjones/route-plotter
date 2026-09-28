@@ -10,6 +10,22 @@ import { VIDEO_EXPORT } from '../config/constants.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 import { getRetainedBackgroundDataURL } from './persistence.js';
 
+/**
+ * One video export at a time. A request while one runs (a double click on
+ * Export MP4, whose codec probe answers later, can ask twice before the
+ * buttons are disabled) is refused before it touches anything: its format or
+ * size would change the running export's canvas, and its setup and clean-up
+ * the running export's mode and buttons (DEF-46). A module helper, so a host
+ * that borrows `exportVideo` alone keeps it.
+ * @param {Object} app
+ * @returns {boolean} Whether an export is running, and the request was refused
+ */
+export function refuseWhileExporting(app) {
+  if (!app._videoExportRunning) return false;
+  app.announce('A video export is already running.');
+  return true;
+}
+
 export const exportingMixin = {
   
   /**
@@ -92,14 +108,7 @@ export const exportingMixin = {
    * 8. Restore canvas to display resolution
    */
   async exportVideo() {
-    // One export at a time. A second request (a double click on Export MP4,
-    // whose codec probe answers later, can ask twice before the buttons are
-    // disabled) is refused before it touches anything: its setup and clean-up
-    // would change the running export's canvas, mode and buttons (DEF-46).
-    if (this._videoExportRunning) {
-      this.announce('A video export is already running.');
-      return;
-    }
+    if (refuseWhileExporting(this)) return;
 
     // Validate we have something to export
     if (this.waypoints.length < 2) {

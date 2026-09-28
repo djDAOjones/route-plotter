@@ -431,7 +431,7 @@
 - `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets, and (TST-17) a transcript names a composited canvas while drawing label text as written, and (DEF-36) shows the state each call was made in, kept through save, restore and a resize, and (DEF-39) just the state each call draws with
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
 - `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch
-- `tests/videoExportConcurrency.test.js` — DEF-46: a second video export asked for while one runs, or by a double click on Export MP4, is refused before it touches the running export's canvas, mode, buttons or frames
+- `tests/videoExportConcurrency.test.js` — DEF-46: a second video export asked for while one runs (directly, with a size through the bus, by a double click on Export MP4, by WebM while a codec probe is out, or from a codec dialog left open) is refused before it touches the running export's size, settings, modes, transport, listeners, buttons, progress or frames; an export cancelled, failed or with no duration leaves the next free to run
 - `tests/videoExporter.test.js` — Endpoint-inclusive frame planning, visibility throttling, cancellation and complete MediaRecorder/WebCodecs cleanup
 - `tests/waypointCardActions.test.js` — Reset/Apply-onward ownership, no-op reasons, content preservation, copy semantics and one-transaction integration contracts
 - `tests/waypointList.test.js` — UI-02 sidebar list contract: whole-route
