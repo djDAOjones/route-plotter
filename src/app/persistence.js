@@ -34,6 +34,7 @@ import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
 import { buildExampleProjects } from '../examples/index.js';
+import { clearRouteSchedules } from './pathTiming.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -710,6 +711,7 @@ function captureLiveState(app) {
     backgroundCache: app._autosaveBackgroundCache,
     majorWaypointsCache: app._majorWaypointsCache,
     waypointProgressCache: app._waypointProgressCache,
+    timingDerived: app._timingDerived,
   };
 }
 
@@ -751,6 +753,7 @@ function restoreLiveState(app, previous) {
   app._autosaveBackgroundCache = previous.backgroundCache;
   app._majorWaypointsCache = previous.majorWaypointsCache;
   app._waypointProgressCache = previous.waypointProgressCache;
+  app._timingDerived = previous.timingDerived;
   if (app.animationEngine?.state) Object.assign(app.animationEngine.state, previous.animation);
   app._jklDirection = previous.jklDirection;
   app._jklSpeedMultiplier = previous.jklSpeedMultiplier;
@@ -900,6 +903,12 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
       : null;
 
     app.updateImageTransform?.(staged.background.image ?? null);
+    // The previous project's schedules, and whether its duration was a
+    // rebuild's, are not this one's: it opens with the timing it was saved
+    // with, and a constant-time duration stays the author's until timing is
+    // rebuilt for its route (DEF-06).
+    clearRouteSchedules(app);
+    app._timingDerived = false;
     app.animationEngine.setMode?.(staged.animationState.mode);
     app.animationEngine.setSpeed?.(staged.animationState.speed);
     app.animationEngine.setDuration?.(staged.animationState.duration);

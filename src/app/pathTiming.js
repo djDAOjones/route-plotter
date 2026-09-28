@@ -82,31 +82,37 @@ const splineInput = wp => ({
 });
 
 /**
- * With no route to travel, what the last route scheduled may not outlive it:
- * its path and trunk, and in the engine its pauses, beacon schedules (by
- * which a paused marker was still drawn, DEF-06), speed segments and any wait
- * at one of its waypoints, and the renderer's beacons. The duration is left:
- * a constant-speed route rebuilds its own when it returns, and in
- * constant-time mode it may be the author's. A route's schedules come only
- * with a timing rebuild, which sets the duration too, so a constant-time
- * route that returns to schedules cleared here is rebuilt the same way
- * (`_routeTimingCleared`), and one whose author's duration was never
- * replaced keeps it. A module helper, as `routeOf` is, for the hosts that
- * borrow `calculatePath` alone.
+ * What a route scheduled, which may not outlive it (DEF-06): in the engine
+ * its pauses, beacon schedules (by which a paused marker was still drawn),
+ * speed segments and any wait at one of its waypoints, and the renderer's
+ * beacons. Cleared when no route is left, and when a project replaces
+ * another. A module helper, as `routeOf` is, for the hosts that borrow
+ * `calculatePath` alone.
  * @param {Object} app
  */
-function clearRouteTiming(app) {
-  app.pathPoints = [];
-  app._trunkWaypoints = null;
+export function clearRouteSchedules(app) {
   const engine = app.animationEngine;
   if (engine) {
-    const scheduled = Boolean(engine.pauseMarkers?.length || engine.beaconSchedules?.length || engine.segmentMarkers?.length);
-    if (scheduled) app._routeTimingCleared = true;
     engine.clearPauseMarkers?.();
     engine.clearSegmentMarkers?.();
     engine.clearWaypointWait?.();
   }
   app.renderingService?.resetBeacons?.();
+}
+
+/**
+ * With no route to travel, what the last route fed may not outlive it: its
+ * path and trunk, and what it scheduled. The duration is left: once timing
+ * has been rebuilt for this project's route (`_timingDerived`), a route that
+ * returns is rebuilt too, in either timing mode; a constant-time duration
+ * the project was opened with, and no rebuild has replaced, is the author's,
+ * and kept.
+ * @param {Object} app
+ */
+function clearRouteTiming(app) {
+  app.pathPoints = [];
+  app._trunkWaypoints = null;
+  clearRouteSchedules(app);
   app.queueRender?.();
 }
 
@@ -190,9 +196,11 @@ export const pathTimingMixin = {
     
     this._durationUpdateTimeout = setTimeout(() => {
       // Calculate duration based on animation mode; and in constant-time
-      // mode, for a route come back to the schedules the no-route clear took
-      // away (DEF-06), rebuilt as they were built.
-      if (this.animationEngine.state.mode === 'constant-speed' || this._routeTimingCleared) {
+      // mode once this project's timing has been rebuilt for its route (the
+      // duration is then that rebuild's, not the author's), rebuilt again for
+      // the route as it is now, so its schedules never outlive its geometry
+      // (DEF-06).
+      if (this.animationEngine.state.mode === 'constant-speed' || this._timingDerived) {
         const currentSpeed = this.animationEngine.state.speed;
         // Convert normalized path points to canvas coords for length calculation
         const canvasPathPoints = this.pathPoints.map(p => this.imageToCanvas(p.x, p.y));
@@ -662,8 +670,8 @@ export const pathTimingMixin = {
 
     // Set the final total duration
     this.animationEngine.setDuration(totalDuration);
-    // The route's schedules are built again (DEF-06).
-    this._routeTimingCleared = false;
+    // This project's duration is now a rebuild's, whatever its mode (DEF-06).
+    this._timingDerived = true;
     
     // Log timeline breakdown
     console.debug(`📍 [AnimationEngine] Timeline: ${(startHandleTime/1000).toFixed(1)}s start + ${(this.animationEngine.introTime/1000).toFixed(1)}s intro + ${(pathDuration/1000).toFixed(1)}s path + ${(this.animationEngine.totalPauseTime/1000).toFixed(1)}s pauses + ${(this.animationEngine.totalTailTime/1000).toFixed(1)}s tail = ${(totalDuration/1000).toFixed(1)}s total`);

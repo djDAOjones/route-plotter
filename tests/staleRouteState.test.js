@@ -190,7 +190,7 @@ test('a project of one waypoint, opened over a route, leaves nothing of that rou
   expect(app.renderingService.getBeaconScaleOverride(app.waypoints[0])).toBeNull();
 });
 
-test('a constant-time route deleted down to one and undone gets back its pauses and beacons, as it had them', async () => {
+test.each([['in one turn', false], ['a moment apart', true]])('a constant-time route deleted down to one and undone (the undos %s) gets back its timeline, as it had it', async (_, apart) => {
   const app = await bootApp();
   await app.ready;
   expect(await loadSnapshot(app, {
@@ -221,6 +221,7 @@ test('a constant-time route deleted down to one and undone gets back its pauses 
     };
   };
   const before = at();
+  const pausesAt = engine.pauseMarkers.map(marker => marker.pathProgress);
   expect(before).toMatchObject({ pauses: 1, beacons: 1, waiting: true });
   expect(before.scale).toBeGreaterThan(1.1);
 
@@ -229,11 +230,13 @@ test('a constant-time route deleted down to one and undone gets back its pauses 
   await timingSettled();
   expect(routeState(app)).toEqual(NO_ROUTE);
   app.undo();
+  if (apart) await timingSettled();
   app.undo();
   await timingSettled();
 
   expect(app.waypoints.map(each => each.id)).toEqual(['a', 'b', 'c']);
   expect(engine.state.mode).toBe('constant-time');
+  expect(engine.pauseMarkers.map(marker => marker.pathProgress)).toEqual(pausesAt);
   expect(at()).toEqual(before);
 });
 
@@ -257,4 +260,54 @@ test('an outline edit to the one waypoint left moves the crowd node anchored to 
   expect(app.waypoints).toEqual([anchor]);
   expect({ x: anchor.imgX, y: anchor.imgY }).toEqual({ x: 0.23, y: 0.34 });
   expect(node.position()).toEqual({ x: 0.23, y: 0.34 });
+});
+
+/** A constant-time project of `waypoints`, as a file opens it: its duration the author's. */
+const authoredConstantTime = waypoints => ({
+  coordVersion: 9,
+  animationState: { mode: 'constant-time', speed: 200, duration: 12000 },
+  waypoints,
+});
+
+/** What a constant-time project can be opened over. */
+const OPENED_OVER = [
+  ['over a route with its timeline', async app => app],
+  ['over a route deleted down to one', async (app) => {
+    for (const waypoint of app.waypoints.slice(1)) app.eventBus.emit('waypoint:delete', waypoint);
+    await timingSettled();
+  }],
+  ['over Clear All', async () => {
+    document.getElementById('clear-btn').click();
+    document.getElementById('clear-confirm').click();
+    await timingSettled();
+  }],
+];
+
+test.each(OPENED_OVER)('a constant-time project of one waypoint, opened %s, keeps the duration it was saved with when its second is added', async (_, before) => {
+  const { app } = await openDayMidGrow();
+  await before(app);
+
+  expect(await loadSnapshot(app, authoredConstantTime([{ id: 'first', imgX: 0.2, imgY: 0.2, isMajor: true }]))).toBe(true);
+  app.eventBus.emit('waypoint:add', { imgX: 0.8, imgY: 0.8, isMajor: true });
+  await timingSettled();
+
+  expect(app.animationEngine.state.duration).toBe(12000);
+  expect(app._buildProjectSnapshot().animationState.duration).toBe(12000);
+});
+
+test.each(OPENED_OVER)('a constant-time project of two waypoints, opened %s, keeps the duration it was saved with, and nothing the previous route scheduled', async (_, before) => {
+  const { app } = await openDayMidGrow();
+  await before(app);
+
+  expect(await loadSnapshot(app, authoredConstantTime([
+    { id: 'first', imgX: 0.2, imgY: 0.2, isMajor: true },
+    { id: 'second', imgX: 0.8, imgY: 0.8, isMajor: true },
+  ]))).toBe(true);
+  await timingSettled();
+
+  expect(app.animationEngine.state.duration).toBe(12000);
+  expect(app._buildProjectSnapshot().animationState.duration).toBe(12000);
+  const engine = app.animationEngine;
+  expect({ pauses: engine.pauseMarkers.length, segments: engine.segmentMarkers.length, beacons: engine.beaconSchedules.length })
+    .toEqual({ pauses: 0, segments: 0, beacons: 0 });
 });

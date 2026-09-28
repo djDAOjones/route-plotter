@@ -43,7 +43,8 @@ down to one waypoint, undo, redo and loading a one-waypoint project clear its
 path, branches, structure, pauses, beacons and waits, and resolve its crowd
 anchors again, so no marker is drawn at the grow scale of a route that is
 gone; a route that comes back gets its timing back, and a constant-time
-duration no rebuild has replaced is kept. (2026-09-28)
+duration a project was opened with, and no rebuild has replaced, is kept,
+whatever project came before. (2026-09-28)
 
 ## Before the big run (2026-09-28)
 
