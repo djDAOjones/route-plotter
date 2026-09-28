@@ -13,7 +13,8 @@
  * The notice offers one record at a time: those this start could not
  * restore first, then those kept earlier, newest first. What is on offer is
  * read back from the store after every change, and when another tab changes
- * it, so it is what the store holds; `app._unrestoredOffers` lists it as
+ * it, so it is what the store holds, one offer to each record however many
+ * copies of it there are; `app._unrestoredOffers` lists it as
  * `{ text, where, durable?, key?, earlier }`.
  */
 import { downloadText } from './privacy.js';
@@ -41,12 +42,31 @@ function offersOf(app) {
 
 /**
  * What this start kept, so its records are offered first, under the row's
- * own sentence, and can be downloaded even if the store cannot read them back.
+ * own sentence, and can be downloaded even if the store cannot read them back:
+ * `own`, the text of each record it could not restore, wherever it is kept
+ * now; `keys`, the kept keys whose text it knows; `unkept`, those it could
+ * keep only in memory; `heldText`, one it held, and `heldDurable`, once that
+ * is seen kept where every tab knows. And what it has seen of other tabs:
+ * `seen`, each kept key it has read, with its text; `discarded`, each record
+ * whose every kept copy it saw go, which only the author's Discard or Clear
+ * All does, so a restore still in progress here keeps it no more.
  */
 function thisStart(app) {
-  app._unrestoredThisStart ??= { keys: new Map(), heldText: null, heldDurable: false, unkept: [] };
+  app._unrestoredThisStart ??= {
+    own: new Set(), keys: new Map(), heldText: null, heldDurable: false, unkept: [],
+    seen: new Map(), discarded: new Set(),
+  };
   return app._unrestoredThisStart;
 }
+
+/**
+ * Where a record is in more than one place (a copy another tab kept, a copy
+ * a failed removal left), the notice says the place that matters most: a
+ * hold every tab knows stops autosave; a key of its own keeps it; a hold this
+ * tab alone knows, or memory, keep it least.
+ */
+const RANK = { unkept: 0, heldHere: 1, parked: 2, held: 3 };
+const rankOf = offer => (offer.where === 'held' ? RANK[offer.durable ? 'held' : 'heldHere'] : RANK[offer.where]);
 
 function statusFor(offer) {
   if (offer.where === 'held') return offer.durable ? STATUS.held : STATUS.heldHere;
@@ -59,60 +79,82 @@ function messageFor(offer) {
 }
 
 /**
- * What is on offer now, read back from the store: the records this start
- * could keep only in memory, a held one, then those under keys of their own;
- * and how many records Clear All would discard, readable or not. A record
- * this start kept only in memory, or held without its mark, that the store
- * is now seen to keep (another tab kept it) is offered once, where it is
- * kept, still as this start's; and the memory copy retires, so that a later
- * Discard, in any tab, is the author's choice and not a loss to make good.
+ * What is on offer now, read back from the store, one offer to each record:
+ * those this start could keep only in memory, then a held one, then those
+ * under keys of their own; and how many records Clear All would discard,
+ * each known record once and each it cannot read as one more. A record this
+ * start kept only in memory, or held without its mark, that the store is now
+ * seen to keep where every tab knows (another tab kept it) is offered where
+ * it is kept, still as this start's; and the memory copy retires, so that a
+ * later Discard, in any tab, is the author's choice and not a loss to make
+ * good. A copy only this tab can vouch for (a hold whose mark cannot be
+ * read) retires nothing.
  */
 function readStore(app) {
   const started = thisStart(app);
   const stored = [];
-  let discardable = 0;
+  let unreadable = 0;
   const hold = app.storageService.holdState();
-  if (hold.state !== 'none') discardable += 1;
-  if (hold.text !== null && hold.text !== undefined) {
-    stored.push({
-      text: hold.text,
-      where: 'held',
-      durable: hold.state === 'held' && hold.durable,
-      earlier: started.heldText !== hold.text,
-    });
+  if (hold.state !== 'none') {
+    if (hold.text === null || hold.text === undefined) unreadable += 1;
+    else stored.push({ text: hold.text, where: 'held', durable: hold.state === 'held' && hold.durable });
   }
   const kept = app.storageService.listKept();
-  discardable += kept.records.length;
   const inMemory = new Set(started.heldDurable ? started.unkept : [...started.unkept, started.heldText]);
+  const parked = new Map();
   for (const { key, text } of kept.records) {
     const known = text ?? started.keys.get(key) ?? null;
-    if (known === null) continue;
+    if (known === null) {
+      unreadable += 1;
+      continue;
+    }
+    // A copy of a record this start kept only in memory: its text stays
+    // known here should the key stop being readable.
     if (inMemory.has(known)) started.keys.set(key, known);
-    stored.push({ text: known, where: 'parked', key, earlier: !started.keys.has(key) });
+    parked.set(key, known);
+    stored.push({ text: known, where: 'parked', key });
   }
   const keptTexts = new Set(stored.filter(offer => offer.where === 'parked' || offer.durable).map(offer => offer.text));
+  noteDiscards(started, kept, parked, keptTexts);
   started.unkept = started.unkept.filter(text => !keptTexts.has(text));
   if (started.heldText !== null && keptTexts.has(started.heldText)) started.heldDurable = true;
-  const offers = [
-    ...started.unkept
-      .filter(text => !stored.some(offer => offer.text === text))
-      .map(text => ({ text, where: 'unkept', earlier: false })),
-    ...stored,
-  ];
-  discardable += started.unkept.length;
+
+  const byText = new Map();
+  const offer = (candidate) => {
+    const current = byText.get(candidate.text);
+    if (!current || rankOf(candidate) > rankOf(current)) byText.set(candidate.text, candidate);
+  };
+  for (const text of started.unkept) offer({ text, where: 'unkept' });
   // A record this start held without its mark, which the recovery key no
   // longer holds and the store was never seen to keep: another tab or build
   // wrote there, not the author choosing, so it is still this tab's to offer.
-  const held = started.heldText;
-  if (held !== null && !started.heldDurable && !offers.some(offer => offer.text === held)) {
-    offers.push({ text: held, where: 'unkept', earlier: false });
-    discardable += 1;
-  }
+  if (started.heldText !== null && !started.heldDurable) offer({ text: started.heldText, where: 'unkept' });
+  for (const each of stored) offer(each);
+  const offers = [...byText.values()].map(each => ({ ...each, earlier: !started.own.has(each.text) }));
   return {
-    offers: [...offers.filter(offer => !offer.earlier), ...offers.filter(offer => offer.earlier)],
-    discardable,
+    offers: [...offers.filter(each => !each.earlier), ...offers.filter(each => each.earlier)],
+    discardable: byText.size + unreadable,
     searched: kept.ok,
   };
+}
+
+/**
+ * Note the records the author has discarded in another tab: a kept key this
+ * tab read goes only by Discard or Clear All, so once one has gone and its
+ * record is kept nowhere else, a restore of it still in progress here keeps
+ * it no more. A hold that ends is not taken for one: a build that knows no
+ * mark may have written over it. Nor is a key this tab never read (it may
+ * have come and gone between two reads): that choice this tab cannot see.
+ */
+function noteDiscards(started, kept, parked, keptTexts) {
+  if (!kept.ok) return;
+  const present = new Set(kept.records.map(record => record.key));
+  for (const [key, text] of started.seen) {
+    if (present.has(key)) continue;
+    started.seen.delete(key);
+    if (!keptTexts.has(text)) started.discarded.add(text);
+  }
+  for (const [key, text] of parked) started.seen.set(key, text);
 }
 
 /**
@@ -149,13 +191,19 @@ function showOffers(app) {
  * @returns {false} Nothing was restored
  */
 export function keepUnrestoredAutosave(app, text) {
-  const kept = app.storageService.keepUnrestored(text);
   const started = thisStart(app);
+  // The author discarded it in another tab while this restore ran.
+  if (started.discarded.has(text)) {
+    showOffers(app);
+    return false;
+  }
+  const kept = app.storageService.keepUnrestored(text);
   // A record kept earlier and read again now is on offer already.
   if (kept.where === 'parked' && kept.existing) {
     showOffers(app);
     return false;
   }
+  started.own.add(text);
   if (kept.where === 'parked') started.keys.set(kept.key, text);
   else if (kept.where === 'held') {
     started.heldText = text;
@@ -212,6 +260,8 @@ export function recoveryFailureGuidance(app) {
 export function discardForClearAll(app) {
   const started = thisStart(app);
   const unkept = started.unkept.length;
+  for (const offer of offersOf(app)) started.discarded.add(offer.text);
+  for (const text of started.unkept) started.discarded.add(text);
   started.unkept = [];
   started.heldText = null;
   const { ok, removed } = app.storageService.discardAllKept();
@@ -259,6 +309,7 @@ export function setupUnrestoredNotice(app) {
       return;
     }
     const started = thisStart(app);
+    started.discarded.add(offer.text);
     started.unkept = started.unkept.filter(text => text !== offer.text);
     if (started.heldText === offer.text) started.heldText = null;
     const notice = document.getElementById('unrestored-notice');

@@ -1420,6 +1420,199 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
       priority: 'assertive',
     });
   });
+
+  /**
+   * A restore held at its background's decoding, in a tab that has a record
+   * another tab read too: that tab keeps it under a key of its own, which
+   * this tab sees, then the author discards it there (or clears all there).
+   */
+  async function discardedElsewhereDuringRestore(choice, start) {
+    const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
+    const store = useStorage();
+    allowConsole(LOAD_REFUSED);
+    const { app, restoring, decoding } = await start(record, store);
+    await decoding.reached;
+    const otherTab = new StorageService();
+    const { key } = otherTab.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: record }));
+    expect(app._unrestoredOffers.map(offer => offer.where)).toEqual(['parked']);
+    if (choice === 'Discard') {
+      expect(otherTab.discardKept({ text: record, where: 'parked', key })).toBe(true);
+    } else {
+      expect(otherTab.discardAllKept().ok).toBe(true);
+      expect(otherTab.clearAutoSave()).toBe(true);
+    }
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: null }));
+    expect(notice().hidden).toBe(true);
+    decoding.fail();
+    await restoring;
+    return { app, store, record };
+  }
+
+  test.each(['Discard', 'Clear All'])('a restore still in progress does not keep again a record the author chose to discard in another tab meanwhile (%s)', async (choice) => {
+    const { app, store, record } = await discardedElsewhereDuringRestore(choice, async (text, storage) => {
+      const booted = await bootApp();
+      await booted.ready;
+      storage.set(AUTOSAVE, text);
+      const decoding = holdDecoding();
+      return { app: booted, restoring: booted.loadAutosave(), decoding };
+    });
+
+    expect(kept(store)).toEqual([]);
+    expect(app._unrestoredOffers).toEqual([]);
+    expect(notice().hidden).toBe(true);
+    expect(store.get(AUTOSAVE)).not.toBe(record);
+    // Nor does a later start find it.
+    vi.mocked(ImageAsset.decodeDataURL).mockRestore();
+    const { app: later } = await restart(Object.getPrototypeOf(app));
+    expect(later._unrestoredOffers).toEqual([]);
+  });
+
+  test.each(['Discard', 'Clear All'])('nor does the restore a start makes (%s in another tab)', async (choice) => {
+    const { app, store } = await discardedElsewhereDuringRestore(choice, async (text, storage) => {
+      storage.set(AUTOSAVE, text);
+      // Only the restore's decoding is held: the start's default image after it decodes.
+      let fail;
+      const reached = new Promise((resolveReached) => {
+        vi.spyOn(ImageAsset, 'decodeDataURL').mockImplementationOnce(() => new Promise((_, reject) => {
+          fail = reject;
+          resolveReached();
+        }));
+      });
+      const booted = await bootApp();
+      return { app: booted, restoring: booted.ready, decoding: { reached, fail: () => fail(new Error('the background could not be decoded')) } };
+    });
+
+    expect(kept(store)).toEqual([]);
+    expect(app._unrestoredOffers).toEqual([]);
+  });
+
+  test('a record kept only in memory here, then held by another tab under its mark, is offered once, as this start’s', async () => {
+    const { app, store, record } = await keptOnlyInMemory();
+    store.set(AUTOSAVE, record);
+    expect(new StorageService().keepUnrestored(record)).toEqual({ where: 'held', durable: true });
+    window.dispatchEvent(new StorageEvent('storage', { key: HELD_MARK, newValue: store.get(HELD_MARK) }));
+
+    expect(app._unrestoredOffers.map(offer => [offer.where, offer.earlier])).toEqual([['held', false]]);
+    expect(heading()).toBe(NOW);
+    expect(status()).toBe(HELD);
+    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+  });
+
+  test('a record kept only in memory here, held by another tab under a mark this tab cannot read, is one session to Clear All', async () => {
+    const unreadable = { now: false };
+    const { store, record } = await keptOnlyInMemory({ readFails: [key => key === HELD_MARK && unreadable.now] });
+    store.set(AUTOSAVE, record);
+    new StorageService().keepUnrestored(record);
+    unreadable.now = true;
+    window.dispatchEvent(new StorageEvent('storage', { key: HELD_MARK, newValue: store.get(HELD_MARK) }));
+
+    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+  });
+
+  test('a record kept only in memory here stays on offer when another tab holds it under a mark this tab cannot read, then writes over it', async () => {
+    const unreadable = { now: false };
+    const { app, store, record } = await keptOnlyInMemory({ readFails: [key => key === HELD_MARK && unreadable.now] });
+    const otherTab = new StorageService();
+    store.set(AUTOSAVE, record);
+    otherTab.keepUnrestored(record);
+    unreadable.now = true;
+    window.dispatchEvent(new StorageEvent('storage', { key: HELD_MARK, newValue: store.get(HELD_MARK) }));
+    unreadable.now = false;
+    // The other tab's hold ends (its author discarded it there, or a build
+    // that knows no mark wrote over it): this tab cannot tell which.
+    store.delete(HELD_MARK);
+    store.set(AUTOSAVE, 'newer work');
+    window.dispatchEvent(new StorageEvent('storage', { key: AUTOSAVE, newValue: 'newer work' }));
+
+    expect(app._unrestoredOffers.map(offer => [offer.text === record, offer.where])).toEqual([[true, 'unkept']]);
+  });
+
+  test('two kept copies of one record are one offer and one session to Clear All, and Discard removes both', async () => {
+    const { store } = await bootRecording({ [keptKey(1, 'a')]: 'a record', [keptKey(2, 'b')]: 'a record' });
+
+    expect(notice().hidden).toBe(false);
+    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+    discard();
+    expect(kept(store)).toEqual([]);
+    expect(notice().hidden).toBe(true);
+  });
+
+  test('a record kept only in memory here leaves another kept record as one kept earlier', async () => {
+    const { app, store } = await keptOnlyInMemory();
+    store.set(keptKey(1, 'q'), 'another record');
+    window.dispatchEvent(new StorageEvent('storage', { key: keptKey(1, 'q'), newValue: 'another record' }));
+
+    expect(app._unrestoredOffers.map(offer => [offer.where, offer.earlier])).toEqual([['unkept', false], ['parked', true]]);
+  });
+
+  test('a record this tab could keep only in memory, kept since by another tab and then discarded there, is not offered again', async () => {
+    const { app, store, record, room } = await keptOnlyInMemory();
+    room.forCopies = true;
+    const otherTab = new StorageService();
+    const { key } = otherTab.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: record }));
+    expect(app._unrestoredOffers.map(offer => offer.where)).toEqual(['parked']);
+
+    // The author discards it there.
+    expect(otherTab.discardKept({ text: record, where: 'parked', key })).toBe(true);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: null }));
+
+    expect(kept(store)).toEqual([]);
+    expect(app._unrestoredOffers).toEqual([]);
+    expect(notice().hidden).toBe(true);
+  });
+
+  test('a record this tab could keep only in memory, kept since by another tab under a key this tab later cannot read, can still be downloaded here', async () => {
+    const unreadable = { key: null };
+    const { app, record, room } = await keptOnlyInMemory({ readFails: [key => key === unreadable.key] });
+    room.forCopies = true;
+    const { key } = new StorageService().keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: record }));
+    allowConsole(/Failed to load from localStorage \(routePlotter_keptAutosave:/);
+    unreadable.key = key;
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: record }));
+
+    expect(app._unrestoredOffers.map(offer => [offer.where, offer.text === record])).toEqual([['parked', true]]);
+    const [blob, name] = download();
+    expect(name).toBe('route-plotter-unrestored-session.json');
+    expect(await blob.text()).toBe(record);
+  });
+
+  test('a restore still in progress keeps its record where this tab can read it, when another tab’s copy of it can no longer be read here', async () => {
+    const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
+    const unreadable = { key: null };
+    const store = useStorage({}, { readFails: [key => key === unreadable.key] });
+    const app = await bootApp();
+    await app.ready;
+    store.set(AUTOSAVE, record);
+    allowConsole(LOAD_REFUSED, /Failed to load from localStorage \(routePlotter_keptAutosave:/);
+    const decoding = holdDecoding();
+    const restoring = app.loadAutosave();
+    await decoding.reached;
+    const { key } = new StorageService().keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: record }));
+    unreadable.key = key;
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: record }));
+    decoding.fail();
+    await restoring;
+
+    expect(app._unrestoredOffers.some(offer => offer.text === record && !offer.earlier)).toBe(true);
+    const [blob] = download();
+    expect(await blob.text()).toBe(record);
+  });
+
+  test('discarding a record kept only in memory says it failed when another tab has since put it in the recovery key, and it cannot go from there', async () => {
+    const removal = { fails: false };
+    const { app, store, record } = await keptOnlyInMemory({ removalFails: [key => key === AUTOSAVE && removal.fails] });
+    allowConsole(/Failed to remove from localStorage \(routePlotter_autosave\)/);
+    const [offered] = app._unrestoredOffers;
+    store.set(AUTOSAVE, record);
+    removal.fails = true;
+
+    expect(app.storageService.discardKept(offered)).toBe(false);
+    expect(store.get(AUTOSAVE)).toBe(record);
+  });
 });
 
 describe('the notice, as the markup and styles declare it (DEF-28)', () => {
