@@ -55,11 +55,13 @@
      DEV-INFRASTRUCTURE.md → Deployment.
 
      W0 closed 2026-09-22, W1 2026-09-23, W2 2026-09-24 (released as
-     v3.2.692), and the post-W2 queue and W3's pilot on 2026-09-28 (merged, not
-     yet released). Two groups: what Joe accepted since W2 closed, and the one
-     defect W1 released that is still open (plan §13 ground rule 8, "After
-     W1"). §14.5 asks for the readout gap (TST-04) to close before W4; that,
-     and W4 itself, are Joe's calls.
+     v3.2.692), and the post-W2 queue, W3's pilot and their follow-ups
+     (DEF-38, DEF-39, DEF-47) on 2026-09-28 (merged, not yet released). What
+     remains is the one defect W1 released that is still open (plan §13
+     ground rule 8, "After W1"), and it waits on Joe. DEF-40 to DEF-46 are
+     proposed, and each enters here only once Joe accepts it. §14.5 asks for
+     the readout gap (TST-04) to close before W4; that, and W4 itself, are
+     Joe's calls.
 
      Nothing enters this lane until it is runnable, and the plan is never
      imported wholesale. A behaviour change is one PR that states its new
@@ -68,19 +70,6 @@
      beside an empty `test.todo`: turn that test into a regression and retire
      the todo. Gate vocabulary is under Active; a gate is a claim, so check
      it. -->
-
-**Accepted by Joe on 2026-09-25**
-
-- [ ] **DEF-38 A throw on the main canvas leaves its state stacked** · Live
-  defect [ready] — DEF-36's exposure on the main canvas: a throw inside the
-  background pass's saves keeps that frame's zoom, camera transform or
-  `destination-in` for every later frame. The main canvas's base transform
-  belongs to its host, so DEF-36's cure does not carry over. No known
-  trigger. **P2**
-- [ ] **DEF-39 Vector styles carry from one frame to the next** · Live defect
-  [ready] — Area borders inherit the route's round caps and joins, so the
-  first frame after a resize or a throw draws them with butt caps and mitred
-  joins. Joe's call: keep the round look that steady frames draw today. **P3**
 
 **Released by W1, still open** (plan §13 ground rule 8)
 
