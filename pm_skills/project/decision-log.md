@@ -2,6 +2,60 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-28 — the post-W2 follow-ups: what a frame leaves behind no longer decides the next
+
+Three pull requests, one item each, merged on Joe's word and not yet released:
+DEF-38 (#46), DEF-39 (#47) and DEF-47 (#48). Gate at close: **86 test files ·
+1,259 tests · 2 todo · shell 0 · build:check 0** (1,239 when the post-W2 queue
+closed).
+
+**Each PR's stated behaviour change.**
+- **DEF-38** — a throw in the main canvas's background pass unwinds its saves,
+  so the next frame draws what a steady frame draws; frames that do not throw
+  are unchanged.
+- **DEF-39** — each frame starts the vector layer with round caps and joins,
+  so outlines that set neither (area borders, marker outlines, the editor's
+  minor dots, a selection rectangle's corners) draw round wherever they drew
+  square: on a freshly sized layer until an unzoomed route drew, and for as
+  long as a viewport zoom or the camera was on. Each of the 66 draw-golden
+  frames gains those two lines; nothing else moved.
+- **DEF-47** — the area-drawing preview sets its own blue before its first
+  stroke, so its placed edges no longer take the last stroke's colour and
+  width.
+
+**Joe, 2026-09-28:** merge #46, #47 and #48; DEF-47, which Codex found in
+DEF-39's review, accepted with the preview's blue (P3).
+
+**Codex (`gpt-6-astra`) was available again** and reviewed each PR in a clone
+with no remote. Each time it found a hole in the test, not the fix, closed
+before the merge. DEF-38's test threw only from canvas calls, so a read moved
+between a `save` and its `try` passed; the test now also throws from the
+pass's inputs. DEF-39's statement said steady frames were unchanged, but under
+a zoom or the camera the square look had lasted indefinitely, and leaving the
+fix out under a zoom passed; the statement was corrected and the case added.
+DEF-47's own test wrapper hid a preview that leaked its styles, and dashed
+vertex rings passed.
+
+**The test harness.** DEF-36's throw helpers now serve both canvases, and
+DEF-39 added a drawn view (`takeFrame(host, { state: 'drawn' })`) that compares
+frames by what each call draws with. DEF-38's first draft ran the gate's test
+worker out of heap: each canvas kept every call it recorded, holding a copy of
+the background's data URL once read, and the recorder made a Vitest mock per
+gradient. `takeFrame` now drops the frames it takes, and `addColorStop` is a
+plain function.
+
+**Found, not fixed** (wish-list lines): the recorder keeps no clip region;
+editing overlays inherit their opacity and dash; the draw-log file's heap
+still grows as it runs.
+
+**Metrics (§18):** open defects 29 → 27 (three closed, DEF-47 found); tests
+1,239 → 1,259; golden diffs only DEF-39's 132 lines; no dependency edge
+changed; on Joe's Mac the gate's test run takes 76–81 s (70 s before DEF-38)
+and peaks at 1.8 GB of heap (2.2 GB before). **Budgets:** this log is 30/20
+live entries, over by Joe's choice; the wish-list is 35/25 and the trajectory
+2,159/2,000 words, with a triage pass and archiving still proposed; backlog
+Active is 611 words and 4 open items.
+
 ## 2026-09-28 — W3's pilot: the slider scales move, and nothing guards the readouts
 
 SPL-01 (#43), behaviour-preserving. The six pure slider functions moved

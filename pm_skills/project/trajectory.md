@@ -17,6 +17,22 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## The post-W2 follow-ups (2026-09-28; merged, not yet released)
+
+Outcome: no frame draws with state that an earlier frame or layer left
+behind, whether after a throw, after a resize or while an area is drawn.
+
+DEF-38 — A frame that throws while drawing the background no longer leaves its
+zoom, camera or mask on the canvas for the frames after it. (2026-09-28) — see
+decision-log.
+
+DEF-39 — Area borders, marker outlines and the editor's minor dots draw with
+round ends and corners in every frame, whatever came before it. (2026-09-28) —
+see decision-log.
+
+DEF-47 — A polygon being drawn shows its edges in the preview's own blue from
+the first point. (2026-09-28)
+
 ## W3 — the pilot (closed 2026-09-28; merged, not yet released)
 
 Outcome: the slider scales live in their own pure module, and the pilot showed
