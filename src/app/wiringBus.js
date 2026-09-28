@@ -306,7 +306,12 @@ export const wiringBusMixin = {
      * area:draw-completed - Polygon drawing finished, refresh sidebar controls
      */
     this.eventBus.on('area:draw-completed', ({ waypoint }) => {
-      if (this.selectedWaypoint === waypoint) {
+      if (this.selectedWaypoint !== waypoint) return;
+      if (this.selectedWaypoints.length > 1) {
+        // Keep the multi-selection's scope and mixed states (as waypoint:multi-selected does)
+        this.uiController.updateWaypointEditor(waypoint, this.selectedWaypoints);
+        this.updateWaypointEditor();
+      } else {
         this.uiController.updateWaypointEditor(waypoint);
       }
     });
