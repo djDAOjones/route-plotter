@@ -1,21 +1,20 @@
 <!-- markdownlint-disable MD013 MD060 -->
-# Continue Route Plotter v3: after the post-W2 queue and W3's pilot
+# Continue Route Plotter v3: Joe's open calls, after the post-W2 follow-ups
 
-**Superseded by `route-plotter-continuation-prompt-open-calls-2026-09-28.md`**, which carries the programme on once all of this merged. This prompt briefed DEF-38 and DEF-39; both merged from it on 2026-09-28 (#46, #47), with DEF-47 (#48), which their reviews found, and their close-out (#49), unreleased. It remains as provenance.
-
-This supersedes `route-plotter-continuation-prompt-2026-09-25.md`, which
-briefed the rest of the post-W2 queue and the W3 pilot and remains as
-provenance: all of it merged on 2026-09-28. Paste everything below into a
-fresh chat.
+This supersedes `route-plotter-continuation-prompt-2026-09-28.md`, which
+briefed DEF-38 and DEF-39 and remains as provenance: both merged on
+2026-09-28, with DEF-47, which their reviews found. Paste everything below
+into a fresh chat.
 
 You are continuing an adopted refactoring programme for Route Plotter v3.
 **W0, W1 and W2 are closed, and W2's fixes are live as v3.2.692. The post-W2
-queue and W3's pilot are merged on `main` and recorded in project memory,
-and none of it is released yet.** Your job now: the two accepted defects
-that are ready, DEF-38 and DEF-39; then DEF-28, once Joe has made its design
-call; then whatever Joe accepts of the proposed rows DEF-40 to DEF-46 and of
-TST-04, which §14.5 wants before W4. A release happens only when Joe calls
-one.
+queue, W3's pilot and their follow-ups (DEF-38, DEF-39, DEF-47) are merged on
+`main` and recorded in project memory, and none of it is released yet.
+Nothing is ready to start: every next step waits on a call only Joe can
+make.** Your job now: put those calls to Joe, few and concrete, each with its
+recommended default; then take DEF-28 once Joe has made its design call, and
+whatever Joe accepts of the proposed rows DEF-40 to DEF-46 and of TST-04. A
+release happens only when Joe calls one.
 
 **Repository:** `djDAOjones/route-plotter`.
 **Maintainer's working copy (OneDrive):** `/Users/joe/Library/CloudStorage/OneDrive-TheUniversityofNottingham/_Joe Bell UoN Files/2_Projects/2025-10-14 Gary Priestnall PARM Maps Encore/Route Plotter v3`
@@ -34,52 +33,58 @@ consolidate. Never rewrite.*
 
 Check with `git fetch` then `git log -1 origin/main`; the Pages source and
 latest build; the last CI runs; the open pull requests (`gh` on Joe's Mac,
-the GitHub MCP tools in the cloud container, which has no `gh`); and a
-read-only `git status` in the OneDrive copy.
+the GitHub MCP tools in the cloud container, which has no `gh`); a read-only
+`git status` in the OneDrive copy; and whether another agent session is
+working the same repository (see Traps).
 
-- **`main`** ends with this prompt's own merge (#45), on the close-out
-  (#44) and the queue's merges, #35 to #43, all squash-merged on Joe's word
-  on 2026-09-28, after DEF-36 (#34), TST-17 (#32) and DEF-34 (#31).
-  **Verify** green. Protected: no force-push, no deletion. No pull request
-  was left open.
+- **`main`** ends with this prompt's own merge, on the follow-ups' close-out
+  (#49), DEF-47 (#48), DEF-39 (#47) and DEF-38 (#46), all squash-merged on
+  Joe's word on 2026-09-28, after the post-W2 queue and W3's pilot (#31 to
+  #45). **Verify** green. Protected: no force-push, no deletion. No pull
+  request was left open, and every merged pull request's branch was deleted
+  (each can be restored from its pull request's page); `main` and the frozen
+  `review-remediation` remain.
 - **Live: v3.2.692** (`14e3656`, tag `v3.2.692`), served by GitHub Pages from
-  `main` `/docs`. Everything merged since (#31 to #45) is **not live**.
+  `main` `/docs`. Everything merged since (#31 onwards) is **not live**.
   Rollback tags: `v3.2.689`, `v3.2.690`, `v3.2.691`, `v3.2.692`.
-- **Gate on `main`:** `npm run check` → 86 test files · 1,239 tests · 2 todo ·
-  shell 0 · build:check 0 (2026-09-28). The test run takes about 166 s in the
-  cloud container (148 s before the queue), and took about 65 s on the
-  machine that ran W2.
+- **Gate on `main`:** `npm run check` → 86 test files · 1,259 tests · 2 todo ·
+  shell 0 · build:check 0 (2026-09-28). On Joe's Mac the test run takes
+  76–81 s and peaks at about 1.8 GB of heap; the cloud container took 166 s
+  before the follow-ups.
 - **What merged on 2026-09-28**, each PR body holding its behaviour
-  statement, evidence, mutation table and review: DEF-35 (#35, #36), DEF-08
-  (#37), DEF-17 (#38), DEF-33 (#39), DEF-30 (#40), DEF-37 (#41), DEF-29
-  (#42), SPL-01, W3's pilot (#43), the close-out (#44) and this prompt (#45).
+  statement, evidence, mutation table and review: the post-W2 queue (#35 to
+  #42), SPL-01, W3's pilot (#43), their close-out (#44) and prompt (#45), then
+  DEF-38 (#46), DEF-39 (#47), DEF-47 (#48) and their close-out (#49).
 - **The plan:** `reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md`.
   Joe accepted all 22 §20 defaults on 2026-09-22. On 2026-09-24 Joe approved
   DEF-34 and accepted DEF-35, DEF-36, TST-17 and DEF-37 (a `null` Graphics
   scale means 1×). On 2026-09-25 Joe accepted DEF-38 (P2) and DEF-39 (P3,
   keeping the round caps and joins), allowed branches named for their item,
-  and asked for the pull requests to be watched. **DEF-40 to DEF-46 are
-  proposed**, awaiting Joe. Check §20 and the decision log before telling Joe
-  anything needs a decision.
+  and asked for the pull requests to be watched. On 2026-09-28 Joe accepted
+  DEF-47 with the preview's own blue. **DEF-40 to DEF-46 are proposed**,
+  awaiting Joe. Check §20 and the decision log before telling Joe anything
+  needs a decision.
 - **Line references in the plan are at `2e4d78e`** unless a dated note says
   otherwise, and `src/` has moved. Re-verify every reference before relying
   on it.
-- **The OneDrive copy** could not be reached from the cloud container this
-  prompt was written in. Joe fast-forwards it; you never do.
+- **The OneDrive copy** was brought up to `main` on Joe's word when the
+  session that wrote this prompt closed; check it read-only. Other sessions
+  may use it: pause before writing anything there.
 
 ## What waits on Joe
 
-Project memory is current: the close-out (#44) removed the merged items from
-the backlog, marked their plan rows shipped (unreleased), and added two
-decision-log entries (the post-W2 queue; W3's pilot, with §14.5's answers),
-trajectory lines and eleven wish-list lines. It left these for Joe, each with
-a recommended default in #44's description. Ask the ones this chat has not
-already answered, few and concrete:
+Project memory is current: the close-outs (#44, #49) removed the merged items
+from the backlog, marked their plan rows shipped (unreleased) and wrote
+decision-log entries and trajectory phases. The backlog's `### Next` holds
+only DEF-28, gated on Joe. These are Joe's, each with a recommended default;
+ask the ones this chat has not already answered:
 
-1. **DEF-28:** what an author sees when a session cannot be restored. The
-   recommended option is a notice with **Download it** and **Discard**, and
-   the record kept under a second storage key that autosave never writes
-   until the author chooses.
+1. **DEF-28:** what an author sees when a session cannot be restored. Options
+   in #44's description: **A** (recommended) announce it and show a notice
+   with **Download it** and **Discard**, keeping the record under a second
+   storage key that autosave never writes until the author chooses; **B**
+   announce it and move the record aside silently; **C** announce it and pause
+   autosave until the author chooses.
 2. **DEF-40 to DEF-46:** accept, change or decline each. Suggested: P2 for
    DEF-40, DEF-41, DEF-44 and DEF-46; P3 for DEF-42, DEF-43 and DEF-45.
 3. **TST-04 before W4**, to guard the sidebar's readouts, which the pilot
@@ -87,16 +92,16 @@ already answered, few and concrete:
 4. **W4's characterisation step:** add "mutate every branch of each moved
    function and account for every survivor", the pilot's lesson.
 5. **Budgets,** reported and proposed, never pruned without Joe: the
-   decision log is 29 of 20 live entries (Joe's standing choice); the
-   wish-list 32 of 25 open items (a triage pass is proposed); the trajectory
-   2,046 of 2,000 words (archiving its oldest phases is proposed).
-6. **A release,** whenever Joe wants the queue live.
+   decision log is 30 of 20 live entries (Joe's standing choice); the
+   wish-list 35 of 25 open items (a triage pass is proposed); the trajectory
+   2,159 of 2,000 words (archiving its oldest phases is proposed).
+6. **A release,** whenever Joe wants #31 onwards live.
 
 ## Reading order
 
 1. **`AGENTS.md` tiers:** README, brief, architecture and conventions whole;
    the backlog Active section; the latest decision-log headings (start with
-   "W2 closes", then the two 2026-09-28 entries above it).
+   "W2 closes", then the three 2026-09-28 entries above it).
 2. **From the plan, only what the current item needs:** its §12.1 or §12.2
    row; §13 ground rules; §17 (testing); §18 (metrics); §20 before calling
    anything open; §2.9 for the round-2 browser probes; §14 before W4.
@@ -108,23 +113,12 @@ already answered, few and concrete:
 
 1. **Ask Joe what waits on Joe** (above), unless this chat already carries
    the answers.
-2. **DEF-38** (P2, ready): a throw inside one of the main canvas's
-   background saves keeps that frame's zoom, camera transform or
-   `destination-in` for every later frame. The row's treatment: put each of
-   those `save`s in a `try/finally` that restores it, or have each host
-   re-apply its canvas set-up after a frame that throws. The main canvas's
-   base transform belongs to its host, so DEF-36's cure does not carry over.
-   DEF-36's state-keeping test recorder is the tool for it.
-3. **DEF-39** (P3, ready): area borders inherit the route's round caps and
-   joins, so the first frame after a resize or a throw draws them differently
-   from a steady frame. Joe chose the round look; set every style a draw
-   relies on where it draws.
-4. **DEF-28,** once Joe has chosen what an author sees. Characterise first,
+2. **DEF-28,** once Joe has chosen what an author sees. Characterise first,
    as always.
-5. **Whatever Joe accepts** of DEF-40 to DEF-46 and TST-04, in the order Joe
+3. **Whatever Joe accepts** of DEF-40 to DEF-46 and TST-04, in the order Joe
    gives. Accepted rows enter `### Next`; nothing else does.
-6. **Memory:** the budget proposals above, only with Joe's word.
-7. **A release,** only when Joe calls one (`DEV-INFRASTRUCTURE.md` →
+4. **Memory:** the budget proposals above, only with Joe's word.
+5. **A release,** only when Joe calls one (`DEV-INFRASTRUCTURE.md` →
    Deployment). It records itself with its own decision-log entry.
 
 ## The safety net — use it, do not rebuild it
@@ -144,16 +138,28 @@ already answered, few and concrete:
   `frameAt`, `takeFrame`, `discardFrame`, `setUpFrame`, `differingLines`.
   Since TST-17 a composited canvas carries its surface's label; a surface the
   transcript does not know appears as `other#<id>`, and the goldens reject
-  it, because a raw recorder id depends on test order.
+  it. Two views of state: `takeFrame(host, { state: true })` ends each line
+  with the full state its call was made in (transform, open saves, styles;
+  DEF-36), and `{ state: 'drawn' }` with only what a marking call draws with
+  (DEF-39), to compare frames by what they draw while a style no call uses
+  differs. It sees no clip region, pattern smoothing, `putImageData` or
+  text spacing, and nothing in `src/` uses them. `takeFrame` also drops the
+  frames it takes from the canvases' own transcripts (DEF-38; see Traps).
 - **`tests/goldenDrawLogs.test.js`** — four fixtures × five instants × three
-  modes, `play == seek`, `app == player` (now including `authored-extras` at
-  its authored Graphics scale 1.6), the DEF-34 regression at scales 0.5, 1.6
-  and 8 with labels on and the camera off, a check that every frame
-  composites `[canvas vector]` onto `main`, and a pixel-density-2 test of
-  the layer's backing size and display-size composite. What it does not see,
-  both on the wish-list: the player's display transform (`PlayerApp.resize`
-  returns early with no parent) and a path-only export (`enterMode('export')`
-  skips the step that hides the background).
+  modes, `play == seek`, `app == player` (including `authored-extras` at its
+  authored Graphics scale 1.6), the DEF-34 regression at scales 0.5, 1.6 and
+  8, a check that every frame composites `[canvas vector]` onto `main`, and a
+  pixel-density-2 composite test. **Fixed defects stay fixed:** DEF-36 and
+  DEF-38 throw at every call a frame makes on the vector layer or the main
+  canvas (and, for DEF-38, at every read of the background pass's inputs:
+  `renderThrowingAtRead`); DEF-39 draws every instant four ways (steady,
+  after another instant, after leftover caps and joins, on a freshly sized
+  layer); DEF-47 checks the area-drawing preview's blue. The shared helpers
+  are `surfaceCalls`, `deepestSave` and `renderThrowingAt(host, surface,
+  index)`. DEF-38's test shows how to run the player at its display size
+  (give its canvas a sized parent, then `player.resize()`). Still unseen, on
+  the wish-list: a path-only export (`enterMode('export')` skips the step that
+  hides the background).
 - **`tests/fixtures/authoredExtras.js`** — the every-field fixture; still no
   `pop` beacon. DEF-08 drew its scaling cases on Open day instead, because the
   fixture's `pathTrail` of 640 puts its later instants past every beacon
@@ -164,7 +170,7 @@ already answered, few and concrete:
 - **`tests/helpers/consoleGuard.js`** — undeclared console output fails its
   test; declare with `allowConsole(/…/)`.
 - **`tests/helpers/minCountReporter.js`** — its floor is still 72 files /
-  1,000 tests against a suite of 86 / 1,239; raise it as the suite grows,
+  1,000 tests against a suite of 86 / 1,259; raise it as the suite grows,
   never lower it.
 - **From W2:** `tests/shortHexGlow.test.js` has a manual
   `requestAnimationFrame` harness for frame-by-frame scheduling tests;
@@ -182,7 +188,7 @@ already answered, few and concrete:
 
 The only `todo`s left are DEF-04's two, in `authorableLoadable.test.js`,
 each beside an active test that asserts today's broken behaviour; DEF-04 is
-not in this queue. When you meet that pattern: turn the active test into a
+not scheduled. When you meet that pattern: turn the active test into a
 regression, keep its reproduction, retire the `todo`, and watch it fail for
 the right reason before touching `src/`.
 
@@ -234,7 +240,7 @@ release, and `DEV-INFRASTRUCTURE.md` → Deployment.
 **Plan fidelity**
 - If evidence shows a row is wrong, patch it with a dated note, say so in the
   wave's decision-log entry, and tell Joe. Any *new* behaviour change becomes a
-  proposed DEF row for Joe first.
+  proposed DEF row for Joe first (DEF-47 went that way).
 
 ## How to run each PR
 
@@ -242,24 +248,26 @@ release, and `DEV-INFRASTRUCTURE.md` → Deployment.
 2. Make the smallest change.
 3. `npm run check`, plus targeted tests. **Prove every new test can fail**:
    run a mutation per fix site from a script that restores the file
-   afterwards, and record what caught each. The whole suite runs in about
-   13 s on the machine that ran W2 as `npx vitest run --silent` (about 75 s in
-   the cloud container) — files in parallel, unlike the gate's serial `npm test` — so
-   a mutation table is cheap. **Read the result, not
-   the exit code**: in a parallel run a frame one test booked can fire after
-   its environment is torn down (`requestAnimationFrame is not defined`,
-   from `AnimationEngine._scheduleFrame`), and vitest then reports
-   `Errors  N errors` and exits 1 with every test passed (seen 2026-09-25 on
-   `a69ab80`; on the wish-list). `--reporter=json --outputFile=<file>` gives
-   you `numFailedTests` and the failing names to script against. **Guard
-   mutation runs with a watchdog**: a mutation can turn a loop infinite (it
-   did in DEF-31), and a synchronous hang cannot be timed out by Vitest.
+   afterwards (and checks it by SHA-256), and record what caught each. The
+   whole suite runs in about 15–25 s on Joe's Mac as `npx vitest run
+   --silent` (about 75 s in the cloud container) — files in parallel, unlike
+   the gate's serial `npm test` — so a mutation table is cheap. **Read the
+   result, not the exit code**: in a parallel run a frame one test booked can
+   fire after its environment is torn down (`requestAnimationFrame is not
+   defined`, from `AnimationEngine._scheduleFrame`), and vitest then reports
+   `Errors  N errors` and exits 1 with every test passed (on the wish-list).
+   `--reporter=json --outputFile=<file>` gives you `numFailedTests` and the
+   failing names to script against. **Guard mutation runs with a watchdog**:
+   a mutation can turn a loop infinite (it did in DEF-31), and a synchronous
+   hang cannot be timed out by Vitest.
 4. Regenerate only the goldens the change means to move, and read the diff.
 5. Where a user sees the result, run the matching §2.9 browser probe.
 6. **The comparative review** (below), then fix or rebut with evidence, and
    re-run the mutation it used.
 7. Open the PR with the behaviour statement, the evidence and the review.
-8. Joe decides the merge.
+8. Joe decides the merge. When Joe says merge: check CI is green, squash with
+   `gh pr merge --squash --match-head-commit <sha>`, where the SHA comes from
+   `git rev-parse`, never typed from a short one.
 
 **At a wave's close:** all PRs merged; Joe decides the release; one
 decision-log entry, trajectory lines, the next wave into `### Next`, the §18
@@ -272,20 +280,20 @@ direction.
 
 ## The comparative reviewer
 
-**Codex (`gpt-6-astra`)**, where it is available, found real holes in four of
-the five W2 fixes it reviewed and in both DEF-34's and TST-17's pull
-requests. **It was not available in the cloud container that ran #34 to
-#43**, so an independent Claude agent stood in: a fresh context, its own
-clone with no remote, the same falsification brief Codex would get, and
-jsdom probes, Chromium and mutation runs of its own. It found a real hole in
-every one of those ten pull requests — a regression, a vacuous test, a
-missed route — and each was fixed before the pull request opened. **Assume
-your work has a hole like that.**
+**Codex (`gpt-6-astra`, Codex CLI 0.155.1) works on Joe's Mac.** On
+2026-09-28 it reviewed DEF-38, DEF-39 and DEF-47 in 20 to 30 minutes each and
+found a real hole in every test: a read moved between a `save` and its `try`,
+a square look that lasted under a zoom, a test wrapper that hid a leak. In
+the cloud container, where Codex was unavailable, an independent Claude agent
+stood in and found a hole in each of #34 to #43. **Assume your work has a
+hole like that.**
 
 - Codex: `codex exec -m gpt-6-astra -s workspace-write -C <throwaway-clone> -o <out.md> - < <brief.md>`
   in a clone with **no remote** (`git clone --no-local`, create `main`,
   `git remote remove origin`, copy `node_modules`). Run it in the background,
-  never with a bare `&`, so you are told when it ends.
+  never with a bare `&`, so you are told when it ends. Its full report lands
+  in the clone (`reviews/<ITEM>-falsification-review.md`); the `-o` file
+  holds only its summary.
 - The stand-in: an agent given the same brief and the same clone rules, told
   where to write its report and that it must not commit or push.
 - A brief that works says what changed and what the gate reports; points at
@@ -327,27 +335,49 @@ your work has a hole like that.**
   - **Emulate ≥1440 px before judging anything.** A hidden pane throttles
     `requestAnimationFrame`: step `animationEngine.updateAnimation(dt, ts)` by
     hand, or seek. Exported pages expose `window.__routePlotterPlayer`.
+- DEF-38, DEF-39 and DEF-47 each list a short manual browser check in their
+  PR; none was run.
 
 ## Traps this programme has already hit
 
+- **Another agent session may be working the same repository**: on
+  2026-09-28 a cloud session merged #35 to #45 and rewrote the brief a local
+  session had been handed, while that session was starting. Check
+  `ListAgents` (cloud sessions show there, not in `list_sessions`) and
+  `git fetch` before every write; a branch you mean to fix may move under
+  you.
+- **The gate's test worker has about 4.3 GB of heap.** A test that reads
+  thousands of frames can crash it ("Worker exited unexpectedly"): each
+  canvas kept every call it recorded, and the recorder made a Vitest mock per
+  gradient. Both are fixed; `goldenDrawLogs.test.js` still grows its heap as
+  it runs (wish-list). Measure with `npx vitest run --pool=threads
+  --no-file-parallelism --logHeapUsage`, and split a heavy test into one per
+  case so Vitest clears mock history between them.
+- **The camera** snaps to its target on a seek of more than 0.05 of the route
+  and otherwise eases (at 1× it snaps once close). With the test clock frozen
+  its zoom rate limiter never moves. To compare two frames at one instant,
+  reach each by a seek from another instant (DEF-39's test).
 - jsdom's `Image` stub reports 100×100, and loading a background makes the
   export resolution follow it; restore the authored resolution.
-- The camera snaps only at 1× zoom; elsewhere use
-  `CameraService.isZoomTransitioning()` and a bounded loop.
 - `esbuild` cannot run under jsdom: `// @vitest-environment node`.
 - A debounced duration rebuild leaves the timeline at 0 right after a load;
   call `app.invalidateAnimationTiming()` before an export or a timed check.
 - `start + (edge − start)` is not always `edge` in floating point; clamp
   after applying a shared delta.
 - The vector canvas's base transform lives outside any `save`, set once at
-  resize; every other transform is paired inside one frame (DEF-36's whole
-  subject).
-- In zsh a variable named `path` clobbers `PATH`, and `IFS=':'` splits PR
-  titles at their colons.
+  resize; every other transform is paired inside one frame (DEF-36). The
+  main canvas's base transform and smoothing belong to its host (DEF-38).
+  Each frame now starts the vector layer with round caps and joins (DEF-39).
+- In zsh a variable named `path` clobbers `PATH`; `IFS=':'` splits PR titles
+  at their colons; `echo =====` fails (a leading `=` expands to a command's
+  path).
 - **Neighbouring lines conflict.** Two pull requests that edit adjacent plan
   rows or file-map rows conflict in git, though they touch different lines,
   and the plan's one-line rows make that common. Check each pair with
   `git merge-tree --write-tree` before giving Joe a merge order.
+- Never `git checkout <rev> -- <file>` in a tree with uncommitted edits: it
+  overwrote a test file on 2026-09-28 (recovered from the dangling stash with
+  `git fsck --no-reflog`). Time or test another revision in its own clone.
 - `pgrep -f "<name>"` matches the shell that runs it, so a `while pgrep` wait
   never ends; write `pgrep -f "[n]ame"`.
 - Vitest's `clearMocks` resets calls but restores nothing: restore spies and
@@ -381,4 +411,4 @@ released; memory written; plan rows patched; metrics deltas at a wave close;
 the exact next step; and any question waiting on Joe.
 
 **Begin** by verifying the state above, making the clone, and asking Joe
-what waits on Joe; then pick up **DEF-38**.
+what waits on Joe.
