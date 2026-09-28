@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 342 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 343 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 109 file(s)
+- `tests` — 110 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -377,6 +377,7 @@
 - `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts, and the player's Graphics scale fallback (DEF-34)
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings
 - `tests/playerEntryAccessibility.test.js` — Exported-player summary, keyboard/transport live-region and playback-speed integration contracts
+- `tests/previewTipStorage.test.js` — DEF-48: the app starts with site storage blocked, and a full store does not throw from the preview tip's timer; a tip already seen stays quiet
 - `tests/privacy.test.js` — Export disclosures, byte-identical diagnostics, support navigation/address fallback, mode isolation, focus recovery and no automatic sharing
 - `tests/projectSnapshotShape.test.js` — TST-06 save-shape goldens: a file snapshot per bundled example, `load(save(x))` idempotence, the assets-included/excluded shape, and the `modified` restamp characterised
 - `tests/projectLimits.test.js` — Adversarial image, model, ZIP/ZIP64 and detached-import resource-limit contracts
