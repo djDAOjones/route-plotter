@@ -462,65 +462,77 @@ export class RenderingService {
     const hasZoom = viewport && viewport.zoom > 1;
     if (hasZoom) {
       ctx.save();
-      ctx.scale(viewport.zoom, viewport.zoom);
-      ctx.translate(-viewport.panX, -viewport.panY);
     }
-    
-    // Determine background rendering mode
-    const bgMode = applyMotion ? motionSettings.backgroundVisibility : BACKGROUND_VISIBILITY.ALWAYS_SHOW;
-    const hasPath = state.pathPoints?.length > 0;
-    
-    if (bgMode === BACKGROUND_VISIBILITY.ALWAYS_HIDE) {
-      // Hide mode: don't render background at all
-    } else if (bgMode === BACKGROUND_VISIBILITY.SPOTLIGHT && hasPath && motionVisibilityService) {
-      // Spotlight: instant circular mask at head position (resets each frame)
-      // Path points are in normalized coords, transform to canvas coords for rendering
-      const headPosNorm = this.getHeadPosition(state.pathPoints, state.animationEngine);
-      if (headPosNorm && state.imageToCanvas) {
-        const headPos = state.imageToCanvas(headPosNorm.x, headPosNorm.y);
-        const currentTimeMs = state.animationEngine.getTime();
-        this.renderBackgroundWithSpotlight(ctx, state.background, cw, ch, headPos, motionSettings, currentTimeMs);
+
+    // Every save the background pass opens on this canvas is restored in a
+    // `finally`. A throw inside one used to skip every restore still owed, so
+    // each later frame drew through this one's zoom or camera, and in a mask
+    // mode under `destination-in`, until a resize (DEF-38). A resize is not
+    // the cure here, as it is for the vector layer (DEF-36): this canvas's
+    // base transform and smoothing belong to its host, so its saves unwind
+    // instead, and the error still reaches the caller.
+    try {
+      if (hasZoom) {
+        ctx.scale(viewport.zoom, viewport.zoom);
+        ctx.translate(-viewport.panX, -viewport.panY);
       }
-    } else if (bgMode === BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL && hasPath && motionVisibilityService) {
-      // Spotlight Reveal: path-based mask rebuilt each frame for bidirectional scrubbing
-      // Pass imageToCanvas for coordinate transformation and current time for intro animation
-      const progress = state.animationEngine.getPathProgress();
-      const currentTimeMs = state.animationEngine.getTime();
-      motionVisibilityService.buildSpotlightRevealMask(state.pathPoints, progress, cw, ch, motionSettings, state.imageToCanvas, currentTimeMs);
-      this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, state.cameraState);
-    } else if (bgMode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW && hasPath && motionVisibilityService) {
-      // Angle of View: instant cone mask at head position (resets each frame)
-      // Path points are in normalized coords, transform to canvas coords for rendering
-      const headPosNorm = this.getHeadPosition(state.pathPoints, state.animationEngine);
-      const direction = this.getHeadDirection(state.pathPoints, state.animationEngine, state.waypointProgressValues, state.waypoints, cw, ch, state.imageToCanvas);
-      if (headPosNorm && direction !== null && state.imageToCanvas) {
-        const headPos = state.imageToCanvas(headPosNorm.x, headPosNorm.y);
+
+      // Determine background rendering mode
+      const bgMode = applyMotion ? motionSettings.backgroundVisibility : BACKGROUND_VISIBILITY.ALWAYS_SHOW;
+      const hasPath = state.pathPoints?.length > 0;
+
+      if (bgMode === BACKGROUND_VISIBILITY.ALWAYS_HIDE) {
+        // Hide mode: don't render background at all
+      } else if (bgMode === BACKGROUND_VISIBILITY.SPOTLIGHT && hasPath && motionVisibilityService) {
+        // Spotlight: instant circular mask at head position (resets each frame)
+        // Path points are in normalized coords, transform to canvas coords for rendering
+        const headPosNorm = this.getHeadPosition(state.pathPoints, state.animationEngine);
+        if (headPosNorm && state.imageToCanvas) {
+          const headPos = state.imageToCanvas(headPosNorm.x, headPosNorm.y);
+          const currentTimeMs = state.animationEngine.getTime();
+          this.renderBackgroundWithSpotlight(ctx, state.background, cw, ch, headPos, motionSettings, currentTimeMs);
+        }
+      } else if (bgMode === BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL && hasPath && motionVisibilityService) {
+        // Spotlight Reveal: path-based mask rebuilt each frame for bidirectional scrubbing
+        // Pass imageToCanvas for coordinate transformation and current time for intro animation
+        const progress = state.animationEngine.getPathProgress();
         const currentTimeMs = state.animationEngine.getTime();
-        this.renderBackgroundWithAOV(ctx, state.background, cw, ch, headPos, direction, motionSettings, currentTimeMs);
+        motionVisibilityService.buildSpotlightRevealMask(state.pathPoints, progress, cw, ch, motionSettings, state.imageToCanvas, currentTimeMs);
+        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, state.cameraState);
+      } else if (bgMode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW && hasPath && motionVisibilityService) {
+        // Angle of View: instant cone mask at head position (resets each frame)
+        // Path points are in normalized coords, transform to canvas coords for rendering
+        const headPosNorm = this.getHeadPosition(state.pathPoints, state.animationEngine);
+        const direction = this.getHeadDirection(state.pathPoints, state.animationEngine, state.waypointProgressValues, state.waypoints, cw, ch, state.imageToCanvas);
+        if (headPosNorm && direction !== null && state.imageToCanvas) {
+          const headPos = state.imageToCanvas(headPosNorm.x, headPosNorm.y);
+          const currentTimeMs = state.animationEngine.getTime();
+          this.renderBackgroundWithAOV(ctx, state.background, cw, ch, headPos, direction, motionSettings, currentTimeMs);
+        }
+      } else if (bgMode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW_REVEAL && hasPath && motionVisibilityService) {
+        // Angle of View Reveal: path-based mask rebuilt each frame for bidirectional scrubbing
+        // Pass imageToCanvas for coordinate transformation and current time for intro animation
+        const progress = state.animationEngine.getPathProgress();
+        const currentTimeMs = state.animationEngine.getTime();
+        motionVisibilityService.buildAOVRevealMask(
+          state.pathPoints, progress, cw, ch, motionSettings,
+          state.waypoints, state.waypointProgressValues, state.animationEngine, state.imageToCanvas, currentTimeMs
+        );
+        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, state.cameraState);
+      } else {
+        // Always Show (default): render background normally
+        // Pass camera state for zoom/pan effect centered on path head
+        this.renderBackground(ctx, state.background, cw, ch, state.cameraState);
       }
-    } else if (bgMode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW_REVEAL && hasPath && motionVisibilityService) {
-      // Angle of View Reveal: path-based mask rebuilt each frame for bidirectional scrubbing
-      // Pass imageToCanvas for coordinate transformation and current time for intro animation
-      const progress = state.animationEngine.getPathProgress();
-      const currentTimeMs = state.animationEngine.getTime();
-      motionVisibilityService.buildAOVRevealMask(
-        state.pathPoints, progress, cw, ch, motionSettings,
-        state.waypoints, state.waypointProgressValues, state.animationEngine, state.imageToCanvas, currentTimeMs
-      );
-      this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, state.cameraState);
-    } else {
-      // Always Show (default): render background normally
-      // Pass camera state for zoom/pan effect centered on path head
-      this.renderBackground(ctx, state.background, cw, ch, state.cameraState);
+
+      // 2) Contrast overlay (in zoomed space) - only affects image area
+      this.renderOverlay(ctx, state.background.overlay, cw, ch, state.background);
+    } finally {
+      if (hasZoom) {
+        ctx.restore();
+      }
     }
-    
-    // 2) Contrast overlay (in zoomed space) - only affects image area
-    this.renderOverlay(ctx, state.background.overlay, cw, ch, state.background);
-    
-    if (hasZoom) {
-      ctx.restore();
-    }
-    
+
     // 3-6) Vector + head + UI handles on offscreen canvas
     //
     // Vectors are resolution-independent (Canvas2D path/stroke operations).
@@ -811,46 +823,50 @@ export class RenderingService {
     const solidStop = 1 - dropoffFraction; // Where solid white ends
     
     ctx.save();
-    
-    // Draw background first
-    this.renderBackground(ctx, background, canvasWidth, canvasHeight);
-    
-    // Create cone mask using destination-in
-    ctx.globalCompositeOperation = 'destination-in';
-    
-    // Calculate cone points
-    const tipX = headPos.x;
-    const tipY = headPos.y;
-    
-    // Use arc for smooth outer edge
-    const startAngle = direction - halfAngleRad;
-    const endAngle = direction + halfAngleRad;
-    
-    if (dropoffFraction <= 0) {
-      // Hard edge - solid white, no gradient
-      ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-    } else {
-      // Radial gradient from tip
-      const gradient = ctx.createRadialGradient(
-        tipX, tipY, 0,
-        tipX, tipY, distance
-      );
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      if (solidStop > 0) {
-        gradient.addColorStop(solidStop, 'rgba(255, 255, 255, 1)');
+
+    // Restored whatever throws: `destination-in` left in force would cut
+    // every later frame to this cone (DEF-38, see `render`)
+    try {
+      // Draw background first
+      this.renderBackground(ctx, background, canvasWidth, canvasHeight);
+
+      // Create cone mask using destination-in
+      ctx.globalCompositeOperation = 'destination-in';
+
+      // Calculate cone points
+      const tipX = headPos.x;
+      const tipY = headPos.y;
+
+      // Use arc for smooth outer edge
+      const startAngle = direction - halfAngleRad;
+      const endAngle = direction + halfAngleRad;
+
+      if (dropoffFraction <= 0) {
+        // Hard edge - solid white, no gradient
+        ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+      } else {
+        // Radial gradient from tip
+        const gradient = ctx.createRadialGradient(
+          tipX, tipY, 0,
+          tipX, tipY, distance
+        );
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        if (solidStop > 0) {
+          gradient.addColorStop(solidStop, 'rgba(255, 255, 255, 1)');
+        }
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradient;
       }
-      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = gradient;
+
+      // Draw pie slice with arc for smooth outer edge
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.arc(tipX, tipY, distance, startAngle, endAngle);
+      ctx.closePath();
+      ctx.fill();
+    } finally {
+      ctx.restore();
     }
-    
-    // Draw pie slice with arc for smooth outer edge
-    ctx.beginPath();
-    ctx.moveTo(tipX, tipY);
-    ctx.arc(tipX, tipY, distance, startAngle, endAngle);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.restore();
   }
 
   /**
@@ -883,27 +899,31 @@ export class RenderingService {
     const innerRadius = MotionVisibilityService.spotlightInnerRadius(radius, feather);
     
     ctx.save();
-    
-    // Draw background first
-    this.renderBackground(ctx, background, canvasWidth, canvasHeight);
-    
-    // Create spotlight mask using destination-in with radial gradient
-    ctx.globalCompositeOperation = 'destination-in';
-    
-    // Create radial gradient for feathered edge
-    const gradient = ctx.createRadialGradient(
-      headPos.x, headPos.y, innerRadius,
-      headPos.x, headPos.y, radius
-    );
-    gradient.addColorStop(0, 'white');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(headPos.x, headPos.y, radius, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.restore();
+
+    // Restored whatever throws: `destination-in` left in force would cut
+    // every later frame to this circle (DEF-38, see `render`)
+    try {
+      // Draw background first
+      this.renderBackground(ctx, background, canvasWidth, canvasHeight);
+
+      // Create spotlight mask using destination-in with radial gradient
+      ctx.globalCompositeOperation = 'destination-in';
+
+      // Create radial gradient for feathered edge
+      const gradient = ctx.createRadialGradient(
+        headPos.x, headPos.y, innerRadius,
+        headPos.x, headPos.y, radius
+      );
+      gradient.addColorStop(0, 'white');
+      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(headPos.x, headPos.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    } finally {
+      ctx.restore();
+    }
   }
 
   /**
@@ -936,30 +956,35 @@ export class RenderingService {
     
     // Save context state
     ctx.save();
-    
-    // Draw background with camera transform
-    this.renderBackground(ctx, background, canvasWidth, canvasHeight, cameraState);
-    
-    // Apply reveal mask using destination-in composite
-    // This keeps only the parts of the background where the mask is white
-    ctx.globalCompositeOperation = 'destination-in';
-    
-    // Apply same camera transform to mask so it scales with background
-    if (hasCamera) {
-      const zoom = cameraState.zoom;
-      const cx = cameraState.centerX;
-      const cy = cameraState.centerY;
-      
-      // Same transform as background: center on canvas, scale, offset to camera center
-      ctx.translate(cw / 2, ch / 2);
-      ctx.scale(zoom, zoom);
-      ctx.translate(-cx, -cy);
+
+    // Restored whatever throws: the camera and `destination-in` left in force
+    // would zoom every later frame again and cut it to this mask (DEF-38, see
+    // `render`)
+    try {
+      // Draw background with camera transform
+      this.renderBackground(ctx, background, canvasWidth, canvasHeight, cameraState);
+
+      // Apply reveal mask using destination-in composite
+      // This keeps only the parts of the background where the mask is white
+      ctx.globalCompositeOperation = 'destination-in';
+
+      // Apply same camera transform to mask so it scales with background
+      if (hasCamera) {
+        const zoom = cameraState.zoom;
+        const cx = cameraState.centerX;
+        const cy = cameraState.centerY;
+
+        // Same transform as background: center on canvas, scale, offset to camera center
+        ctx.translate(cw / 2, ch / 2);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-cx, -cy);
+      }
+
+      ctx.drawImage(revealMask, 0, 0, canvasWidth, canvasHeight);
+    } finally {
+      // Restore context
+      ctx.restore();
     }
-    
-    ctx.drawImage(revealMask, 0, 0, canvasWidth, canvasHeight);
-    
-    // Restore context
-    ctx.restore();
   }
 
   /**
@@ -1056,22 +1081,26 @@ export class RenderingService {
     // Apply camera transform if zoom is not 1x (with small epsilon for float comparison)
     if (cameraState && cameraState.enabled && Math.abs(cameraState.zoom - 1) > 0.001) {
       ctx.save();
-      
-      // Camera centers on centerX, centerY (in canvas coords)
-      // Transform: translate to center, scale, translate back offset by center point
-      const zoom = cameraState.zoom;
-      const cx = cameraState.centerX;
-      const cy = cameraState.centerY;
-      
-      // Move origin to canvas center, scale, then offset so camera center is at canvas center
-      ctx.translate(cw / 2, ch / 2);
-      ctx.scale(zoom, zoom);
-      ctx.translate(-cx, -cy);
-      
-      // Draw full image centered with letterboxing
-      ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
-      
-      ctx.restore();
+
+      // Restored whatever throws, or every later frame would zoom again on
+      // top of this one (DEF-38, see `render`)
+      try {
+        // Camera centers on centerX, centerY (in canvas coords)
+        // Transform: translate to center, scale, translate back offset by center point
+        const zoom = cameraState.zoom;
+        const cx = cameraState.centerX;
+        const cy = cameraState.centerY;
+
+        // Move origin to canvas center, scale, then offset so camera center is at canvas center
+        ctx.translate(cw / 2, ch / 2);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-cx, -cy);
+
+        // Draw full image centered with letterboxing
+        ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+      } finally {
+        ctx.restore();
+      }
     } else {
       // No camera transform - draw normally
       ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
@@ -1110,13 +1139,18 @@ export class RenderingService {
     // Fill mode: image covers entire canvas, no change needed
     
     ctx.save();
-    ctx.globalAlpha = Math.min(
-      Math.abs(overlayValue),
-      MOTION.TINT_OPACITY_MAX
-    ) / 100;
-    ctx.fillStyle = overlayValue < 0 ? '#000' : '#fff';
-    ctx.fillRect(dx, dy, dw, dh);
-    ctx.restore();
+    // Restored whatever throws, or every later frame would draw at this
+    // tint's alpha (DEF-38, see `render`)
+    try {
+      ctx.globalAlpha = Math.min(
+        Math.abs(overlayValue),
+        MOTION.TINT_OPACITY_MAX
+      ) / 100;
+      ctx.fillStyle = overlayValue < 0 ? '#000' : '#fff';
+      ctx.fillRect(dx, dy, dw, dh);
+    } finally {
+      ctx.restore();
+    }
   }
 
   /**
