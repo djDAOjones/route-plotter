@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 342 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 343 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 109 file(s)
+- `tests` — 110 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -380,6 +380,7 @@
 - `tests/privacy.test.js` — Export disclosures, byte-identical diagnostics, support navigation/address fallback, mode isolation, focus recovery and no automatic sharing
 - `tests/projectSnapshotShape.test.js` — TST-06 save-shape goldens: a file snapshot per bundled example, `load(save(x))` idempotence, the assets-included/excluded shape, and the `modified` restamp characterised
 - `tests/projectLimits.test.js` — Adversarial image, model, ZIP/ZIP64 and detached-import resource-limit contracts
+- `tests/projectRollback.test.js` — DEF-49: a late-failing Open Project is rolled back in full when the rollback's image-asset or undo step fails
 - `tests/projectReset.test.js` — Behavioral Clear All proof for stale writers/tokens, asset/reference removal and one empty non-undoable baseline
 - `tests/publicationBoundary.test.js` — Approved-image hashes, CSP/same-origin shell, exact Pages inventory and manifest-tamper rejection
 - `tests/releaseSafety.test.js` — Clean-build rollback, versioned CSS references, dry-run deployment safety, and the DEF-18 refusals (unknown options, mistyped npm settings) and check-gate contracts
