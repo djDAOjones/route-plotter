@@ -549,11 +549,21 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       app.addCrowd({ enterNetworkEditor: false });
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
       const saved = app._buildProjectSnapshot();
-      saved.scene.flowLayers[0].graph.edges[0].controlPoints = [{ x: 11.5, y: 0.5 }];
+      const withBend = (point) => {
+        const project = structuredClone(saved);
+        project.scene.flowLayers[0].graph.edges[0].controlPoints = [point];
+        return project;
+      };
 
       allowConsole(LOAD_REFUSED);
-      expect(await loadSnapshot(app, saved)).toBe(false);
-      expect(recordedConsole().some(line => line.includes('Invalid graph control point: expected coordinates from -10 to 11'))).toBe(true);
+      for (const point of [{ x: 11.5, y: 0.5 }, { x: 0.5, y: -10.5 }]) {
+        const before = recordedConsole().length;
+        expect(await loadSnapshot(app, withBend(point))).toBe(false);
+        expect(recordedConsole().slice(before).some(line => line.includes('Invalid graph control point: expected coordinates from -10 to 11'))).toBe(true);
+      }
+      // At the range's ends, it loads.
+      expect(await loadSnapshot(app, withBend({ x: 11, y: -10 }))).toBe(true);
+      expect(app._buildProjectSnapshot().scene.flowLayers[0].graph.edges[0].controlPoints).toEqual([{ x: 11, y: -10 }]);
     });
 
   });
