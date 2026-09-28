@@ -5,6 +5,7 @@ import { Waypoint } from '../src/models/Waypoint.js';
 import { NetworkEditService } from '../src/services/NetworkEditService.js';
 import { sceneOutlineMixin } from '../src/app/sceneOutline.js';
 import { sceneOutlineKey } from '../src/utils/sceneSemantics.js';
+import { IMAGE_COORDINATES } from '../src/config/constants.js';
 
 function makeApp() {
   const eventBus = new EventBus();
@@ -239,6 +240,152 @@ describe('scene-outline command adapter', () => {
     expect(waypoint.segmentSpeed).toBe(2);
     expect(app.undoSaves).toBe(1);
     expect(app.autoSaves).toBe(1);
+  });
+
+  test('edits and adds points off the image, as far as a project can store one (DEF-35)', () => {
+    // The adapter took positions of 0–100% only, and `Waypoint.setPosition`
+    // pulled a waypoint back onto the image, so a point off it could not keep
+    // its place, be typed there or be given a polygon around it.
+    const waypoint = new Waypoint({
+      id: 'wp-off', imgX: -0.4, imgY: 1.35, isMajor: true, pauseTime: 1000, segmentSpeed: 1,
+      areaHighlight: { shape: 'none' },
+    });
+    app.waypoints = [waypoint];
+    const error = vi.fn();
+    app.eventBus.on('scene-outline:error', error);
+    const update = (x, y, outlineOriginalValues) => app._handleSceneOutlineCommand({
+      action: 'update-waypoint', waypointId: waypoint.id, x, y, waitSeconds: '2', segmentSpeed: '1',
+      outlineFormKey: 'waypoint:wp-off:apply', ...(outlineOriginalValues ? { outlineOriginalValues } : {}),
+    });
+
+    // Its wait changes, and its position stays where it was.
+    update('-40', '135', {
+      x: { display: '-40', canonical: String(-0.4) },
+      y: { display: '135', canonical: String(1.35) },
+    });
+    expect([waypoint.imgX, waypoint.imgY, waypoint.pauseTime]).toEqual([-0.4, 1.35, 2000]);
+
+    // A position typed off the image is stored there, to the edge of the range.
+    const { MIN, MAX } = IMAGE_COORDINATES;
+    update(String(MIN * 100), String(MAX * 100));
+    expect([waypoint.imgX, waypoint.imgY]).toEqual([MIN, MAX]);
+    update('-20', '150');
+    expect([waypoint.imgX, waypoint.imgY]).toEqual([-0.2, 1.5]);
+    update(String(MIN * 100 - 1), '150');
+    expect(error).toHaveBeenLastCalledWith({
+      formKey: 'waypoint:wp-off:apply',
+      message: `Horizontal position must be between ${MIN * 100} and ${MAX * 100}.`,
+    });
+    expect([waypoint.imgX, waypoint.imgY]).toEqual([-0.2, 1.5]);
+
+    // A new polygon surrounds its waypoint off the image, and its vertices
+    // can be added and moved there.
+    app._handleSceneOutlineCommand({ action: 'create-polygon', waypointId: waypoint.id });
+    const [x, y] = [-0.2, 1.5];
+    expect(waypoint.areaHighlight.points).toEqual([
+      { x, y: y - 0.04 }, { x: x - 0.04, y: y + 0.04 }, { x: x + 0.04, y: y + 0.04 },
+    ]);
+    app._handleSceneOutlineCommand({ action: 'add-vertex', waypointId: waypoint.id, x: '-35', y: '160' });
+    expect(waypoint.areaHighlight.points.at(-1)).toEqual({ x: -0.35, y: 1.6 });
+    app._handleSceneOutlineCommand({
+      action: 'update-vertex', waypointId: waypoint.id, index: '0', x: '-30', y: '140',
+    });
+    expect(waypoint.areaHighlight.points[0]).toEqual({ x: -0.3, y: 1.4 });
+
+    // A waypoint is added off the image, and a polygon around one at the edge
+    // of the range stays inside it, so the project still reloads.
+    const added = vi.fn(({ imgX, imgY, isMajor }) => {
+      app.waypoints.push(new Waypoint({ id: 'wp-edge', imgX, imgY, isMajor, areaHighlight: { shape: 'none' } }));
+    });
+    app.eventBus.on('waypoint:add', added);
+    app._handleSceneOutlineCommand({
+      action: 'add-waypoint', kind: 'major', x: String(MIN * 100), y: String(MAX * 100),
+    });
+    expect(added.mock.lastCall[0]).toMatchObject({ imgX: MIN, imgY: MAX, isMajor: true });
+    const edge = app.waypoints.at(-1);
+    app._handleSceneOutlineCommand({ action: 'create-polygon', waypointId: edge.id });
+    expect(edge.areaHighlight.points).toEqual([
+      { x: MIN, y: MAX - 0.04 }, { x: MIN, y: MAX }, { x: MIN + 0.04, y: MAX },
+    ]);
+  });
+
+  test('keeps a new polygon on the image round a waypoint on it (DEF-35)', () => {
+    // Only a waypoint off the image gets a polygon that leaves the image. One
+    // on the image beside its edge keeps the squeezed triangle it always had.
+    const waypoint = new Waypoint({
+      id: 'wp-top', imgX: 0.5, imgY: 0, isMajor: true, areaHighlight: { shape: 'none' },
+    });
+    app.waypoints = [waypoint];
+    app._handleSceneOutlineCommand({ action: 'create-polygon', waypointId: waypoint.id });
+    expect(waypoint.areaHighlight.points).toEqual([
+      { x: 0.5, y: 0 }, { x: 0.5 - 0.04, y: 0.04 }, { x: 0.5 + 0.04, y: 0.04 },
+    ]);
+  });
+
+  test('refuses positions past the range on each image-point command, and past 0–100% for networks (DEF-35)', () => {
+    const { MIN, MAX } = IMAGE_COORDINATES;
+    const waypoint = new Waypoint({
+      id: 'wp-bounds', imgX: 0.5, imgY: 0.5, isMajor: true, pauseTime: 1000, segmentSpeed: 1,
+      areaHighlight: { shape: 'polygon', points: [{ x: 0.4, y: 0.4 }, { x: 0.6, y: 0.4 }, { x: 0.5, y: 0.6 }] },
+    });
+    app.waypoints = [waypoint];
+    const layer = addGraphLayer(app);
+    const node = layer.graph.addNode({ id: 'node-a', x: 0.1, y: 0.2 });
+    layer.graph.addNode({ id: 'node-b', x: 0.8, y: 0.9 });
+    const edge = layer.graph.addEdge({ id: 'edge-a', sourceId: 'node-a', targetId: 'node-b' });
+    edge.addControlPoint(0.5, 0.5);
+    const stored = () => JSON.stringify([waypoint.toJSON(), layer.toJSON()]);
+    const before = stored();
+    const added = vi.fn();
+    app.eventBus.on('waypoint:add', added);
+    const error = vi.fn();
+    app.eventBus.on('scene-outline:error', error);
+    const refuses = (commands, [low, high], range) => {
+      for (const [action, fields] of Object.entries(commands)) {
+        for (const [axis, label] of [['x', 'Horizontal position'], ['y', 'Vertical position']]) {
+          for (const past of [low, high]) {
+            app._handleSceneOutlineCommand({
+              action, ...fields, x: '50', y: '50', [axis]: String(past), outlineFormKey: action,
+            });
+            expect(error, `${action} ${axis} ${past}`).toHaveBeenLastCalledWith({
+              formKey: action, message: `${label} must be between ${range}.`,
+            });
+          }
+        }
+      }
+    };
+
+    refuses({
+      'add-waypoint': { kind: 'major' },
+      'update-waypoint': { waypointId: waypoint.id, waitSeconds: '1', segmentSpeed: '1' },
+      'add-vertex': { waypointId: waypoint.id },
+      'update-vertex': { waypointId: waypoint.id, index: '0' },
+    }, [MIN * 100 - 0.001, MAX * 100 + 0.001], `${MIN * 100} and ${MAX * 100}`);
+    refuses({
+      'add-node': { layerId: layer.id, type: 'normal', label: '' },
+      'update-node': { layerId: layer.id, nodeId: node.id, type: 'normal', label: '' },
+      'add-control': { layerId: layer.id, edgeId: edge.id },
+      'update-control': { layerId: layer.id, edgeId: edge.id, index: '0' },
+    }, [-0.001, 100.001], '0 and 100');
+    expect(error).toHaveBeenCalledTimes(32);
+    expect(added).not.toHaveBeenCalled();
+    expect(stored()).toBe(before);
+  });
+
+  test('never stores an unchanged field\'s value from outside the range (DEF-35)', () => {
+    // An untouched field submits the value it was drawn from, which load has
+    // already checked. Only a tampered command could carry one from outside
+    // the range; it gets the typed value instead.
+    const waypoint = new Waypoint({
+      id: 'wp-canonical', imgX: 0.5, imgY: 0.5, isMajor: true,
+      areaHighlight: { shape: 'polygon', points: [{ x: 0.4, y: 0.4 }, { x: 0.6, y: 0.4 }, { x: 0.5, y: 0.6 }] },
+    });
+    app.waypoints = [waypoint];
+    app._handleSceneOutlineCommand({
+      action: 'update-vertex', waypointId: waypoint.id, index: '0', x: '20', y: '40',
+      outlineOriginalValues: { x: { display: '20', canonical: '50' }, y: { display: '40', canonical: '0.4' } },
+    });
+    expect(waypoint.areaHighlight.points[0]).toEqual({ x: 0.2, y: 0.4 });
   });
 
   test('preserves untouched long and whitespace-significant text in combined forms', () => {
