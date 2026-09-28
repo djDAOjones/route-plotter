@@ -302,9 +302,12 @@ function createRecordingContext(canvas) {
     context[name] = vi.fn((...args) => {
       const id = `[gradient ${++gradients}]`;
       record([name, ...args.map(describeValue)]);
+      // A plain function, not a mock: the transcript is what tests read, and
+      // Vitest keeps every mock it makes, while an angle-of-view reveal makes
+      // hundreds of gradients a frame (DEF-38).
       return {
         __recorderId: id,
-        addColorStop: vi.fn((offset, color) => record([`${id}.addColorStop`, offset, color]))
+        addColorStop: (offset, color) => record([`${id}.addColorStop`, offset, color])
       };
     });
   }

@@ -14,7 +14,7 @@
  * calls drawn on it, so a frame says which surface it composited (TST-17).
  */
 
-import { contextIdFor, recordCallOrder, takeOrderedCalls } from '../setup.js';
+import { contextFor, contextIdFor, recordCallOrder, takeOrderedCalls } from '../setup.js';
 
 // Only this file's tests pay for the shared transcript.
 recordCallOrder(true);
@@ -139,11 +139,27 @@ function describeState(entry, gradients) {
 export function takeFrame(host, { state = false } = {}) {
   const names = surfaceNames(host);
   const gradients = new Map();
-  return takeOrderedCalls().map((entry) => {
+  const lines = takeOrderedCalls().map((entry) => {
     const [id, ...call] = entry;
     const line = `${surfaceLabel(names, id)} ${describeCall(call, gradients, names)}`;
     return state ? `${line} ${describeState(entry, gradients)}` : line;
   });
+  forgetSurfaceCalls(host);
+  return lines;
+}
+
+/**
+ * Each canvas also keeps its own transcript of every call it was ever given
+ * (`setup.js`), which nothing that reads frames here uses. A background drawn
+ * from a data URL puts the whole 1.6 MB URL into its call's record, and
+ * reading a frame can leave that record holding a copy of its own, so a file
+ * that read a few thousand frames ran its test worker out of heap (DEF-38).
+ * A frame taken here is dropped from its surfaces' own transcripts too.
+ */
+function forgetSurfaceCalls(host) {
+  for (const canvas of [host.canvas, host.renderingService?.vectorCanvas, host.motionVisibilityService?.revealMaskCanvas]) {
+    if (canvas) contextFor(canvas)?.takeCalls();
+  }
 }
 
 /**
