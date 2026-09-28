@@ -109,10 +109,12 @@ describe('GraphEdge', () => {
     expect(edge.controlPoints.length).toBe(2);
   });
 
-  test('addControlPoint should clamp coordinates', () => {
+  test('addControlPoint should clamp coordinates to the range a project can store (DEF-41)', () => {
     const edge = new GraphEdge({ sourceId: 'a', targetId: 'b' });
     edge.addControlPoint(-1, 2);
-    expect(edge.controlPoints[0]).toEqual({ x: 0, y: 1 });
+    edge.addControlPoint(-12, 13);
+    edge.addControlPoint(-Infinity, Infinity);
+    expect(edge.controlPoints).toEqual([{ x: -1, y: 2 }, { x: -10, y: 11 }, { x: -10, y: 11 }]);
   });
 
   test('addControlPoint should handle NaN gracefully', () => {
@@ -135,14 +137,15 @@ describe('GraphEdge', () => {
     expect(edge.removeControlPoint(-1)).toBe(false);
   });
 
-  test('constructor should clamp control points from options', () => {
+  test('constructor should clamp control points from options to the range a project can store (DEF-41)', () => {
     const edge = new GraphEdge({
       sourceId: 'a',
       targetId: 'b',
-      controlPoints: [{ x: -1, y: 2 }, { x: NaN, y: 0.5 }],
+      controlPoints: [{ x: -1, y: 2 }, { x: NaN, y: 0.5 }, { x: 11.5, y: -10.5 }],
     });
-    expect(edge.controlPoints[0]).toEqual({ x: 0, y: 1 });
+    expect(edge.controlPoints[0]).toEqual({ x: -1, y: 2 });
     expect(edge.controlPoints[1]).toEqual({ x: 0.5, y: 0.5 });
+    expect(edge.controlPoints[2]).toEqual({ x: 11, y: -10 });
   });
 
   // ── toJSON / fromJSON round-trip ────────────────────

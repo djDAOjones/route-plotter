@@ -111,7 +111,6 @@ moved, and account for every survivor)
   and Discard; the record moves to a second key autosave never writes. Clear
   All discards it too; if storage is full it stays, and the autosave failure
   report points to the notice. **P2**
-- [ ] **DEF-41 Traced bends stay on the image** · Live defect [ready] **P2**
 - [ ] **DEF-44 A paused editor never idles** · Live defect [ready] **P2**
 - [ ] **DEF-46 A second export spoils the first** · Live defect [ready]
   **P2**

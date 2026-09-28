@@ -188,6 +188,17 @@ describe('applyTraceToLayer', () => {
     expect(['a', 'b', 'c'].map(id => [nodeFor(id).x, nodeFor(id).y])).toEqual([[0, 0.5], [0.5, 1], [1, 0]]);
   });
 
+  test('a traced bend off the image stays where its waypoint is, as far as a project can store (DEF-41)', () => {
+    // Its nodes followed their waypoints off the image (DEF-35), but a minor
+    // waypoint between them became a bend held at the image's edge.
+    const route = [major('a', 0.3, 0.5), minor('m', 1.25, 0.15), major('b', 1.6, 0.5), minor('far', 12, 0.5), major('c', 0.6, 1.45)];
+    const { layer } = layerWithTrace(route);
+
+    const bends = layer.graph.getEdges().map(edge => edge.controlPoints);
+    // A bend past the range a project can store stops at it, as a node does.
+    expect(bends).toEqual([[{ x: 1.25, y: 0.15 }], [{ x: 11, y: 0.5 }]]);
+  });
+
   test('reshaping the traced network never reaches back into the route', () => {
     const route = linearRoute();
     const before = route.map(waypoint => waypoint.toJSON());
