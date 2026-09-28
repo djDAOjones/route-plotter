@@ -21,6 +21,10 @@
 
 Outcome: written when the run's last such defect has merged.
 
+DEF-48 — The preview tip's storage access is guarded, as every other the app
+reaches is: a browser that blocks site storage no longer stops the app
+starting, and a full store no longer throws from the tip's timer. (2026-09-28)
+
 DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, and reload; a bend drawn
 by hand still stays on the image. (2026-09-28)
