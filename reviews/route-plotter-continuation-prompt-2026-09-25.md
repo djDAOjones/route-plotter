@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD013 MD060 -->
 # Continue Route Plotter v3: the rest of the post-W2 queue, then the W3 pilot
 
-**Superseded by `route-plotter-continuation-prompt-2026-09-26.md`**, which carries the programme on from the open pull requests #35 to #44. This prompt briefed the rest of the post-W2 queue and the W3 pilot; DEF-36 (#34) merged from it on 2026-09-25, unreleased, and every other item in it has a pull request. It remains as provenance.
+**Superseded by `route-plotter-continuation-prompt-2026-09-28.md`**, which carries the programme on once all of this merged. This prompt briefed the rest of the post-W2 queue and the W3 pilot; DEF-36 (#34) merged from it on 2026-09-25, and the rest (#35 to #44) on 2026-09-28, unreleased. It remains as provenance.
 
 This supersedes `route-plotter-continuation-prompt-2026-09-24.md`, which
 briefed the post-W2 queue and remains as provenance: its first two items,

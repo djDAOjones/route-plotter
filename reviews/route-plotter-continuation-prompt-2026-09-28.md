@@ -1,27 +1,25 @@
 <!-- markdownlint-disable MD013 MD060 -->
-# Continue Route Plotter v3: land the post-W2 queue and W3's pilot, then close them out
+# Continue Route Plotter v3: after the post-W2 queue and W3's pilot
 
 This supersedes `route-plotter-continuation-prompt-2026-09-25.md`, which
 briefed the rest of the post-W2 queue and the W3 pilot and remains as
-provenance: every item in it now has a pull request. Paste everything below
-into a fresh chat.
+provenance: all of it merged on 2026-09-28. Paste everything below into a
+fresh chat.
 
 You are continuing an adopted refactoring programme for Route Plotter v3.
-**W0, W1 and W2 are closed; W2's fixes are live as v3.2.692; DEF-34, TST-17
-and DEF-36 are merged on `main` and not yet released. Every other item of the
-post-W2 queue, and W3's pilot, is an open pull request waiting on Joe, and the
-close-out `PM:` pull request is open as a draft.** Your job now: see those
-pull requests merged cleanly, resolving the text conflicts between them;
-finalise and land the close-out; then take DEF-28 once Joe has made its
-design call, and whatever Joe accepts from the proposals.
+**W0, W1 and W2 are closed, and W2's fixes are live as v3.2.692. The post-W2
+queue and W3's pilot are merged on `main` and recorded in project memory,
+and none of it is released yet.** Your job now: the two accepted defects
+that are ready, DEF-38 and DEF-39; then DEF-28, once Joe has made its design
+call; then whatever Joe accepts of the proposed rows DEF-40 to DEF-46 and of
+TST-04, which §14.5 wants before W4. A release happens only when Joe calls
+one.
 
 **Repository:** `djDAOjones/route-plotter`.
 **Maintainer's working copy (OneDrive):** `/Users/joe/Library/CloudStorage/OneDrive-TheUniversityofNottingham/_Joe Bell UoN Files/2_Projects/2025-10-14 Gary Priestnall PARM Maps Encore/Route Plotter v3`
 
 The owner is Joe. Follow `AGENTS.md` (via `CLAUDE.md`). Where this prompt and
-the repository disagree, the repository wins, and you tell Joe. The one
-exception is the close-out pull request (#44), which is newer than the memory
-on `main` until it merges; tell Joe you are working from it.
+the repository disagree, the repository wins, and you tell Joe.
 
 ## Purpose
 
@@ -37,73 +35,66 @@ latest build; the last CI runs; the open pull requests (`gh` on Joe's Mac,
 the GitHub MCP tools in the cloud container, which has no `gh`); and a
 read-only `git status` in the OneDrive copy.
 
-- **`main` @ `2fb72ff`** (DEF-36, #34, merged on Joe's word on 2026-09-25),
-  on DEF-34 (#31), TST-17 (#32) and the `PM:` commit of the 2026-09-25 prompt
-  (#33). **Verify** green. Protected: no force-push, no deletion.
+- **`main`** ends with this prompt's own merge (#45), on the close-out
+  (#44) and the queue's merges, #35 to #43, all squash-merged on Joe's word
+  on 2026-09-28, after DEF-36 (#34), TST-17 (#32) and DEF-34 (#31).
+  **Verify** green. Protected: no force-push, no deletion. No pull request
+  was left open.
 - **Live: v3.2.692** (`14e3656`, tag `v3.2.692`), served by GitHub Pages from
-  `main` `/docs`. DEF-34, TST-17 and DEF-36 are merged and **not live**.
+  `main` `/docs`. Everything merged since (#31 to #45) is **not live**.
   Rollback tags: `v3.2.689`, `v3.2.690`, `v3.2.691`, `v3.2.692`.
-- **Gate on `main`:** `npm run check` → 85 test files · 1,190 tests · 2 todo ·
-  shell 0 · build:check 0 (2026-09-26). The test run took about 65 s on the
-  machine that ran W2, and takes 148 s in the cloud container.
-- **Open pull requests,** all green on CI and all waiting on Joe:
-
-  | PR | Item | Branch |
-  | --- | --- | --- |
-  | #35 | DEF-35 part A: crowds, dots and area drags follow points off the image | `post-w2/def-35-readers` |
-  | #36 | DEF-35 part B: the scene outline edits points off the image | `post-w2/def-35-outline` |
-  | #37 | DEF-08: pop, grow and pulse scale their marker in export, scrubbing and pause | `post-w2/def-08-beacon-scale` |
-  | #38 | DEF-17: a finished polygon names its waypoint | `post-w2/def-17-polygon-complete` |
-  | #39 | DEF-33: a cold start no longer announces "Animation paused" | `post-w2/def-33-startup-announce` |
-  | #40 | DEF-30: a refused benchmark changes nothing, and `once` means once | `post-w2/def-30-harness-and-once` |
-  | #41 | DEF-37: a `null` Graphics scale opens at 1×, and its next save reopens | `post-w2/def-37-null-graphics-scale` |
-  | #42 | DEF-29: a video export bakes its beacons whatever the author's reduced motion | `post-w2/def-29-export-motion` |
-  | #43 | SPL-01, W3's pilot: the slider scales move to `utils/sliderScales` | `w3/spl-01-slider-scales` |
-  | #44 | `PM:` close-out, a **draft, merged last** | `pm/close-out-post-w2` |
-
-  Merged together, #35 to #43 pass the gate: 86 test files · 1,239 tests ·
-  2 todo. Each PR body states its behaviour change, its evidence, its
-  mutation table and its review.
+- **Gate on `main`:** `npm run check` → 86 test files · 1,239 tests · 2 todo ·
+  shell 0 · build:check 0 (2026-09-28). The test run takes about 166 s in the
+  cloud container (148 s before the queue), and took about 65 s on the
+  machine that ran W2.
+- **What merged on 2026-09-28**, each PR body holding its behaviour
+  statement, evidence, mutation table and review: DEF-35 (#35, #36), DEF-08
+  (#37), DEF-17 (#38), DEF-33 (#39), DEF-30 (#40), DEF-37 (#41), DEF-29
+  (#42), SPL-01, W3's pilot (#43), the close-out (#44) and this prompt (#45).
 - **The plan:** `reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md`.
   Joe accepted all 22 §20 defaults on 2026-09-22. On 2026-09-24 Joe approved
   DEF-34 and accepted DEF-35, DEF-36, TST-17 and DEF-37 (a `null` Graphics
   scale means 1×). On 2026-09-25 Joe accepted DEF-38 (P2) and DEF-39 (P3,
   keeping the round caps and joins), allowed branches named for their item,
-  and asked for the pull requests to be watched. DEF-40 to DEF-46 are
-  **proposed**, awaiting Joe. Check §20 and the decision log before telling
-  Joe anything needs a decision.
+  and asked for the pull requests to be watched. **DEF-40 to DEF-46 are
+  proposed**, awaiting Joe. Check §20 and the decision log before telling Joe
+  anything needs a decision.
 - **Line references in the plan are at `2e4d78e`** unless a dated note says
   otherwise, and `src/` has moved. Re-verify every reference before relying
   on it.
 - **The OneDrive copy** could not be reached from the cloud container this
   prompt was written in. Joe fast-forwards it; you never do.
 
-## What the close-out pull request holds
+## What waits on Joe
 
-The memory on `main` still lists DEF-34, TST-17 and DEF-36 as open, and has no
-entry, trajectory line or plan marker for them. **#44 is the record**,
-written for the state after #35 to #43 merge:
-- the backlog's `### Next` without the merged items, with DEF-38 and DEF-39
-  in, and DEF-28 gated on Joe's design call;
-- plan markers for DEF-34, TST-17 and DEF-36; DEF-38 and DEF-39 marked
-  accepted; proposed rows DEF-42 to DEF-46 (DEF-40 and DEF-41 arrive with #36
-  and #35); and a dated note on DEF-06;
-- two decision-log entries (the post-W2 queue; W3's pilot, with §14.5's
-  answers), trajectory lines and eleven wish-list lines.
+Project memory is current: the close-out (#44) removed the merged items from
+the backlog, marked their plan rows shipped (unreleased), and added two
+decision-log entries (the post-W2 queue; W3's pilot, with §14.5's answers),
+trajectory lines and eleven wish-list lines. It left these for Joe, each with
+a recommended default in #44's description. Ask the ones this chat has not
+already answered, few and concrete:
 
-**Before #44 is marked ready:** merge `main` into it; add a "shipped" marker
-to each merged item's plan row, in the W2 form with `unreleased` for the
-version (`**Shipped 2026-09-24 (post-W2 queue, PR #31; unreleased)**`); take
-out whatever did not merge (its backlog row stays; its trajectory line and
-its place in the entry go); recount `file-map.md` against the tree; and rerun
-the gate. The queue's own pull requests edit those plan rows, which is why #44
-has not marked them yet.
+1. **DEF-28:** what an author sees when a session cannot be restored. The
+   recommended option is a notice with **Download it** and **Discard**, and
+   the record kept under a second storage key that autosave never writes
+   until the author chooses.
+2. **DEF-40 to DEF-46:** accept, change or decline each. Suggested: P2 for
+   DEF-40, DEF-41, DEF-44 and DEF-46; P3 for DEF-42, DEF-43 and DEF-45.
+3. **TST-04 before W4**, to guard the sidebar's readouts, which the pilot
+   showed nothing checks.
+4. **W4's characterisation step:** add "mutate every branch of each moved
+   function and account for every survivor", the pilot's lesson.
+5. **Budgets,** reported and proposed, never pruned without Joe: the
+   decision log is 29 of 20 live entries (Joe's standing choice); the
+   wish-list 32 of 25 open items (a triage pass is proposed); the trajectory
+   2,046 of 2,000 words (archiving its oldest phases is proposed).
+6. **A release,** whenever Joe wants the queue live.
 
 ## Reading order
 
 1. **`AGENTS.md` tiers:** README, brief, architecture and conventions whole;
    the backlog Active section; the latest decision-log headings (start with
-   "W2 closes"), then #44's two entries.
+   "W2 closes", then the two 2026-09-28 entries above it).
 2. **From the plan, only what the current item needs:** its §12.1 or §12.2
    row; §13 ground rules; §17 (testing); §18 (metrics); §20 before calling
    anything open; §2.9 for the round-2 browser probes; §14 before W4.
@@ -113,23 +104,25 @@ has not marked them yet.
 
 ## The work in order
 
-1. **Land the open pull requests as Joe merges them.** Seven pairs conflict
-   with each other, in text only; the table is in #44. Whichever of a pair
-   merges second needs `main` merged into it: do that on its branch with a
-   merge commit (never rebase or force-push a pull request's branch), keep
-   both sides, rerun `npm run check`, and push. If Joe tells you to merge them
-   yourself, take them in number order, one at a time, waiting for green CI
-   between merges; squash, keeping the `<ITEM-ID>: summary` title.
-2. **Finalise and land #44**, as above, once #35 to #43 are merged or Joe says
-   which to leave out. It merges last.
-3. **DEF-28,** once Joe chooses what an author sees when a session cannot be
-   restored. #44 sets out options A, B and C, and recommends A. Characterise
-   first, as always.
-4. **Joe's calls on the proposals:** DEF-40 to DEF-46; TST-04 before W4, which
-   §14.5 asks for because nothing guards the sidebar's readouts; and the
-   pilot's lesson for W4's characterisation step. Accepted rows enter
-   `### Next`; nothing else does.
-5. **A release,** only when Joe calls one (`DEV-INFRASTRUCTURE.md` →
+1. **Ask Joe what waits on Joe** (above), unless this chat already carries
+   the answers.
+2. **DEF-38** (P2, ready): a throw inside one of the main canvas's
+   background saves keeps that frame's zoom, camera transform or
+   `destination-in` for every later frame. The row's treatment: put each of
+   those `save`s in a `try/finally` that restores it, or have each host
+   re-apply its canvas set-up after a frame that throws. The main canvas's
+   base transform belongs to its host, so DEF-36's cure does not carry over.
+   DEF-36's state-keeping test recorder is the tool for it.
+3. **DEF-39** (P3, ready): area borders inherit the route's round caps and
+   joins, so the first frame after a resize or a throw draws them differently
+   from a steady frame. Joe chose the round look; set every style a draw
+   relies on where it draws.
+4. **DEF-28,** once Joe has chosen what an author sees. Characterise first,
+   as always.
+5. **Whatever Joe accepts** of DEF-40 to DEF-46 and TST-04, in the order Joe
+   gives. Accepted rows enter `### Next`; nothing else does.
+6. **Memory:** the budget proposals above, only with Joe's word.
+7. **A release,** only when Joe calls one (`DEV-INFRASTRUCTURE.md` →
    Deployment). It records itself with its own decision-log entry.
 
 ## The safety net — use it, do not rebuild it
@@ -169,15 +162,15 @@ has not marked them yet.
 - **`tests/helpers/consoleGuard.js`** — undeclared console output fails its
   test; declare with `allowConsole(/…/)`.
 - **`tests/helpers/minCountReporter.js`** — its floor is still 72 files /
-  1,000 tests against a suite of 85 / 1,190 (86 / 1,239 once the queue
-  merges); raise it as the suite grows, never lower it.
+  1,000 tests against a suite of 86 / 1,239; raise it as the suite grows,
+  never lower it.
 - **From W2:** `tests/shortHexGlow.test.js` has a manual
   `requestAnimationFrame` harness for frame-by-frame scheduling tests;
   `tests/exportMinimisation.test.js` drives the real `saveProject()` and
   `exportHTML()` and reads the blobs back; `src/utils/imageCoordinates.js`
   and `boundedEntityId` (`src/utils/entityId.js`) are the one rule each for
   image-point ranges and derived ids.
-- **From the post-W2 queue, once merged:** DEF-29's tests run the app's real
+- **From the post-W2 queue:** DEF-29's tests run the app's real
   `exportVideo()` with only the encoder replaced (`app.videoExporter`
   stubbed, `VideoExporter.downloadBlob` spied, both restored in `finally`);
   DEF-37's round-trip a real `.zip` through Open Project (`exportZip`, then
@@ -385,7 +378,5 @@ The current state (`main` SHA, open PRs, CI, live version); what merged or
 released; memory written; plan rows patched; metrics deltas at a wave close;
 the exact next step; and any question waiting on Joe.
 
-**Begin** by verifying the state above (`main`'s SHA, which of #35 to #44 are
-merged, CI, and each open pull request's mergeability), making the clone, and
-telling Joe you are working from #44. Then resolve whatever conflicts the
-merges so far have left, and take the first open step of "The work in order".
+**Begin** by verifying the state above, making the clone, and asking Joe
+what waits on Joe; then pick up **DEF-38**.

@@ -146,10 +146,10 @@
   Full historical Route Plotter review at commit cec0191, public-path sanitised
 - `reviews/route-plotter-continuation-prompt-2026-08-27.md` — Superseded
   continuation prompt, kept as provenance for the backlog-driven era
-- `reviews/route-plotter-continuation-prompt-2026-09-26.md` — Current
-  paste-ready prompt: land the open pull requests of the post-W2 queue and
-  W3's pilot, resolving the text conflicts between them, then the close-out
-  PM PR; then DEF-28 and whatever Joe accepts of the proposals
+- `reviews/route-plotter-continuation-prompt-2026-09-28.md` — Current
+  paste-ready prompt, once the post-W2 queue and W3's pilot had merged: the
+  questions waiting on Joe, DEF-38 and DEF-39, then DEF-28 and whatever Joe
+  accepts of the proposals
 - `reviews/route-plotter-continuation-prompt-2026-09-25.md` — Superseded
   continuation prompt, kept as provenance for the rest of the post-W2 queue
   and the W3 pilot
