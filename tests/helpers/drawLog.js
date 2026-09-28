@@ -110,16 +110,58 @@ export function discardFrame() {
   takeOrderedCalls();
 }
 
+/** One recorded style as `name=value`; a line dash is its lengths, comma-separated. */
+function describeStyle(name, value, gradients) {
+  return Array.isArray(value)
+    ? `${name}=${value.map(round).join(',')}`
+    : `${name}=${renameGradient(String(round(value)), gradients)}`;
+}
+
 /**
  * The state a call was made in, as `setup.js` recorded it: `@ ` and its
  * transform (`a b c d e f`, `DOMMatrix` order), `| saved ` and how many saved
  * states were open, then every style away from its default, as `name=value`.
  */
 function describeState(entry, gradients) {
-  const styles = Object.entries(entry.state).map(([name, value]) => (Array.isArray(value)
-    ? `${name}=${value.map(round).join(',')}`
-    : `${name}=${renameGradient(String(round(value)), gradients)}`));
+  const styles = Object.entries(entry.state).map(([name, value]) => describeStyle(name, value, gradients));
   const parts = [`@ ${entry.transform.map(round).join(' ')}`, `saved ${entry.depth}`];
+  if (styles.length > 0) parts.push(styles.join(' '));
+  return parts.join(' | ');
+}
+
+const COMPOSITING = ['globalAlpha', 'globalCompositeOperation', 'shadowColor', 'shadowBlur', 'shadowOffsetX',
+  'shadowOffsetY', 'filter'];
+const STROKING = ['strokeStyle', 'lineWidth', 'lineCap', 'lineJoin', 'miterLimit', 'lineDash', 'lineDashOffset'];
+const LETTERING = ['font', 'textAlign', 'textBaseline', 'direction'];
+
+/**
+ * The styles each call that marks the canvas draws with, beyond its
+ * arguments. A path point and a `clearRect` use only the transform; a call
+ * not listed here marks nothing.
+ */
+const DRAWN_WITH = new Map([
+  ...['moveTo', 'lineTo', 'bezierCurveTo', 'quadraticCurveTo', 'arc', 'arcTo', 'ellipse', 'rect', 'roundRect',
+    'clearRect'].map(name => [name, []]),
+  ['stroke', [...STROKING, ...COMPOSITING]],
+  ['strokeRect', [...STROKING, ...COMPOSITING]],
+  ['strokeText', [...STROKING, ...LETTERING, ...COMPOSITING]],
+  ['fill', ['fillStyle', ...COMPOSITING]],
+  ['fillRect', ['fillStyle', ...COMPOSITING]],
+  ['fillText', ['fillStyle', ...LETTERING, ...COMPOSITING]],
+  ['drawImage', ['imageSmoothingEnabled', 'imageSmoothingQuality', ...COMPOSITING]],
+]);
+
+/**
+ * The state a call draws with: `@ ` and its transform, then those of its
+ * styles that are away from their defaults. Null for a call that draws
+ * nothing, which carries no state.
+ */
+function describeDrawnState(entry, gradients) {
+  const used = DRAWN_WITH.get(entry[1]);
+  if (!used) return null;
+  const styles = used.filter(name => name in entry.state)
+    .map(name => describeStyle(name, entry.state[name], gradients));
+  const parts = [`@ ${entry.transform.map(round).join(' ')}`];
   if (styles.length > 0) parts.push(styles.join(' '));
   return parts.join(' | ');
 }
@@ -127,13 +169,16 @@ function describeState(entry, gradients) {
 /**
  * Drain one frame as transcript lines, each prefixed by its surface.
  *
- * With `state`, each line ends with the state its call was made in
+ * With `state: true`, each line ends with the state its call was made in
  * (`describeState`). The goldens leave it off, since their calls already say
  * every change they make; it is for a comparison that must also catch state
- * left over from an earlier frame, which changes no call (DEF-36).
+ * left over from an earlier frame, which changes no call (DEF-36). With
+ * `state: 'drawn'`, a call that marks the canvas ends with only the state it
+ * draws with (`describeDrawnState`), so two frames can be compared by what
+ * they draw while a style nothing uses differs between them (DEF-39).
  *
  * @param {Object} host - A booted RoutePlotter or a loaded PlayerApp
- * @param {{state?: boolean}} [options]
+ * @param {{state?: boolean|'drawn'}} [options]
  * @returns {string[]}
  */
 export function takeFrame(host, { state = false } = {}) {
@@ -142,6 +187,10 @@ export function takeFrame(host, { state = false } = {}) {
   const lines = takeOrderedCalls().map((entry) => {
     const [id, ...call] = entry;
     const line = `${surfaceLabel(names, id)} ${describeCall(call, gradients, names)}`;
+    if (state === 'drawn') {
+      const drawn = describeDrawnState(entry, gradients);
+      return drawn ? `${line} ${drawn}` : line;
+    }
     return state ? `${line} ${describeState(entry, gradients)}` : line;
   });
   forgetSurfaceCalls(host);
@@ -171,7 +220,7 @@ function forgetSurfaceCalls(host) {
  *
  * @param {Object} host - A booted RoutePlotter or a loaded PlayerApp
  * @param {number} progress
- * @param {{state?: boolean}} [options] - As `takeFrame`
+ * @param {{state?: boolean|'drawn'}} [options] - As `takeFrame`
  */
 export function frameAt(host, progress, options) {
   host.animationEngine.seekToProgress(progress);

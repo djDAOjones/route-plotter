@@ -4,6 +4,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector setLineDash []
 vector save
 vector set:globalAlpha 1
@@ -124,6 +126,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector setLineDash []
 vector save
 vector set:globalAlpha 1
@@ -244,6 +248,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector set:strokeStyle #FFFFFF
 vector set:lineWidth 5
 vector setLineDash []
@@ -832,6 +838,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector set:strokeStyle #FFFFFF
 vector set:lineWidth 5
 vector setLineDash []
@@ -1420,6 +1428,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector set:strokeStyle #FFFFFF
 vector set:lineWidth 5
 vector setLineDash []
@@ -2150,6 +2160,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 660 660
 main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector set:strokeStyle #FFFFFF
 vector set:lineWidth 5
 vector setLineDash []

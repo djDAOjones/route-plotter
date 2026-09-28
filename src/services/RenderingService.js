@@ -556,7 +556,14 @@ export class RenderingService {
     const clearWidth = this.vectorCanvasCssWidth || vCanvas.width;
     const clearHeight = this.vectorCanvasCssHeight || vCanvas.height;
     vctx.clearRect(0, 0, clearWidth, clearHeight);
-    
+    // Each frame starts from the round caps and joins a steady frame always
+    // drew with. The route sets them outside any save, and an outline that
+    // sets neither (an area's border, a marker's ring) inherited whatever the
+    // frame before had left: square on a freshly sized layer, the first frame
+    // after a resize or a throw, and at an instant with no route (DEF-39).
+    vctx.lineCap = 'round';
+    vctx.lineJoin = 'round';
+
     // Determine which spatial transform to apply to the vector context.
     // Priority: user viewport zoom > animation camera zoom > identity.
     const cameraState = state.cameraState;

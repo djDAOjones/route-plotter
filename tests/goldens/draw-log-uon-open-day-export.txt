@@ -8,6 +8,8 @@ vector canvas.height 1080
 vector setTransform 1 0 0 1 0 0
 vector scale 1 1
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector setLineDash []
 vector setLineDash []
 vector save
@@ -153,6 +155,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector setLineDash []
 vector setLineDash []
 vector save
@@ -298,6 +302,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector set:fillStyle #56B4E9
 vector beginPath
@@ -1170,6 +1176,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector set:fillStyle #56B4E9
 vector beginPath
@@ -2578,6 +2586,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector set:fillStyle #56B4E9
 vector beginPath
@@ -4396,6 +4406,8 @@ main set:fillStyle #ffffff
 main fillRect 0 0 1920 1080
 main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] 420 0 1080 1080
 vector clearRect 0 0 1920 1080
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector set:fillStyle #56B4E9
 vector beginPath

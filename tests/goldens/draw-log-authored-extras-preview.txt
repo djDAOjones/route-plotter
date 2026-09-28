@@ -22,6 +22,8 @@ main set:fillStyle #fff
 main fillRect 0 0 660 660
 main restore
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector translate 330 330
 vector scale 1.75 1.75
@@ -126,6 +128,8 @@ main set:fillStyle #fff
 main fillRect 0 0 660 660
 main restore
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector translate 330 330
 vector scale 1.75 1.75
@@ -1302,6 +1306,8 @@ main set:fillStyle #fff
 main fillRect 0 0 660 660
 main restore
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector translate 330 330
 vector scale 1.75 1.75
@@ -3016,6 +3022,8 @@ main set:fillStyle #fff
 main fillRect 0 0 660 660
 main restore
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector translate 330 330
 vector scale 1.75 1.75
@@ -4570,6 +4578,8 @@ main set:fillStyle #fff
 main fillRect 0 0 660 660
 main restore
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector translate 330 330
 vector scale 1.75 1.75
@@ -5961,6 +5971,8 @@ main set:fillStyle #fff
 main fillRect 0 0 660 660
 main restore
 vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
 vector save
 vector translate 330 330
 vector scale 1.75 1.75
