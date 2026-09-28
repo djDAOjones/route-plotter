@@ -215,7 +215,7 @@
 - `src/app/projectReset.js` — Testable Clear All transaction: invalidate async work, clear bytes/model/UI, reset the visual reference, cancel writers and establish one empty baseline
 - `src/app/sceneOutline.js` — EventBus integration and sole mutation/undo/autosave owner for stable-ID semantic scene-outline commands, with shared plain crowd-field vocabulary
 - `src/app/startup.js` — Testable startup sequence: await autosave recovery before selecting a default background
-- `src/app/unrestoredAutosave.js` — DEF-28: recovery records that could not be restored — keeping them, the author's notice (Download it, Discard) one record at a time, their offer at each start and as other tabs change them, what a failed recovery write adds about them, and Clear All's part in discarding them
+- `src/app/unrestoredAutosave.js` — DEF-28: recovery records that could not be restored — keeping them, the author's notice (Download it, Discard) one record at a time, their offer at each start and as other tabs change them (one offer per record, a memory copy retiring once another tab keeps it), what a failed recovery write adds about them, and Clear All's part in discarding them
 - `src/app/undoRedo.js` — Undo/redo model, selection and inspector-scope restoration; reference-aware asset sweeping and rollback-safe interactive image admission with minimum history loss
 - `src/app/viewport.js` — Responsive canvas/panel bounds, first-authored-canvas visual-reference seeding, coordinate conversion, aspect handling and manual zoom
 - `src/app/wiringBus.js` — EventBus + AnimationEngine subscriptions, including card-action availability refresh and compatible already-saved image-edit signalling

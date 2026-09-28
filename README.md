@@ -173,8 +173,10 @@ narrows, and cannot close, the moment in which a tab that has not yet seen it
 writes over the record; two tabs choosing the same key for a kept record at
 the same moment could likewise collide. The notice offers one record at a
 time, this start's first, and follows what other tabs keep, hold, discard or
-write over. Discard removes every copy of the record it can read, wherever it
-has moved, and says it failed if the store cannot be searched. Only that
+write over; a record this start could keep only in memory, which another tab
+then keeps, is offered once, where it is kept. Discard removes every copy of
+the record it can read, wherever it has moved, and says it failed if the
+store cannot be searched. Only that
 Discard and **Clear All** remove one, and Clear All's dialog says so. When storage cannot hold both a kept record and a new autosave, the
 record stays, and the autosave's failure report says how to free space.
 

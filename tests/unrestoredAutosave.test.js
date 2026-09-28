@@ -1233,6 +1233,123 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     expect(notice().hidden).toBe(true);
   });
 
+  test('a record this tab could keep only in memory, kept since by another tab, is offered once, as this start’s, and Discard removes that copy', async () => {
+    const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
+    const room = { forCopies: false };
+    const store = useStorage({}, { quotaFor: [key => isKept(key) && !room.forCopies] });
+    const app = await bootApp();
+    await app.ready;
+    store.set(AUTOSAVE, record);
+    allowConsole(LOAD_REFUSED, WRITE_FAILED);
+    const decoding = holdDecoding();
+    const restoring = app.loadAutosave();
+    await decoding.reached;
+    store.set(AUTOSAVE, 'a newer record, written by another tab');
+    decoding.fail();
+    expect(await restoring).toBe(false);
+    expect(status()).toBe(UNKEPT);
+
+    // Another tab, which read the same record, keeps it once there is room.
+    room.forCopies = true;
+    const { key } = new StorageService().keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: record }));
+
+    expect(app._unrestoredOffers.map(offer => offer.where)).toEqual(['parked']);
+    expect(heading()).toBe(NOW);
+    expect(status()).toBe(KEPT);
+    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+    const heard = listen(app);
+    discard();
+    expect(kept(store)).toEqual([]);
+    expect(notice().hidden).toBe(true);
+    expect(heard()).toEqual([{ message: DISCARDED, priority: 'polite' }]);
+  });
+
+  test('a record this tab held without its mark, kept since by another tab and then discarded there, is not offered again', async () => {
+    allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to save section states/);
+    const record = await refusedRecord();
+    // A full store: no copy fits, nor the mark. Room is made later.
+    const capacity = { value: TIP_SIZE + AUTOSAVE.length + record.length, valueOf() { return this.value; } };
+    const { store } = await bootRecording({ [AUTOSAVE]: record, ...TIP_SEEN }, { capacity });
+    expect(status()).toBe(HELD_HERE);
+
+    capacity.value = Infinity;
+    const otherTab = new StorageService();
+    const { key } = otherTab.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: record }));
+    expect(notice().hidden).toBe(false);
+    expect(heading()).toBe(NOW);
+    expect(status()).toBe(KEPT);
+
+    // The author discards it there.
+    expect(otherTab.discardKept({ text: record, where: 'parked', key })).toBe(true);
+    window.dispatchEvent(new StorageEvent('storage', { key, newValue: null }));
+    expect(kept(store)).toEqual([]);
+    expect(notice().hidden).toBe(true);
+  });
+
+  /**
+   * This tab's restore of `record` fails while another tab writes the
+   * recovery key, and no copy fits: the record is kept only in memory here.
+   */
+  async function keptOnlyInMemory(options = {}) {
+    const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
+    const room = { forCopies: false };
+    const store = useStorage({}, { quotaFor: [key => isKept(key) && !room.forCopies], ...options });
+    const app = await bootApp();
+    await app.ready;
+    store.set(AUTOSAVE, record);
+    allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to load from localStorage/);
+    const decoding = holdDecoding();
+    const restoring = app.loadAutosave();
+    await decoding.reached;
+    store.set(AUTOSAVE, 'a newer record, written by another tab');
+    decoding.fail();
+    expect(await restoring).toBe(false);
+    expect(status()).toBe(UNKEPT);
+    return { app, store, record, room };
+  }
+
+  test('a Discard of a record kept only in memory removes the copy another tab kept, though this tab had not heard of it', async () => {
+    const { store, record, room } = await keptOnlyInMemory();
+    room.forCopies = true;
+    new StorageService().keepUnrestored(record);
+
+    discard();
+    expect(kept(store)).toEqual([]);
+  });
+
+  test('a record kept only in memory here, held by another tab under a mark this tab cannot read, is offered once', async () => {
+    const unreadable = { now: false };
+    const { app, store, record } = await keptOnlyInMemory({ readFails: [key => key === HELD_MARK && unreadable.now] });
+    store.set(AUTOSAVE, record);
+    expect(new StorageService().keepUnrestored(record)).toEqual({ where: 'held', durable: true });
+    unreadable.now = true;
+    window.dispatchEvent(new StorageEvent('storage', { key: HELD_MARK, newValue: store.get(HELD_MARK) }));
+
+    expect(app._unrestoredOffers.map(offer => offer.where)).toEqual(['held']);
+  });
+
+  test('a hold without its mark stays while an unrelated record is kept under a key of its own', () => {
+    allowConsole(WRITE_FAILED);
+    const store = useStorage(
+      { [AUTOSAVE]: 'held', [keptKey(1, 'q')]: 'another record' },
+      { quotaFor: [key => isKept(key) || key === HELD_MARK] }
+    );
+    const here = new StorageService();
+
+    expect(here.keepUnrestored('held')).toEqual({ where: 'held', durable: false });
+    expect(here.holdState()).toEqual({ state: 'held', text: 'held', durable: false });
+    expect(here.saveAutoSave({ name: 'new work' })).toBe(false);
+    expect(store.get(AUTOSAVE)).toBe('held');
+  });
+
+  test('discarding a record kept only in memory leaves every other kept record', () => {
+    const store = useStorage({ [keptKey(1, 'q')]: 'another record' });
+    expect(new StorageService().discardKept({ text: 'a record kept only in memory', where: 'unkept' })).toBe(true);
+    expect(kept(store)).toEqual(['another record']);
+  });
+
   test('a record another tab holds shows here, and a failure to save here says why', async () => {
     allowConsole(WRITE_FAILED);
     const { store, app } = await bootRecording({}, noCopies);

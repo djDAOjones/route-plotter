@@ -331,8 +331,9 @@ export class StorageService {
    *   as far as the store could be searched
    */
   discardKept({ text, where, key }) {
-    if (where === 'unkept') return true;
-    // The recovery key's copy first: if it cannot go, the record stays on offer.
+    // Wherever it was when it was offered, even kept only in memory: another
+    // tab may have kept it since. The recovery key's copy first, and only if
+    // it is this record: if it cannot go, the record stays on offer.
     if (!this._removeIfHolding(STORAGE.AUTOSAVE_KEY, text)) return false;
     this._releaseHold(text);
     if (where === 'parked' && !this._removeIfHolding(key, text)) return false;
