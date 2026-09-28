@@ -34,6 +34,7 @@ import { PROJECT_MODEL_LIMITS } from '../src/app/persistence.js';
 import { IMAGE_COORDINATES } from '../src/config/constants.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { CoordinateTransform } from '../src/services/CoordinateTransform.js';
+import { PathCalculator } from '../src/services/PathCalculator.js';
 
 /**
  * A booted app with enough route for the per-waypoint controls to act on.
@@ -556,14 +557,115 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       };
 
       allowConsole(LOAD_REFUSED);
-      for (const point of [{ x: 11.5, y: 0.5 }, { x: 0.5, y: -10.5 }]) {
+      for (const point of [{ x: -10.5, y: 0.5 }, { x: 11.5, y: 0.5 }, { x: 0.5, y: -10.5 }, { x: 0.5, y: 11.5 }]) {
         const before = recordedConsole().length;
         expect(await loadSnapshot(app, withBend(point))).toBe(false);
         expect(recordedConsole().slice(before).some(line => line.includes('Invalid graph control point: expected coordinates from -10 to 11'))).toBe(true);
       }
-      // At the range's ends, it loads.
-      expect(await loadSnapshot(app, withBend({ x: 11, y: -10 }))).toBe(true);
-      expect(app._buildProjectSnapshot().scene.flowLayers[0].graph.edges[0].controlPoints).toEqual([{ x: 11, y: -10 }]);
+      // At the range's ends, it loads, in both opposite corners.
+      for (const point of [{ x: 11, y: -10 }, { x: -10, y: 11 }]) {
+        expect(await loadSnapshot(app, withBend(point))).toBe(true);
+        expect(app._buildProjectSnapshot().scene.flowLayers[0].graph.edges[0].controlPoints).toEqual([point]);
+      }
+    });
+
+    test('the editor and the exported player draw the guide through a traced bend off the image', async () => {
+      const app = await bootWithRoute({ waypoints: 0 });
+      const route = [{ x: 0.3, y: 0.5 }, { x: 1.25, y: 0.15 }, { x: 1.6, y: 0.5 }];
+      expect(await loadSnapshot(app, {
+        coordVersion: 9,
+        waypoints: [
+          { id: 'wp-a', imgX: 0.3, imgY: 0.5, isMajor: true },
+          { id: 'wp-bend', imgX: 1.25, imgY: 0.15, isMajor: false },
+          { id: 'wp-b', imgX: 1.6, imgY: 0.5, isMajor: true },
+        ],
+      })).toBe(true);
+      app.addCrowd({ enterNetworkEditor: false });
+      expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
+      // The curve a route's own path would take through those points.
+      const expected = new PathCalculator().calculatePath(route);
+      expect(Math.max(...expected.map(point => point.x))).toBeGreaterThan(1.2);
+
+      const [layer] = app.scene.getFlowLayers();
+      const [edge] = layer.graph.getEdges();
+      expect(app.swarmEngine.edgeGeometry(layer.graph, edge).points).toEqual(expected);
+
+      const player = new PlayerApp(document.createElement('canvas'));
+      await player.load(JSON.parse(JSON.stringify(app._buildProjectSnapshot())), null);
+      const [playerLayer] = player.scene.getFlowLayers();
+      const [playerEdge] = playerLayer.graph.getEdges();
+      expect(playerEdge.controlPoints).toEqual([{ x: 1.25, y: 0.15 }]);
+      expect(player.swarmEngine.edgeGeometry(playerLayer.graph, playerEdge).points).toEqual(expected);
+    });
+
+    test('a traced bend off the image is kept, or moved onto the image, from the outline', async () => {
+      // Its fields show where it is; left as they are, the app keeps it, and a
+      // new value is held to the image, as a bend drawn by hand is.
+      const app = await bootWithRoute({ waypoints: 0 });
+      expect(await loadSnapshot(app, {
+        coordVersion: 9,
+        waypoints: [
+          { id: 'wp-a', imgX: 0.3, imgY: 0.5, isMajor: true },
+          { id: 'wp-bend', imgX: 1.25, imgY: 0.15, isMajor: false },
+          { id: 'wp-b', imgX: 0.8, imgY: 0.5, isMajor: true },
+          { id: 'wp-below', imgX: 0.9, imgY: -0.2, isMajor: false },
+          { id: 'wp-c', imgX: 0.4, imgY: 0.6, isMajor: true },
+        ],
+      })).toBe(true);
+      app.addCrowd({ enterNetworkEditor: false });
+      expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
+      const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+      const graph = () => app.scene.getFlowLayers()[0].graph;
+      const [aboveId, belowId] = graph().getEdges().map(edge => edge.id);
+      const bend = edgeId => ({ ...graph().getEdge(edgeId).controlPoints[0] });
+      const formFor = async (edgeId) => {
+        app.networkEditService.bindForInspection(app.scene.getFlowLayers()[0]);
+        app.networkEditService.selectControlPoint(graph().getEdge(edgeId), 0);
+        await nextTask();
+        return document.querySelector(`form[data-outline-action="update-control"][data-edge-id="${edgeId}"]`);
+      };
+      const commits = [];
+      app.eventBus.on('network:changed', ({ commit } = {}) => { if (commit) commits.push(commit); });
+      const apply = async (form, values) => {
+        for (const [name, value] of Object.entries(values)) form.elements.namedItem(name).value = value;
+        form.querySelector('[type="submit"]').click();
+        await nextTask();
+      };
+
+      let form = await formFor(aboveId);
+      expect(form.elements.namedItem('x').value).toBe('125');
+      expect(form.elements.namedItem('x').max).toBe('125');
+      await apply(form, { y: '20' });
+      expect(bend(aboveId)).toEqual({ x: 1.25, y: 0.2 });
+
+      // Applying it as it is changes nothing.
+      form = await formFor(aboveId);
+      const before = commits.length;
+      await apply(form, {});
+      expect(commits.length).toBe(before);
+      expect(bend(aboveId)).toEqual({ x: 1.25, y: 0.2 });
+
+      // A new place off the image is refused, and said why.
+      form = await formFor(aboveId);
+      await apply(form, { x: '110' });
+      expect(bend(aboveId)).toEqual({ x: 1.25, y: 0.2 });
+      expect(document.querySelector('form[data-outline-action="update-control"] [role="alert"]').textContent)
+        .toBe('Horizontal position must be between 0 and 100.');
+
+      form = await formFor(aboveId);
+      await apply(form, { x: '50' });
+      expect(bend(aboveId)).toEqual({ x: 0.5, y: 0.2 });
+      app.undo();
+      expect(bend(aboveId)).toEqual({ x: 1.25, y: 0.2 });
+      app.redo();
+      expect(bend(aboveId)).toEqual({ x: 0.5, y: 0.2 });
+
+      // Below the image, too.
+      form = await formFor(belowId);
+      expect(form.elements.namedItem('y').min).toBe(String(bend(belowId).y * 100));
+      await apply(form, { x: '80' });
+      expect(bend(belowId)).toEqual({ x: 0.8, y: -0.2 });
+      // (Escape resetting a form is the outline's own: sceneOutline.test.js.)
     });
 
   });

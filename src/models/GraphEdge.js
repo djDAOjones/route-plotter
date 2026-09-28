@@ -54,7 +54,7 @@ export class GraphEdge {
   }
 
   /**
-   * Append a control point (normalised 0–1).
+   * Append a control point (normalised; clamped to the range a project can store).
    * @param {number} x
    * @param {number} y
    * @returns {number} Index of the new control point.
