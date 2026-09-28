@@ -92,6 +92,15 @@ export const exportingMixin = {
    * 8. Restore canvas to display resolution
    */
   async exportVideo() {
+    // One export at a time. A second request (a double click on Export MP4,
+    // whose codec probe answers later, can ask twice before the buttons are
+    // disabled) is refused before it touches anything: its setup and clean-up
+    // would change the running export's canvas, mode and buttons (DEF-46).
+    if (this._videoExportRunning) {
+      this.announce('A video export is already running.');
+      return;
+    }
+
     // Validate we have something to export
     if (this.waypoints.length < 2) {
       alert('Please add at least 2 waypoints before exporting.');
@@ -148,6 +157,7 @@ export const exportingMixin = {
     const pathOnly = this.exportSettings.pathOnly;
     const originalBackgroundImage = this.background.image;
 
+    this._videoExportRunning = true;
     try {
       // Use the same mode transition as the UI. Its event chain rebuilds the
       // preview timeline; the explicit invalidation also covers exports that
@@ -206,6 +216,9 @@ export const exportingMixin = {
       }
       
     } finally {
+      // Nothing below waits, so no other request comes between; and a
+      // clean-up that throws cannot refuse every export after it.
+      this._videoExportRunning = false;
       // Clean up listeners
       window.removeEventListener('keydown', onEscapeKey, true);
       this.eventBus.off('video:export-paused', onExportPaused);

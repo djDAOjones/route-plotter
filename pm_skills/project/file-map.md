@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 344 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 345 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 111 file(s)
+- `tests` — 112 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -431,6 +431,7 @@
 - `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets, and (TST-17) a transcript names a composited canvas while drawing label text as written, and (DEF-36) shows the state each call was made in, kept through save, restore and a resize, and (DEF-39) just the state each call draws with
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
 - `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch
+- `tests/videoExportConcurrency.test.js` — DEF-46: a second video export asked for while one runs, or by a double click on Export MP4, is refused before it touches the running export's canvas, mode, buttons or frames
 - `tests/videoExporter.test.js` — Endpoint-inclusive frame planning, visibility throttling, cancellation and complete MediaRecorder/WebCodecs cleanup
 - `tests/waypointCardActions.test.js` — Reset/Apply-onward ownership, no-op reasons, content preservation, copy semantics and one-transaction integration contracts
 - `tests/waypointList.test.js` — UI-02 sidebar list contract: whole-route
