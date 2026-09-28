@@ -244,8 +244,9 @@ breaking change.
   concern, named for its item (e.g. `w0/def-18-push-flags`); run
   `npm run check`; push the branch; open a pull request; and wait for
   **Verify** to pass on it. The owner decides each merge (squash, keeping the
-  `<ITEM-ID>: summary` title); the agent rules are `AGENTS.md` → Commit, push
-  and release. The OneDrive checkout stays the owner's: update it only by
+  `<ITEM-ID>: summary` title), or delegates merges for a named run in a
+  decision-log entry that states the conditions; the agent rules are
+  `AGENTS.md` → Commit, push and release. The OneDrive checkout stays the owner's: update it only by
   fast-forward, and only when it is clean.
 - **A merge does not release source changes.** Every push to `main` rebuilds
   Pages, but from the committed `docs/`, which only `npm run push` changes;

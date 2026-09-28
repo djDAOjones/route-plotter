@@ -1,6 +1,8 @@
 <!-- markdownlint-disable MD013 MD060 -->
 # Continue Route Plotter v3: Joe's open calls, after the post-W2 follow-ups
 
+**Superseded by `route-plotter-continuation-prompt-big-run-2026-09-28.md`**, which carries the programme on as one long run. Joe answered every call this prompt put, on 2026-09-28 (decision log, "the big run"): DEF-28 option A, DEF-40 to DEF-46 accepted, TST-04 before W4, W4's mutation step, trajectory archiving, and one release at the run's end, with merges and the planned defects delegated for the run. It remains as provenance.
+
 This supersedes `route-plotter-continuation-prompt-2026-09-28.md`, which
 briefed DEF-38 and DEF-39 and remains as provenance: both merged on
 2026-09-28, with DEF-47, which their reviews found. Paste everything below

@@ -2,6 +2,62 @@
 
 <!-- Append new decisions at the top. Don't edit old entries. -->
 
+## 2026-09-28 — the big run: Joe answers the open calls, and delegates merges and planned fixes
+
+**Joe, 2026-09-28,** answering the open-calls prompt in one pass, so that one
+long development run can take the programme as far as it will go:
+
+1. **DEF-28, option A** (from #44): announce the failed restore, and show a
+   notice with **Download it** and **Discard**; the record moves to a second
+   storage key that autosave never writes, and stays until the author
+   chooses.
+2. **DEF-40 to DEF-46 accepted**, each by its row's first remedy: P2 for
+   DEF-40, 41, 44 and 46; P3 for DEF-42, 43 and 45.
+3. **TST-04 lands before W4** (§14.5), and **W4's characterisation mutates
+   every branch** of each moved function and accounts for every survivor.
+4. **Budgets:** the run may archive the trajectory's oldest phases at a wave
+   close, keeping any phase that feeds open work (the prune bar). This log
+   stays over its entry budget by Joe's choice; wish-list triage stays Joe's.
+5. **One release, at the run's end,** by DEV-INFRASTRUCTURE → Deployment, if
+   the gate, CI and the smoke test are green. Firefox and Safari evidence
+   stays Joe's.
+
+**A standing merge authority, for this run only.** The agent squash-merges
+its own pull request when all of these hold: Verify is green on the head it
+merges; `npm run check` passes with the current `main` merged in; an
+independent review ran, and each finding is fixed or rebutted with evidence
+in the PR; the diff has no `docs/` or `version.json`; and the goldens moved
+only as the PR states — byte-identical for a behaviour-preserving PR, only
+the named cells for a defect. A PR that falls short stays open for Joe while
+the run moves on. The authority also covers the run's `PM:` close-outs,
+which touch only memory and need no review, and a revert PR for any merge
+that turns `main` red. It ends with the release. `AGENTS.md` and
+DEV-INFRASTRUCTURE → Deployment now allow such an advance grant.
+
+**Planned defects are approved in advance.** An open plan row's stated
+treatment is its approved behaviour, and so are the §20 choices of 2026-09-22
+that change behaviour (Q10–Q13, Q18, Q19); each of those becomes its own PR
+with a DEF row marked decided. Every PR still states its behaviour. Still
+Joe's: DEF-07's camera feel, seen side by side before it merges; any
+behaviour beyond a row's treatment; and defects found on the way, which
+become proposed rows, not fixes.
+
+**Scheduling** (refines DOC-06 (i) and the 2026-09-23 entry on unwaved
+defects): `### Next` now holds W5, W4 behind TST-04, the eight defects
+runnable now and the seven waiting on a W5 test. W6 to W12 enter from plan
+§13 at each wave close, once their prerequisites have merged; the run
+promotes them itself. Nothing enters until runnable, and the plan is never
+imported wholesale.
+
+**A gate is a claim.** Ten plan rows and two waves still read "owner
+decides" for questions Joe answered on 2026-09-22 (DEF-07, 11, 22, 24 and
+27; CON-14; DEL-03, 04 and 06; ABS-03; W4 and W10). Each now carries a dated
+note. W1's six rows and DEF-01 gained their shipped markers, and W1 and W3 a
+status line.
+
+**Link:** `reviews/route-plotter-continuation-prompt-big-run-2026-09-28.md`;
+plan §12, §13, §20.
+
 ## 2026-09-28 — the post-W2 follow-ups: what a frame leaves behind no longer decides the next
 
 Three pull requests, one item each, merged on Joe's word and not yet released:

@@ -100,8 +100,10 @@ Load only the tier the task needs so startup context stays useful.
   branch.
 - Never commit to or push `main` except in two owner-authorised cases:
   merging a pull request the owner has told you to merge, and running
-  `npm run push` for a release the owner has called. Approving a merge does
-  not call a release.
+  `npm run push` for a release the owner has called. The owner may grant
+  either in advance for a named run, in a decision-log entry that states its
+  conditions; outside those conditions this rule holds unchanged. Approving
+  a merge does not call a release.
 - These rules hold in every workflow and mode. The commit-and-push close in
   `pm_skills/integrations/task.md` step 11 commits to the working branch and
   pushes only that branch.
