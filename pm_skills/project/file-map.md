@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 342 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 344 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -14,9 +14,9 @@
 - `reviews` — 16 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
-- `src` — 99 file(s)
+- `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 109 file(s)
+- `tests` — 110 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -215,6 +215,7 @@
 - `src/app/projectReset.js` — Testable Clear All transaction: invalidate async work, clear bytes/model/UI, reset the visual reference, cancel writers and establish one empty baseline
 - `src/app/sceneOutline.js` — EventBus integration and sole mutation/undo/autosave owner for stable-ID semantic scene-outline commands, with shared plain crowd-field vocabulary
 - `src/app/startup.js` — Testable startup sequence: await autosave recovery before selecting a default background
+- `src/app/unrestoredAutosave.js` — DEF-28: a recovery record that could not be restored — its parking, the author's notice (Download it, Discard), its offer at each start, and Clear All's part in discarding it
 - `src/app/undoRedo.js` — Undo/redo model, selection and inspector-scope restoration; reference-aware asset sweeping and rollback-safe interactive image admission with minimum history loss
 - `src/app/viewport.js` — Responsive canvas/panel bounds, first-authored-canvas visual-reference seeding, coordinate conversion, aspect handling and manual zoom
 - `src/app/wiringBus.js` — EventBus + AnimationEngine subscriptions, including card-action availability refresh and compatible already-saved image-edit signalling
@@ -427,6 +428,7 @@
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
 - `tests/undoService.test.js` — Prospective-save parity, natural rollover, extra oldest discard, redo preservation/invalidation and rejected-input immutability
 - `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets, and (TST-17) a transcript names a composited canvas while drawing label text as written, and (DEF-36) shows the state each call was made in, kept through save, restore and a resize, and (DEF-39) just the state each call draws with
+- `tests/unrestoredAutosave.test.js` — DEF-28: a refused, unreadable or older-format recovery record is kept byte for byte and offered; new work autosaves beside it; Download it, Discard, a later start and Clear All; a failed recovery write and a full store leave it alone
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
 - `tests/vectorLayers.test.js` — VECTOR_LAYERS registry: canonical order + per-layer visibility-guard dispatch
 - `tests/videoExporter.test.js` — Endpoint-inclusive frame planning, visibility throttling, cancellation and complete MediaRecorder/WebCodecs cleanup

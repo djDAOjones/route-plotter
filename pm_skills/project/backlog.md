@@ -106,11 +106,6 @@ moved, and account for every survivor)
 
 **Defects runnable now**
 
-- [ ] **DEF-28 A failed recovery restore is silent** · Live defect [ready]
-  — Option A (Joe, 2026-09-28): announce it, and a notice offers Download it
-  and Discard; the record moves to a second key autosave never writes. Clear
-  All discards it too; if storage is full it stays, and the autosave failure
-  report points to the notice. **P2**
 - [ ] **DEF-40 An outline entry opens empty on a real click** · Live defect
   [ready] **P2**
 - [ ] **DEF-41 Traced bends stay on the image** · Live defect [ready] **P2**

@@ -152,6 +152,15 @@ the immediate replacement after opening a project file or restoring recovery
 at startup clears the old point if the new one cannot be written. Real storage failures are
 reported.
 
+A recovery record that cannot be restored (the loader refuses it, it is not
+valid JSON, or its format is older than the app reads) is never cleared or
+overwritten. It moves to `routePlotter_parkedAutosave`, which autosave never
+writes; the author is told, and a notice offers **Download it** (the record
+exactly as stored) and **Discard**, again at each start, until they choose.
+Only that Discard and **Clear All** remove it, and Clear All's dialog says so.
+When storage cannot hold both it and a new autosave, it stays, and the
+autosave's failure report says how to make room.
+
 Other localStorage keys: `routePlotter_splashShown`, `routePlotter_previewTipDismissed`, `routePlotter_sectionState` and `routePlotter_lastSection`. `routePlotter_customKeybindings` is read only by the help panel (Keybindings below); `routePlotter_preferences` has read/write helpers in `StorageService` with no callers.
 
 ### Project save/load (ZIP)

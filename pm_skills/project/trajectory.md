@@ -17,6 +17,15 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
+
+Outcome: written when the run's last such defect has merged.
+
+DEF-28 — A recovery record that cannot be restored is kept under its own key
+and offered to the author (Download it, Discard) instead of being cleared or
+overwritten; Clear All discards it and says so. (2026-09-28) — see
+decision-log.
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its

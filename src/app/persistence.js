@@ -34,6 +34,7 @@ import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
 import { buildExampleProjects } from '../examples/index.js';
+import { hasUnrestoredOffer, parkUnrestoredAutosave } from './unrestoredAutosave.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -671,7 +672,11 @@ function replaceImmediateRecovery(app) {
 function reportAutosaveFailure(app) {
   if (app._autosaveFailureWarningShown) return;
   app._autosaveFailureWarningShown = true;
-  app.announce('Auto-save failed. Save a project file to keep your work.');
+  // A kept record that could not be restored may be what fills the storage
+  // (DEF-28): it stays, and the report says how to make room.
+  app.announce(hasUnrestoredOffer(app)
+    ? "Auto-save failed. Save a project file to keep your work, or download or discard the session that couldn't be restored to make room."
+    : 'Auto-save failed. Save a project file to keep your work.');
 }
 
 function captureLiveState(app) {
@@ -1215,18 +1220,33 @@ export const persistenceMixin = {
   
   async loadAutosave() {
     console.debug('📥 [loadAutosave] Loading saved state...');
+    // A record that cannot be restored is kept for the author to download or
+    // discard, never cleared or left for the next autosave to overwrite
+    // (DEF-28), so each refusal below parks the record as it was stored.
+    const keepUnrestored = data => parkUnrestoredAutosave(
+      this, this.storageService.loadAutoSaveText() ?? JSON.stringify(data)
+    );
     try {
       const data = this.storageService.loadAutoSave();
-      if (!data) return false;
+      if (!data) {
+        // `loadAutoSave` reads a record that is not valid JSON as none.
+        const text = this.storageService.loadAutoSaveText();
+        return text === null ? false : parkUnrestoredAutosave(this, text);
+      }
 
       const MIN_COORD_VERSION = 6;
       if (!data.coordVersion || data.coordVersion < MIN_COORD_VERSION) {
-        console.log('Old data version detected (v' + (data.coordVersion || 1) + '), clearing saved data for v' + MIN_COORD_VERSION);
-        this.storageService.clearAutoSave();
-        return false;
+        console.log('Old data version detected (v' + (data.coordVersion || 1) + '); kept, not restored, for v' + MIN_COORD_VERSION);
+        return keepUnrestored(data);
       }
 
-      const staged = await stageProject(this, data);
+      let staged;
+      try {
+        staged = await stageProject(this, data);
+      } catch (error) {
+        console.warn('Autosave was not restored; current state was left unchanged:', error);
+        return keepUnrestored(data);
+      }
       staged.backgroundSourceDataURL = data.backgroundImage || null;
       commitStagedProject(this, staged);
       // Legacy recovery points may contain image bytes and original filenames.

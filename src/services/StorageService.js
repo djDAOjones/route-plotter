@@ -222,6 +222,49 @@ export class StorageService {
     if (removed) this._lastSerialized = null;
     return removed;
   }
+
+  /**
+   * The recovery record exactly as stored. `loadAutoSave` reads a record that
+   * is not valid JSON as no record at all, and a record that cannot be
+   * restored is kept byte for byte (DEF-28), so this reads it raw.
+   * @returns {string|null} The stored text, or null
+   */
+  loadAutoSaveText() {
+    return this._readText(STORAGE.AUTOSAVE_KEY);
+  }
+
+  /**
+   * Move a recovery record that could not be restored to its own key, which
+   * autosave never writes, so new work is saved while the record waits for
+   * the author (DEF-28). Freeing the recovery key first makes room for the
+   * copy; if the copy still cannot be written, the record goes back.
+   * @param {string} text - The record exactly as stored
+   * @returns {boolean} Whether the record is now parked
+   */
+  parkAutoSave(text) {
+    if (!this.remove(STORAGE.AUTOSAVE_KEY)) return false;
+    this._lastSerialized = null;
+    if (this._writeSerialized(STORAGE.PARKED_AUTOSAVE_KEY, text).ok) return true;
+    this._writeSerialized(STORAGE.AUTOSAVE_KEY, text);
+    return false;
+  }
+
+  /**
+   * The parked record exactly as stored (DEF-28).
+   * @returns {string|null} The stored text, or null
+   */
+  loadParkedAutoSave() {
+    return this._readText(STORAGE.PARKED_AUTOSAVE_KEY);
+  }
+
+  /**
+   * Remove the parked record. Only the author's Discard and Clear All may:
+   * a recovery write that fails clears the recovery key alone (DEF-28).
+   * @returns {boolean} True if successful
+   */
+  discardParkedAutoSave() {
+    return this.remove(STORAGE.PARKED_AUTOSAVE_KEY);
+  }
   
   /**
    * Save user preferences
@@ -339,6 +382,16 @@ export class StorageService {
       }
     }
     return null;
+  }
+
+  /** @private */
+  _readText(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.error(`Failed to load from localStorage (${key}):`, error);
+      return null;
+    }
   }
 
   /** @private */

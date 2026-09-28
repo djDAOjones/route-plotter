@@ -1,6 +1,7 @@
 import { invalidateProjectOperations } from './operationGeneration.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { isBuiltInPathHeadStyle } from '../utils/pathHeadPresets.js';
+import { discardForClearAll } from './unrestoredAutosave.js';
 
 /**
  * Establish a new, empty, non-undoable project baseline.
@@ -73,13 +74,18 @@ export function clearProject(app) {
   }
   app.undoService.reset(app._getUndoableState());
   const recoveryCleared = app.storageService.clearAutoSave();
+  // Clear All discards a kept record that could not be restored too, as its
+  // dialog says, so cleared work cannot come back on reload (DEF-28).
+  const unrestored = discardForClearAll(app);
   app._isDirty = false;
   app.updateTitleIndicator();
-  if (!recoveryCleared) {
+  if (!recoveryCleared || !unrestored.discarded) {
     app.announce(
       'Browser recovery could not be cleared; reload may restore old work.',
       'assertive'
     );
+  } else if (unrestored.offered) {
+    app.announce("Project cleared, and the session that couldn't be restored was discarded");
   } else {
     app.announce('Project cleared');
   }

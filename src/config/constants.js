@@ -114,6 +114,9 @@ export const INTERACTION = {
 // Storage keys for persistence
 export const STORAGE = {
   AUTOSAVE_KEY: 'routePlotter_autosave',
+  // A recovery record that could not be restored waits here, where autosave
+  // never writes, until the author downloads or discards it (DEF-28)
+  PARKED_AUTOSAVE_KEY: 'routePlotter_parkedAutosave',
   PREFERENCES_KEY: 'routePlotter_preferences',
   SPLASH_SHOWN_KEY: 'routePlotter_splashShown',
   AUTOSAVE_INTERVAL: 1000         // Debounce time for autosave
