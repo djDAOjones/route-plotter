@@ -768,15 +768,15 @@ function runRollbackStep(label, action) {
 }
 
 function restoreLiveState(app, previous) {
+  // The model first, by plain assignment, which cannot fail; then the image
+  // assets and the undo history, each a step of its own, so neither can stop
+  // the rest being restored (DEF-49).
   app.waypoints = previous.waypoints;
   if (app.waypointsById) {
     app.waypointsById.clear();
     previous.waypointMap.forEach((value, key) => app.waypointsById.set(key, value));
   }
   app.scene.flowLayers = previous.sceneLayers;
-  if (previous.assets && app.imageAssetService.replaceAssets) {
-    app.imageAssetService.replaceAssets(previous.assets);
-  }
   app.styles = previous.styles;
   replaceObjectContents(app.background, previous.background);
   replaceObjectContents(app.exportSettings, previous.exportSettings);
@@ -790,14 +790,21 @@ function restoreLiveState(app, previous) {
   app._autosaveBackgroundCache = previous.backgroundCache;
   app._majorWaypointsCache = previous.majorWaypointsCache;
   app._waypointProgressCache = previous.waypointProgressCache;
-  if (previous.undo && app.undoService?.restoreSnapshot) {
-    app.undoService.restoreSnapshot(previous.undo);
-  }
   if (app.animationEngine?.state) Object.assign(app.animationEngine.state, previous.animation);
   app._jklDirection = previous.jklDirection;
   app._jklSpeedMultiplier = previous.jklSpeedMultiplier;
   app.jklDirection = previous.controllerJklDirection;
   app.jklSpeed = previous.controllerJklSpeed;
+  runRollbackStep('the image assets', () => {
+    if (previous.assets && app.imageAssetService.replaceAssets) {
+      app.imageAssetService.replaceAssets(previous.assets);
+    }
+  });
+  runRollbackStep('the undo history', () => {
+    if (previous.undo && app.undoService?.restoreSnapshot) {
+      app.undoService.restoreSnapshot(previous.undo);
+    }
+  });
 
   // A late commit failure may happen after transform, path, and controls have
   // already switched to the staged project. Restore each derived/UI surface

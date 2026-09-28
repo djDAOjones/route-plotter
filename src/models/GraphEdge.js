@@ -2,8 +2,12 @@
  * Model representing a directed or bidirectional edge in the crowd-flow graph.
  * Pure data model — no EventBus dependency.
  *
- * Control-point positions are normalised image coordinates (0–1).
+ * Control-point positions are normalised image coordinates. A traced edge's
+ * bends are its route's minor waypoints, which may sit off the image, so the
+ * model keeps the range a project can store (`IMAGE_COORDINATES`, DEF-41);
+ * a bend drawn by hand is held to the image before it reaches the model.
  */
+import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 
 const VALID_DIRECTIONS = ['one-way', 'two-way'];
 const MIN_WEIGHT = 0.01;
@@ -16,7 +20,7 @@ export class GraphEdge {
    * @param {string}  [options.id]               — Unique identifier (auto-generated if omitted).
    * @param {number}  [options.weight=1]         — Positive edge weight.
    * @param {string}  [options.direction='two-way'] — 'one-way' | 'two-way'.
-   * @param {Array<{x:number, y:number}>} [options.controlPoints=[]] — Intermediate curve points (normalised 0–1).
+   * @param {Array<{x:number, y:number}>} [options.controlPoints=[]] — Intermediate curve points (normalised; the range a project can store).
    * @throws {Error} If sourceId or targetId is missing.
    */
   constructor(options = {}) {
@@ -50,7 +54,7 @@ export class GraphEdge {
   }
 
   /**
-   * Append a control point (normalised 0–1).
+   * Append a control point (normalised; clamped to the range a project can store).
    * @param {number} x
    * @param {number} y
    * @returns {number} Index of the new control point.
@@ -126,7 +130,8 @@ export class GraphEdge {
   }
 
   /**
-   * Clamp a {x, y} point to 0–1 on both axes.
+   * Clamp a {x, y} point to the range a project can store, on both axes
+   * (DEF-41: a traced bend may sit off the image, as its waypoint does).
    * @private
    * @param {{x: number, y: number}} p
    * @returns {{x: number, y: number}}
@@ -135,7 +140,7 @@ export class GraphEdge {
     const clamp = (v) => {
       const n = Number(v);
       if (Number.isNaN(n)) return 0.5;
-      return Math.max(0, Math.min(1, n));
+      return clampImageCoordinate(n);
     };
     return { x: clamp(p.x), y: clamp(p.y) };
   }
