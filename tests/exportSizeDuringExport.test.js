@@ -36,6 +36,10 @@ afterEach(async () => {
 
 /** The background under test, named so its draws can be told from any other image's. */
 const BACKGROUND = 'landscape-under-test.png';
+/** How the harness's transcript names that image: by its source, resolved as the page resolves it. */
+const backgroundToken = () => `[image ${Object.assign(new Image(), { src: BACKGROUND }).src}]`;
+/** A context with nothing moved, scaled or turned. */
+const IDENTITY = [1, 0, 0, 1, 0, 0];
 const IMAGE = { width: 1600, height: 900 };
 const ZOOM = 1.75;
 
@@ -54,6 +58,8 @@ function fitted(width, height) {
 /**
  * A booted app with a route and a 1600×900 background, zoomed to 175% (so a
  * placement put back at 100% shows), set to export with it or path only.
+ * The camera is off (its authored zoom would move each frame's view): a
+ * frame then draws with nothing moved, so where it draws can be checked.
  */
 async function withBackground(pathOnly) {
   const app = await bootApp();
@@ -66,6 +72,7 @@ async function withBackground(pathOnly) {
   app.elements.backgroundZoom.value = '175';
   app.elements.backgroundZoom.dispatchEvent(new Event('input', { bubbles: true }));
   app.exportSettings.pathOnly = pathOnly;
+  app.exportSettings.includeCamera = false;
   vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
   vi.stubGlobal('alert', vi.fn());
   return { app, image };
@@ -74,8 +81,11 @@ async function withBackground(pathOnly) {
 /**
  * An export whose encoder holds after its first frame until it is let
  * finish, made to fail, or cancelled. Each frame records the canvas it was
- * drawn on, and every draw of the background the frame made, on any canvas:
- * where on the main canvas, or on which other.
+ * drawn on; every draw of the background it made, on any canvas (which,
+ * where, and the transform it was drawn under); whether the path's layer
+ * was put on the main canvas; and whether the main canvas was cleared after
+ * the frame's last draw of either, so that what the encoder captures next
+ * would have lost it.
  */
 async function exporting(app) {
   const frames = [];
@@ -91,13 +101,24 @@ async function exporting(app) {
       release?.();
     },
     async export({ renderFrame }) {
+      const token = backgroundToken();
       const frame = async (progress) => {
         takeOrderedCalls();
         await renderFrame(progress);
-        const background = takeOrderedCalls()
-          .filter(([, name, source]) => name === 'drawImage' && String(source).includes(BACKGROUND))
-          .map(([surface, , , ...at]) => [surface === main ? 'main' : `canvas #${surface}`, ...at.slice(0, 4)]);
-        frames.push({ exportMode: app._isExportMode, width: app.canvas.width, height: app.canvas.height, background });
+        const calls = takeOrderedCalls();
+        const background = calls
+          .filter(([, name, source]) => name === 'drawImage' && source === token)
+          .map(entry => [entry[0] === main ? 'main' : `canvas #${entry[0]}`, ...entry.slice(3, 7), [...entry.transform]]);
+        const onMain = calls.filter(([surface]) => surface === main);
+        const drawn = onMain.findLastIndex(([, name, source]) => name === 'drawImage' && (source === token || /^\[canvas #\d+\]$/.test(String(source))));
+        frames.push({
+          exportMode: app._isExportMode,
+          width: app.canvas.width,
+          height: app.canvas.height,
+          background,
+          path: onMain.some(([, name, source]) => name === 'drawImage' && /^\[canvas #\d+\]$/.test(String(source))),
+          clearedAfter: drawn < 0 || onMain.slice(drawn + 1).some(([, name]) => name === 'clearRect'),
+        });
       };
       await frame(0.1);
       started();
@@ -155,10 +176,19 @@ function portraitDisplay() {
   };
 }
 
-/** What a frame of `width` × `height` should show of the background: drawn once, on the main canvas, fitted at the zoom; or nothing, path only. */
+/**
+ * What a frame of `width` × `height` should show: the background drawn once,
+ * on the main canvas, fitted at the zoom, nothing moved (none, path only);
+ * the path's layer put on the main canvas; and nothing cleared after.
+ */
 const frameOf = (width, height, pathOnly) => {
   const { x, y, w, h } = fitted(width, height);
-  return { exportMode: true, width, height, background: pathOnly ? [] : [['main', x, y, w, h]] };
+  return {
+    exportMode: true, width, height,
+    background: pathOnly ? [] : [['main', x, y, w, h, IDENTITY]],
+    path: true,
+    clearedAfter: false,
+  };
 };
 
 /** That, and the export size and background zoom the project keeps. */
@@ -184,6 +214,10 @@ const CHANGES = [
   ['its width changed', (app) => {
     app.elements.exportResX.value = '1080';
     app.elements.exportResX.dispatchEvent(new Event('change', { bubbles: true }));
+  }],
+  ['its height changed', (app) => {
+    app.elements.exportResY.value = '1920';
+    app.elements.exportResY.dispatchEvent(new Event('change', { bubbles: true }));
   }],
   ['the 9:16 preset chosen', () => document.getElementById('preset-9-16').click()],
 ];
