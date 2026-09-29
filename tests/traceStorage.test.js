@@ -19,6 +19,7 @@ import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { getRetainedBackgroundDataURL, stageProjectModel } from '../src/app/persistence.js';
 import { STORAGE } from '../src/config/constants.js';
 import { applyTraceToLayer, traceRouteIntoGraph } from '../src/utils/routeTrace.js';
+import { ImageAsset } from '../src/models/ImageAsset.js';
 
 const major = (id, name = id, extra = {}) => ({ id, name, imgX: 0.2, imgY: 0.3, isMajor: true, ...extra });
 
@@ -287,8 +288,19 @@ test('a leg of 257 bends from a major with no name is refused, as a leg of the r
 const bytesOf = text => new TextEncoder().encode(text).length;
 const valuesIn = value => 1 + (value && typeof value === 'object' ? Object.values(value).reduce((sum, each) => sum + valuesIn(each), 0) : 0);
 
-/** A project's file metadata as Save Project writes it, with no images or background: `project.json` and its (empty) manifest. */
-const fileMetadata = project => JSON.stringify({ ...project, assetManifest: [] }, null, 2);
+/** A project's file metadata as Save Project writes it, with no background: `project.json` and its images' manifest. */
+const fileMetadata = (project, manifest = []) => JSON.stringify({ ...project, assetManifest: manifest }, null, 2);
+
+/** A custom marker image on the first waypoint, as the author adds one: a file then carries it, and its manifest names it. */
+function withMarkerImage(app) {
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+  const asset = new ImageAsset({
+    id: 'custom', name: 'icon.png', base64: png, width: 1, height: 1, mimeType: 'image/png', size: ImageAsset.inspectDataURL(png).byteLength,
+  });
+  app.imageAssetService.addAsset(asset);
+  app.waypoints[0].customImageAssetId = asset.id;
+  app.waypoints[0].markerStyle = 'custom';
+}
 
 /** The project the trace would make, worked out here: the project as saved, the crowd's network the trace's. */
 function traced(app, layer) {
@@ -319,23 +331,31 @@ test('a trace whose project would hold just over its values, counting what its c
 });
 
 test.each([
-  ['exactly 2 MB is traced, and the file and recovery reopen', 0],
-  ['a byte more is not traced', 1],
-])('a trace whose file metadata would be %s', async (_, over) => {
+  ['exactly 2 MB is traced, and the file and recovery reopen', 0, false],
+  ['a byte more is not traced', 1, false],
+  ['exactly 2 MB, its images’ manifest counted, is traced, and the file and recovery reopen', 0, true],
+  ['a byte more, its images’ manifest counted, is not traced', 1, true],
+])('a trace whose file metadata would be %s', async (_, over, image) => {
   const limit = 2 * 1024 * 1024;
   const app = await withRoute(Array.from({ length: 900 }, (_, index) => major(`w${index}`, 'q'.repeat(40))));
   const layer = app.scene.flowLayers[0];
-  // Worked out here, and as Save Project's own preparation writes it
-  expect(fileMetadata(traced(app, layer))).toBe(app.imageAssetService.prepareArchive(traced(app, layer)).projectJSON);
+  if (image) withMarkerImage(app);
+  // Worked out here, and as Save Project's own preparation writes it (the
+  // manifest taken from it once, before the names grow)
+  const manifest = JSON.parse(app.imageAssetService.prepareArchive(traced(app, layer)).projectJSON).assetManifest;
+  expect(manifest).toHaveLength(image ? 1 : 0);
+  expect(fileMetadata(traced(app, layer), manifest)).toBe(app.imageAssetService.prepareArchive(traced(app, layer)).projectJSON);
+  const reopensFrom = async zip => { const fresh = await bootApp(); await fresh.ready; return fresh.loadProject(zip); };
+  expect(await reopensFrom(await app.imageAssetService.exportZip(app._buildProjectSnapshot({ includeAssets: false })))).toBe(true);
   // The first major's name appears twice (the waypoint and its node), the crowd's once: make up the bytes to the limit
-  let gap = limit + over - bytesOf(fileMetadata(traced(app, layer)));
+  let gap = limit + over - bytesOf(fileMetadata(traced(app, layer), manifest));
   expect(gap).toBeGreaterThan(0);
   if (gap % 2) {
     layer.name += 'x';
     gap -= 1;
   }
   app.waypoints[0].name += 'q'.repeat(gap / 2);
-  expect(bytesOf(fileMetadata(traced(app, layer)))).toBe(limit + over);
+  expect(bytesOf(fileMetadata(traced(app, layer), manifest))).toBe(limit + over);
 
   if (over) {
     await refused(app, layer, 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
