@@ -174,8 +174,10 @@ writes over the record; two tabs choosing the same key for a kept record at
 the same moment could likewise collide. The notice offers one record at a
 time, this start's first, and follows what other tabs keep, hold, discard or
 write over; each record is one offer, and one session in Clear All's count,
-however many copies of it there are, and a record this start could not
-restore stays this start's wherever another tab then keeps it. Discard
+in its question and in what it says it did, however many copies of it there
+are; and a record this start could not restore stays this start's, and its
+failure is announced, wherever it is kept, even by another tab while this
+start's restore ran. The announcement says what the notice says. Discard
 removes every copy of the record it can read, wherever it has moved, and says
 it failed if the store cannot be searched. A restore still in progress when
 the author discards its record in another tab (by Discard or Clear All)

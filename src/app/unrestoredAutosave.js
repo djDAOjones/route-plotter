@@ -49,12 +49,14 @@ function offersOf(app) {
  * is seen kept where every tab knows. And what it has seen of other tabs:
  * `seen`, each kept key it has read, with its text; `discarded`, each record
  * whose every kept copy it saw go, which only the author's Discard or Clear
- * All does, so a restore still in progress here keeps it no more.
+ * All does, so a restore still in progress here keeps it no more; and
+ * `keptAtStart`, the text of each record kept before this start's restore
+ * began, which, read again by that restore, is an earlier start's.
  */
 function thisStart(app) {
   app._unrestoredThisStart ??= {
     own: new Set(), keys: new Map(), heldText: null, heldDurable: false, unkept: [],
-    seen: new Map(), discarded: new Set(),
+    seen: new Map(), discarded: new Set(), keptAtStart: null,
   };
   return app._unrestoredThisStart;
 }
@@ -134,6 +136,7 @@ function readStore(app) {
   return {
     offers: [...offers.filter(each => !each.earlier), ...offers.filter(each => each.earlier)],
     discardable: byText.size + unreadable,
+    unreadable,
     searched: kept.ok,
   };
 }
@@ -162,8 +165,8 @@ function noteDiscards(started, kept, parked, keptTexts) {
  * Clear All's dialog, which counts every record Clear All would discard.
  * @returns {Array<Object>} The offers, first shown first
  */
-function showOffers(app) {
-  const { offers, discardable, searched } = readStore(app);
+function showOffers(app, read = readStore(app)) {
+  const { offers, discardable, searched } = read;
   app._unrestoredOffers = offers;
   const [first] = offers;
   const notice = document.getElementById('unrestored-notice');
@@ -198,8 +201,10 @@ export function keepUnrestoredAutosave(app, text) {
     return false;
   }
   const kept = app.storageService.keepUnrestored(text);
-  // A record kept earlier and read again now is on offer already.
-  if (kept.where === 'parked' && kept.existing) {
+  // A record kept before this restore began, read again now, is an earlier
+  // start's, and on offer already. One another tab kept while this restore
+  // ran is this start's, and its failure is told.
+  if (kept.where === 'parked' && kept.existing && started.keptAtStart?.has(text)) {
     showOffers(app);
     return false;
   }
@@ -209,8 +214,12 @@ export function keepUnrestoredAutosave(app, text) {
     started.heldText = text;
     started.heldDurable = kept.durable;
   } else started.unkept.unshift(text);
-  showOffers(app);
-  app.announce(messageFor({ where: kept.where, durable: kept.durable, earlier: false }), 'assertive');
+  // Told as the notice now offers it: where it is kept may matter more than
+  // where this keep put it (still held, say, where a copy could not replace
+  // the hold); or, where the store cannot be searched, as this keep left it.
+  const offer = showOffers(app).find(each => each.text === text)
+    ?? { where: kept.where, durable: kept.durable, earlier: false };
+  app.announce(messageFor(offer), 'assertive');
   return false;
 }
 
@@ -220,7 +229,9 @@ export function keepUnrestoredAutosave(app, text) {
  * held is not restored again: it is on offer.
  */
 export function offerKeptAutosave(app) {
-  const [first] = showOffers(app);
+  const offers = showOffers(app);
+  thisStart(app).keptAtStart = new Set(offers.map(offer => offer.text));
+  const [first] = offers;
   if (first) app.announce(messageFor(first), 'assertive');
 }
 
@@ -254,19 +265,24 @@ export function recoveryFailureGuidance(app) {
 /**
  * Clear All's part: discard every kept record, on offer or not, readable or
  * not, and any this start could keep only in memory.
- * @returns {{ discarded: number, failed: boolean }} How many went, and
- *   whether any could not be found or removed
+ * @returns {{ discarded: number, failed: boolean }} How many records went,
+ *   counted as its dialog counts them (a record once, however many copies of
+ *   it there were, and gone only when none is left), and whether any could
+ *   not be found or removed
  */
 export function discardForClearAll(app) {
   const started = thisStart(app);
-  const unkept = started.unkept.length;
-  for (const offer of offersOf(app)) started.discarded.add(offer.text);
-  for (const text of started.unkept) started.discarded.add(text);
+  // Every record on offer, those kept only in memory among them.
+  const before = readStore(app);
+  for (const offer of before.offers) started.discarded.add(offer.text);
   started.unkept = [];
   started.heldText = null;
-  const { ok, removed } = app.storageService.discardAllKept();
-  showOffers(app);
-  return { discarded: removed + unkept, failed: !ok };
+  const { ok } = app.storageService.discardAllKept();
+  const after = readStore(app);
+  showOffers(app, after);
+  const left = new Set(after.offers.map(offer => offer.text));
+  const gone = before.offers.filter(offer => !left.has(offer.text)).length;
+  return { discarded: gone + Math.max(0, before.unreadable - after.unreadable), failed: !ok };
 }
 
 /**
