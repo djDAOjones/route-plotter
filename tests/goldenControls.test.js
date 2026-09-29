@@ -228,6 +228,30 @@ const registrationOf = (type, capture) => (capture ? `${type} (capture)` : type)
 const typeOf = registration => registration.split(' ', 1)[0];
 
 /**
+ * Where a listener was added: the file, line and column of the code that
+ * added it, read from the stack. Two listeners for one gesture on one
+ * element, added by different code, are two registrations, each to be run
+ * by some row; the same code adding a listener to each rebuilt row is one.
+ */
+function registrationSite() {
+  const caller = new Error().stack.split('\n')[3] ?? '';
+  const place = caller.match(/((?:src|tests)\/[^\s():]+:\d+:\d+)/);
+  return place ? place[1] : 'an unknown place';
+}
+const identityOf = (registration, site) => `${registration} at ${site}`;
+
+/** Each element's registrations, by where each was added (`registrationSite`). */
+const wiredSites = new WeakMap();
+
+/**
+ * Where each of an element's listeners was added, by registration: one
+ * listener added to two elements by two lines of code is credited, on each,
+ * to its own line.
+ */
+const listenerSites = new WeakMap();
+const siteFor = (element, registration, listener) => listenerSites.get(element)?.get(registration)?.get(listener) ?? 'an unknown place';
+
+/**
  * The session whose app is booting or running. Its listeners on the document,
  * the window and the body, which outlast it, and on its canvases are its own,
  * and go when it is retired; the parameter hints bind theirs once per
@@ -262,10 +286,11 @@ function noteDispatch(event) {
   }
 }
 
-function noteInvocation(element, event, capture) {
+function noteInvocation(element, event, capture, listener) {
   if (!invoked) return;
   const key = dispatchKeys.get(element) ?? keyFor(element);
-  invoked.push({ control: controlOf(element, key), registration: registrationOf(event.type, capture) });
+  const registration = registrationOf(event.type, capture);
+  invoked.push({ control: controlOf(element, key), registration: identityOf(registration, siteFor(element, registration, listener)) });
 }
 
 /**
@@ -286,7 +311,7 @@ function wrapperFor(listener, capture) {
   let wrapper = byListener.get(listener);
   if (!wrapper) {
     wrapper = function ranByRow(event) {
-      noteInvocation(this, event, capture);
+      noteInvocation(this, event, capture, listener);
       return typeof listener === 'function' ? listener.call(this, event) : listener.handleEvent(event);
     };
     byListener.set(listener, wrapper);
@@ -297,8 +322,16 @@ function wrapperFor(listener, capture) {
 function recordWiring() {
   EventTarget.prototype.addEventListener = function addEventListener(type, listener, options) {
     if (this instanceof Element) {
+      const registration = registrationOf(type, captureOf(options));
+      const site = registrationSite();
       if (!wiredEvents.has(this)) wiredEvents.set(this, new Set());
-      wiredEvents.get(this).add(registrationOf(type, captureOf(options)));
+      wiredEvents.get(this).add(registration);
+      if (!wiredSites.has(this)) wiredSites.set(this, new Set());
+      wiredSites.get(this).add(identityOf(registration, site));
+      if (!listenerSites.has(this)) listenerSites.set(this, new Map());
+      const sites = listenerSites.get(this);
+      if (!sites.has(registration)) sites.set(registration, new Map());
+      sites.get(registration).set(listener, site);
     }
     const outlasting = this === document || this === window || this === document.body;
     if (owner && (this instanceof HTMLCanvasElement || (outlasting && !new Error().stack.includes('ParamTooltip.js')))) {
@@ -433,6 +466,9 @@ function watchAlerts() {
 const pointersDown = new Set();
 const pointerCaptures = new Map();
 const capturesToAnnounce = new Set();
+/** Captures let go of while a pointer event is being sent: lost once it has been. */
+const releasesPending = new Set();
+let sendingPointerEvent = false;
 const POINTER_CAPTURE_METHODS = ['setPointerCapture', 'releasePointerCapture', 'hasPointerCapture'];
 const originalPointerCapture = POINTER_CAPTURE_METHODS.map(name => [name, Object.getOwnPropertyDescriptor(Element.prototype, name)]);
 
@@ -463,7 +499,9 @@ function installPointerCapture() {
       configurable: true,
       writable: true,
       value(pointerId) {
-        if (pointerCaptures.get(pointerId) === this) losePointerCapture(pointerId);
+        if (pointerCaptures.get(pointerId) !== this) return;
+        if (sendingPointerEvent) releasesPending.add(pointerId);
+        else losePointerCapture(pointerId);
       },
     },
     hasPointerCapture: {
@@ -484,13 +522,16 @@ function uninstallPointerCapture() {
   pointersDown.clear();
   pointerCaptures.clear();
   capturesToAnnounce.clear();
+  releasesPending.clear();
 }
 
 /**
  * Send a pointer event as a browser would: to the element holding the
  * pointer's capture, if one does, or else to the element under it. A capture
- * taken since the last event is announced to its holder first; the pointer
- * going up or being cancelled lets go of any capture, once the event is sent.
+ * taken since the last event is announced to its holder first; one let go of
+ * while the event is sent, or held when the pointer goes up or is cancelled,
+ * is lost once the event has been sent, as a browser processes pending
+ * captures after the event.
  */
 function pointer(under, type, { pointerId = 1, clientX = 0, clientY = 0 } = {}) {
   if (type === 'pointerdown') pointersDown.add(pointerId);
@@ -511,11 +552,14 @@ function pointer(under, type, { pointerId = 1, clientX = 0, clientY = 0 } = {}) 
     clientX,
     clientY,
   });
-  target.dispatchEvent(event);
-  if (ending) {
-    losePointerCapture(pointerId);
-    pointersDown.delete(pointerId);
+  sendingPointerEvent = true;
+  try {
+    target.dispatchEvent(event);
+  } finally {
+    sendingPointerEvent = false;
   }
+  if (releasesPending.delete(pointerId) || ending) losePointerCapture(pointerId);
+  if (ending) pointersDown.delete(pointerId);
   return event;
 }
 
@@ -720,6 +764,16 @@ const INITIAL_DROP_EFFECT = {
   link: 'link', linkMove: 'link', move: 'move', uninitialized: 'move',
 };
 
+/** The operations a drag's source allows, by its `effectAllowed`: a target cannot ask for another. */
+const ALLOWED_OPERATIONS = {
+  none: [], copy: ['copy'], copyLink: ['copy', 'link'], copyMove: ['copy', 'move'], all: ['copy', 'link', 'move'],
+  link: ['link'], linkMove: ['link', 'move'], move: ['move'], uninitialized: ['copy', 'link', 'move'],
+};
+
+/** Whether a `dragover` accepts the drop: the page cancelled it, and left an effect the source allows. */
+const dropAccepted = (dragover, transfer) => dragover.defaultPrevented
+  && (ALLOWED_OPERATIONS[transfer.effectAllowed] ?? []).includes(transfer.dropEffect);
+
 /** What a drag carries, as far as a page can see it. */
 function dragData() {
   const data = new Map();
@@ -743,7 +797,8 @@ const listShown = () => [...document.getElementById('waypoint-list').children]
  * Drag a row by its handle, as Chromium sends the drag: `dragstart` at the
  * row; `dragenter` and `dragover` at the row under the pointer, over the half
  * given; there, a `drop` only if the page cancelled that `dragover` (so
- * accepting it) and left it an effect, or else a `dragleave`; and last,
+ * accepting it) and left it an effect the drag's source allows, or else a
+ * `dragleave`; and last,
  * `dragend` at the row it began from, though its drop may have rebuilt the
  * list. `away` takes the pointer out of the list before letting go, over the
  * page, which accepts no drop. The row records where the list shows the
@@ -765,8 +820,7 @@ function dragging(label, ontoOf, { half, away = false }) {
       const over = (target, clientY) => {
         send(target, 'dragenter', clientY);
         transfer.dropEffect = INITIAL_DROP_EFFECT[transfer.effectAllowed] ?? 'none';
-        const event = send(target, 'dragover', clientY);
-        return event.defaultPrevented && transfer.dropEffect !== 'none';
+        return dropAccepted(send(target, 'dragover', clientY), transfer);
       };
       const layout = layOutList();
       try {
@@ -842,7 +896,8 @@ function busynessGesture(label, handleIndex, moves, finish = 'pointerup') {
   return {
     label,
     run: (graph) => {
-      const handle = graph.querySelector(`[data-busyness-handle="${handleIndex}"]`);
+      const handles = graph.querySelectorAll('[data-busyness-handle]');
+      const handle = handleIndex === 'last' ? handles[handles.length - 1] : graph.querySelector(`[data-busyness-handle="${handleIndex}"]`);
       if (!handle) throw new Error(`the busyness graph has no handle ${handleIndex}`);
       const measure = vi.spyOn(graph, 'getBoundingClientRect').mockReturnValue(GRAPH_BOX);
       const under = ([x, y]) => (x >= 0 && x <= GRAPH_BOX.width && y >= 0 && y <= GRAPH_BOX.height ? graph : document.body);
@@ -863,6 +918,7 @@ const END_HANDLE_DRAGS = [
   busynessGesture('drag its first handle a third of the way down, and let go there', 0, [[0, 10], [0, 50]]),
   busynessGesture('drag its first handle below the graph, and let go there', 0, [[0, 10], [0, 50], [0, 200]]),
   busynessGesture('drag its first handle, then the drag is cancelled', 0, [[0, 10], [0, 50]], 'pointercancel'),
+  busynessGesture('drag its last handle a third of the way down, and let go there', 'last', [[300, 10], [300, 50]]),
 ];
 
 /** A handle between them moves along too, but never onto or past a neighbour. */
@@ -1504,6 +1560,7 @@ async function runRow(session, key, operation, name) {
     await takeBrowserRequests();
     base = capture(session);
   }
+  const history = session.app.undoService.createSnapshot().lastState;
   invoked = [];
   dispatchKeys = new WeakMap();
   // What the gesture saw on the way, if it says (a drag: where the list
@@ -1526,11 +1583,40 @@ async function runRow(session, key, operation, name) {
   const later = [...onceEach(session.emits.take()), ...askedLater, ...changes(after, settled)];
   const pending = vi.getTimerCount();
   if (pending > 0 && !session.context.running) later.push(`still pending after settling: ${pending} timer(s)`);
-  const settledComplete = capture(session, { complete: true });
+  let settledComplete = capture(session, { complete: true });
   vi.clearAllTimers();
+  // Playing writes the head's rotation into the project as it goes (DEF-09).
+  // A row that undid (the last entry is then one to redo) has no entry of
+  // its own to undo.
+  const recorded = session.app.undoService.createSnapshot().lastState !== history;
+  if (!session.context.running && recorded && session.app.undoService.canUndo()) {
+    await expectHistoryRestores(session, name);
+    settledComplete = capture(session, { complete: true });
+  }
   random.mockRestore();
   if (later.length > 0) lines.push('settled:', ...later.map(line => `  ${line}`));
   return { lines, settled: settledComplete };
+}
+
+/**
+ * A row that recorded an entry for undo, and can be undone: undone, then
+ * redone, the project is what the row made it. What an entry holds, not only that there is one. A
+ * waypoint's `modified` stamp is not compared: every waypoint made, from a
+ * history entry as from a file, is stamped when it is made, and the stamp
+ * is never read back.
+ */
+async function expectHistoryRestores(session, name) {
+  const made = modelState(session.app);
+  session.app.undo();
+  await settle();
+  session.app.redo();
+  await settle();
+  vi.clearAllTimers();
+  session.emits.take();
+  await takeBrowserRequests();
+  const differences = modelChanges(made, modelState(session.app))
+    .filter(line => !/^model ~ waypoints\[\d+\]\.modified: /.test(line));
+  expect(differences, `${name}: undone and redone, the project is not what the row made it`).toEqual([]);
 }
 
 /**
@@ -1584,7 +1670,7 @@ const operatedControls = new Set();
 
 function noteWiring(context) {
   for (const element of document.querySelectorAll('*')) {
-    const registrations = wiredEvents.get(element);
+    const registrations = wiredSites.get(element);
     if (!registrations) continue;
     const key = controlOf(element);
     const seen = wiredSeen.get(key) ?? { excluded: exclusionFor(element), context: context.name, registrations: new Set() };
@@ -1763,12 +1849,65 @@ describe('control → bus goldens (TST-04)', () => {
       parent.remove();
     }
     expect(ran).toEqual(['parent blur, on the way down', 'dragend, off the page']);
-    expect(ranByRow).toEqual([
+    const here = /^(.+) at tests\/goldenControls\.test\.js:\d+:\d+$/;
+    expect(ranByRow.map(({ control, registration }) => ({ control, registration: registration.match(here)?.[1] }))).toEqual([
       { control: parentKey, registration: 'click (capture)' },
       { control: parentKey, registration: 'blur (capture)' },
       { control: leavingKey, registration: 'dragstart' },
       { control: leavingKey, registration: 'dragend' },
     ]);
+  });
+
+  test('two listeners for one gesture on one element, added by different code, are two registrations: one a stopped propagation keeps from running is not credited', () => {
+    const button = document.createElement('button');
+    document.body.append(button);
+    const ran = [];
+    button.addEventListener('click', (event) => { ran.push('first'); event.stopImmediatePropagation(); });
+    button.addEventListener('click', () => ran.push('second'));
+    invoked = [];
+    let ranByRow;
+    try {
+      button.click();
+    } finally {
+      ranByRow = invoked.map(({ registration }) => registration);
+      invoked = null;
+      button.remove();
+    }
+    const wired = [...wiredSites.get(button)];
+    expect(ran).toEqual(['first']);
+    expect(wired).toHaveLength(2);
+    expect(wired.filter(identity => !ranByRow.includes(identity))).toHaveLength(1);
+  });
+
+  test('a drag is dropped only where the page accepts an operation its source allows', () => {
+    const dragover = accepted => ({ defaultPrevented: accepted });
+    const cases = [
+      ['move', 'move', true], ['none', 'move', false], ['copy', 'move', false], ['copyMove', 'move', true],
+      ['uninitialized', 'move', true], ['all', 'link', true], ['move', 'none', false],
+    ].map(([effectAllowed, dropEffect]) => dropAccepted(dragover(true), { effectAllowed, dropEffect }));
+    expect(cases).toEqual([true, false, false, true, true, true, false]);
+    expect(dropAccepted(dragover(false), { effectAllowed: 'move', dropEffect: 'move' })).toBe(false);
+  });
+
+  test('a pointer capture let go of while pointerup is sent is lost once pointerup has been sent', async () => {
+    const handle = document.createElement('div');
+    document.body.append(handle);
+    const heard = [];
+    handle.addEventListener('pointerdown', event => handle.setPointerCapture(event.pointerId));
+    handle.addEventListener('pointerup', (event) => {
+      heard.push('up begins');
+      handle.releasePointerCapture(event.pointerId);
+      heard.push('up ends');
+    });
+    handle.addEventListener('lostpointercapture', () => heard.push('capture lost'));
+    try {
+      pointer(handle, 'pointerdown');
+      pointer(document.body, 'pointerup');
+    } finally {
+      handle.remove();
+      await takeBrowserRequests();
+    }
+    expect(heard).toEqual(['up begins', 'up ends', 'capture lost']);
   });
 
   test('a listener wrapped to note that it ran is added and removed as it would be unwrapped', () => {
