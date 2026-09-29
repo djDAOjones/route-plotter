@@ -361,8 +361,8 @@ export const wiringDomMixin = {
     // Per-waypoint beacon edits (only apply to major waypoints). A beacon's
     // style and a pulse's cycle decide its pause and its schedule, so they
     // rebuild timing, as the motion settings do; the editor would otherwise
-    // time the beacon by what it was (DEF-42). A ripple's scale already does,
-    // through its wait time.
+    // time the beacon by what it was (DEF-42). A ripple's scale, and a style
+    // changed to ripple, already do, through its wait time, which rebuilds.
     this.elements.editorBeaconStyle.addEventListener('change', (e) => {
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
@@ -387,9 +387,9 @@ export const wiringDomMixin = {
             this.elements.rippleWait.checked = this.selectedWaypoint.rippleWait;
           }
           this._updateRippleWaitTime();
+        } else {
+          this.invalidateAnimationTiming();
         }
-
-        this.invalidateAnimationTiming();
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
