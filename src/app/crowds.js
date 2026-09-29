@@ -23,8 +23,9 @@ import {
   normalizeBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
 import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
-import { FlowLayer, FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
+import { FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
 import { GraphModel } from '../models/GraphModel.js';
+import { stageProjectModel } from './persistence.js';
 import { waitForCrowdMs } from '../utils/crowdArrival.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
@@ -44,16 +45,18 @@ export function formatCrowdReleaseBias(percent) {
 }
 
 /**
- * Why a traced network could not be stored, or null. A crowd's network is
- * checked as a saved project's is when it opens (`FlowLayer.assertValidJSON`),
- * in the form it would be saved in, before the trace replaces anything: a
- * network the loader refuses (a leg with more bends than a path can hold)
- * saved a project that would not reopen (DEF-52).
+ * Why a traced network could not be stored, or null. The project the trace
+ * would make is checked as it would be opened (`stageProjectModel`), in the
+ * form it would be saved in, before the trace replaces anything: a network
+ * the loader refuses (a leg with more bends than a path can hold, more nodes
+ * than a scene can hold, labels past the project's text budget) saved a
+ * project that would not reopen (DEF-52). A leg with too many bends is named.
+ * @param {Object} app
  * @param {FlowLayer} layer
  * @param {{nodes: Array, edges: Array}} trace
  * @returns {string|null}
  */
-function traceStorageProblem(layer, trace) {
+function traceStorageProblem(app, layer, trace) {
   const limit = FLOW_LAYER_LIMITS.MAX_CONTROL_POINTS_PER_EDGE;
   const crowded = trace.edges.find(edge => edge.controlPoints.length > limit);
   if (crowded) {
@@ -65,8 +68,11 @@ function traceStorageProblem(layer, trace) {
   const graph = new GraphModel();
   for (const node of trace.nodes) graph.addNode(node);
   for (const edge of trace.edges) graph.addEdge(edge);
+  const project = app._buildProjectSnapshot({ includeAssets: false });
+  const traced = { ...layer.toJSON(), guideType: 'graph', graph: graph.toJSON() };
+  project.scene = { ...project.scene, flowLayers: project.scene.flowLayers.map(each => (each.id === layer.id ? traced : each)) };
   try {
-    FlowLayer.assertValidJSON({ ...layer.toJSON(), graph: graph.toJSON() });
+    stageProjectModel(project);
     return null;
   } catch (error) {
     return `This route can’t be traced into a crowd: ${error.message}.`;
@@ -640,7 +646,7 @@ export const crowdsMixin = {
       this.eventBus.emit('ui:toast', { message: trace.problems[0].detail });
       return false;
     }
-    const unstorable = traceStorageProblem(layer, trace);
+    const unstorable = traceStorageProblem(this, layer, trace);
     if (unstorable) {
       this.eventBus.emit('ui:toast', { message: unstorable });
       return false;
