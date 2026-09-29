@@ -13,18 +13,22 @@
  * when it has gone; and asking again for the draw in progress keeps it.
  */
 
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { allowConsole } from './helpers/consoleGuard.js';
+import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 
 const GONE = 'Area drawing cancelled: its waypoint was removed.';
 const TRIANGLE = [{ x: 0.2, y: 0.2 }, { x: 0.4, y: 0.2 }, { x: 0.3, y: 0.4 }];
 const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+const nextFrame = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
 
 async function openDay() {
   const app = await bootApp();
   await app.ready;
+  // The welcome dialog, open at start, makes the page behind it inert.
+  document.getElementById('splash-close').click();
   const project = structuredClone(buildExampleProjects().find(each => each.id === 'uon-open-day').project);
   expect(await loadSnapshot(app, project)).toBe(true);
   return app;
@@ -48,9 +52,25 @@ const drawing = app => ({
 });
 const ENDED = { active: false, vertices: 0, banner: false, canvasDraws: false };
 
-/** How many toasts on screen say the draw was cancelled. */
-const toldGone = () => [...document.querySelectorAll('#toast-container .toast')]
+const toastRegion = () => document.getElementById('toast-container');
+
+/** How many toasts say the draw was cancelled. */
+const toldGone = () => [...toastRegion().querySelectorAll('.toast')]
   .filter(toast => toast.firstChild.nodeValue === GONE).length;
+
+/**
+ * Whether the one toast saying so is where the author is told: in a polite
+ * live region on the page, which a screen reader reads (how it speaks it is
+ * not checked here), and shown from the next frame.
+ */
+async function toldOnScreen() {
+  expect(toldGone()).toBe(1);
+  expect(toastRegion().getAttribute('aria-live')).toBe('polite');
+  expect(toastRegion().closest('[hidden], [aria-hidden="true"], [inert]')).toBeNull();
+  await nextFrame();
+  const [toast] = [...toastRegion().querySelectorAll('.toast')].filter(each => each.firstChild.nodeValue === GONE);
+  return toast.classList.contains('is-visible');
+}
 
 /** Each way a waypoint leaves the project: how its draw's target is got ready, and removed. */
 const REMOVALS = [
@@ -98,12 +118,62 @@ test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told on
 
   expect(app.getWaypointById(waypoint.id)).toBeUndefined();
   expect(drawing(app)).toEqual(ENDED);
-  expect(toldGone()).toBe(1);
+  expect(await toldOnScreen()).toBe(true);
   await nextTask();
   expect(toldGone()).toBe(1);
   // Nothing more is drawn, for it or anything else.
   place(app, 0.2, 0.2);
   expect(drawing(app).vertices).toBe(0);
+});
+
+test('the toast saying so outlasts the deletion’s own announcement, which clears after two seconds', async () => {
+  const app = await openDay();
+  const target = app.getWaypointById('ex-uon-2');
+  drawFor(app, target);
+  placeTriangle(app);
+
+  app.eventBus.emit('waypoint:delete', target);
+  await new Promise(resolve => setTimeout(resolve, 2100));
+
+  expect(document.getElementById('announcer').textContent).toBe('');
+  expect(toldGone()).toBe(1);
+  expect(await toldOnScreen()).toBe(true);
+});
+
+test.each([
+  ['cancelled', () => document.querySelector('#area-draw-banner .banner-cancel').click()],
+  ['ended with Escape', () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))],
+  ['closed', app => place(app, 0.2, 0.2)],
+])('a draw already %s says nothing when its waypoint is then deleted, undone back and redone away', async (_, end) => {
+  const app = await openDay();
+  const target = app.getWaypointById('ex-uon-2');
+  drawFor(app, target);
+  placeTriangle(app);
+  end(app);
+  expect(drawing(app)).toEqual(ENDED);
+
+  app.eventBus.emit('waypoint:delete', target);
+  await nextTask();
+  app.undo();
+  app.redo();
+
+  expect(toldGone()).toBe(0);
+});
+
+test('a draw goes on, unannounced, when a project fails to open over it', async () => {
+  const app = await openDay();
+  const target = app.getWaypointById('ex-uon-2');
+  drawFor(app, target);
+  placeTriangle(app);
+  allowConsole(LOAD_REFUSED);
+  vi.spyOn(app, 'pruneImageAssets').mockImplementationOnce(() => { throw new Error('late failure'); });
+
+  expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(false);
+
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3 });
+  expect(toldGone()).toBe(0);
+  place(app, 0.2, 0.2);
+  expect(target.areaHighlight).toMatchObject({ shape: 'polygon', points: TRIANGLE });
 });
 
 test('a draw ended by a deletion stays ended when the deletion is undone', async () => {
