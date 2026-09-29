@@ -40,6 +40,7 @@ const KEPT = 'Kept until you discard it. You can download a copy.';
 const HELD = "Kept until you discard it, and new work isn't saved in this browser until then. You can download a copy.";
 const HELD_HERE = "Kept by this tab only, so download it now to keep a copy. New work isn't saved in this browser until you discard it.";
 const UNKEPT = "This browser couldn't keep it, so download it now to keep a copy.";
+const CACHED = "This browser's storage can't be read at the moment, so download it now to keep a copy.";
 const DISCARDED = "The session that couldn't be restored was discarded.";
 const FREE_SPACE = " To free space, download the session that couldn't be restored, then discard it.";
 const OFF_UNTIL = " Auto-save is off until you discard the session that couldn't be restored; download it first to keep a copy.";
@@ -179,6 +180,12 @@ const status = () => document.getElementById('unrestored-notice-status').textCon
 const clearNote = () => document.getElementById('clear-unrestored-note');
 const announcer = () => document.getElementById('announcer').textContent;
 const discard = () => document.getElementById('unrestored-discard').click();
+/** Clear All's dialog opened and cancelled: the notice reads the store again. */
+function refresh() {
+  document.getElementById('clear-btn').click();
+  document.getElementById('clear-cancel').click();
+}
+const COULD_NOT = { message: "The session that couldn't be restored could not be discarded.", priority: 'assertive' };
 
 /** A change in the editor, and its autosave written at once. */
 function editAndSave(app) {
@@ -439,6 +446,16 @@ describe('more than one record that could not be restored (DEF-28)', () => {
     expect(store.has(AUTOSAVE)).toBe(false);
     expect(heading()).toBe(EARLIER);
     expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+  });
+
+  test('are each an earlier start’s when a recovery copy of one is refused again, the first on offer or not, and nothing is told as this start’s', async () => {
+    allowConsole(LOAD_REFUSED);
+    const record = await refusedRecord();
+    const { app, announced } = await bootRecording({ [keptKey(1, 't')]: record, [keptKey(2, 'q')]: 'a newer record', [AUTOSAVE]: record });
+
+    expect(app._unrestoredOffers.map(({ text, earlier }) => ({ text, earlier })))
+      .toEqual([{ text: 'a newer record', earlier: true }, { text: record, earlier: true }]);
+    expect(announced.filter(call => call.message.startsWith(NOW))).toEqual([]);
   });
 
   test('leave no copy in the recovery key for Discard to miss, so none returns on reload', async () => {
@@ -1635,8 +1652,8 @@ describe('another tab during this start’s restore, and what Clear All says it 
   }
 
   /** Start with `record` in browser recovery, its restore waiting on its background decode. */
-  async function startRestoring(record, entries = {}) {
-    const store = useStorage({ ...entries, [AUTOSAVE]: record });
+  async function startRestoring(record, entries = {}, options = {}) {
+    const store = useStorage({ ...entries, [AUTOSAVE]: record }, options);
     allowConsole(LOAD_REFUSED);
     let fail;
     const reached = new Promise((resolveReached) => {
@@ -1672,6 +1689,100 @@ describe('another tab during this start’s restore, and what Clear All says it 
     editAndSave(app);
     expect(store.has(AUTOSAVE)).toBe(true);
     expect(kept(store)).toEqual([record]);
+  });
+
+  test.each([
+    ['', {}],
+    [', beside an unrelated record kept before this start', { [keptKey(1, 'q')]: 'an earlier record' }],
+  ])('a record another tab keeps again after the author discarded it there, while this start restores it, is this start’s when the restore fails: told, offered, and not copied again%s', async (_, entries) => {
+    allowConsole(/Failed to load from localStorage/);
+    const record = await recordWithBackground();
+    const faults = { unreadable: null };
+    const { app, store, heard, fail } = await startRestoring(record, entries, { readFails: [key => key === faults.unreadable] });
+    const mine = () => app._unrestoredOffers.filter(offer => offer.text === record).map(({ where, earlier }) => ({ where, earlier }));
+    // A restore in a third tab has read the record too, and does not see what follows.
+    const late = new StorageService();
+    expect(late.loadAutoSaveText()).toBe(record);
+    const otherTab = new StorageService();
+    const first = otherTab.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key: first.key }));
+    expect(otherTab.discardKept({ ...first, text: record })).toBe(true);
+    window.dispatchEvent(new StorageEvent('storage', { key: first.key }));
+    const again = late.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key: again.key }));
+
+    fail();
+    await app.ready;
+
+    expect(kept(store).filter(text => text === record)).toEqual([record]);
+    expect(heading()).toBe(NOW);
+    expect(mine()).toEqual([{ where: 'parked', earlier: false }]);
+    expect(heard().filter(call => call.message.startsWith(NOW)))
+      .toEqual([{ message: `${NOW} ${KEPT}`, priority: 'assertive' }]);
+    // Its copy can then no longer be read here: still this start's, and it downloads.
+    faults.unreadable = again.key;
+    refresh();
+    expect(mine()).toEqual([{ where: 'parked', earlier: false }]);
+    const [blob] = download();
+    expect(await blob.text()).toBe(record);
+  });
+
+  test('a record the author discards in another tab during this start’s restore, kept there again only once the restore has ended, is an earlier start’s', async () => {
+    const record = await recordWithBackground();
+    const { app, heard, fail } = await startRestoring(record);
+    const late = new StorageService();
+    expect(late.loadAutoSaveText()).toBe(record);
+    const otherTab = new StorageService();
+    const first = otherTab.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key: first.key }));
+    expect(otherTab.discardKept({ ...first, text: record })).toBe(true);
+    window.dispatchEvent(new StorageEvent('storage', { key: first.key }));
+
+    fail();
+    await app.ready;
+    expect(app._unrestoredOffers).toEqual([]);
+    const again = late.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key: again.key }));
+
+    expect(heading()).toBe(EARLIER);
+    expect(heard().filter(call => call.message.startsWith(NOW))).toEqual([]);
+  });
+
+  test('a record kept before this start, discarded in another tab and kept there again while this start restores it, stays an earlier start’s when the restore fails, and nothing is told of it', async () => {
+    const record = await recordWithBackground();
+    const { app, store, heard, fail } = await startRestoring(record, { [keptKey(1, 'earlier')]: record });
+    expect(heading()).toBe(EARLIER);
+    const late = new StorageService();
+    expect(late.loadAutoSaveText()).toBe(record);
+    const otherTab = new StorageService();
+    expect(otherTab.discardKept({ text: record, where: 'parked', key: keptKey(1, 'earlier') })).toBe(true);
+    window.dispatchEvent(new StorageEvent('storage', { key: keptKey(1, 'earlier') }));
+    expect(notice().hidden).toBe(true);
+    const again = late.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key: again.key }));
+
+    fail();
+    await app.ready;
+
+    expect(kept(store)).toEqual([record]);
+    expect(heading()).toBe(EARLIER);
+    expect(heard().filter(call => call.message.startsWith(NOW))).toEqual([]);
+  });
+
+  test('an unrelated record kept before this start does not make one another tab keeps during this start’s restore an earlier one: the restore’s failure is told once', async () => {
+    const record = await recordWithBackground();
+    const { app, store, heard, fail } = await startRestoring(record, { [keptKey(1, 'q')]: 'an earlier record' });
+    const otherTab = new StorageService();
+    const { key } = otherTab.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key }));
+
+    fail();
+    await app.ready;
+
+    expect(app._unrestoredOffers.find(offer => offer.text === record)).toMatchObject({ where: 'parked', earlier: false });
+    expect(heard().filter(call => call.message.startsWith(NOW))).toEqual([{ message: `${NOW} ${KEPT}`, priority: 'assertive' }]);
+    expect(kept(store)).toHaveLength(2);
+    expect(kept(store)).toEqual(expect.arrayContaining([record, 'an earlier record']));
   });
 
   test('another tab’s Discard of an unrelated record while this start restores leaves this start’s record to keep', async () => {
@@ -1825,6 +1936,227 @@ describe('another tab during this start’s restore, and what Clear All says it 
 
     expect(kept(store)).toEqual([]);
     expect(heard()).toContainEqual({ message: "Project cleared, and the session that couldn't be restored was discarded", priority: 'polite' });
+  });
+});
+
+describe('a store that cannot be searched, or read, and the records this tab knows (DEF-28)', () => {
+  const denied = /Failed to load from localStorage|Failed to search localStorage/;
+
+  test('a record this start keeps where the store cannot be searched is offered, as this start’s and kept, and downloads; the announcement says what the notice says', async () => {
+    allowConsole(LOAD_REFUSED, denied);
+    const record = await refusedRecord();
+    const { store, announced } = await bootRecording({ [AUTOSAVE]: record }, { searchFails: () => true });
+
+    expect(kept(store)).toEqual([record]);
+    expect(notice().hidden).toBe(false);
+    expect(heading()).toBe(NOW);
+    expect(status()).toBe(KEPT);
+    expect(announced).toContainEqual({ message: `${NOW} ${KEPT}`, priority: 'assertive' });
+    const [blob] = download();
+    expect(await blob.text()).toBe(record);
+  });
+
+  test('a record this start kept stays on offer, and downloads, while the store can be neither searched nor read; Discard then says it could not; and once the store can be read it is offered as kept', async () => {
+    allowConsole(LOAD_REFUSED, denied);
+    const faults = { denied: false };
+    const record = await refusedRecord();
+    const { app, store } = await bootRecording({ [AUTOSAVE]: record }, { readFails: [() => faults.denied], searchFails: () => faults.denied });
+    expect(status()).toBe(KEPT);
+
+    faults.denied = true;
+    refresh();
+
+    expect(notice().hidden).toBe(false);
+    expect(heading()).toBe(NOW);
+    expect(status()).toBe(CACHED);
+    const [blob] = download();
+    expect(await blob.text()).toBe(record);
+    const heard = listen(app);
+    discard();
+    expect(heard()).toContainEqual(COULD_NOT);
+    expect(status()).toBe(CACHED);
+    expect(kept(store)).toEqual([record]);
+
+    faults.denied = false;
+    refresh();
+    expect(status()).toBe(KEPT);
+    const [again] = download();
+    expect(await again.text()).toBe(record);
+    expect(app.storageService.saveAutoSave({ name: 'once the store can be read' })).toBe(true);
+  });
+
+  test('a record kept by an earlier start stays on offer, and downloads, while the store can be neither searched nor read', async () => {
+    allowConsole(denied);
+    const faults = { denied: false };
+    await bootRecording({ [keptKey(1, 'q')]: 'an earlier record' }, { readFails: [() => faults.denied], searchFails: () => faults.denied });
+
+    faults.denied = true;
+    refresh();
+
+    expect(heading()).toBe(EARLIER);
+    expect(status()).toBe(CACHED);
+    const [blob] = download();
+    expect(await blob.text()).toBe('an earlier record');
+  });
+
+  test('a record kept by an earlier start stays on offer, as kept, when its key can no longer be read here', async () => {
+    allowConsole(denied);
+    const faults = { read: null };
+    await bootRecording({ [keptKey(1, 'q')]: 'an earlier record' }, { readFails: [key => key === faults.read] });
+
+    faults.read = keptKey(1, 'q');
+    refresh();
+
+    expect(heading()).toBe(EARLIER);
+    expect(status()).toBe(KEPT);
+    const [blob] = download();
+    expect(await blob.text()).toBe('an earlier record');
+  });
+
+  test('a record kept by an earlier start, offered while the store could not be searched, stays on offer as kept once it can, though its key can no longer be read', async () => {
+    allowConsole(denied);
+    const faults = { search: false, read: null };
+    await bootRecording({ [keptKey(1, 'q')]: 'an earlier record' }, { searchFails: () => faults.search, readFails: [key => key === faults.read] });
+    faults.search = true;
+    refresh();
+    expect(status()).toBe(KEPT);
+
+    faults.search = false;
+    faults.read = keptKey(1, 'q');
+    refresh();
+
+    expect(heading()).toBe(EARLIER);
+    expect(status()).toBe(KEPT);
+    const [blob] = download();
+    expect(await blob.text()).toBe('an earlier record');
+  });
+
+  test('where the store cannot be searched, a record whose key is read empty is not offered', async () => {
+    allowConsole(denied);
+    const faults = { search: false };
+    const { store } = await bootRecording({ [keptKey(1, 'q')]: 'an earlier record' }, { searchFails: () => faults.search });
+    expect(notice().hidden).toBe(false);
+
+    faults.search = true;
+    // Another tab's Discard, which this tab cannot see by a search.
+    store.delete(keptKey(1, 'q'));
+    refresh();
+
+    expect(notice().hidden).toBe(true);
+  });
+
+  test('Discard of a record offered from this tab’s copy says it could not, while its key still cannot be read, though the store can be searched again', async () => {
+    allowConsole(LOAD_REFUSED, denied, /Failed to remove from localStorage/);
+    const faults = { search: false, read: null };
+    const record = await refusedRecord();
+    const { app, store } = await bootRecording({ [AUTOSAVE]: record }, { readFails: [key => key === faults.read], searchFails: () => faults.search });
+    const [key] = [...store.keys()].filter(isKept);
+    faults.search = true;
+    faults.read = key;
+    refresh();
+    expect(status()).toBe(CACHED);
+    // The store can be searched again before the notice next reads it.
+    faults.search = false;
+    const heard = listen(app);
+
+    discard();
+
+    expect(heard()).toContainEqual(COULD_NOT);
+    expect(store.get(key)).toBe(record);
+    expect(app._unrestoredOffers.map(offer => offer.text)).toEqual([record]);
+  });
+
+  test('a record the author discards here is not offered again from this tab’s copy when the store then cannot be read', async () => {
+    allowConsole(LOAD_REFUSED, denied);
+    const faults = { denied: false };
+    const record = await refusedRecord();
+    const { app, store } = await bootRecording({ [AUTOSAVE]: record }, { readFails: [() => faults.denied], searchFails: () => faults.denied });
+    // The store stops being readable the moment the Discard has done its work.
+    const discardKept = app.storageService.discardKept.bind(app.storageService);
+    vi.spyOn(app.storageService, 'discardKept').mockImplementation((offer) => {
+      const done = discardKept(offer);
+      faults.denied = true;
+      return done;
+    });
+
+    discard();
+
+    expect(kept(store)).toEqual([]);
+    expect(notice().hidden).toBe(true);
+    refresh();
+    expect(notice().hidden).toBe(true);
+  });
+
+  test('a record discarded in another tab, as this tab saw, is not offered from this tab’s copy when the store then cannot be read', async () => {
+    allowConsole(LOAD_REFUSED, denied);
+    const faults = { denied: false };
+    const record = await refusedRecord();
+    const { store } = await bootRecording({ [AUTOSAVE]: record }, { readFails: [() => faults.denied], searchFails: () => faults.denied });
+    const [key] = [...store.keys()].filter(isKept);
+    expect(new StorageService().discardKept({ text: record, where: 'parked', key })).toBe(true);
+    window.dispatchEvent(new StorageEvent('storage', { key }));
+    expect(notice().hidden).toBe(true);
+
+    faults.denied = true;
+    refresh();
+
+    expect(notice().hidden).toBe(true);
+  });
+
+  test('where the store cannot be searched, a record read under one of the keys this tab knows it by is offered as kept, though another of them cannot be read', async () => {
+    allowConsole(denied);
+    const faults = { search: false, read: null };
+    await bootRecording({ [keptKey(1, 'a')]: 'a record', [keptKey(2, 'b')]: 'a record' }, {
+      searchFails: () => faults.search, readFails: [key => key === faults.read],
+    });
+
+    faults.search = true;
+    faults.read = keptKey(2, 'b');
+    refresh();
+
+    expect(status()).toBe(KEPT);
+  });
+
+  test('a record another tab discards the moment this start has kept it is neither told nor offered', async () => {
+    allowConsole(LOAD_REFUSED);
+    const record = await refusedRecord();
+    const keep = StorageService.prototype.keepUnrestored;
+    vi.spyOn(StorageService.prototype, 'keepUnrestored').mockImplementation(function keptThenDiscarded(text) {
+      const kept = keep.call(this, text);
+      // The author's Discard in another tab, before this tab reads the store again.
+      if (kept.key) localStorage.removeItem(kept.key);
+      return kept;
+    });
+
+    const { app, store, announced } = await bootRecording({ [AUTOSAVE]: record });
+
+    expect(kept(store)).toEqual([]);
+    expect(app._unrestoredOffers).toEqual([]);
+    expect(announced.filter(call => call.message.includes("couldn't be restored"))).toEqual([]);
+  });
+
+  test('after Clear All, no record is offered from this tab’s copy when the store then cannot be read', async () => {
+    allowConsole(LOAD_REFUSED, denied, /Failed to remove from localStorage|Failed to save to localStorage/);
+    const faults = { denied: false };
+    const record = await refusedRecord();
+    const { app, store } = await bootRecording({ [keptKey(1, 'q')]: 'an earlier record', [AUTOSAVE]: record }, {
+      readFails: [() => faults.denied], searchFails: () => faults.denied,
+    });
+    expect(app._unrestoredOffers).toHaveLength(2);
+    // The store stops being readable the moment Clear All has discarded them.
+    const discardAllKept = app.storageService.discardAllKept.bind(app.storageService);
+    vi.spyOn(app.storageService, 'discardAllKept').mockImplementation(() => {
+      const done = discardAllKept();
+      faults.denied = true;
+      return done;
+    });
+
+    document.getElementById('clear-btn').click();
+    document.getElementById('clear-confirm').click();
+
+    expect(kept(store)).toEqual([]);
+    expect(app._unrestoredOffers).toEqual([]);
+    expect(notice().hidden).toBe(true);
   });
 });
 

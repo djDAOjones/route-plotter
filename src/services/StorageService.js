@@ -322,21 +322,37 @@ export class StorageService {
   }
 
   /**
+   * One kept record, read by the key it was kept under, for when the store
+   * cannot be searched (DEF-28).
+   * @param {string} key
+   * @returns {{ ok: boolean, text: string|null }} `text` is null when the key
+   *   holds nothing; `ok` is false when it could not be read
+   */
+  readKept(key) {
+    const { ok, value } = this._readKey(key);
+    return { ok, text: value };
+  }
+
+  /**
    * Remove a kept record, for the author's Discard — one of the two ways one
    * goes (DEF-28) — from where it was kept, with every identical copy that
    * can be read, but never a different record written there since. Ending a
    * hold removes its mark only while the mark is this record's.
-   * @param {{ text: string, where: 'parked'|'held'|'unkept', key?: string }} kept
+   * @param {{ text: string, where: string, key?: string }} kept - As offered:
+   *   `key` is the key it was kept under, if it was (one this tab may have
+   *   been unable to read when it offered it)
    * @returns {boolean} Whether no readable copy of it is left in the store,
    *   as far as the store could be searched
    */
-  discardKept({ text, where, key }) {
+  discardKept({ text, key }) {
     // Wherever it was when it was offered, even kept only in memory: another
     // tab may have kept it since. The recovery key's copy first, and only if
     // it is this record: if it cannot go, the record stays on offer.
     if (!this._removeIfHolding(STORAGE.AUTOSAVE_KEY, text)) return false;
     this._releaseHold(text);
-    if (where === 'parked' && !this._removeIfHolding(key, text)) return false;
+    // Its own key, read or not when it was offered: one that cannot be read
+    // now cannot be said to be empty.
+    if (key && !this._removeIfHolding(key, text)) return false;
     // Every other copy, wherever it has gone since it was offered: another tab
     // may have kept a held record under a key of its own. A search that fails
     // cannot say none is left.

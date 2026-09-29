@@ -177,9 +177,16 @@ write over; each record is one offer, and one session in Clear All's count,
 in its question and in what it says it did, however many copies of it there
 are; and a record this start could not restore stays this start's, and its
 failure is announced, wherever it is kept, even by another tab while this
-start's restore ran. The announcement says what the notice says. Discard
-removes every copy of the record it can read, wherever it has moved, and says
-it failed if the store cannot be searched. A restore still in progress when
+start's restore ran, and even kept again there after the author discarded it.
+The announcement says what the notice then offers, and nothing of a record
+no longer on offer. Where the store cannot be searched, the records this tab
+knows are looked for by their keys: one read there is offered as kept; one
+whose key cannot be read either stays on offer from this tab's copy, saying
+the browser's storage can't be read at the moment, and can still be
+downloaded; one seen empty is not offered; and once a search works again,
+what it lists is what is offered. Discard removes every copy of the record it
+can read, wherever it has moved, and says it failed if the store cannot be
+searched, or the key it was offered under cannot be read. A restore still in progress when
 the author discards its record in another tab (by Discard or Clear All)
 keeps it no more, once this tab has seen that tab keep it and then seen it
 go; a hold another tab ends is not taken for such a choice, since a build
