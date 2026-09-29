@@ -211,13 +211,16 @@ export const exportingMixin = {
       this.eventBus.off('video:export-paused', onExportPaused);
       this.eventBus.off('video:export-resumed', onExportResumed);
       
-      // Restore canvas to display resolution (must happen before render)
-      this._exitExportMode();
-      
-      // Restore background if it was hidden for path-only export
+      // Restore background if it was hidden for path-only export: before the
+      // display size, which places the image on the canvas, and, with the
+      // image hidden, left the place it had at the size the export began
+      // with, stale after a size chosen during the export (DEF-53).
       if (pathOnly) {
         this.background.image = originalBackgroundImage;
       }
+
+      // Restore canvas to display resolution (must happen before render)
+      this._exitExportMode();
 
       // Restore the original timeline shape before feeding its timeline
       // progress back into the engine, then restore transport flags and speed.
