@@ -105,7 +105,9 @@ function alphaOf(colour, node) {
     const own = getComputedStyle(node).getPropertyValue(custom[1]).trim();
     return own ? alphaOf(own, node) : custom[2] !== undefined ? alphaOf(custom[2], node) : null;
   }
-  if (/^(currentcolor|inherit|initial|unset|revert|revert-layer)$/i.test(value)) return null;
+  // A colour that takes its value from where it is used (`currentcolor`,
+  // even inside another) cannot be read off the page
+  if (/currentcolor/i.test(value) || /^(inherit|initial|unset|revert|revert-layer)$/i.test(value)) return null;
   // A span of its own, off the page, so reading it changes nothing the checks watch
   const probe = document.createElement('span');
   probe.style.color = value;
@@ -215,7 +217,8 @@ function watchTold() {
       failures.push(error.message);
     }
   });
-  observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
+  // The document itself, so a page whose root is replaced is still watched
+  observer.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
   return () => {
     observer.disconnect();
     expect(failures).toEqual([]);
@@ -240,7 +243,7 @@ async function expectNothingTold(app, act) {
     }
   };
   const observer = new MutationObserver(look);
-  observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  observer.observe(document, { subtree: true, childList: true, characterData: true });
   if (!vi.isFakeTimers()) vi.useFakeTimers({ toFake: CLOCK });
   try {
     const acting = act();
@@ -490,7 +493,8 @@ test('Draw Area for another waypoint starts that waypoint’s draw afresh', asyn
 test('the toast’s colour is read as this environment’s CSS parser reads it, and one it cannot read is not known to paint', () => {
   // As a stylesheet sets them: custom properties on an element, read through `var()`
   const sheet = document.createElement('style');
-  sheet.textContent = '.colour-read { --upper: TRANSPARENT; --relative: rgb(from transparent r g b); --unknown: blorple; }';
+  sheet.textContent = '.colour-read { --upper: TRANSPARENT; --relative: rgb(from transparent r g b); --unknown: blorple; '
+    + '--mixed: color-mix(in srgb, currentcolor, transparent); }';
   document.head.append(sheet);
   const node = document.createElement('span');
   node.className = 'colour-read';
@@ -502,8 +506,9 @@ test('the toast’s colour is read as this environment’s CSS parser reads it, 
       transparent: ['TRANSPARENT', 'Transparent', '#0000', 'rgb(1 2 3 / 0)', 'color(srgb 1 0 0 / 0)', 'oklch(0.5 0.1 20 / 0)',
         'rgb(from transparent r g b)', 'var(--upper, white)', 'var(--relative, white)'].map(read),
       half: read('color-mix(in srgb, red, transparent)'),
-      unread: ['blorple', 'rgb(blorple)', 'var(--unknown, white)', 'currentcolor', 'inherit', 'var(--missing)'].map(read),
-    }).toEqual({ opaque: [1, 1, 1, 1, 1], transparent: [0, 0, 0, 0, 0, 0, 0, 0, 0], half: 0.5, unread: [null, null, null, null, null, null] });
+      unread: ['blorple', 'rgb(blorple)', 'var(--unknown, white)', 'currentcolor', 'inherit', 'var(--missing)',
+        'var(--mixed, white)', 'color-mix(in srgb, CurrentColor, red)'].map(read),
+    }).toEqual({ opaque: [1, 1, 1, 1, 1], transparent: [0, 0, 0, 0, 0, 0, 0, 0, 0], half: 0.5, unread: [null, null, null, null, null, null, null, null] });
   } finally {
     node.remove();
     sheet.remove();
