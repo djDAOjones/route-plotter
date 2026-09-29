@@ -15,6 +15,10 @@ import { bootApp } from './helpers/bootApp.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { networkRoom } from '../src/utils/networkBudget.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
+import { EventBus } from '../src/core/EventBus.js';
+import { FlowLayer } from '../src/models/FlowLayer.js';
+import { Scene } from '../src/models/Scene.js';
+import { NetworkEditService } from '../src/services/NetworkEditService.js';
 
 const FULL = {
   node: 'The project node limit has been reached.',
@@ -254,21 +258,151 @@ test.each([
   // The first node and the last are not yet linked.
   ['a link', crowd('c', { nodes: 100, links: 4000 }), layer => ({ action: 'connect-nodes', layerId: layer.id, sourceId: 'c-n0', targetId: 'c-n99', direction: 'one-way', weight: 1 }), FULL.edge],
 ])('the outline refuses %s past the budget in the same words, once, and changes nothing else', async (_, full, command, message) => {
-  const { app, layer, told } = await editing([full]);
+  const { app, layer } = await editing([full]);
+
+  outlineRefuses(app, layer, command(layer), message);
+});
+
+/**
+ * The outline was refused `command`: its form told once, in `message`, and
+ * the network, the history, the pen and the banner as they were, with no
+ * toast, no change announced and nothing saved.
+ */
+function outlineRefuses(app, layer, command, message) {
   const before = penState(app, layer);
   const errors = vi.fn();
   app.eventBus.on('scene-outline:error', errors);
   const saving = vi.spyOn(app, 'autoSave');
   const changed = vi.fn();
   app.eventBus.on('network:changed', changed);
+  const toasts = vi.fn();
+  app.eventBus.on('ui:toast', toasts);
 
-  app.eventBus.emit('scene-outline:command', { ...command(layer), outlineFormKey: 'form' });
+  app.eventBus.emit('scene-outline:command', { ...command, outlineFormKey: 'form' });
 
   expect(errors.mock.calls).toEqual([[{ formKey: 'form', message }]]);
   expect(penState(app, layer)).toEqual(before);
   expect(saving).not.toHaveBeenCalled();
   expect(changed).not.toHaveBeenCalled();
-  expect(told()).toEqual([]);
+  expect(toasts).not.toHaveBeenCalled();
+}
+
+/** Five crowds of 2,000 nodes (guided as `guideType` says) and, last, an empty one: a scene of 10,000 nodes. */
+const tenThousandNodes = (guideType = 'graph') => [
+  ...Array.from({ length: 5 }, (_, index) => ({ ...crowd(`f${index}`, { nodes: 2000, links: 0 }), guideType })),
+  crowd('last', { nodes: 0, links: 0 }),
+];
+
+/**
+ * An app editing, with the pen at its first node, the last of five crowds
+ * of 4,000 links and one of two nodes and none: a scene of 20,000 links. So
+ * many links are past the project-wide values budget (DEF-04's), so no
+ * project holds them and they cannot be opened: the scene is put in place
+ * as it is, to test the count.
+ */
+async function twentyThousandLinks() {
+  const app = await undrawn();
+  app.scene = Scene.fromJSON({
+    flowLayers: [...Array.from({ length: 5 }, (_, index) => crowd(`f${index}`, { nodes: 100, links: 4000 })), crowd('last', { nodes: 2, links: 0 })],
+  });
+  const layer = app.scene.getFlowLayers().at(-1);
+  app.eventBus.emit('crowd:selected', layer);
+  app.enterNetworkEditMode();
+  app.networkEditService.clickNode(layer.graph.getNodes()[0]);
+  const told = vi.fn();
+  app.eventBus.on('ui:toast', told);
+  return { app, layer, pen: app.networkEditService, told: () => told.mock.calls.map(([{ message }]) => message) };
+}
+
+test('the outline refuses a node when the scene has 10,000, though its own crowd has none', async () => {
+  const { app, layer } = await editing(tenThousandNodes());
+
+  outlineRefuses(app, layer, { action: 'add-node', layerId: layer.id, x: 50, y: 50, type: 'normal' }, FULL.node);
+});
+
+test('the outline refuses a link when the scene has 20,000, though its own crowd has none', async () => {
+  const { app, layer } = await twentyThousandLinks();
+
+  outlineRefuses(app, layer, {
+    action: 'connect-nodes', layerId: layer.id, sourceId: 'last-n0', targetId: 'last-n1', direction: 'one-way', weight: 1,
+  }, FULL.edge);
+});
+
+test('the outline refuses a bend when its crowd\'s paths hold 8,192, on a path with none', async () => {
+  const full = crowd('c', { nodes: 40, links: 33, bends: 256 });
+  full.graph.edges.at(-1).controlPoints = [];
+  const { app, layer } = await editing([full]);
+  const edge = layer.graph.getEdges().at(-1);
+  expect(edge.controlPoints).toHaveLength(0);
+
+  outlineRefuses(app, layer, { action: 'add-control', layerId: layer.id, edgeId: edge.id, x: 50, y: 50 }, FULL.bend);
+});
+
+test.each([
+  ['with a new node', pen => pen.placeNode({ x: 0.8, y: 0.8 })],
+  ['to a node there', (pen, layer) => pen.clickNode(layer.graph.getNodes().at(-1))],
+])('the pen refuses a link %s when the scene has 20,000, though its own crowd has none', async (_, link) => {
+  const { app, layer, pen, told } = await twentyThousandLinks();
+  const before = penState(app, layer);
+  const changed = vi.fn();
+  app.eventBus.on('network:changed', changed);
+
+  link(pen, layer);
+
+  expect(penState(app, layer)).toEqual(before);
+  expect(changed).not.toHaveBeenCalled();
+  expect(told()).toEqual([FULL.edge]);
+});
+
+test('the pen counts the saved networks of crowds that follow the route, with the rest of the scene', async () => {
+  const { app, layer, pen, told } = await editing(tenThousandNodes('route'));
+
+  await refused(app, layer, () => pen.placeNode({ x: 0.8, y: 0.8 }), FULL.node, told);
+});
+
+test('after another project is opened, the pen counts its scene, not the one it counted before', async () => {
+  const { app, pen } = await editing([crowd('old')]);
+  // The pen asks for the scene's crowds, and places a node
+  expect(pen.placeNode({ x: 0.8, y: 0.8 })).not.toBeNull();
+
+  expect(await loadSnapshot(app, { coordVersion: 9, waypoints: [], scene: { flowLayers: tenThousandNodes() } })).toBe(true);
+  const layer = app.scene.getFlowLayers().at(-1);
+  app.eventBus.emit('crowd:selected', layer);
+  app.enterNetworkEditMode();
+  const told = vi.fn();
+  app.eventBus.on('ui:toast', told);
+
+  expect(pen.placeNode({ x: 0.8, y: 0.8 })).toBeNull();
+  expect(layer.graph.getNodes()).toHaveLength(0);
+  expect(told.mock.calls).toEqual([[{ message: FULL.node }]]);
+});
+
+test.each([
+  ['a node, in a crowd of 2,000', { nodes: 2000 }, (pen) => pen.placeNode({ x: 0.8, y: 0.8 }), FULL.node],
+  ['a link, in a crowd of 4,000', { nodes: 100, links: 4000 }, (pen, layer) => pen.clickNode(layer.graph.getNodes().at(-1)), FULL.edge],
+  ['a bend, on a path of 256', { bends: 256 }, (pen, layer) => pen.beginEdgeBend(layer.graph.getEdges()[0], { x: 0.5, y: 0.5 }, 1), FULL.bend],
+])('a pen with no app to ask for the scene still keeps its own crowd within its counts: %s', (_, size, attempt, message) => {
+  // No listener answers the pen's question about the scene: it counts its own crowd
+  const bus = new EventBus({ onListenerError: (error) => { throw error; } });
+  expect(bus.listenerCount('scene:flow-layers')).toBe(0);
+  const pen = new NetworkEditService(bus);
+  const layer = FlowLayer.fromJSON(crowd('solo', size));
+  pen.enter(layer);
+  pen.clickNode(layer.graph.getNodes()[0]);
+  const network = JSON.stringify(layer.graph.toJSON());
+  const toasts = vi.fn();
+  const changed = vi.fn();
+  bus.on('ui:toast', toasts);
+  bus.on('network:changed', changed);
+  try {
+    attempt(pen, layer);
+
+    expect(JSON.stringify(layer.graph.toJSON())).toBe(network);
+    expect(toasts.mock.calls).toEqual([[{ message }]]);
+    expect(changed).not.toHaveBeenCalled();
+  } finally {
+    pen.exit();
+  }
 });
 
 /** A crowd as the budget reads it: so many nodes and links, each link with so many bends. */
