@@ -623,3 +623,70 @@ test.each([
   expect(app.waypoints).toHaveLength(1);
   expect(app.animationEngine.getLiveTiming()[field]).toBe(kept);
 });
+
+/** A constant-time project whose one-stop branch leaves its fork and rejoins at its end, a minor between them. */
+const branched = () => authoredConstantTime([
+  { id: 'a', imgX: 0.1, imgY: 0.2, isMajor: true, pauseTime: 0 },
+  { id: 'fork', imgX: 0.2, imgY: 0.2, isMajor: true, pauseTime: 0 },
+  { id: 'minor', imgX: 0.25, imgY: 0.2, isMajor: false },
+  { id: 'end', imgX: 0.3, imgY: 0.2, isMajor: true, pauseTime: 0 },
+  { id: 'b', imgX: 0.9, imgY: 0.9, isMajor: true, pauseTime: 0, branchId: 'B', branchFrom: 'fork', branchRejoin: 'end' },
+]);
+
+/** Save Project, as the author asks for it: the project it writes. */
+async function savedProject(app) {
+  let saved = null;
+  vi.spyOn(app.imageAssetService, 'exportZip').mockImplementation(async (project) => { saved = project; return new Blob(['zip']); });
+  vi.spyOn(app.imageAssetService, 'downloadZip').mockImplementation(() => {});
+  await app.saveProject();
+  return saved;
+}
+
+test('a branch end dropped on a minor, its rejoin refused, is back where it was, and Save Project then holds the route with the duration a rebuild gives it', async () => {
+  const app = await derivedByPreview(branched());
+  app.eventBus.emit('motion:preview-mode-change', false);
+  await timingSettled();
+  const end = app.getWaypointById('b');
+  const start = { imgX: end.imgX, imgY: end.imgY };
+  const minor = app.getWaypointById('minor');
+  // The branch's end dragged over the minor, and let go there.
+  dragging(app, 'b', minor.imgX, minor.imgY);
+  const drop = app.imageToCanvas(minor.imgX, minor.imgY);
+  const told = vi.fn();
+  app.eventBus.on('ui:toast', told);
+  app.eventBus.emit('waypoint:drag-ended', { waypoint: end, dropX: drop.x, dropY: drop.y, dragGroup: [{ waypoint: end, ...start }] });
+  expect(told).toHaveBeenCalledTimes(1);
+  expect(end).toMatchObject({ ...start, branchRejoin: 'end' });
+
+  const saved = await savedProject(app);
+
+  // The route as it is, rebuilt from nothing.
+  app.calculatePath();
+  app.invalidateAnimationTiming();
+  expect(saved.animationState.duration).toBe(app.animationEngine.state.duration);
+});
+
+test('an HTML export made mid-drag runs the route’s queued rebuild, and changes nothing else: no edit, no history, no recovery written', async () => {
+  const app = await derivedByPreview(threeStops());
+  const image = Object.assign(new Image(), { naturalWidth: 1600, naturalHeight: 900, width: 1600, height: 900 });
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  vi.spyOn(app, 'loadImageFileAsset').mockResolvedValue({ base64: png, getImageElement: async () => image });
+  expect(await loadBackgroundFile(app, new File(['x'], 'background.png', { type: 'image/png' }))).toBe(true);
+  app.storageService.flushAutoSave();
+  app._isDirty = false;
+  dragging(app, 'b', 0.3, 0.65);
+  const before = { dirty: app._isDirty, revision: app._editRevision, history: app.undoService.createSnapshot(), pending: app.storageService._pendingAutoSave };
+  localStorage.setItem.mockClear();
+  vi.spyOn(app.htmlExportService, 'estimateSize').mockResolvedValue({ formatted: '1 KB' });
+  vi.spyOn(app.htmlExportService, 'exportHTML').mockResolvedValue(new Blob(['html']));
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:export');
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+  await app.exportHTML();
+
+  expect(app._durationUpdateTimeout).toBeNull();
+  expect({ dirty: app._isDirty, revision: app._editRevision, history: app.undoService.createSnapshot(), pending: app.storageService._pendingAutoSave })
+    .toEqual(before);
+  expect(localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY)).toEqual([]);
+});
