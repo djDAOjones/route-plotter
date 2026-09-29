@@ -305,8 +305,19 @@ function focusedKey() {
 }
 
 /**
+ * The text the focused field has selected, `[start, end, direction]` (its
+ * caret, when start and end meet): what typing will replace. Null when focus
+ * is not in a text field.
+ */
+function focusedSelection() {
+  const element = document.activeElement;
+  if (focusedKey() === 'body' || element.selectionStart === null || element.selectionStart === undefined) return null;
+  return [element.selectionStart, element.selectionEnd, element.selectionDirection];
+}
+
+/**
  * What the app holds outside the save shape that a control can change:
- * selection, mode, transport and view.
+ * selection, mode, transport and view, and where focus is.
  *
  * @returns {Map<string, string>}
  */
@@ -323,6 +334,7 @@ export function appState(app) {
     exportMode: Boolean(app._isExportMode),
     viewport: [app.viewport?.zoom, app.viewport?.panX, app.viewport?.panY].map(round).join(' '),
     focus: focusedKey(),
+    focusedText: focusedSelection(),
   };
   return new Map(Object.entries(flags).map(([key, value]) => [key, JSON.stringify(value)]));
 }

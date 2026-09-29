@@ -416,10 +416,12 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9688 chars, b5cf9487]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
-## #crowd-busyness-graph · drag its first handle a third of the way down
+## #crowd-busyness-graph · drag its first handle a third of the way down, and let go there
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+pointer capture 1 taken by #crowd-busyness-graph
+pointer capture 1 let go by #crowd-busyness-graph
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[0].value: 1 → 0.716049
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -435,7 +437,30 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9701 chars, d5bbecb3]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
+## #crowd-busyness-graph · drag its first handle below the graph, and let go there
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+pointer capture 1 taken by #crowd-busyness-graph
+pointer capture 1 let go by #crowd-busyness-graph
+model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[0].value: 1 → 0
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available."
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="Even" → output aria-labelledby="crowd-busyness-label" :text="2 handles"
+ui ~ #crowd-busyness-graph: svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="2 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
+ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 282 16" → path class="crowd-busyness-line" d="M 18 124 L 282 16"
+ui ~ #crowd-busyness-graph>circle[2]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="18" cy="16" data-busyness-handle="0" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="18" cy="124" data-busyness-handle="0" r="22"
+ui ~ #crowd-busyness-graph>circle[3]: circle aria-hidden="true" class="crowd-busyness-handle" cx="18" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="18" cy="124" r="8"
+ui ~ #crowd-busyness-handles>div[0]>label[2]>input[0]: input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="0"
+ui ~ #crowd-busyness-reset: button class="btn btn-ghost" disabled="" type="button" :text="Reset to even" → button class="btn btn-ghost" type="button" :text="Reset to even"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 2de394a3]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
 ## #crowd-busyness-graph · drag its first handle, then the drag is cancelled
+pointer capture 1 taken by #crowd-busyness-graph
+pointer capture 1 let go by #crowd-busyness-graph
 
 ## #crowd-busyness-handles>div[0]>label[1]>input[0] · read-only, not operated
 
