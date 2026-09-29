@@ -43,15 +43,10 @@ const SELECTION_INNER = '#111111';
 export class NetworkEditService {
   /**
    * @param {EventBus} eventBus - Application event bus
-   * @param {{layers?: function(): Array}} [options] - `layers`: the scene's
-   *   crowds, whose nodes and links count towards the scene's budgets
    */
-  constructor(eventBus, { layers = () => [] } = {}) {
+  constructor(eventBus) {
     /** @type {EventBus} */
     this.eventBus = eventBus;
-
-    /** @type {function(): Array} The scene's crowds, for its budgets (DEF-59) */
-    this.layersOf = layers;
 
     /** @type {boolean} Whether network edit mode is active */
     this.active = false;
@@ -321,7 +316,11 @@ export class NetworkEditService {
    * @private
    */
   _roomFor(kind, edge = null) {
-    if (networkRoom(this.layersOf(), this.layer, edge)[kind]) return true;
+    // The scene's crowds, whose nodes and links count towards its budgets:
+    // asked of the app on the bus, as a tool asks for coordinates.
+    let crowds = [];
+    this.eventBus.emit('scene:flow-layers', null, (layers) => { crowds = layers; });
+    if (networkRoom(crowds, this.layer, edge)[kind]) return true;
     this.eventBus.emit('ui:toast', { message: NETWORK_FULL[kind] });
     return false;
   }

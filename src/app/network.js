@@ -116,6 +116,12 @@ export const networkMixin = {
       this.queueRender();
     });
 
+    // The scene's crowds, for the pen's budgets (DEF-59): a synchronous
+    // query, answered through the callback.
+    this.eventBus.on('scene:flow-layers', (_, callback) => {
+      callback?.(this.scene?.getFlowLayers?.() ?? []);
+    });
+
     // ── Pointer events from InteractionHandler (mode only) ──
     this.eventBus.on('network:click', ({ x, y, shiftKey }) => {
       this._handleNetworkClick(x, y, shiftKey);

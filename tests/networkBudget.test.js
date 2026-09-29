@@ -55,9 +55,10 @@ async function undrawn() {
   return app;
 }
 
-/** An app with `crowds` open, editing the last one's network with the pen, its first node selected. */
-async function editing(crowds) {
-  const app = await undrawn();
+/** An app with `crowds` open, editing the last one's network with the pen, its first node selected; drawing only if asked (small networks). */
+async function editing(crowds, { draws = false } = {}) {
+  const app = draws ? await bootApp() : await undrawn();
+  if (draws) await app.ready;
   expect(await loadSnapshot(app, { coordVersion: 9, waypoints: [], scene: { flowLayers: crowds } })).toBe(true);
   const layer = app.scene.flowLayers.at(-1);
   app.eventBus.emit('crowd:selected', layer);
@@ -138,6 +139,21 @@ test('a path of 256 bends is not bent again by the pen, and the author is told w
   await refused(app, layer, () => bend(pen, edge), FULL.bend, told);
 });
 
+test('a crowd whose paths hold 8,191 bends takes an 8,192nd, and the project reopens with it', async () => {
+  // Thirty-one paths of 256 bends, one of 255, and one of none.
+  const nearlyFull = crowd('c', { nodes: 40, links: 33, bends: 256 });
+  nearlyFull.graph.edges.at(-2).controlPoints.pop();
+  nearlyFull.graph.edges.at(-1).controlPoints = [];
+  const { app, layer, pen, told } = await editing([nearlyFull]);
+  const edge = layer.graph.getEdges().at(-1);
+
+  bend(pen, edge);
+
+  expect(layer.graph.getEdges().reduce((sum, each) => sum + each.controlPoints.length, 0)).toBe(8192);
+  expect(told()).toEqual([]);
+  expect(await reopens(app._buildProjectSnapshot())).toBe(true);
+});
+
 test('a crowd whose paths hold 8,192 bends is not bent again by the pen, on a path with none', async () => {
   // Thirty-two paths of 256 bends, and one of none.
   const full = crowd('c', { nodes: 40, links: 33, bends: 256 });
@@ -148,8 +164,8 @@ test('a crowd whose paths hold 8,192 bends is not bent again by the pen, on a pa
   await refused(app, layer, () => bend(pen, edge), FULL.bend, told);
 });
 
-test('a path of 256 bends dragged by the pointer is not bent, and the author is told once', async () => {
-  const { app, layer, told } = await editing([crowd('c', { bends: 256 })]);
+test('a path of 256 bends dragged by the pointer is not bent, and the author is told once, the editor drawing as it goes', async () => {
+  const { app, layer, told } = await editing([crowd('c', { bends: 256 })], { draws: true });
   await withImage(app);
   // On the path's run of bends, away from its nodes.
   const { x, y } = app.imageToCanvas(0.5, 0.5);
@@ -211,18 +227,25 @@ test('a scene of 10,000 nodes takes no node from the pen, in any crowd', async (
   await refused(app, layer, () => pen.placeNode({ x: 0.9, y: 0.9 }), FULL.node, told);
 });
 
-test('a crowd of 4,000 links takes no link from the pen: not with a new node, nor to one there', async () => {
+test.each([
+  ['with a new node', pen => pen.placeNode({ x: 0.9, y: 0.9 })],
+  // The first node and the last are not yet linked.
+  ['to a node there', (pen, layer) => pen.clickNode(layer.graph.getNodes().at(-1))],
+])('a crowd of 4,000 links takes no link from the pen %s', async (_, link) => {
   const { app, layer, pen, told } = await editing([crowd('c', { nodes: 100, links: 4000 })]);
-  const [first] = layer.graph.getNodes();
-  const last = layer.graph.getNodes().at(-1);
-  // The pen down at the first node: a node placed would come linked from it.
-  pen.clickNode(first);
+  // The pen down at the first node: a link would come from it.
+  pen.clickNode(layer.graph.getNodes()[0]);
 
-  await refused(app, layer, () => pen.placeNode({ x: 0.9, y: 0.9 }), FULL.edge, told);
-  const network = JSON.stringify(layer.graph.toJSON());
-  pen.clickNode(last);
-  expect(JSON.stringify(layer.graph.toJSON())).toBe(network);
-  expect(told()).toEqual([FULL.edge, FULL.edge]);
+  await refused(app, layer, () => link(pen, layer), FULL.edge, told);
+});
+
+test('a bend refused while a node is being dragged leaves that drag as it was', async () => {
+  const { app, layer, pen, told } = await editing([crowd('c', { bends: 256 })]);
+  const [edge] = layer.graph.getEdges();
+  pen.beginNodeDrag(layer.graph.getNodes()[0]);
+  expect(pen.drag).not.toBeNull();
+
+  await refused(app, layer, () => pen.beginEdgeBend(edge, { x: 0.5, y: 0.5 }, 1), FULL.bend, told);
 });
 
 test.each([
@@ -230,16 +253,22 @@ test.each([
   ['a node', crowd('c', { nodes: 2000, links: 1 }), layer => ({ action: 'add-node', layerId: layer.id, x: 50, y: 50, type: 'normal' }), FULL.node],
   // The first node and the last are not yet linked.
   ['a link', crowd('c', { nodes: 100, links: 4000 }), layer => ({ action: 'connect-nodes', layerId: layer.id, sourceId: 'c-n0', targetId: 'c-n99', direction: 'one-way', weight: 1 }), FULL.edge],
-])('the outline refuses %s past the budget in the same words', async (_, full, command, message) => {
-  const { app, layer } = await editing([full]);
-  const network = JSON.stringify(layer.graph.toJSON());
+])('the outline refuses %s past the budget in the same words, once, and changes nothing else', async (_, full, command, message) => {
+  const { app, layer, told } = await editing([full]);
+  const before = penState(app, layer);
   const errors = vi.fn();
   app.eventBus.on('scene-outline:error', errors);
+  const saving = vi.spyOn(app, 'autoSave');
+  const changed = vi.fn();
+  app.eventBus.on('network:changed', changed);
 
   app.eventBus.emit('scene-outline:command', { ...command(layer), outlineFormKey: 'form' });
 
-  expect(errors).toHaveBeenCalledWith({ formKey: 'form', message });
-  expect(JSON.stringify(layer.graph.toJSON())).toBe(network);
+  expect(errors.mock.calls).toEqual([[{ formKey: 'form', message }]]);
+  expect(penState(app, layer)).toEqual(before);
+  expect(saving).not.toHaveBeenCalled();
+  expect(changed).not.toHaveBeenCalled();
+  expect(told()).toEqual([]);
 });
 
 /** A crowd as the budget reads it: so many nodes and links, each link with so many bends. */
