@@ -17,6 +17,16 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## W5 — deepen the characterisation (2026-09-29 →; merged, not yet released)
+
+Outcome: written when W5 closes.
+
+TST-13 — The key table, the element ids and the HTML ranges are pinned:
+Help's 36 entries against what each key and click does (18 name an event
+nothing listens to), every id the app looks up against the page it runs in
+(8 missing), and every range and number field against the numbers the code
+gives it, so drift on either side fails. (2026-09-29)
+
 ## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
 
 Outcome: written when the run's last such defect has merged.

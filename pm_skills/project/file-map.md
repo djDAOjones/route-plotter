@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 344 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 347 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 111 file(s)
+- `tests` — 114 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -311,11 +311,14 @@
 
 ## tests
 
+- `tests/elementIds.test.js` — TST-13: every id the app looks up (its `elements` bag, every id the running app asks for, every literal `getElementById` in `src/`) is declared by the page it runs in, `index.html` or the exported player's page, except the eight missing today and three built on demand, each with what the code does without it
 - `tests/Emitter.test.js` — Emitter defaults, bounds, updates, collision-safe reseeding and persistence contracts
 - `tests/FlowLayer.test.js` — Flow-layer guide, emitter CRUD and hydration/round-trip contracts
 - `tests/GraphEdge.test.js` — Graph-edge direction, weight, control-point and serialisation contracts
 - `tests/GraphModel.test.js` — Graph CRUD, adjacency, referential-integrity and hydration contracts
 - `tests/GraphNode.test.js` — Graph-node type, normalised-position and serialisation contracts
+- `tests/keyTable.test.js` — TST-13 key table: every Help entry pressed or clicked in the booted app, and what it changed; the 19 entries whose action is not the event their key sends (18 that nothing listens to, and K); every key the page's dispatcher reacts to, with the modifiers it accepts, in Help or with its reason; the modifier-click matrix, modifier drags and the modifier cursor; where a shortcut runs (DEF-13's cells); the transport keys over time, two proposed defects pinned as they stand
+- `tests/rangeConstants.test.js` — TST-13: all 52 range and number fields in `index.html` paired with the code that gives their numbers; bounds and defaults agree but for the pinned disagreements, and every value the app writes fits its field on a new project and at load's limits, with the pinned exceptions (CON-14's list)
 - `tests/Scene.test.js` — Ordered flow-layer CRUD, movement, clearing and persistence contracts
 - `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
 - `tests/backgroundModeOverlay.test.js` — DEF-01: no background visibility mode draws text or a panel on the main canvas, with the reveal mask proved to have run
