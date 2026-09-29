@@ -748,34 +748,74 @@ describe('golden draw logs (TST-02)', () => {
 
     });
 
-    test.each([BACKGROUND_VISIBILITY.ALWAYS_SHOW, BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL, BACKGROUND_VISIBILITY.ANGLE_OF_VIEW_REVEAL])('DEF-61: under the author’s viewport zoom, the background (%s) is drawn under the viewport alone, as the route is, though the camera is on', async (mode) => {
+    describe('DEF-61: under the author’s viewport zoom, the map is drawn under the zoom alone, as the route is', () => {
       // The camera zoomed the map on top of the viewport zoom, while the
       // vector layer, by its stated priority, took the viewport alone: the
       // route was drawn off the map (at 2× the map was drawn at 3.53×). The
       // viewport zoom now takes the camera's place for the background too.
+      const MODES = [BACKGROUND_VISIBILITY.ALWAYS_SHOW, BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL, BACKGROUND_VISIBILITY.ANGLE_OF_VIEW_REVEAL];
       const transformOf = line => line.split(' @ ')[1].split(' | ')[0];
+      /** The transforms the map, its reveal mask and the route are drawn in. */
       const drawn = (frame) => ({
         image: frame.filter(line => line.startsWith('main drawImage [image ')).map(transformOf),
         mask: frame.filter(line => line.startsWith('main drawImage [canvas mask]')).map(transformOf),
         route: [...new Set(frame.filter(line => /^vector (moveTo|lineTo) /.test(line)).map(transformOf))],
       });
-      const fixture = fixtures().find(each => each.id === 'authored-extras');
-      fixture.project.motionSettings.backgroundVisibility = mode;
-      const app = await appWithFixture(fixture);
-      enterMode(app, 'preview');
-      // With no viewport zoom the camera zooms all three: the case is not vacuous
-      const camera = drawn(frameAt(app, 0.5, { state: true }));
-      expect(camera.image).toHaveLength(1);
-      expect(camera.image[0]).toMatch(/^1\.7\d* 0 0 1\.7\d* /);
-      expect(camera.route).toContain(camera.image[0]);
+      /** One transform for all three, at `scale`; Always Show draws no mask. */
+      const expectOneTransform = (layers, mode, scale, where) => {
+        expect(layers.image, where).toHaveLength(1);
+        expect(layers.image[0], where).toMatch(scale);
+        expect(layers.route, where).toEqual(layers.image);
+        expect(layers.mask, where).toEqual(mode === BACKGROUND_VISIBILITY.ALWAYS_SHOW ? [] : layers.image);
+      };
+      const withMode = (mode, pathOnly) => {
+        const fixture = fixtures().find(each => each.id === 'authored-extras');
+        fixture.project.motionSettings.backgroundVisibility = mode;
+        if (pathOnly !== undefined) fixture.project.exportSettings.pathOnly = pathOnly;
+        return fixture;
+      };
 
-      app.setZoom(2, app.waypoints[1]);
-      const viewport = drawn(frameAt(app, 0.5, { state: true }));
+      test.each(MODES)('in Preview (%s), at Zoom in’s first step and at 2×, though the camera is on', async (mode) => {
+        const app = await appWithFixture(withMode(mode));
+        enterMode(app, 'preview');
+        // With no viewport zoom the camera zooms all three: the case is not vacuous
+        expectOneTransform(drawn(frameAt(app, 0.5, { state: true })), mode, /^1\.7\d* 0 0 1\.7\d* /, 'under the camera');
 
-      expect(viewport.image).toHaveLength(1);
-      expect(viewport.image[0]).toMatch(/^2 0 0 2 /);
-      expect(viewport.route).toEqual([viewport.image[0]]);
-      expect(viewport.mask).toEqual(mode === BACKGROUND_VISIBILITY.ALWAYS_SHOW ? [] : [viewport.image[0]]);
+        // Zoom in goes 1× → 1.5× → 2.25×; 2× is a zoom the camera's 1.75× passes
+        for (const zoom of [1.5, 2]) {
+          app.setZoom(zoom, app.waypoints[1]);
+          expectOneTransform(drawn(frameAt(app, 0.5, { state: true })), mode,
+            new RegExp(`^${zoom} 0 0 ${zoom} `), `at ${zoom}× viewport zoom`);
+        }
+      });
+
+      test.each(MODES)('in a video exported while the author is zoomed in (%s)', async (mode) => {
+        // Export mode resizes the canvas but keeps the author's viewport, so
+        // every frame of a video exported at 2× is drawn at 2×, and the map
+        // was drawn under the camera as well, off the route.
+        const app = await appWithFixture(withMode(mode, false));
+        enterMode(app, 'preview');
+        app.setZoom(2, app.waypoints[1]);
+        const download = vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+        let frame = null;
+        try {
+          // The real exportVideo(), with only the encoder replaced
+          app.videoExporter = {
+            cancel() {},
+            async export({ renderFrame }) {
+              discardFrame();
+              await renderFrame(0.5);
+              frame = drawn(takeFrame(app, { state: true }));
+              return new Blob(['video']);
+            },
+          };
+          await app.exportVideo();
+          expect(download).toHaveBeenCalledTimes(1);
+        } finally {
+          download.mockRestore();
+        }
+        expectOneTransform(frame, mode, /^2 0 0 2 /, 'in the export frame');
+      });
     });
 
     describe('DEF-38: a throw in the background pass leaves nothing behind', () => {

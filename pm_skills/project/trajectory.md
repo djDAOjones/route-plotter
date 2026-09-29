@@ -40,7 +40,8 @@ in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
 DEF-61 — Under the author's viewport zoom, the map is drawn under the zoom
 alone, as the route already was, not the animation camera as well: the route
-no longer leaves the map in Preview. (2026-09-29)
+no longer leaves the map in Preview, or in a video exported while zoomed in.
+(2026-09-29)
 
 ## Before the big run (2026-09-28)
 
