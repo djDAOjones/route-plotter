@@ -116,6 +116,42 @@ function clearRouteTiming(app) {
   app.queueRender?.();
 }
 
+/**
+ * The timing rebuild a route change queues (`calculatePath`, 50 ms after the
+ * last change): in constant-speed mode; and in constant-time mode once this
+ * project's timing has been rebuilt for its route (the duration is then that
+ * rebuild's, not the author's), rebuilt again for the route as it is now, so
+ * its schedules never outlive its geometry (DEF-06). Otherwise, in
+ * constant-time mode, the duration is the author's.
+ * @param {Object} app
+ */
+function retimeRoute(app) {
+  if (app.animationEngine.state.mode === 'constant-speed' || app._timingDerived) {
+    const currentSpeed = app.animationEngine.state.speed;
+    // Convert normalized path points to canvas coords for length calculation
+    const canvasPathPoints = app.pathPoints.map(p => app.imageToCanvas(p.x, p.y));
+    const totalLength = app.pathCalculator.calculatePathLength(canvasPathPoints);
+    console.debug('🛤️  [calculatePath] Updating path duration - speed:', currentSpeed, 'px/s, length:', totalLength.toFixed(1), 'px');
+
+    // Use unified duration update (accounts for segment speeds)
+    app.updateAnimationDuration(currentSpeed);
+  }
+}
+
+/**
+ * Run now the timing rebuild a route change has queued, if it has not run.
+ * A snapshot taken before it paired the route with the timeline it had
+ * before, and recovery then reopened a constant-time route with the earlier
+ * duration as the author's (DEF-06).
+ * @param {Object} app
+ */
+export function settleRouteTiming(app) {
+  if (!app._durationUpdateTimeout) return;
+  clearTimeout(app._durationUpdateTimeout);
+  app._durationUpdateTimeout = null;
+  retimeRoute(app);
+}
+
 export const pathTimingMixin = {
   
   calculatePath() {
@@ -195,22 +231,8 @@ export const pathTimingMixin = {
     }
     
     this._durationUpdateTimeout = setTimeout(() => {
-      // Calculate duration based on animation mode; and in constant-time
-      // mode once this project's timing has been rebuilt for its route (the
-      // duration is then that rebuild's, not the author's), rebuilt again for
-      // the route as it is now, so its schedules never outlive its geometry
-      // (DEF-06).
-      if (this.animationEngine.state.mode === 'constant-speed' || this._timingDerived) {
-        const currentSpeed = this.animationEngine.state.speed;
-        // Convert normalized path points to canvas coords for length calculation
-        const canvasPathPoints = this.pathPoints.map(p => this.imageToCanvas(p.x, p.y));
-        const totalLength = this.pathCalculator.calculatePathLength(canvasPathPoints);
-        console.debug('🛤️  [calculatePath] Updating path duration - speed:', currentSpeed, 'px/s, length:', totalLength.toFixed(1), 'px');
-        
-        // Use unified duration update (accounts for segment speeds)
-        this.updateAnimationDuration(currentSpeed);
-      }
-      // Otherwise, in constant-time mode, the duration is the author's.
+      this._durationUpdateTimeout = null;
+      retimeRoute(this);
     }, 50); // Wait 50ms for batch changes
   },
   

@@ -14,11 +14,13 @@
  * in either timing mode.
  */
 
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { trunkWaypoints } from '../src/utils/routeBranches.js';
+import { STORAGE } from '../src/config/constants.js';
 
 const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -310,4 +312,177 @@ test.each(OPENED_OVER)('a constant-time project of two waypoints, opened %s, kee
   const engine = app.animationEngine;
   expect({ pauses: engine.pauseMarkers.length, segments: engine.segmentMarkers.length, beacons: engine.beaconSchedules.length })
     .toEqual({ pauses: 0, segments: 0, beacons: 0 });
+});
+
+/** A constant-time project of three stops, the middle one pausing with a grow beacon, or not at all. */
+const threeStops = ({ pausing = true } = {}) => authoredConstantTime([
+  { id: 'a', imgX: 0.2, imgY: 0.2, isMajor: true, pauseTime: 0 },
+  { id: 'b', imgX: 0.5, imgY: 0.5, isMajor: true, pauseTime: pausing ? 3000 : 0, beaconStyle: pausing ? 'grow' : 'none' },
+  { id: 'c', imgX: 0.8, imgY: 0.8, isMajor: true, pauseTime: 0 },
+]);
+
+/** An app with `project` open, in Preview or Edit. */
+async function opened(project, { preview = true } = {}) {
+  const app = await bootApp();
+  await app.ready;
+  expect(await loadSnapshot(app, project)).toBe(true);
+  if (!preview) app.eventBus.emit('motion:preview-mode-change', false);
+  expect(app.previewMode).toBe(preview);
+  return app;
+}
+
+/** Timing rebuilt for the route by Preview, as it is on `main`: the duration is then the rebuild's. */
+async function derivedByPreview(project) {
+  const app = await opened(project);
+  app.eventBus.emit('motion:preview-mode-change', true);
+  await timingSettled();
+  expect(app._timingDerived).toBe(true);
+  return app;
+}
+
+/** Move a waypoint, as a finished drag or an arrow key does. */
+const move = (app, id, imgX, imgY) => app.eventBus.emit('waypoint:position-changed', { waypoint: app.getWaypointById(id), imgX, imgY });
+
+/** The last recovery written, as the page left now writes the autosave the app has queued. */
+function recoveryOnLeaving() {
+  localStorage.setItem.mockClear();
+  window.dispatchEvent(new Event('pagehide'));
+  const writes = localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY);
+  expect(writes).toHaveLength(1);
+  return JSON.parse(writes[0][1]);
+}
+
+/** The duration a fresh app gives `recovery`, restoring it as the browser does. */
+async function reopenedDuration(recovery) {
+  const app = await bootApp();
+  await app.ready;
+  expect(await loadSnapshot(app, recovery)).toBe(true);
+  await timingSettled();
+  return app.animationEngine.state.duration;
+}
+
+/** Ways a derived constant-time route changes, each ending on the route it keeps. */
+const DERIVED_CHANGES = [
+  ['a stop moved, its timing derived by Preview', async () => {
+    const app = await derivedByPreview(threeStops());
+    move(app, 'b', 0.25, 0.7);
+    return app;
+  }],
+  ['a stop moved in Edit, its timing derived by the speed control', async () => {
+    const app = await opened(threeStops({ pausing: false }), { preview: false });
+    app.eventBus.emit('animation:speed-change', 200);
+    await timingSettled();
+    expect(app._timingDerived).toBe(true);
+    move(app, 'b', 0.25, 0.7);
+    return app;
+  }],
+  ['the route deleted to one stop, and undone a moment apart', async () => {
+    const app = await derivedByPreview(threeStops());
+    app.eventBus.emit('waypoint:delete', app.getWaypointById('c'));
+    app.eventBus.emit('waypoint:delete', app.getWaypointById('a'));
+    await timingSettled();
+    app.undo();
+    await timingSettled();
+    app.undo();
+    return app;
+  }],
+];
+
+test.each(DERIVED_CHANGES)('recovery written the moment after %s keeps the route with its own duration', async (_, change) => {
+  const app = await change();
+
+  const recovery = recoveryOnLeaving();
+
+  await timingSettled();
+  const live = app.animationEngine.state.duration;
+  expect(recovery.waypoints.map(each => [each.id, each.imgX, each.imgY]))
+    .toEqual(app.waypoints.map(each => [each.id, each.imgX, each.imgY]));
+  expect(recovery.animationState.duration).toBe(live);
+  expect(await reopenedDuration(recovery)).toBe(live);
+});
+
+test('recovery written after the autosave delay keeps a moved stop with its own duration', async () => {
+  const app = await derivedByPreview(threeStops());
+  const before = app.animationEngine.state.duration;
+  localStorage.setItem.mockClear();
+
+  move(app, 'b', 0.25, 0.7);
+  await new Promise(resolve => setTimeout(resolve, STORAGE.AUTOSAVE_INTERVAL + 200));
+
+  const live = app.animationEngine.state.duration;
+  expect(live).not.toBe(before);
+  const recovery = JSON.parse(localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY).at(-1)[1]);
+  expect(recovery.waypoints[1]).toMatchObject({ imgX: 0.25, imgY: 0.7 });
+  expect(recovery.animationState.duration).toBe(live);
+});
+
+/** The engine's timeline and live timing, as the player and the renderers read them. */
+const timelineOf = app => ({ ...app.animationEngine.getTimeline(), ...app.animationEngine.getLiveTiming() });
+
+test.each([
+  ['a Spotlight Reveal’s intro', app => app.eventBus.emit('motion:background-visibility-change', 'spotlight-reveal')],
+  ['a comet path’s tail', app => app.eventBus.emit('motion:path-visibility-change', 'instantaneous')],
+])('a constant-time project opened over %s is timed as a fresh app opens it, its route played evenly over its duration', async (_, timeline) => {
+  const app = await derivedByPreview(threeStops());
+  timeline(app);
+  await timingSettled();
+  const engine = app.animationEngine;
+  expect(engine.introTime + engine.totalTailTime).toBeGreaterThan(0);
+
+  const incoming = authoredConstantTime([
+    { id: 'first', imgX: 0.2, imgY: 0.2, isMajor: true },
+    { id: 'second', imgX: 0.8, imgY: 0.8, isMajor: true },
+  ]);
+  incoming.motionSettings = { backgroundVisibility: 'always-show', pathVisibility: 'always-show' };
+  expect(await loadSnapshot(app, incoming)).toBe(true);
+  await timingSettled();
+
+  const fresh = await opened(incoming);
+  await timingSettled();
+  expect(timelineOf(app)).toEqual(timelineOf(fresh));
+  const progressAt = ms => {
+    engine.seekToTime(ms);
+    return engine.state.pathProgress;
+  };
+  expect(engine.state.duration).toBe(12000);
+  expect([progressAt(1000), progressAt(6000), progressAt(12000)]).toEqual([1 / 12, 0.5, 1]);
+});
+
+test('after an open that failed and was rolled back, the next move of a derived constant-time route rebuilds its timing', async () => {
+  const app = await derivedByPreview(threeStops());
+  const before = app.animationEngine.state.duration;
+  allowConsole(LOAD_REFUSED);
+  vi.spyOn(app, 'pruneImageAssets').mockImplementationOnce(() => { throw new Error('late failure'); });
+  expect(await loadSnapshot(app, authoredConstantTime([{ id: 'only', imgX: 0.5, imgY: 0.5, isMajor: true }]))).toBe(false);
+  expect(app.waypoints.map(each => each.id)).toEqual(['a', 'b', 'c']);
+
+  move(app, 'b', 0.25, 0.7);
+  await timingSettled();
+
+  const [pause] = app.animationEngine.pauseMarkers;
+  expect(app.animationEngine.pauseMarkers).toHaveLength(1);
+  expect(pause.pathProgress).toBeCloseTo(app.getWaypointProgressValues()[1], 8);
+  expect(app.animationEngine.state.duration).not.toBe(before);
+});
+
+test.each([
+  ['the speed control', app => app.eventBus.emit('animation:speed-change', 220)],
+  ['a pause edited', app => {
+    const stop = app.getWaypointById('b');
+    stop.pauseTime = 3400;
+    app.eventBus.emit('waypoint:pause-changed', { waypoint: stop, pauseTime: 3400, pauseMode: 'timed' });
+  }],
+])('in Edit, a constant-time route whose timing %s rebuilt is rebuilt again when a stop moves', async (_, derive) => {
+  const app = await opened(threeStops(), { preview: false });
+  derive(app);
+  await timingSettled();
+  const before = app.animationEngine.state.duration;
+  expect(app.animationEngine.pauseMarkers[0].pathProgress).toBeCloseTo(0.5, 8);
+
+  move(app, 'b', 0.25, 0.7);
+  await timingSettled();
+
+  expect(app.animationEngine.pauseMarkers[0].pathProgress).toBeCloseTo(app.getWaypointProgressValues()[1], 8);
+  expect(app.animationEngine.pauseMarkers[0].pathProgress).not.toBeCloseTo(0.5, 3);
+  expect(app.animationEngine.state.duration).not.toBe(before);
 });
