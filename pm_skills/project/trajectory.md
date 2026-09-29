@@ -38,6 +38,11 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
+DEF-43 — A polygon draw follows its waypoint through an undo, and ends, saying
+so, when its waypoint is deleted or undone away, rather than closing onto a
+waypoint the project no longer has; and Draw Area asked for again keeps the
+draw in progress. (2026-09-29)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its

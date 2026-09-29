@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 344 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 345 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 111 file(s)
+- `tests` — 112 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -320,6 +320,7 @@
 - `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
 - `tests/backgroundModeOverlay.test.js` — DEF-01: no background visibility mode draws text or a panel on the main canvas, with the reveal mask proved to have run
 - `tests/bootApp.test.js` — TST-01: the whole app boots from the shipped shell, sizes its canvas to the harness viewport, loads its bundled background, and carries an authoring intent from the bus to the model and the canvas, and (DEF-33) a cold start announces nothing and a restored session only its restore, while a pause the author makes is announced
+- `tests/areaDrawTarget.test.js` — DEF-43: a polygon draw whose waypoint is deleted or undone away ends and is announced; one whose waypoint an undo restores goes on, and its polygon lands on the waypoint the project has; Draw Area asked for again keeps the draw in progress, and for another waypoint starts afresh
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms, (DEF-35) handles dragged off the image stay there, as far as a project can store a point, and (DEF-17) a polygon drawn in the booted app names its waypoint, so the editor and the outline follow it unless the selection changed during the draw
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts

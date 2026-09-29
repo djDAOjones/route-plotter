@@ -116,8 +116,6 @@ moved, and account for every survivor)
   **P2**
 - [ ] **DEF-42 A beacon-style change keeps the old schedule** · Live defect
   [ready] **P3**
-- [ ] **DEF-43 A polygon draw outlives its target** · Live defect [ready]
-  **P3**
 - [ ] **DEF-45 Announcements overwrite each other** · Accessibility [ready]
   **P3**
 - [ ] **DEF-06 Clear All leaves stale route state** · Live defect [ready] —

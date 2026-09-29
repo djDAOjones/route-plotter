@@ -60,6 +60,17 @@ function resolveBranchRejoinDrop(app, data) {
 }
 
 export const wiringBusMixin = {
+  /**
+   * After waypoints leave the model (a deletion, an undo or a redo): an area
+   * draw follows its waypoint, or ends when that has gone, and the author is
+   * told, since the polygon being drawn is lost (DEF-43).
+   */
+  followAreaDrawTarget() {
+    if (this.areaDrawingService?.followModel?.(this.waypoints)) {
+      this.announce?.('Area drawing cancelled: its waypoint was removed.', 'assertive');
+    }
+  },
+
 
   
   /**
@@ -112,6 +123,7 @@ export const wiringBusMixin = {
     this.eventBus.on('waypoint:deleted', (index) => {
       // Invalidate major waypoints cache
       this._majorWaypointsCache = null;
+      this.followAreaDrawTarget();
       
       // Save state for undo (after waypoint is deleted)
       this.saveUndoState();
