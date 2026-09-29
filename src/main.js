@@ -551,7 +551,7 @@ class RoutePlotter {
     this.areaDrawingService = new AreaDrawingService(this.eventBus);
 
     // Initialize Network Edit Service for crowd guide-network editing
-    this.networkEditService = new NetworkEditService(this.eventBus);
+    this.networkEditService = new NetworkEditService(this.eventBus, { layers: () => this.scene?.getFlowLayers?.() ?? [] });
     
     // Initialize Area Edit Service for repositioning/vertex editing
     this.areaEditService = new AreaEditService(this.eventBus);

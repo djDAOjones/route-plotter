@@ -228,8 +228,7 @@ export const networkMixin = {
     if (!hit) {
       // Empty canvas: place a node (within the image, like waypoints)
       if (!this.isWithinImageBounds(x, y)) return;
-      svc.placeNode(this._networkImgPos(x, y), shiftKey);
-      this.announce('Node placed');
+      if (svc.placeNode(this._networkImgPos(x, y), shiftKey)) this.announce('Node placed');
       return;
     }
 

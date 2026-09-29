@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 344 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 346 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -14,9 +14,9 @@
 - `reviews` — 16 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
-- `src` — 99 file(s)
+- `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 111 file(s)
+- `tests` — 112 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -264,7 +264,7 @@
 - `src/services/HTMLExportService.js` — Self-contained HTML export: embeds snapshot/background (only the images the project uses, without their filenames: DEF-23) and the exact-build same-origin player bundle; owns the exported shell
 - `src/services/ImageAssetService.js` — Strict bitmap validation, bounded ZIP staging/export (only the images the project uses: DEF-23), deduplication and deterministic unreachable-asset sweeping
 - `src/services/MotionVisibilityService.js` — Stateless timeline-derived path, waypoint and background visibility, including comet trails
-- `src/services/NetworkEditService.js` — Network edit mode (Phase 4): pen state machine (chaining, drags, bends, Esc ladder, mode keys), banner, node/edge selection events, and the guide/overlay canvas rendering (edge geometry via SwarmEngine's cache)
+- `src/services/NetworkEditService.js` — Network edit mode (Phase 4): pen state machine (chaining, drags, bends, Esc ladder, mode keys), banner, node/edge selection events, and the guide/overlay canvas rendering (edge geometry via SwarmEngine's cache); and (DEF-59) the pen checks the scene's budgets before it adds a node, link or bend
 - `src/services/PathCalculator.js` — Catmull-Rom spline, corner-slowing reparameterisation, curvature; `legTimingLengths()` gives per-major-leg timing lengths (progress-span basis)
 - `src/services/RenderingService.js` — Canvas drawing and stable short-edge reference scaling for path, markers, labels, effects and overlays; static `VECTOR_LAYERS` drives draw order
 - `src/services/StorageService.js` — Honest bounded localStorage writes with debounce, change detection, deterministic flush/cancel and clear
@@ -285,6 +285,7 @@
 - `src/utils/imageCoordinates.js` — DEF-03: the one range check and clamp for stored image points, shared by load and the zoomed-out authoring paths
 - `src/utils/index.js` — Barrel exports for Catmull-Rom and easing utilities
 - `src/utils/mixedControlState.js` — DOM-only mixed-value comparison, select/range/checkbox presentation and concrete-input reset helpers
+- `src/utils/networkBudget.js` — DEF-59: the room a crowd's network has, in its scene, for one more node, link or bend (the loader's budgets), and the words for none; shared by the outline and the network editor's pen
 - `src/utils/pathHeadPresets.js` — Built-in route-head registry, shared image decoding and custom/preset hydration boundary
 - `src/utils/pathWidthScale.js` — Log-scale thickness slider ↔ width (1–40px) mapping; single source shared by the DOM wiring and UIController bulk edits (Phase 3.5)
 - `src/utils/renderReference.js` — Pure visual-reference migration and current-to-authored short-edge scale calculation
@@ -358,6 +359,7 @@
 - `tests/mixins.test.js` — Mixin split guards: cross-mixin name-collision check, cluster spot-checks, snapToAngle unit tests
 - `tests/modelBoundary.test.js` — Strict graph-endpoint and persisted emitter integer boundary contracts
 - `tests/multiSelect.test.js` — Multi-select write-target rules, gestures/bulk actions/persistence, undo scope restoration, stable headings and honest per-control mixed-state integration
+- `tests/networkBudget.test.js` — DEF-59: the network editor's pen and the outline keep a crowd within the budgets a project can store (a path's 256 bends, a crowd's 8,192 bends, 2,000 nodes and 4,000 links, a scene's 10,000 nodes and 20,000 links): past them nothing is added, the author is told in the outline's words, nothing is recorded, and the project still reopens; a click on the map announces no node placed
 - `tests/networkEdit.test.js` — Network edit mode: pen chaining/loop-close, snap, drags + bends + cancel, Esc ladder + mode keys, guide-card auto-enter/exit rules, change pipeline, hit cascade, traffic-share readout, restore re-binding, and (DEF-35) the rings and Shift snaps of a node anchored off the image sit where it is drawn, and (DEF-41) a bend drawn by hand stays on the image
 - `tests/operationGeneration.test.js` — Latest-request/project-generation guards and original background-byte retention
 - `tests/paramTooltip.test.js` — A11Y-01 contract: hint labels carry no role

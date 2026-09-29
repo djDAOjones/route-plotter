@@ -33,6 +33,7 @@
 
 import { snapToAngle } from '../utils/snapToAngle.js';
 import { getGraphDepartureShares } from '../utils/graphRouting.js';
+import { networkRoom, NETWORK_FULL } from '../utils/networkBudget.js';
 
 /** Node types in T-key cycle order; 'normal' is user-facing "pass-through". */
 const NODE_TYPE_CYCLE = ['normal', 'entry', 'exit'];
@@ -42,10 +43,15 @@ const SELECTION_INNER = '#111111';
 export class NetworkEditService {
   /**
    * @param {EventBus} eventBus - Application event bus
+   * @param {{layers?: function(): Array}} [options] - `layers`: the scene's
+   *   crowds, whose nodes and links count towards the scene's budgets
    */
-  constructor(eventBus) {
+  constructor(eventBus, { layers = () => [] } = {}) {
     /** @type {EventBus} */
     this.eventBus = eventBus;
+
+    /** @type {function(): Array} The scene's crowds, for its budgets (DEF-59) */
+    this.layersOf = layers;
 
     /** @type {boolean} Whether network edit mode is active */
     this.active = false;
@@ -304,6 +310,22 @@ export class NetworkEditService {
       : { index: selection.controlIndex });
   }
 
+  /**
+   * Whether the crowd has room for one more node, link or bend, in its
+   * scene; if not, the author is told, as the outline tells them, and
+   * nothing is added: a network past the loader's budgets saved a project
+   * that would not reopen (DEF-59).
+   * @param {'node'|'edge'|'bend'} kind
+   * @param {import('../models/GraphEdge.js').GraphEdge|null} [edge] - The path a bend would go on
+   * @returns {boolean}
+   * @private
+   */
+  _roomFor(kind, edge = null) {
+    if (networkRoom(this.layersOf(), this.layer, edge)[kind]) return true;
+    this.eventBus.emit('ui:toast', { message: NETWORK_FULL[kind] });
+    return false;
+  }
+
   // ── pen clicks ──────────────────────────────────────────
 
   /**
@@ -325,6 +347,7 @@ export class NetworkEditService {
       ({ x, y } = snapToAngle(origin.x, origin.y, x, y));
     }
 
+    if (!this._roomFor('node') || (penNode && !this._roomFor('edge'))) return null;
     const node = this.layer.graph.addNode({ x, y });
     if (penNode) {
       this.layer.graph.addEdge({ sourceId: penNode.id, targetId: node.id });
@@ -351,6 +374,7 @@ export class NetworkEditService {
         e => e.sourceId === penNode.id || e.targetId === penNode.id
       );
       if (!joined) {
+        if (!this._roomFor('edge')) return;
         this.layer.graph.addEdge({ sourceId: penNode.id, targetId: node.id });
         this._updateBannerCount();
         this.eventBus.emit('network:changed', { commit: true });
@@ -568,7 +592,7 @@ export class NetworkEditService {
    * @param {number} insertIndex - Position in controlPoints to insert at
    */
   beginEdgeBend(edge, img, insertIndex) {
-    if (!this.active) return;
+    if (!this.active || !this._roomFor('bend', edge)) return;
     const index = Math.max(0, Math.min(edge.controlPoints.length, insertIndex));
     edge.controlPoints.splice(index, 0, { x: img.x, y: img.y });
     this.drag = {
