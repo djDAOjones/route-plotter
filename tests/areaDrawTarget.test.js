@@ -76,14 +76,26 @@ const messageOf = toast => [...toast.childNodes]
 const goneToasts = () => [...toastRegion().querySelectorAll('.toast')].filter(toast => messageOf(toast) === GONE);
 const toldGone = () => goneToasts().length;
 
+/** A colour that paints nothing, as jsdom computes one. */
+const CLEAR = /^(transparent|rgba\([^)]*,\s*0(\.0*)?\)|hsla\([^)]*,\s*0(\.0*)?%?\))$/;
+/** A filter that makes what it filters transparent. */
+const FADED = /opacity\(\s*0*(\.0*)?%?\s*\)/;
+
 /**
- * The one toast saying so, where the author is told, as far as a page can
- * check without a browser's layout: its text the message; in the app's own
- * polite, atomic live region (the one the page started with); no role over
- * its text; and nothing from it up to the page hidden, inert, busy, taken
- * out of the live region, or drawn invisible by the stylesheet (display,
- * visibility, opacity). Where it lands on screen, and how a screen reader
- * speaks it, are for a browser.
+ * The one toast saying so, checked as far as a page can check it without a
+ * browser's layout, against a stated list and nothing more:
+ * - its own text is the message, and its text includes it;
+ * - it is in the app's own live region (the one the page started with),
+ *   polite, atomic, relevant to additions;
+ * - from the toast up to and including `<html>`: no role, nothing `hidden`,
+ *   `aria-hidden`, inert or busy, no `aria-live="off"` inside the region,
+ *   no `aria-relevant` without additions; and, by the app's stylesheet,
+ *   displayed, `visibility: visible`, not transparent (opacity, a filter)
+ *   and its content not hidden (`content-visibility`); the toast's text not
+ *   a colour that paints nothing.
+ * Where it lands on screen, what covers it, and how a screen reader speaks
+ * it are a browser's to check; `expectPlaced` pins the stylesheet's
+ * placement.
  */
 function expectTold() {
   const toasts = goneToasts();
@@ -93,17 +105,100 @@ function expectTold() {
   expect(toastRegion()).toBe(shellRegion);
   expect(toastRegion().getAttribute('aria-live')).toBe('polite');
   expect(toastRegion().getAttribute('aria-atomic')).toBe('true');
-  expect(toast.getAttribute('role')).toBeNull();
   expect(toast.classList.contains('is-visible')).toBe(true);
-  for (let node = toast; node && node !== document.documentElement; node = node.parentElement) {
+  expect(getComputedStyle(toast).color).not.toMatch(CLEAR);
+  for (let node = toast; node; node = node.parentElement) {
     const style = getComputedStyle(node);
+    const relevant = node.getAttribute('aria-relevant');
     expect({
-      at: node.id || node.className,
+      at: node.id || node.className || node.tagName,
+      role: node.getAttribute('role'),
       hidden: node.hidden || node.getAttribute('aria-hidden') === 'true' || node.hasAttribute('inert') || node.getAttribute('aria-busy') === 'true',
       silenced: node !== toastRegion() && node.getAttribute('aria-live') === 'off' && toastRegion().contains(node),
-      drawn: style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0',
-    }).toEqual({ at: node.id || node.className, hidden: false, silenced: false, drawn: true });
+      irrelevant: relevant !== null && !/\b(additions|all)\b/.test(relevant),
+      drawn: style.display !== 'none' && style.visibility === 'visible' && Number(style.opacity) > 0
+        && !FADED.test(style.filter) && style.getPropertyValue('content-visibility') !== 'hidden',
+    }).toEqual({ at: node.id || node.className || node.tagName, role: null, hidden: false, silenced: false, irrelevant: false, drawn: true });
   }
+}
+
+/**
+ * The toasts' region where the app's stylesheet puts it: fixed, centred at
+ * the top, above the page (z-index 9000), with no margin and nothing above
+ * it moved. A structural check of this design, not of the screen: a new
+ * design updates it.
+ */
+function expectPlaced() {
+  const region = getComputedStyle(toastRegion());
+  expect({
+    position: region.position, top: region.top, left: region.left, transform: region.transform, zIndex: region.zIndex,
+    margin: [region.marginTop, region.marginRight, region.marginBottom, region.marginLeft],
+  }).toEqual({
+    position: 'fixed', top: 'var(--space-3)', left: '50%', transform: 'translateX(-50%)', zIndex: '9000',
+    margin: ['0px', '0px', '0px', '0px'],
+  });
+  const above = [];
+  for (let node = toastRegion().parentElement; node; node = node.parentElement) above.push(getComputedStyle(node).transform);
+  expect(above.every(transform => transform === 'none')).toBe(true);
+}
+
+/** The test's clock: timers, frames and the time they read. */
+const CLOCK = ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'requestAnimationFrame', 'cancelAnimationFrame', 'Date'];
+
+/**
+ * Check `expectTold` after every change to the page, as well as when asked:
+ * a toast hidden between two samples, however briefly, is caught at the
+ * change that hides it. Changes to a stylesheet's rules through the CSSOM
+ * are not page changes; the samples catch those.
+ */
+function watchTold() {
+  const failures = [];
+  const observer = new MutationObserver(() => {
+    try {
+      expectTold();
+    } catch (error) {
+      failures.push(error.message);
+    }
+  });
+  observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
+  return () => {
+    observer.disconnect();
+    expect(failures).toEqual([]);
+  };
+}
+
+/**
+ * Nothing said of the draw, from `act` for a toast's five seconds on the
+ * test's clock: no toast asked for with the message, and the message
+ * nowhere in the toasts' region at any change to the page or 250 ms
+ * sample, however it is marked up.
+ */
+async function expectNothingTold(app, act) {
+  const asked = [];
+  const heard = ({ message } = {}) => asked.push(message);
+  app.eventBus.on('ui:toast', heard);
+  const seen = [];
+  const look = () => {
+    if (toastRegion().textContent.includes(GONE)) seen.push(toastRegion().textContent);
+  };
+  const observer = new MutationObserver(look);
+  observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  vi.useFakeTimers({ toFake: CLOCK });
+  try {
+    const acting = act();
+    for (let at = 0; at < 5000; at += 250) {
+      look();
+      await vi.advanceTimersByTimeAsync(250);
+    }
+    await acting;
+    look();
+  } finally {
+    observer.disconnect();
+    vi.useRealTimers();
+    app.eventBus.off('ui:toast', heard);
+  }
+  expect(asked.filter(message => String(message).includes(GONE))).toEqual([]);
+  expect(seen).toEqual([]);
 }
 
 /** Each way a waypoint leaves the project: how its draw's target is got ready, and removed. */
@@ -142,28 +237,32 @@ const REMOVALS = [
   }],
 ];
 
-test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told once, in a toast shown for a toast’s five seconds whatever the action does meanwhile', async (_, { target, remove }) => {
+test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told once, in a toast shown for a toast’s five seconds, checked at every change to the page and every 250 ms', async (_, { target, remove }) => {
   const app = await openDay();
   const waypoint = await target(app);
   drawFor(app, waypoint);
   placeTriangle(app);
-  // The clock is the test's from here: what the action schedules runs as time is let pass.
-  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'requestAnimationFrame', 'cancelAnimationFrame'] });
+  // The clock is the test's from here, the time the app reads included: what
+  // the action schedules runs as time is let pass, promise work with it.
+  vi.useFakeTimers({ toFake: CLOCK });
   try {
     remove(app, waypoint);
 
     expect(app.getWaypointById(waypoint.id)).toBeUndefined();
     expect(drawing(app)).toEqual(ENDED);
-    // Told from the next frame, and all through, promise work included, past
-    // the action's own announcement (cleared at two seconds), to the last
-    // moment of its five seconds.
+    // Told from the next frame to the last moment of its five seconds, past
+    // the action's own announcement (cleared at two seconds): at every
+    // change to the page, and every 250 ms.
     await vi.advanceTimersByTimeAsync(16);
+    expectPlaced();
+    const watched = watchTold();
     for (let at = 16; at < 4999; at += 250) {
       expectTold();
       await vi.advanceTimersByTimeAsync(Math.min(250, 4999 - at));
     }
     expect(document.getElementById('announcer').textContent).toBe('');
     expectTold();
+    watched();
     await vi.advanceTimersByTimeAsync(1);
     expect(goneToasts().map(toast => toast.classList.contains('is-visible'))).toEqual([false]);
     // Nothing more is drawn, for it or anything else.
@@ -179,13 +278,12 @@ test('a draw ended by Clear All, with the project, says nothing of its waypoint'
   drawFor(app, app.getWaypointById('ex-uon-2'));
   placeTriangle(app);
 
-  document.getElementById('clear-btn').click();
-  document.getElementById('clear-confirm').click();
+  await expectNothingTold(app, () => {
+    document.getElementById('clear-btn').click();
+    document.getElementById('clear-confirm').click();
+  });
 
   expect(drawing(app)).toEqual(ENDED);
-  // Nor a moment later.
-  await new Promise(resolve => setTimeout(resolve, 100));
-  expect(toldGone()).toBe(0);
 });
 
 test.each([
@@ -200,12 +298,12 @@ test.each([
   end(app);
   expect(drawing(app)).toEqual(ENDED);
 
-  app.eventBus.emit('waypoint:delete', target);
-  await nextTask();
-  app.undo();
-  app.redo();
-
-  expect(toldGone()).toBe(0);
+  await expectNothingTold(app, async () => {
+    app.eventBus.emit('waypoint:delete', target);
+    await nextTask();
+    app.undo();
+    app.redo();
+  });
 });
 
 test('a draw goes on, unannounced, when a project fails to open over it', async () => {
@@ -216,10 +314,11 @@ test('a draw goes on, unannounced, when a project fails to open over it', async 
   allowConsole(LOAD_REFUSED);
   vi.spyOn(app, 'pruneImageAssets').mockImplementationOnce(() => { throw new Error('late failure'); });
 
-  expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(false);
+  await expectNothingTold(app, async () => {
+    expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(false);
+  });
 
   expect(drawing(app)).toMatchObject({ active: true, vertices: 3 });
-  expect(toldGone()).toBe(0);
   place(app, 0.2, 0.2);
   expect(target.areaHighlight).toMatchObject({ shape: 'polygon', points: TRIANGLE });
 });
@@ -244,12 +343,13 @@ test('a draw goes on, unannounced, through another waypoint’s deletion', async
   drawFor(app, target);
   placeTriangle(app);
 
-  app.eventBus.emit('waypoint:delete', app.getWaypointById('ex-uon-3'));
-  await nextTask();
+  await expectNothingTold(app, async () => {
+    app.eventBus.emit('waypoint:delete', app.getWaypointById('ex-uon-3'));
+    await nextTask();
+  });
   place(app, 0.2, 0.2);
 
   expect(target.areaHighlight).toMatchObject({ shape: 'polygon', points: TRIANGLE });
-  expect(toldGone()).toBe(0);
 });
 
 test('a draw goes on through an undo that keeps its waypoint, and its polygon lands on the waypoint the project has', async () => {
@@ -260,7 +360,7 @@ test('a draw goes on through an undo that keeps its waypoint, and its polygon la
   drawFor(app, app.getWaypointById('ex-uon-2'));
   placeTriangle(app);
 
-  app.undo();
+  await expectNothingTold(app, () => app.undo());
   expect(drawing(app)).toMatchObject({ active: true, vertices: 3, banner: true });
   place(app, 0.2, 0.2);
 
@@ -268,7 +368,6 @@ test('a draw goes on through an undo that keeps its waypoint, and its polygon la
   expect(live.areaHighlight).toMatchObject({ shape: 'polygon', enabled: true, points: TRIANGLE });
   expect(app._buildProjectSnapshot().waypoints.find(each => each.id === 'ex-uon-2').areaHighlight.points)
     .toEqual(TRIANGLE);
-  expect(toldGone()).toBe(0);
 });
 
 test('a draw goes on through a redo that keeps its waypoint, and Draw Area pressed again there keeps its vertices', async () => {
@@ -280,7 +379,7 @@ test('a draw goes on through a redo that keeps its waypoint, and Draw Area press
   drawFor(app, drawn);
   placeTriangle(app);
 
-  app.redo();
+  await expectNothingTold(app, () => app.redo());
   const live = app.getWaypointById('ex-uon-2');
   expect(live).not.toBe(drawn);
   expect(app.areaDrawingService.targetWaypoint).toBe(live);
@@ -290,7 +389,6 @@ test('a draw goes on through a redo that keeps its waypoint, and Draw Area press
   place(app, 0.2, 0.2);
 
   expect(live.areaHighlight).toMatchObject({ shape: 'polygon', points: TRIANGLE });
-  expect(toldGone()).toBe(0);
 });
 
 test('a draw ends, and is not carried over, when a project with the same waypoints is opened', async () => {
@@ -298,11 +396,11 @@ test('a draw ends, and is not carried over, when a project with the same waypoin
   drawFor(app, app.getWaypointById('ex-uon-2'));
   placeTriangle(app);
 
-  expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+  await expectNothingTold(app, async () => {
+    expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+  });
 
   expect(drawing(app)).toEqual(ENDED);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  expect(toldGone()).toBe(0);
   place(app, 0.2, 0.2);
   expect(app.getWaypointById('ex-uon-2').areaHighlight?.points ?? []).not.toEqual(TRIANGLE);
 });
