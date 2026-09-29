@@ -13,9 +13,11 @@
 
 import { expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { LOAD_REFUSED, loadSnapshot } from './helpers/projectSnapshot.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { getRetainedBackgroundDataURL } from '../src/app/persistence.js';
+import { STORAGE } from '../src/config/constants.js';
 
 const major = (id, name = id, extra = {}) => ({ id, name, imgX: 0.2, imgY: 0.3, isMajor: true, ...extra });
 
@@ -73,10 +75,11 @@ test('a leg of 256 bends traces into the crowd, and the project reopens with the
 
 /**
  * Refused: the crowd keeps its network, nothing is recorded or saved, the
- * author is told `message`, once, and the project still reopens as it was.
- * `unchanged` is checked before the reopening, which boots another app.
+ * author is told `message`, once, and the project still reopens as it was
+ * (unless it never did: `reopens: false`). `unchanged` is checked before the
+ * reopening, which boots another app.
  */
-async function refused(app, layer, message, unchanged = () => {}) {
+async function refused(app, layer, message, unchanged = () => {}, { reopens = true } = {}) {
   const network = JSON.stringify(layer.graph.toJSON());
   const undo = app.undoService.createSnapshot();
   const saving = vi.spyOn(app, 'autoSave');
@@ -89,7 +92,7 @@ async function refused(app, layer, message, unchanged = () => {}) {
   expect(app.undoService.createSnapshot()).toEqual(undo);
   expect(saving).not.toHaveBeenCalled();
   unchanged();
-  expect(await reopened(app._buildProjectSnapshot())).not.toBeNull();
+  if (reopens) expect(await reopened(app._buildProjectSnapshot())).not.toBeNull();
 }
 
 test('a leg of 257 bends is not traced, and the author is told which leg, and why', async () => {
@@ -145,14 +148,45 @@ test('a trace that would make the project too big to save as a file is not trace
   await expect(saves()).resolves.toBeInstanceOf(Blob);
 });
 
-test('a project already too big to save as a file is traced, when the trace gives it no other reason', async () => {
+test('a project already too big to save as a file is not traced either, and the author is told why', async () => {
   const app = await withRoute(Array.from({ length: 1000 }, (_, index) => major(`w${index}`, `w${index} ${'x'.repeat(500)}`)));
   const saves = () => app.imageAssetService.exportZip(app._buildProjectSnapshot({ includeAssets: false }));
   await expect(saves()).rejects.toThrow('Project metadata exceeds the 2 MB limit');
 
-  expect(trace(app, app.scene.flowLayers[0]).traced).toBe(true);
+  await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
+});
 
-  expect(await reopened(app._buildProjectSnapshot())).not.toBeNull();
+test('a trace that would take browser recovery past its budget is not traced, and recovery goes on writing the project', async () => {
+  // Each name escapes to twice its length in JSON: the file is past its 2 MB
+  // already, recovery (compact, 4 MB) is not, and the trace would copy every
+  // name into a node's label.
+  const app = await withRoute(Array.from({ length: 11 }, (_, index) => major(`w${index}`, '"'.repeat(95000))));
+  const recovered = async () => {
+    app.autoSave();
+    app.storageService.flushAutoSave();
+    const [, written] = localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY).at(-1) ?? [];
+    return written ? reopened(JSON.parse(written)) : null;
+  };
+  expect(await recovered()).not.toBeNull();
+
+  await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
+
+  app.waypoints[0].name = 'Main entrance';
+  expect(await recovered()).not.toBeNull();
+});
+
+test('a project already too complex to reopen is not traced, whichever of its checks the trace would fail', async () => {
+  // A name as deep as a file may make it, on a route whose waypoints, their
+  // defaults filled in, are already past the project's 100,000 values: the
+  // trace would add depth as well.
+  let deep = 'Main entrance';
+  for (let level = 0; level < 61; level += 1) deep = { text: deep };
+  const app = await withRoute(Array.from({ length: 1700 }, (_, index) => major(`w${index}`, index === 0 ? deep : `w${index}`)));
+  allowConsole(LOAD_REFUSED);
+  expect(await reopened(app._buildProjectSnapshot())).toBeNull();
+
+  await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata is too deeply nested or complex.',
+    () => {}, { reopens: false });
 });
 
 test('a trace checks the file as Save Project would write it, with the background it would carry', async () => {
@@ -227,14 +261,19 @@ test.each([
     dirty: app._isDirty,
   });
   const before = state();
+  const revision = app._editRevision;
   const pending = app.storageService._pendingAutoSave;
   const history = vi.spyOn(app, 'saveUndoState');
   const announce = vi.spyOn(app, 'announce');
 
   await refused(app, editor.layer, message, () => {
     expect(state()).toEqual(before);
+    expect(app._editRevision).toBe(revision);
     expect(app.storageService._pendingAutoSave).toBe(pending);
     expect(history).not.toHaveBeenCalled();
     expect(announce).not.toHaveBeenCalled();
   });
+  // The recovery the refusal found pending is written when its time comes.
+  await new Promise(resolve => setTimeout(resolve, STORAGE.AUTOSAVE_INTERVAL + 100));
+  expect(localStorage.setItem).toHaveBeenCalledWith(STORAGE.AUTOSAVE_KEY, pending.serialized);
 });

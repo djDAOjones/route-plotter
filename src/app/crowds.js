@@ -72,8 +72,11 @@ function unstorable(app, project) {
  * with more bends than a path can hold, more nodes than a scene can hold,
  * labels past the project's text budget), or a file too big to save, left a
  * project that could not be saved or would not reopen (DEF-52). A leg with
- * too many bends is named. The same reason the project has already, before
- * the trace, is not the trace's, and does not refuse it; another does.
+ * too many bends is named. A reason the project had before the trace refuses
+ * it too: the project it would make could not be saved or opened either, and
+ * one reason can hide another behind the same words. Browser recovery holds
+ * the same model, compact and without its images, so a project whose file
+ * metadata fits its 2 MB fits recovery's 4 MB.
  * @param {Object} app
  * @param {FlowLayer} layer
  * @param {{nodes: Array, edges: Array}} trace
@@ -97,8 +100,7 @@ function traceStorageProblem(app, layer, trace) {
     ...project,
     scene: { ...project.scene, flowLayers: project.scene.flowLayers.map(each => (each.id === layer.id ? traced : each)) },
   });
-  if (!reason || reason === unstorable(app, project)) return null;
-  return `This route can’t be traced into a crowd: ${reason}.`;
+  return reason ? `This route can’t be traced into a crowd: ${reason}.` : null;
 }
 
 export const crowdsMixin = {
