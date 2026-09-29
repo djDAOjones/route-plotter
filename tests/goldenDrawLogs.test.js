@@ -748,6 +748,36 @@ describe('golden draw logs (TST-02)', () => {
 
     });
 
+    test.each([BACKGROUND_VISIBILITY.ALWAYS_SHOW, BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL, BACKGROUND_VISIBILITY.ANGLE_OF_VIEW_REVEAL])('DEF-61: under the author’s viewport zoom, the background (%s) is drawn under the viewport alone, as the route is, though the camera is on', async (mode) => {
+      // The camera zoomed the map on top of the viewport zoom, while the
+      // vector layer, by its stated priority, took the viewport alone: the
+      // route was drawn off the map (at 2× the map was drawn at 3.53×). The
+      // viewport zoom now takes the camera's place for the background too.
+      const transformOf = line => line.split(' @ ')[1].split(' | ')[0];
+      const drawn = (frame) => ({
+        image: frame.filter(line => line.startsWith('main drawImage [image ')).map(transformOf),
+        mask: frame.filter(line => line.startsWith('main drawImage [canvas mask]')).map(transformOf),
+        route: [...new Set(frame.filter(line => /^vector (moveTo|lineTo) /.test(line)).map(transformOf))],
+      });
+      const fixture = fixtures().find(each => each.id === 'authored-extras');
+      fixture.project.motionSettings.backgroundVisibility = mode;
+      const app = await appWithFixture(fixture);
+      enterMode(app, 'preview');
+      // With no viewport zoom the camera zooms all three: the case is not vacuous
+      const camera = drawn(frameAt(app, 0.5, { state: true }));
+      expect(camera.image).toHaveLength(1);
+      expect(camera.image[0]).toMatch(/^1\.7\d* 0 0 1\.7\d* /);
+      expect(camera.route).toContain(camera.image[0]);
+
+      app.setZoom(2, app.waypoints[1]);
+      const viewport = drawn(frameAt(app, 0.5, { state: true }));
+
+      expect(viewport.image).toHaveLength(1);
+      expect(viewport.image[0]).toMatch(/^2 0 0 2 /);
+      expect(viewport.route).toEqual([viewport.image[0]]);
+      expect(viewport.mask).toEqual(mode === BACKGROUND_VISIBILITY.ALWAYS_SHOW ? [] : [viewport.image[0]]);
+    });
+
     describe('DEF-38: a throw in the background pass leaves nothing behind', () => {
       // Before the vector layer is composited, the main canvas draws the
       // background inside saves of its own: the viewport zoom's around the
