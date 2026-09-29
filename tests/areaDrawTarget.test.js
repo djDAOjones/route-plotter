@@ -38,6 +38,7 @@ async function openDay() {
   const app = await bootApp();
   await app.ready;
   withStyles();
+  shellRegion = toastRegion();
   // The welcome dialog, open at start, makes the page behind it inert.
   document.getElementById('splash-close').click();
   const project = structuredClone(buildExampleProjects().find(each => each.id === 'uon-open-day').project);
@@ -63,27 +64,46 @@ const drawing = app => ({
 });
 const ENDED = { active: false, vertices: 0, banner: false, canvasDraws: false };
 
+/** The toasts' live region, as the page had it when the app started. */
+let shellRegion = null;
 const toastRegion = () => document.getElementById('toast-container');
 
+/** A toast's own text: its message, not its dismiss button's. */
+const messageOf = toast => [...toast.childNodes]
+  .filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.nodeValue).join('');
+
 /** The toasts saying the draw was cancelled. */
-const goneToasts = () => [...toastRegion().querySelectorAll('.toast')]
-  .filter(toast => toast.firstChild.nodeValue === GONE);
+const goneToasts = () => [...toastRegion().querySelectorAll('.toast')].filter(toast => messageOf(toast) === GONE);
 const toldGone = () => goneToasts().length;
 
 /**
- * The one toast saying so, exposed where the author is told: in the polite
- * live region meant for screen readers (how a reader speaks it is a separate
- * check), nothing on its way to the page hidden, inert or busy, and drawn
- * visible by the stylesheet.
+ * The one toast saying so, where the author is told, as far as a page can
+ * check without a browser's layout: its text the message; in the app's own
+ * polite, atomic live region (the one the page started with); no role over
+ * its text; and nothing from it up to the page hidden, inert, busy, taken
+ * out of the live region, or drawn invisible by the stylesheet (display,
+ * visibility, opacity). Where it lands on screen, and how a screen reader
+ * speaks it, are for a browser.
  */
 function expectTold() {
   const toasts = goneToasts();
   expect(toasts).toHaveLength(1);
   const [toast] = toasts;
+  expect(toast.textContent).toContain(GONE);
+  expect(toastRegion()).toBe(shellRegion);
   expect(toastRegion().getAttribute('aria-live')).toBe('polite');
-  expect(toast.closest('[hidden], [aria-hidden="true"], [inert], [aria-busy="true"]')).toBeNull();
+  expect(toastRegion().getAttribute('aria-atomic')).toBe('true');
+  expect(toast.getAttribute('role')).toBeNull();
   expect(toast.classList.contains('is-visible')).toBe(true);
-  expect(getComputedStyle(toast).opacity).toBe('1');
+  for (let node = toast; node && node !== document.documentElement; node = node.parentElement) {
+    const style = getComputedStyle(node);
+    expect({
+      at: node.id || node.className,
+      hidden: node.hidden || node.getAttribute('aria-hidden') === 'true' || node.hasAttribute('inert') || node.getAttribute('aria-busy') === 'true',
+      silenced: node !== toastRegion() && node.getAttribute('aria-live') === 'off' && toastRegion().contains(node),
+      drawn: style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0',
+    }).toEqual({ at: node.id || node.className, hidden: false, silenced: false, drawn: true });
+  }
 }
 
 /** Each way a waypoint leaves the project: how its draw's target is got ready, and removed. */
@@ -134,13 +154,17 @@ test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told on
 
     expect(app.getWaypointById(waypoint.id)).toBeUndefined();
     expect(drawing(app)).toEqual(ENDED);
-    vi.advanceTimersByTime(16);
-    expectTold();
-    // Past the action's own announcement, which clears at two seconds, to the toast's last moment.
-    vi.advanceTimersByTime(4999 - 16);
+    // Told from the next frame, and all through, promise work included, past
+    // the action's own announcement (cleared at two seconds), to the last
+    // moment of its five seconds.
+    await vi.advanceTimersByTimeAsync(16);
+    for (let at = 16; at < 4999; at += 250) {
+      expectTold();
+      await vi.advanceTimersByTimeAsync(Math.min(250, 4999 - at));
+    }
     expect(document.getElementById('announcer').textContent).toBe('');
     expectTold();
-    vi.advanceTimersByTime(1);
+    await vi.advanceTimersByTimeAsync(1);
     expect(goneToasts().map(toast => toast.classList.contains('is-visible'))).toEqual([false]);
     // Nothing more is drawn, for it or anything else.
     place(app, 0.2, 0.2);
@@ -159,6 +183,8 @@ test('a draw ended by Clear All, with the project, says nothing of its waypoint'
   document.getElementById('clear-confirm').click();
 
   expect(drawing(app)).toEqual(ENDED);
+  // Nor a moment later.
+  await new Promise(resolve => setTimeout(resolve, 100));
   expect(toldGone()).toBe(0);
 });
 
@@ -275,6 +301,7 @@ test('a draw ends, and is not carried over, when a project with the same waypoin
   expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
 
   expect(drawing(app)).toEqual(ENDED);
+  await new Promise(resolve => setTimeout(resolve, 100));
   expect(toldGone()).toBe(0);
   place(app, 0.2, 0.2);
   expect(app.getWaypointById('ex-uon-2').areaHighlight?.points ?? []).not.toEqual(TRIANGLE);
