@@ -43,35 +43,73 @@ function crowd(id, { nodes = 2, links = 1, bends = 0 } = {}) {
   };
 }
 
-/** An app with `crowds` open, editing the last one's network with the pen. */
-async function editing(crowds) {
+/**
+ * A booted app that does not draw. These networks are as large as a project
+ * may hold, the harness keeps every canvas call, and the editor draws frame
+ * after frame while a test waits: gigabytes, for nothing these tests read.
+ */
+async function undrawn() {
   const app = await bootApp();
   await app.ready;
+  vi.spyOn(app, 'render').mockImplementation(() => {});
+  return app;
+}
+
+/** An app with `crowds` open, editing the last one's network with the pen, its first node selected. */
+async function editing(crowds) {
+  const app = await undrawn();
   expect(await loadSnapshot(app, { coordVersion: 9, waypoints: [], scene: { flowLayers: crowds } })).toBe(true);
   const layer = app.scene.flowLayers.at(-1);
   app.eventBus.emit('crowd:selected', layer);
   app.enterNetworkEditMode();
+  const [first] = layer.graph.getNodes();
+  if (first) app.networkEditService.selectNode(first);
   const told = vi.fn();
   app.eventBus.on('ui:toast', told);
   return { app, layer, pen: app.networkEditService, told: () => told.mock.calls.map(([{ message }]) => message) };
 }
 
-/** A fresh app opens `snapshot`. */
-async function reopens(snapshot) {
-  const fresh = await bootApp();
-  await fresh.ready;
-  return loadSnapshot(fresh, snapshot);
+/** A background, so the canvas maps to the image and the pen can be used on it. */
+async function withImage(app) {
+  const image = Object.assign(new Image(), { naturalWidth: 1600, naturalHeight: 900, width: 1600, height: 900 });
+  vi.spyOn(app, 'loadImageFileAsset').mockResolvedValue({ base64: 'data:image/png;base64,AA==', getImageElement: async () => image });
+  expect(await loadBackgroundFile(app, new File(['x'], 'background.png', { type: 'image/png' }))).toBe(true);
 }
 
-/** The pen was refused: the network as it was, nothing recorded, the author told once, and the project still reopens. */
+/** A fresh app opens `snapshot`. */
+async function reopens(snapshot) {
+  return loadSnapshot(await undrawn(), snapshot);
+}
+
+/** What a refusal leaves as it was: the network, the history, the pen (the node it is at, its selection and drag) and the banner's counts. */
+function penState(app, layer) {
+  const pen = app.networkEditService;
+  return {
+    network: JSON.stringify(layer.graph.toJSON()),
+    undo: app.undoService.createSnapshot(),
+    at: pen.penNodeId,
+    selection: JSON.stringify(pen.selection),
+    drag: JSON.stringify(pen.drag),
+    banner: document.querySelector('.banner-count')?.textContent ?? null,
+  };
+}
+
+/**
+ * The pen was refused: all of that as it was, no change announced to the
+ * app and nothing saved, the author told once, and the project still
+ * reopens.
+ */
 async function refused(app, layer, attempt, message, told) {
-  const network = JSON.stringify(layer.graph.toJSON());
-  const undo = app.undoService.createSnapshot();
+  const before = penState(app, layer);
+  const saving = vi.spyOn(app, 'autoSave');
+  const changed = vi.fn();
+  app.eventBus.on('network:changed', changed);
 
   attempt();
 
-  expect(JSON.stringify(layer.graph.toJSON())).toBe(network);
-  expect(app.undoService.createSnapshot()).toEqual(undo);
+  expect(penState(app, layer)).toEqual(before);
+  expect(saving).not.toHaveBeenCalled();
+  expect(changed).not.toHaveBeenCalled();
   expect(told()).toEqual([message]);
   expect(await reopens(app._buildProjectSnapshot())).toBe(true);
 }
@@ -110,6 +148,42 @@ test('a crowd whose paths hold 8,192 bends is not bent again by the pen, on a pa
   await refused(app, layer, () => bend(pen, edge), FULL.bend, told);
 });
 
+test('a path of 256 bends dragged by the pointer is not bent, and the author is told once', async () => {
+  const { app, layer, told } = await editing([crowd('c', { bends: 256 })]);
+  await withImage(app);
+  // On the path's run of bends, away from its nodes.
+  const { x, y } = app.imageToCanvas(0.5, 0.5);
+  expect(app.findNetworkTargetAt(x, y)).toMatchObject({ kind: 'edge' });
+
+  await refused(app, layer, () => {
+    app.eventBus.emit('network:drag-start', { x, y });
+    app.eventBus.emit('network:drag-move', { x: x + 12, y: y + 8, shiftKey: false });
+    app.eventBus.emit('network:drag-end');
+  }, FULL.bend, told);
+});
+
+test.each([
+  ['a crowd of 1,999 nodes takes a 2,000th node', () => [crowd('c', { nodes: 1999, links: 1 })], 'node'],
+  ['a scene of 9,999 nodes takes a 10,000th node', () => [...Array.from({ length: 4 }, (_, index) => crowd(`c${index}`, { nodes: 2000, links: 1 })), crowd('last', { nodes: 1999, links: 1 })], 'node'],
+  ['a crowd of 3,999 links takes a 4,000th link', () => [crowd('c', { nodes: 100, links: 3999 })], 'link'],
+])('%s from the pen, and the project reopens with it', async (_, crowds, kind) => {
+  const { app, layer, pen, told } = await editing(crowds());
+  const nodes = layer.graph.getNodes().length;
+  const links = layer.graph.getEdges().length;
+
+  if (kind === 'node') expect(pen.placeNode({ x: 0.9, y: 0.9 })).not.toBeNull();
+  else {
+    // The first node and the last are not yet linked.
+    pen.clickNode(layer.graph.getNodes()[0]);
+    pen.clickNode(layer.graph.getNodes().at(-1));
+  }
+
+  expect([layer.graph.getNodes().length, layer.graph.getEdges().length])
+    .toEqual(kind === 'node' ? [nodes + 1, links] : [nodes, links + 1]);
+  expect(told()).toEqual([]);
+  expect(await reopens(app._buildProjectSnapshot())).toBe(true);
+});
+
 test('a crowd of 2,000 nodes takes no node from the pen', async () => {
   const { app, layer, pen, told } = await editing([crowd('c', { nodes: 2000, links: 1 })]);
 
@@ -119,9 +193,7 @@ test('a crowd of 2,000 nodes takes no node from the pen', async () => {
 test('a click on the map with the pen, in a crowd of 2,000 nodes, places nothing and says only why', async () => {
   const { app, layer, told } = await editing([crowd('c', { nodes: 2000, links: 1 })]);
   // Nodes are placed on the image: the project has one.
-  const image = Object.assign(new Image(), { naturalWidth: 1600, naturalHeight: 900, width: 1600, height: 900 });
-  vi.spyOn(app, 'loadImageFileAsset').mockResolvedValue({ base64: 'data:image/png;base64,AA==', getImageElement: async () => image });
-  expect(await loadBackgroundFile(app, new File(['x'], 'background.png', { type: 'image/png' }))).toBe(true);
+  await withImage(app);
   const announce = vi.spyOn(app, 'announce');
   // A corner of the image no node is near.
   const { x, y } = app.imageToCanvas(0.98, 0.98);
@@ -184,6 +256,11 @@ test('the scene’s budgets count every crowd: 10,000 nodes and 20,000 links in 
   expect(networkRoom([counted(10000, 0), layer], layer)).toMatchObject({ node: false });
   expect(networkRoom([counted(0, 19999), layer], layer)).toMatchObject({ edge: true });
   expect(networkRoom([counted(0, 20000), layer], layer)).toMatchObject({ edge: false });
-  // A crowd not yet among the scene's is counted too.
-  expect(networkRoom([counted(0, 20000)], counted(0, 0))).toMatchObject({ edge: false });
+  // A crowd in the scene is counted once, with what it holds.
+  const five = counted(5, 0);
+  expect(networkRoom([counted(9994, 0), five], five)).toMatchObject({ node: true });
+  // A crowd not yet among the scene's is counted too, with what it holds.
+  expect(networkRoom([counted(9995, 0)], counted(4, 0))).toMatchObject({ node: true });
+  expect(networkRoom([counted(9995, 0)], counted(5, 0))).toMatchObject({ node: false });
+  expect(networkRoom([counted(0, 19999)], counted(0, 1))).toMatchObject({ edge: false });
 });

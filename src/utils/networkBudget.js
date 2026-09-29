@@ -1,9 +1,10 @@
 /**
  * The room a crowd's network has, in its scene, for one more node, link or
- * bend: the loader's budgets (a crowd's nodes, links and bends, a path's
- * bends, the scene's nodes and links), which the outline and the network
- * editor's pen both check before they add one, so neither makes a network
- * the project cannot store (DEF-59).
+ * bend: the loader's six graph counts (a crowd's nodes, links and bends, a
+ * path's bends, the scene's nodes and links), which the outline and the
+ * network editor's pen both check before they add one, so neither makes a
+ * network past them (DEF-59). The project-wide budgets (how many values,
+ * how much text, the file's size) are not counted here: DEF-04's.
  */
 import { FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
 import { SCENE_LIMITS } from '../models/Scene.js';

@@ -38,10 +38,10 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
-DEF-59 — The network editor's pen keeps a crowd within what a project can
-store, as the outline does: a node, link or bend past a crowd's or the scene's
-budgets is refused, in the outline's words, so a network drawn by hand
-reopens. (2026-09-29)
+DEF-59 — The network editor's pen keeps a crowd within the six graph counts a
+project can store, as the outline does: a node, link or bend past a crowd's or
+the scene's counts is refused, in the outline's words. The project-wide
+budgets, which no editor checks yet, stay DEF-04's. (2026-09-29)
 
 ## Before the big run (2026-09-28)
 
