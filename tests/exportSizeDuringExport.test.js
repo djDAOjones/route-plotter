@@ -82,10 +82,13 @@ async function withBackground(pathOnly) {
  * An export whose encoder holds after its first frame until it is let
  * finish, made to fail, or cancelled. Each frame records the canvas it was
  * drawn on; every draw of the background it made, on any canvas (which,
- * where, and the transform it was drawn under); whether the path's layer
- * was put on the main canvas; and whether the main canvas was cleared after
- * the frame's last draw of either, so that what the encoder captures next
- * would have lost it.
+ * where, the transform it was drawn under, and the alpha and compositing it
+ * was drawn with); every draw of the path's own layer (the renderer's vector
+ * canvas) on the main canvas, the same; whether the path was drawn on that
+ * layer before it was put there; whether the main canvas was cleared after
+ * the frame's first draw that must survive, so that what the encoder captures
+ * next would have lost it; and whether the main canvas was given a size
+ * during the frame, which empties it.
  */
 async function exporting(app) {
   const frames = [];
@@ -106,18 +109,25 @@ async function exporting(app) {
         takeOrderedCalls();
         await renderFrame(progress);
         const calls = takeOrderedCalls();
-        const background = calls
-          .filter(([, name, source]) => name === 'drawImage' && source === token)
-          .map(entry => [entry[0] === main ? 'main' : `canvas #${entry[0]}`, ...entry.slice(3, 7), [...entry.transform]]);
+        const vector = contextIdFor(app.renderingService.vectorCanvas);
+        const layer = `[canvas #${vector}]`;
+        /** A draw: its surface, its rectangle, the transform, and the alpha and compositing it was drawn with. */
+        const drawOf = entry => [entry[0] === main ? 'main' : `canvas #${entry[0]}`, ...entry.slice(3, 7), [...entry.transform],
+          entry.state.globalAlpha ?? 1, entry.state.globalCompositeOperation ?? 'source-over'];
+        const background = calls.filter(([, name, source]) => name === 'drawImage' && source === token).map(drawOf);
+        const composite = ([surface, name, source]) => surface === main && name === 'drawImage' && source === layer;
+        const put = calls.findIndex(composite);
         const onMain = calls.filter(([surface]) => surface === main);
-        const drawn = onMain.findLastIndex(([, name, source]) => name === 'drawImage' && (source === token || /^\[canvas #\d+\]$/.test(String(source))));
+        const kept = onMain.findIndex(([, name, source]) => name === 'drawImage' && (source === token || source === layer));
         frames.push({
           exportMode: app._isExportMode,
           width: app.canvas.width,
           height: app.canvas.height,
           background,
-          path: onMain.some(([, name, source]) => name === 'drawImage' && /^\[canvas #\d+\]$/.test(String(source))),
-          clearedAfter: drawn < 0 || onMain.slice(drawn + 1).some(([, name]) => name === 'clearRect'),
+          path: calls.filter(composite).map(drawOf),
+          pathDrawn: put > 0 && calls.slice(0, put).some(([surface, name]) => surface === vector && name === 'stroke'),
+          clearedAfter: kept < 0 || onMain.slice(kept + 1).some(([, name]) => name === 'clearRect'),
+          resized: onMain.some(([, name]) => name === 'canvas.width' || name === 'canvas.height'),
         });
       };
       await frame(0.1);
@@ -178,16 +188,20 @@ function portraitDisplay() {
 
 /**
  * What a frame of `width` × `height` should show: the background drawn once,
- * on the main canvas, fitted at the zoom, nothing moved (none, path only);
- * the path's layer put on the main canvas; and nothing cleared after.
+ * on the main canvas, fitted at the zoom, nothing moved, at full alpha and
+ * composited over (none, path only); the renderer's own path layer, drawn on
+ * in the frame, put on the main canvas over the whole of it the same way; and
+ * the main canvas neither cleared after the first of those nor resized.
  */
 const frameOf = (width, height, pathOnly) => {
   const { x, y, w, h } = fitted(width, height);
   return {
     exportMode: true, width, height,
-    background: pathOnly ? [] : [['main', x, y, w, h, IDENTITY]],
-    path: true,
+    background: pathOnly ? [] : [['main', x, y, w, h, IDENTITY, 1, 'source-over']],
+    path: [['main', 0, 0, width, height, IDENTITY, 1, 'source-over']],
+    pathDrawn: true,
     clearedAfter: false,
+    resized: false,
   };
 };
 
