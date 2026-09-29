@@ -554,10 +554,11 @@ export class UIController {
   
   /**
    * An export has been asked for, by whatever route (the app calls this for
-   * every request it does not refuse as one already runs): a codec probe
-   * still out for an export asked for before asks for nothing when it
-   * answers, and a codec dialog one opened closes, giving focus back, so
-   * neither its choices nor its hold on Escape outlive it (DEF-46).
+   * every request it does not refuse as one already runs; an MP4 click, for
+   * itself, before its probe): a codec probe still out for an export asked
+   * for before asks for nothing when it answers, and a codec dialog one
+   * opened closes, giving focus back, so neither its choices nor its hold on
+   * Escape outlive it (DEF-46).
    */
   exportRequested() {
     this._exportIntent += 1;
@@ -913,6 +914,10 @@ export class UIController {
     
     // Export MP4 button — cascading H.264 probe at actual export dimensions
     this.elements.exportMp4Btn?.addEventListener('click', async () => {
+      // Disabled while an export runs: a click sent to it then (a script's)
+      // asks for nothing, not even a probe, whose dialog would open over the
+      // export (DEF-46).
+      if (this.elements.exportMp4Btn.disabled) return;
       const w = parseInt(this.elements.exportResX?.value) || 1920;
       const h = parseInt(this.elements.exportResY?.value) || 1080;
       console.log(`🎬 [Export] MP4 probe at ${w}×${h}`);
@@ -920,8 +925,10 @@ export class UIController {
       // 1. Probe at actual export dimensions. The answer counts only while
       //    this is the export the author last asked for, and none has started
       //    since: a double click asks once, and a probe that answers after
-      //    WebM was chosen, or after an export ended, asks for nothing.
-      const intent = ++this._exportIntent;
+      //    WebM was chosen, or after an export ended, asks for nothing. The
+      //    click is itself a request: a codec dialog still open closes.
+      this.exportRequested();
+      const intent = this._exportIntent;
       const fullConfig = await VideoExporter._testWebCodecsConfig(
         w, h, undefined, undefined, 'mp4'
       );

@@ -259,10 +259,17 @@ test('a double click on Export MP4 at a size H.264 cannot take makes one export,
   expect(frames).toEqual(Array(3).fill({ exportMode: true, width: 1920, height: 1080, background: 'hidden' }));
 });
 
-test('the codec dialog’s WebM exports WebM at the full size', async () => {
+/** Probes that open the codec dialog: no H.264 at all, or only at a reduced size. */
+const DIALOGS = [
+  ['no H.264 at all', () => vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue(null)],
+  ['H.264 only at a reduced size', () => vi.spyOn(VideoExporter, '_testWebCodecsConfig')
+    .mockImplementation(width => Promise.resolve(width === 3840 ? null : { codec: 'avc1' }))],
+];
+
+test.each(DIALOGS)('the codec dialog’s WebM (%s) exports WebM at the full size', async (_, probes) => {
   const { app, frames, running, finish } = await exportingApp();
   exportSize(app, 3840, 2160);
-  vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue(null);
+  probes();
   const encode = vi.spyOn(app.videoExporter, 'export');
 
   document.getElementById('export-mp4-btn').click();
@@ -369,12 +376,83 @@ test.each([
   expect(alert).toHaveBeenCalledTimes(1);
 });
 
-/** Probes that open the codec dialog: no H.264 at all, or only at a reduced size. */
-const DIALOGS = [
-  ['no H.264 at all', () => vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue(null)],
-  ['H.264 only at a reduced size', () => vi.spyOn(VideoExporter, '_testWebCodecsConfig')
-    .mockImplementation(width => Promise.resolve(width === 3840 ? null : { codec: 'avc1' }))],
+/** Every way to put a codec dialog away without choosing. */
+const DISMISSALS = [
+  ['Cancel', () => document.getElementById('codec-cancel').click()],
+  ['its close button', () => document.querySelector('#codec-unsupported-modal [data-modal-close]').click()],
+  ['its backdrop', () => document.getElementById('codec-unsupported-modal').click()],
+  ['Escape', () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))],
 ];
+
+/** Open a codec dialog from Export MP4, focused as a keyboard leaves it. */
+async function openDialog(probes) {
+  const exporting = await exportingApp();
+  exportSize(exporting.app, 3840, 2160);
+  probes();
+  const mp4 = document.getElementById('export-mp4-btn');
+  mp4.focus();
+  mp4.click();
+  await vi.waitFor(() => expect(codecDialogShown()).toBe(true));
+  return exporting;
+}
+
+/** Whether the page is as a closed dialog leaves it: live, focus outside the dialog, and Escape free for others. */
+function pageFreed() {
+  const heard = vi.fn();
+  window.addEventListener('keydown', heard);
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  window.removeEventListener('keydown', heard);
+  return {
+    shown: codecDialogShown(),
+    inert: document.getElementById('app').hasAttribute('inert'),
+    focusInDialog: document.getElementById('codec-unsupported-modal').contains(document.activeElement),
+    escapeHeard: heard.mock.calls.length,
+  };
+}
+const FREED = { shown: false, inert: false, focusInDialog: false, escapeHeard: 1 };
+
+test.each(DIALOGS.flatMap(([dialog, probes]) => DISMISSALS.map(([how, dismiss]) => [dialog, how, probes, dismiss])))('a codec dialog (%s) put away with %s is gone at once: hidden, the page live, focus out of it, and Escape free', async (_, __, probes, dismiss) => {
+  await openDialog(probes);
+
+  dismiss();
+
+  expect(pageFreed()).toEqual(FREED);
+});
+
+test('Export MP4 clicked again while its codec dialog is open closes that dialog at once, and the new click’s answer is the one that counts', async () => {
+  const { app, running, finish } = await openDialog(DIALOGS[0][1]);
+  const encode = vi.spyOn(app.videoExporter, 'export');
+
+  document.getElementById('export-mp4-btn').click();
+
+  expect(codecDialogShown()).toBe(false);
+  // The new click's probe answers the same, and opens the dialog afresh: its WebM exports.
+  await vi.waitFor(() => expect(codecDialogShown()).toBe(true));
+  document.getElementById('codec-webm').click();
+  await running;
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+  expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['webm']);
+});
+
+test('a click sent to Export MP4 while it is disabled, as it is while an export runs, asks for nothing', async () => {
+  const { app, frames, running, finish } = await exportingApp();
+  exportSize(app, 3840, 2160);
+  const probe = vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue(null);
+  const first = app.exportVideo();
+  await running;
+  const mp4 = document.getElementById('export-mp4-btn');
+  expect(mp4.disabled).toBe(true);
+
+  mp4.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await answered();
+
+  expect(probe).not.toHaveBeenCalled();
+  expect(codecDialogShown()).toBe(false);
+  finish();
+  await first;
+  expect(frames).toEqual(Array(3).fill({ exportMode: true, width: 3840, height: 2160, background: 'hidden' }));
+});
 
 test.each(DIALOGS)('a codec dialog (%s) open when an export is asked for another way closes, and the first Escape cancels that export', async (_, probes) => {
   const { app, running } = await exportingApp();
