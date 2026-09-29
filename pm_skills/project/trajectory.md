@@ -38,13 +38,14 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
-DEF-46 — A second video export asked for while one runs, as a double click
-on Export MP4 or the codec dialog's reduced MP4 can, is refused before it
-touches the running export, its size included, so it no longer spoils its
-frames, mode and buttons; and a codec probe, or the dialog it opened,
-answers only for the export the author last asked for, by any route, so a
-stale one starts nothing, and an open dialog closes rather than holding
-Escape from the export. (2026-09-28)
+DEF-46 — A video export is the app's from the moment it is asked for to the
+end of its clean-up: another asked for meanwhile, by a control, the bus, or
+a script called back by the export's own setting up or clean-up, is refused
+before it touches it, its size included, so it no longer spoils its frames,
+mode and buttons. Overlapping MP4 probes are superseded, not refused: a codec
+probe, or the dialog it opened, answers only for the export the author last
+asked for, so a stale one starts nothing, and an open dialog closes rather
+than holding Escape from the export. (2026-09-28)
 
 ## Before the big run (2026-09-28)
 

@@ -915,7 +915,9 @@ export const wiringControllersMixin = {
      * @param {string|{format: string, resolution?: {width: number, height: number}}} request -
      *   The format, or the format and the size to export at (the codec
      *   dialog's reduced MP4). While an export runs it is refused whole, the
-     *   size included, which would resize the running export's canvas (DEF-46).
+     *   size included, which would resize the running export's canvas; the
+     *   export sets both once it is the app's, so a request made from what
+     *   setting them sets off is refused too (DEF-46).
      */
     this.eventBus.on('video:export-request', (request) => {
       const { format, resolution } = request && typeof request === 'object' ? request : { format: request };
@@ -923,9 +925,7 @@ export const wiringControllersMixin = {
       if (!this.previewMode) {
         this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
       }
-      if (resolution) this.eventBus.emit('video:resolution-change', resolution);
-      this.exportSettings.format = format || 'mp4';
-      this.exportVideo();
+      this.exportVideo({ format: format || 'mp4', resolution });
     });
     
     /**

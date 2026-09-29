@@ -106,157 +106,169 @@ export const exportingMixin = {
    * 6. Capture frames and encode to video
    * 7. Download result
    * 8. Restore canvas to display resolution
+   * @param {{format?: string, resolution?: {width: number, height: number}}} [request] -
+   *   The format and size to export at, if not the ones set: applied once the
+   *   export is this app's, so no request made meanwhile can change them
    */
-  async exportVideo() {
+  async exportVideo({ format, resolution } = {}) {
     if (refuseWhileExporting(this)) return;
-    // This is the export the author now asks for, by whatever route: a codec
-    // probe or dialog from an earlier request asks for nothing (DEF-46).
-    this.uiController?.exportRequested?.();
-
-    // Validate we have something to export
-    if (this.waypoints.length < 2) {
-      alert('Please add at least 2 waypoints before exporting.');
-      return;
-    }
-    
-    // Initialize exporter if needed
-    if (!this.videoExporter) {
-      this.videoExporter = new VideoExporter(this.canvas, this.eventBus);
-    }
-
-    // Export steps the shared engine, so suspend it without changing the
-    // user's latched play/pause state or temporary review speed. Progress is
-    // captured in timeline space and restored only after the old mode returns.
-    const transportState = this.animationEngine.suspendTransport();
-    const wasPreviewMode = this.previewMode;
-    
-    // Disable all export buttons and show progress on the dropdown toggle
-    const exportDropdownBtn = document.getElementById('export-dropdown-btn');
-    const originalText = exportDropdownBtn.textContent;
-    exportDropdownBtn.textContent = 'Exporting... 0%';
-    exportDropdownBtn.disabled = true;
-    if (this.elements.exportMp4Btn) this.elements.exportMp4Btn.disabled = true;
-    if (this.elements.exportWebmBtn) this.elements.exportWebmBtn.disabled = true;
-    if (this.elements.exportHtmlBtn) this.elements.exportHtmlBtn.disabled = true;
-    
-    this.announce('Starting video export — press Esc to cancel');
-    
-    // Capture-phase Escape handler — cancels export and blocks other keydown listeners
-    const onEscapeKey = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        if (this.videoExporter) {
-          this.videoExporter.cancel();
-        }
-      }
-    };
-    window.addEventListener('keydown', onEscapeKey, true); // capture phase
-    
-    // Listen for visibility-aware pause/resume (MediaRecorder fallback only)
-    const onExportPaused = () => {
-      exportDropdownBtn.textContent = 'Export paused — return to tab';
-      this.announce('Video export paused. Return to this tab to resume.');
-    };
-    const onExportResumed = () => {
-      exportDropdownBtn.textContent = 'Exporting...';
-      this.announce('Video export resumed');
-    };
-    this.eventBus.on('video:export-paused', onExportPaused);
-    this.eventBus.on('video:export-resumed', onExportResumed);
-    
-    // Store original background state for path-only export
-    const pathOnly = this.exportSettings.pathOnly;
-    const originalBackgroundImage = this.background.image;
-
+    // The export is this app's from here to the end of its clean-up. What it
+    // does on the way can call back at once (closing a codec dialog gives
+    // focus back; a size or a mode change emits), and a request made then is
+    // refused, not run inside this one. Released last, even if the clean-up
+    // throws, so no later export is refused for good (DEF-46).
     this._videoExportRunning = true;
     try {
-      // Use the same mode transition as the UI. Its event chain rebuilds the
-      // preview timeline; the explicit invalidation also covers exports that
-      // begin while Preview is already selected.
-      this._setPreviewMode(true);
-      const duration = this.invalidateAnimationTiming();
-      if (duration <= 0) {
-        alert('Animation duration is zero. Please check your waypoints.');
+      // This is the export the author now asks for, by whatever route: a codec
+      // probe or dialog from an earlier request asks for nothing.
+      this.uiController?.exportRequested?.();
+      // The size and format asked for with it, now that no other can start.
+      if (resolution) this.eventBus.emit('video:resolution-change', resolution);
+      if (format) this.exportSettings.format = format;
+
+      // Validate we have something to export
+      if (this.waypoints.length < 2) {
+        alert('Please add at least 2 waypoints before exporting.');
         return;
       }
-
-      if (pathOnly) {
-        // Temporarily hide background for transparent export
-        this.background.image = null;
+    
+      // Initialize exporter if needed
+      if (!this.videoExporter) {
+        this.videoExporter = new VideoExporter(this.canvas, this.eventBus);
       }
 
-      // Reset reveal mask for fresh export
-      this.motionVisibilityService.resetRevealMask();
-
-      // Resize canvas to export resolution so captureStream captures at the
-      // correct pixel dimensions (not screen size × DPR)
-      this._enterExportMode(this.exportSettings.resolutionX, this.exportSettings.resolutionY);
-
-      const blob = await this.videoExporter.export({
-        frameRate: this.exportSettings.frameRate,
-        duration: duration,
-        format: this.exportSettings.format,
-        startBuffer: VIDEO_EXPORT.START_BUFFER_MS,
-        
-        // Render function called for each frame
-        renderFrame: async (progress) => {
-          // Seek animation to this progress point
-          this.animationEngine.seekToProgress(progress);
-          // Render the frame (with or without background based on pathOnly)
-          this.render();
-        },
-        
-        // Progress callback
-        onProgress: (percent) => {
-          exportDropdownBtn.textContent = `Exporting... ${percent}% · Esc to cancel`;
+      // Export steps the shared engine, so suspend it without changing the
+      // user's latched play/pause state or temporary review speed. Progress is
+      // captured in timeline space and restored only after the old mode returns.
+      const transportState = this.animationEngine.suspendTransport();
+      const wasPreviewMode = this.previewMode;
+    
+      // Disable all export buttons and show progress on the dropdown toggle
+      const exportDropdownBtn = document.getElementById('export-dropdown-btn');
+      const originalText = exportDropdownBtn.textContent;
+      exportDropdownBtn.textContent = 'Exporting... 0%';
+      exportDropdownBtn.disabled = true;
+      if (this.elements.exportMp4Btn) this.elements.exportMp4Btn.disabled = true;
+      if (this.elements.exportWebmBtn) this.elements.exportWebmBtn.disabled = true;
+      if (this.elements.exportHtmlBtn) this.elements.exportHtmlBtn.disabled = true;
+    
+      this.announce('Starting video export — press Esc to cancel');
+    
+      // Capture-phase Escape handler — cancels export and blocks other keydown listeners
+      const onEscapeKey = (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          if (this.videoExporter) {
+            this.videoExporter.cancel();
+          }
         }
-      });
+      };
+      window.addEventListener('keydown', onEscapeKey, true); // capture phase
+    
+      // Listen for visibility-aware pause/resume (MediaRecorder fallback only)
+      const onExportPaused = () => {
+        exportDropdownBtn.textContent = 'Export paused — return to tab';
+        this.announce('Video export paused. Return to this tab to resume.');
+      };
+      const onExportResumed = () => {
+        exportDropdownBtn.textContent = 'Exporting...';
+        this.announce('Video export resumed');
+      };
+      this.eventBus.on('video:export-paused', onExportPaused);
+      this.eventBus.on('video:export-resumed', onExportResumed);
+    
+      // Store original background state for path-only export
+      const pathOnly = this.exportSettings.pathOnly;
+      const originalBackgroundImage = this.background.image;
+
+      try {
+        // Use the same mode transition as the UI. Its event chain rebuilds the
+        // preview timeline; the explicit invalidation also covers exports that
+        // begin while Preview is already selected.
+        this._setPreviewMode(true);
+        const duration = this.invalidateAnimationTiming();
+        if (duration <= 0) {
+          alert('Animation duration is zero. Please check your waypoints.');
+          return;
+        }
+
+        if (pathOnly) {
+          // Temporarily hide background for transparent export
+          this.background.image = null;
+        }
+
+        // Reset reveal mask for fresh export
+        this.motionVisibilityService.resetRevealMask();
+
+        // Resize canvas to export resolution so captureStream captures at the
+        // correct pixel dimensions (not screen size × DPR)
+        this._enterExportMode(this.exportSettings.resolutionX, this.exportSettings.resolutionY);
+
+        const blob = await this.videoExporter.export({
+          frameRate: this.exportSettings.frameRate,
+          duration: duration,
+          format: this.exportSettings.format,
+          startBuffer: VIDEO_EXPORT.START_BUFFER_MS,
+        
+          // Render function called for each frame
+          renderFrame: async (progress) => {
+            // Seek animation to this progress point
+            this.animationEngine.seekToProgress(progress);
+            // Render the frame (with or without background based on pathOnly)
+            this.render();
+          },
+        
+          // Progress callback
+          onProgress: (percent) => {
+            exportDropdownBtn.textContent = `Exporting... ${percent}% · Esc to cancel`;
+          }
+        });
       
-      // Download the video
-      VideoExporter.downloadBlob(blob);
-      this.announce('Video export complete');
+        // Download the video
+        VideoExporter.downloadBlob(blob);
+        this.announce('Video export complete');
       
-    } catch (error) {
-      if (error.message === 'Export cancelled') {
-        console.log('🛑 [Export] Cancelled by user');
-        this.announce('Video export cancelled');
-      } else {
-        console.error('Video export failed:', error);
-        alert(`Export failed: ${error.message}`);
-        this.announce('Video export failed');
+      } catch (error) {
+        if (error.message === 'Export cancelled') {
+          console.log('🛑 [Export] Cancelled by user');
+          this.announce('Video export cancelled');
+        } else {
+          console.error('Video export failed:', error);
+          alert(`Export failed: ${error.message}`);
+          this.announce('Video export failed');
+        }
+      
+      } finally {
+        // Clean up listeners
+        window.removeEventListener('keydown', onEscapeKey, true);
+        this.eventBus.off('video:export-paused', onExportPaused);
+        this.eventBus.off('video:export-resumed', onExportResumed);
+      
+        // Restore canvas to display resolution (must happen before render)
+        this._exitExportMode();
+      
+        // Restore background if it was hidden for path-only export
+        if (pathOnly) {
+          this.background.image = originalBackgroundImage;
+        }
+
+        // Restore the original timeline shape before feeding its timeline
+        // progress back into the engine, then restore transport flags and speed.
+        this._setPreviewMode(wasPreviewMode);
+        this.animationEngine.restoreTransportState(transportState);
+
+        // Restore button state
+        exportDropdownBtn.disabled = false;
+        exportDropdownBtn.textContent = originalText;
+        if (this.elements.exportMp4Btn) this.elements.exportMp4Btn.disabled = false;
+        if (this.elements.exportWebmBtn) this.elements.exportWebmBtn.disabled = false;
+        if (this.elements.exportHtmlBtn) this.elements.exportHtmlBtn.disabled = false;
+
+        this.queueRender();
       }
-      
     } finally {
-      // Nothing below waits, so no other request comes between; and a
-      // clean-up that throws cannot refuse every export after it.
       this._videoExportRunning = false;
-      // Clean up listeners
-      window.removeEventListener('keydown', onEscapeKey, true);
-      this.eventBus.off('video:export-paused', onExportPaused);
-      this.eventBus.off('video:export-resumed', onExportResumed);
-      
-      // Restore canvas to display resolution (must happen before render)
-      this._exitExportMode();
-      
-      // Restore background if it was hidden for path-only export
-      if (pathOnly) {
-        this.background.image = originalBackgroundImage;
-      }
-
-      // Restore the original timeline shape before feeding its timeline
-      // progress back into the engine, then restore transport flags and speed.
-      this._setPreviewMode(wasPreviewMode);
-      this.animationEngine.restoreTransportState(transportState);
-
-      // Restore button state
-      exportDropdownBtn.disabled = false;
-      exportDropdownBtn.textContent = originalText;
-      if (this.elements.exportMp4Btn) this.elements.exportMp4Btn.disabled = false;
-      if (this.elements.exportWebmBtn) this.elements.exportWebmBtn.disabled = false;
-      if (this.elements.exportHtmlBtn) this.elements.exportHtmlBtn.disabled = false;
-
-      this.queueRender();
     }
   },
   

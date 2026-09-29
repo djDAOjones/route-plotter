@@ -15,7 +15,9 @@
  * that answers after a later click or another request (even one that could
  * not start) asks for nothing and opens no dialog, and a dialog open when
  * another export is asked for closes, its choices and its hold on Escape
- * gone with it.
+ * gone with it. An export is the app's from its first line to the end of its
+ * clean-up, so a request made from anything it sets off on the way (focus
+ * given back as a dialog closes, a size or mode change) is refused too.
  */
 
 import { afterEach, expect, test, vi } from 'vitest';
@@ -668,4 +670,153 @@ test('a transparent export hides the background for its frames only', async () =
 
   expect(frames.map(frame => frame.background)).toEqual(['hidden', 'hidden', 'hidden']);
   expect(app.background.image).toBe(image);
+});
+
+/** A request made from the next focus given back, as a page's own script might make one. */
+function onNextFocus(request) {
+  const made = [];
+  document.addEventListener('focusin', () => made.push(request()), { once: true });
+  return made;
+}
+
+test('an export asked for from focus given back as another export closes a codec dialog is refused, and the first draws every frame as it began', async () => {
+  const { app, frames, running, finish } = await openDialog(DIALOGS[1][1]);
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const nested = onNextFocus(() => app.exportVideo());
+
+  const first = app.exportVideo();
+  await running;
+  finish();
+  await first;
+  await Promise.all(nested);
+
+  expect(nested).toHaveLength(1);
+  expect(encode).toHaveBeenCalledTimes(1);
+  expect(frames).toEqual(Array(3).fill({ exportMode: true, width: 3840, height: 2160, background: 'hidden' }));
+  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
+});
+
+test('a request through the bus from focus given back as an export starts, in Edit, is refused before it shows its tip about Preview', async () => {
+  const { app, running, finish } = await openDialog(DIALOGS[1][1]);
+  app._setPreviewMode(false);
+  const tips = vi.spyOn(app, 'showToast');
+  const told = vi.spyOn(app, 'announce');
+  const nested = onNextFocus(() => app.eventBus.emit('video:export-request', 'webm'));
+
+  const first = app.exportVideo();
+  await running;
+  finish();
+  await first;
+
+  expect(nested).toHaveLength(1);
+  expect(told).toHaveBeenCalledWith('A video export is already running.');
+  expect(tips).not.toHaveBeenCalled();
+});
+
+test('an export asked for while a request sets its own size is refused, and that request exports in its own format and size', async () => {
+  const { app, frames, running, finish } = await exportingApp();
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const nested = [];
+  const onSize = () => {
+    app.eventBus.off('video:resolution-change', onSize);
+    nested.push(app.eventBus.emit('video:export-request', 'webm'));
+  };
+  app.eventBus.on('video:resolution-change', onSize);
+
+  app.eventBus.emit('video:export-request', { format: 'mp4', resolution: { width: 1920, height: 1080 } });
+  await running;
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+
+  expect(nested).toHaveLength(1);
+  expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['mp4']);
+  expect(app.exportSettings.format).toBe('mp4');
+  expect(frames).toEqual(Array(3).fill({ exportMode: true, width: 1920, height: 1080, background: 'hidden' }));
+});
+
+test('an export asked for while another is cleaned up, as the mode it began in is put back, is refused, and the clean-up leaves the controls free', async () => {
+  const { app, frames, running, finish } = await exportingApp();
+  // In Edit, so the clean-up puts the mode back, and says so on the bus.
+  app._setPreviewMode(false);
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const first = app.exportVideo();
+  await running;
+  const nested = [];
+  const onMode = (preview) => {
+    if (preview) return;
+    app.eventBus.off('motion:preview-mode-change', onMode);
+    nested.push(app.exportVideo());
+  };
+  app.eventBus.on('motion:preview-mode-change', onMode);
+
+  finish();
+  await first;
+  await Promise.all(nested);
+
+  expect(nested).toHaveLength(1);
+  expect(encode).toHaveBeenCalledTimes(1);
+  expect(frames).toHaveLength(3);
+  expect([app.previewMode, app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, false, [false, false, false, false]]);
+});
+
+test('Export MP4 clicked while its codec dialog is open, whose closing lets another export start first, asks for nothing when its probe answers', async () => {
+  const { app, running, finish } = await openDialog(DIALOGS[1][1]);
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const nested = onNextFocus(() => app.exportVideo());
+
+  document.getElementById('export-mp4-btn').click();
+  await running;
+  await answered();
+  await answered();
+
+  expect(nested).toHaveLength(1);
+  expect(codecDialogShown()).toBe(false);
+  expect(document.getElementById('app').hasAttribute('inert')).toBe(false);
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+  expect(encode).toHaveBeenCalledTimes(1);
+});
+
+test.each([['WebM', 'codec-webm'], ['the reduced MP4', 'codec-mp4-reduced']])('%s chosen in a codec dialog asks for nothing when closing it lets another export start first, which draws every frame as it began', async (_, choice) => {
+  const { app, frames, running, finish } = await openDialog(DIALOGS[1][1]);
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const nested = onNextFocus(() => app.exportVideo());
+  const told = vi.spyOn(app, 'announce');
+
+  document.getElementById(choice).click();
+  await running;
+  await answered();
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+
+  expect(nested).toHaveLength(1);
+  expect(encode).toHaveBeenCalledTimes(1);
+  // The choice asked for nothing: not even a request to be refused.
+  expect(told).not.toHaveBeenCalledWith('A video export is already running.');
+  expect(frames).toEqual(Array(3).fill({ exportMode: true, width: 3840, height: 2160, background: 'hidden' }));
+});
+
+test.each([
+  ['3840×2160', [3840, 2160], [1920, 1080]],
+  ['7680×4320, past H.264’s nine million pixels', [7680, 4320], [4000, 2250]],
+])('the reduced MP4 the codec dialog offers for %s exports at the size it offered, asked for again after the dialog was put away', async (_, [width, height], [reducedWidth, reducedHeight]) => {
+  const { app, frames, running, finish } = await exportingApp();
+  exportSize(app, width, height);
+  vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockImplementation(probed => Promise.resolve(probed === width ? null : { codec: 'avc1' }));
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const mp4 = document.getElementById('export-mp4-btn');
+  mp4.click();
+  await vi.waitFor(() => expect(codecDialogShown()).toBe(true));
+  document.getElementById('codec-cancel').click();
+
+  mp4.click();
+  await vi.waitFor(() => expect(codecDialogShown()).toBe(true));
+  expect(document.getElementById('codec-mp4-reduced').textContent).toBe(`Export MP4 at ${reducedWidth}×${reducedHeight}`);
+  document.getElementById('codec-mp4-reduced').click();
+  await running;
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+
+  expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['mp4']);
+  expect(frames).toEqual(Array(3).fill({ exportMode: true, width: reducedWidth, height: reducedHeight, background: 'hidden' }));
 });

@@ -524,16 +524,16 @@ export class UIController {
     // export the author last asked for (DEF-46).
     const current = () => this._codecModalIntent === this._exportIntent;
     
+    // Closing it gives focus back, which can ask for another export first: a
+    // choice counts only while its dialog's request is still the last.
     this._codecWebmBtn.addEventListener('click', () => {
-      const asked = current();
       closeModal();
-      if (asked) this.eventBus.emit('video:export-request', 'webm');
+      if (current()) this.eventBus.emit('video:export-request', 'webm');
     });
     
     this._codecMp4Btn?.addEventListener('click', () => {
-      const asked = current();
       closeModal();
-      if (!asked) return;
+      if (!current()) return;
       // At the reduced resolution stored when the modal was configured: one
       // request, so the app applies the size only if it starts the export.
       const resolution = this._codecReducedRes
@@ -559,10 +559,14 @@ export class UIController {
    * for before asks for nothing when it answers, and a codec dialog one
    * opened closes, giving focus back, so neither its choices nor its hold on
    * Escape outlive it (DEF-46).
+   * @returns {number} This request's own mark, taken before the dialog
+   *   closes: whatever closing it sets off may ask for another after it
    */
   exportRequested() {
     this._exportIntent += 1;
+    const intent = this._exportIntent;
     this._closeCodecModal?.();
+    return intent;
   }
 
   /**
@@ -926,9 +930,9 @@ export class UIController {
       //    this is the export the author last asked for, and none has started
       //    since: a double click asks once, and a probe that answers after
       //    WebM was chosen, or after an export ended, asks for nothing. The
-      //    click is itself a request: a codec dialog still open closes.
-      this.exportRequested();
-      const intent = this._exportIntent;
+      //    click is itself a request: a codec dialog still open closes, and
+      //    anything its closing asks for comes after it.
+      const intent = this.exportRequested();
       const fullConfig = await VideoExporter._testWebCodecsConfig(
         w, h, undefined, undefined, 'mp4'
       );
