@@ -428,6 +428,10 @@ export const wiringControllersMixin = {
       const next = current === targetId ? null : targetId;
       const verdict = canRejoinBranch(this.waypoints, info.branchId, next);
       if (!verdict.ok) {
+        // The drop put the branch's end back where it was: its route is
+        // rebuilt for it, or the drag's own path would time a route the
+        // project no longer has (DEF-06).
+        this.calculatePath();
         this.eventBus.emit('ui:toast', { message: verdict.reason });
         return;
       }
@@ -435,7 +439,9 @@ export const wiringControllersMixin = {
       waypoint.branchRejoin = next;
       this.saveUndoState(); // after the mutation, per the undo-stack contract
       this.calculatePath();
-      this.updateAnimationDuration();
+      // Timed now, and the rebuild the path queued with it dropped: a save
+      // would otherwise run it again (DEF-06).
+      this.invalidateAnimationTiming();
       this.updateWaypointList();
       this.autoSave();
       this.queueRender();

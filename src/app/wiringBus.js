@@ -49,14 +49,12 @@ function resolveBranchRejoinDrop(app, data) {
   if (!target) return false;
 
   // Put it back: this gesture aimed at a target, it did not move a point.
-  // The route is rebuilt for where it is again, whether the rejoin is then
-  // made or refused: the drag's own path, left in place by a refusal, timed
-  // a route the project no longer had (DEF-06).
+  // The rejoin's handler rebuilds the route for where it is again, made or
+  // refused, once (DEF-06).
   const start = (data.dragGroup || []).find(item => item?.waypoint === waypoint);
   if (start) {
     waypoint.imgX = start.imgX;
     waypoint.imgY = start.imgY;
-    app.calculatePath?.();
   }
 
   app.eventBus.emit('route:branch-rejoin', { waypoint, targetId: target.id });

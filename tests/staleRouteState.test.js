@@ -642,25 +642,71 @@ async function savedProject(app) {
   return saved;
 }
 
-test('a branch end dropped on a minor, its rejoin refused, is back where it was, and Save Project then holds the route with the duration a rebuild gives it', async () => {
+/**
+ * The branch's end dragged over `targetId`, and let go there: the rebuilds
+ * the drop made (the path built, the timing rebuilt, the queued rebuild's
+ * time let pass), and the toasts it asked for.
+ */
+async function droppedOn(app, targetId) {
+  const end = app.getWaypointById('b');
+  const start = { imgX: end.imgX, imgY: end.imgY };
+  const target = app.getWaypointById(targetId);
+  dragging(app, 'b', target.imgX, target.imgY);
+  await timingSettled();
+  const built = vi.spyOn(app, 'calculatePath');
+  const timed = vi.spyOn(app, 'updateAnimationDuration');
+  const told = vi.fn();
+  app.eventBus.on('ui:toast', told);
+  const drop = app.imageToCanvas(target.imgX, target.imgY);
+  app.eventBus.emit('waypoint:drag-ended', { waypoint: end, dropX: drop.x, dropY: drop.y, dragGroup: [{ waypoint: end, ...start }] });
+  await timingSettled();
+  const work = { built: built.mock.calls.length, timed: timed.mock.calls.length, toasts: told.mock.calls.length };
+  built.mockRestore();
+  timed.mockRestore();
+  app.eventBus.off('ui:toast', told);
+  return { end, start, work };
+}
+
+test('a branch end dropped on a minor, its rejoin refused, is back where it was, its route built and timed once, nothing recorded or said but the refusal, and Save Project then holds the route with the duration a rebuild gives it', async () => {
   const app = await derivedByPreview(branched());
   app.eventBus.emit('motion:preview-mode-change', false);
   await timingSettled();
-  const end = app.getWaypointById('b');
-  const start = { imgX: end.imgX, imgY: end.imgY };
-  const minor = app.getWaypointById('minor');
-  // The branch's end dragged over the minor, and let go there.
-  dragging(app, 'b', minor.imgX, minor.imgY);
-  const drop = app.imageToCanvas(minor.imgX, minor.imgY);
-  const told = vi.fn();
-  app.eventBus.on('ui:toast', told);
-  app.eventBus.emit('waypoint:drag-ended', { waypoint: end, dropX: drop.x, dropY: drop.y, dragGroup: [{ waypoint: end, ...start }] });
-  expect(told).toHaveBeenCalledTimes(1);
+  app.storageService.flushAutoSave();
+  app._isDirty = false;
+  const before = { dirty: app._isDirty, revision: app._editRevision, history: app.undoService.createSnapshot() };
+  const announced = vi.spyOn(app, 'announce');
+  const saving = vi.spyOn(app, 'autoSave');
+
+  const { end, start, work } = await droppedOn(app, 'minor');
+
+  expect(work).toEqual({ built: 1, timed: 1, toasts: 1 });
   expect(end).toMatchObject({ ...start, branchRejoin: 'end' });
+  expect({ dirty: app._isDirty, revision: app._editRevision, history: app.undoService.createSnapshot() }).toEqual(before);
+  expect(announced).not.toHaveBeenCalled();
+  expect(saving).not.toHaveBeenCalled();
 
   const saved = await savedProject(app);
 
   // The route as it is, rebuilt from nothing.
+  app.calculatePath();
+  app.invalidateAnimationTiming();
+  expect(saved.animationState.duration).toBe(app.animationEngine.state.duration);
+});
+
+test.each([
+  ['cleared, dropped on the major it rejoins at', 1, null],
+  ['made again, dropped there once more', 2, 'end'],
+])('a branch end’s rejoin %s: the route is built once and timed once for it, and Save Project holds the duration a rebuild gives it', async (_, drops, rejoin) => {
+  const app = await derivedByPreview(branched());
+  app.eventBus.emit('motion:preview-mode-change', false);
+  await timingSettled();
+
+  let work;
+  for (let drop = 0; drop < drops; drop += 1) ({ work } = await droppedOn(app, 'end'));
+
+  expect(work).toEqual({ built: 1, timed: 1, toasts: 1 });
+  expect(app.getWaypointById('b').branchRejoin ?? null).toBe(rejoin);
+  const saved = await savedProject(app);
   app.calculatePath();
   app.invalidateAnimationTiming();
   expect(saved.animationState.duration).toBe(app.animationEngine.state.duration);
