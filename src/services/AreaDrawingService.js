@@ -187,7 +187,9 @@ export class AreaDrawingService {
    * redo. The draw follows its waypoint to the one with the same id (undo and
    * redo restore copies), and ends when there is none, rather than closing
    * onto a waypoint the project no longer has, where the polygon was lost
-   * without a word (DEF-43).
+   * without a word (DEF-43). An id names one waypoint only within a project:
+   * a load refuses duplicates, and opening a project ends a draw rather than
+   * following it into the new one.
    * @param {Array<Object>} waypoints - The model's waypoints now
    * @returns {boolean} Whether a draw ended because its waypoint has gone
    */
