@@ -492,3 +492,109 @@ test('the scene’s budgets count every crowd: 10,000 nodes and 20,000 links in 
   expect(networkRoom([counted(9995, 0)], counted(5, 0))).toMatchObject({ node: false });
   expect(networkRoom([counted(0, 19999)], counted(0, 1))).toMatchObject({ edge: false });
 });
+
+/** A crowd whose paths hold 8,191 bends, its last path none: room for one more bend in the crowd. */
+function oneBendShort() {
+  const data = crowd('c', { nodes: 40, links: 33, bends: 256 });
+  data.graph.edges.at(-2).controlPoints.pop();
+  data.graph.edges.at(-1).controlPoints = [];
+  return data;
+}
+const totalBends = layer => layer.graph.getEdges().reduce((sum, edge) => sum + edge.controlPoints.length, 0);
+const outline = (app, command) => app.eventBus.emit('scene-outline:command', { ...command, outlineFormKey: 'form' });
+const addControl = (layer, edge) => ({ action: 'add-control', layerId: layer.id, edgeId: edge.id, x: 50, y: 50 });
+
+test('the pen that takes a crowd’s 8,192nd bend refuses its 8,193rd, in the same session', async () => {
+  const { app, layer, pen, told } = await editing([oneBendShort()]);
+  const edge = layer.graph.getEdges().at(-1);
+  bend(pen, edge);
+  expect(totalBends(layer)).toBe(8192);
+
+  await refused(app, layer, () => bend(pen, edge), FULL.bend, told);
+  expect(totalBends(layer)).toBe(8192);
+});
+
+test('the outline takes a crowd’s 8,192nd bend, and the pen then refuses the next', async () => {
+  const { app, layer, pen, told } = await editing([oneBendShort()]);
+  const edge = layer.graph.getEdges().at(-1);
+  outline(app, addControl(layer, edge));
+  expect(totalBends(layer)).toBe(8192);
+
+  await refused(app, layer, () => bend(pen, edge), FULL.bend, told);
+  expect(totalBends(layer)).toBe(8192);
+});
+
+test('the pen takes a crowd’s 8,192nd bend, and the outline then refuses the next', async () => {
+  const { app, layer, pen } = await editing([oneBendShort()]);
+  const edge = layer.graph.getEdges().at(-1);
+  bend(pen, edge);
+  expect(totalBends(layer)).toBe(8192);
+
+  outlineRefuses(app, layer, addControl(layer, edge), FULL.bend);
+  expect(totalBends(layer)).toBe(8192);
+});
+
+test('a crowd’s bends given back and taken again, and undone and redone, are counted as they stand: the next past 8,192 is refused', async () => {
+  const { app, layer, pen, told } = await editing([oneBendShort()]);
+  const edge = layer.graph.getEdges().at(-1);
+  bend(pen, edge);
+  pen.deleteControlPoint(edge, 0);
+  expect(totalBends(layer)).toBe(8191);
+  pen.beginEdgeBend(edge, { x: 0.5, y: 0.5 }, 0);
+  expect(totalBends(layer)).toBe(8192);
+  pen.cancelDrag();
+  expect(totalBends(layer)).toBe(8191);
+  bend(pen, edge);
+  expect(totalBends(layer)).toBe(8192);
+  app.undo();
+  expect(totalBends(pen.layer)).toBe(8191);
+  app.redo();
+  expect(totalBends(pen.layer)).toBe(8192);
+
+  await refused(app, pen.layer, () => bend(pen, pen.layer.graph.getEdge(edge.id)), FULL.bend, told);
+});
+
+/** Five hidden crowds of 2,000 nodes and, last, an empty one shown: a scene of 10,000 nodes. */
+const tenThousandHidden = () => [
+  ...Array.from({ length: 5 }, (_, index) => ({ ...crowd(`h${index}`, { nodes: 2000, links: 0 }), visible: false })),
+  crowd('c', { nodes: 0, links: 0 }),
+];
+
+test('hidden crowds count toward the scene’s 10,000 nodes: the pen places none in a crowd shown', async () => {
+  const { app, layer, pen, told } = await editing(tenThousandHidden());
+
+  await refused(app, layer, () => pen.placeNode({ x: 0.8, y: 0.8 }), FULL.node, told);
+});
+
+test('hidden crowds count toward the scene’s 10,000 nodes: the outline adds none to a crowd shown', async () => {
+  const { app, layer } = await editing(tenThousandHidden());
+
+  outlineRefuses(app, layer, { action: 'add-node', layerId: layer.id, type: 'normal', x: 80, y: 80 }, FULL.node);
+});
+
+test('at a crowd’s 4,000 links, the pen, at no node, still places a node on its own, with no link', async () => {
+  const { app, layer, pen, told } = await editing([crowd('c', { nodes: 100, links: 4000 })]);
+  expect(pen.penNodeId).toBeNull();
+
+  expect(pen.placeNode({ x: 0.8, y: 0.8 })).not.toBeNull();
+
+  expect([layer.graph.getNodes().length, layer.graph.getEdges().length]).toEqual([101, 4000]);
+  expect(told()).toEqual([]);
+  expect(await reopens(app._buildProjectSnapshot())).toBe(true);
+});
+
+test('the pen takes a scene’s 10,000th node, the outline then refuses the next, and a node deleted makes room again', async () => {
+  const crowds = [...Array.from({ length: 4 }, (_, index) => crowd(`f${index}`, { nodes: 2000, links: 0 })),
+    crowd('reserve', { nodes: 1998, links: 0 }), crowd('c', { nodes: 1, links: 0 })];
+  const { app, layer, pen, told } = await editing(crowds);
+  const node = pen.placeNode({ x: 0.8, y: 0.8 });
+  expect(node).not.toBeNull();
+
+  outlineRefuses(app, layer, { action: 'add-node', layerId: layer.id, type: 'normal', x: 80, y: 80 }, FULL.node);
+
+  pen.deleteNode(node);
+  expect(pen.placeNode({ x: 0.7, y: 0.7 })).not.toBeNull();
+  expect(app.scene.getFlowLayers().reduce((sum, each) => sum + each.graph.getNodes().length, 0)).toBe(10000);
+  expect(told()).toEqual([]);
+  expect(await reopens(app._buildProjectSnapshot())).toBe(true);
+});
