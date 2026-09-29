@@ -46,8 +46,9 @@ mode and buttons, and Export MP4 starts no codec probe meanwhile. Overlapping
 MP4 probes are superseded, not refused: a codec probe, or the dialog it
 opened, answers only for the export the author last asked for, so a stale
 one starts nothing, and an open dialog closes rather than holding Escape from
-the export. Each part of an export's clean-up runs whether or not another
-fails, and its controls are freed whatever failed. (2026-09-28)
+the export. Once its transport is suspended, each part of an export's
+clean-up runs whether or not another fails, and its controls are freed
+whatever failed. (2026-09-28)
 
 ## Before the big run (2026-09-28)
 

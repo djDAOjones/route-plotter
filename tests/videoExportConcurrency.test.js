@@ -762,10 +762,11 @@ test('an export asked for while another is cleaned up, as the mode it began in i
   expect([app.previewMode, app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, false, [false, false, false, false]]);
 });
 
-test('Export MP4 clicked while its codec dialog is open, whose closing lets another export start first, asks for nothing when its probe answers', async () => {
+test('Export MP4 clicked while its codec dialog is open, whose closing lets another export start first, asks for nothing, not even a probe', async () => {
   const { app, running, finish } = await openDialog(DIALOGS[1][1]);
   const encode = vi.spyOn(app.videoExporter, 'export');
   const nested = onNextFocus(() => app.exportVideo());
+  const probed = VideoExporter._testWebCodecsConfig.mock.calls.length;
 
   document.getElementById('export-mp4-btn').click();
   await running;
@@ -773,11 +774,35 @@ test('Export MP4 clicked while its codec dialog is open, whose closing lets anot
   await answered();
 
   expect(nested).toHaveLength(1);
+  expect(VideoExporter._testWebCodecsConfig.mock.calls.length, 'a probe started once the other export had').toBe(probed);
   expect(codecDialogShown()).toBe(false);
   expect(document.getElementById('app').hasAttribute('inert')).toBe(false);
   finish();
   await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
   expect(encode).toHaveBeenCalledTimes(1);
+});
+
+test('Export MP4 clicked while its codec dialog is open, whose closing asks for an export that cannot start, asks for nothing, not even a probe', async () => {
+  const { app } = await openDialog(DIALOGS[1][1]);
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  // As the dialog closes, a request finds one waypoint left, and is refused
+  // for it: the click, asked for before it, is no longer the latest
+  const nested = onNextFocus(() => {
+    while (app.waypoints.length > 1) app.eventBus.emit('waypoint:delete', app.waypoints.at(-1));
+    return app.exportVideo();
+  });
+  const probed = VideoExporter._testWebCodecsConfig.mock.calls.length;
+
+  document.getElementById('export-mp4-btn').click();
+  await Promise.all(nested);
+  await answered();
+  await answered();
+
+  expect(nested).toHaveLength(1);
+  expect(alert).toHaveBeenCalledWith('Please add at least 2 waypoints before exporting.');
+  expect(VideoExporter._testWebCodecsConfig.mock.calls.length, 'a probe for a click a later request superseded').toBe(probed);
+  expect(encode).not.toHaveBeenCalled();
+  expect([app._videoExportRunning, codecDialogShown()]).toEqual([false, false]);
 });
 
 test.each([['WebM', 'codec-webm'], ['the reduced MP4', 'codec-mp4-reduced']])('%s chosen in a codec dialog asks for nothing when closing it lets another export start first, which draws every frame as it began', async (_, choice) => {
@@ -947,4 +972,72 @@ test.each([
   expect(nested).toHaveLength(1);
   expect(encode).toHaveBeenCalledTimes(1);
   expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
+});
+
+test('an export whose clean-up fails at two steps reports both, puts back the rest, and Export MP4 then exports MP4', async () => {
+  const { app, running, finish, frames } = await exportingApp();
+  const exitFailed = new Error('exit failed');
+  const redrawFailed = new Error('redraw failed');
+  vi.spyOn(app, '_exitExportMode').mockImplementationOnce(() => { throw exitFailed; });
+  const failed = app.exportVideo().catch(error => error);
+  await running;
+  vi.spyOn(app, 'queueRender').mockImplementation(() => { throw redrawFailed; });
+  finish();
+  const error = await failed;
+  app.queueRender.mockRestore();
+
+  expect(error).toBeInstanceOf(AggregateError);
+  expect(error.errors).toEqual([exitFailed, redrawFailed]);
+  expect([app._videoExportRunning, exportButtons()]).toEqual([false, [false, false, false, false]]);
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const probe = vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue({ codec: 'avc1' });
+  const drawn = frames.length;
+  app.elements.exportMp4Btn.click();
+  // The next export's first frame, then its hold let go.
+  await vi.waitFor(() => expect(frames.length).toBe(drawn + 1));
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+  expect(probe).toHaveBeenCalledTimes(1);
+  expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['mp4']);
+});
+
+test('a clean-up whose first step fails still puts back the background and the transport, and frees the controls', async () => {
+  const { app, running, finish } = await exportingApp();
+  const image = document.createElement('canvas');
+  app.background.image = image;
+  app.exportSettings.pathOnly = true;
+  const transport = app.animationEngine.state.captureTransportState();
+  const failed = app.exportVideo().catch(error => error);
+  await running;
+  // The first step takes the Escape listener off the window
+  const remove = window.removeEventListener.bind(window);
+  const fault = vi.spyOn(window, 'removeEventListener').mockImplementationOnce(() => { throw new Error('remove failed'); });
+  finish();
+  const error = await failed;
+  const [type, listener, capture] = fault.mock.calls[0];
+  fault.mockRestore();
+  remove(type, listener, capture);
+
+  expect(error.message).toBe('remove failed');
+  expect(app.background.image).toBe(image);
+  expect(app.animationEngine._transportSuspended).toBe(false);
+  expect(app.animationEngine.state.captureTransportState()).toEqual(transport);
+  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
+});
+
+test('a finished export no longer listens for its pause and resume', async () => {
+  const { app, running, finish } = await exportingApp();
+  const listening = () => ['video:export-paused', 'video:export-resumed'].map(event => app.eventBus.listenerCount(event));
+  const before = listening();
+  const label = document.getElementById('export-dropdown-btn').textContent;
+  const first = app.exportVideo();
+  await running;
+  expect(listening()).toEqual(before.map(count => count + 1));
+  finish();
+  await first;
+
+  expect(listening()).toEqual(before);
+  app.eventBus.emit('video:export-paused');
+  app.eventBus.emit('video:export-resumed');
+  expect(document.getElementById('export-dropdown-btn').textContent).toBe(label);
 });

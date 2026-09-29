@@ -947,6 +947,10 @@ export class UIController {
       //    click is itself a request: a codec dialog still open closes, and
       //    anything its closing asks for comes after it.
       const intent = this.exportRequested();
+      // Closing that dialog gives focus back at once, and whatever that sets
+      // off may have started another export, or asked for one, by now: this
+      // click then asks for nothing, not even a probe.
+      if (this._exportRunning || intent !== this._exportIntent) return;
       const fullConfig = await VideoExporter._testWebCodecsConfig(
         w, h, undefined, undefined, 'mp4'
       );
