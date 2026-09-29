@@ -14,6 +14,8 @@
 import { expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
+import { getRetainedBackgroundDataURL } from '../src/app/persistence.js';
 
 const major = (id, name = id, extra = {}) => ({ id, name, imgX: 0.2, imgY: 0.3, isMajor: true, ...extra });
 
@@ -133,14 +135,71 @@ test('a trace whose node labels would take the project past its text budget is n
   await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project text exceeds the 2 MB limit.');
 });
 
+test('a trace that would make the project too big to save as a file is not traced, and the project still saves', async () => {
+  const app = await withRoute(Array.from({ length: 1000 }, (_, index) => major(`w${index}`)));
+  const saves = () => app.imageAssetService.exportZip(app._buildProjectSnapshot({ includeAssets: false }));
+  await expect(saves()).resolves.toBeInstanceOf(Blob);
+
+  await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
+
+  await expect(saves()).resolves.toBeInstanceOf(Blob);
+});
+
+test('a project already too big to save as a file is traced, when the trace gives it no other reason', async () => {
+  const app = await withRoute(Array.from({ length: 1000 }, (_, index) => major(`w${index}`, `w${index} ${'x'.repeat(500)}`)));
+  const saves = () => app.imageAssetService.exportZip(app._buildProjectSnapshot({ includeAssets: false }));
+  await expect(saves()).rejects.toThrow('Project metadata exceeds the 2 MB limit');
+
+  expect(trace(app, app.scene.flowLayers[0]).traced).toBe(true);
+
+  expect(await reopened(app._buildProjectSnapshot())).not.toBeNull();
+});
+
+test('a trace checks the file as Save Project would write it, with the background it would carry', async () => {
+  const app = await withRoute(routeWithBends(3));
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  const image = Object.assign(new Image(), { naturalWidth: 1, naturalHeight: 1, width: 1, height: 1 });
+  vi.spyOn(app, 'loadImageFileAsset').mockResolvedValue({ base64: png, getImageElement: async () => image });
+  expect(await loadBackgroundFile(app, new File(['x'], 'background.png', { type: 'image/png' }))).toBe(true);
+  const saved = getRetainedBackgroundDataURL(app, 'saving the project');
+  const prepared = vi.spyOn(app.imageAssetService, 'prepareArchive');
+
+  expect(trace(app, app.scene.flowLayers[0]).traced).toBe(true);
+
+  expect(saved).toBe(png);
+  expect(prepared.mock.calls.map(([, background]) => background)).toEqual([saved]);
+});
+
+test('a major named with something other than text, as a file may name it, traces, and the project reopens', async () => {
+  const app = await withRoute([major('start', { text: 'Main entrance' }), major('end', 'Library')]);
+
+  expect(trace(app, app.scene.flowLayers[0])).toEqual({ traced: true, told: [expect.stringContaining('Traced the route into')] });
+
+  expect(await reopened(app._buildProjectSnapshot())).not.toBeNull();
+});
+
+test('a leg of 257 bends from a major with no name is refused, as a leg of the route', async () => {
+  const app = await withRoute(routeWithBends(257));
+  // Opening a project names its unnamed majors; the name field can empty one.
+  app.waypoints[0].name = '';
+
+  await refused(app, app.scene.flowLayers[0], 'A leg of the route has 257 bends, more than the 256 a crowd’s path can hold. '
+    + 'Remove some of its minor waypoints, then trace again.');
+});
+
 test('a trace that would give the project more values than it can hold is not traced', async () => {
   const app = await withRoute(Array.from({ length: 1400 }, (_, index) => major(`w${index}`)));
 
   await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata is too deeply nested or complex.');
 });
 
-test('a refused trace leaves the network editor, its selection and drag, the outline, a pending save and the redo history as they were', async () => {
-  const app = await withRoute(routeWithBends(257));
+test.each([
+  ['a leg of too many bends', routeWithBends(257), 'The leg from Main entrance has 257 bends, more than the 256 a crowd’s path can hold. '
+    + 'Remove some of its minor waypoints, then trace again.'],
+  ['node labels past the text budget', Array.from({ length: 11 }, (_, index) => major(`w${index}`, 'x'.repeat(100000))),
+    'This route can’t be traced into a crowd: Project text exceeds the 2 MB limit.'],
+])('a trace refused for %s leaves the network editor, its selection and drag, the outline, a pending save and the redo history as they were', async (_, waypoints, message) => {
+  const app = await withRoute(waypoints);
   const layer = app.scene.flowLayers[0];
   layer.guideType = 'graph';
   const a = layer.graph.addNode({ id: 'a' });
@@ -172,8 +231,7 @@ test('a refused trace leaves the network editor, its selection and drag, the out
   const history = vi.spyOn(app, 'saveUndoState');
   const announce = vi.spyOn(app, 'announce');
 
-  await refused(app, editor.layer, 'The leg from Main entrance has 257 bends, more than the 256 a crowd’s path can hold. '
-    + 'Remove some of its minor waypoints, then trace again.', () => {
+  await refused(app, editor.layer, message, () => {
     expect(state()).toEqual(before);
     expect(app.storageService._pendingAutoSave).toBe(pending);
     expect(history).not.toHaveBeenCalled();

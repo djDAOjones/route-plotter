@@ -45,12 +45,35 @@ export function formatCrowdReleaseBias(percent) {
 }
 
 /**
+ * Why `project` could not be saved as a file, or opened again, or null: the
+ * loader's model checks (`stageProjectModel`), run on its JSON, as a file or
+ * recovery holds it (where the model shares a value, its JSON repeats it),
+ * and the file's own (`prepareArchive`: the metadata a ZIP of it carries).
+ * @param {Object} app
+ * @param {Object} project - A project snapshot, built without assets
+ * @returns {string|null}
+ */
+function unstorable(app, project) {
+  const cache = app._autosaveBackgroundCache;
+  const background = cache && cache.image === app.background?.image ? cache.dataURL : null;
+  try {
+    stageProjectModel(JSON.parse(JSON.stringify(project)));
+    app.imageAssetService.prepareArchive(project, background);
+    return null;
+  } catch (error) {
+    return error.message;
+  }
+}
+
+/**
  * Why a traced network could not be stored, or null. The project the trace
- * would make is checked as it would be opened (`stageProjectModel`), in the
- * form it would be saved in, before the trace replaces anything: a network
- * the loader refuses (a leg with more bends than a path can hold, more nodes
- * than a scene can hold, labels past the project's text budget) saved a
- * project that would not reopen (DEF-52). A leg with too many bends is named.
+ * would make is checked as it would be saved and opened (`unstorable`),
+ * before the trace replaces anything: a network the loader refuses (a leg
+ * with more bends than a path can hold, more nodes than a scene can hold,
+ * labels past the project's text budget), or a file too big to save, left a
+ * project that could not be saved or would not reopen (DEF-52). A leg with
+ * too many bends is named. The same reason the project has already, before
+ * the trace, is not the trace's, and does not refuse it; another does.
  * @param {Object} app
  * @param {FlowLayer} layer
  * @param {{nodes: Array, edges: Array}} trace
@@ -70,13 +93,12 @@ function traceStorageProblem(app, layer, trace) {
   for (const edge of trace.edges) graph.addEdge(edge);
   const project = app._buildProjectSnapshot({ includeAssets: false });
   const traced = { ...layer.toJSON(), guideType: 'graph', graph: graph.toJSON() };
-  project.scene = { ...project.scene, flowLayers: project.scene.flowLayers.map(each => (each.id === layer.id ? traced : each)) };
-  try {
-    stageProjectModel(project);
-    return null;
-  } catch (error) {
-    return `This route can’t be traced into a crowd: ${error.message}.`;
-  }
+  const reason = unstorable(app, {
+    ...project,
+    scene: { ...project.scene, flowLayers: project.scene.flowLayers.map(each => (each.id === layer.id ? traced : each)) },
+  });
+  if (!reason || reason === unstorable(app, project)) return null;
+  return `This route can’t be traced into a crowd: ${reason}.`;
 }
 
 export const crowdsMixin = {
