@@ -768,6 +768,17 @@ describe('golden draw logs (TST-02)', () => {
         expect(layers.route, where).toEqual(layers.image);
         expect(layers.mask, where).toEqual(mode === BACKGROUND_VISIBILITY.ALWAYS_SHOW ? [] : layers.image);
       };
+      /**
+       * The viewport's transform alone, whole: its zoom, then its pan, at pixel
+       * density 1. Matching layers could otherwise share a wrong pan.
+       */
+      const expectViewport = (viewport, layers, mode, where) => {
+        const { zoom, panX, panY } = viewport;
+        expect(zoom, where).toBeGreaterThan(1);
+        expectOneTransform(layers, mode, new RegExp(`^${zoom} 0 0 ${zoom} `), where);
+        expect(layers.image[0].split(' ').map(Number), where)
+          .toEqual([zoom, 0, 0, zoom, -zoom * panX, -zoom * panY].map(n => Number(n.toFixed(3))));
+      };
       const withMode = (mode, pathOnly) => {
         const fixture = fixtures().find(each => each.id === 'authored-extras');
         fixture.project.motionSettings.backgroundVisibility = mode;
@@ -775,7 +786,7 @@ describe('golden draw logs (TST-02)', () => {
         return fixture;
       };
 
-      test.each(MODES)('in Preview (%s), at Zoom in’s first step and at 2×, though the camera is on', async (mode) => {
+      test.each(MODES)('in Preview (%s), at Zoom in’s first step and at 2×, paused and playing, though the camera is on', async (mode) => {
         const app = await appWithFixture(withMode(mode));
         enterMode(app, 'preview');
         // With no viewport zoom the camera zooms all three: the case is not vacuous
@@ -784,8 +795,25 @@ describe('golden draw logs (TST-02)', () => {
         // Zoom in goes 1× → 1.5× → 2.25×; 2× is a zoom the camera's 1.75× passes
         for (const zoom of [1.5, 2]) {
           app.setZoom(zoom, app.waypoints[1]);
-          expectOneTransform(drawn(frameAt(app, 0.5, { state: true })), mode,
-            new RegExp(`^${zoom} 0 0 ${zoom} `), `at ${zoom}× viewport zoom`);
+          expectViewport(app.viewport, drawn(frameAt(app, 0.5, { state: true })), mode, `paused at ${zoom}×`);
+        }
+
+        // And while it plays, the frame drawn from the transport's own clock
+        const engine = app.animationEngine;
+        engine.seekToProgress(0);
+        engine.play();
+        const step = engine.state.duration / 100;
+        for (let tick = 1; tick <= 50; tick += 1) engine.updateAnimation(step, tick * step);
+        try {
+          expect(engine.isPlaying()).toBe(true);
+          for (const zoom of [1.5, 2]) {
+            app.setZoom(zoom, app.waypoints[1]);
+            discardFrame();
+            app.render();
+            expectViewport(app.viewport, drawn(takeFrame(app, { state: true })), mode, `playing at ${zoom}×`);
+          }
+        } finally {
+          engine.pause();
         }
       });
 
@@ -798,6 +826,7 @@ describe('golden draw logs (TST-02)', () => {
         app.setZoom(2, app.waypoints[1]);
         const download = vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
         let frame = null;
+        let viewport = null;
         try {
           // The real exportVideo(), with only the encoder replaced
           app.videoExporter = {
@@ -806,6 +835,7 @@ describe('golden draw logs (TST-02)', () => {
               discardFrame();
               await renderFrame(0.5);
               frame = drawn(takeFrame(app, { state: true }));
+              viewport = { ...app.viewport };
               return new Blob(['video']);
             },
           };
@@ -814,7 +844,8 @@ describe('golden draw logs (TST-02)', () => {
         } finally {
           download.mockRestore();
         }
-        expectOneTransform(frame, mode, /^2 0 0 2 /, 'in the export frame');
+        expect(viewport.zoom).toBe(2);
+        expectViewport(viewport, frame, mode, 'in the export frame');
       });
     });
 
