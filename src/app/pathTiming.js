@@ -620,6 +620,11 @@ export const pathTimingMixin = {
     // handles, intro and tail still sit outside it exactly as before.
     // Optional call: a host that assembles only part of this mixin has no
     // branch data either, so linear behaviour is the correct degradation.
+    // Composed afresh: its runs' pauses come from each waypoint's pause and
+    // beacon, which a rebuild may be for, and the cache kept only per path
+    // and speed, so a pause or beacon edit on a branched route had kept the
+    // old total (DEF-42).
+    this.branchTimeline = null;
     const branchTimeline = this.getBranchTimeline?.();
     if (branchTimeline && branchTimeline.totalDurationMs > 0) {
       const branchTotal = branchTimeline.totalDurationMs
