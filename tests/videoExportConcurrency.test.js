@@ -321,7 +321,11 @@ test.each([
   expect(frames).toHaveLength(drawn);
 });
 
-test('WebM chosen while the reduced-size probe is out leaves that probe asking for nothing', async () => {
+test.each([
+  ['can take', { codec: 'avc1' }], ['cannot take', null],
+].flatMap(([can, reply]) => ['while that export runs', 'once it has ended'].map(when => [can, when, reply])))('WebM chosen while the reduced-size probe is out leaves that probe, saying H.264 %s the reduced size %s, asking for nothing', async (_, when, reply) => {
+  // Either answer would open a dialog were it heard: the offered size, or
+  // no H.264 at all.
   const { app, running, finish } = await exportingApp();
   exportSize(app, 3840, 2160);
   let reducedAnswer;
@@ -334,12 +338,21 @@ test('WebM chosen while the reduced-size probe is out leaves that probe asking f
   await vi.waitFor(() => expect(reducedAnswer).toBeDefined());
   document.getElementById('export-webm-btn').click();
   await running;
-  finish();
-  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
-  reducedAnswer({ codec: 'avc1' });
-  await answered();
+  if (when === 'while that export runs') {
+    reducedAnswer(reply);
+    await answered();
+    // (No Escape here: it is the running export's.)
+    expect([codecDialogShown(), document.getElementById('app').hasAttribute('inert')]).toEqual([false, false]);
+    finish();
+    await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+  } else {
+    finish();
+    await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+    reducedAnswer(reply);
+    await answered();
+  }
 
-  expect(codecDialogShown()).toBe(false);
+  expect(pageFreed()).toEqual(FREED);
   expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['webm']);
 });
 
@@ -415,6 +428,19 @@ function pageFreed() {
   };
 }
 const FREED = { shown: false, inert: false, focusInDialog: false, escapeHeard: 1 };
+
+/**
+ * The transport is the author's again: no longer held for an export (a hold
+ * left on keeps playback from ever scheduling a frame, whatever the
+ * transport's own state says), and playing schedules one.
+ */
+function expectTransportFree(app) {
+  const engine = app.animationEngine;
+  expect(engine._transportSuspended).toBe(false);
+  engine.play();
+  expect(engine.animationFrameId).not.toBeNull();
+  engine.pause();
+}
 
 test.each(DIALOGS.flatMap(([dialog, probes]) => DISMISSALS.map(([how, dismiss]) => [dialog, how, probes, dismiss])))('a codec dialog (%s) put away with %s is gone at once: hidden, the page live, focus out of it, and Escape free', async (_, __, probes, dismiss) => {
   await openDialog(probes);
@@ -648,6 +674,7 @@ test.each([
   // (An export with no duration never enters export mode.)
   expect(Boolean(app._isExportMode)).toBe(false);
   expect(exportButtons()).toEqual([false, false, false, false]);
+  expectTransportFree(app);
   undo();
   const next = app.exportVideo();
   await vi.waitFor(() => expect(frames).toHaveLength(1));
@@ -907,6 +934,7 @@ test.each([
   expect(document.getElementById('export-dropdown-btn').textContent).toBe(label);
   expect(app.background.image).toBe(image);
   expect(app.animationEngine.state.captureTransportState()).toEqual(transport);
+  expectTransportFree(app);
   const before = encode.mock.calls.length;
   const drawn = frames.length;
   app.elements.exportWebmBtn.click();
@@ -1001,27 +1029,52 @@ test('an export whose clean-up fails at two steps reports both, puts back the re
   expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['mp4']);
 });
 
-test('a clean-up whose first step fails still puts back the background and the transport, and frees the controls', async () => {
+test.each([
+  ['its Escape listener off the window', () => {
+    const remove = window.removeEventListener.bind(window);
+    const fault = vi.spyOn(window, 'removeEventListener').mockImplementationOnce(() => { throw new Error('remove failed'); });
+    return () => {
+      const [type, listener, capture] = fault.mock.calls[0];
+      fault.mockRestore();
+      remove(type, listener, capture);
+    };
+  }],
+  ...['video:export-paused', 'video:export-resumed'].map(event => [`its ${event} listener off the bus`, (app) => {
+    const off = app.eventBus.off.bind(app.eventBus);
+    let kept = null;
+    const fault = vi.spyOn(app.eventBus, 'off').mockImplementation((name, callback) => {
+      if (name === event && kept === null) {
+        kept = callback;
+        throw new Error('remove failed');
+      }
+      return off(name, callback);
+    });
+    return () => {
+      fault.mockRestore();
+      off(event, kept);
+    };
+  }]),
+])('a clean-up that fails to take %s still puts back the rest, and frees the controls', async (_, failOnce) => {
   const { app, running, finish } = await exportingApp();
   const image = document.createElement('canvas');
   app.background.image = image;
   app.exportSettings.pathOnly = true;
   const transport = app.animationEngine.state.captureTransportState();
+  const listening = () => ['video:export-paused', 'video:export-resumed'].map(event => app.eventBus.listenerCount(event));
+  const before = listening();
   const failed = app.exportVideo().catch(error => error);
   await running;
-  // The first step takes the Escape listener off the window
-  const remove = window.removeEventListener.bind(window);
-  const fault = vi.spyOn(window, 'removeEventListener').mockImplementationOnce(() => { throw new Error('remove failed'); });
+  const letGo = failOnce(app);
   finish();
   const error = await failed;
-  const [type, listener, capture] = fault.mock.calls[0];
-  fault.mockRestore();
-  remove(type, listener, capture);
+  // The one listener the fault kept is taken off here, so what is checked is the rest
+  letGo();
 
   expect(error.message).toBe('remove failed');
   expect(app.background.image).toBe(image);
-  expect(app.animationEngine._transportSuspended).toBe(false);
+  expect(listening()).toEqual(before);
   expect(app.animationEngine.state.captureTransportState()).toEqual(transport);
+  expectTransportFree(app);
   expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
 });
 
