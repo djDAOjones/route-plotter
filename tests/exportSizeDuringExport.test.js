@@ -21,6 +21,7 @@ import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
+import { contextIdFor, recordCallOrder, takeOrderedCalls } from './setup.js';
 
 /** Exports a test left held (one whose assertion failed first): let go, so their Escape listeners go with them. */
 const held = new Set();
@@ -28,9 +29,27 @@ const held = new Set();
 afterEach(async () => {
   for (const letGo of held) await letGo();
   held.clear();
+  recordCallOrder(false);
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
+
+/** The background under test, named so its draws can be told from any other image's. */
+const BACKGROUND = 'landscape-under-test.png';
+const IMAGE = { width: 1600, height: 900 };
+const ZOOM = 1.75;
+
+/**
+ * Where the background is drawn on a canvas of `width` × `height`, worked out
+ * here from the image, the size and the zoom, not by the app's own layout
+ * code: the image fitted inside the canvas, scaled by the zoom, centred.
+ */
+function fitted(width, height) {
+  const scale = Math.min(width / IMAGE.width, height / IMAGE.height) * ZOOM;
+  const w = IMAGE.width * scale;
+  const h = IMAGE.height * scale;
+  return { x: (width - w) / 2, y: (height - h) / 2, w, h, scale };
+}
 
 /**
  * A booted app with a route and a 1600×900 background, zoomed to 175% (so a
@@ -41,7 +60,7 @@ async function withBackground(pathOnly) {
   await app.ready;
   document.getElementById('splash-close').click();
   expect(await loadSnapshot(app, authoredExtrasProject())).toBe(true);
-  const image = Object.assign(new Image(), { naturalWidth: 1600, naturalHeight: 900, width: 1600, height: 900 });
+  const image = Object.assign(new Image(), { naturalWidth: IMAGE.width, naturalHeight: IMAGE.height, ...IMAGE, src: BACKGROUND });
   vi.spyOn(app, 'loadImageFileAsset').mockResolvedValue({ base64: 'data:image/png;base64,AA==', getImageElement: async () => image });
   expect(await loadBackgroundFile(app, new File(['x'], 'landscape.png', { type: 'image/png' }))).toBe(true);
   app.elements.backgroundZoom.value = '175';
@@ -52,9 +71,16 @@ async function withBackground(pathOnly) {
   return { app, image };
 }
 
-/** An export whose encoder holds after its first frame until it is let finish, made to fail, or cancelled. */
+/**
+ * An export whose encoder holds after its first frame until it is let
+ * finish, made to fail, or cancelled. Each frame records the canvas it was
+ * drawn on, and every draw of the background the frame made, on any canvas:
+ * where on the main canvas, or on which other.
+ */
 async function exporting(app) {
   const frames = [];
+  const main = contextIdFor(app.canvas);
+  recordCallOrder(true);
   let started;
   let release;
   let outcome = 'complete';
@@ -66,8 +92,12 @@ async function exporting(app) {
     },
     async export({ renderFrame }) {
       const frame = async (progress) => {
+        takeOrderedCalls();
         await renderFrame(progress);
-        frames.push({ exportMode: app._isExportMode, width: app.canvas.width, height: app.canvas.height, background: app.background.image ? 'drawn' : 'hidden' });
+        const background = takeOrderedCalls()
+          .filter(([, name, source]) => name === 'drawImage' && String(source).includes(BACKGROUND))
+          .map(([surface, , , ...at]) => [surface === main ? 'main' : `canvas #${surface}`, ...at.slice(0, 4)]);
+        frames.push({ exportMode: app._isExportMode, width: app.canvas.width, height: app.canvas.height, background });
       };
       await frame(0.1);
       started();
@@ -82,7 +112,10 @@ async function exporting(app) {
   const done = app.exportVideo();
   const letGo = async () => { release?.(); await done; };
   held.add(letGo);
-  done.finally(() => held.delete(letGo));
+  done.finally(() => {
+    held.delete(letGo);
+    recordCallOrder(false);
+  });
   await running;
   return {
     frames,
@@ -95,13 +128,38 @@ async function exporting(app) {
   };
 }
 
-/** Where the display puts things: its size, its canvas, the image's place on it, and an image point's. */
+/** Where the display puts things: its size, its canvas and the size the page shows it at, the image's place on it, and an image point's. */
 const geometry = app => JSON.parse(JSON.stringify({
   display: [app.displayWidth, app.displayHeight],
   canvas: [app.canvas.width, app.canvas.height],
+  css: [app.canvas.style.width, app.canvas.style.height],
   image: app.coordinateTransform.imageBounds,
   point: app.imageToCanvas(0.25, 0.25),
 }));
+
+/**
+ * The display at the 9:16 size, worked out here: the harness's canvas area is
+ * 660 high (720, less the 60 of its playbar), so the display is 371.25 wide,
+ * its canvas 371 by 660, shown at 371.25 by 660; the image fitted into it at
+ * the zoom, and the image point (0.25, 0.25) a quarter of the way into it.
+ */
+function portraitDisplay() {
+  const width = 660 * 1080 / 1920;
+  const image = fitted(width, 660);
+  return {
+    display: [width, 660],
+    canvas: [371, 660],
+    css: [`${width}px`, '660px'],
+    image,
+    point: { x: image.x + 0.25 * image.w, y: image.y + 0.25 * image.h },
+  };
+}
+
+/** What a frame of `width` × `height` should show of the background: drawn once, on the main canvas, fitted at the zoom; or nothing, path only. */
+const frameOf = (width, height, pathOnly) => {
+  const { x, y, w, h } = fitted(width, height);
+  return { exportMode: true, width, height, background: pathOnly ? [] : [['main', x, y, w, h]] };
+};
 
 /** That, and the export size and background zoom the project keeps. */
 const placement = app => ({
@@ -115,9 +173,6 @@ async function chosenWithoutExporting(pathOnly) {
   document.getElementById('preset-9-16').click();
   return placement(app);
 }
-
-/** What an export's frames show of the background: drawn, or hidden in a path-only export. */
-const shownIn = pathOnly => (pathOnly ? 'hidden' : 'drawn');
 
 const KINDS = [['with its background', false], ['of the path only', true]];
 
@@ -142,21 +197,23 @@ test.each(KINDS.flatMap(([kind, pathOnly]) => CHANGES.map(([label, change]) => [
 
   expect(geometry(app)).toEqual(began);
   await run.completes();
-  expect(run.frames).toEqual(Array(3).fill({ exportMode: true, width: began.canvas[0], height: began.canvas[1], background: shownIn(pathOnly) }));
+  expect(run.frames).toEqual(Array(3).fill(frameOf(began.canvas[0], began.canvas[1], pathOnly)));
 });
 
-test.each(KINDS)('an export %s with no size chosen during it leaves the display as it was before it', async (_, pathOnly) => {
+const ENDINGS = ['completes', 'fails', 'is cancelled with Escape'];
+
+test.each(KINDS.flatMap(([kind, pathOnly]) => ENDINGS.map(ending => [kind, ending, pathOnly])))('an export %s with no size chosen during it, which then %s, leaves the display as it was before it', async (_, ending, pathOnly) => {
   const { app, image } = await withBackground(pathOnly);
   const before = placement(app);
   const run = await exporting(app);
 
-  await run.completes();
+  await run[ending]();
 
   expect(app.background.image).toBe(image);
   expect(placement(app)).toEqual(before);
 });
 
-test.each(KINDS.flatMap(([kind, pathOnly]) => ['completes', 'fails', 'is cancelled with Escape'].map(ending => [kind, ending, pathOnly])))('an export %s given a new size while it runs, which then %s, leaves the display as that size chosen without exporting would, and the next export draws at it', async (_, ending, pathOnly) => {
+test.each(KINDS.flatMap(([kind, pathOnly]) => ENDINGS.map(ending => [kind, ending, pathOnly])))('an export %s given a new size while it runs, which then %s, leaves the display at that size, as it would be chosen without exporting, and the next export draws at it', async (_, ending, pathOnly) => {
   const { app, image } = await withBackground(pathOnly);
   const run = await exporting(app);
 
@@ -166,9 +223,10 @@ test.each(KINDS.flatMap(([kind, pathOnly]) => ['completes', 'fails', 'is cancell
   expect(app._isExportMode).toBeFalsy();
   expect(app.background.image).toBe(image);
   const restored = placement(app);
+  expect(restored).toMatchObject(portraitDisplay());
   const next = await exporting(app);
   await next.completes();
-  expect(next.frames).toEqual(Array(3).fill({ exportMode: true, width: 1080, height: 1920, background: shownIn(pathOnly) }));
+  expect(next.frames).toEqual(Array(3).fill(frameOf(1080, 1920, pathOnly)));
   // Booting the app to compare with replaces this one's page: last.
   expect(restored).toEqual(await chosenWithoutExporting(pathOnly));
 });
