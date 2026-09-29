@@ -86,7 +86,7 @@ async function reopens(snapshot) {
   return loadSnapshot(await undrawn(), snapshot);
 }
 
-/** What a refusal leaves as it was: the network, the history, the pen (the node it is at, its selection and drag) and the banner's counts. */
+/** What a refusal leaves as it was: the network, the history, the pen (the node it is at, its selection, drag, hover and cursor) and the banner's counts. */
 function penState(app, layer) {
   const pen = app.networkEditService;
   return {
@@ -95,6 +95,8 @@ function penState(app, layer) {
     at: pen.penNodeId,
     selection: JSON.stringify(pen.selection),
     drag: JSON.stringify(pen.drag),
+    hover: JSON.stringify(pen.hover),
+    cursor: JSON.stringify(pen.cursorImg),
     banner: document.querySelector('.banner-count')?.textContent ?? null,
   };
 }
@@ -241,6 +243,69 @@ test.each([
   pen.clickNode(layer.graph.getNodes()[0]);
 
   await refused(app, layer, () => link(pen, layer), FULL.edge, told);
+});
+
+test('the pen that takes a path’s 256th bend refuses its 257th, in the same session', async () => {
+  const { app, layer, pen, told } = await editing([crowd('c', { bends: 255 })]);
+  const [edge] = layer.graph.getEdges();
+  bend(pen, edge);
+  expect(edge.controlPoints).toHaveLength(256);
+
+  await refused(app, layer, () => bend(pen, edge), FULL.bend, told);
+  expect(edge.controlPoints).toHaveLength(256);
+});
+
+test('the pen that places a crowd’s 2,000th node refuses its 2,001st, in the same session', async () => {
+  const { app, layer, pen, told } = await editing([crowd('c', { nodes: 1999, links: 1 })]);
+  expect(pen.placeNode({ x: 0.9, y: 0.9 })).not.toBeNull();
+  expect(layer.graph.getNodes()).toHaveLength(2000);
+
+  await refused(app, layer, () => pen.placeNode({ x: 0.8, y: 0.8 }), FULL.node, told);
+  expect(layer.graph.getNodes()).toHaveLength(2000);
+});
+
+test('the pen that makes a crowd’s 4,000th link refuses its 4,001st, in the same session', async () => {
+  const { app, layer, pen, told } = await editing([crowd('c', { nodes: 100, links: 3999 })]);
+  const nodes = layer.graph.getNodes();
+  pen.clickNode(nodes[0]);
+  pen.clickNode(nodes.at(-1));
+  expect(layer.graph.getEdges()).toHaveLength(4000);
+
+  await refused(app, layer, () => pen.placeNode({ x: 0.9, y: 0.9 }), FULL.edge, told);
+  expect(layer.graph.getEdges()).toHaveLength(4000);
+});
+
+test('a node refused where the crowd has no room for a node or a link says so once, for the node', async () => {
+  const { app, layer, pen, told } = await editing([crowd('c', { nodes: 2000, links: 4000 })]);
+  pen.clickNode(layer.graph.getNodes()[0]);
+
+  await refused(app, layer, () => pen.placeNode({ x: 0.9, y: 0.9 }), FULL.node, told);
+});
+
+test('a refusal leaves the pen’s hover and cursor as they were', async () => {
+  const { app, layer, pen, told } = await editing([crowd('c', { bends: 256 })]);
+  const [edge] = layer.graph.getEdges();
+  pen.setHover({ kind: 'edge', edge, insertIndex: 1 }, { x: 0.5, y: 0.5 });
+  expect(pen.hover).not.toBeNull();
+
+  await refused(app, layer, () => pen.beginEdgeBend(edge, { x: 0.5, y: 0.5 }, 1), FULL.bend, told);
+});
+
+test('at a crowd’s 4,000 links, the pen still goes on along a link there, adding nothing', async () => {
+  const { app, layer, pen, told } = await editing([crowd('c', { nodes: 100, links: 4000 })]);
+  const [first, second] = layer.graph.getNodes();
+  pen.clickNode(first);
+  const network = JSON.stringify(layer.graph.toJSON());
+  const undo = app.undoService.createSnapshot();
+  const saving = vi.spyOn(app, 'autoSave');
+
+  pen.clickNode(second);
+
+  expect([pen.penNodeId, pen.selection]).toEqual([second.id, { kind: 'node', id: second.id }]);
+  expect(JSON.stringify(layer.graph.toJSON())).toBe(network);
+  expect(app.undoService.createSnapshot()).toEqual(undo);
+  expect(saving).not.toHaveBeenCalled();
+  expect(told()).toEqual([]);
 });
 
 test('a bend refused while a node is being dragged leaves that drag as it was', async () => {
