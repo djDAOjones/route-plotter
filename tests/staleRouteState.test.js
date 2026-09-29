@@ -55,7 +55,10 @@ async function openDayMidGrow() {
   return { app, growing };
 }
 
-/** What a route feeds and schedules, as it stands. */
+/**
+ * What a route feeds and schedules, as it stands: its speed mode and the
+ * wait the renderer reads (`getPauseState`) among them.
+ */
 function routeState(app) {
   const engine = app.animationEngine;
   return {
@@ -65,12 +68,45 @@ function routeState(app) {
     branches: app.routeStructure.branches.length,
     pauses: engine.pauseMarkers.length,
     segments: engine.segmentMarkers.length,
+    variableSpeed: engine.getTimeline().hasVariableSpeed,
     beacons: engine.beaconSchedules.length,
     waiting: engine.state.isWaiting(),
+    waitShown: engine.getPauseState().isWaiting,
   };
 }
 
-const NO_ROUTE = { pathPoints: 0, trunk: 0, branchPaths: 0, branches: 0, pauses: 0, segments: 0, beacons: 0, waiting: false };
+const NO_ROUTE = {
+  pathPoints: 0, trunk: 0, branchPaths: 0, branches: 0, pauses: 0, segments: 0, variableSpeed: false, beacons: 0, waiting: false, waitShown: false,
+};
+
+test('a route deleted down to one waypoint while it waits ends the wait the renderer reads too, at the waypoint it waited at, once', async () => {
+  const { app, growing } = await openDayMidGrow();
+  const engine = app.animationEngine;
+  expect(engine.getPauseState().isWaiting).toBe(true);
+  const ended = vi.fn();
+  app.eventBus.on('animation:waypointWaitEnd', ended);
+
+  for (const waypoint of [...app.waypoints]) if (waypoint !== growing) app.eventBus.emit('waypoint:delete', waypoint);
+
+  expect([engine.state.isWaiting(), engine.getPauseState().isWaiting, engine.state.pauseWaypointIndex]).toEqual([false, false, -1]);
+  expect(ended).toHaveBeenCalledTimes(1);
+});
+
+test('a route with a leg at its own speed, deleted down to one, keeps its duration and plays through it evenly', async () => {
+  const project = threeStops();
+  project.waypoints[0].segmentSpeed = 2;
+  const app = await derivedByPreview(project);
+  const engine = app.animationEngine;
+  expect(engine.getTimeline().hasVariableSpeed).toBe(true);
+
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('c'));
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('a'));
+  await timingSettled();
+  engine.seekToTime(engine.state.duration / 2);
+
+  expect(engine.getTimeline().hasVariableSpeed).toBe(false);
+  expect(engine.state.pathProgress).toBe(0.5);
+});
 
 test('a route deleted down to one waypoint leaves nothing of itself, and its marker is drawn at rest', async () => {
   const { app, growing } = await openDayMidGrow();
