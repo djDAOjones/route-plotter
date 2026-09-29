@@ -17,9 +17,12 @@ main translate -365.714 -431.54
 main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
+main translate 640 360
+main scale 1.75 1.75
+main translate -365.714 -431.54
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 1280 720
+main fillRect 10 -270 1260 1260
 main restore
 vector canvas.width 1280
 vector canvas.height 720
@@ -134,9 +137,12 @@ main translate -365.714 -438.16
 main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
+main translate 640 360
+main scale 1.75 1.75
+main translate -365.714 -438.16
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 1280 720
+main fillRect 10 -270 1260 1260
 main restore
 vector clearRect 0 0 1280 720
 vector set:lineCap round
@@ -1319,9 +1325,12 @@ main translate -914.286 -259.2
 main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
+main translate 640 360
+main scale 1.75 1.75
+main translate -914.286 -259.2
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 1280 720
+main fillRect 10 -270 1260 1260
 main restore
 vector clearRect 0 0 1280 720
 vector set:lineCap round
@@ -3042,9 +3051,12 @@ main translate -914.286 -259.2
 main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
+main translate 640 360
+main scale 1.75 1.75
+main translate -914.286 -259.2
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 1280 720
+main fillRect 10 -270 1260 1260
 main restore
 vector clearRect 0 0 1280 720
 vector set:lineCap round
@@ -4605,9 +4617,12 @@ main translate -914.286 -259.2
 main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
+main translate 640 360
+main scale 1.75 1.75
+main translate -914.286 -259.2
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 1280 720
+main fillRect 10 -270 1260 1260
 main restore
 vector clearRect 0 0 1280 720
 vector set:lineCap round
@@ -6005,9 +6020,12 @@ main translate -914.286 -259.2
 main drawImage [canvas mask] 0 0 1280 720
 main restore
 main save
+main translate 640 360
+main scale 1.75 1.75
+main translate -914.286 -259.2
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 1280 720
+main fillRect 10 -270 1260 1260
 main restore
 vector clearRect 0 0 1280 720
 vector set:lineCap round
