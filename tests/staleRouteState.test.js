@@ -20,7 +20,7 @@ import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { trunkWaypoints } from '../src/utils/routeBranches.js';
-import { STORAGE } from '../src/config/constants.js';
+import { ANIMATION, STORAGE } from '../src/config/constants.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 
 const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -79,17 +79,26 @@ const NO_ROUTE = {
   pathPoints: 0, trunk: 0, branchPaths: 0, branches: 0, pauses: 0, segments: 0, variableSpeed: false, beacons: 0, waiting: false, waitShown: false,
 };
 
-test('a route deleted down to one waypoint while it waits ends the wait the renderer reads too, at the waypoint it waited at, once', async () => {
+test.each(['Preview', 'Edit'])('in %s, a route deleted down to one waypoint while it waits ends the wait the renderer reads too, once, naming the waypoint it waited at', async (mode) => {
   const { app, growing } = await openDayMidGrow();
   const engine = app.animationEngine;
+  if (mode === 'Edit') {
+    app.eventBus.emit('motion:preview-mode-change', false);
+    await timingSettled();
+    const pause = engine.pauseMarkers.find(each => each.duration > 0);
+    engine.seekToTime((engine.startHandleTime || 0) + (engine.introTime || 0) + pause.timelineStartMs + 100);
+  }
+  expect(app.previewMode).toBe(mode === 'Preview');
   expect(engine.getPauseState().isWaiting).toBe(true);
+  const waitedAt = engine.state.pauseWaypointIndex;
+  expect(waitedAt).toBeGreaterThanOrEqual(0);
   const ended = vi.fn();
   app.eventBus.on('animation:waypointWaitEnd', ended);
 
   for (const waypoint of [...app.waypoints]) if (waypoint !== growing) app.eventBus.emit('waypoint:delete', waypoint);
 
   expect([engine.state.isWaiting(), engine.getPauseState().isWaiting, engine.state.pauseWaypointIndex]).toEqual([false, false, -1]);
-  expect(ended).toHaveBeenCalledTimes(1);
+  expect(ended.mock.calls).toEqual([[waitedAt]]);
 });
 
 test('a route with a leg at its own speed, deleted down to one, keeps its duration and plays through it evenly', async () => {
@@ -106,6 +115,33 @@ test('a route with a leg at its own speed, deleted down to one, keeps its durati
 
   expect(engine.getTimeline().hasVariableSpeed).toBe(false);
   expect(engine.state.pathProgress).toBe(0.5);
+});
+
+test('a route deleted down to one leaves the transport where it was, and its last marker drawn as that place shows it', async () => {
+  // The duration and the place in it are kept when a route goes. A reset of
+  // the path's place passed every test that seeked afterwards, and drew a
+  // marker set to hide once passed again.
+  const app = await derivedByPreview(threeStops());
+  const engine = app.animationEngine;
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('c'));
+  await timingSettled();
+  app.eventBus.emit('motion:waypoint-visibility-change', 'hide-after');
+  engine.seekToProgress(0.6);
+  const transport = () => ({
+    duration: engine.state.duration, pathProgress: engine.state.pathProgress,
+    progress: engine.state.progress, currentTime: engine.state.currentTime,
+  });
+  const kept = transport();
+  expect(kept.pathProgress).toBeGreaterThan(0);
+
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('a'));
+  await timingSettled();
+  expect(transport()).toEqual(kept);
+
+  const visibility = vi.spyOn(app.motionVisibilityService, 'getWaypointVisibility');
+  app.render();
+  expect(visibility.mock.calls.map(([waypoint]) => waypoint.id)).toEqual(['b']);
+  expect(visibility.mock.results[0].value.visible).toBe(false);
 });
 
 test('a route deleted down to one waypoint leaves nothing of itself, and its marker is drawn at rest', async () => {
@@ -521,7 +557,41 @@ test.each([
 
   expect(app.animationEngine.pauseMarkers[0].pathProgress).toBeCloseTo(app.getWaypointProgressValues()[1], 8);
   expect(app.animationEngine.pauseMarkers[0].pathProgress).not.toBeCloseTo(0.5, 3);
-  expect(app.animationEngine.state.duration).not.toBe(before);
+  const moved = app.animationEngine.state.duration;
+  expect(moved).not.toBe(before);
+  // …at the speed set, not the default's
+  const { speed } = app.animationEngine.state;
+  expect(moved).toBeCloseTo(rebuiltAt(app, speed), 6);
+});
+
+/** The duration the route as it stands has at `speed`, rebuilt now: what any retime should give. */
+function rebuiltAt(app, speed) {
+  app.calculatePath();
+  return app.invalidateAnimationTiming(speed);
+}
+
+test.each([80, 650].flatMap(speed => ['constant-time', 'constant-speed'].flatMap(mode =>
+  ['at once', 'once its retime has run'].map(when => [speed, mode, when]))))(
+  'at %i px/s, a %s route whose stop moved and was saved %s has, saves and reopens with its duration at that speed', async (speed, mode, when) => {
+  // A retime at the default speed, not the speed set, passed every test that
+  // asked only that the duration change, or that saved and live agree.
+  const project = threeStops();
+  Object.assign(project.animationState, { mode, speed });
+  const app = await derivedByPreview(project);
+  dragging(app, 'b', 0.3, 0.7);
+  if (when !== 'at once') await timingSettled();
+  const saved = await savedProject(app);
+  await timingSettled();
+  const live = app.animationEngine.state.duration;
+  const reopened = await reopenedDuration(saved);
+
+  expect(app.animationEngine.state.speed).toBe(speed);
+  const expected = rebuiltAt(app, speed);
+  expect(expected).not.toBeCloseTo(rebuiltAt(app, ANIMATION.DEFAULT_SPEED), 0);
+  expect(live).toBeCloseTo(expected, 6);
+  // A constant-speed file's duration is rebuilt when it opens; a constant-time one's is kept.
+  if (mode === 'constant-time') expect(saved.animationState.duration).toBeCloseTo(expected, 6);
+  expect(reopened).toBeCloseTo(expected, 6);
 });
 
 /** A stop dragged and not yet let go: the route changes, and nothing is saved. */
