@@ -42,10 +42,12 @@ DEF-46 — A video export is the app's from the moment it is asked for to the
 end of its clean-up: another asked for meanwhile, by a control, the bus, or
 a script called back by the export's own setting up or clean-up, is refused
 before it touches it, its size included, so it no longer spoils its frames,
-mode and buttons. Overlapping MP4 probes are superseded, not refused: a codec
-probe, or the dialog it opened, answers only for the export the author last
-asked for, so a stale one starts nothing, and an open dialog closes rather
-than holding Escape from the export. (2026-09-28)
+mode and buttons, and Export MP4 starts no codec probe meanwhile. Overlapping
+MP4 probes are superseded, not refused: a codec probe, or the dialog it
+opened, answers only for the export the author last asked for, so a stale
+one starts nothing, and an open dialog closes rather than holding Escape from
+the export. Each part of an export's clean-up runs whether or not another
+fails, and its controls are freed whatever failed. (2026-09-28)
 
 ## Before the big run (2026-09-28)
 

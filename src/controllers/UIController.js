@@ -241,6 +241,8 @@ export class UIController {
      * @private @type {number}
      */
     this._exportIntent = 0;
+    /** @type {boolean} Whether a video export is the app's (DEF-46) */
+    this._exportRunning = false;
 
     // Bind methods that are passed as callbacks
     this.updateWaypointList = this.updateWaypointList.bind(this);
@@ -567,6 +569,18 @@ export class UIController {
     const intent = this._exportIntent;
     this._closeCodecModal?.();
     return intent;
+  }
+
+  /**
+   * Whether a video export is the app's (DEF-46): while it is, Export MP4
+   * asks for nothing, not even a probe, whatever sends it a click. The app
+   * says so before anything its export does can call back (closing a codec
+   * dialog gives focus back, before the buttons are disabled), and again
+   * once the export has let go.
+   * @param {boolean} running
+   */
+  exportRunning(running) {
+    this._exportRunning = running;
   }
 
   /**
@@ -921,7 +935,7 @@ export class UIController {
       // Disabled while an export runs: a click sent to it then (a script's)
       // asks for nothing, not even a probe, whose dialog would open over the
       // export (DEF-46).
-      if (this.elements.exportMp4Btn.disabled) return;
+      if (this.elements.exportMp4Btn.disabled || this._exportRunning) return;
       const w = parseInt(this.elements.exportResX?.value) || 1920;
       const h = parseInt(this.elements.exportResY?.value) || 1080;
       console.log(`🎬 [Export] MP4 probe at ${w}×${h}`);

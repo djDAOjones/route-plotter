@@ -130,6 +130,7 @@ function watchRunningExport(app) {
 test('a second export asked for while one runs is refused before it touches anything, and the first draws every frame as it began', async () => {
   const { app, frames, running, finish } = await exportingApp();
   const announce = vi.spyOn(app, 'announce');
+  const label = document.getElementById('export-dropdown-btn').textContent;
   const first = app.exportVideo();
   await running;
   const size = { width: app.canvas.width, height: app.canvas.height };
@@ -154,6 +155,8 @@ test('a second export asked for while one runs is refused before it touches anyt
   expect(announce).toHaveBeenLastCalledWith('Video export complete');
   expect(app._isExportMode).toBe(false);
   expect(exportButtons()).toEqual([false, false, false, false]);
+  // The menu shows its own label again
+  expect(progress.textContent).toBe(label);
 
   // And the next export, asked for once this one has ended, runs.
   const next = app.exportVideo();
@@ -819,4 +822,129 @@ test.each([
 
   expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['mp4']);
   expect(frames).toEqual(Array(3).fill({ exportMode: true, width: reducedWidth, height: reducedHeight, background: 'hidden' }));
+});
+
+test.each(['while it runs', 'once it ends'])('Export MP4 clicked from focus given back as an export closes a codec dialog asks for nothing, %s', async (when) => {
+  const { app, running, finish } = await openDialog(DIALOGS[1][1]);
+  let answer;
+  const probe = VideoExporter._testWebCodecsConfig;
+  probe.mockImplementationOnce(() => new Promise((resolve) => { answer = resolve; }));
+  const probes = probe.mock.calls.length;
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const clicked = onNextFocus(() => app.elements.exportMp4Btn.click());
+
+  const first = app.exportVideo({ format: 'webm' });
+  await running;
+  if (when === 'once it ends') {
+    finish();
+    await first;
+  }
+  answer?.(when === 'once it ends' ? { codec: 'avc1' } : null);
+  await answered();
+  await answered();
+
+  expect(clicked).toHaveLength(1);
+  expect(probe.mock.calls.length - probes).toBe(0);
+  expect(codecDialogShown()).toBe(false);
+  finish();
+  await first;
+  await answered();
+  expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['webm']);
+});
+
+test.each([
+  ['its clean-up', app => vi.spyOn(app, '_exitExportMode').mockImplementationOnce(() => { throw new Error('the clean-up failed'); })],
+  ['its starting announcement', app => vi.spyOn(app, 'announce').mockImplementationOnce(() => { throw new Error('the announcement failed'); })],
+])('an export that throws in %s puts back what it can, frees the controls, and the next export runs from them', async (where, fail) => {
+  const { app, running, finish, frames } = await exportingApp();
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const image = document.createElement('canvas');
+  image.width = 1600;
+  image.height = 1000;
+  app.background.image = image;
+  app.exportSettings.pathOnly = true;
+  const transport = app.animationEngine.state.captureTransportState();
+  const label = document.getElementById('export-dropdown-btn').textContent;
+  fail(app);
+  if (where === 'its starting announcement') allowConsole(/Video export failed/);
+
+  const first = app.exportVideo();
+  if (where === 'its clean-up') {
+    const failed = expect(first).rejects.toThrow('the clean-up failed');
+    await running;
+    finish();
+    await failed;
+  } else {
+    await first;
+  }
+
+  expect([app._videoExportRunning, exportButtons()]).toEqual([false, [false, false, false, false]]);
+  expect(document.getElementById('export-dropdown-btn').textContent).toBe(label);
+  expect(app.background.image).toBe(image);
+  expect(app.animationEngine.state.captureTransportState()).toEqual(transport);
+  const before = encode.mock.calls.length;
+  const drawn = frames.length;
+  app.elements.exportWebmBtn.click();
+  // The next export's first frame, then its hold let go.
+  await vi.waitFor(() => expect(frames.length).toBe(drawn + 1));
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+  expect(encode.mock.calls.length).toBe(before + 1);
+  expect(encode.mock.calls.at(-1)[0].format).toBe('webm');
+});
+
+test('the reduced MP4 chosen in a codec dialog holds the export before its size is set: a request made as the size changes is refused', async () => {
+  const { app, running, finish } = await openDialog(DIALOGS[1][1]);
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const held = [];
+  const onSize = () => {
+    app.eventBus.off('video:resolution-change', onSize);
+    held.push(app._videoExportRunning);
+    app.eventBus.emit('video:export-request', 'webm');
+  };
+  app.eventBus.on('video:resolution-change', onSize);
+
+  document.getElementById('codec-mp4-reduced').click();
+  await running;
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+
+  expect(held).toEqual([true]);
+  expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['mp4']);
+});
+
+test.each([
+  ['its download link is clicked', (app, request) => {
+    VideoExporter.downloadBlob.mockRestore();
+    const clicked = (event) => {
+      if (!event.target.matches('a[download]')) return;
+      event.preventDefault();
+      document.removeEventListener('click', clicked);
+      request();
+    };
+    document.addEventListener('click', clicked);
+  }],
+  ['its transport is put back', (app, request) => {
+    const seeked = () => {
+      if (app._isExportMode) return;
+      app.eventBus.off('animation:seek', seeked);
+      request();
+    };
+    app.eventBus.on('animation:seek', seeked);
+  }],
+])('an export asked for as a finishing export’s %s is refused, and the controls are free once it has let go', async (_, at) => {
+  const { app, running, finish } = await exportingApp();
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  const nested = [];
+  at(app, () => nested.push(app.exportVideo()));
+
+  const first = app.exportVideo();
+  await running;
+  finish();
+  await first;
+  await Promise.all(nested);
+
+  expect(nested).toHaveLength(1);
+  expect(encode).toHaveBeenCalledTimes(1);
+  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
 });

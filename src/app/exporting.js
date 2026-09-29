@@ -26,6 +26,29 @@ export function refuseWhileExporting(app) {
   return true;
 }
 
+/**
+ * Disable the export controls (the menu's toggle, MP4, WebM, HTML) while an
+ * export is the app's; `release()`, when it has let go, enables them and
+ * gives the toggle its text back, whatever part of the clean-up failed
+ * (DEF-46). A module helper, so a host that borrows `exportVideo` alone
+ * keeps it.
+ * @param {Object} app
+ * @returns {{menu: HTMLElement|null, release: function(): void}}
+ */
+function holdExportControls(app) {
+  const menu = document.getElementById('export-dropdown-btn');
+  const buttons = [menu, app.elements?.exportMp4Btn, app.elements?.exportWebmBtn, app.elements?.exportHtmlBtn].filter(Boolean);
+  const text = menu?.textContent;
+  for (const button of buttons) button.disabled = true;
+  return {
+    menu,
+    release() {
+      for (const button of buttons) button.disabled = false;
+      if (menu) menu.textContent = text;
+    },
+  };
+}
+
 export const exportingMixin = {
   
   /**
@@ -114,14 +137,21 @@ export const exportingMixin = {
     if (refuseWhileExporting(this)) return;
     // The export is this app's from here to the end of its clean-up. What it
     // does on the way can call back at once (closing a codec dialog gives
-    // focus back; a size or a mode change emits), and a request made then is
-    // refused, not run inside this one. Released last, even if the clean-up
-    // throws, so no later export is refused for good (DEF-46).
+    // focus back; a size, a mode or a seek emits; the download clicks a
+    // link), and a request made then is refused, not run inside this one;
+    // the export controls hear of it first, so Export MP4 starts no probe
+    // meanwhile. It is let go last, even if the clean-up throws, and the
+    // controls with it, so no later export is refused for good (DEF-46).
     this._videoExportRunning = true;
+    let controls = null;
     try {
+      this.uiController?.exportRunning?.(true);
       // This is the export the author now asks for, by whatever route: a codec
       // probe or dialog from an earlier request asks for nothing.
       this.uiController?.exportRequested?.();
+      // The export controls disabled while it is the app's (closing a codec
+      // dialog, just now, gave focus back to one of them first).
+      controls = holdExportControls(this);
       // The size and format asked for with it, now that no other can start.
       if (resolution) this.eventBus.emit('video:resolution-change', resolution);
       if (format) this.exportSettings.format = format;
@@ -131,29 +161,15 @@ export const exportingMixin = {
         alert('Please add at least 2 waypoints before exporting.');
         return;
       }
-    
+
       // Initialize exporter if needed
       if (!this.videoExporter) {
         this.videoExporter = new VideoExporter(this.canvas, this.eventBus);
       }
 
-      // Export steps the shared engine, so suspend it without changing the
-      // user's latched play/pause state or temporary review speed. Progress is
-      // captured in timeline space and restored only after the old mode returns.
-      const transportState = this.animationEngine.suspendTransport();
-      const wasPreviewMode = this.previewMode;
-    
-      // Disable all export buttons and show progress on the dropdown toggle
-      const exportDropdownBtn = document.getElementById('export-dropdown-btn');
-      const originalText = exportDropdownBtn.textContent;
-      exportDropdownBtn.textContent = 'Exporting... 0%';
-      exportDropdownBtn.disabled = true;
-      if (this.elements.exportMp4Btn) this.elements.exportMp4Btn.disabled = true;
-      if (this.elements.exportWebmBtn) this.elements.exportWebmBtn.disabled = true;
-      if (this.elements.exportHtmlBtn) this.elements.exportHtmlBtn.disabled = true;
-    
-      this.announce('Starting video export — press Esc to cancel');
-    
+      // Show progress on the menu's toggle
+      if (controls.menu) controls.menu.textContent = 'Exporting... 0%';
+
       // Capture-phase Escape handler — cancels export and blocks other keydown listeners
       const onEscapeKey = (e) => {
         if (e.key === 'Escape') {
@@ -164,25 +180,33 @@ export const exportingMixin = {
           }
         }
       };
-      window.addEventListener('keydown', onEscapeKey, true); // capture phase
-    
-      // Listen for visibility-aware pause/resume (MediaRecorder fallback only)
+      // Visibility-aware pause/resume (MediaRecorder fallback only)
       const onExportPaused = () => {
-        exportDropdownBtn.textContent = 'Export paused — return to tab';
+        if (controls.menu) controls.menu.textContent = 'Export paused — return to tab';
         this.announce('Video export paused. Return to this tab to resume.');
       };
       const onExportResumed = () => {
-        exportDropdownBtn.textContent = 'Exporting...';
+        if (controls.menu) controls.menu.textContent = 'Exporting...';
         this.announce('Video export resumed');
       };
-      this.eventBus.on('video:export-paused', onExportPaused);
-      this.eventBus.on('video:export-resumed', onExportResumed);
-    
+
       // Store original background state for path-only export
       const pathOnly = this.exportSettings.pathOnly;
       const originalBackgroundImage = this.background.image;
+      const wasPreviewMode = this.previewMode;
 
+      // Export steps the shared engine, so suspend it without changing the
+      // user's latched play/pause state or temporary review speed. Progress is
+      // captured in timeline space and restored only after the old mode returns.
+      // From here every change is put back, each part whether or not another
+      // part of the putting back fails.
+      const transportState = this.animationEngine.suspendTransport();
       try {
+        this.announce('Starting video export — press Esc to cancel');
+        window.addEventListener('keydown', onEscapeKey, true); // capture phase
+        this.eventBus.on('video:export-paused', onExportPaused);
+        this.eventBus.on('video:export-resumed', onExportResumed);
+
         // Use the same mode transition as the UI. Its event chain rebuilds the
         // preview timeline; the explicit invalidation also covers exports that
         // begin while Preview is already selected.
@@ -210,7 +234,7 @@ export const exportingMixin = {
           duration: duration,
           format: this.exportSettings.format,
           startBuffer: VIDEO_EXPORT.START_BUFFER_MS,
-        
+
           // Render function called for each frame
           renderFrame: async (progress) => {
             // Seek animation to this progress point
@@ -218,17 +242,17 @@ export const exportingMixin = {
             // Render the frame (with or without background based on pathOnly)
             this.render();
           },
-        
+
           // Progress callback
           onProgress: (percent) => {
-            exportDropdownBtn.textContent = `Exporting... ${percent}% · Esc to cancel`;
+            if (controls.menu) controls.menu.textContent = `Exporting... ${percent}% · Esc to cancel`;
           }
         });
-      
+
         // Download the video
         VideoExporter.downloadBlob(blob);
         this.announce('Video export complete');
-      
+
       } catch (error) {
         if (error.message === 'Export cancelled') {
           console.log('🛑 [Export] Cancelled by user');
@@ -238,37 +262,39 @@ export const exportingMixin = {
           alert(`Export failed: ${error.message}`);
           this.announce('Video export failed');
         }
-      
-      } finally {
-        // Clean up listeners
-        window.removeEventListener('keydown', onEscapeKey, true);
-        this.eventBus.off('video:export-paused', onExportPaused);
-        this.eventBus.off('video:export-resumed', onExportResumed);
-      
-        // Restore canvas to display resolution (must happen before render)
-        this._exitExportMode();
-      
-        // Restore background if it was hidden for path-only export
-        if (pathOnly) {
-          this.background.image = originalBackgroundImage;
-        }
 
+      } finally {
+        const failures = [];
+        const putBack = (step) => {
+          try {
+            step();
+          } catch (error) {
+            failures.push(error);
+          }
+        };
+        // Clean up listeners
+        putBack(() => window.removeEventListener('keydown', onEscapeKey, true));
+        putBack(() => this.eventBus.off('video:export-paused', onExportPaused));
+        putBack(() => this.eventBus.off('video:export-resumed', onExportResumed));
+        // Restore canvas to display resolution (must happen before render)
+        putBack(() => this._exitExportMode());
+        // Restore background if it was hidden for path-only export
+        putBack(() => {
+          if (pathOnly) this.background.image = originalBackgroundImage;
+        });
         // Restore the original timeline shape before feeding its timeline
         // progress back into the engine, then restore transport flags and speed.
-        this._setPreviewMode(wasPreviewMode);
-        this.animationEngine.restoreTransportState(transportState);
-
-        // Restore button state
-        exportDropdownBtn.disabled = false;
-        exportDropdownBtn.textContent = originalText;
-        if (this.elements.exportMp4Btn) this.elements.exportMp4Btn.disabled = false;
-        if (this.elements.exportWebmBtn) this.elements.exportWebmBtn.disabled = false;
-        if (this.elements.exportHtmlBtn) this.elements.exportHtmlBtn.disabled = false;
-
-        this.queueRender();
+        putBack(() => this._setPreviewMode(wasPreviewMode));
+        putBack(() => this.animationEngine.restoreTransportState(transportState));
+        putBack(() => this.queueRender());
+        if (failures.length > 0) {
+          throw failures.length === 1 ? failures[0] : new AggregateError(failures, 'The display could not be put back in full after the export');
+        }
       }
     } finally {
       this._videoExportRunning = false;
+      controls?.release();
+      this.uiController?.exportRunning?.(false);
     }
   },
   
