@@ -139,14 +139,17 @@ function retimeRoute(app) {
 }
 
 /**
- * Run now the timing rebuild a route change has queued, if it has not run.
- * A snapshot taken before it paired the route with the timeline it had
- * before, and recovery then reopened a constant-time route with the earlier
- * duration as the author's (DEF-06).
+ * Before a snapshot a project reopens by (browser recovery, Save Project, an
+ * HTML export): run now a queued rebuild whose duration reopening would
+ * keep, that of a constant-time route whose timing is a rebuild's. A
+ * snapshot taken before it paired the route with the duration it had
+ * before, which reopening then kept as the author's (DEF-06). A
+ * constant-speed route's duration is rebuilt when it opens, so its rebuild
+ * stays queued, and a run of edits stays one rebuild.
  * @param {Object} app
  */
-export function settleRouteTiming(app) {
-  if (!app._durationUpdateTimeout) return;
+export function settleSavedTiming(app) {
+  if (!app._durationUpdateTimeout || app.animationEngine?.state.mode === 'constant-speed') return;
   clearTimeout(app._durationUpdateTimeout);
   app._durationUpdateTimeout = null;
   retimeRoute(app);

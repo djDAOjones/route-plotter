@@ -34,7 +34,7 @@ import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
 import { buildExampleProjects } from '../examples/index.js';
-import { clearRouteSchedules, settleRouteTiming } from './pathTiming.js';
+import { clearRouteSchedules, settleSavedTiming } from './pathTiming.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -608,6 +608,7 @@ function stripAssetReferences(modelSnapshot) {
  * image references that cannot be hydrated without those bytes.
  */
 function prepareAutosaveSnapshot(app) {
+  settleSavedTiming(app);
   const hasAssets = app.imageAssetService?.getAssetCount?.() > 0;
   const hasBackground = Boolean(app.background?.image);
   try {
@@ -974,6 +975,7 @@ export const persistenceMixin = {
       // ZIP assets are archived separately; the canonical model builder owns
       // every other field so explicit save, recovery and HTML export cannot
       // drift on additive project metadata such as the render reference.
+      settleSavedTiming(this);
       const projectData = this._buildProjectSnapshot({ includeAssets: false });
       
       // Preserve the original validated PNG/JPEG/WebP bytes exactly. Export
@@ -1208,9 +1210,6 @@ export const persistenceMixin = {
   autoSave() {
     // Mark as dirty when changes are made
     this.markDirty();
-    // A route change queues its timing rebuild: run it first, so recovery
-    // keeps the route with its own timeline (DEF-06).
-    settleRouteTiming(this);
 
     try {
       const prepared = prepareAutosaveSnapshot(this);

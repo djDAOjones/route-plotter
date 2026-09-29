@@ -21,6 +21,7 @@ import { allowConsole } from './helpers/consoleGuard.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { trunkWaypoints } from '../src/utils/routeBranches.js';
 import { STORAGE } from '../src/config/constants.js';
+import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 
 const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -485,4 +486,140 @@ test.each([
   expect(app.animationEngine.pauseMarkers[0].pathProgress).toBeCloseTo(app.getWaypointProgressValues()[1], 8);
   expect(app.animationEngine.pauseMarkers[0].pathProgress).not.toBeCloseTo(0.5, 3);
   expect(app.animationEngine.state.duration).not.toBe(before);
+});
+
+/** A stop dragged and not yet let go: the route changes, and nothing is saved. */
+const dragging = (app, id, imgX, imgY) => app.eventBus.emit('waypoint:position-changed', { waypoint: app.getWaypointById(id), imgX, imgY, isDragging: true });
+
+test.each([
+  ['Save Project', async (app) => {
+    let saved = null;
+    vi.spyOn(app.imageAssetService, 'exportZip').mockImplementation(async (project) => { saved = project; return new Blob(['zip']); });
+    vi.spyOn(app.imageAssetService, 'downloadZip').mockImplementation(() => {});
+    await app.saveProject();
+    return saved;
+  }],
+  ['an HTML export', async (app) => {
+    // An HTML export carries its background, so the project needs one.
+    const image = Object.assign(new Image(), { naturalWidth: 1600, naturalHeight: 900, width: 1600, height: 900 });
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    vi.spyOn(app, 'loadImageFileAsset').mockResolvedValue({ base64: png, getImageElement: async () => image });
+    expect(await loadBackgroundFile(app, new File(['x'], 'background.png', { type: 'image/png' }))).toBe(true);
+    dragging(app, 'b', 0.3, 0.65);
+    let saved = null;
+    vi.spyOn(app.htmlExportService, 'estimateSize').mockResolvedValue({ formatted: '1 KB' });
+    vi.spyOn(app.htmlExportService, 'exportHTML').mockImplementation(async ({ projectData }) => { saved = projectData; return new Blob(['html']); });
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:export');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    await app.exportHTML();
+    return saved;
+  }],
+])('%s made mid-drag, before the route’s rebuild has run, holds the route with its own duration', async (_, save) => {
+  const app = await derivedByPreview(threeStops());
+  dragging(app, 'b', 0.25, 0.7);
+
+  const saved = await save(app);
+
+  await timingSettled();
+  const b = app.getWaypointById('b');
+  expect(saved.waypoints.find(each => each.id === 'b')).toMatchObject({ imgX: b.imgX, imgY: b.imgY });
+  expect(saved.animationState.duration).toBe(app.animationEngine.state.duration);
+});
+
+test('a video export begun just after a stop moved keeps the duration it began with, all through', async () => {
+  const app = await derivedByPreview(threeStops());
+  move(app, 'b', 0.25, 0.7);
+  vi.stubGlobal('alert', vi.fn());
+  const durations = [];
+  let requested;
+  app.videoExporter = {
+    cancel() {},
+    async export({ renderFrame }) {
+      requested = app.animationEngine.state.duration;
+      await renderFrame(0.1);
+      durations.push(app.animationEngine.state.duration);
+      // Past the 50 ms a queued rebuild waits.
+      await timingSettled();
+      await renderFrame(0.5);
+      durations.push(app.animationEngine.state.duration);
+      return new Blob(['video']);
+    },
+  };
+  vi.spyOn(app, 'announce');
+  const { VideoExporter } = await import('../src/services/VideoExporter.js');
+  vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+
+  await app.exportVideo();
+
+  expect(durations).toEqual([requested, requested]);
+  vi.unstubAllGlobals();
+});
+
+test.each([
+  // A drag under way queues the rebuild and saves nothing.
+  ['when its time came', app => dragging(app, 'b', 0.25, 0.7)],
+  ['when the save that followed it settled it', app => move(app, 'b', 0.25, 0.7)],
+])('once a route’s rebuild has run (%s), a change that leaves the route alone rebuilds nothing', async (_, change) => {
+  const app = await derivedByPreview(threeStops());
+  change(app);
+  await timingSettled();
+  const rebuilds = vi.spyOn(app, 'updateAnimationDuration');
+
+  app.autoSave();
+
+  expect(rebuilds).not.toHaveBeenCalled();
+});
+
+test('in constant-speed timing, a run of saved edits to the route is rebuilt once, after the last', async () => {
+  const project = threeStops();
+  project.animationState = { mode: 'constant-speed', speed: 200, duration: 0 };
+  const app = await opened(project);
+  await timingSettled();
+  const rebuilds = vi.spyOn(app, 'updateAnimationDuration');
+
+  for (let step = 1; step <= 10; step += 1) move(app, 'b', 0.5 - step * 0.01, 0.5);
+
+  expect(rebuilds).not.toHaveBeenCalled();
+  await timingSettled();
+  expect(rebuilds).toHaveBeenCalledTimes(1);
+});
+
+test.each([
+  ['a Spotlight Reveal’s intro', app => app.eventBus.emit('motion:background-visibility-change', 'spotlight-reveal')],
+  ['a comet path’s tail', app => app.eventBus.emit('motion:path-visibility-change', 'instantaneous')],
+])('a constant-time project of one waypoint opened over %s, given its second, is timed as a fresh app times it', async (_, timeline) => {
+  const app = await derivedByPreview(threeStops());
+  timeline(app);
+  await timingSettled();
+  const incoming = authoredConstantTime([{ id: 'first', imgX: 0.2, imgY: 0.2, isMajor: true }]);
+  incoming.motionSettings = { backgroundVisibility: 'always-show', pathVisibility: 'always-show' };
+  expect(await loadSnapshot(app, incoming)).toBe(true);
+  app.eventBus.emit('waypoint:add', { imgX: 0.8, imgY: 0.8, isMajor: true });
+  await timingSettled();
+
+  const fresh = await opened(incoming);
+  fresh.eventBus.emit('waypoint:add', { imgX: 0.8, imgY: 0.8, isMajor: true });
+  await timingSettled();
+  expect(timelineOf(app)).toEqual(timelineOf(fresh));
+  app.animationEngine.seekToTime(6000);
+  expect(app.animationEngine.state.pathProgress).toBe(0.5);
+});
+
+test.each([
+  ['a Spotlight Reveal’s intro', app => app.eventBus.emit('motion:background-visibility-change', 'spotlight-reveal'), 'introMs'],
+  ['a comet path’s tail', app => app.eventBus.emit('motion:path-visibility-change', 'instantaneous'), 'totalTailMs'],
+])('a route deleted down to one keeps the last timeline’s %s, as on main', async (_, timeline, field) => {
+  const app = await derivedByPreview(threeStops());
+  timeline(app);
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('c'));
+  await timingSettled();
+  const kept = app.animationEngine.getLiveTiming()[field];
+  expect(kept).toBeGreaterThan(0);
+
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('a'));
+  await timingSettled();
+
+  expect(app.waypoints).toHaveLength(1);
+  expect(app.animationEngine.getLiveTiming()[field]).toBe(kept);
 });
