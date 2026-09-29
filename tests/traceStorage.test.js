@@ -18,6 +18,7 @@ import { allowConsole } from './helpers/consoleGuard.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { getRetainedBackgroundDataURL, stageProjectModel } from '../src/app/persistence.js';
 import { STORAGE } from '../src/config/constants.js';
+import { applyTraceToLayer, traceRouteIntoGraph } from '../src/utils/routeTrace.js';
 
 const major = (id, name = id, extra = {}) => ({ id, name, imgX: 0.2, imgY: 0.3, isMajor: true, ...extra });
 
@@ -227,13 +228,17 @@ test('a trace that replaces a network the project could not store makes one it c
   expect(await reopened(app._buildProjectSnapshot())).not.toBeNull();
 });
 
-test('a project with a setting the loader refuses is not traced, and the recovery it had pending is written as it was', async () => {
+test.each([
+  ['an animation setting', app => { app.animationEngine.state.speed = 10001; }],
+  ['a crowd whose emitter', app => { app.scene.flowLayers[0].emitters[0].dotCount = 20001; }],
+  ['an export setting', app => { app.exportSettings.frameRate = 10001; }],
+])('a project with %s the loader refuses is not traced, and the recovery it had pending is written as it was', async (_, spoil) => {
   const app = await withRoute([major('start', 'Main entrance'), major('end', 'Library')]);
   app.autoSave();
   const pending = app.storageService._pendingAutoSave;
   const revision = app._editRevision;
   const network = JSON.stringify(app.scene.flowLayers[0].graph.toJSON());
-  app.animationEngine.state.speed = 10001;
+  spoil(app);
 
   const { traced, told } = trace(app, app.scene.flowLayers[0]);
 
@@ -277,6 +282,74 @@ test('a leg of 257 bends from a major with no name is refused, as a leg of the r
   await refused(app, app.scene.flowLayers[0], 'A leg of the route has 257 bends, more than the 256 a crowd’s path can hold. '
     + 'Remove some of its minor waypoints, then trace again.');
 });
+
+/** What a string or a value takes in a file: its UTF-8 bytes, and how many values it holds (each object, array and item). */
+const bytesOf = text => new TextEncoder().encode(text).length;
+const valuesIn = value => 1 + (value && typeof value === 'object' ? Object.values(value).reduce((sum, each) => sum + valuesIn(each), 0) : 0);
+
+/** A project's file metadata as Save Project writes it, with no images or background: `project.json` and its (empty) manifest. */
+const fileMetadata = project => JSON.stringify({ ...project, assetManifest: [] }, null, 2);
+
+/** The project the trace would make, worked out here: the project as saved, the crowd's network the trace's. */
+function traced(app, layer) {
+  const project = app._buildProjectSnapshot({ includeAssets: false });
+  const network = { graph: new layer.graph.constructor() };
+  applyTraceToLayer(network, traceRouteIntoGraph(app.waypoints));
+  project.scene.flowLayers = project.scene.flowLayers.map(each => (each.id === layer.id
+    ? { ...layer.toJSON(), guideType: 'graph', graph: network.graph.toJSON() } : each));
+  return project;
+}
+
+test('a trace whose project would hold just over its values, counting what its crowds’ emitters hold, is not traced; the project was one that saves and reopens', async () => {
+  // A name that is a long array (a file may name a major so), copied into its node's label: the project then
+  // holds a value short of its budget but for the trace, whose emitters' values take it past.
+  const app = await withRoute([major('start', []), major('end', 'Library')]);
+  const layer = app.scene.flowLayers[0];
+  app.waypoints[0].name = Array(Math.ceil((100001 - valuesIn(traced(app, layer))) / 2)).fill(null);
+  const before = app._buildProjectSnapshot({ includeAssets: false });
+  const after = traced(app, layer);
+  expect(() => stageProjectModel(JSON.parse(JSON.stringify(before)))).not.toThrow();
+  expect(valuesIn(after)).toBeGreaterThan(100000);
+  expect(() => stageProjectModel(JSON.parse(JSON.stringify(after)))).toThrow('Project metadata is too deeply nested or complex');
+  expect(bytesOf(app.imageAssetService.prepareArchive(after).projectJSON)).toBeLessThan(2 * 1024 * 1024);
+  const reopensFrom = async zip => { const fresh = await bootApp(); await fresh.ready; return fresh.loadProject(zip); };
+  expect(await reopensFrom(await app.imageAssetService.exportZip(before))).toBe(true);
+
+  await refused(app, layer, 'This route can’t be traced into a crowd: Project metadata is too deeply nested or complex.');
+});
+
+test.each([
+  ['exactly 2 MB is traced, and the file and recovery reopen', 0],
+  ['a byte more is not traced', 1],
+])('a trace whose file metadata would be %s', async (_, over) => {
+  const limit = 2 * 1024 * 1024;
+  const app = await withRoute(Array.from({ length: 900 }, (_, index) => major(`w${index}`, 'q'.repeat(40))));
+  const layer = app.scene.flowLayers[0];
+  // Worked out here, and as Save Project's own preparation writes it
+  expect(fileMetadata(traced(app, layer))).toBe(app.imageAssetService.prepareArchive(traced(app, layer)).projectJSON);
+  // The first major's name appears twice (the waypoint and its node), the crowd's once: make up the bytes to the limit
+  let gap = limit + over - bytesOf(fileMetadata(traced(app, layer)));
+  expect(gap).toBeGreaterThan(0);
+  if (gap % 2) {
+    layer.name += 'x';
+    gap -= 1;
+  }
+  app.waypoints[0].name += 'q'.repeat(gap / 2);
+  expect(bytesOf(fileMetadata(traced(app, layer)))).toBe(limit + over);
+
+  if (over) {
+    await refused(app, layer, 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
+    return;
+  }
+  expect(trace(app, layer).traced).toBe(true);
+  const saved = app._buildProjectSnapshot({ includeAssets: false });
+  expect(bytesOf(app.imageAssetService.prepareArchive(saved).projectJSON)).toBe(limit);
+  const fresh = await bootApp();
+  await fresh.ready;
+  expect(await fresh.loadProject(await app.imageAssetService.exportZip(saved))).toBe(true);
+  app.storageService.flushAutoSave();
+  expect(await reopened(JSON.parse(app.storageService._lastSerialized))).not.toBeNull();
+}, LARGE);
 
 test('a trace that would give the project more values than it can hold is not traced', async () => {
   const app = await withRoute(Array.from({ length: 1400 }, (_, index) => major(`w${index}`)));
