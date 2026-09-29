@@ -23,6 +23,8 @@ import {
   normalizeBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
 import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
+import { FlowLayer, FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
+import { GraphModel } from '../models/GraphModel.js';
 import { waitForCrowdMs } from '../utils/crowdArrival.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
@@ -39,6 +41,36 @@ export function formatCrowdReleaseBias(percent) {
   const rounded = Math.round(percent);
   if (rounded === 0) return 'Even';
   return rounded < 0 ? `Earlier ${Math.abs(rounded)}%` : `Later ${rounded}%`;
+}
+
+/**
+ * Why a traced network could not be stored, or null. A crowd's network is
+ * checked as a saved project's is when it opens (`FlowLayer.assertValidJSON`),
+ * in the form it would be saved in, before the trace replaces anything: a
+ * network the loader refuses (a leg with more bends than a path can hold)
+ * saved a project that would not reopen (DEF-52).
+ * @param {FlowLayer} layer
+ * @param {{nodes: Array, edges: Array}} trace
+ * @returns {string|null}
+ */
+function traceStorageProblem(layer, trace) {
+  const limit = FLOW_LAYER_LIMITS.MAX_CONTROL_POINTS_PER_EDGE;
+  const crowded = trace.edges.find(edge => edge.controlPoints.length > limit);
+  if (crowded) {
+    const from = trace.nodes.find(node => node.id === crowded.sourceId)?.label;
+    const leg = from ? `The leg from ${from}` : 'A leg of the route';
+    return `${leg} has ${crowded.controlPoints.length} bends, more than the ${limit} a crowd’s path can hold. `
+      + 'Remove some of its minor waypoints, then trace again.';
+  }
+  const graph = new GraphModel();
+  for (const node of trace.nodes) graph.addNode(node);
+  for (const edge of trace.edges) graph.addEdge(edge);
+  try {
+    FlowLayer.assertValidJSON({ ...layer.toJSON(), graph: graph.toJSON() });
+    return null;
+  } catch (error) {
+    return `This route can’t be traced into a crowd: ${error.message}.`;
+  }
 }
 
 export const crowdsMixin = {
@@ -606,6 +638,11 @@ export const crowdsMixin = {
     const trace = traceRouteIntoGraph(this.waypoints);
     if (trace.problems.length > 0) {
       this.eventBus.emit('ui:toast', { message: trace.problems[0].detail });
+      return false;
+    }
+    const unstorable = traceStorageProblem(layer, trace);
+    if (unstorable) {
+      this.eventBus.emit('ui:toast', { message: unstorable });
       return false;
     }
 

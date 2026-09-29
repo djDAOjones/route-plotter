@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 344 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 345 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 99 file(s)
 - `styles` — 6 file(s)
-- `tests` — 111 file(s)
+- `tests` — 112 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -427,6 +427,7 @@
 - `tests/startup.test.js` — Recovery-before-default-image startup ordering contracts
 - `tests/swarmEngine.test.js` — SwarmEngine behavioural spec: hash pins, serialized-clone determinism, busyness density, release variation, weighted junctions, lifecycles, route guide, wobble and cache invalidation; and (DEF-35) dots follow a route off the image, held only to the range a project can store
 - `tests/swatchPicker.test.js` — Exact preset/custom/mixed colour state, external refresh and complete disabled-fieldset contracts
+- `tests/traceStorage.test.js` — DEF-52: a route traced into a crowd is refused, saying which leg, when a path would hold more bends than a saved crowd may (256 traces and reopens; 257 leaves the network and the history as they were)
 - `tests/undoService.test.js` — Prospective-save parity, natural rollover, extra oldest discard, redo preservation/invalidation and rejected-input immutability
 - `tests/testHarness.test.js` — TST-01: the test world behaves like a browser — absent storage keys read null, each canvas records its own draw calls, style state and resets, and (TST-17) a transcript names a composited canvas while drawing label text as written, and (DEF-36) shows the state each call was made in, kept through save, restore and a resize, and (DEF-39) just the state each call draws with
 - `tests/units.test.js` — Extended unit coverage (state transitions, coordinate round-trips, path maths, waypoint serialisation/inheritance)
