@@ -42,8 +42,9 @@ DEF-52 — A route traced into a crowd is checked as the project it would
 make would be when it is saved and opened: a trace the loader or the file's
 metadata would refuse (a leg with more bends than a path can hold, a scene,
 project or file past its budgets) is refused, saying why, whether or not the
-project already failed that check, so a traced crowd reopens. The archive's
-whole size, which its images dominate, stays Save Project's check (DEF-04).
+project already failed that check, so a traced crowd reopens (its images all
+there). The archive's whole size, which its images dominate, stays Save
+Project's check (DEF-04).
 (2026-09-29)
 
 ## Before the big run (2026-09-28)

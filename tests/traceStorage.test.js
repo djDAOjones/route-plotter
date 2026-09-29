@@ -16,10 +16,13 @@ import { bootApp } from './helpers/bootApp.js';
 import { LOAD_REFUSED, loadSnapshot } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
-import { getRetainedBackgroundDataURL } from '../src/app/persistence.js';
+import { getRetainedBackgroundDataURL, stageProjectModel } from '../src/app/persistence.js';
 import { STORAGE } from '../src/config/constants.js';
 
 const major = (id, name = id, extra = {}) => ({ id, name, imgX: 0.2, imgY: 0.3, isMajor: true, ...extra });
+
+/** Hundreds of majors take a while to trace, check and reopen, more under load. */
+const LARGE = 30000;
 
 /** A route of two majors with `bends` minors between them, in a zig-zag. */
 function routeWithBends(bends) {
@@ -146,7 +149,7 @@ test('a trace that would make the project too big to save as a file is not trace
   await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
 
   await expect(saves()).resolves.toBeInstanceOf(Blob);
-});
+}, LARGE);
 
 test('a project already too big to save as a file is not traced either, and the author is told why', async () => {
   const app = await withRoute(Array.from({ length: 1000 }, (_, index) => major(`w${index}`, `w${index} ${'x'.repeat(500)}`)));
@@ -154,7 +157,7 @@ test('a project already too big to save as a file is not traced either, and the 
   await expect(saves()).rejects.toThrow('Project metadata exceeds the 2 MB limit');
 
   await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
-});
+}, LARGE);
 
 test('a trace that would take browser recovery past its budget is not traced, and recovery goes on writing the project', async () => {
   // Each name escapes to twice its length in JSON: the file is past its 2 MB
@@ -187,6 +190,60 @@ test('a project already too complex to reopen is not traced, whichever of its ch
 
   await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata is too deeply nested or complex.',
     () => {}, { reopens: false });
+}, LARGE);
+
+test('a trace whose file metadata would pass 2 MB in bytes, though not in characters, is not traced, and the project still saves', async () => {
+  // Each name is 65 characters but 130 bytes, and the trace copies each into a node's label.
+  const app = await withRoute(Array.from({ length: 900 }, (_, index) => major(`w${index}`, 'é'.repeat(65))));
+  const saves = () => app.imageAssetService.exportZip(app._buildProjectSnapshot({ includeAssets: false }));
+  await expect(saves()).resolves.toBeInstanceOf(Blob);
+
+  await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
+
+  await expect(saves()).resolves.toBeInstanceOf(Blob);
+}, LARGE);
+
+test('a trace into a crowd that has a network already is checked as one into an empty crowd is', async () => {
+  const app = await withRoute(Array.from({ length: 1000 }, (_, index) => major(`w${index}`)));
+  const layer = app.scene.flowLayers[0];
+  layer.guideType = 'graph';
+  layer.graph.addNode({ id: 'there-before' });
+
+  await refused(app, layer, 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
+}, LARGE);
+
+test('a trace that replaces a network the project could not store makes one it can: it is traced, and the project reopens', async () => {
+  const app = await withRoute([major('start', 'Main entrance'), major('end', 'Library')]);
+  const layer = app.scene.flowLayers[0];
+  layer.guideType = 'graph';
+  layer.graph.addNode({ id: 'a' });
+  layer.graph.addNode({ id: 'b' });
+  layer.graph.addEdge({ id: 'bent', sourceId: 'a', targetId: 'b', controlPoints: Array.from({ length: 257 }, () => ({ x: 0.3, y: 0.5 })) });
+  expect(() => stageProjectModel(JSON.parse(JSON.stringify(app._buildProjectSnapshot({ includeAssets: false })))))
+    .toThrow('Graph edge control-point limit is 256');
+
+  expect(trace(app, layer).traced).toBe(true);
+
+  expect(await reopened(app._buildProjectSnapshot())).not.toBeNull();
+});
+
+test('a project with a setting the loader refuses is not traced, and the recovery it had pending is written as it was', async () => {
+  const app = await withRoute([major('start', 'Main entrance'), major('end', 'Library')]);
+  app.autoSave();
+  const pending = app.storageService._pendingAutoSave;
+  const revision = app._editRevision;
+  const network = JSON.stringify(app.scene.flowLayers[0].graph.toJSON());
+  app.animationEngine.state.speed = 10001;
+
+  const { traced, told } = trace(app, app.scene.flowLayers[0]);
+
+  expect(traced).toBe(false);
+  expect(told).toHaveLength(1);
+  expect(told[0]).toMatch(/^This route can’t be traced into a crowd: /);
+  expect(JSON.stringify(app.scene.flowLayers[0].graph.toJSON())).toBe(network);
+  expect([app.storageService._pendingAutoSave, app._editRevision]).toEqual([pending, revision]);
+  app.storageService.flushAutoSave();
+  expect(app.storageService._lastSerialized).toBe(pending.serialized);
 });
 
 test('a trace checks the file as Save Project would write it, with the background it would carry', async () => {
@@ -225,7 +282,7 @@ test('a trace that would give the project more values than it can hold is not tr
   const app = await withRoute(Array.from({ length: 1400 }, (_, index) => major(`w${index}`)));
 
   await refused(app, app.scene.flowLayers[0], 'This route can’t be traced into a crowd: Project metadata is too deeply nested or complex.');
-});
+}, LARGE);
 
 test.each([
   ['a leg of too many bends', routeWithBends(257), 'The leg from Main entrance has 257 bends, more than the 256 a crowd’s path can hold. '
