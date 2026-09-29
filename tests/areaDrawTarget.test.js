@@ -89,12 +89,14 @@ const goneToasts = () => [...toastRegion().querySelectorAll('.toast')].filter(to
 const toldGone = () => goneToasts().length;
 
 /**
- * A computed colour's alpha, where it can be read: `transparent`; a hex
- * colour; a legacy `rgb()`/`rgba()`/`hsl()`/`hsla()` with commas; a modern
- * function (`rgb`, `hsl`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color`)
- * with or without a slash alpha; a `var()` by its custom property on `node`,
- * else its fallback; a named colour, opaque. Anything else is null: not
- * known to paint.
+ * A colour's alpha, as this environment's CSS parser reads it, or null where
+ * it cannot be read: a custom property (`var()`) by its value on `node`,
+ * else its fallback; any other value set on a span of its own, off the page,
+ * and read back as the parser computes it (`rgb()`/`rgba()` with commas, or a colour
+ * function with an optional slash alpha), so keywords in any case, relative
+ * and mixed colours are read as the parser resolves them. A value the parser
+ * refuses, one that takes its colour from elsewhere (`currentcolor`,
+ * `inherit`), or a computed form not listed is null: not known to paint.
  */
 function alphaOf(colour, node) {
   const value = String(colour).trim();
@@ -103,28 +105,27 @@ function alphaOf(colour, node) {
     const own = getComputedStyle(node).getPropertyValue(custom[1]).trim();
     return own ? alphaOf(own, node) : custom[2] !== undefined ? alphaOf(custom[2], node) : null;
   }
-  if (value === 'transparent') return 0;
-  const hex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(value);
-  if (hex) {
-    const digits = hex[1];
-    if (digits.length === 4) return parseInt(digits[3].repeat(2), 16) / 255;
-    if (digits.length === 8) return parseInt(digits.slice(6), 16) / 255;
-    return 1;
-  }
+  if (/^(currentcolor|inherit|initial|unset|revert|revert-layer)$/i.test(value)) return null;
+  // A span of its own, off the page, so reading it changes nothing the checks watch
+  const probe = document.createElement('span');
+  probe.style.color = value;
+  if (!probe.style.color) return null;
+  const computed = getComputedStyle(probe).color;
   const number = text => (text.endsWith('%') ? Number.parseFloat(text) / 100 : Number(text));
-  const legacy = /^(?:rgba?|hsla?)\(([^)]*)\)$/i.exec(value);
+  const legacy = /^rgba?\(([^()]*)\)$/.exec(computed);
   if (legacy && legacy[1].includes(',')) {
     const parts = legacy[1].split(',').map(part => part.trim());
-    return parts.length === 4 ? number(parts[3]) : parts.length === 3 ? 1 : null;
+    if (parts.length === 3) return 1;
+    const alpha = parts.length === 4 ? number(parts[3]) : NaN;
+    return Number.isFinite(alpha) ? alpha : null;
   }
-  const modern = /^(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(([^)]*)\)$/i.exec(value);
-  if (modern) {
-    const slash = modern[1].split('/');
-    if (slash.length === 1) return 1;
-    const alpha = number(slash[1].trim());
-    return slash.length === 2 && Number.isFinite(alpha) ? alpha : null;
-  }
-  return /^[a-z]+$/i.test(value) ? 1 : null;
+  const modern = /^(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(([^()]*)\)$/.exec(computed);
+  if (!modern) return null;
+  const [channels, alphaText, ...rest] = modern[1].split('/');
+  if (rest.length > 0 || !channels.trim()) return null;
+  if (alphaText === undefined) return 1;
+  const alpha = number(alphaText.trim());
+  return Number.isFinite(alpha) ? alpha : null;
 }
 /** A filter that makes what it filters transparent. */
 const FADED = /opacity\(\s*0*(\.0*)?%?\s*\)/;
@@ -167,7 +168,7 @@ function expectTold() {
       role: node.getAttribute('role'),
       hidden: node.hidden || node.getAttribute('aria-hidden') === 'true' || node.hasAttribute('inert') || node.getAttribute('aria-busy') === 'true',
       silenced: node !== toastRegion() && node.getAttribute('aria-live') === 'off' && toastRegion().contains(node),
-      irrelevant: relevant !== null && !/\b(additions|all)\b/.test(relevant),
+      irrelevant: relevant !== null && !relevant.trim().split(/\s+/).some(token => token === 'additions' || token === 'all'),
       drawn: style.display !== 'none' && style.visibility === 'visible' && Number(style.opacity) > 0
         && !FADED.test(style.filter) && style.getPropertyValue('content-visibility') !== 'hidden',
     }).toEqual({ at: node.id || node.className || node.tagName, role: null, hidden: false, silenced: false, irrelevant: false, drawn: true });
@@ -484,4 +485,27 @@ test('Draw Area for another waypoint starts that waypoint’s draw afresh', asyn
 
   expect(drawing(app)).toEqual({ active: true, vertices: 0, banner: true, canvasDraws: true });
   expect(app.areaDrawingService.targetWaypoint).toBe(other);
+});
+
+test('the toast’s colour is read as this environment’s CSS parser reads it, and one it cannot read is not known to paint', () => {
+  // As a stylesheet sets them: custom properties on an element, read through `var()`
+  const sheet = document.createElement('style');
+  sheet.textContent = '.colour-read { --upper: TRANSPARENT; --relative: rgb(from transparent r g b); --unknown: blorple; }';
+  document.head.append(sheet);
+  const node = document.createElement('span');
+  node.className = 'colour-read';
+  document.body.append(node);
+  try {
+    const read = colour => alphaOf(colour, node);
+    expect({
+      opaque: ['white', 'WHITE', '#fff', 'rgb(1 2 3)', 'var(--missing, white)'].map(read),
+      transparent: ['TRANSPARENT', 'Transparent', '#0000', 'rgb(1 2 3 / 0)', 'color(srgb 1 0 0 / 0)', 'oklch(0.5 0.1 20 / 0)',
+        'rgb(from transparent r g b)', 'var(--upper, white)', 'var(--relative, white)'].map(read),
+      half: read('color-mix(in srgb, red, transparent)'),
+      unread: ['blorple', 'rgb(blorple)', 'var(--unknown, white)', 'currentcolor', 'inherit', 'var(--missing)'].map(read),
+    }).toEqual({ opaque: [1, 1, 1, 1, 1], transparent: [0, 0, 0, 0, 0, 0, 0, 0, 0], half: 0.5, unread: [null, null, null, null, null, null] });
+  } finally {
+    node.remove();
+    sheet.remove();
+  }
 });
