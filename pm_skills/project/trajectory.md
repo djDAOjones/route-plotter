@@ -38,6 +38,10 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
+DEF-53 — A video export keeps the canvas size it began with: a size chosen
+meanwhile, by the fields or a preset, applies to the display and the next
+export once it ends. (2026-09-29)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its
