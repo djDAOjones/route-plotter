@@ -14,7 +14,7 @@
  * in either timing mode.
  */
 
-import { expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
@@ -643,16 +643,17 @@ async function savedProject(app) {
 }
 
 /**
- * The branch's end dragged over `targetId`, and let go there: the rebuilds
- * the drop made (the path built, the timing rebuilt, the queued rebuild's
- * time let pass), and the toasts it asked for.
+ * The branch's end dragged over `targetId`, and let go there (once the
+ * drag's queued retiming has run, or at once): the rebuilds the drop made
+ * (the path built, the timing rebuilt, the queued rebuild's time let pass),
+ * and the toasts it asked for.
  */
-async function droppedOn(app, targetId) {
+async function droppedOn(app, targetId, { atOnce = false } = {}) {
   const end = app.getWaypointById('b');
   const start = { imgX: end.imgX, imgY: end.imgY };
   const target = app.getWaypointById(targetId);
   dragging(app, 'b', target.imgX, target.imgY);
-  await timingSettled();
+  if (!atOnce) await timingSettled();
   const built = vi.spyOn(app, 'calculatePath');
   const timed = vi.spyOn(app, 'updateAnimationDuration');
   const told = vi.fn();
@@ -710,6 +711,65 @@ test.each([
   app.calculatePath();
   app.invalidateAnimationTiming();
   expect(saved.animationState.duration).toBe(app.animationEngine.state.duration);
+});
+
+describe.each([
+  ['made', null, 'end', 'Branch rejoins at that waypoint'],
+  ['cleared', 'end', null, 'Branch now ends here'],
+])('a branch end’s rejoin %s by a drop', (_, initial, rejoin, message) => {
+  /** The branched route with its rejoin as `initial`, its timing derived, in Edit, nothing pending. */
+  async function editing() {
+    const project = branched();
+    project.waypoints.at(-1).branchRejoin = initial;
+    const app = await derivedByPreview(project);
+    app.eventBus.emit('motion:preview-mode-change', false);
+    await timingSettled();
+    app.storageService.flushAutoSave();
+    app._isDirty = false;
+    return app;
+  }
+
+  test.each([['once the drag is retimed', false], ['at once', true]])('let go %s, is recorded once, said once and written for recovery, and undone and redone', async (__, atOnce) => {
+    const app = await editing();
+    const revision = app._editRevision;
+    const recorded = vi.spyOn(app, 'saveUndoState');
+    const saving = vi.spyOn(app, 'autoSave');
+    const announced = vi.spyOn(app, 'announce');
+
+    const { end, start, work } = await droppedOn(app, 'end', { atOnce });
+
+    expect(work).toEqual({ built: 1, timed: 1, toasts: 1 });
+    expect({ imgX: end.imgX, imgY: end.imgY, branchRejoin: end.branchRejoin ?? null }).toEqual({ ...start, branchRejoin: rejoin });
+    expect(recorded).toHaveBeenCalledTimes(1);
+    expect(saving).toHaveBeenCalledTimes(1);
+    expect(app._editRevision - revision).toBe(1);
+    expect(announced.mock.calls).toEqual([[message]]);
+    localStorage.setItem.mockClear();
+    app.storageService.flushAutoSave();
+    const writes = localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY);
+    expect(writes).toHaveLength(1);
+    expect(JSON.parse(writes[0][1]).waypoints.at(-1).branchRejoin ?? null).toBe(rejoin);
+
+    app.undo();
+    await timingSettled();
+    expect(app.getWaypointById('b').branchRejoin ?? null).toBe(initial);
+    app.redo();
+    await timingSettled();
+    expect(app.getWaypointById('b').branchRejoin ?? null).toBe(rejoin);
+  });
+
+  test('then dragged on, Save Project before the drag is retimed holds the duration a rebuild gives the new route', async () => {
+    const app = await editing();
+    await droppedOn(app, 'end');
+
+    dragging(app, 'b', 0.7, 0.4);
+    const saved = await savedProject(app);
+
+    // The route as it is, rebuilt from nothing.
+    app.calculatePath();
+    app.invalidateAnimationTiming();
+    expect(saved.animationState.duration).toBe(app.animationEngine.state.duration);
+  });
 });
 
 test('an HTML export made mid-drag runs the route’s queued rebuild, and changes nothing else: no edit, no history, no recovery written', async () => {
