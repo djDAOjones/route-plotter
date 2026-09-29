@@ -13,6 +13,8 @@
  * when it has gone; and asking again for the draw in progress keeps it.
  */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
@@ -22,11 +24,20 @@ import { buildExampleProjects } from '../src/examples/index.js';
 const GONE = 'Area drawing cancelled: its waypoint was removed.';
 const TRIANGLE = [{ x: 0.2, y: 0.2 }, { x: 0.4, y: 0.2 }, { x: 0.3, y: 0.4 }];
 const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
-const nextFrame = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
+
+/** The app's stylesheet, which the harness's shell leaves out, so how a toast is drawn can be read. */
+function withStyles() {
+  if (document.getElementById('app-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'app-styles';
+  style.textContent = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
+  document.head.append(style);
+}
 
 async function openDay() {
   const app = await bootApp();
   await app.ready;
+  withStyles();
   // The welcome dialog, open at start, makes the page behind it inert.
   document.getElementById('splash-close').click();
   const project = structuredClone(buildExampleProjects().find(each => each.id === 'uon-open-day').project);
@@ -54,22 +65,25 @@ const ENDED = { active: false, vertices: 0, banner: false, canvasDraws: false };
 
 const toastRegion = () => document.getElementById('toast-container');
 
-/** How many toasts say the draw was cancelled. */
-const toldGone = () => [...toastRegion().querySelectorAll('.toast')]
-  .filter(toast => toast.firstChild.nodeValue === GONE).length;
+/** The toasts saying the draw was cancelled. */
+const goneToasts = () => [...toastRegion().querySelectorAll('.toast')]
+  .filter(toast => toast.firstChild.nodeValue === GONE);
+const toldGone = () => goneToasts().length;
 
 /**
- * Whether the one toast saying so is where the author is told: in a polite
- * live region on the page, which a screen reader reads (how it speaks it is
- * not checked here), and shown from the next frame.
+ * The one toast saying so, exposed where the author is told: in the polite
+ * live region meant for screen readers (how a reader speaks it is a separate
+ * check), nothing on its way to the page hidden, inert or busy, and drawn
+ * visible by the stylesheet.
  */
-async function toldOnScreen() {
-  expect(toldGone()).toBe(1);
+function expectTold() {
+  const toasts = goneToasts();
+  expect(toasts).toHaveLength(1);
+  const [toast] = toasts;
   expect(toastRegion().getAttribute('aria-live')).toBe('polite');
-  expect(toastRegion().closest('[hidden], [aria-hidden="true"], [inert]')).toBeNull();
-  await nextFrame();
-  const [toast] = [...toastRegion().querySelectorAll('.toast')].filter(each => each.firstChild.nodeValue === GONE);
-  return toast.classList.contains('is-visible');
+  expect(toast.closest('[hidden], [aria-hidden="true"], [inert], [aria-busy="true"]')).toBeNull();
+  expect(toast.classList.contains('is-visible')).toBe(true);
+  expect(getComputedStyle(toast).opacity).toBe('1');
 }
 
 /** Each way a waypoint leaves the project: how its draw's target is got ready, and removed. */
@@ -108,36 +122,44 @@ const REMOVALS = [
   }],
 ];
 
-test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told once, in a message the rest of the action leaves standing', async (_, { target, remove }) => {
+test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told once, in a toast shown for a toast’s five seconds whatever the action does meanwhile', async (_, { target, remove }) => {
   const app = await openDay();
   const waypoint = await target(app);
   drawFor(app, waypoint);
   placeTriangle(app);
+  // The clock is the test's from here: what the action schedules runs as time is let pass.
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'requestAnimationFrame', 'cancelAnimationFrame'] });
+  try {
+    remove(app, waypoint);
 
-  remove(app, waypoint);
-
-  expect(app.getWaypointById(waypoint.id)).toBeUndefined();
-  expect(drawing(app)).toEqual(ENDED);
-  expect(await toldOnScreen()).toBe(true);
-  await nextTask();
-  expect(toldGone()).toBe(1);
-  // Nothing more is drawn, for it or anything else.
-  place(app, 0.2, 0.2);
-  expect(drawing(app).vertices).toBe(0);
+    expect(app.getWaypointById(waypoint.id)).toBeUndefined();
+    expect(drawing(app)).toEqual(ENDED);
+    vi.advanceTimersByTime(16);
+    expectTold();
+    // Past the action's own announcement, which clears at two seconds, to the toast's last moment.
+    vi.advanceTimersByTime(4999 - 16);
+    expect(document.getElementById('announcer').textContent).toBe('');
+    expectTold();
+    vi.advanceTimersByTime(1);
+    expect(goneToasts().map(toast => toast.classList.contains('is-visible'))).toEqual([false]);
+    // Nothing more is drawn, for it or anything else.
+    place(app, 0.2, 0.2);
+    expect(drawing(app).vertices).toBe(0);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
-test('the toast saying so outlasts the deletion’s own announcement, which clears after two seconds', async () => {
+test('a draw ended by Clear All, with the project, says nothing of its waypoint', async () => {
   const app = await openDay();
-  const target = app.getWaypointById('ex-uon-2');
-  drawFor(app, target);
+  drawFor(app, app.getWaypointById('ex-uon-2'));
   placeTriangle(app);
 
-  app.eventBus.emit('waypoint:delete', target);
-  await new Promise(resolve => setTimeout(resolve, 2100));
+  document.getElementById('clear-btn').click();
+  document.getElementById('clear-confirm').click();
 
-  expect(document.getElementById('announcer').textContent).toBe('');
-  expect(toldGone()).toBe(1);
-  expect(await toldOnScreen()).toBe(true);
+  expect(drawing(app)).toEqual(ENDED);
+  expect(toldGone()).toBe(0);
 });
 
 test.each([
@@ -253,6 +275,7 @@ test('a draw ends, and is not carried over, when a project with the same waypoin
   expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
 
   expect(drawing(app)).toEqual(ENDED);
+  expect(toldGone()).toBe(0);
   place(app, 0.2, 0.2);
   expect(app.getWaypointById('ex-uon-2').areaHighlight?.points ?? []).not.toEqual(TRIANGLE);
 });
