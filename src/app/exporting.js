@@ -109,6 +109,9 @@ export const exportingMixin = {
    */
   async exportVideo() {
     if (refuseWhileExporting(this)) return;
+    // This is the export the author now asks for, by whatever route: a codec
+    // probe or dialog from an earlier request asks for nothing (DEF-46).
+    this.uiController?.exportRequested?.();
 
     // Validate we have something to export
     if (this.waypoints.length < 2) {
@@ -167,9 +170,6 @@ export const exportingMixin = {
     const originalBackgroundImage = this.background.image;
 
     this._videoExportRunning = true;
-    // A codec probe still out for an export asked for before this one asks
-    // for nothing now, nor once this one ends (DEF-46).
-    this.uiController?.exportStarted?.();
     try {
       // Use the same mode transition as the UI. Its event chain rebuilds the
       // preview timeline; the explicit invalidation also covers exports that

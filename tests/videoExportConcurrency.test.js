@@ -10,10 +10,12 @@
  * likely route is a double click on Export MP4: its codec probe answers later,
  * so both clicks can ask for an export before the first disables the buttons.
  * A request is now refused whole while an export runs, the size the codec
- * dialog's reduced MP4 carries included; and a codec probe answers for the
- * export the author last asked for alone: one that answers after a later
- * click, WebM chosen meanwhile, or an export started (or ended), asks for
- * nothing and opens no dialog.
+ * dialog's reduced MP4 carries included; and a codec probe, or the dialog it
+ * opened, answers for the export the author last asked for alone: a probe
+ * that answers after a later click or another request (even one that could
+ * not start) asks for nothing and opens no dialog, and a dialog open when
+ * another export is asked for closes, its choices and its hold on Escape
+ * gone with it.
  */
 
 import { afterEach, expect, test, vi } from 'vitest';
@@ -348,14 +350,18 @@ test('an MP4 probe still out when an export starts another way asks for nothing 
   expect(app._videoExportRunning).toBe(false);
 });
 
-test('an MP4 probe still out when WebM was chosen asks for nothing, though WebM could not start', async () => {
+test.each([
+  ['WebM is chosen', () => document.getElementById('export-webm-btn').click()],
+  ['WebM is asked for through the bus', app => app.eventBus.emit('video:export-request', 'webm')],
+  ['an export is asked for directly', app => { void app.exportVideo(); }],
+])('an MP4 probe still out when %s asks for nothing, though that export could not start', async (_, request) => {
   const { app } = await exportingApp();
   expect(await loadSnapshot(app, { coordVersion: 9, waypoints: [{ id: 'only', imgX: 0.5, imgY: 0.5, isMajor: true }] })).toBe(true);
   let answer;
   vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockImplementationOnce(() => new Promise((resolve) => { answer = resolve; }));
 
   document.getElementById('export-mp4-btn').click();
-  document.getElementById('export-webm-btn').click();
+  request(app);
   expect(alert).toHaveBeenCalledTimes(1);
   answer({ codec: 'avc1' });
   await answered();
@@ -363,25 +369,122 @@ test('an MP4 probe still out when WebM was chosen asks for nothing, though WebM 
   expect(alert).toHaveBeenCalledTimes(1);
 });
 
-test('a codec dialog still open when an export starts changes nothing of it when its reduced MP4 is chosen', async () => {
+/** Probes that open the codec dialog: no H.264 at all, or only at a reduced size. */
+const DIALOGS = [
+  ['no H.264 at all', () => vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue(null)],
+  ['H.264 only at a reduced size', () => vi.spyOn(VideoExporter, '_testWebCodecsConfig')
+    .mockImplementation(width => Promise.resolve(width === 3840 ? null : { codec: 'avc1' }))],
+];
+
+test.each(DIALOGS)('a codec dialog (%s) open when an export is asked for another way closes, and the first Escape cancels that export', async (_, probes) => {
+  const { app, running } = await exportingApp();
+  exportSize(app, 3840, 2160);
+  probes();
+  const announce = vi.spyOn(app, 'announce');
+  const mp4 = document.getElementById('export-mp4-btn');
+  mp4.focus();
+  mp4.click();
+  await vi.waitFor(() => expect(codecDialogShown()).toBe(true));
+
+  const other = app.exportVideo();
+  await running;
+
+  expect(codecDialogShown()).toBe(false);
+  expect(document.getElementById('codec-unsupported-modal').contains(document.activeElement)).toBe(false);
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  await other;
+  expect(announce).toHaveBeenLastCalledWith('Video export cancelled');
+});
+
+test.each(DIALOGS)('the choices of a codec dialog (%s) closed by another request ask for nothing, while that export runs or after it ends', async (_, probes) => {
   const { app, frames, running, finish } = await exportingApp();
   exportSize(app, 3840, 2160);
-  // H.264 cannot take the full size, and the dialog offers a reduced one;
-  // meanwhile an export starts by another way than the dialog.
-  vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValueOnce(null).mockResolvedValue({ codec: 'avc1' });
+  probes();
+  const encode = vi.spyOn(app.videoExporter, 'export');
   const announce = vi.spyOn(app, 'announce');
-
   document.getElementById('export-mp4-btn').click();
   await vi.waitFor(() => expect(codecDialogShown()).toBe(true));
   const first = app.exportVideo();
   await running;
-  document.getElementById('codec-mp4-reduced').click();
+  const choose = () => ['codec-mp4-reduced', 'codec-webm'].forEach(id => document.getElementById(id).click());
 
-  expect(announce).toHaveBeenLastCalledWith('A video export is already running.');
+  choose();
+  expect(announce).not.toHaveBeenCalledWith('A video export is already running.');
   expect({ width: app.exportSettings.resolutionX, height: app.exportSettings.resolutionY }).toEqual({ width: 3840, height: 2160 });
   finish();
   await first;
+  choose();
+  await answered();
+
+  expect(encode).toHaveBeenCalledTimes(1);
+  expect(app._videoExportRunning).toBe(false);
   expect(frames).toEqual(Array(3).fill({ exportMode: true, width: 3840, height: 2160, background: 'hidden' }));
+});
+
+test('an export request whose notice to the export controls throws holds no export, and the next one runs', async () => {
+  const { app, frames, finish } = await exportingApp();
+  vi.spyOn(app.uiController, 'exportRequested').mockImplementationOnce(() => { throw new Error('the notice failed'); });
+
+  await expect(app.exportVideo()).rejects.toThrow('the notice failed');
+
+  expect(app._videoExportRunning).toBeFalsy();
+  expect(exportButtons()).toEqual([false, false, false, false]);
+  const next = app.exportVideo();
+  await vi.waitFor(() => expect(frames).toHaveLength(1));
+  finish();
+  await next;
+  expect(frames).toHaveLength(3);
+});
+
+test('one click on Export MP4, H.264 taking the full size, exports MP4', async () => {
+  const { app, frames, running, finish } = await exportingApp();
+  vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue({ codec: 'avc1' });
+  const encode = vi.spyOn(app.videoExporter, 'export');
+
+  document.getElementById('export-mp4-btn').click();
+  await running;
+  finish();
+  await vi.waitFor(() => expect(app._isExportMode).toBe(false));
+
+  expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['mp4']);
+  expect(frames).toHaveLength(3);
+});
+
+test.each([
+  ['a WebM export completed', async ({ app, finish }) => {
+    document.getElementById('export-webm-btn').click();
+    await vi.waitFor(() => expect(app._videoExportRunning).toBe(true));
+    await vi.waitFor(() => expect(app.videoExporter.export).toHaveBeenCalled());
+    finish();
+    await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+  }],
+  ['a WebM export cancelled with Escape', async ({ app, running }) => {
+    document.getElementById('export-webm-btn').click();
+    await running;
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+  }],
+  ['a codec dialog dismissed', async () => {
+    VideoExporter._testWebCodecsConfig.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    document.getElementById('export-mp4-btn').click();
+    await vi.waitFor(() => expect(codecDialogShown()).toBe(true));
+    document.getElementById('codec-cancel').click();
+  }],
+])('after %s, the next click on Export MP4 exports MP4', async (_, before) => {
+  const exporting = await exportingApp();
+  const { app, frames, finish } = exporting;
+  vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue({ codec: 'avc1' });
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  await before(exporting);
+  const drawn = frames.length;
+
+  document.getElementById('export-mp4-btn').click();
+  await vi.waitFor(() => expect(frames).toHaveLength(drawn + 1));
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+
+  expect(encode.mock.calls.at(-1)[0].format).toBe('mp4');
+  expect(frames).toHaveLength(drawn + 3);
 });
 
 test('a refused request leaves the running export drawing what it drew', async () => {

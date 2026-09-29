@@ -519,14 +519,21 @@ export class UIController {
       this._codecModal.style.display = 'none';
       this._codecFocusTrap.deactivate();
     };
+    this._closeCodecModal = closeModal;
+    // The dialog answers for the MP4 click that opened it, while that is the
+    // export the author last asked for (DEF-46).
+    const current = () => this._codecModalIntent === this._exportIntent;
     
     this._codecWebmBtn.addEventListener('click', () => {
+      const asked = current();
       closeModal();
-      this.eventBus.emit('video:export-request', 'webm');
+      if (asked) this.eventBus.emit('video:export-request', 'webm');
     });
     
     this._codecMp4Btn?.addEventListener('click', () => {
+      const asked = current();
       closeModal();
+      if (!asked) return;
       // At the reduced resolution stored when the modal was configured: one
       // request, so the app applies the size only if it starts the export.
       const resolution = this._codecReducedRes
@@ -546,12 +553,15 @@ export class UIController {
   }
   
   /**
-   * An export has started (the app calls this): a codec probe still out for
-   * an export asked for before it asks for nothing when it answers, now or
-   * after this export ends (DEF-46).
+   * An export has been asked for, by whatever route (the app calls this for
+   * every request it does not refuse as one already runs): a codec probe
+   * still out for an export asked for before asks for nothing when it
+   * answers, and a codec dialog one opened closes, giving focus back, so
+   * neither its choices nor its hold on Escape outlive it (DEF-46).
    */
-  exportStarted() {
+  exportRequested() {
     this._exportIntent += 1;
+    this._closeCodecModal?.();
   }
 
   /**
@@ -587,6 +597,7 @@ export class UIController {
       this._codecReducedRes = null;
     }
     
+    this._codecModalIntent = this._exportIntent;
     this._codecModal.style.display = 'flex';
     this._codecFocusTrap?.activate();
   }
@@ -957,9 +968,8 @@ export class UIController {
       this._showCodecModal();
     });
     
-    // Export WebM button: the export the author now asks for (DEF-46)
+    // Export WebM button (the app's request supersedes a probe still out: DEF-46)
     this.elements.exportWebmBtn?.addEventListener('click', () => {
-      this._exportIntent += 1;
       this.eventBus.emit('video:export-request', 'webm');
     });
     
