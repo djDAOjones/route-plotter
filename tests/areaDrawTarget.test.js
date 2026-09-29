@@ -15,7 +15,7 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
@@ -23,7 +23,8 @@ import { buildExampleProjects } from '../src/examples/index.js';
 
 const GONE = 'Area drawing cancelled: its waypoint was removed.';
 const TRIANGLE = [{ x: 0.2, y: 0.2 }, { x: 0.4, y: 0.2 }, { x: 0.3, y: 0.4 }];
-const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+/** The next task: on the test's clock once it runs (from Draw Area on), else the real one. */
+const nextTask = () => (vi.isFakeTimers() ? vi.advanceTimersByTimeAsync(0) : new Promise(resolve => setTimeout(resolve, 0)));
 
 /** The app's stylesheet, which the harness's shell leaves out, so how a toast is drawn can be read. */
 function withStyles() {
@@ -46,11 +47,22 @@ async function openDay() {
   return app;
 }
 
-/** Select `waypoint` and press Draw Area, as the author does. */
+/**
+ * Select `waypoint` and press Draw Area, as the author does. The clock is the
+ * test's from here on, the time the app reads included: whatever the draw
+ * schedules, and all that follows, runs only as a test lets time pass
+ * (what the app scheduled while it started and the test set up is before
+ * it, and not covered).
+ */
 function drawFor(app, waypoint) {
+  if (!vi.isFakeTimers()) vi.useFakeTimers({ toFake: CLOCK });
   app.eventBus.emit('waypoint:selected', waypoint);
   document.getElementById('area-draw-btn').click();
 }
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 /** A canvas click during the draw, at image coordinates. */
 const place = (app, x, y) => app.eventBus.emit('area:draw-click', { imgX: x, imgY: y });
@@ -76,8 +88,44 @@ const messageOf = toast => [...toast.childNodes]
 const goneToasts = () => [...toastRegion().querySelectorAll('.toast')].filter(toast => messageOf(toast) === GONE);
 const toldGone = () => goneToasts().length;
 
-/** A colour that paints nothing, as jsdom computes one. */
-const CLEAR = /^(transparent|rgba\([^)]*,\s*0(\.0*)?\)|hsla\([^)]*,\s*0(\.0*)?%?\))$/;
+/**
+ * A computed colour's alpha, where it can be read: `transparent`; a hex
+ * colour; a legacy `rgb()`/`rgba()`/`hsl()`/`hsla()` with commas; a modern
+ * function (`rgb`, `hsl`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color`)
+ * with or without a slash alpha; a `var()` by its custom property on `node`,
+ * else its fallback; a named colour, opaque. Anything else is null: not
+ * known to paint.
+ */
+function alphaOf(colour, node) {
+  const value = String(colour).trim();
+  const custom = /^var\(\s*(--[\w-]+)\s*(?:,\s*(.+))?\)$/.exec(value);
+  if (custom) {
+    const own = getComputedStyle(node).getPropertyValue(custom[1]).trim();
+    return own ? alphaOf(own, node) : custom[2] !== undefined ? alphaOf(custom[2], node) : null;
+  }
+  if (value === 'transparent') return 0;
+  const hex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(value);
+  if (hex) {
+    const digits = hex[1];
+    if (digits.length === 4) return parseInt(digits[3].repeat(2), 16) / 255;
+    if (digits.length === 8) return parseInt(digits.slice(6), 16) / 255;
+    return 1;
+  }
+  const number = text => (text.endsWith('%') ? Number.parseFloat(text) / 100 : Number(text));
+  const legacy = /^(?:rgba?|hsla?)\(([^)]*)\)$/i.exec(value);
+  if (legacy && legacy[1].includes(',')) {
+    const parts = legacy[1].split(',').map(part => part.trim());
+    return parts.length === 4 ? number(parts[3]) : parts.length === 3 ? 1 : null;
+  }
+  const modern = /^(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(([^)]*)\)$/i.exec(value);
+  if (modern) {
+    const slash = modern[1].split('/');
+    if (slash.length === 1) return 1;
+    const alpha = number(slash[1].trim());
+    return slash.length === 2 && Number.isFinite(alpha) ? alpha : null;
+  }
+  return /^[a-z]+$/i.test(value) ? 1 : null;
+}
 /** A filter that makes what it filters transparent. */
 const FADED = /opacity\(\s*0*(\.0*)?%?\s*\)/;
 
@@ -90,9 +138,11 @@ const FADED = /opacity\(\s*0*(\.0*)?%?\s*\)/;
  * - from the toast up to and including `<html>`: no role, nothing `hidden`,
  *   `aria-hidden`, inert or busy, no `aria-live="off"` inside the region,
  *   no `aria-relevant` without additions; and, by the app's stylesheet,
- *   displayed, `visibility: visible`, not transparent (opacity, a filter)
- *   and its content not hidden (`content-visibility`); the toast's text not
- *   a colour that paints nothing.
+ *   displayed, `visibility: visible`, not transparent by opacity or by an
+ *   `opacity(0)` filter, and its content not hidden (`content-visibility`);
+ *   the toast's text
+ *   colour one whose alpha can be read (`alphaOf`), and more than 0;
+ * - the region placed as the stylesheet places it (`expectPlaced`).
  * Where it lands on screen, what covers it, and how a screen reader speaks
  * it are a browser's to check; `expectPlaced` pins the stylesheet's
  * placement.
@@ -106,7 +156,9 @@ function expectTold() {
   expect(toastRegion().getAttribute('aria-live')).toBe('polite');
   expect(toastRegion().getAttribute('aria-atomic')).toBe('true');
   expect(toast.classList.contains('is-visible')).toBe(true);
-  expect(getComputedStyle(toast).color).not.toMatch(CLEAR);
+  const colour = getComputedStyle(toast).color;
+  expect({ colour, alpha: alphaOf(colour, toast) > 0 }).toEqual({ colour, alpha: true });
+  expectPlaced();
   for (let node = toast; node; node = node.parentElement) {
     const style = getComputedStyle(node);
     const relevant = node.getAttribute('aria-relevant');
@@ -146,10 +198,12 @@ function expectPlaced() {
 const CLOCK = ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'requestAnimationFrame', 'cancelAnimationFrame', 'Date'];
 
 /**
- * Check `expectTold` after every change to the page, as well as when asked:
- * a toast hidden between two samples, however briefly, is caught at the
- * change that hides it. Changes to a stylesheet's rules through the CSSOM
- * are not page changes; the samples catch those.
+ * Check `expectTold` at each point the page's changes are delivered (a
+ * `MutationObserver`'s checkpoints), as well as when asked: a toast hidden
+ * between two samples, and still hidden when its change is delivered, is
+ * caught. Changes made and undone within one task (a browser draws none of
+ * them) and changes to a stylesheet's rules through the CSSOM are not seen
+ * there; the samples catch lasting ones.
  */
 function watchTold() {
   const failures = [];
@@ -170,8 +224,9 @@ function watchTold() {
 /**
  * Nothing said of the draw, from `act` for a toast's five seconds on the
  * test's clock: no toast asked for with the message, and the message
- * nowhere in the toasts' region at any change to the page or 250 ms
- * sample, however it is marked up.
+ * nowhere in the toasts' region (the one the page started with, which stays
+ * the one the page has) at each point the page's changes are delivered or
+ * 250 ms sample, however it is marked up.
  */
 async function expectNothingTold(app, act) {
   const asked = [];
@@ -179,11 +234,13 @@ async function expectNothingTold(app, act) {
   app.eventBus.on('ui:toast', heard);
   const seen = [];
   const look = () => {
-    if (toastRegion().textContent.includes(GONE)) seen.push(toastRegion().textContent);
+    for (const region of new Set([shellRegion, toastRegion()])) {
+      if (region?.textContent.includes(GONE)) seen.push(region.textContent);
+    }
   };
   const observer = new MutationObserver(look);
   observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
-  vi.useFakeTimers({ toFake: CLOCK });
+  if (!vi.isFakeTimers()) vi.useFakeTimers({ toFake: CLOCK });
   try {
     const acting = act();
     for (let at = 0; at < 5000; at += 250) {
@@ -194,11 +251,11 @@ async function expectNothingTold(app, act) {
     look();
   } finally {
     observer.disconnect();
-    vi.useRealTimers();
     app.eventBus.off('ui:toast', heard);
   }
   expect(asked.filter(message => String(message).includes(GONE))).toEqual([]);
   expect(seen).toEqual([]);
+  expect(toastRegion()).toBe(shellRegion);
 }
 
 /** Each way a waypoint leaves the project: how its draw's target is got ready, and removed. */
@@ -237,24 +294,22 @@ const REMOVALS = [
   }],
 ];
 
-test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told once, in a toast shown for a toast’s five seconds, checked at every change to the page and every 250 ms', async (_, { target, remove }) => {
+test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told once, in a toast shown for a toast’s five seconds, checked as the page’s changes are delivered and every 250 ms', async (_, { target, remove }) => {
   const app = await openDay();
   const waypoint = await target(app);
   drawFor(app, waypoint);
   placeTriangle(app);
-  // The clock is the test's from here, the time the app reads included: what
-  // the action schedules runs as time is let pass, promise work with it.
-  vi.useFakeTimers({ toFake: CLOCK });
+  // The clock has been the test's since Draw Area: what the draw and the
+  // action schedule runs as time is let pass, promise work with it.
   try {
     remove(app, waypoint);
 
     expect(app.getWaypointById(waypoint.id)).toBeUndefined();
     expect(drawing(app)).toEqual(ENDED);
     // Told from the next frame to the last moment of its five seconds, past
-    // the action's own announcement (cleared at two seconds): at every
-    // change to the page, and every 250 ms.
+    // the action's own announcement (cleared at two seconds): as the page's
+    // changes are delivered, and every 250 ms.
     await vi.advanceTimersByTimeAsync(16);
-    expectPlaced();
     const watched = watchTold();
     for (let at = 16; at < 4999; at += 250) {
       expectTold();
