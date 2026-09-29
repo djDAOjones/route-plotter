@@ -78,6 +78,41 @@ async function withBackground(pathOnly) {
   return { app, image };
 }
 
+/** The calls that draw or erase on a canvas. */
+const MARKS = new Set(['clearRect', 'fillRect', 'strokeRect', 'fill', 'stroke', 'fillText', 'strokeText', 'drawImage', 'putImageData', 'canvas.width', 'canvas.height']);
+
+/**
+ * A frame's calls on every canvas, in order, each with its arguments, the
+ * transform it was made under and the drawing state it was made in (alpha,
+ * compositing, filter and the rest), the canvases named by what they are, so
+ * that two apps' frames can be compared.
+ */
+function transcriptOf(calls, names) {
+  const nameOf = id => names[id] ?? 'other';
+  return calls.map(entry => JSON.stringify([
+    nameOf(entry[0]),
+    ...entry.slice(1).map(arg => (typeof arg === 'string' ? arg.replace(/^\[canvas #(\d+)\]$/, (_, id) => `[canvas ${nameOf(Number(id))}]`) : arg)),
+    [...entry.transform],
+    entry.state,
+  ]));
+}
+
+/**
+ * An export's frames as the same app draws them with no size chosen during
+ * it: each call on every canvas, as `transcriptOf` has it (worked out once
+ * for each kind of export).
+ */
+const unchosen = new Map();
+async function framesWithNoSizeChosen(pathOnly) {
+  if (!unchosen.has(pathOnly)) {
+    const { app } = await withBackground(pathOnly);
+    const run = await exporting(app);
+    await run.completes();
+    unchosen.set(pathOnly, run.transcripts);
+  }
+  return unchosen.get(pathOnly);
+}
+
 /**
  * An export whose encoder holds after its first frame until it is let
  * finish, made to fail, or cancelled. Each frame records the canvas it was
@@ -92,6 +127,8 @@ async function withBackground(pathOnly) {
  */
 async function exporting(app) {
   const frames = [];
+  const transcripts = [];
+  const between = [];
   const main = contextIdFor(app.canvas);
   recordCallOrder(true);
   let started;
@@ -106,7 +143,8 @@ async function exporting(app) {
     async export({ renderFrame }) {
       const token = backgroundToken();
       const frame = async (progress) => {
-        takeOrderedCalls();
+        // What the export's canvas was given since the last frame, outside any frame
+        between.push(takeOrderedCalls().filter(([surface]) => surface === main).map(([, name]) => name));
         await renderFrame(progress);
         const calls = takeOrderedCalls();
         const vector = contextIdFor(app.renderingService.vectorCanvas);
@@ -119,16 +157,23 @@ async function exporting(app) {
         const put = calls.findIndex(composite);
         const onMain = calls.filter(([surface]) => surface === main);
         const kept = onMain.findIndex(([, name, source]) => name === 'drawImage' && (source === token || source === layer));
+        const lastStroke = calls.findLastIndex(([surface, name], at) => at < put && surface === vector && name === 'stroke');
         frames.push({
           exportMode: app._isExportMode,
           width: app.canvas.width,
           height: app.canvas.height,
           background,
           path: calls.filter(composite).map(drawOf),
-          pathDrawn: put > 0 && calls.slice(0, put).some(([surface, name]) => surface === vector && name === 'stroke'),
+          pathDrawn: put > 0 && lastStroke >= 0,
           clearedAfter: kept < 0 || onMain.slice(kept + 1).some(([, name]) => name === 'clearRect'),
           resized: onMain.some(([, name]) => name === 'canvas.width' || name === 'canvas.height'),
+          // Anything that draws or erases on the main canvas once the path is on it
+          afterPath: put < 0 ? [] : calls.slice(put + 1).filter(([surface, name]) => surface === main && MARKS.has(name)).map(([, name]) => name),
+          // The path layer emptied between its last stroke and being put on the main canvas
+          layerErased: lastStroke >= 0 && calls.slice(lastStroke + 1, put)
+            .some(([surface, name]) => surface === vector && (name === 'clearRect' || name === 'canvas.width' || name === 'canvas.height')),
         });
+        transcripts.push(transcriptOf(calls, { [main]: 'main', [vector]: 'vector' }));
       };
       await frame(0.1);
       started();
@@ -150,6 +195,8 @@ async function exporting(app) {
   await running;
   return {
     frames,
+    transcripts,
+    between,
     completes: async () => { release(); await done; },
     fails: async () => { allowConsole(/Video export failed/); outcome = 'failed'; release(); await done; },
     'is cancelled with Escape': async () => {
@@ -202,6 +249,8 @@ const frameOf = (width, height, pathOnly) => {
     pathDrawn: true,
     clearedAfter: false,
     resized: false,
+    afterPath: [],
+    layerErased: false,
   };
 };
 
@@ -246,6 +295,14 @@ test.each(KINDS.flatMap(([kind, pathOnly]) => CHANGES.map(([label, change]) => [
   expect(geometry(app)).toEqual(began);
   await run.completes();
   expect(run.frames).toEqual(Array(3).fill(frameOf(began.canvas[0], began.canvas[1], pathOnly)));
+  // Nothing is done to the export's canvas between its frames: a size chosen
+  // meanwhile leaves it as the last frame left it
+  expect(run.between.slice(1)).toEqual([[], []]);
+  // Call for call, as the same export draws its frames with no size chosen
+  const unchanged = await framesWithNoSizeChosen(pathOnly);
+  expect(unchanged).toHaveLength(3);
+  expect(run.transcripts.length).toBe(unchanged.length);
+  run.transcripts.forEach((frame, index) => expect(frame, `frame ${index + 1}`).toEqual(unchanged[index]));
 });
 
 const ENDINGS = ['completes', 'fails', 'is cancelled with Escape'];
