@@ -38,6 +38,11 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
+DEF-61 — Under the author's viewport zoom, the map is drawn under the zoom
+alone, as the route already was, not the animation camera as well: the route
+no longer leaves the map in Preview, or in a video exported while zoomed in.
+(2026-09-29)
+
 DEF-27 — The instant spotlight and angle of view follow the camera, so the
 circle or cone stays on the head at any zoom, and the contrast tint covers the
 image and nothing else at any background zoom, moving with the camera.
