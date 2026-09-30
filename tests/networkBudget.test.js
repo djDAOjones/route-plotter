@@ -104,9 +104,10 @@ function penState(app, layer) {
 /**
  * The pen was refused: all of that as it was, no change announced to the
  * app and nothing saved, the author told once, and the project still
- * reopens.
+ * reopens (unless its scene is past the project-wide budgets, DEF-04's,
+ * which no project may hold).
  */
-async function refused(app, layer, attempt, message, told) {
+async function refused(app, layer, attempt, message, told, { reopen = true } = {}) {
   const before = penState(app, layer);
   const saving = vi.spyOn(app, 'autoSave');
   const changed = vi.fn();
@@ -118,7 +119,7 @@ async function refused(app, layer, attempt, message, told) {
   expect(saving).not.toHaveBeenCalled();
   expect(changed).not.toHaveBeenCalled();
   expect(told()).toEqual([message]);
-  expect(await reopens(app._buildProjectSnapshot())).toBe(true);
+  if (reopen) expect(await reopens(app._buildProjectSnapshot())).toBe(true);
 }
 
 /** Bend a path by dragging it, as the pen does. */
@@ -597,4 +598,99 @@ test('the pen takes a scene’s 10,000th node, the outline then refuses the next
   expect(app.scene.getFlowLayers().reduce((sum, each) => sum + each.graph.getNodes().length, 0)).toBe(10000);
   expect(told()).toEqual([]);
   expect(await reopens(app._buildProjectSnapshot())).toBe(true);
+});
+
+/**
+ * An app editing, with the pen at the first node of the last crowd (three
+ * nodes, no links), in a scene `short` links short of 20,000: four crowds of
+ * 4,000 and one (f4) of the rest. Put in place as `twentyThousandLinks` puts
+ * its scene.
+ */
+async function oneLinkShort({ short = 1 } = {}) {
+  const app = await undrawn();
+  app.scene = Scene.fromJSON({
+    flowLayers: [
+      ...Array.from({ length: 4 }, (_, index) => crowd(`f${index}`, { nodes: 100, links: 4000 })),
+      crowd('f4', { nodes: 100, links: 4000 - short }),
+      crowd('last', { nodes: 3, links: 0 }),
+    ],
+  });
+  const layer = app.scene.getFlowLayers().at(-1);
+  app.eventBus.emit('crowd:selected', layer);
+  app.enterNetworkEditMode();
+  app.networkEditService.clickNode(layer.graph.getNodes()[0]);
+  const told = vi.fn();
+  app.eventBus.on('ui:toast', told);
+  return { app, layer, pen: app.networkEditService, told: () => told.mock.calls.map(([{ message }]) => message) };
+}
+const sceneLinks = app => app.scene.getFlowLayers().reduce((sum, each) => sum + each.graph.getEdges().length, 0);
+const connect = (layer, sourceId, targetId) => ({ action: 'connect-nodes', layerId: layer.id, sourceId, targetId, direction: 'one-way', weight: 1 });
+
+test('the pen that makes a scene’s 20,000th link refuses its 20,001st, in the same session', async () => {
+  const { app, layer, pen, told } = await oneLinkShort();
+  const [, second, third] = layer.graph.getNodes();
+  pen.clickNode(second);
+  expect(sceneLinks(app)).toBe(20000);
+
+  await refused(app, layer, () => pen.clickNode(third), FULL.edge, told, { reopen: false });
+  expect(sceneLinks(app)).toBe(20000);
+});
+
+test('the pen links and bends in one crowd, the outline makes the scene’s 20,000th link in another, and the pen then refuses the next', async () => {
+  // Counted as they stand: the pen's own crowd unchanged since it last
+  // asked, another crowd's links have moved on
+  const { app, layer, pen, told } = await oneLinkShort({ short: 2 });
+  const other = app.scene.getFlowLayers().find(each => each.id === 'f4');
+  pen.clickNode(layer.graph.getNodes()[1]);
+  bend(pen, layer.graph.getEdges()[0]);
+  expect([sceneLinks(app), layer.graph.getEdges()[0].controlPoints.length]).toEqual([19999, 1]);
+  outline(app, connect(other, 'f4-n0', 'f4-n99'));
+  expect(sceneLinks(app)).toBe(20000);
+  // Back to the pen in the last crowd, as the author would go
+  app.eventBus.emit('crowd:selected', layer);
+  app.enterNetworkEditMode();
+  pen.clickNode(layer.graph.getNodes()[1]);
+  expect([pen.active, pen.layer]).toEqual([true, layer]);
+
+  await refused(app, layer, () => pen.clickNode(layer.graph.getNodes()[2]), FULL.edge, told, { reopen: false });
+  expect(sceneLinks(app)).toBe(20000);
+});
+
+test('the pen makes a scene’s 20,000th link, the outline then refuses one in another crowd, and a link deleted makes room again', async () => {
+  const { app, layer, pen, told } = await oneLinkShort();
+  const other = app.scene.getFlowLayers().find(each => each.id === 'f4');
+  const [, second, third] = layer.graph.getNodes();
+  pen.clickNode(second);
+  expect(sceneLinks(app)).toBe(20000);
+
+  outlineRefuses(app, other, connect(other, 'f4-n0', 'f4-n99'), FULL.edge);
+
+  pen.deleteEdge(layer.graph.getEdges()[0]);
+  pen.clickNode(third);
+  expect(sceneLinks(app)).toBe(20000);
+  expect(told()).toEqual([]);
+});
+
+test('at a crowd’s 2,000 nodes, the pen and the outline still link two of its nodes', async () => {
+  const { app, layer, pen, told } = await editing([crowd('c', { nodes: 2000, links: 1 })]);
+  const nodes = layer.graph.getNodes();
+  pen.clickNode(nodes[0]);
+  pen.clickNode(nodes[5]);
+  outline(app, connect(layer, nodes[7].id, nodes[9].id));
+
+  expect([layer.graph.getNodes().length, layer.graph.getEdges().length]).toEqual([2000, 3]);
+  expect(told()).toEqual([]);
+  expect(await reopens(app._buildProjectSnapshot())).toBe(true);
+});
+
+test('at a scene’s 10,000 nodes, the pen and the outline still link two nodes of a crowd', async () => {
+  const { app, layer, pen, told } = await editing(Array.from({ length: 5 }, (_, index) => crowd(`f${index}`, { nodes: 2000, links: 0 })));
+  const nodes = layer.graph.getNodes();
+  pen.clickNode(nodes[0]);
+  pen.clickNode(nodes[1]);
+  outline(app, connect(layer, nodes[2].id, nodes[3].id));
+
+  expect(app.scene.getFlowLayers().reduce((sum, each) => sum + each.graph.getNodes().length, 0)).toBe(10000);
+  expect(layer.graph.getEdges()).toHaveLength(2);
+  expect(told()).toEqual([]);
 });
