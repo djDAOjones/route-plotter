@@ -9,7 +9,9 @@
  * that should be still ran about 60 frames a second, against the rule that a
  * stable paused view queues none. A frame that draws no camera now puts it on
  * its target: in Edit mode, with Camera movement off, and under the author's
- * viewport zoom, which takes the camera's place. Where it is drawn, in Preview
+ * viewport zoom, which takes the camera's place. That target is where the
+ * camera comes to rest, its target zoom and the centre at that zoom, so a
+ * camera drawn again is drawn there at once. Where it is drawn, in Preview
  * and in the exported player, it still eases.
  *
  * Frames run only when a test runs them, so a loop that never sleeps shows as
@@ -142,6 +144,50 @@ function untickCameraMovement(app) {
   checkbox.dispatchEvent(new Event('change'));
 }
 
+/**
+ * A booted editor in Preview, at rest at the start, whose route runs from
+ * (0.2, 0.3) with a 3× camera to the canvas's corner, (0.98, 0.98), with an
+ * `endZoom` camera: zoomed in there, the view stops at the canvas's edge,
+ * short of the head.
+ */
+async function routeToTheCorner(endZoom) {
+  const app = await bootApp();
+  await app.ready;
+  app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+  app.eventBus.emit('waypoint:add', { imgX: 0.98, imgY: 0.98, isMajor: true });
+  app.waypoints[0].camera.zoom = 3;
+  app.waypoints[1].camera.zoom = endZoom;
+  app.eventBus.emit('ui:animation:skip-start');
+  frames.runUntilIdle();
+  expect(frames.pending.size, 'the camera came to rest at the start').toBe(0);
+  expect(app.previewMode).toBe(true);
+  expect(app.exportSettings.includeCamera).toBe(true);
+  return app;
+}
+
+/**
+ * The camera as it rests at the route's end, drawn: at `zoom`, and on the
+ * head, held where the view at that zoom stays on the canvas; flat at 1×.
+ */
+function restingAtTheCorner(app, zoom) {
+  const width = app.displayWidth;
+  const height = app.displayHeight;
+  if (zoom === 1) return { zoom: 1, centerX: width / 2, centerY: height / 2, enabled: false };
+  const head = app.imageToCanvas(0.98, 0.98);
+  const edge = { x: width - width / (2 * zoom), y: height - height / (2 * zoom) };
+  expect(head.x, 'the head lies past where the view can follow it').toBeGreaterThan(edge.x);
+  expect(head.y, 'the head lies past where the view can follow it').toBeGreaterThan(edge.y);
+  return { zoom, centerX: edge.x, centerY: edge.y, enabled: true };
+}
+
+/** A drawn camera equals the expected one, to floating-point rounding. */
+function expectCamera(actual, expected, label) {
+  expect(actual.enabled, `${label}: drawn`).toBe(expected.enabled);
+  expect(actual.zoom, `${label}: zoom`).toBeCloseTo(expected.zoom, 9);
+  expect(actual.centerX, `${label}: centre x`).toBeCloseTo(expected.centerX, 6);
+  expect(actual.centerY, `${label}: centre y`).toBeCloseTo(expected.centerY, 6);
+}
+
 describe('DEF-44: a still view queues no animation frame', () => {
 
   test('a cold start with no waypoints goes idle once drawn', async () => {
@@ -265,6 +311,116 @@ describe('DEF-44: a still view queues no animation frame', () => {
     expect(drawn().slice(before), 'frames drawn after the zoom was undone').toEqual([]);
   });
 
+  test.each([
+    ['in from 3× to 16×', 16],
+    ['out from 3× to 2.25×', 2.25],
+  ])('undoing the view’s zoom after the camera zoomed %s beneath it, at the canvas’s edge, draws the camera at rest there at once', async (change, endZoom) => {
+    // The camera hidden by the view's zoom is put where it comes to rest. It
+    // was put at its target zoom on the centre its one frame had found at the
+    // zoom its rate limit had reached, about 3×: undone, the 16× view was
+    // drawn some 79 px short of the edge, and stayed there, as undoing the
+    // zoom draws one frame and wakes no loop.
+    const app = await routeToTheCorner(endZoom);
+    const drawn = watchCamera(app);
+    app.eventBus.emit('canvas:zoom-in');
+    expect(app.viewport.zoom).toBeCloseTo(1.5);
+    app.eventBus.emit('ui:animation:seek', 1);
+    expectIdle('at the end, under the view’s zoom');
+
+    app.eventBus.emit('canvas:zoom-reset');
+    expect(app.viewport.zoom).toBe(1);
+    expectCamera(drawn().at(-1), restingAtTheCorner(app, endZoom), 'the zoom undone');
+    const before = drawn().length;
+    app.animationEngine.requestUpdate();
+    expectIdle('the zoom undone');
+    expect(drawn().slice(before), 'frames drawn after the zoom was undone').toEqual([]);
+  });
+
+  test('undoing the view’s zoom after the camera went back to 1× beneath it leaves the flat view still', async () => {
+    // Put at 1× on a centre found at some 2.9×, the camera, drawn again at
+    // 1×, eased that centre back to the canvas centre unseen: the next scrub
+    // ran 72 frames, each drawn the same.
+    const app = await routeToTheCorner(1);
+    const drawn = watchCamera(app);
+    app.eventBus.emit('canvas:zoom-in');
+    app.eventBus.emit('ui:animation:seek', 1);
+    expectIdle('at the end, under the view’s zoom');
+
+    app.eventBus.emit('canvas:zoom-reset');
+    expect(drawn().at(-1)).toEqual(restingAtTheCorner(app, 1));
+    app.eventBus.emit('ui:animation:seek', 1);
+    expectIdle('a scrub to where the head is, the zoom undone');
+  });
+
+  test('after the view’s zoom is undone, a scrub draws the camera as it draws one that was never hidden', async () => {
+    // A hidden frame still records where the head is, as a drawn one does, so
+    // a small scrub after the zoom is undone eases the camera on rather than
+    // jumping it. The same moves, Skip to start between: once drawn
+    // throughout, once beneath the view's zoom, each from the camera at rest
+    // at the start, and the scrub 20 ms after its last frame.
+    const app = await routeToTheCorner(1);
+    const drawn = watchCamera(app);
+    const nearTheEnd = app.animationEngine.pathToTimelineProgress(0.97);
+    const scrubBack = () => {
+      const before = drawn().length;
+      app.eventBus.emit('ui:animation:seek', nearTheEnd);
+      const ran = frames.runUntilIdle();
+      expect(frames.pending.size, `the camera eased on and stopped, after ${ran}`).toBe(0);
+      return drawn().slice(before);
+    };
+
+    app.eventBus.emit('ui:animation:seek', 1);
+    frames.runUntilIdle();
+    expect(frames.pending.size, 'drawn throughout, the camera came to rest at the end').toBe(0);
+    const neverHidden = scrubBack();
+    app.eventBus.emit('ui:animation:skip-start');
+    frames.runUntilIdle();
+    expect(frames.pending.size, 'the camera came to rest at the start again').toBe(0);
+
+    app.eventBus.emit('canvas:zoom-in');
+    app.eventBus.emit('ui:animation:seek', 1);
+    expectIdle('at the end, under the view’s zoom');
+    app.eventBus.emit('canvas:zoom-reset');
+    const onceHidden = scrubBack();
+
+    expect(neverHidden.length).toBeGreaterThan(1);
+    expect(neverHidden[0].zoom, 'a small scrub eases the camera: a jump draws the 1.03× its rate limit allows at once')
+      .toBeLessThan(1.01);
+    expect(onceHidden).toEqual(neverHidden);
+  });
+
+  test.each([
+    ['in from 3× to 16×', 16],
+    ['back from 3× to 1×', 1],
+  ])('leaving Preview while the camera zooms %s at the canvas’s edge, Preview draws it at rest there on return', async (change, endZoom) => {
+    // Edit mode puts the camera on the same target, and it was the same pair:
+    // the 16× view came back some 74 px short of the edge and stayed there,
+    // and the flat view's centre was left to ease unseen.
+    const app = await routeToTheCorner(endZoom);
+    const drawn = watchCamera(app);
+    app.eventBus.emit('ui:animation:seek', 1);
+    for (let frame = 0; frame < 3; frame += 1) {
+      expect(frames.pending.size, `zooming frame ${frame + 1} is queued`).toBeGreaterThan(0);
+      frames.runNext();
+    }
+    expect(frames.pending.size, 'the camera is still zooming').toBeGreaterThan(0);
+
+    app.elements.modeToggleBtn.click();
+    expect(app.previewMode).toBe(false);
+    expectIdle('Edit mode, left while the camera zoomed');
+
+    const before = drawn().length;
+    app.elements.modeToggleBtn.click();
+    expect(app.previewMode).toBe(true);
+    expectIdle('Preview again');
+    const resumed = drawn().slice(before);
+    expect(resumed.length).toBeGreaterThan(0);
+    expectCamera(resumed[0], restingAtTheCorner(app, endZoom), 'Preview again');
+    for (const later of resumed) expect(later).toEqual(resumed[0]);
+    app.eventBus.emit('ui:animation:seek', 1);
+    expectIdle('a scrub to where the head is, in Preview again');
+  });
+
   test('Skip to start in Edit mode, after the camera zoomed in Preview, goes idle', async () => {
     // A reset puts the zoom's rate limiter back to 1× (`resetRateLimiter`),
     // short of the 3× target, and only a frame that drew the camera took it
@@ -363,6 +519,61 @@ describe('DEF-44: the camera settles where no frame eases it', () => {
     expect(camera.isZoomTransitioning(1200, 800)).toBe(false);
     expect([camera._rateLimitedZoom, camera._smoothedZoom]).toEqual([4, 4]);
     expect([camera._smoothedCenterX, camera._smoothedCenterY]).toEqual([700, 300]);
+  });
+
+  test('settling a fractional zoom, as the This Zoom slider sets most, puts it exactly on its target', () => {
+    // The slider's zooms are 2 to a power in steps of 0.04: all but 1×, 2×,
+    // 4×, 8× and 16× are fractional.
+    const zoom = CameraService.sliderToZoom(0.3);
+    expect(zoom % 1).not.toBe(0);
+    const camera = cameraMidMove();
+    camera._targetZoom = zoom;
+
+    camera.settle();
+
+    expect(camera.isZoomTransitioning(1200, 800)).toBe(false);
+    expect([camera._rateLimitedZoom, camera._smoothedZoom]).toEqual([zoom, zoom]);
+  });
+
+  test.each([
+    ['in to 16×', 3, FRAME_MS, 16, { zoom: 16, centerX: 7440, centerY: 4185, enabled: true }],
+    ['out to 1×', 3, FRAME_MS, 1, { zoom: 1, centerX: 3840, centerY: 2160, enabled: false }],
+    ['out to within 1×’s tolerance', 3, FRAME_MS, 1.0005, { zoom: 1, centerX: 3840, centerY: 2160, enabled: false }],
+    ['in to 16× from the flat view before its rate limit moves', 1, 0, 16, { zoom: 16, centerX: 7440, centerY: 4185, enabled: true }],
+  ])('a frame zooming %s aims the camera where it comes to rest, so settled there it is drawn still', (change, from, elapsed, endZoom, rest) => {
+    // The target centre is the one at the target zoom (flat on the canvas
+    // centre within 1×'s tolerance, as a drawn camera rests), not the one at
+    // the zoom the rate limit has reached this frame, which settling paired
+    // with the target zoom. On an 8K canvas, the head in its corner, past
+    // where a zoomed view can follow it; the camera already at the route's
+    // end, its rate limit at `from`, `elapsed` ms after its last step.
+    const camera = new CameraService();
+    const frameAt = () => camera.calculateCameraState({
+      progress: 1,
+      waypoints: [{ camera: { zoom: from } }, { camera: { zoom: endZoom } }],
+      waypointProgressValues: [0, 1],
+      headPosition: { x: 7670, y: 4310 },
+      canvasWidth: 7680,
+      canvasHeight: 4320,
+      animationDuration: 10000,
+    });
+    camera._lastProgress = 1;
+    camera._rateLimitedZoom = from;
+    camera._lastZoomUpdateTime = frames.now();
+    frames.wait(elapsed);
+    frameAt();
+    expect(camera._rateLimitedZoom, 'the rate limit has not reached the target').not.toBeCloseTo(endZoom, 2);
+
+    camera.settle();
+
+    expect(camera.isZoomTransitioning(7680, 4320)).toBe(false);
+    frames.wait(FRAME_MS);
+    const next = frameAt();
+    expect(next.enabled).toBe(rest.enabled);
+    expect(next.zoom).toBeCloseTo(rest.zoom, 9);
+    expect(next.centerX).toBeCloseTo(rest.centerX, 6);
+    expect(next.centerY).toBeCloseTo(rest.centerY, 6);
+    expect(camera.isZoomTransitioning(7680, 4320)).toBe(false);
   });
 
   test('with no waypoints the camera rests on the flat view in one frame', () => {

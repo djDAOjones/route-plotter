@@ -300,8 +300,9 @@ export const cameraMixin = {
     // The author's viewport zoom takes the camera's place, as `hasZoom` does
     // in `RenderingService.render` (DEF-61), so this camera is not drawn
     // either, and easing it out of sight kept the loop awake (DEF-44). It
-    // has still followed the head, and rests where it was going, so it is in
-    // place when the zoom is undone: that draws one frame and wakes no loop.
+    // has still followed the head, and is put where it comes to rest, at its
+    // target zoom on the centre for that zoom, so it is in place when the
+    // zoom is undone: that draws one frame and wakes no loop.
     const hasZoom = this.viewport && this.viewport.zoom > 1;
     if (!hasZoom) return cameraState;
     this.cameraService.settle();
