@@ -64,9 +64,24 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-/** A canvas click during the draw, at image coordinates. */
+/** A canvas click during the draw, at image coordinates, as the canvas sends it on to the draw. */
 const place = (app, x, y) => app.eventBus.emit('area:draw-click', { imgX: x, imgY: y });
 const placeTriangle = app => TRIANGLE.forEach(({ x, y }) => place(app, x, y));
+
+/**
+ * A tap on the canvas at image coordinates, as a pointer makes it: through
+ * the interaction handler, which sends it on to the draw only while canvas
+ * drawing is on (`place` sends the draw's click itself). jsdom lays nothing
+ * out, so the canvas is given the rectangle the app is sized for.
+ */
+function tap(app, imgX, imgY) {
+  const canvas = app.interactionHandler.canvas;
+  canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1280, height: 720 });
+  const point = app.coordinateTransform.imageToCanvas(imgX, imgY);
+  const options = { bubbles: true, cancelable: true, pointerId: 41, pointerType: 'mouse', isPrimary: true, clientX: point.x, clientY: point.y };
+  canvas.dispatchEvent(new PointerEvent('pointerdown', { ...options, button: 0, buttons: 1 }));
+  canvas.dispatchEvent(new PointerEvent('pointerup', { ...options, button: -1, buttons: 0 }));
+}
 
 const drawing = app => ({
   active: app.areaDrawingService.isDrawing,
@@ -229,15 +244,18 @@ function watchTold() {
 
 /**
  * Nothing said of the draw, from `act` for a toast's five seconds on the
- * test's clock: no toast asked for with the message, and the message
- * nowhere in the toasts' region (the one the page started with, which stays
- * the one the page has) at each point the page's changes are delivered or
- * 250 ms sample, however it is marked up.
+ * test's clock: no toast asked for with the message, through the bus or by a
+ * call to the app's `showToast`, and the message nowhere in the toasts'
+ * region (the one the page started with, which stays the one the page has)
+ * at each point the page's changes are delivered or 250 ms sample, however
+ * it is marked up.
  */
 async function expectNothingTold(app, act) {
   const asked = [];
   const heard = ({ message } = {}) => asked.push(message);
   app.eventBus.on('ui:toast', heard);
+  const shown = vi.spyOn(app, 'showToast');
+  let calls = [];
   const seen = [];
   const look = () => {
     for (const region of new Set([shellRegion, toastRegion()])) {
@@ -258,8 +276,11 @@ async function expectNothingTold(app, act) {
   } finally {
     observer.disconnect();
     app.eventBus.off('ui:toast', heard);
+    calls = shown.mock.calls.map(([message]) => message);
+    shown.mockRestore();
   }
   expect(asked.filter(message => String(message).includes(GONE))).toEqual([]);
+  expect(calls.filter(message => String(message).includes(GONE))).toEqual([]);
   expect(seen).toEqual([]);
   expect(toastRegion()).toBe(shellRegion);
 }
@@ -408,8 +429,11 @@ test('a draw goes on, unannounced, through another waypoint’s deletion', async
     app.eventBus.emit('waypoint:delete', app.getWaypointById('ex-uon-3'));
     await nextTask();
   });
-  place(app, 0.2, 0.2);
+  // Still drawn on the canvas: a tap there closes the polygon
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, canvasDraws: true });
+  tap(app, 0.2, 0.2);
 
+  expect(drawing(app)).toEqual(ENDED);
   expect(target.areaHighlight).toMatchObject({ shape: 'polygon', points: TRIANGLE });
 });
 
@@ -422,8 +446,10 @@ test('a draw goes on through an undo that keeps its waypoint, and its polygon la
   placeTriangle(app);
 
   await expectNothingTold(app, () => app.undo());
-  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, banner: true });
-  place(app, 0.2, 0.2);
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, banner: true, canvasDraws: true });
+  tap(app, 0.2, 0.2);
+
+  expect(drawing(app)).toEqual(ENDED);
 
   const live = app.getWaypointById('ex-uon-2');
   expect(live.areaHighlight).toMatchObject({ shape: 'polygon', enabled: true, points: TRIANGLE });
@@ -444,10 +470,13 @@ test('a draw goes on through a redo that keeps its waypoint, and Draw Area press
   const live = app.getWaypointById('ex-uon-2');
   expect(live).not.toBe(drawn);
   expect(app.areaDrawingService.targetWaypoint).toBe(live);
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, canvasDraws: true });
   // The restored waypoint selected, and Draw Area asked for again.
   drawFor(app, live);
-  expect(drawing(app)).toMatchObject({ active: true, vertices: 3 });
-  place(app, 0.2, 0.2);
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, canvasDraws: true });
+  tap(app, 0.2, 0.2);
+
+  expect(drawing(app)).toEqual(ENDED);
 
   expect(live.areaHighlight).toMatchObject({ shape: 'polygon', points: TRIANGLE });
 });
