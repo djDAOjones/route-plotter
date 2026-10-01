@@ -648,6 +648,12 @@ function prepareAutosaveSnapshot(app) {
   }
 }
 
+// What browser recovery did or could not do must be heard. The author did not
+// ask, and nothing says it again: the omission and auto-save warnings are
+// suppressed once said, and a restore happens once per load. So the
+// announcement queue never lets later routine messages displace it (DEF-45).
+const RECOVERY_NOTICE = Object.freeze({ essential: true });
+
 function reportAutosaveOmissions(app, { omittedAssets, omittedBackground }) {
   const newlyOmittedAssets = omittedAssets && !app._autosaveAssetWarningShown;
   const newlyOmittedBackground = omittedBackground && !app._autosaveBackgroundWarningShown;
@@ -655,11 +661,14 @@ function reportAutosaveOmissions(app, { omittedAssets, omittedBackground }) {
   app._autosaveBackgroundWarningShown = omittedBackground;
 
   if (newlyOmittedAssets && newlyOmittedBackground) {
-    app.announce('Browser recovery excludes the background and custom images. Save a project file to preserve them.');
+    app.announce('Browser recovery excludes the background and custom images. Save a project file to preserve them.',
+      'polite', RECOVERY_NOTICE);
   } else if (newlyOmittedAssets) {
-    app.announce('Browser recovery excludes custom images. Save a project file to preserve them.');
+    app.announce('Browser recovery excludes custom images. Save a project file to preserve them.',
+      'polite', RECOVERY_NOTICE);
   } else if (newlyOmittedBackground) {
-    app.announce('Browser recovery excludes the background. Save a project file to preserve it.');
+    app.announce('Browser recovery excludes the background. Save a project file to preserve it.',
+      'polite', RECOVERY_NOTICE);
   }
 }
 
@@ -685,7 +694,7 @@ function replaceImmediateRecovery(app) {
 function reportAutosaveFailure(app) {
   if (app._autosaveFailureWarningShown) return;
   app._autosaveFailureWarningShown = true;
-  app.announce('Auto-save failed. Save a project file to keep your work.');
+  app.announce('Auto-save failed. Save a project file to keep your work.', 'polite', RECOVERY_NOTICE);
 }
 
 function captureLiveState(app) {
@@ -1069,9 +1078,12 @@ export const persistenceMixin = {
       const recovery = replaceImmediateRecovery(this);
       const recoveryUnavailable = recovery.attempted && !recovery.saved;
       
-      this.announce(recoveryUnavailable
-        ? 'Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.'
-        : 'Project loaded');
+      if (recoveryUnavailable) {
+        this.announce('Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.',
+          'polite', RECOVERY_NOTICE);
+      } else {
+        this.announce('Project loaded');
+      }
       console.log(`📦 Project loaded: ${file.name} (${this.waypoints.length} waypoints, ${this.imageAssetService.getAssetCount()} assets)`);
       return true;
     } catch (err) {
@@ -1259,7 +1271,7 @@ export const persistenceMixin = {
       console.debug('Loaded flow layers:', staged.scene.getFlowLayers().length);
       this.announce(recovery.attempted && !recovery.saved
         ? 'Previous session restored, but browser recovery is now unavailable. Save a project file to keep it safe.'
-        : 'Previous session restored');
+        : 'Previous session restored', 'polite', RECOVERY_NOTICE);
       return true;
     } catch (error) {
       console.warn('Autosave was not restored; current state was left unchanged:', error);

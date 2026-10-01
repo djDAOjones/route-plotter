@@ -7,21 +7,28 @@
  * loaded" was never heard. Each message also set a 2 s clear that nothing
  * cancelled, so an earlier message's clear could blank a later one early.
  *
- * Messages are now read in turn. One announced while the region is idle is
- * written at once, so code that reads the region straight after announcing
- * still sees it; one announced while another shows waits. Each keeps the
- * region for `ANNOUNCEMENTS.HOLD_MS`, and the region is cleared only once
- * nothing waits, so a repeated message still reads as a change. There is one
- * timer at a time, so no clear can land on a later message.
+ * Messages are now written to the region in turn. One announced while the
+ * region is idle is written at once, so code that reads the region straight
+ * after announcing still sees it; one announced while another shows waits.
+ * Each keeps the region for `ANNOUNCEMENTS.HOLD_MS`, and only once nothing
+ * waits is the region cleared and made polite again, so a repeated message
+ * still reads as a change. There is one timer at a time, so no clear can land
+ * on a later message.
  *
+ * - A message the author must hear is never dropped: one its caller marks
+ *   essential (what browser recovery did or could not do, which nothing says
+ *   again) and every assertive one. Only routine messages, which confirm what
+ *   the author has just done, ever give way.
  * - An assertive message waits ahead of the polite ones, but never cuts short
- *   the message showing: that would lose it, the fault this fixes. The region
- *   is assertive only while it shows one.
- * - A message identical to the one it would follow is dropped: the region
- *   already says it, and the same text written again is not read again.
- * - At most `ANNOUNCEMENTS.MAX_WAITING` wait. Beyond that the oldest polite one
- *   gives way, so a burst of toggles ends on the latest state and falls no
- *   further behind.
+ *   the message showing. The region is assertive only while it shows one.
+ * - A message identical to the one it would follow is merged into it: the
+ *   region already says it, or will next, and the same text written again is
+ *   not read again. The merged message keeps the stronger protection.
+ * - At most `ANNOUNCEMENTS.MAX_WAITING` routine messages wait. Beyond that the
+ *   oldest gives way, so a burst of toggles falls no further behind; messages
+ *   the author must hear do not count.
+ * - A blank or whitespace-only message has nothing to read and is ignored.
+ *   Text is written as text, never parsed as markup.
  *
  * @module utils/announcementQueue
  */
@@ -32,7 +39,7 @@ import { ANNOUNCEMENTS } from '../config/constants.js';
  * Create the queue that writes a live region.
  *
  * @param {HTMLElement|null} region - The live region; without one, announcing does nothing
- * @returns {{announce: (message: string, priority?: string) => void}}
+ * @returns {{announce: (message: string, priority?: string, options?: {essential?: boolean}) => void}}
  */
 export function createAnnouncementQueue(region) {
   const waiting = [];
@@ -46,7 +53,7 @@ export function createAnnouncementQueue(region) {
   };
 
   // The message showing has had its time: the next replaces it, or, with
-  // none waiting, the region is cleared.
+  // none waiting, the region is cleared and left polite, as the shell has it.
   const showNext = () => {
     const entry = waiting.shift();
     if (entry) {
@@ -54,6 +61,7 @@ export function createAnnouncementQueue(region) {
       return;
     }
     showing = null;
+    region.setAttribute('aria-live', 'polite');
     region.textContent = '';
   };
 
@@ -63,23 +71,26 @@ export function createAnnouncementQueue(region) {
      *
      * @param {string} message
      * @param {string} [priority='polite'] - 'assertive' waits ahead of polite messages
+     * @param {Object} [options]
+     * @param {boolean} [options.essential=false] - The author must hear it, so it never gives way
      */
-    announce(message, priority = 'polite') {
-      // A blank message has nothing to read and would only hold the region.
-      if (!region || !message) return;
-      const entry = { message, priority };
+    announce(message, priority = 'polite', { essential = false } = {}) {
+      if (!region || !String(message ?? '').trim()) return;
+      const entry = { message, priority, kept: essential || priority === 'assertive' };
       if (!showing) {
         show(entry);
         return;
       }
       const firstPolite = waiting.findIndex(each => each.priority !== 'assertive');
       const at = priority === 'assertive' && firstPolite !== -1 ? firstPolite : waiting.length;
-      if ((at > 0 ? waiting[at - 1] : showing).message === message) return;
-      waiting.splice(at, 0, entry);
-      if (waiting.length > ANNOUNCEMENTS.MAX_WAITING) {
-        const oldestPolite = waiting.findIndex(each => each.priority !== 'assertive');
-        waiting.splice(oldestPolite === -1 ? 0 : oldestPolite, 1);
+      const before = at > 0 ? waiting[at - 1] : showing;
+      if (before.message === message) {
+        before.kept ||= entry.kept;
+        return;
       }
+      waiting.splice(at, 0, entry);
+      const routine = waiting.filter(each => !each.kept);
+      if (routine.length > ANNOUNCEMENTS.MAX_WAITING) waiting.splice(waiting.indexOf(routine[0]), 1);
     },
   };
 }

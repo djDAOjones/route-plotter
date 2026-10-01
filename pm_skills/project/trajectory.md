@@ -68,11 +68,12 @@ the export. Once its transport is suspended, each part of an export's
 clean-up runs whether or not another fails, and its controls are freed
 whatever failed. (2026-09-28)
 
-DEF-45 — Announcements are read in turn: a recovery warning is no longer
-replaced, in the same moment, by "Previous session restored" or "Project
-loaded"; each message keeps the live region for 2 s, no earlier message's clear
-blanks a later one, and the waypoint list's own messages wait their turn.
-(2026-10-01)
+DEF-45 — Announcements are written to the live region in turn, and what
+browser recovery did or could not do is never pushed out: a recovery
+warning is no longer replaced by "Previous session restored" or "Project
+loaded", nor lost when the author plays and pauses straight away; each
+message keeps the region for 2 s, no earlier clear blanks a later one, and
+the waypoint list's own messages wait their turn. (2026-10-01)
 
 ## Before the big run (2026-09-28)
 
