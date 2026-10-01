@@ -78,15 +78,24 @@ async function withBackground(pathOnly) {
   return { app, image };
 }
 
+/**
+ * The calls that empty a whole canvas: a size given to it, through its
+ * `width` and `height` properties or by any route to the attributes they
+ * reflect (the test recorder records both the same way), even the size it
+ * has, and `reset()`.
+ */
+const EMPTIES = new Set(['canvas.width', 'canvas.height', 'reset']);
+
 /** The calls that draw or erase on a canvas. */
-const MARKS = new Set(['clearRect', 'fillRect', 'strokeRect', 'fill', 'stroke', 'fillText', 'strokeText', 'drawImage', 'putImageData', 'canvas.width', 'canvas.height']);
+const MARKS = new Set(['clearRect', 'fillRect', 'strokeRect', 'fill', 'stroke', 'fillText', 'strokeText', 'drawImage', 'putImageData', ...EMPTIES]);
 
 /**
  * A frame's calls on every canvas, in order, each with its arguments, the
  * transform it was made under and the drawing state it was made in (alpha,
  * compositing, filter and the rest, as the test recorder keeps them: not the
  * bitmap, nor a clip region), the canvases named by what they are, so that two
- * apps' frames can be compared.
+ * apps' frames can be compared. A size given to a canvas, by any route, and a
+ * `reset()` are among the calls.
  */
 function transcriptOf(calls, names) {
   const nameOf = id => names[id] ?? 'other';
@@ -118,13 +127,14 @@ async function framesWithNoSizeChosen(pathOnly) {
  * An export whose encoder holds after its first frame until it is let
  * finish, made to fail, or cancelled. Each frame records the canvas it was
  * drawn on; every draw of the background it made, on any canvas (which,
- * where, the transform it was drawn under, and the alpha and compositing it
- * was drawn with); every draw of the path's own layer (the renderer's vector
- * canvas) on the main canvas, the same; whether the path was drawn on that
- * layer before it was put there; whether the main canvas was cleared after
- * the frame's first draw that must survive, so that what the encoder captures
- * next would have lost it; and whether the main canvas was given a size
- * during the frame, which empties it.
+ * where, the transform it was drawn under, and the alpha, compositing and
+ * filter it was drawn with, the state that decides whether a draw shows at
+ * all); every draw of the path's own layer (the renderer's vector canvas) on
+ * the main canvas, the same; whether the path was drawn on that layer before
+ * it was put there; whether the main canvas was cleared after the frame's
+ * first draw that must survive, so that what the encoder captures next would
+ * have lost it; and whether the main canvas was emptied during the frame
+ * (given a size, by any route, or reset).
  */
 async function exporting(app) {
   const frames = [];
@@ -163,9 +173,16 @@ async function exporting(app) {
         clipped.push(...clipsIn(calls, roles()));
         const vector = contextIdFor(app.renderingService.vectorCanvas);
         const layer = `[canvas #${vector}]`;
-        /** A draw: its surface, its rectangle, the transform, and the alpha and compositing it was drawn with. */
-        const drawOf = entry => [entry[0] === main ? 'main' : `canvas #${entry[0]}`, ...entry.slice(3, 7), [...entry.transform],
-          entry.state.globalAlpha ?? 1, entry.state.globalCompositeOperation ?? 'source-over'];
+        /**
+         * A draw: its surface, its rectangle (every number it was given, so
+         * that a source rectangle drawn into nothing does not pass for the
+         * place), the transform, and the alpha, compositing and filter it was
+         * drawn with (a filter such as `opacity(0)` hides it as alpha 0 does;
+         * a shadow is drawn beneath it and smoothing only softens it, so
+         * neither can).
+         */
+        const drawOf = entry => [entry[0] === main ? 'main' : `canvas #${entry[0]}`, ...entry.slice(3), [...entry.transform],
+          entry.state.globalAlpha ?? 1, entry.state.globalCompositeOperation ?? 'source-over', entry.state.filter ?? 'none'];
         const background = calls.filter(([, name, source]) => name === 'drawImage' && source === token).map(drawOf);
         const composite = ([surface, name, source]) => surface === main && name === 'drawImage' && source === layer;
         const put = calls.findIndex(composite);
@@ -180,12 +197,12 @@ async function exporting(app) {
           path: calls.filter(composite).map(drawOf),
           pathDrawn: put > 0 && lastStroke >= 0,
           clearedAfter: kept < 0 || onMain.slice(kept + 1).some(([, name]) => name === 'clearRect'),
-          resized: onMain.some(([, name]) => name === 'canvas.width' || name === 'canvas.height'),
+          emptied: onMain.some(([, name]) => EMPTIES.has(name)),
           // Anything that draws or erases on the main canvas once the path is on it
           afterPath: put < 0 ? [] : calls.slice(put + 1).filter(([surface, name]) => surface === main && MARKS.has(name)).map(([, name]) => name),
           // The path layer emptied between its last stroke and being put on the main canvas
           layerErased: lastStroke >= 0 && calls.slice(lastStroke + 1, put)
-            .some(([surface, name]) => surface === vector && (name === 'clearRect' || name === 'canvas.width' || name === 'canvas.height')),
+            .some(([surface, name]) => surface === vector && (name === 'clearRect' || EMPTIES.has(name))),
         });
         transcripts.push(transcriptOf(calls, roles()));
       };
@@ -250,20 +267,25 @@ function portraitDisplay() {
 
 /**
  * What a frame of `width` × `height` should show: the background drawn once,
- * on the main canvas, fitted at the zoom, nothing moved, at full alpha and
- * composited over (none, path only); the renderer's own path layer, drawn on
- * in the frame, put on the main canvas over the whole of it the same way; and
- * the main canvas neither cleared after the first of those nor resized.
+ * on the main canvas, fitted at the zoom, nothing moved, at full alpha,
+ * composited over and unfiltered (none, path only); the renderer's own path
+ * layer, drawn on in the frame, put on the main canvas over the whole of it
+ * the same way; and the main canvas neither cleared after the first of those
+ * nor emptied (given a size or reset) during the frame. These are calls, not
+ * pixels: what the reveal mask lets show of the background, whether a draw
+ * over the background before the path layer hides it, and how visible the
+ * strokes on that layer are, are judged only by the comparison with the
+ * export that has no size chosen, which a fault both share passes.
  */
 const frameOf = (width, height, pathOnly) => {
   const { x, y, w, h } = fitted(width, height);
   return {
     exportMode: true, width, height,
-    background: pathOnly ? [] : [['main', x, y, w, h, IDENTITY, 1, 'source-over']],
-    path: [['main', 0, 0, width, height, IDENTITY, 1, 'source-over']],
+    background: pathOnly ? [] : [['main', x, y, w, h, IDENTITY, 1, 'source-over', 'none']],
+    path: [['main', 0, 0, width, height, IDENTITY, 1, 'source-over', 'none']],
     pathDrawn: true,
     clearedAfter: false,
-    resized: false,
+    emptied: false,
     afterPath: [],
     layerErased: false,
   };
@@ -310,8 +332,11 @@ test.each(KINDS.flatMap(([kind, pathOnly]) => CHANGES.map(([label, change]) => [
   expect(geometry(app)).toEqual(began);
   await run.completes();
   expect(run.frames).toEqual(Array(3).fill(frameOf(began.canvas[0], began.canvas[1], pathOnly)));
-  // Nothing is done to any canvas between its frames: a size chosen
-  // meanwhile leaves each as the last frame left it
+  // No canvas is given anything between its frames, no call, and no size
+  // or reset by any route (the recorder records a size given through a
+  // canvas's attributes as through its properties): a size chosen meanwhile
+  // leaves each as the last frame left it. Within the frames, the comparison
+  // below holds that it gives none a size or reset either
   expect(run.between.slice(1)).toEqual([[], []]);
   // Nothing in this app clips, and the recorder keeps no clip region: a clip
   // on any canvas, from the export's setting up to its last frame, could
