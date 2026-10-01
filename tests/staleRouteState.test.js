@@ -161,6 +161,42 @@ test('a route deleted down to one waypoint leaves nothing of itself, and its mar
   expect(app.renderingService.getBeaconScaleOverride(growing)).toBeNull();
 });
 
+test('in Edit, a route deleted down to one waypoint draws nothing more of the ripple it had started there, at once or once its timing settles', async () => {
+  // The engine's schedules are not all a clear must take: the renderer keeps
+  // each beacon it started, and one left behind draws on, in Edit as in Preview
+  const { app, growing } = await openDayMidGrow();
+  growing.beaconStyle = 'ripple';
+  app.invalidateAnimationTiming();
+  const engine = app.animationEngine;
+  const ripple = engine.beaconSchedules.find(each => each.waypointId === growing.id);
+  expect(ripple.style).toBe('ripple');
+  const offset = (engine.startHandleTime || 0) + (engine.introTime || 0);
+  engine.seekToProgress((ripple.arrivalMs + 250 + offset) / engine.state.duration);
+  app.render();
+  app.eventBus.emit('motion:preview-mode-change', false);
+  const beacon = app.renderingService.beaconRenderer.beacons.get(growing.id);
+  const drawn = vi.spyOn(beacon, 'render');
+  app.render();
+  // Drawing, in Edit
+  expect(drawn).toHaveBeenCalled();
+  drawn.mockClear();
+
+  for (const waypoint of [...app.waypoints]) {
+    if (waypoint !== growing) app.eventBus.emit('waypoint:delete', waypoint);
+  }
+  app.render();
+  expect(drawn).not.toHaveBeenCalled();
+  await timingSettled();
+  app.render();
+
+  expect(drawn).not.toHaveBeenCalled();
+  // The waypoint's beacon is a new one, idle: no schedule starts it
+  const now = app.renderingService.beaconRenderer.beacons.get(growing.id);
+  expect(now).not.toBe(beacon);
+  expect(now?.isActive() ?? false).toBe(false);
+  expect(routeState(app)).toEqual(NO_ROUTE);
+});
+
 /** Past the 50 ms the app waits before it rebuilds a route's timing. */
 const timingSettled = () => new Promise(resolve => setTimeout(resolve, 100));
 
@@ -624,8 +660,14 @@ test.each([
     await app.exportHTML();
     return saved;
   }],
-])('%s made mid-drag, before the route’s rebuild has run, holds the route with its own duration', async (_, save) => {
+].flatMap(([name, save]) => ['Preview', 'Edit'].map(mode => [name, mode, save])))('%s made mid-drag in %s, before the route’s rebuild has run, holds the route with its own duration', async (_, mode, save) => {
+  // Each save settles the route's timing itself, in either mode: an HTML
+  // export that settled it only in Preview held, in Edit, the duration before
   const app = await derivedByPreview(threeStops());
+  if (mode === 'Edit') {
+    app.eventBus.emit('motion:preview-mode-change', false);
+    await timingSettled();
+  }
   dragging(app, 'b', 0.25, 0.7);
 
   const saved = await save(app);
@@ -634,6 +676,8 @@ test.each([
   const b = app.getWaypointById('b');
   expect(saved.waypoints.find(each => each.id === 'b')).toMatchObject({ imgX: b.imgX, imgY: b.imgY });
   expect(saved.animationState.duration).toBe(app.animationEngine.state.duration);
+  // …the route as it stands, rebuilt at the speed set
+  expect(saved.animationState.duration).toBeCloseTo(rebuiltAt(app, app.animationEngine.state.speed), 6);
 });
 
 test('a video export begun just after a stop moved keeps the duration it began with, all through', async () => {
