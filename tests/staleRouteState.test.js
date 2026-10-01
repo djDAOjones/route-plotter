@@ -991,6 +991,39 @@ test.each(['Preview', 'Edit'].flatMap(mode => [2, -2].map(rate => [mode, rate]))
   expect([app.animationEngine.isPlaying(), app.animationEngine.state.playbackSpeed]).toEqual([true, rate]);
 });
 
+test.each([
+  ['undone', app => app.undo()],
+  // Not where c was: a route as long as the one before the clear would be
+  // timed right by a duration kept from it
+  ['given a second stop', app => app.eventBus.emit('waypoint:add', { imgX: 0.9, imgY: 0.4, isMajor: true })],
+])('a route authored at 80 px/s and deleted down to one keeps that speed, and the route that comes back (%s) is timed at it, live and in the saved file', async (_, comeBack) => {
+  // The speed a route is authored at (px/s) is the project's, and not the
+  // transport's rate (the 2× and -2× above): a clear that put it back to the
+  // default 200 went unnoticed, and timed the route that came back at it
+  const project = threeStops();
+  project.animationState.speed = 80;
+  const app = await derivedByPreview(project);
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('c'));
+  await timingSettled();
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('a'));
+  await timingSettled();
+  expect(app.waypoints.map(each => each.id)).toEqual(['b']);
+  const kept = app.animationEngine.state.speed;
+
+  comeBack(app);
+  await timingSettled();
+  expect(app.waypoints).toHaveLength(2);
+  const live = app.animationEngine.state.duration;
+  const saved = await savedProject(app);
+
+  const expected = rebuiltAt(app, 80);
+  expect(expected).not.toBeCloseTo(rebuiltAt(app, ANIMATION.DEFAULT_SPEED), 0);
+  for (const [where, duration] of [['live', live], ['the saved file', saved.animationState.duration]]) {
+    expect(duration, where).toBeCloseTo(expected, 6);
+  }
+  expect({ cleared: kept, saved: saved.animationState.speed }).toEqual({ cleared: 80, saved: 80 });
+});
+
 test.each(['Preview', 'Edit'])('in %s, a stop moved while the route plays is saved with its duration at the speed set: in recovery, in the saved file, and reopened', async (mode) => {
   // Each save settles the route's timing itself, playing or not: a settle that
   // passed over a playing transport left recovery and the file with the
@@ -1017,6 +1050,91 @@ test.each(['Preview', 'Edit'])('in %s, a stop moved while the route plays is sav
   for (const [where, duration] of [['recovery', recovery.animationState.duration], ['the saved file', saved.animationState.duration], ['reopened', reopened]]) {
     expect(duration, where).toBeCloseTo(expected, 6);
   }
+});
+
+/** A background loaded, as an HTML export needs one, and the retime it brings run. */
+async function withBackground(app) {
+  const image = Object.assign(new Image(), { naturalWidth: 1600, naturalHeight: 900, width: 1600, height: 900 });
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  vi.spyOn(app, 'loadImageFileAsset').mockResolvedValue({ base64: png, getImageElement: async () => image });
+  expect(await loadBackgroundFile(app, new File(['x'], 'background.png', { type: 'image/png' }))).toBe(true);
+  await timingSettled();
+}
+
+/** An HTML export, as the author asks for it: the project it embeds. */
+async function htmlExported(app) {
+  let embedded = null;
+  vi.spyOn(app.htmlExportService, 'estimateSize').mockResolvedValue({ formatted: '1 KB' });
+  vi.spyOn(app.htmlExportService, 'exportHTML').mockImplementation(async ({ projectData }) => { embedded = projectData; return new Blob(['html']); });
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:export');
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  await app.exportHTML();
+  return embedded;
+}
+
+/**
+ * The route at 80 px/s in `mode`, playing, a stop dragged and not yet let go
+ * (which saves nothing): its rebuild still queued, the duration the one from
+ * before the drag. No recovery written and no save has run that rebuild, so
+ * what a save made next holds is that save's own settling.
+ */
+async function playingMidDrag(mode, { background = false } = {}) {
+  const project = threeStops();
+  project.animationState.speed = 80;
+  const app = await derivedByPreview(project);
+  if (mode === 'Edit') {
+    app.eventBus.emit('motion:preview-mode-change', false);
+    await timingSettled();
+  }
+  if (background) await withBackground(app);
+  app.animationEngine.play();
+  const before = app.animationEngine.state.duration;
+
+  dragging(app, 'b', 0.25, 0.7);
+
+  expect({ playing: app.animationEngine.isPlaying(), queued: Boolean(app._durationUpdateTimeout), duration: app.animationEngine.state.duration })
+    .toEqual({ playing: true, queued: true, duration: before });
+  return { app, before };
+}
+
+test.each(['Preview', 'Edit'])('in %s, Save Project made mid-drag while the route plays at 80 px/s, nothing having run the route’s rebuild before it, saves the route with its duration rebuilt at that speed, and the file reopens with it', async (mode) => {
+  // Save Project settles the route's timing itself, while it plays. In the
+  // test above, the finished move's recovery snapshot had settled it first, so
+  // a Save Project that skipped its own settle while playing passed the whole
+  // gate, and saved and reopened the duration from before the move
+  const { app, before } = await playingMidDrag(mode);
+
+  const saved = await savedProject(app);
+
+  expect(app.animationEngine.isPlaying()).toBe(true);
+  app.animationEngine.pause();
+  expect(app.animationEngine.state.speed).toBe(80);
+  const expected = rebuiltAt(app, 80);
+  expect(expected).not.toBeCloseTo(before, 0);
+  expect(expected).not.toBeCloseTo(rebuiltAt(app, ANIMATION.DEFAULT_SPEED), 0);
+  expect(saved.waypoints.find(each => each.id === 'b')).toMatchObject({ imgX: 0.25, imgY: 0.7 });
+  expect(saved.animationState.duration, 'the saved file').toBeCloseTo(expected, 6);
+  expect(await reopenedDuration(saved), 'reopened').toBeCloseTo(expected, 6);
+});
+
+test.each(['Preview', 'Edit'])('in %s, an HTML export made mid-drag while the route plays at 80 px/s, nothing having run the route’s rebuild before it, embeds the route with its duration rebuilt at that speed', async (mode) => {
+  // As Save Project: the export settles the route's timing itself, while it
+  // plays. The exported player rebuilds a constant-time route's duration from
+  // its speed (the plan's exception), but the project it embeds is the
+  // project's snapshot, and holds the route with its own duration
+  const { app, before } = await playingMidDrag(mode, { background: true });
+
+  const embedded = await htmlExported(app);
+
+  expect(app.animationEngine.isPlaying()).toBe(true);
+  app.animationEngine.pause();
+  expect(app.animationEngine.state.speed).toBe(80);
+  const expected = rebuiltAt(app, 80);
+  expect(expected).not.toBeCloseTo(before, 0);
+  expect(expected).not.toBeCloseTo(rebuiltAt(app, ANIMATION.DEFAULT_SPEED), 0);
+  expect(embedded.waypoints.find(each => each.id === 'b')).toMatchObject({ imgX: 0.25, imgY: 0.7 });
+  expect(embedded.animationState.duration, 'the embedded project').toBeCloseTo(expected, 6);
 });
 
 test.each([80, 650].flatMap(speed => ['made', 'cleared'].map(action => [speed, action])))('at %i px/s, a rejoin %s times the route at that speed: live, in recovery, in the saved file, reopened, and in the path’s own travel', async (speed, action) => {
