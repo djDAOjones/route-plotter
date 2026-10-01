@@ -694,3 +694,175 @@ test('at a scene’s 10,000 nodes, the pen and the outline still link two nodes 
   expect(layer.graph.getEdges()).toHaveLength(2);
   expect(told()).toEqual([]);
 });
+
+// ---------------------------------------------------------------------------
+// Round 7's gaps, as matrices: a scene count filled in another crowd since
+// the pen last asked, every kind of crowd counting in both scene counts, and
+// each count full leaving the additions that do not use it free.
+// ---------------------------------------------------------------------------
+
+/** Scenes of thousands of nodes or links take a while to load, edit and reopen, more under load. */
+const LARGE = 30000;
+
+const sceneNodes = app => app.scene.getFlowLayers().reduce((sum, each) => sum + each.graph.getNodes().length, 0);
+const addNode = (layer, x = 80, y = 80) => ({ action: 'add-node', layerId: layer.id, type: 'normal', x, y });
+
+test.each(['pen', 'outline'])('the pen places the scene’s 9,999th node and bends a path, the outline then takes the 10,000th in another crowd, and the %s then refuses the next in the first', async (last) => {
+  const crowds = [...Array.from({ length: 4 }, (_, index) => crowd(`f${index}`, { nodes: 2000, links: 0 })),
+    crowd('other', { nodes: 1995, links: 0 }), crowd('last', { nodes: 3, links: 1 })];
+  const { app, layer, pen, told } = await editing(crowds);
+  const other = app.scene.getFlowLayers().find(each => each.id === 'other');
+  // The pen asks, in its own crowd, before the other crowd moves on
+  expect(pen.placeNode({ x: 0.8, y: 0.8 })).not.toBeNull();
+  bend(pen, layer.graph.getEdges()[0]);
+  expect(sceneNodes(app)).toBe(9999);
+  outline(app, addNode(other));
+  expect(sceneNodes(app)).toBe(10000);
+  app.eventBus.emit('crowd:selected', layer);
+  app.enterNetworkEditMode();
+
+  if (last === 'pen') await refused(app, layer, () => pen.placeNode({ x: 0.9, y: 0.9 }), FULL.node, told);
+  else outlineRefuses(app, layer, addNode(layer), FULL.node);
+  expect(sceneNodes(app)).toBe(10000);
+}, LARGE);
+
+test('the pen links in one crowd, the outline makes the scene’s 20,000th link in another, and the outline then refuses one in the first', async () => {
+  const { app, layer, pen } = await oneLinkShort({ short: 2 });
+  const other = app.scene.getFlowLayers().find(each => each.id === 'f4');
+  pen.clickNode(layer.graph.getNodes()[1]);
+  expect(sceneLinks(app)).toBe(19999);
+  outline(app, connect(other, 'f4-n0', 'f4-n99'));
+  expect(sceneLinks(app)).toBe(20000);
+
+  outlineRefuses(app, layer, connect(layer, 'last-n1', 'last-n2'), FULL.edge);
+  expect(sceneLinks(app)).toBe(20000);
+}, LARGE);
+
+/**
+ * An app editing the last crowd (three nodes, no links) of a scene whose five
+ * other crowds are `kind` (hidden, or following the route) and fill one of
+ * its counts: for `count` 'nodes', the other 9,997 of its 10,000 nodes; for
+ * 'links', all 20,000 of its links (put in place, as `twentyThousandLinks`
+ * puts its scene: past the project-wide budgets).
+ */
+async function fullOf(kind, count) {
+  const others = Array.from({ length: 5 }, (_, index) => ({
+    ...crowd(`f${index}`, count === 'nodes' ? { nodes: index === 4 ? 1997 : 2000, links: 0 } : { nodes: 100, links: 4000 }),
+    ...(kind === 'hidden' ? { visible: false } : { guideType: 'route' }),
+  }));
+  const app = await undrawn();
+  app.scene = Scene.fromJSON({ flowLayers: [...others, crowd('last', { nodes: 3, links: 0 })] });
+  const layer = app.scene.getFlowLayers().at(-1);
+  app.eventBus.emit('crowd:selected', layer);
+  app.enterNetworkEditMode();
+  const told = vi.fn();
+  app.eventBus.on('ui:toast', told);
+  return { app, layer, pen: app.networkEditService, told: () => told.mock.calls.map(([{ message }]) => message) };
+}
+
+test.each(['hidden', 'route'].flatMap(kind => ['nodes', 'links'].flatMap(count => ['pen', 'outline'].map(author => [kind, count, author]))))('crowds that are %s count toward the scene’s %s: the %s adds none past them', async (kind, count, author) => {
+  const { app, layer, pen, told } = await fullOf(kind, count);
+  const [a, b] = layer.graph.getNodes();
+  if (count === 'nodes') {
+    expect(sceneNodes(app)).toBe(10000);
+    if (author === 'pen') await refused(app, layer, () => pen.placeNode({ x: 0.9, y: 0.9 }), FULL.node, told, { reopen: false });
+    else outlineRefuses(app, layer, addNode(layer), FULL.node);
+  } else {
+    expect(sceneLinks(app)).toBe(20000);
+    pen.clickNode(a);
+    if (author === 'pen') await refused(app, layer, () => pen.clickNode(b), FULL.edge, told, { reopen: false });
+    else outlineRefuses(app, layer, connect(layer, a.id, b.id), FULL.edge);
+  }
+}, LARGE);
+
+/** The additions a full count leaves free, by pen or outline: each takes one more of what it adds, and nothing is refused. */
+const FREE = {
+  'a node on its own': {
+    counts: layer => layer.graph.getNodes().length,
+    pen: (app, layer, pen) => { pen.penNodeId = null; return pen.placeNode({ x: 0.85, y: 0.85 }); },
+    outline: (app, layer) => outline(app, addNode(layer, 85, 85)),
+  },
+  'a link between two of its nodes': {
+    counts: layer => layer.graph.getEdges().length,
+    pen: (app, layer, pen) => {
+      const [a, b] = unlinkedPair(layer);
+      pen.clickNode(a);
+      pen.clickNode(b);
+    },
+    outline: (app, layer) => {
+      const [a, b] = unlinkedPair(layer);
+      outline(app, connect(layer, a.id, b.id));
+    },
+  },
+  'a bend on a path with room': {
+    counts: layer => layer.graph.getEdges().reduce((sum, each) => sum + each.controlPoints.length, 0),
+    pen: (app, layer, pen) => bend(pen, pathWithRoom(layer)),
+    outline: (app, layer) => outline(app, addControl(layer, pathWithRoom(layer))),
+  },
+};
+const unlinkedPair = (layer) => {
+  const nodes = layer.graph.getNodes();
+  for (const a of nodes) {
+    for (const b of nodes) {
+      if (a !== b && !layer.graph.getEdgesForNode(a.id).some(each => each.sourceId === b.id || each.targetId === b.id)) return [a, b];
+    }
+  }
+  throw new Error('no unlinked pair');
+};
+const pathWithRoom = layer => layer.graph.getEdges().find(each => each.controlPoints.length < 256);
+
+/** Each count full, and the scene it is full in; `reopens` false where the scene is past the project-wide budgets. */
+const FULL_COUNTS = {
+  'a crowd’s 8,192 bends': { crowds: () => [crowd('c', { nodes: 40, links: 32, bends: 256 })], free: ['a node on its own', 'a link between two of its nodes'] },
+  'a path’s 256 bends': {
+    crowds: () => {
+      const c = crowd('c', { nodes: 10, links: 2 });
+      c.graph.edges[0].controlPoints = Array.from({ length: 256 }, (_, index) => ({ x: 0.5, y: (index + 1) / 258 }));
+      return [c];
+    },
+    free: ['a node on its own', 'a link between two of its nodes', 'a bend on a path with room'],
+  },
+  'a crowd’s 4,000 links': { crowds: () => [crowd('c', { nodes: 100, links: 4000 })], free: ['a node on its own', 'a bend on a path with room'] },
+  'a crowd’s 2,000 nodes': { crowds: () => [crowd('c', { nodes: 2000, links: 1 })], free: ['a link between two of its nodes', 'a bend on a path with room'] },
+  'a scene’s 10,000 nodes': {
+    crowds: () => [...Array.from({ length: 4 }, (_, index) => crowd(`f${index}`, { nodes: 2000, links: 0 })), crowd('c', { nodes: 2000, links: 1 })],
+    free: ['a link between two of its nodes', 'a bend on a path with room'],
+  },
+};
+
+test.each(Object.entries(FULL_COUNTS).flatMap(([full, { free }]) => free.flatMap(addition => ['pen', 'outline'].map(author => [full, addition, author]))))('at %s, %s is still taken, by the %s', async (full, addition, author) => {
+  const { app, layer, pen, told } = await editing(FULL_COUNTS[full].crowds());
+  const errors = vi.fn();
+  app.eventBus.on('scene-outline:error', errors);
+  const { counts } = FREE[addition];
+  const before = counts(layer);
+
+  FREE[addition][author](app, layer, pen);
+
+  expect(counts(layer)).toBe(before + 1);
+  expect([told(), errors.mock.calls]).toEqual([[], []]);
+  expect(await reopens(app._buildProjectSnapshot())).toBe(true);
+}, LARGE);
+
+test.each(['a node on its own', 'a bend on a path with room'].flatMap(addition => ['pen', 'outline'].map(author => [addition, author])))('at a scene’s 20,000 links, %s is still taken, by the %s', async (addition, author) => {
+  const app = await undrawn();
+  app.scene = Scene.fromJSON({
+    flowLayers: [...Array.from({ length: 5 }, (_, index) => crowd(`f${index}`, { nodes: 100, links: 4000 })).slice(0, 4),
+      crowd('f4', { nodes: 100, links: 3999 }), crowd('last', { nodes: 3, links: 1 })],
+  });
+  expect(sceneLinks(app)).toBe(20000);
+  const layer = app.scene.getFlowLayers().at(-1);
+  app.eventBus.emit('crowd:selected', layer);
+  app.enterNetworkEditMode();
+  const toasts = vi.fn();
+  app.eventBus.on('ui:toast', toasts);
+  const errors = vi.fn();
+  app.eventBus.on('scene-outline:error', errors);
+  const { counts } = FREE[addition];
+  const before = counts(layer);
+
+  FREE[addition][author](app, layer, app.networkEditService);
+
+  expect(counts(layer)).toBe(before + 1);
+  expect([toasts.mock.calls, errors.mock.calls]).toEqual([[], []]);
+}, LARGE);
