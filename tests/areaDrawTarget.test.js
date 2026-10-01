@@ -501,6 +501,27 @@ test('a draw goes on, unannounced, through another waypoint’s deletion', async
 
   expect(drawing(app)).toEqual(ENDED);
   expectTriangle(target.areaHighlight);
+  expectTriangle(app._buildProjectSnapshot().waypoints.find(each => each.id === 'ex-uon-2').areaHighlight);
+});
+
+test('a draw with three vertices placed, enough to close, goes on, unannounced, through another waypoint’s deletion, and a tap on the first closes it', async () => {
+  // The other side of the closing boundary: a draw that can close before the
+  // change is still drawn on the canvas after it, and closes there
+  const app = await openDay();
+  const target = app.getWaypointById('ex-uon-2');
+  drawFor(app, target);
+  TRIANGLE.forEach(({ x, y }) => tap(app, x, y));
+
+  await expectNothingTold(app, async () => {
+    app.eventBus.emit('waypoint:delete', app.getWaypointById('ex-uon-3'));
+    await nextTask();
+  });
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, banner: true, canvasDraws: true });
+  tap(app, TRIANGLE[0].x, TRIANGLE[0].y);
+
+  expect(drawing(app)).toEqual(ENDED);
+  expectTriangle(app.getWaypointById('ex-uon-2').areaHighlight);
+  expectTriangle(app._buildProjectSnapshot().waypoints.find(each => each.id === 'ex-uon-2').areaHighlight);
 });
 
 test('a draw goes on through an undo that keeps its waypoint, and its polygon lands on the waypoint the project has', async () => {
@@ -515,6 +536,28 @@ test('a draw goes on through an undo that keeps its waypoint, and its polygon la
   // Before the polygon could close: the draw follows the restored copy all the same
   expect(drawing(app)).toMatchObject({ active: true, vertices: 2, banner: true, canvasDraws: true });
   tap(app, TRIANGLE[2].x, TRIANGLE[2].y);
+  tap(app, TRIANGLE[0].x, TRIANGLE[0].y);
+
+  expect(drawing(app)).toEqual(ENDED);
+
+  const live = app.getWaypointById('ex-uon-2');
+  expect(live.areaHighlight.enabled).toBe(true);
+  expectTriangle(live.areaHighlight);
+  expectTriangle(app._buildProjectSnapshot().waypoints.find(each => each.id === 'ex-uon-2').areaHighlight);
+});
+
+test('a draw with three vertices placed, enough to close, goes on through an undo that keeps its waypoint, and its polygon lands on the waypoint the project has', async () => {
+  const app = await openDay();
+  // An edit to undo, made before the draw.
+  app.eventBus.emit('waypoint:add', { imgX: 0.9, imgY: 0.9, isMajor: true });
+  await nextTask();
+  drawFor(app, app.getWaypointById('ex-uon-2'));
+  TRIANGLE.forEach(({ x, y }) => tap(app, x, y));
+
+  await expectNothingTold(app, () => app.undo());
+  // Once the polygon can close: the draw still follows the restored copy, so
+  // the tap that closes it saves the polygon there, not on the copy undo replaced
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, banner: true, canvasDraws: true });
   tap(app, TRIANGLE[0].x, TRIANGLE[0].y);
 
   expect(drawing(app)).toEqual(ENDED);
@@ -549,6 +592,33 @@ test('a draw goes on through a redo that keeps its waypoint, and Draw Area press
   expect(drawing(app)).toEqual(ENDED);
 
   expectTriangle(live.areaHighlight);
+  expectTriangle(app._buildProjectSnapshot().waypoints.find(each => each.id === 'ex-uon-2').areaHighlight);
+});
+
+test('a draw with three vertices placed, enough to close, goes on through a redo that keeps its waypoint, and Draw Area pressed again there keeps them', async () => {
+  const app = await openDay();
+  app.eventBus.emit('waypoint:add', { imgX: 0.9, imgY: 0.9, isMajor: true });
+  await nextTask();
+  app.undo();
+  const drawn = app.getWaypointById('ex-uon-2');
+  drawFor(app, drawn);
+  TRIANGLE.forEach(({ x, y }) => tap(app, x, y));
+
+  await expectNothingTold(app, () => app.redo());
+  const live = app.getWaypointById('ex-uon-2');
+  expect(live).not.toBe(drawn);
+  // Once the polygon can close: the draw still follows the restored copy
+  expect(app.areaDrawingService.targetWaypoint).toBe(live);
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, canvasDraws: true });
+  // The restored waypoint selected, and Draw Area asked for again: the three are kept
+  drawFor(app, live);
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, canvasDraws: true });
+  tap(app, TRIANGLE[0].x, TRIANGLE[0].y);
+
+  expect(drawing(app)).toEqual(ENDED);
+
+  expectTriangle(live.areaHighlight);
+  expectTriangle(app._buildProjectSnapshot().waypoints.find(each => each.id === 'ex-uon-2').areaHighlight);
 });
 
 test('a draw ends, and is not carried over, when a project with the same waypoints is opened', async () => {
@@ -577,6 +647,25 @@ test('Draw Area asked for again, as Space or Enter on it does, keeps the draw in
   expect(drawing(app)).toEqual({ active: true, vertices: 2, banner: true, canvasDraws: true });
   expect(app.areaDrawingService.targetWaypoint).toBe(target);
   expect(document.querySelector('#area-draw-banner .banner-count').textContent).toBe('2 vertices (1 more needed to close)');
+});
+
+test('Draw Area asked for again with three vertices placed, enough to close, keeps them, and a tap on the first closes the polygon', async () => {
+  // The other side of the closing boundary, where Space was first seen to discard the vertices
+  const app = await openDay();
+  const target = app.getWaypointById('ex-uon-2');
+  drawFor(app, target);
+  TRIANGLE.forEach(({ x, y }) => tap(app, x, y));
+
+  document.getElementById('area-draw-btn').click();
+
+  expect(drawing(app)).toEqual({ active: true, vertices: 3, banner: true, canvasDraws: true });
+  expect(app.areaDrawingService.targetWaypoint).toBe(target);
+  expect(document.querySelector('#area-draw-banner .banner-count').textContent).toBe('3 vertices (click near first to close)');
+  tap(app, TRIANGLE[0].x, TRIANGLE[0].y);
+
+  expect(drawing(app)).toEqual(ENDED);
+  expectTriangle(app.getWaypointById('ex-uon-2').areaHighlight);
+  expectTriangle(app._buildProjectSnapshot().waypoints.find(each => each.id === 'ex-uon-2').areaHighlight);
 });
 
 test('Draw Area for another waypoint starts that waypoint’s draw afresh', async () => {
