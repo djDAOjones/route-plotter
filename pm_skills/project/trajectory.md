@@ -38,6 +38,10 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
+DEF-61 — Under the author's viewport zoom, the map is drawn under the zoom
+alone, as the route already was, not the animation camera as well: the route
+no longer leaves the map in Preview, or in a video exported while zoomed in.
+
 DEF-52 — A route traced into a crowd is checked as the project it would
 make would be when it is saved and opened: a trace the loader or the file's
 metadata would refuse (a leg with more bends than a path can hold, a scene,
