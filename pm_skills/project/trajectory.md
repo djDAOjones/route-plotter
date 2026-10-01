@@ -43,6 +43,11 @@ alone, as the route already was, not the animation camera as well: the route
 no longer leaves the map in Preview, or in a video exported while zoomed in.
 (2026-09-29)
 
+DEF-59 — The network editor's pen keeps a crowd within the six graph counts a
+project can store, as the outline does: a node, link or bend past a crowd's or
+the scene's counts is refused, in the outline's words. The project-wide
+budgets, which no editor checks yet, stay DEF-04's. (2026-09-29)
+
 DEF-28 — A recovery record that cannot be restored is kept under a key of
 its own, or held in the recovery key where no copy fits, and offered to the
 author (Download it, Discard) instead of being cleared or overwritten; each
