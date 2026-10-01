@@ -181,9 +181,12 @@ export function closing(lexed, open) {
   return -1;
 }
 
-/** Split a call's argument text (from the lexed code, between its brackets) at its top-level commas. */
+/**
+ * A call's top-level arguments, between its brackets: each one's text, with
+ * white space folded, and its span in the code.
+ */
 function argumentsOf(lexed, open, close) {
-  const args = [];
+  const spans = [];
   let depth = 0;
   let start = open + 1;
   for (let at = open + 1; at < close; at += 1) {
@@ -192,13 +195,15 @@ function argumentsOf(lexed, open, close) {
     if ('([{'.includes(char)) depth += 1;
     else if (')]}'.includes(char)) depth -= 1;
     else if (char === ',' && depth === 0) {
-      args.push(lexed.code.slice(start, at));
+      spans.push([start, at]);
       start = at + 1;
     }
   }
-  args.push(lexed.code.slice(start, close));
-  return args.map(text => text.replace(/\s+/g, ' ').trim()).filter((text, index, all) =>
-    text !== '' || index < all.length - 1);
+  spans.push([start, close]);
+  const args = spans.map(([from, to]) => ({ text: lexed.code.slice(from, to).replace(/\s+/g, ' ').trim(), from, to }));
+  // No argument, or a trailing comma, leaves an empty last entry.
+  if (args.length > 0 && args.at(-1).text === '') args.pop();
+  return args;
 }
 
 /** A string literal's value, or null when the text is anything else (a template with `${` included). */
@@ -207,38 +212,454 @@ export function literalValue(text) {
   return match ? match[2] : null;
 }
 
+const skipSpace = (code, at) => {
+  let index = at;
+  while (index < code.length && /\s/.test(code[index])) index += 1;
+  return index;
+};
+
+/** The offset of the last code character before `at` that is not white space, or -1. */
+function codeBefore(lexed, at) {
+  let index = at - 1;
+  while (index >= 0 && (lexed.kind[index] !== 'c' || /\s/.test(lexed.code[index]))) index -= 1;
+  return index;
+}
+
+/** The receiver an access ends with, as `a.b.c`, from the code that ends at `end`. */
+function receiverEnding(code, end) {
+  const before = code.slice(Math.max(0, end - 200), end).replace(/\s*\??\.?\s*$/, '');
+  return /([A-Za-z_$][\w$]*(?:\s*\??\.\s*[A-Za-z_$][\w$]*)*)$/.exec(before)?.[1].replace(/\s+/g, '')
+    .replace(/\?\./g, '.') ?? '';
+}
+
+/** Every string literal in the code (quoted, or a template with no `${`), as its value and span. */
+function stringsIn(lexed) {
+  const found = [];
+  const { kind, source } = lexed;
+  let at = 0;
+  while (at < source.length) {
+    if (kind[at] !== 's' && kind[at] !== 't') {
+      at += 1;
+      continue;
+    }
+    let end = at;
+    while (end < source.length && kind[end] === kind[at]) end += 1;
+    const quote = source[at];
+    if ('\'"`'.includes(quote) && end - at >= 2 && source[end - 1] === quote) {
+      found.push({ value: source.slice(at + 1, end - 1), from: at, to: end });
+    }
+    at = end;
+  }
+  return found;
+}
+
 /**
- * Every place `name` appears as code in a lexed file: each call, with its
- * arguments, and each mention that is not a call (an alias, say), which a
- * scan of calls would otherwise miss.
+ * Every place `name` appears in a lexed file: each call, with its arguments,
+ * and each mention that is not a call. A call is `name(…)`, `name?.(…)`, or a
+ * computed member, `obj['name'](…)`; a string naming `name` anywhere else,
+ * and any other mention (an alias, `.bind`, a feature test), is in `others`,
+ * so a scan that checks `others` is empty cannot be dodged by spelling.
  *
- * @returns {{ calls: Array<{index: number, line: number, args: string[], receiver: string}>, others: number[] }}
+ * @returns {{ calls: Array<{index: number, line: number, args: string[], spans: number[][],
+ *   receiver: string}>, others: number[] }}
  */
 export function callsOf(lexed, name) {
   const calls = [];
   const others = [];
+  const callAt = (index, open, receiver) => {
+    const close = closing(lexed, open);
+    const args = argumentsOf(lexed, open, close);
+    calls.push({
+      index,
+      line: lineAt(lexed.source, index),
+      args: args.map(({ text }) => text),
+      spans: args.map(({ from, to }) => [from, to]),
+      receiver
+    });
+  };
+  /** The `(` a call opens after `at`, past white space and an optional `?.`, or -1. */
+  const openAfter = at => {
+    let open = skipSpace(lexed.code, at);
+    if (lexed.code.startsWith('?.', open)) open = skipSpace(lexed.code, open + 2);
+    return lexed.code[open] === '(' && lexed.kind[open] === 'c' ? open : -1;
+  };
+
   const pattern = new RegExp(`(?<![\\w$])${name.replace(/[$]/g, '\\$')}(?![\\w$])`, 'g');
   for (const match of lexed.code.matchAll(pattern)) {
     if (lexed.kind[match.index] !== 'c') continue;
-    let open = match.index + name.length;
-    while (open < lexed.code.length && /\s/.test(lexed.code[open])) open += 1;
-    // An optional call, `name?.(…)`, is still a call.
-    if (lexed.code.startsWith('?.', open)) open += 2;
-    if (lexed.code[open] !== '(' || lexed.kind[open] !== 'c') {
-      others.push(match.index);
-      continue;
-    }
+    const open = openAfter(match.index + name.length);
+    if (open === -1) others.push(match.index);
+    else callAt(match.index, open, receiverEnding(lexed.code, match.index));
+  }
+  for (const { value, from, to } of stringsIn(lexed)) {
+    if (value !== name) continue;
+    const bracket = codeBefore(lexed, from);
+    const after = skipSpace(lexed.code, to);
+    const open = lexed.code[bracket] === '[' && lexed.code[after] === ']' ? openAfter(after + 1) : -1;
+    if (open === -1) others.push(from);
+    else callAt(from, open, receiverEnding(lexed.code, bracket));
+  }
+  calls.sort((a, b) => a.index - b.index);
+  others.sort((a, b) => a - b);
+  return { calls, others };
+}
+
+// ---------------------------------------------------------------------------
+// What a key handler reads of its event
+// ---------------------------------------------------------------------------
+
+const WORD_AT = /^[A-Za-z_$][\w$]*/;
+const COMPARED = /^(===|!==|==|!=)\s*(['"`])((?:(?!\2)[^\\\n])*)\2/;
+const COMPARED_FROM_LEFT = /(['"`])((?:(?!\1)[^\\\n])*)\1\s*(===|!==|==|!=)\s*$/;
+const LITERALS = /(['"`])((?:(?!\1)[^\\\n])*)\1/g;
+const NOT_CALLS = new Set(['if', 'for', 'while', 'switch', 'return', 'typeof', 'catch', 'with', 'await', 'void']);
+
+/** The parameter at `index` of a parameter list, or null for a pattern or a default the scan cannot follow. */
+function parameterAt(params, index) {
+  const name = (params.split(',')[index] ?? '').trim();
+  return /^[A-Za-z_$][\w$]*$/.test(name) ? name : null;
+}
+
+/** The end of an arrow's expression body: the first `,` `;` `)` `]` or `}` outside brackets. */
+function expressionEnd(lexed, start) {
+  let depth = 0;
+  for (let at = start; at < lexed.code.length; at += 1) {
+    if (lexed.kind[at] !== 'c') continue;
+    const char = lexed.code[at];
+    if ('([{'.includes(char)) depth += 1;
+    else if (')]}'.includes(char)) {
+      if (depth === 0) return at;
+      depth -= 1;
+    } else if ((char === ',' || char === ';') && depth === 0) return at;
+  }
+  return lexed.code.length;
+}
+
+/**
+ * The function whose text starts at `at`: an arrow or a function
+ * expression. Returns its parameter list and body span, or null.
+ */
+export function functionAt(lexed, at) {
+  const { code } = lexed;
+  let index = skipSpace(code, at);
+  if (/^async\s/.test(code.slice(index, index + 6))) index = skipSpace(code, index + 5);
+  let params;
+  let bodyStart;
+  if (/^function\b/.test(code.slice(index, index + 9))) {
+    const open = code.indexOf('(', index);
     const close = closing(lexed, open);
-    const receiver = /([A-Za-z_$][\w$]*(?:\s*\??\.\s*[A-Za-z_$][\w$]*)*)\s*\??\.\s*$/
-      .exec(lexed.code.slice(Math.max(0, match.index - 200), match.index))?.[1].replace(/\s+/g, '') ?? '';
-    calls.push({
-      index: match.index,
-      line: lineAt(lexed.source, match.index),
-      args: argumentsOf(lexed, open, close),
-      receiver: receiver.replace(/\?$/, '')
+    params = code.slice(open + 1, close);
+    bodyStart = skipSpace(code, close + 1);
+    if (code[bodyStart] !== '{') return null;
+  } else {
+    if (code[index] === '(') {
+      const close = closing(lexed, index);
+      params = code.slice(index + 1, close);
+      index = close + 1;
+    } else {
+      const word = WORD_AT.exec(code.slice(index));
+      if (!word) return null;
+      params = word[0];
+      index += word[0].length;
+    }
+    index = skipSpace(code, index);
+    if (!code.startsWith('=>', index)) return null;
+    bodyStart = skipSpace(code, index + 2);
+  }
+  const end = code[bodyStart] === '{' ? closing(lexed, bodyStart) + 1 : expressionEnd(lexed, bodyStart);
+  return { params, start: bodyStart, end };
+}
+
+/** A method's parameter list and body, from the offset of its name. */
+function methodAt(lexed, at) {
+  const open = lexed.code.indexOf('(', at);
+  const close = closing(lexed, open);
+  const body = skipSpace(lexed.code, close + 1);
+  if (lexed.code[body] !== '{') return null;
+  return { params: lexed.code.slice(open + 1, close), start: body, end: closing(lexed, body) + 1 };
+}
+
+/**
+ * The functions a callee or a handler names in its file: `name` (a function
+ * declaration, or a `const`/`let`/`var` holding a function) or `this.name` (a
+ * function assigned to it, a method bound to it, or the method itself).
+ * Returns the functions, or the reason they cannot be found.
+ */
+export function functionsNamed(lexed, reference) {
+  const { code } = lexed;
+  const member = /^this\.([A-Za-z_$][\w$]*)$/.exec(reference);
+  const bare = /^[A-Za-z_$][\w$]*$/.test(reference) ? reference : null;
+  const name = member?.[1] ?? bare;
+  if (!name) return { functions: [], unfound: `${reference} is not a name the scan can look up` };
+  const escaped = name.replace(/[$]/g, '\\$');
+  const found = [];
+  const unfound = [];
+  const each = (pattern, take) => {
+    for (const match of code.matchAll(pattern)) {
+      if (lexed.kind[match.index] === 'c') take(match);
+    }
+  };
+  const methods = () => {
+    each(new RegExp(`^[ \\t]*(?:async[ \\t]+)?${escaped}[ \\t]*\\(`, 'gm'), match => {
+      const method = methodAt(lexed, match.index + match[0].lastIndexOf(name));
+      if (method) found.push(method);
+    });
+  };
+  if (member) {
+    let assigned = 0;
+    each(new RegExp(`this\\.${escaped}\\s*=(?!=)`, 'g'), match => {
+      assigned += 1;
+      const at = match.index + match[0].length;
+      const value = code.slice(at, expressionEnd(lexed, skipSpace(code, at))).replace(/\s+/g, ' ').trim();
+      if (value === 'null') return;
+      if (value === `this.${name}.bind(this)`) return;
+      const fn = functionAt(lexed, at);
+      if (fn) found.push(fn);
+      else unfound.push(`this.${name} is assigned ${value}`);
+    });
+    if (found.length === 0) methods();
+  } else {
+    each(new RegExp(`\\bfunction\\s+${escaped}\\s*\\(`, 'g'), match => {
+      const fn = functionAt(lexed, match.index);
+      if (fn) found.push(fn);
+    });
+    each(new RegExp(`\\b(?:const|let|var)\\s+${escaped}\\s*=(?!=)`, 'g'), match => {
+      const fn = functionAt(lexed, match.index + match[0].length);
+      if (fn) found.push(fn);
+      else unfound.push(`${name} holds something other than a function`);
     });
   }
-  return { calls, others };
+  if (found.length === 0 && unfound.length === 0) unfound.push(`no function ${reference} in this file`);
+  return { functions: found, unfound: unfound.join('; ') || null };
+}
+
+/** Every use of the word `word` as code between two offsets, not as a property name. */
+function wordsIn(lexed, word, from, to) {
+  const pattern = new RegExp(`(?<![\\w$.])${word.replace(/[$]/g, '\\$')}(?![\\w$])`, 'g');
+  const found = [];
+  for (const match of lexed.code.slice(from, to).matchAll(pattern)) {
+    const at = from + match.index;
+    if (lexed.kind[at] === 'c') found.push(at);
+  }
+  return found;
+}
+
+/** The literals of a `switch` block whose `(` closes at `close`. */
+function caseLiterals(lexed, close) {
+  const open = skipSpace(lexed.code, close + 1);
+  if (lexed.code[open] !== '{') return null;
+  const block = lexed.code.slice(open, closing(lexed, open) + 1);
+  return [...block.matchAll(/case\s+(['"`])((?:(?!\1)[^\\\n])*)\1\s*:/g)].map(match => match[2]);
+}
+
+/**
+ * How the key is compared at a use that ends at `after` and starts at `at`:
+ * `=== 'x'`, `'x' ===`, inside `switch (…)` or `[…].includes(…)`. Returns the
+ * literals, or null when the use is none of these.
+ */
+function comparedWith(lexed, fn, at, after) {
+  const { code } = lexed;
+  const right = COMPARED.exec(code.slice(skipSpace(code, after)));
+  if (right) return [right[3]];
+  const left = COMPARED_FROM_LEFT.exec(code.slice(Math.max(fn.start, at - 120), at));
+  if (left) return [left[2]];
+  const closeAt = skipSpace(code, after);
+  if (code[closeAt] === ')' && /switch\s*\(\s*$/.test(code.slice(Math.max(fn.start, at - 40), at))) {
+    return caseLiterals(lexed, closeAt);
+  }
+  const includes = /\[([^\]]*)\]\s*\.includes\(\s*$/.exec(code.slice(Math.max(fn.start, at - 300), at));
+  if (code[closeAt] === ')' && includes) return [...includes[1].matchAll(LITERALS)].map(match => match[2]);
+  return null;
+}
+
+/**
+ * What a key handler reads of its event, from its source: the keys it
+ * compares `event.key` with (as written, or `anyCase` where it lower-cases
+ * first), the other properties it reads (`reads`), and every use of the
+ * event it cannot account for (`unanalysed`). It follows the event into the
+ * functions of the same file it is passed to, and into a variable that holds
+ * the key. Anything else it does with the event, it reports rather than
+ * ignores, so a check that `unanalysed` is empty fails closed.
+ *
+ * @param {Object} lexed - The handler's file, lexed
+ * @param {{params: string, start: number, end: number}} fn - The handler
+ * @param {number} [index=0] - Which parameter is the event
+ */
+export function eventReads(lexed, fn, index = 0, seen = new Set()) {
+  const result = { keys: new Set(), anyCase: new Set(), reads: new Set(), unanalysed: [] };
+  const where = at => `line ${lineAt(lexed.source, at)}`;
+  const merge = other => {
+    for (const name of ['keys', 'anyCase', 'reads']) for (const value of other[name]) result[name].add(value);
+    result.unanalysed.push(...other.unanalysed);
+  };
+  if (seen.has(fn.start)) return result;
+  seen.add(fn.start);
+  const event = parameterAt(fn.params, index);
+  if (!event) {
+    result.unanalysed.push(`${where(fn.start)}: its event parameter is a pattern or has a default`);
+    return result;
+  }
+  const { code, source } = lexed;
+  const add = (literals, anyCase) => {
+    for (const literal of literals) result[anyCase ? 'anyCase' : 'keys'].add(anyCase ? literal.toLowerCase() : literal);
+  };
+
+  /** A variable holding the key: every use must be a comparison too. */
+  const keyHeldIn = (name, declaredAt, anyCase) => {
+    for (const at of wordsIn(lexed, name, declaredAt, fn.end)) {
+      if (/(?:const|let|var)\s+$/.test(code.slice(Math.max(fn.start, at - 10), at))) continue;
+      const literals = comparedWith(lexed, fn, at, at + name.length);
+      if (literals) add(literals, anyCase);
+      else result.unanalysed.push(`${where(at)}: ${name}, which holds the key, is used other than in a comparison`);
+    }
+  };
+
+  for (const at of wordsIn(lexed, event, fn.start, fn.end)) {
+    let next = skipSpace(code, at + event.length);
+    let property = null;
+    let after = next;
+    if (code.startsWith('?.', next) || (code[next] === '.' && code[next + 1] !== '.')) {
+      next = skipSpace(code, next + (code[next] === '?' ? 2 : 1));
+      if (code[next] === '[') {
+        const close = closing(lexed, next);
+        property = literalValue(source.slice(next + 1, close));
+        after = close + 1;
+      } else {
+        property = WORD_AT.exec(code.slice(next))?.[0] ?? null;
+        after = next + (property?.length ?? 0);
+      }
+    } else if (code[next] === '[') {
+      const close = closing(lexed, next);
+      property = literalValue(source.slice(next + 1, close));
+      after = close + 1;
+    }
+
+    if (property === 'key') {
+      let end = after;
+      let anyCase = false;
+      if (/^\s*\.\s*toLowerCase\(\s*\)/.test(code.slice(end))) {
+        anyCase = true;
+        end = code.indexOf(')', end) + 1;
+      }
+      const literals = comparedWith(lexed, fn, at, end);
+      if (literals) {
+        add(literals, anyCase);
+        continue;
+      }
+      const held = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*$/.exec(code.slice(Math.max(fn.start, at - 60), at));
+      if (held && code[skipSpace(code, end)] === ';') {
+        keyHeldIn(held[1], at, anyCase);
+        continue;
+      }
+      result.unanalysed.push(`${where(at)}: ${event}.key is used other than in a comparison`);
+      continue;
+    }
+    if (property !== null) {
+      result.reads.add(property);
+      continue;
+    }
+
+    // Passed whole to a function of this file: follow it there.
+    let depth = 0;
+    let argument = 0;
+    let open = -1;
+    for (let back = at - 1; back >= fn.start; back -= 1) {
+      if (lexed.kind[back] !== 'c') continue;
+      const char = code[back];
+      if (')]}'.includes(char)) depth += 1;
+      else if ('([{'.includes(char)) {
+        if (depth === 0) {
+          open = char === '(' ? back : -1;
+          break;
+        }
+        depth -= 1;
+      } else if (char === ',' && depth === 0) argument += 1;
+    }
+    const closer = code[skipSpace(code, at + event.length)];
+    // Only `name(…)` and `this.name(…)` are followed; a method of anything else is not.
+    const chain = open === -1 ? null
+      : /([A-Za-z_$][\w$]*(?:\s*\.\s*[A-Za-z_$][\w$]*)*)\s*$/.exec(code.slice(Math.max(0, open - 100), open))?.[1]
+        .replace(/\s+/g, '');
+    const callee = chain && /^(?:this\.)?[A-Za-z_$][\w$]*$/.test(chain) ? chain : null;
+    if (!callee || NOT_CALLS.has(callee) || !(closer === ',' || closer === ')')) {
+      result.unanalysed.push(`${where(at)}: ${event} is used other than by reading a property of it`);
+      continue;
+    }
+    const { functions, unfound } = functionsNamed(lexed, callee);
+    if (unfound || functions.length === 0) {
+      result.unanalysed.push(
+        `${where(at)}: ${event} is passed to ${callee}, which the scan cannot follow (${unfound})`);
+      continue;
+    }
+    for (const delegate of functions) merge(eventReads(lexed, delegate, argument, seen));
+  }
+  return result;
+}
+
+const KEY_EVENT_TYPES = ['keydown', 'keyup', 'keypress'];
+
+/**
+ * Every key listener registered in some lexed files, read as code: each
+ * named by file, what it is added to, its type, `(capture)` when it listens
+ * on the way down, and its number when a file adds more than one of a kind;
+ * with what its handler reads of the event (`eventReads`). Also `unread`:
+ * every mention of `addEventListener` that is not a call, every call whose
+ * type is not a literal, and every key event type named outside an `add` or
+ * `removeEventListener` call — each a way to listen the scan cannot read, so
+ * a check that `unread` is empty fails closed.
+ */
+export function keyListenersIn(files) {
+  const found = [];
+  const unread = [];
+  for (const { file, lexed } of files) {
+    const typeStrings = new Set();
+    for (const method of ['addEventListener', 'removeEventListener']) {
+      const { calls, others } = callsOf(lexed, method);
+      for (const at of others) {
+        unread.push(`${file}: ${receiverEnding(lexed.code, at)}.${method}, not called`);
+      }
+      for (const call of calls) {
+        const type = literalValue(call.args[0] ?? '');
+        if (call.spans[0]) typeStrings.add(skipSpace(lexed.code, call.spans[0][0]));
+        if (type === null) {
+          unread.push(`${file}:${call.line} ${method}(${call.args[0]}, …)`);
+          continue;
+        }
+        if (method !== 'addEventListener' || !KEY_EVENT_TYPES.includes(type)) continue;
+        const capture = /^true$|capture:\s*true/.test(call.args[2] ?? '');
+        const [from, to] = call.spans[1] ?? [0, 0];
+        const inline = call.spans[1] ? functionAt(lexed, from) : null;
+        let reads;
+        if (inline && inline.end <= to) {
+          reads = eventReads(lexed, inline);
+        } else {
+          const { functions, unfound } = functionsNamed(lexed, call.args[1] ?? '');
+          reads = { keys: new Set(), anyCase: new Set(), reads: new Set(), unanalysed: [] };
+          if (unfound) reads.unanalysed.push(`its handler, ${call.args[1]}: ${unfound}`);
+          for (const fn of functions) {
+            const each = eventReads(lexed, fn);
+            for (const name of ['keys', 'anyCase', 'reads']) for (const value of each[name]) reads[name].add(value);
+            reads.unanalysed.push(...each.unanalysed);
+          }
+        }
+        found.push({ name: `${file}: ${call.receiver} ${type}${capture ? ' (capture)' : ''}`, file, line: call.line,
+          handler: call.args[1], reads });
+      }
+    }
+    for (const { value, from } of stringsIn(lexed)) {
+      if (KEY_EVENT_TYPES.includes(value) && !typeStrings.has(from)) {
+        unread.push(`${file}:${lineAt(lexed.source, from)} names '${value}' outside a listener call`);
+      }
+    }
+  }
+  const count = {};
+  for (const { name } of found) count[name] = (count[name] ?? 0) + 1;
+  const seen = {};
+  const listeners = found.map(listener => {
+    seen[listener.name] = (seen[listener.name] ?? 0) + 1;
+    return count[listener.name] > 1 ? { ...listener, name: `${listener.name} #${seen[listener.name]}` } : listener;
+  });
+  return { listeners, unread };
 }
 
 /**

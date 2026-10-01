@@ -1,11 +1,12 @@
 /**
- * TST-13 — every element the app looks up by id is in the page it looks in.
+ * TST-13 — every element the app looks up by id is in the page it looks in,
+ * and which ids each file looks up is a reviewed list.
  *
  * `main.js` gathers about 190 controls into `this.elements` when the app is
  * built, and other modules call `getElementById` as they go. A missing id is
  * not an error: the lookup returns null, most readers guard it with `?.`, and
- * the feature it served quietly stops. This pins every lookup against the page
- * it runs in — the editor's `index.html`, read from disk, or the exported
+ * the feature it served quietly stops. This holds every lookup to the page it
+ * runs in — the editor's `index.html`, read from disk, or the exported
  * player's page, as the HTML export writes it — so a renamed or deleted id
  * fails here. The ids missing today are listed with where they are read and
  * what the code does without them (SEG-025: "8 are missing today").
@@ -15,14 +16,24 @@
  * `getElementById` call in `src/`, read as code (which reaches code no test
  * flow runs). That last scan reads each file whole, so a call written across
  * lines, or with a comment inside it, is still a call, and one inside a
- * comment or a string is not; its fixtures below pin that. Every call is
- * accounted for: a literal id, checked against its page, or one of the eleven
- * ids built at run time, each listed with what it looks up and whether the
- * running-app flow reaches it.
+ * comment or a string is not; nor does a computed name, `doc['getElementById']`,
+ * hide a call, and any other mention of the method (an alias, a string naming
+ * it) fails as one the scan cannot read. Its fixtures below pin that. Every
+ * call is accounted for: a literal id, checked against its page, or one of
+ * the eleven ids built at run time, each listed with what it looks up and
+ * whether the running-app flow reaches it.
+ *
+ * Membership in the page does not say which element a caller wants: a lookup
+ * changed to another id its page has would pass it. So the ids each file looks
+ * up, and how often, are a reviewed list too (LOOKED_UP), and a lookup added,
+ * removed or pointed at another id changes it. Two lookups in one file
+ * trading ids would not; for the exported player's error panel, the one the
+ * round-2 review found, `playerEntryAccessibility.test.js` checks what the
+ * panel says.
  *
  * The ids the editor builds on demand are built here, twice, to show each is
  * then found under the id it was looked up by and reused — or, for one of
- * them, that it is built and never attached (a defect, pinned as it stands).
+ * them, that it is built and never attached (DEF-69, pinned as it stands).
  */
 
 import { readFileSync } from 'node:fs';
@@ -134,7 +145,7 @@ const CREATED_ON_DEMAND = {
   'camera-zoom-warning': {
     why: 'camera.js builds it when a waypoint asks the camera for a zoom it cannot reach in time',
     twice: { built: 2, inPage: false, reused: false },
-    // Proposed defect: the warning never shows. Its anchor, `.camera-controls`
+    // DEF-69: the warning never shows. Its anchor, `.camera-controls`
     // or the zoom slider's `.control-group`, left the shell when the camera
     // zoom moved into the waypoint card, so the element is built detached, the
     // lookup that should reuse it finds nothing, and every warning builds
@@ -151,18 +162,116 @@ const CREATED_ON_DEMAND = {
   }
 };
 
-/** Every `getElementById` call in `src/`, read as code, with its file and line. */
-function lookupCalls() {
+/** A list of ids written as words. */
+const words = text => text.trim().split(/\s+/);
+
+/**
+ * Which ids each file of `src/` looks up by a literal, and how often, sorted:
+ * the reviewed caller-to-page contract. A lookup added or removed, or pointed
+ * at another id, changes this list.
+ */
+const LOOKED_UP = {
+  'src/app/camera.js': words('camera-zoom-warning camera-zoom-warning'),
+  'src/app/crowds.js': words(`
+    add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-graph crowd-busyness-graph
+    crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
+    crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-pattern-hint
+    crowd-reroll-btn layers-strip
+  `),
+  'src/app/editorPanel.js': words('waypoint-scope'),
+  'src/app/exporting.js': words('export-dropdown-btn'),
+  'src/app/network.js': words(`
+    crowd-fit-wait-btn crowd-guide-hint crowd-trace-route-btn network-edge-delete network-edge-direction
+    network-edge-direction network-edge-hint network-edge-swap network-edge-swap network-edge-weight
+    network-edge-weight network-edge-weight-value network-edit-btn network-node-delete network-node-hint
+    network-node-type network-node-type network-path-weight-rows network-path-weight-rows
+    network-path-weights
+  `),
+  'src/app/persistence.js': words('app-title'),
+  'src/app/privacy.js': words(`
+    copy-debug-btn diagnostics-cancel diagnostics-copy diagnostics-copy-issues-address
+    diagnostics-description diagnostics-download diagnostics-issues-address diagnostics-issues-note
+    diagnostics-modal diagnostics-open-issues diagnostics-open-security diagnostics-preview
+    diagnostics-public-warning diagnostics-status diagnostics-title download-debug-btn export-dropdown-btn
+    export-dropdown-btn report-bug-btn share-disclosure-cancel share-disclosure-confirm
+    share-disclosure-description share-disclosure-modal share-disclosure-title
+  `),
+  'src/app/sceneOutline.js': words('scene-outline'),
+  'src/app/viewport.js': words('zoom-prompt'),
+  'src/app/wiringDom.js': words('example-projects-menu waypoint-scope'),
+  'src/components/Tooltip.js': words('tooltip-container'),
+  'src/controllers/SectionController.js': words(`
+    crowd-scope edge-scope node-scope route-scope settings-help-placeholder settings-sections waypoint-scope
+  `),
+  'src/controllers/UIController.js': words(`
+    aov-controls aov-controls clear-cancel clear-confirm clear-confirm-modal codec-cancel
+    codec-modal-message codec-mp4-reduced codec-unsupported-modal codec-webm file-dropdown-btn
+    leg-section-title modal-title-codec pacing-comet-hint path-trail-control reveal-trail-control scope-chip
+    scope-chip-text scope-next-btn scope-prev-btn scope-route-btn splash-help spotlight-controls
+    spotlight-controls
+  `),
+  'src/main.js': words(`
+    animation-speed animation-speed-right animation-speed-value animation-speed-value-right announcer
+    announcer aov-angle aov-angle-value aov-distance aov-distance-value aov-dropoff aov-dropoff-value app
+    app app-title area-border-color area-border-controls area-border-style area-border-width
+    area-border-width-value area-circle-controls area-circle-radius area-circle-radius-value area-delete-btn
+    area-delete-controls area-draw-btn area-draw-controls area-fade-in area-fade-in-value area-fade-out
+    area-fade-out-value area-fill-color area-fill-controls area-fill-opacity area-fill-opacity-value
+    area-rect-controls area-rect-height area-rect-height-value area-rect-width area-rect-width-value
+    area-shape area-visibility area-visibility-controls background-visibility background-zoom
+    background-zoom-value bg-fit-toggle bg-overlay bg-overlay-value bg-upload bg-upload-btn
+    camera-multi-controls camera-next-zoom-value camera-prev-zoom-value camera-selected-zoom
+    camera-selected-zoom-value camera-single-controls camera-zoom camera-zoom-mode camera-zoom-value canvas
+    canvas clear-btn current-time custom-head-controls custom-head-upload-controls custom-marker-controls
+    dot-color dot-size dot-size-value editing-name editing-subheading editor-beacon-style
+    example-backgrounds-menu export-frame-rate export-html-btn export-include-camera export-include-image
+    export-include-text export-mp4-btn export-res-x export-res-y export-summary export-webm-btn
+    graphics-scale graphics-scale-label graphics-scale-value head-filename head-preview head-preview-img
+    head-rotation-mode head-rotation-offset head-rotation-offset-control head-rotation-offset-value
+    head-upload head-upload-btn help-btn label-auto-position label-bg-color label-bg-opacity
+    label-bg-opacity-value label-color label-mode label-offset-x label-offset-x-value label-offset-y
+    label-offset-y-value label-size label-size-value label-size-warning label-width label-width-value
+    load-project-btn load-project-input marker-filename marker-preview marker-preview-img marker-style
+    marker-upload marker-upload-btn mode-toggle-btn path-casing-toggle path-glow-intensity path-glow-toggle
+    path-glow-value path-head-color path-head-size path-head-size-value path-head-style path-shape
+    path-trail path-trail-value path-visibility pause-btn pause-time-control play-btn preset-1-1 preset-16-9
+    preset-9-16 preset-native pulse-amplitude pulse-amplitude-value pulse-controls pulse-cycle-speed
+    pulse-cycle-speed-value redo-btn reveal-feather reveal-feather-value reveal-size reveal-size-value
+    reveal-trail reveal-trail-value ripple-controls ripple-max-scale ripple-max-scale-value ripple-thickness
+    ripple-thickness-value ripple-wait save-project-btn segment-color segment-speed-control segment-style
+    segment-width segment-width-value settings-help-placeholder settings-sections shape-amplitude
+    shape-amplitude-value shape-frequency shape-frequency-value shape-params-controls skip-end-btn
+    skip-start-btn speed-control splash splash-close splash-close-x splash-dont-show splash-help
+    timeline-slider toast-container total-time undo-btn waypoint-label waypoint-list waypoint-pause-time
+    waypoint-pause-time-value waypoint-segment-speed waypoint-segment-speed-value waypoint-visibility
+  `),
+  'src/player/playerEntry.js': words(`
+    canvas current-time play-btn player-announcer player-error player-error-detail reset-btn
+    scene-summary-content scene-summary-content speed-select timeline total-time
+  `)
+};
+
+/**
+ * Every `getElementById` call in some lexed files, with its file and line:
+ * its id where the argument is a literal, and `args: null` for a mention that
+ * is not a call, which no list here accepts.
+ */
+function lookupCallsIn(files) {
   const calls = [];
-  for (const { file, lexed } of lexedFiles(repoRoot, 'src')) {
+  for (const { file, lexed } of files) {
     const { calls: found, others } = callsOf(lexed, 'getElementById');
     for (const { line, args } of found) {
       calls.push({ file, line, args, id: args.length === 1 ? literalValue(args[0]) : null });
     }
-    for (const index of others) calls.push({ file, line: lexed.source.slice(0, index).split('\n').length, args: null });
+    for (const index of others) {
+      calls.push({ file, line: lexed.source.slice(0, index).split('\n').length, args: null, id: null });
+    }
   }
   return calls;
 }
+
+/** Every `getElementById` call in `src/`. */
+const lookupCalls = () => lookupCallsIn(lexedFiles(repoRoot, 'src'));
 
 /** The literal-id lookups, as `{ id, file, line }`. */
 function literalLookups() {
@@ -270,6 +379,26 @@ describe('element ids (TST-13)', () => {
     // An alias is not a call, but the scan still sees it.
     const alias = 'const byId = document.getElementById; byId("aliased")';
     expect(callsOf(lex(alias), 'getElementById')).toEqual({ calls: [], others: [alias.indexOf('getElementById')] });
+    // Round 2's review: a computed name is still a call, read like one.
+    expect(scan("document['getElementById']('player-error-detail-typo')")).toEqual([[1, 'player-error-detail-typo']]);
+    expect(scan('document?.["getElementById"]?.(`optional`)')).toEqual([[1, 'optional']]);
+    // And a string naming the method anywhere else is a mention the scan reports.
+    const named = "const method = 'getElementById'; document[method]('hidden')";
+    expect(callsOf(lex(named), 'getElementById')).toEqual({ calls: [], others: [named.indexOf("'getElementById'")] });
+    // What the checks below consume: a mention that is not a call stays in, as one no list accepts.
+    expect(lookupCallsIn([{ file: 'fixture.js', lexed: lex(`document['getElementById']('bracketed');\n${named}`) }]))
+      .toEqual([
+        { file: 'fixture.js', line: 1, args: ["'bracketed'"], id: 'bracketed' },
+        { file: 'fixture.js', line: 2, args: null, id: null }
+      ]);
+  });
+
+  test('which ids each file of src/ looks up, and how often, is the reviewed list', () => {
+    const found = {};
+    for (const { id, file } of literalLookups()) (found[file] ??= []).push(id);
+    for (const ids of Object.values(found)) ids.sort();
+    expect(found, 'the ids each file looks up (a lookup added, removed or pointed at another id changes LOOKED_UP)')
+      .toEqual(LOOKED_UP);
   });
 
   test('every literal id in src/ is declared by the page it is looked up in', () => {
@@ -336,7 +465,7 @@ describe('element ids (TST-13)', () => {
     };
   }
 
-  test('the camera zoom warning is built when a zoom cannot be reached in time, but never attached (proposed defect)', async () => {
+  test('the camera zoom warning is built when a zoom cannot be reached in time, but never attached (DEF-69)', async () => {
     const app = await bootApp();
     running.push(app);
     await app.ready;

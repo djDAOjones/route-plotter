@@ -1,4 +1,10 @@
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { CANDIDATE_KEYS } from './helpers/keyDomain.js';
+import { keyListenersIn, lexedFiles } from './helpers/sourceScan.js';
+
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const playerHarness = vi.hoisted(() => ({ latest: null }));
 
@@ -316,6 +322,9 @@ describe('standalone player accessibility wiring', () => {
     // The key table (tests/keyTable.test.js) lists every key listener in
     // src/ and names this test for the player's: the page's transport keys,
     // which leave a focused control its own keys, and the timeline's steps.
+    // It holds this test to what the key table holds its own rows to: each key
+    // the handlers compare, read from their source, is pressed on its target,
+    // and every other key of the domain is pressed there and does nothing.
     vi.useFakeTimers();
     installPlayerShell();
     window.__ROUTE_PLOTTER_PROJECT__ = { coordVersion: 9 };
@@ -325,7 +334,9 @@ describe('standalone player accessibility wiring', () => {
     const state = app.animationEngine.state;
     const timeline = document.getElementById('timeline');
     const playButton = document.getElementById('play-btn');
+    const pressed = { page: new Set(), timeline: new Set() };
     const press = (key, target = document.body) => {
+      pressed[target === timeline ? 'timeline' : 'page'].add(key);
       const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
       target.dispatchEvent(event);
       const where = target === document.body ? 'the page' : `#${target.id}`;
@@ -362,5 +373,44 @@ describe('standalone player accessibility wiring', () => {
       // The timeline keeps its own keys: K there neither plays nor is taken.
       'k on #timeline: left; paused at 0 s'
     ]);
+
+    const { listeners } = keyListenersIn(lexedFiles(repoRoot, 'src/player'));
+    const comparedBy = name => {
+      const { reads } = listeners.find(listener => listener.name === `src/player/playerEntry.js: ${name} keydown`);
+      expect(reads.unanalysed).toEqual([]);
+      return [...reads.keys];
+    };
+    const compared = { page: comparedBy('document'), timeline: comparedBy('timeline') };
+    for (const where of ['page', 'timeline']) {
+      expect(compared[where].filter(key => !pressed[where].has(key)), `keys the ${where}'s handler compares, unpressed`)
+        .toEqual([]);
+      // Every other key: nothing taken, and the transport where it was.
+      const target = where === 'timeline' ? timeline : document.body;
+      const before = press('Home', target);
+      expect(CANDIDATE_KEYS.filter(key => !compared[where].includes(key)).map(key => press(key, target))
+        .filter(record => !record.endsWith(`left; ${before.split('; ')[1]}`)), `other keys on the ${where}`)
+        .toEqual([]);
+    }
+  });
+
+  test('a page without its project says why, in its own error panel (TST-13)', async () => {
+    // The error detail is looked up by id: a lookup that named another id the
+    // page has would pass the id checks and leave this panel empty.
+    installPlayerShell();
+    delete window.__ROUTE_PLOTTER_PROJECT__;
+    await importAndBootPlayer();
+    expect({
+      panel: document.getElementById('player-error').hidden ? 'hidden' : 'shown',
+      detail: document.getElementById('player-error-detail').textContent,
+      controls: document.querySelector('.controls').hidden ? 'hidden' : 'shown',
+      summary: document.getElementById('scene-summary-content').textContent,
+      time: document.getElementById('current-time').textContent
+    }).toEqual({
+      panel: 'shown',
+      detail: 'This export is missing its embedded project data. Re-export the file from Route Plotter.',
+      controls: 'hidden',
+      summary: 'Scene summary unavailable.',
+      time: '0:00'
+    });
   });
 });

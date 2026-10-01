@@ -20,21 +20,31 @@
  * - the event each entry names against the event its key sends: 18 of the 36
  *   name an event nothing listens to, and K names one it does not send. The
  *   names are pinned exactly;
- * - every key the page's shortcuts react to, and the modifiers they accept,
- *   each either in Help or listed here with the reason it is not;
+ * - every key the page's shortcuts react to, pressed once and held down, and
+ *   the modifiers they accept (DEF-63), each either in Help or listed here
+ *   with the reason it is not;
  * - every modifier click and drag on the canvas, and the cursor each modifier
  *   shows while it is held;
  * - where a key must be pressed for a shortcut to run (DEF-13);
  * - every keydown, keyup and keypress listener in `src/`, found by reading
- *   the source: each has a row here that presses its keys and records what
- *   they did, or names the suite that does.
+ *   the source, with what its handler reads of the event: the keys it
+ *   compares and every other property it reads, followed into the functions
+ *   of its file the event is passed to. A use of the event the scan cannot
+ *   follow, a listener added through an alias, or a type it cannot read, fails
+ *   rather than passes. Each listener has one place that presses every key
+ *   its handler compares, on its target, and records what each did, then
+ *   presses every other key of the domain there and finds it does nothing:
+ *   a row here, or for the exported player's two, its own suite.
  *
- * The keys probed are a bounded domain: every printable US character, and
- * every named key of the UI Events key list, F1 to F24 included, under all
- * sixteen combinations of Shift, Ctrl, Alt and Meta. The dispatcher compares
- * `event.key` with literals, so a key outside that domain can only reach it
- * through a literal; a source check holds every literal it tests for, and
- * every property of the event it reads, to what the probe sends.
+ * The keys probed are a bounded domain (`tests/helpers/keyDomain.js`): every
+ * printable US character, and every named key of the UI Events key list, F1
+ * to F24 included. The dispatcher's sweep presses each under all sixteen
+ * combinations of Shift, Ctrl, Alt and Meta, once and held down; the other
+ * listeners' sweeps press each without modifiers (the modifiers a handler
+ * reads are pinned from its source, and Shift+Tab is pressed in the focus
+ * trap). A handler compares `event.key` with literals, so a key outside the
+ * domain can only reach it through a literal, which the source checks hold
+ * to the domain.
  *
  * Keys go to `document.body`: the canvas takes no focus, so once a user has
  * clicked it, that is where their keys land. What changed is read back as the
@@ -52,7 +62,8 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { formatBinding, getDefaultBindings, isMac, MODIFIER_DISPLAY } from '../src/config/keybindings.js';
 import { bootApp } from './helpers/bootApp.js';
-import { bodyOf, callsOf, closing, lex, lexedFiles, literalValue } from './helpers/sourceScan.js';
+import { CANDIDATE_KEYS, NAMED_KEYS } from './helpers/keyDomain.js';
+import { keyListenersIn, lex, lexedFiles } from './helpers/sourceScan.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -520,7 +531,8 @@ describe("Help's key table (TST-13)", () => {
       .toEqual(Object.keys(HIDDEN_FROM_HELP).sort());
     expect(Object.values(HIDDEN_FROM_HELP).filter(why => !/\w/.test(why)), 'each says why').toEqual([]);
     expect(Object.fromEntries(Object.entries(KEYBOARD).filter(([, binding]) => binding.altKeys)
-      .map(([id, binding]) => [id, binding.altKeys])), 'alternative keys no row shows').toEqual(KEYS_HELP_DOES_NOT_SHOW);
+      .map(([id, binding]) => [id, binding.altKeys])), 'alternative keys no row shows')
+      .toEqual(KEYS_HELP_DOES_NOT_SHOW);
   });
 
   test("the chords Help's prose names are its entries' chords", async () => {
@@ -857,109 +869,17 @@ function nameModifierSet(combos) {
 }
 
 /**
- * The named keys of the UI Events `key` list (W3C, "UI Events KeyboardEvent
- * key Values"), by its sections, with the function keys from F1 to F24.
+ * What the probe sets on a key event, and so all the dispatcher may read of
+ * one. A held key repeats: the probe presses every key both ways.
  */
-const NAMED_KEYS = [
-  'Unidentified',
-  // Modifier keys
-  'Alt', 'AltGraph', 'CapsLock', 'Control', 'Fn', 'FnLock', 'Hyper', 'Meta', 'NumLock', 'ScrollLock', 'Shift',
-  'Super', 'Symbol', 'SymbolLock',
-  // White space, navigation and editing
-  'Enter', 'Tab', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'End', 'Home', 'PageDown', 'PageUp',
-  'Backspace', 'Clear', 'Copy', 'CrSel', 'Cut', 'Delete', 'EraseEof', 'ExSel', 'Insert', 'Paste', 'Redo', 'Undo',
-  // User interface and device
-  'Accept', 'Again', 'Attn', 'Cancel', 'ContextMenu', 'Escape', 'Execute', 'Find', 'Finish', 'Help', 'Pause', 'Play',
-  'Props', 'Select', 'ZoomIn', 'ZoomOut', 'BrightnessDown', 'BrightnessUp', 'Eject', 'LogOff', 'Power', 'PowerOff',
-  'PrintScreen', 'Hibernate', 'Standby', 'WakeUp',
-  // Input methods and composition
-  'AllCandidates', 'Alphanumeric', 'CodeInput', 'Compose', 'Convert', 'Dead', 'FinalMode', 'GroupFirst',
-  'GroupLast', 'GroupNext', 'GroupPrevious', 'ModeChange', 'NextCandidate', 'NonConvert', 'PreviousCandidate',
-  'Process', 'SingleCandidate', 'HangulMode', 'HanjaMode', 'JunjaMode', 'Eisu', 'Hankaku', 'Hiragana',
-  'HiraganaKatakana', 'KanaMode', 'KanjiMode', 'Katakana', 'Romaji', 'Zenkaku', 'ZenkakuHankaku',
-  // General-purpose function keys
-  ...Array.from({ length: 24 }, (_, index) => `F${index + 1}`), 'Soft1', 'Soft2', 'Soft3', 'Soft4',
-  // Multimedia, audio and speech
-  'ChannelDown', 'ChannelUp', 'Close', 'MailForward', 'MailReply', 'MailSend', 'MediaClose', 'MediaFastForward',
-  'MediaPause', 'MediaPlay', 'MediaPlayPause', 'MediaRecord', 'MediaRewind', 'MediaStop', 'MediaTrackNext',
-  'MediaTrackPrevious', 'New', 'Open', 'Print', 'Save', 'SpellCheck', 'Key11', 'Key12', 'AudioBalanceLeft',
-  'AudioBalanceRight', 'AudioBassBoostDown', 'AudioBassBoostToggle', 'AudioBassBoostUp', 'AudioFaderFront',
-  'AudioFaderRear', 'AudioSurroundModeNext', 'AudioTrebleDown', 'AudioTrebleUp', 'AudioVolumeDown',
-  'AudioVolumeUp', 'AudioVolumeMute', 'MicrophoneToggle', 'MicrophoneVolumeDown', 'MicrophoneVolumeUp',
-  'MicrophoneVolumeMute', 'SpeechCorrectionList', 'SpeechInputToggle',
-  // Applications, browser and phone
-  'LaunchApplication1', 'LaunchApplication2', 'LaunchCalendar', 'LaunchContacts', 'LaunchMail',
-  'LaunchMediaPlayer', 'LaunchMusicPlayer', 'LaunchPhone', 'LaunchScreenSaver', 'LaunchSpreadsheet',
-  'LaunchWebBrowser', 'LaunchWebCam', 'LaunchWordProcessor', 'BrowserBack', 'BrowserFavorites', 'BrowserForward',
-  'BrowserHome', 'BrowserRefresh', 'BrowserSearch', 'BrowserStop', 'AppSwitch', 'Call', 'Camera', 'CameraFocus',
-  'EndCall', 'GoBack', 'GoHome', 'HeadsetHook', 'LastNumberRedial', 'Notification', 'MannerMode', 'VoiceDial',
-  // Television and media controllers
-  'TV', 'TV3DMode', 'TVAntennaCable', 'TVAudioDescription', 'TVAudioDescriptionMixDown',
-  'TVAudioDescriptionMixUp', 'TVContentsMenu', 'TVDataService', 'TVInput', 'TVInputComponent1',
-  'TVInputComponent2', 'TVInputComposite1', 'TVInputComposite2', 'TVInputHDMI1', 'TVInputHDMI2', 'TVInputHDMI3',
-  'TVInputHDMI4', 'TVInputVGA1', 'TVMediaContext', 'TVNetwork', 'TVNumberEntry', 'TVPower', 'TVRadioService',
-  'TVSatellite', 'TVSatelliteBS', 'TVSatelliteCS', 'TVSatelliteToggle', 'TVTerrestrialAnalog',
-  'TVTerrestrialDigital', 'TVTimer', 'AVRInput', 'AVRPower', 'ColorF0Red', 'ColorF1Green', 'ColorF2Yellow',
-  'ColorF3Blue', 'ColorF4Grey', 'ColorF5Brown', 'ClosedCaptionToggle', 'Dimmer', 'DisplaySwap', 'DVR', 'Exit',
-  'FavoriteClear0', 'FavoriteClear1', 'FavoriteClear2', 'FavoriteClear3', 'FavoriteRecall0', 'FavoriteRecall1',
-  'FavoriteRecall2', 'FavoriteRecall3', 'FavoriteStore0', 'FavoriteStore1', 'FavoriteStore2', 'FavoriteStore3',
-  'Guide', 'GuideNextDay', 'GuidePreviousDay', 'Info', 'InstantReplay', 'Link', 'ListProgram', 'LiveContent',
-  'Lock', 'MediaApps', 'MediaAudioTrack', 'MediaLast', 'MediaSkipBackward', 'MediaSkipForward',
-  'MediaStepBackward', 'MediaStepForward', 'MediaTopMenu', 'NavigateIn', 'NavigateNext', 'NavigateOut',
-  'NavigatePrevious', 'NextFavoriteChannel', 'NextUserProfile', 'OnDemand', 'Pairing', 'PinPDown', 'PinPMove',
-  'PinPToggle', 'PinPUp', 'PlaySpeedDown', 'PlaySpeedReset', 'PlaySpeedUp', 'RandomToggle', 'RcLowBattery',
-  'RecordSpeedNext', 'RfBypass', 'ScanChannelsToggle', 'ScreenModeNext', 'Settings', 'SplitScreenToggle',
-  'STBInput', 'STBPower', 'Subtitle', 'Teletext', 'VideoModeNext', 'Wink', 'ZoomToggle'
-];
-
-/** Every printable US character, and every named key. */
-const CANDIDATE_KEYS = [
-  ...'abcdefghijklmnopqrstuvwxyz0123456789',
-  ...'`~!@#$%^&*()-_=+[{]}\\|;:\'",<.>/? ',
-  ...NAMED_KEYS
-];
-
-/** What the probe sets on a key event, and so all the dispatcher may read of one. */
 const PROBED_EVENT_PROPERTIES = [
-  'key', 'shiftKey', 'ctrlKey', 'altKey', 'metaKey', 'target', 'defaultPrevented', 'preventDefault'
+  'key', 'shiftKey', 'ctrlKey', 'altKey', 'metaKey', 'repeat', 'target', 'defaultPrevented', 'preventDefault'
 ];
 
-/**
- * Read `InteractionHandler.handleKeyDown` as code: every literal it compares
- * the key with, every use of the key it does not compare with a literal, and
- * every property of the event it reads. The forms read are `key === 'x'`,
- * `[ … ].includes(key)` and `switch (key) { case 'x': … }`.
- */
-function dispatcherSource() {
-  const lexed = lex(readFileSync(join(repoRoot, 'src/handlers/InteractionHandler.js'), 'utf8'));
-  const body = bodyOf(lexed, /\n {2}handleKeyDown\(event\)\s*\{/);
-  const { code } = body;
-  const literals = new Set();
-  const covered = [];
-  const take = (pattern, collect) => {
-    for (const match of code.matchAll(pattern)) {
-      collect(match);
-      covered.push([match.index, match.index + match[0].length]);
-    }
-  };
-  take(/const key = event\.key\.toLowerCase\(\);/g, () => {});
-  take(/(?<![\w$.])key\s*[!=]==\s*(['"])((?:(?!\1).)*)\1/g, match => literals.add(match[2]));
-  take(/(['"])((?:(?!\1).)*)\1\s*[!=]==\s*key(?![\w$])/g, match => literals.add(match[2]));
-  take(/\[([^\]]*)\]\.includes\(key\)/g, match => {
-    for (const item of match[1].matchAll(/(['"])((?:(?!\1).)*)\1/g)) literals.add(item[2]);
-  });
-  for (const match of code.matchAll(/switch\s*\(\s*key\s*\)\s*\{/g)) {
-    const open = body.start + match.index + match[0].length - 1;
-    const block = lexed.code.slice(open, closing(lexed, open) + 1);
-    for (const item of block.matchAll(/case (['"])((?:(?!\1).)*)\1:/g)) literals.add(item[2]);
-    covered.push([match.index, match.index + match[0].length]);
-  }
-  const others = [...code.matchAll(/(?<![\w$.])key(?![\w$])/g)]
-    .filter(({ index }) => !covered.some(([from, to]) => index >= from && index < to))
-    .map(({ index }) => code.slice(Math.max(0, index - 30), index + 30).replace(/\s+/g, ' ').trim());
-  const properties = new Set([...code.matchAll(/(?<![\w$])event\.(\w+)/g)].map(match => match[1]));
-  return { literals, others, properties };
-}
+/** Every key listener in `src/`, read as code (`keyListenersIn`), read once. */
+let sourceListeners = null;
+const sourceKeyListeners = () => (sourceListeners ??= keyListenersIn(lexedFiles(repoRoot, 'src')));
+const listenerNamed = name => sourceKeyListeners().listeners.find(listener => listener.name === name);
 
 /**
  * Everything the page's shortcut dispatcher reacts to, with a waypoint
@@ -971,10 +891,10 @@ function dispatcherSource() {
  * Z and 0; Shift for Z and for the arrows' step), treats Ctrl and Cmd alike on
  * every platform, and ignores the rest, so every other key fires whatever else
  * is held, where Help shows one chord per entry. Some of those chords are the
- * browser's own, and the app takes them with their default prevented: Ctrl or
- * Cmd with L, J or K plays, Cmd with comma skips to the start, and Ctrl or Cmd
- * with = or − zooms the map rather than the page, while Ctrl or Cmd with 0 is
- * left to reset the page's zoom.
+ * browser's own, and the app takes them with their default prevented
+ * (DEF-63): Ctrl or Cmd with L, J or K plays, Cmd with comma skips to the
+ * start, and Ctrl or Cmd with = or − zooms the map rather than the page, while
+ * Ctrl or Cmd with 0 is left to reset the page's zoom.
  */
 const DISPATCH = [
   [' ', 'ui:animation:toggle', ANY, ['playPause']],
@@ -1019,26 +939,31 @@ describe('what the page shortcuts react to (TST-13)', () => {
     // Recorded, not delivered, so every press meets the same editor.
     const emit = vi.spyOn(app.eventBus, 'emit').mockImplementation(() => {});
 
-    const reactions = new Map();
+    // Each key once as a single press, and once as a key held down repeats it.
+    const reactions = { single: new Map(), held: new Map() };
     const strays = [];
     try {
       for (const candidate of CANDIDATE_KEYS) {
         for (const flags of COMBOS) {
           // A letter arrives in capitals while Shift is held.
           const key = candidate.length === 1 && flags.shiftKey ? candidate.toUpperCase() : candidate;
-          emit.mockClear();
-          const event = press(key, flags);
-          const sent = emit.mock.calls.map(([name]) => name);
-          if (sent.length === 0) {
-            if (event.defaultPrevented) strays.push(`${comboName(flags)} ${key}: prevented, nothing sent`);
-            continue;
+          for (const repeat of [false, true]) {
+            emit.mockClear();
+            const event = press(key, { ...flags, repeat });
+            const sent = emit.mock.calls.map(([name]) => name);
+            const pressed = `${repeat ? 'held ' : ''}${comboName(flags)} ${key}`;
+            if (sent.length === 0) {
+              if (event.defaultPrevented) strays.push(`${pressed}: prevented, nothing sent`);
+              continue;
+            }
+            if (sent.length > 1 || !event.defaultPrevented) {
+              strays.push(`${pressed}: ${sent.join(', ')}, prevented ${event.defaultPrevented}`);
+            }
+            const table = repeat ? reactions.held : reactions.single;
+            const row = `${key.toLowerCase()}\n${sent[0]}`;
+            if (!table.has(row)) table.set(row, []);
+            table.get(row).push(flags);
           }
-          if (sent.length > 1 || !event.defaultPrevented) {
-            strays.push(`${comboName(flags)} ${key}: ${sent.join(', ')}, prevented ${event.defaultPrevented}`);
-          }
-          const row = `${key.toLowerCase()}\n${sent[0]}`;
-          if (!reactions.has(row)) reactions.set(row, []);
-          reactions.get(row).push(flags);
         }
       }
     } finally {
@@ -1046,10 +971,13 @@ describe('what the page shortcuts react to (TST-13)', () => {
     }
 
     expect(strays, 'each reaction is one event, with the browser default prevented').toEqual([]);
-    const found = [...reactions].map(([row, combos]) => [...row.split('\n'), nameModifierSet(combos)]);
+    const tabled = table => [...table].map(([row, combos]) => [...row.split('\n'), nameModifierSet(combos)]);
+    const found = tabled(reactions.single);
     expect(byText(found), 'what the dispatcher reacts to: a new key needs a DISPATCH row (in Help, or with its ' +
       'reason), and a key it no longer takes leaves the table')
       .toEqual(byText(DISPATCH.map(([key, sends, modifiers]) => [key, sends, modifiers])));
+    // Holding a key down, as a user holds an arrow to keep nudging, does what one press does.
+    expect(byText(tabled(reactions.held)), 'what a held, repeating key does').toEqual(byText(found));
 
     for (const [key, , modifiers, documentedBy] of DISPATCH) {
       if (typeof documentedBy === 'string') {
@@ -1071,16 +999,19 @@ describe('what the page shortcuts react to (TST-13)', () => {
   });
 
   test('the probe presses every key the dispatcher tests for, and sets everything it reads of the event', () => {
-    const { literals, others, properties } = dispatcherSource();
-    expect(others, 'uses of the key other than a comparison with a literal (the probe cannot vouch for them)')
-      .toEqual([]);
-    expect([...properties].filter(name => !PROBED_EVENT_PROPERTIES.includes(name)),
+    // The dispatcher's source, read as `keyListenersIn` reads every key
+    // handler: a use of the event or its key it cannot account for fails.
+    const { reads } = listenerNamed(KEY_LISTENER.dispatcher);
+    expect(reads.unanalysed, 'uses of the event or its key the scan cannot vouch for').toEqual([]);
+    expect([...reads.reads].filter(name => !PROBED_EVENT_PROPERTIES.includes(name)),
       'properties of the event the dispatcher reads and the probe does not set').toEqual([]);
+    expect([...reads.keys], 'keys compared as written (the dispatcher lower-cases every key first)').toEqual([]);
+    const literals = [...reads.anyCase];
     const probed = new Set(CANDIDATE_KEYS.map(key => key.toLowerCase()));
-    expect([...literals].filter(literal => !probed.has(literal)).sort(),
+    expect(literals.filter(literal => !probed.has(literal)).sort(),
       'keys the dispatcher tests for that the probe never presses').toEqual([]);
     // Each key it tests for is one it reacts to, and the other way round.
-    expect([...literals].sort(), 'the keys the dispatcher tests for (DISPATCH)')
+    expect(literals.sort(), 'the keys the dispatcher tests for (DISPATCH)')
       .toEqual([...new Set(DISPATCH.map(([key]) => key))].sort());
     expect(NAMED_KEYS.filter(key => /^F\d+$/.test(key))).toHaveLength(24);
   });
@@ -1271,7 +1202,7 @@ describe('the transport keys over time (TST-13)', () => {
     ]);
   });
 
-  test('at the end of the timeline, Space and K play one frame and stop; Play restarts (proposed defect)', async () => {
+  test('at the end of the timeline, Space and K play one frame and stop; Play restarts (DEF-62)', async () => {
     // Every project opens paused at the end. The toggle plays from there, so
     // the next frame completes at once: the live region says "Playing
     // animation" then "Animation complete", and nothing moves. The Play
@@ -1300,8 +1231,12 @@ describe('modifier keys held on their own (TST-13)', () => {
     const [minorKey, minorFlag, otherKey, otherFlag] = isMac
       ? ['Meta', 'metaKey', 'Control', 'ctrlKey']
       : ['Control', 'ctrlKey', 'Meta', 'metaKey'];
+    // Each press is logged for the listener it is for, so the test can show it
+    // pressed every key the cursor's handlers compare (KEY_LISTENERS).
+    const log = keyLog();
     const key = (type, name, flags = {}) => {
-      document.body.dispatchEvent(new KeyboardEvent(type, { key: name, bubbles: true, cancelable: true, ...flags }));
+      const listener = type === 'keyup' ? KEY_LISTENER.cursorUp : KEY_LISTENER.cursorDown;
+      log.press(listener, name, document.body, flags, type);
       return `${type} ${name}: ${app.canvas.style.cursor}`;
     };
     const blur = () => {
@@ -1344,6 +1279,15 @@ describe('modifier keys held on their own (TST-13)', () => {
       'keydown A: not-allowed',
       'window blur: crosshair'
     ]);
+
+    // Every other key of the domain, pressed and let go, leaves the cursor as it is.
+    const cursor = () => app.canvas.style.cursor;
+    log.sweep(KEY_LISTENER.cursorDown, document.body, cursor, { onThePage: true });
+    log.sweep(KEY_LISTENER.cursorUp, document.body, cursor, { onThePage: true, type: 'keyup' });
+    expect(log.findings(), 'keys that moved the cursor, other than the modifiers').toEqual({});
+    for (const listener of [KEY_LISTENER.cursorDown, KEY_LISTENER.cursorUp]) {
+      expect(log.unpressed(listener), `keys ${listener} compares that this test never pressed`).toEqual([]);
+    }
   });
 });
 
@@ -1373,28 +1317,222 @@ function keysReachingThePage() {
 const focusName = () => {
   const element = document.activeElement;
   if (!element || element === document.body) return 'the page';
-  return element.id ? `#${element.id}` : (element.getAttribute('aria-label') || element.textContent.trim());
+  if (element.id) return `#${element.id}`;
+  const label = element.getAttribute('aria-label');
+  if (label) return label;
+  return element.name ? `the ${element.name} field` : element.textContent.trim();
 };
 
 /**
- * Rows for the key listeners no other suite presses, or presses only in
- * part. Each presses the keys its listener reads, and some it does not, and
- * records what each press did.
+ * Every key listener in `src/`, by a short name: each is the inventory's own
+ * name for it (`keyListenersIn`), as KEY_LISTENERS keys it.
  */
-const LISTENER_ROWS = {
-  'Enter in a busyness handle field applies what was typed; other keys, and a read-only field, do not':
-    async () => {
+const KEY_LISTENER = {
+  crowdRename: 'src/app/crowds.js: input keydown #1',
+  busyness: 'src/app/crowds.js: input keydown #2',
+  exportEscape: 'src/app/exporting.js: window keydown (capture)',
+  contextMenu: 'src/components/ContextMenu.js: document keydown (capture)',
+  menuButton: 'src/components/Dropdown.js: trigger keydown',
+  menu: 'src/components/Dropdown.js: menu keydown',
+  menuAnywhere: 'src/components/Dropdown.js: document keydown',
+  hint: 'src/components/ParamTooltip.js: document keydown',
+  outline: 'src/controllers/SceneOutlineController.js: this.container keydown',
+  sectionHeader: 'src/controllers/SectionController.js: header keydown',
+  more: 'src/controllers/SectionController.js: summary keydown',
+  waypointRename: 'src/controllers/UIController.js: input keydown',
+  waypointRow: 'src/controllers/UIController.js: rowBtn keydown',
+  dispatcher: 'src/handlers/InteractionHandler.js: document keydown #1',
+  cursorDown: 'src/handlers/InteractionHandler.js: document keydown #2',
+  cursorUp: 'src/handlers/InteractionHandler.js: document keyup',
+  playerTimeline: 'src/player/playerEntry.js: timeline keydown',
+  playerPage: 'src/player/playerEntry.js: document keydown',
+  areaDrawing: 'src/services/AreaDrawingService.js: document keydown (capture)',
+  networkPen: 'src/services/NetworkEditService.js: document keydown (capture)',
+  focusTrap: 'src/utils/focusTrap.js: window keydown (capture)'
+};
+
+/**
+ * Every keydown, keyup and keypress listener in `src/`: what it does, and
+ * what its handler reads of the event, as the source says (`keyListenersIn`
+ * follows the event through the handler and the functions of its file it is
+ * passed to): the keys it compares `event.key` with (`keys`, or `anyCase`
+ * where it lower-cases first), and every other property it reads (`reads`).
+ * A changed key, a new property, or a use of the event the scan cannot
+ * follow, fails here.
+ *
+ * Where its keys are pressed: a row below that covers it (each key the
+ * handler compares, on its target, and every other key of the domain swept
+ * past it), this file's own tables (`here`), or another suite (`suite`),
+ * which holds itself to the same. `pinnedBy` names other suites that press
+ * some of its keys too, lightly checked: the suite exists and names them.
+ */
+const KEY_LISTENERS = {
+  [KEY_LISTENER.crowdRename]: {
+    what: "a crowd's rename field (_startCrowdRename): Enter keeps the name typed, Escape the old one; " +
+      'no key reaches the page',
+    keys: ['Enter', 'Escape'], reads: ['preventDefault', 'stopPropagation'],
+    pinnedBy: { 'tests/crowds.test.js': ['Enter', 'Escape'] } },
+  [KEY_LISTENER.busyness]: {
+    what: 'a busyness handle number field: Enter applies what was typed (TST-04 mutant C5 breaks it)',
+    keys: ['Enter'], reads: ['preventDefault'],
+    pinnedBy: { 'tests/crowds.test.js': ['Enter'] } },
+  [KEY_LISTENER.exportEscape]: {
+    what: 'Escape during a video export cancels it, ahead of every other listener',
+    keys: ['Escape'], reads: ['preventDefault', 'stopImmediatePropagation'] },
+  [KEY_LISTENER.contextMenu]: {
+    what: 'an open context menu: arrows, Home and End move, Escape and Tab close it; it holds every other key back',
+    keys: ['ArrowDown', 'ArrowUp', 'End', 'Escape', 'Home', 'Tab'], reads: ['preventDefault', 'stopPropagation'] },
+  [KEY_LISTENER.menuButton]: {
+    what: 'a menu button (File, Export): Enter, Space and ↓ open its menu',
+    keys: [' ', 'ArrowDown', 'Enter'], reads: ['preventDefault'] },
+  [KEY_LISTENER.menu]: {
+    what: 'an open menu: arrows, Home and End move, Escape closes it to its button, Tab closes it',
+    keys: ['ArrowDown', 'ArrowUp', 'End', 'Escape', 'Home', 'Tab'], reads: ['preventDefault'] },
+  [KEY_LISTENER.menuAnywhere]: {
+    what: 'Escape anywhere closes an open menu',
+    keys: ['Escape'], reads: [] },
+  [KEY_LISTENER.hint]: {
+    what: 'Escape hides an open hint, and keeps it hidden while focus stays',
+    keys: ['Escape'], reads: [],
+    pinnedBy: { 'tests/paramTooltip.test.js': ['Escape'] } },
+  [KEY_LISTENER.outline]: {
+    what: 'Escape in a scene outline field drops the draft and resets its form',
+    keys: ['Escape'], reads: ['preventDefault', 'stopPropagation', 'target'],
+    pinnedBy: { 'tests/sceneOutline.test.js': ['Escape'] } },
+  [KEY_LISTENER.sectionHeader]: {
+    what: 'a settings section header: Enter and Space open and close it (TST-04 mutant C8 breaks it)',
+    keys: [' ', 'Enter'], reads: ['preventDefault'] },
+  [KEY_LISTENER.more]: {
+    what: 'a More disclosure: Enter and Space open and close it',
+    keys: [' ', 'Enter'], reads: ['preventDefault'],
+    pinnedBy: { 'tests/reviewAccessibility.test.js': ['Enter', ' '] } },
+  [KEY_LISTENER.waypointRename]: {
+    what: "a waypoint's rename field: Enter keeps the name typed, Escape the old one; no key reaches the page",
+    keys: ['Enter', 'Escape'], reads: ['preventDefault', 'stopPropagation'],
+    pinnedBy: { 'tests/waypointList.test.js': ['Enter'] } },
+  [KEY_LISTENER.waypointRow]: {
+    what: 'F2 on a waypoint row selects it and starts its rename; the selection reads Shift and Ctrl/Cmd, ' +
+      'as a click on the row does',
+    keys: ['F2'], reads: ['ctrlKey', 'metaKey', 'preventDefault', 'shiftKey'] },
+  [KEY_LISTENER.dispatcher]: {
+    what: "the page's shortcut dispatcher, which lower-cases each key before it compares",
+    anyCase: [...new Set(DISPATCH.map(([key]) => key))],
+    reads: ['ctrlKey', 'defaultPrevented', 'metaKey', 'preventDefault', 'shiftKey', 'target'],
+    here: 'what the page shortcuts react to (TST-13)' },
+  [KEY_LISTENER.cursorDown]: {
+    what: 'the canvas cursor while a modifier is held',
+    keys: ['Alt', 'Control', 'Meta', 'Shift'], reads: ['altKey', 'ctrlKey', 'metaKey', 'shiftKey'],
+    here: 'modifier keys held on their own (TST-13)' },
+  [KEY_LISTENER.cursorUp]: {
+    what: 'the canvas cursor when a modifier is let go',
+    keys: ['Alt', 'Control', 'Meta', 'Shift'], reads: ['altKey', 'ctrlKey', 'metaKey', 'shiftKey'],
+    here: 'modifier keys held on their own (TST-13)' },
+  [KEY_LISTENER.playerTimeline]: {
+    what: "the exported player's timeline: arrows step 5 s, Page Up and Down 10 s, Home and End go to the ends",
+    keys: ['ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'End', 'Home', 'PageDown', 'PageUp'],
+    reads: ['preventDefault'],
+    suite: 'tests/playerEntryAccessibility.test.js' },
+  [KEY_LISTENER.playerPage]: {
+    what: "the exported player's page: Space and K play and pause, Home and End, and the arrows seek 1 s; " +
+      'a focused control keeps its own keys',
+    keys: [' ', 'ArrowLeft', 'ArrowRight', 'End', 'Home', 'k'], reads: ['preventDefault', 'target'],
+    suite: 'tests/playerEntryAccessibility.test.js' },
+  [KEY_LISTENER.areaDrawing]: {
+    what: 'Escape while drawing an area cancels the drawing, ahead of the page',
+    keys: ['Escape'], reads: ['preventDefault', 'stopPropagation'] },
+  [KEY_LISTENER.networkPen]: {
+    what: 'drawing a network: the Escape ladder, Delete and Backspace, and T in either case, ahead of the page',
+    keys: ['Backspace', 'Delete', 'Escape'], anyCase: ['t'], reads: ['preventDefault', 'stopPropagation', 'target'],
+    pinnedBy: { 'tests/networkEdit.test.js': ['Escape', 't', 'Delete'] } },
+  [KEY_LISTENER.focusTrap]: {
+    what: "an open dialog's focus trap: Tab and Shift+Tab wrap, Escape closes the dialog",
+    keys: ['Escape', 'Tab'], reads: ['preventDefault', 'shiftKey', 'stopImmediatePropagation'],
+    pinnedBy: { 'tests/reviewAccessibility.test.js': ['Tab', 'Escape'] } }
+};
+
+/** Mentions of a listener method that register nothing, and why. */
+const NOT_REGISTRATIONS = {
+  'src/services/StorageService.js: target.addEventListener, not called':
+    'a feature test: attachLifecycle checks its target can take listeners before adding its own, ' +
+    'each with a literal type the scan reads'
+};
+
+/**
+ * A row's key presses, by the listener each is for, so a row can be held to
+ * pressing every key its listeners compare, and to sweeping every other key
+ * of the domain past them.
+ */
+function keyLog() {
+  const pressed = {};
+  const swept = new Set();
+  const findings = {};
+  const dispatched = new Set(DISPATCH.map(([key]) => key));
+  const log = {
+    /** A key pressed for `listener`'s sake, on `target`. */
+    press(listener, key, target = document.activeElement, flags = {}, type = 'keydown') {
+      (pressed[listener] ??= new Set()).add(key);
+      const event = new KeyboardEvent(type, { key, bubbles: true, cancelable: true, ...flags });
+      target.dispatchEvent(event);
+      return event;
+    },
+    /**
+     * Press every key of the domain that `listener` does not compare, on its
+     * target (a function where the target is rebuilt): a key that changes
+     * `state()` or is taken is a finding, and a row must have none. Where the
+     * key lands on the page itself (`onThePage`), the keys the page's
+     * dispatcher reacts to are left out: the dispatcher takes them.
+     */
+    sweep(listener, target, state, { onThePage = false, type = 'keydown' } = {}) {
+      const { keys = [], anyCase = [] } = KEY_LISTENERS[listener];
+      const compared = new Set([...keys, ...anyCase.flatMap(key => [key, key.toUpperCase()])]);
+      const found = [];
+      for (const key of CANDIDATE_KEYS) {
+        if (compared.has(key) || (onThePage && dispatched.has(key.toLowerCase()))) continue;
+        const was = state();
+        const event = log.press(listener, key, typeof target === 'function' ? target() : target, {}, type);
+        const now = state();
+        if (event.defaultPrevented || now !== was) {
+          found.push(`${key === ' ' ? 'Space' : key}: ${taken(event)}; ${now}`);
+        }
+      }
+      swept.add(listener);
+      if (found.length > 0) findings[listener] = found;
+    },
+    /** The keys `listener` compares that no press was for. */
+    unpressed(listener) {
+      const { keys = [], anyCase = [] } = KEY_LISTENERS[listener];
+      return [...keys, ...anyCase].filter(key => !pressed[listener]?.has(key));
+    },
+    swept: listener => swept.has(listener),
+    findings: () => findings
+  };
+  return log;
+}
+
+/**
+ * The rows that press the local key listeners: each covers its listeners,
+ * pressing every key their handlers compare on their targets and recording
+ * what each did, then sweeping every other key of the domain past them.
+ * Keys are pressed without modifiers, but for Shift+Tab in the focus trap:
+ * the modifiers a handler reads are pinned from its source (KEY_LISTENERS).
+ */
+const LISTENER_ROWS = [
+  {
+    title: 'Enter in a busyness handle field applies what was typed; every other key, and a read-only field, do not',
+    covers: [KEY_LISTENER.busyness],
+    async run(log) {
       const app = await editor();
       document.getElementById('add-crowd-btn').click();
       const envelope = () => app.selectedCrowd.emitters[0].busynessEnvelope
         .map(({ time, value }) => `${time}:${value}`).join(' ');
       const field = (index, name) =>
         document.querySelector(`[data-busyness-index="${index}"][data-busyness-field="${name}"]`);
+      const said = () => document.getElementById('announcer').textContent || '—';
       const step = (name, target, key, typedValue) => {
         target.value = typedValue;
         document.getElementById('announcer').textContent = '';
-        const event = press(key, {}, target);
-        return `${name}: ${key} ${taken(event)}; ${envelope()}; said ${document.getElementById('announcer').textContent || '—'}`;
+        const event = log.press(KEY_LISTENER.busyness, key, target);
+        return `${name}: ${key} ${taken(event)}; ${envelope()}; said ${said()}`;
       };
       expect([
         step('busy 1', field(0, 'value'), 'a', '40'),
@@ -1407,337 +1545,476 @@ const LISTENER_ROWS = {
         'time 1, read-only: Enter left; 0:0.4 1:1; said —',
         'busy 2: Enter taken; 0:0.4 1:0; said Busyness pattern updated. Undo is available.'
       ]);
-    },
-
-  'Enter and Space on a settings section header open and close it; other keys do not': async () => {
-    await editor();
-    const section = document.querySelector('.settings-section[data-section="video"]');
-    const header = section.querySelector('.section-header');
-    header.focus();
-    const state = () => `${header.getAttribute('aria-expanded') === 'true' ? 'open' : 'closed'}` +
-      `${section.classList.contains('expanded') ? '' : ' (no class)'}, last used ` +
-      `${document.querySelector('.settings-section[data-last="true"]')?.dataset.section ?? 'none'}`;
-    const before = state();
-    const steps = ['a', 'Enter', ' ', 'Tab'].map(key => `${key === ' ' ? 'Space' : key}: ${taken(press(key, {}, header))}; ${state()}`);
-    // Focus alone marks the section last used (SectionController's focusin).
-    expect([before, ...steps]).toEqual([
-      'closed (no class), last used video',
-      'a: left; closed (no class), last used video',
-      'Enter: taken; open, last used video',
-      'Space: taken; closed (no class), last used video',
-      'Tab: left; closed (no class), last used video'
-    ]);
+      // A value typed and every other key pressed: nothing is applied.
+      field(0, 'value').value = '55';
+      document.getElementById('announcer').textContent = '';
+      log.sweep(KEY_LISTENER.busyness, () => field(0, 'value'), () => `${envelope()}; said ${said()}`);
+    }
   },
 
-  'Enter and Space on a More disclosure open and close it': async () => {
-    await editor();
-    const disclosure = document.querySelector('.section-more');
-    const summary = disclosure.querySelector('summary');
-    summary.focus();
-    expect(['Enter', ' ', 'a'].map(key => `${key === ' ' ? 'Space' : key}: ${taken(press(key, {}, summary))}; ` +
-      `${disclosure.open ? 'open' : 'closed'}`)).toEqual(['Enter: taken; open', 'Space: taken; closed', 'a: left; closed']);
-  },
-
-  'F2 on a waypoint row starts its rename; Enter keeps the new name, Escape the old one': async () => {
-    const app = await editor();
-    const row = index => document.querySelector(`#waypoint-list .waypoint-item[data-route-index="${index}"] .waypoint-row`);
-    const renaming = () => document.querySelector('#waypoint-list .waypoint-rename-input');
-    const names = () => app.waypoints.map(wp => wp.name || '—').join(', ');
-    const steps = [];
-    let event = press('F3', {}, row(2));
-    await frame();
-    steps.push(`F3 on row 3: ${taken(event)}; ${renaming() ? 'renaming' : 'not renaming'}`);
-    event = press('F2', {}, row(2));
-    await frame();
-    steps.push(`F2 on row 3: ${taken(event)}; renaming "${renaming().value}", focus ${focusName()}`);
-    renaming().value = 'Lab';
-    event = press('Enter', {}, renaming());
-    steps.push(`Enter: ${taken(event)}; ${renaming() ? 'renaming' : 'done'}; names ${names()}`);
-    event = press('F2', {}, row(2));
-    await frame();
-    renaming().value = 'Library';
-    event = press('Escape', {}, renaming());
-    steps.push(`F2, then Escape: ${taken(event)}; ${renaming() ? 'renaming' : 'done'}; names ${names()}, ` +
-      `selected ${app.selectedWaypoint === app.waypoints[2] ? 'row 3' : 'another'}`);
-    expect(steps).toEqual([
-      'F3 on row 3: left; not renaming',
-      'F2 on row 3: taken; renaming "", focus Rename Waypoint 3',
-      'Enter: taken; done; names —, —, Lab',
-      'F2, then Escape: taken; done; names —, —, Lab, selected row 3'
-    ]);
-  },
-
-  "the Export menu: Enter, Space and ↓ open it; ↓ ↑ Home End move in it; Escape and Tab close it, and Escape on the page": async () => {
-    const app = await editor();
-    const trigger = document.getElementById('export-dropdown-btn');
-    const menu = document.getElementById('export-menu');
-    trigger.focus();
-    const state = () => `${menu.classList.contains('is-open') ? 'open' : 'closed'} ` +
-      `(${trigger.getAttribute('aria-expanded')}), focus ${focusName()}`;
-    const step = (key, target = document.activeElement, flags = {}) =>
-      `${key === ' ' ? 'Space' : key}: ${taken(press(key, flags, target))}; ${state()}`;
-    expect([
-      step('Enter'), step('ArrowDown'), step('End'), step('ArrowDown'), step('ArrowUp'), step('Home'),
-      step('Escape'), step(' '), step('Tab'), step('ArrowDown', trigger), step('Escape', document.body)
-    ]).toEqual([
-      'Enter: taken; open (true), focus #export-mp4-btn',
-      'ArrowDown: taken; open (true), focus #export-webm-btn',
-      'End: taken; open (true), focus #copy-debug-btn',
-      'ArrowDown: taken; open (true), focus #export-mp4-btn',
-      'ArrowUp: taken; open (true), focus #copy-debug-btn',
-      'Home: taken; open (true), focus #export-mp4-btn',
-      'Escape: taken; closed (false), focus #export-dropdown-btn',
-      'Space: taken; open (true), focus #export-mp4-btn',
-      'Tab: left; closed (false), focus #export-mp4-btn',
-      'ArrowDown: taken; open (true), focus #export-mp4-btn',
-      // Escape on the page closes the menu, and runs the page's own Escape too.
-      'Escape: taken; closed (false), focus #export-mp4-btn'
-    ]);
-    expect(app.selectedWaypoint, "the page's Escape cleared the selection").toBeNull();
-  },
-
-  "a waypoint's context menu: ↓ ↑ Home End move, other keys stay in it, Tab and Escape close it": async () => {
-    const app = await editor();
-    const { x, y } = app.imageToCanvas(0.75, 0.5);
-    const open = () => {
-      app.canvas.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2,
-        clientX: x, clientY: y }));
-    };
-    const menu = () => document.querySelector('.context-menu');
-    const state = () => (menu()?.style.display === 'block' ? `open, focus ${focusName()}` : `closed, focus ${focusName()}`);
-    const step = (key, target = document.activeElement) => `${key}: ${taken(press(key, {}, target))}; ${state()}`;
-    open();
-    const steps = [`opened: ${state()}`, step('ArrowDown'), step('End'), step('ArrowDown'), step('ArrowUp'),
-      step('Home')];
-    // Sent to the page, T would convert the selected waypoint; under the
-    // menu, the menu's capture-phase listener holds it back from the page.
-    const route = app.waypoints.map(describeWaypoint).join(' ');
-    steps.push(step('t', document.body));
-    steps.push(`route ${app.waypoints.map(describeWaypoint).join(' ') === route ? 'unchanged' : 'changed'}`);
-    steps.push(step('Tab'));
-    open();
-    steps.push(step('Escape'));
-    expect(steps).toEqual([
-      'opened: open, focus Rename',
-      'ArrowDown: taken; open, focus Convert to minor waypoint',
-      'End: taken; open, focus Delete waypoint',
-      'ArrowDown: taken; open, focus Rename',
-      'ArrowUp: taken; open, focus Delete waypoint',
-      'Home: taken; open, focus Rename',
-      't: left; open, focus Rename',
-      'route unchanged',
-      'Tab: left; closed, focus the page',
-      'Escape: taken; closed, focus the page'
-    ]);
-  },
-
-  'Escape while drawing an area cancels the drawing, and leaves the selection': async () => {
-    const app = await editor();
-    document.getElementById('area-draw-btn').click();
-    const state = () => `${app.areaDrawingService.isDrawing ? 'drawing' : 'not drawing'}, ` +
-      `selected ${app.selectedWaypoint ? describeWaypoint(app.selectedWaypoint) : 'none'}`;
-    const before = state();
-    const page = keysReachingThePage();
-    const event = press('Escape');
-    page.stop();
-    expect([before, `Escape: ${taken(event)}; ${state()}; reached the page: ${page.keys.join(' ') || 'nothing'}`])
-      .toEqual([
-        'drawing, selected major 0.5,0.5',
-        'Escape: taken; not drawing, selected major 0.5,0.5; reached the page: nothing'
+  {
+    title: "a crowd's rename field: Enter keeps the name typed, Escape the old one; every other key stays in it",
+    covers: [KEY_LISTENER.crowdRename],
+    async run(log) {
+      const app = await editor();
+      document.getElementById('add-crowd-btn').click();
+      const layer = app.selectedCrowd;
+      const renaming = () => document.querySelector('#layers-strip .layer-rename-input');
+      const rename = () => [...document.querySelectorAll('#layers-strip .layer-row')]
+        .find(row => row.textContent.includes(layer.name))
+        .dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+      const state = () => `${renaming() ? `renaming "${renaming().value}"` : 'done'}, named ${layer.name}`;
+      const page = keysReachingThePage();
+      rename();
+      const steps = [`double-click: ${state()}, focus ${focusName()}`];
+      log.sweep(KEY_LISTENER.crowdRename, renaming, state);
+      renaming().value = 'Visitors';
+      steps.push(`Enter: ${taken(log.press(KEY_LISTENER.crowdRename, 'Enter', renaming()))}; ${state()}`);
+      rename();
+      renaming().value = 'Others';
+      steps.push(`Escape: ${taken(log.press(KEY_LISTENER.crowdRename, 'Escape', renaming()))}; ${state()}`);
+      page.stop();
+      expect(page.keys, 'keys the rename field let through to the page').toEqual([]);
+      expect(steps).toEqual([
+        'double-click: renaming "Crowd 1", named Crowd 1, focus Crowd name',
+        'Enter: taken; done, named Visitors',
+        'Escape: taken; done, named Visitors'
       ]);
+    }
   },
 
-  'Escape during a video export cancels it, and leaves the selection': async () => {
-    const app = await editor();
-    let started;
-    const running = new Promise(resolve => { started = resolve; });
-    let cancelled = 0;
-    app.videoExporter = {
-      cancel() { cancelled += 1; this.stop?.(new Error('Export cancelled')); },
-      export() {
-        started();
-        return new Promise((resolve, reject) => { this.stop = reject; });
+  {
+    title: 'Enter and Space on a settings section header open and close it; every other key does not',
+    covers: [KEY_LISTENER.sectionHeader],
+    async run(log) {
+      await editor();
+      const section = document.querySelector('.settings-section[data-section="video"]');
+      const header = section.querySelector('.section-header');
+      header.focus();
+      const state = () => `${header.getAttribute('aria-expanded') === 'true' ? 'open' : 'closed'}` +
+        `${section.classList.contains('expanded') ? '' : ' (no class)'}, last used ` +
+        `${document.querySelector('.settings-section[data-last="true"]')?.dataset.section ?? 'none'}`;
+      const before = state();
+      const steps = ['a', 'Enter', ' ', 'Tab'].map(key =>
+        `${key === ' ' ? 'Space' : key}: ${taken(log.press(KEY_LISTENER.sectionHeader, key, header))}; ${state()}`);
+      // Focus alone marks the section last used (SectionController's focusin).
+      expect([before, ...steps]).toEqual([
+        'closed (no class), last used video',
+        'a: left; closed (no class), last used video',
+        'Enter: taken; open, last used video',
+        'Space: taken; closed (no class), last used video',
+        'Tab: left; closed (no class), last used video'
+      ]);
+      log.sweep(KEY_LISTENER.sectionHeader, header, state);
+    }
+  },
+
+  {
+    title: 'Enter and Space on a More disclosure open and close it; every other key does not',
+    covers: [KEY_LISTENER.more],
+    async run(log) {
+      await editor();
+      const disclosure = document.querySelector('.section-more');
+      const summary = disclosure.querySelector('summary');
+      summary.focus();
+      const state = () => (disclosure.open ? 'open' : 'closed');
+      expect(['Enter', ' ', 'a'].map(key =>
+        `${key === ' ' ? 'Space' : key}: ${taken(log.press(KEY_LISTENER.more, key, summary))}; ${state()}`))
+        .toEqual(['Enter: taken; open', 'Space: taken; closed', 'a: left; closed']);
+      log.sweep(KEY_LISTENER.more, summary, state);
+    }
+  },
+
+  {
+    title: 'F2 on a waypoint row starts its rename; Enter keeps the new name, Escape the old one; other keys do not',
+    covers: [KEY_LISTENER.waypointRow, KEY_LISTENER.waypointRename],
+    async run(log) {
+      const app = await editor();
+      const row = index =>
+        document.querySelector(`#waypoint-list .waypoint-item[data-route-index="${index}"] .waypoint-row`);
+      const renaming = () => document.querySelector('#waypoint-list .waypoint-rename-input');
+      const names = () => app.waypoints.map(wp => wp.name || '—').join(', ');
+      const selected = () => `selected ${app.waypoints.indexOf(app.selectedWaypoint) + 1}`;
+      // Every key but F2 on a row starts nothing and selects nothing.
+      log.sweep(KEY_LISTENER.waypointRow, () => row(2),
+        () => `${renaming() ? 'renaming' : 'not renaming'}, ${selected()}`);
+      const steps = [];
+      let event = log.press(KEY_LISTENER.waypointRow, 'F3', row(2));
+      await frame();
+      steps.push(`F3 on row 3: ${taken(event)}; ${renaming() ? 'renaming' : 'not renaming'}`);
+      event = log.press(KEY_LISTENER.waypointRow, 'F2', row(2));
+      await frame();
+      steps.push(`F2 on row 3: ${taken(event)}; renaming "${renaming().value}", focus ${focusName()}`);
+      // Every key but Enter and Escape in the rename field stays in it.
+      renaming().value = 'Lab';
+      log.sweep(KEY_LISTENER.waypointRename, renaming,
+        () => `${renaming() ? `renaming "${renaming().value}"` : 'done'}; names ${names()}`);
+      event = log.press(KEY_LISTENER.waypointRename, 'Enter', renaming());
+      steps.push(`Enter: ${taken(event)}; ${renaming() ? 'renaming' : 'done'}; names ${names()}`);
+      event = log.press(KEY_LISTENER.waypointRow, 'F2', row(2));
+      await frame();
+      renaming().value = 'Library';
+      event = log.press(KEY_LISTENER.waypointRename, 'Escape', renaming());
+      steps.push(`F2, then Escape: ${taken(event)}; ${renaming() ? 'renaming' : 'done'}; names ${names()}, ` +
+        `selected ${app.selectedWaypoint === app.waypoints[2] ? 'row 3' : 'another'}`);
+      expect(steps).toEqual([
+        'F3 on row 3: left; not renaming',
+        'F2 on row 3: taken; renaming "", focus Rename Waypoint 3',
+        'Enter: taken; done; names —, —, Lab',
+        'F2, then Escape: taken; done; names —, —, Lab, selected row 3'
+      ]);
+    }
+  },
+
+  {
+    title: 'the Export menu: Enter, Space and ↓ open it; ↓ ↑ Home End move in it; Escape and Tab close it, ' +
+      'and Escape on the page; other keys do nothing',
+    covers: [KEY_LISTENER.menuButton, KEY_LISTENER.menu, KEY_LISTENER.menuAnywhere],
+    async run(log) {
+      const app = await editor();
+      const trigger = document.getElementById('export-dropdown-btn');
+      const menu = document.getElementById('export-menu');
+      trigger.focus();
+      const state = () => `${menu.classList.contains('is-open') ? 'open' : 'closed'} ` +
+        `(${trigger.getAttribute('aria-expanded')}), focus ${focusName()}`;
+      const step = (listener, key, target = document.activeElement) =>
+        `${key === ' ' ? 'Space' : key}: ${taken(log.press(listener, key, target))}; ${state()}`;
+      const { menuButton, menu: open, menuAnywhere } = KEY_LISTENER;
+      // Every other key on the closed menu's button opens nothing.
+      log.sweep(menuButton, trigger, state);
+      expect([
+        step(menuButton, 'Enter'), step(open, 'ArrowDown'), step(open, 'End'), step(open, 'ArrowDown'),
+        step(open, 'ArrowUp'), step(open, 'Home'), step(open, 'Escape'), step(menuButton, ' '), step(open, 'Tab'),
+        step(menuButton, 'ArrowDown', trigger), step(menuAnywhere, 'Escape', document.body)
+      ]).toEqual([
+        'Enter: taken; open (true), focus #export-mp4-btn',
+        'ArrowDown: taken; open (true), focus #export-webm-btn',
+        'End: taken; open (true), focus #copy-debug-btn',
+        'ArrowDown: taken; open (true), focus #export-mp4-btn',
+        'ArrowUp: taken; open (true), focus #copy-debug-btn',
+        'Home: taken; open (true), focus #export-mp4-btn',
+        'Escape: taken; closed (false), focus #export-dropdown-btn',
+        'Space: taken; open (true), focus #export-mp4-btn',
+        'Tab: left; closed (false), focus #export-mp4-btn',
+        'ArrowDown: taken; open (true), focus #export-mp4-btn',
+        // Escape on the page closes the menu, and runs the page's own Escape too.
+        'Escape: taken; closed (false), focus #export-mp4-btn'
+      ]);
+      expect(app.selectedWaypoint, "the page's Escape cleared the selection").toBeNull();
+      // Open again: every other key in the menu, and on the page, leaves it open where it is.
+      log.press(menuButton, 'Enter', trigger);
+      log.sweep(open, () => document.activeElement, state);
+      log.sweep(menuAnywhere, document.body, state, { onThePage: true });
+    }
+  },
+
+  {
+    title: "a waypoint's context menu: ↓ ↑ Home End move, Tab and Escape close it; it holds every other key back",
+    covers: [KEY_LISTENER.contextMenu],
+    async run(log) {
+      const app = await editor();
+      const { x, y } = app.imageToCanvas(0.75, 0.5);
+      const open = () => {
+        app.canvas.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2,
+          clientX: x, clientY: y }));
+      };
+      const menu = () => document.querySelector('.context-menu');
+      const state = () => `${menu()?.style.display === 'block' ? 'open' : 'closed'}, focus ${focusName()}`;
+      const step = (key, target = document.activeElement) =>
+        `${key}: ${taken(log.press(KEY_LISTENER.contextMenu, key, target))}; ${state()}`;
+      open();
+      const steps = [`opened: ${state()}`, step('ArrowDown'), step('End'), step('ArrowDown'), step('ArrowUp'),
+        step('Home')];
+      // Sent to the page, T would convert the selected waypoint; under the
+      // menu, the menu's capture-phase listener holds it back from the page.
+      const route = app.waypoints.map(describeWaypoint).join(' ');
+      const page = keysReachingThePage();
+      steps.push(step('t', document.body));
+      // Every other key in the menu is held back too, and moves nothing.
+      log.sweep(KEY_LISTENER.contextMenu, () => document.activeElement, state);
+      page.stop();
+      steps.push(`route ${app.waypoints.map(describeWaypoint).join(' ') === route ? 'unchanged' : 'changed'}, ` +
+        `${page.keys.length} keys reached the page`);
+      steps.push(step('Tab'));
+      open();
+      steps.push(step('Escape'));
+      expect(steps).toEqual([
+        'opened: open, focus Rename',
+        'ArrowDown: taken; open, focus Convert to minor waypoint',
+        'End: taken; open, focus Delete waypoint',
+        'ArrowDown: taken; open, focus Rename',
+        'ArrowUp: taken; open, focus Delete waypoint',
+        'Home: taken; open, focus Rename',
+        't: left; open, focus Rename',
+        'route unchanged, 0 keys reached the page',
+        'Tab: left; closed, focus the page',
+        'Escape: taken; closed, focus the page'
+      ]);
+    }
+  },
+
+  {
+    title: 'Escape while drawing an area cancels the drawing, and leaves the selection; other keys do not',
+    covers: [KEY_LISTENER.areaDrawing],
+    async run(log) {
+      const app = await editor();
+      document.getElementById('area-draw-btn').click();
+      const state = () => `${app.areaDrawingService.isDrawing ? 'drawing' : 'not drawing'}, ` +
+        `selected ${app.selectedWaypoint ? describeWaypoint(app.selectedWaypoint) : 'none'}`;
+      const before = state();
+      log.sweep(KEY_LISTENER.areaDrawing, document.body, state, { onThePage: true });
+      const page = keysReachingThePage();
+      const event = log.press(KEY_LISTENER.areaDrawing, 'Escape', document.body);
+      page.stop();
+      expect([before, `Escape: ${taken(event)}; ${state()}; reached the page: ${page.keys.join(' ') || 'nothing'}`])
+        .toEqual([
+          'drawing, selected major 0.5,0.5',
+          'Escape: taken; not drawing, selected major 0.5,0.5; reached the page: nothing'
+        ]);
+    }
+  },
+
+  {
+    title: 'Escape during a video export cancels it, and leaves the selection; other keys do not',
+    covers: [KEY_LISTENER.exportEscape],
+    async run(log) {
+      const app = await editor();
+      let started;
+      const exportRunning = new Promise(resolve => { started = resolve; });
+      let cancelled = 0;
+      app.videoExporter = {
+        cancel() { cancelled += 1; this.stop?.(new Error('Export cancelled')); },
+        export() {
+          started();
+          return new Promise((resolve, reject) => { this.stop = reject; });
+        }
+      };
+      const exporting = app.exportVideo();
+      await exportRunning;
+      log.sweep(KEY_LISTENER.exportEscape, document.body, () => `cancelled ${cancelled}`, { onThePage: true });
+      const page = keysReachingThePage();
+      const event = log.press(KEY_LISTENER.exportEscape, 'Escape', document.body);
+      page.stop();
+      await exporting;
+      expect({ escape: taken(event), cancelled, said: document.getElementById('announcer').textContent,
+        selected: app.selectedWaypoint ? describeWaypoint(app.selectedWaypoint) : 'none', reached: page.keys })
+        .toEqual({
+          escape: 'taken', cancelled: 1, said: 'Video export cancelled', selected: 'major 0.5,0.5', reached: []
+        });
+    }
+  },
+
+  {
+    title: 'drawing a network: T cycles the node, Escape lifts the pen then the selection then leaves; ' +
+      'Delete and Backspace delete; other keys do not',
+    covers: [KEY_LISTENER.networkPen],
+    async run(log) {
+      const app = await editor();
+      document.getElementById('add-crowd-btn').click();
+      const guide = document.getElementById('crowd-guide-type');
+      guide.value = 'graph';
+      guide.dispatchEvent(new Event('change', { bubbles: true }));
+      const service = app.networkEditService;
+      for (const at of [[0.3, 0.2], [0.6, 0.2], [0.6, 0.4]]) {
+        const { x, y } = app.imageToCanvas(...at);
+        for (const type of ['pointerdown', 'pointerup']) pointer(app, type, x, y);
       }
-    };
-    const exporting = app.exportVideo();
-    await running;
-    const page = keysReachingThePage();
-    const event = press('Escape');
-    page.stop();
-    await exporting;
-    expect({ escape: taken(event), cancelled, said: document.getElementById('announcer').textContent,
-      selected: app.selectedWaypoint ? describeWaypoint(app.selectedWaypoint) : 'none', reached: page.keys })
-      .toEqual({
-        escape: 'taken', cancelled: 1, said: 'Video export cancelled', selected: 'major 0.5,0.5', reached: []
-      });
+      const graph = service.layer.graph;
+      const state = () => `${service.active ? 'drawing' : 'not drawing'}, pen ${service.penNodeId ? 'down' : 'up'}, ` +
+        `${service.selection ? `${service.selection.kind} selected` : 'nothing selected'}, ` +
+        `${graph.getNodes().length} nodes ${graph.getEdges().length} edges, ` +
+        `types ${graph.getNodes().map(node => node.type).join(' ')}`;
+      log.sweep(KEY_LISTENER.networkPen, document.body, state, { onThePage: true });
+      const page = keysReachingThePage();
+      const step = key => `${key}: ${taken(log.press(KEY_LISTENER.networkPen, key, document.body))}; ${state()}`;
+      const steps = [`drawn: ${state()}`, step('t'), step('Escape'), step('Escape')];
+      service.selectEdge(graph.getEdges()[0]);
+      steps.push(step('Backspace'));
+      service.selectNode(graph.getNodes()[0]);
+      steps.push(step('Delete'));
+      steps.push(step('Escape'));
+      page.stop();
+      expect(page.keys, 'keys the network pen let through to the page').toEqual([]);
+      expect(steps).toEqual([
+        'drawn: drawing, pen down, node selected, 3 nodes 2 edges, types normal normal normal',
+        't: taken; drawing, pen down, node selected, 3 nodes 2 edges, types normal normal entry',
+        'Escape: taken; drawing, pen up, node selected, 3 nodes 2 edges, types normal normal entry',
+        'Escape: taken; drawing, pen up, nothing selected, 3 nodes 2 edges, types normal normal entry',
+        'Backspace: taken; drawing, pen up, nothing selected, 3 nodes 1 edges, types normal normal entry',
+        'Delete: taken; drawing, pen up, nothing selected, 2 nodes 1 edges, types normal entry',
+        'Escape: taken; not drawing, pen up, nothing selected, 2 nodes 1 edges, types normal entry'
+      ]);
+    }
   },
 
-  'drawing a network: T cycles the node, Escape lifts the pen then the selection then leaves; Delete and Backspace delete': async () => {
-    const app = await editor();
-    document.getElementById('add-crowd-btn').click();
-    const guide = document.getElementById('crowd-guide-type');
-    guide.value = 'graph';
-    guide.dispatchEvent(new Event('change', { bubbles: true }));
-    const service = app.networkEditService;
-    for (const at of [[0.3, 0.2], [0.6, 0.2], [0.6, 0.4]]) {
-      const { x, y } = app.imageToCanvas(...at);
-      for (const type of ['pointerdown', 'pointerup']) pointer(app, type, x, y);
+  {
+    title: 'Escape hides an open hint; every other key leaves it open',
+    covers: [KEY_LISTENER.hint],
+    async run(log) {
+      await editor();
+      document.querySelector('#pause-time-control [data-tip]').click();
+      const hint = () => document.getElementById('param-tooltip');
+      const state = () => (hint()?.style.display === 'block' ? `showing "${hint().textContent}"` : 'hidden');
+      const shown = state();
+      log.sweep(KEY_LISTENER.hint, document.body, state, { onThePage: true });
+      const event = log.press(KEY_LISTENER.hint, 'Escape', document.body);
+      // The page's own Escape takes the key too: it clears the selection.
+      expect([shown, `Escape: ${taken(event)}; ${state()}`])
+        .toEqual(['showing "How long the animation pauses at this waypoint"', 'Escape: taken; hidden']);
     }
-    const graph = service.layer.graph;
-    const page = keysReachingThePage();
-    const state = () => `${service.active ? 'drawing' : 'not drawing'}, pen ${service.penNodeId ? 'down' : 'up'}, ` +
-      `${service.selection ? `${service.selection.kind} selected` : 'nothing selected'}, ` +
-      `${graph.getNodes().length} nodes ${graph.getEdges().length} edges, ` +
-      `types ${graph.getNodes().map(node => node.type).join(' ')}`;
-    const step = key => `${key}: ${taken(press(key))}; ${state()}`;
-    const steps = [`drawn: ${state()}`, step('t'), step('Escape'), step('Escape')];
-    service.selectEdge(graph.getEdges()[0]);
-    steps.push(step('Backspace'));
-    service.selectNode(graph.getNodes()[0]);
-    steps.push(step('Delete'));
-    steps.push(step('Escape'));
-    page.stop();
-    expect(page.keys, 'keys the network pen let through to the page').toEqual([]);
-    expect(steps).toEqual([
-      'drawn: drawing, pen down, node selected, 3 nodes 2 edges, types normal normal normal',
-      't: taken; drawing, pen down, node selected, 3 nodes 2 edges, types normal normal entry',
-      'Escape: taken; drawing, pen up, node selected, 3 nodes 2 edges, types normal normal entry',
-      'Escape: taken; drawing, pen up, nothing selected, 3 nodes 2 edges, types normal normal entry',
-      'Backspace: taken; drawing, pen up, nothing selected, 3 nodes 1 edges, types normal normal entry',
-      'Delete: taken; drawing, pen up, nothing selected, 2 nodes 1 edges, types normal entry',
-      'Escape: taken; not drawing, pen up, nothing selected, 2 nodes 1 edges, types normal entry'
-    ]);
-  }
-};
+  },
 
-/**
- * Every keydown, keyup and keypress listener in `src/`, as the scan below
- * names it (file, what it is added to, type, capture, and its number when a
- * file adds more than one of a kind): what it does, and where its keys are
- * pressed — a row above (`rows`), this file's own tables (`here`), or another
- * suite and the keys it presses (`pinnedBy`).
- */
-const KEY_LISTENERS = {
-  'src/app/crowds.js: input keydown #1': {
-    what: "a crowd's rename field (_startCrowdRename): Enter keeps the name, Escape drops it, no key reaches the page",
-    pinnedBy: { 'tests/crowds.test.js': ['Enter', 'Escape'] } },
-  'src/app/crowds.js: input keydown #2': {
-    what: 'a busyness handle number field: Enter applies what was typed (TST-04 mutant C5 breaks it)',
-    rows: ['Enter in a busyness handle field applies what was typed; other keys, and a read-only field, do not'],
-    pinnedBy: { 'tests/crowds.test.js': ['Enter'] } },
-  'src/app/exporting.js: window keydown (capture)': {
-    what: 'Escape during a video export cancels it, ahead of every other listener',
-    rows: ['Escape during a video export cancels it, and leaves the selection'] },
-  'src/components/ContextMenu.js: document keydown (capture)': {
-    what: 'an open context menu: arrows, Home and End move, Escape and Tab close, other keys stay in it',
-    rows: ["a waypoint's context menu: ↓ ↑ Home End move, other keys stay in it, Tab and Escape close it"] },
-  'src/components/Dropdown.js: trigger keydown': {
-    what: 'a menu button (File, Export): Enter, Space and ↓ open its menu',
-    rows: ["the Export menu: Enter, Space and ↓ open it; ↓ ↑ Home End move in it; Escape and Tab close it, and Escape on the page"] },
-  'src/components/Dropdown.js: menu keydown': {
-    what: 'an open menu: arrows, Home and End move, Escape closes to the button, Tab closes',
-    rows: ["the Export menu: Enter, Space and ↓ open it; ↓ ↑ Home End move in it; Escape and Tab close it, and Escape on the page"] },
-  'src/components/Dropdown.js: document keydown': {
-    what: 'Escape anywhere closes an open menu',
-    rows: ["the Export menu: Enter, Space and ↓ open it; ↓ ↑ Home End move in it; Escape and Tab close it, and Escape on the page"] },
-  'src/components/ParamTooltip.js: document keydown': {
-    what: 'Escape hides an open hint, and keeps it hidden while focus stays',
-    pinnedBy: { 'tests/paramTooltip.test.js': ['Escape'] } },
-  'src/controllers/SceneOutlineController.js: this.container keydown': {
-    what: 'Escape in an outline form field drops the draft and resets the form',
-    pinnedBy: { 'tests/sceneOutline.test.js': ['Escape'] } },
-  'src/controllers/SectionController.js: header keydown': {
-    what: 'a settings section header: Enter and Space open and close it (TST-04 mutant C8 breaks it)',
-    rows: ['Enter and Space on a settings section header open and close it; other keys do not'] },
-  'src/controllers/SectionController.js: summary keydown': {
-    what: 'a More disclosure: Enter and Space open and close it',
-    rows: ['Enter and Space on a More disclosure open and close it'],
-    pinnedBy: { 'tests/reviewAccessibility.test.js': ['Enter', ' '] } },
-  'src/controllers/UIController.js: input keydown': {
-    what: "a waypoint's rename field: Enter keeps the name, Escape the old one, no key reaches the page",
-    rows: ['F2 on a waypoint row starts its rename; Enter keeps the new name, Escape the old one'],
-    pinnedBy: { 'tests/waypointList.test.js': ['Enter'] } },
-  'src/controllers/UIController.js: rowBtn keydown': {
-    what: 'F2 on a waypoint row starts its rename',
-    rows: ['F2 on a waypoint row starts its rename; Enter keeps the new name, Escape the old one'] },
-  'src/handlers/InteractionHandler.js: document keydown #1': {
-    what: "the page's shortcut dispatcher", here: 'what the page shortcuts react to (TST-13)' },
-  'src/handlers/InteractionHandler.js: document keydown #2': {
-    what: 'the canvas cursor while a modifier is held', here: 'modifier keys held on their own (TST-13)' },
-  'src/handlers/InteractionHandler.js: document keyup': {
-    what: 'the canvas cursor when a modifier is let go', here: 'modifier keys held on their own (TST-13)' },
-  'src/player/playerEntry.js: timeline keydown': {
-    what: "the exported player's timeline: arrows step 5 s, Page Up and Down 10 s, Home and End the ends",
-    pinnedBy: { 'tests/playerEntryAccessibility.test.js': ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown',
-      'PageUp', 'PageDown', 'Home', 'End'] } },
-  'src/player/playerEntry.js: document keydown': {
-    what: "the exported player's page: Space and K play and pause, Home and End, arrows seek 1 s",
-    pinnedBy: { 'tests/playerEntryAccessibility.test.js': [' ', 'k', 'Home', 'End', 'ArrowLeft', 'ArrowRight'] } },
-  'src/services/AreaDrawingService.js: document keydown (capture)': {
-    what: 'Escape while drawing an area cancels the drawing, ahead of the page',
-    rows: ['Escape while drawing an area cancels the drawing, and leaves the selection'] },
-  'src/services/NetworkEditService.js: document keydown (capture)': {
-    what: 'drawing a network: the Escape ladder, Delete and Backspace, T, ahead of the page',
-    rows: ['drawing a network: T cycles the node, Escape lifts the pen then the selection then leaves; Delete and Backspace delete'],
-    pinnedBy: { 'tests/networkEdit.test.js': ['Escape', 't', 'Delete'] } },
-  'src/utils/focusTrap.js: window keydown (capture)': {
-    what: "an open dialog's focus trap: Tab and Shift+Tab wrap, Escape closes",
-    pinnedBy: { 'tests/reviewAccessibility.test.js': ['Tab', 'Escape'] } }
-};
+  {
+    title: 'Escape in a scene outline field resets its form; every other key leaves the draft',
+    covers: [KEY_LISTENER.outline],
+    async run(log) {
+      await editor();
+      const form = await vi.waitFor(() => {
+        const found = document.querySelector('#scene-outline form[data-outline-form-key="route:add-submit"]');
+        expect(found).toBeTruthy();
+        return found;
+      });
+      const field = () => form.elements.x;
+      field().focus();
+      field().value = '42';
+      const state = () => `x ${field().value}, focus ${focusName()}`;
+      const typed = state();
+      log.sweep(KEY_LISTENER.outline, field, state);
+      const onAButton = log.press(KEY_LISTENER.outline, 'Escape', form.querySelector('[type="submit"]'));
+      const afterButton = state();
+      field().focus();
+      const inTheField = log.press(KEY_LISTENER.outline, 'Escape', field());
+      // Escape anywhere but a field is not the outline's: its button keeps it.
+      expect([typed, `Escape on its button: ${taken(onAButton)}; ${afterButton}`,
+        `Escape in the field: ${taken(inTheField)}; ${state()}`]).toEqual([
+        'x 42, focus the x field',
+        'Escape on its button: left; x 42, focus the x field',
+        'Escape in the field: taken; x 50, focus Add waypoint'
+      ]);
+    }
+  },
 
-/** Every key listener registration in `src/`, read as code, named as KEY_LISTENERS names it. */
-function keyListeners() {
-  const names = [];
-  const untyped = [];
-  for (const { file, lexed } of lexedFiles(repoRoot, 'src')) {
-    for (const { args, receiver, line } of callsOf(lexed, 'addEventListener').calls) {
-      const type = literalValue(args[0] ?? '');
-      if (type === null) untyped.push(`${file}:${line} ${args[0]}`);
-      if (!['keydown', 'keyup', 'keypress'].includes(type)) continue;
-      const capture = /^true$|capture:\s*true/.test(args[2] ?? '');
-      names.push(`${file}: ${receiver} ${type}${capture ? ' (capture)' : ''}`);
+  {
+    title: "an open dialog's focus trap: Tab and Shift+Tab wrap, Escape closes it; every other key stays in it",
+    covers: [KEY_LISTENER.focusTrap],
+    async run(log) {
+      await editor();
+      press('?');
+      const dialog = document.getElementById('splash');
+      // The trap starts when the dialog shows (a MutationObserver), with focus on its title.
+      await vi.waitFor(() => expect(document.activeElement.id).toBe('splash-title'));
+      const state = () => `${dialog.style.display === 'flex' ? 'open' : 'closed'}, focus ${focusName()}`;
+      const step = (key, flags = {}) => `${flags.shiftKey ? 'Shift+' : ''}${key}: ` +
+        `${taken(log.press(KEY_LISTENER.focusTrap, key, document.activeElement, flags))}; ${state()}`;
+      const steps = [`opened: ${state()}`, step('Tab'), step('Tab', { shiftKey: true }), step('Tab')];
+      log.sweep(KEY_LISTENER.focusTrap, () => document.activeElement, state);
+      steps.push(step('Escape'));
+      expect(steps).toEqual([
+        'opened: open, focus #splash-title',
+        'Tab: taken; open, focus #splash-close-x',
+        'Shift+Tab: taken; open, focus licences and third-party notices (opens in a new tab)',
+        'Tab: taken; open, focus #splash-close-x',
+        'Escape: taken; closed, focus #splash-close-x'
+      ]);
     }
   }
-  const seen = {};
-  const numbered = names.map(name => {
-    seen[name] = (seen[name] ?? 0) + 1;
-    return names.filter(each => each === name).length > 1 ? `${name} #${seen[name]}` : name;
-  });
-  return { listeners: numbered, untyped };
-}
+];
 
 const escapeRegExp = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 describe('every key listener the app adds (TST-13)', () => {
 
-  test('each key listener in src/ has a row here, or names the suite that presses its keys', () => {
-    const { listeners, untyped } = keyListeners();
-    expect(untyped, 'listeners added for a type the scan cannot read').toEqual([]);
-    expect(listeners.sort(), 'key listeners in src/ (a new one needs a KEY_LISTENERS row)')
+  test('each key listener in src/: what its handler reads, from the source, and where its keys are pressed', () => {
+    const { listeners, unread } = sourceKeyListeners();
+    expect(unread.sort(), 'ways of listening the scan cannot read (NOT_REGISTRATIONS says why one registers nothing)')
+      .toEqual(Object.keys(NOT_REGISTRATIONS).sort());
+    expect(listeners.map(({ name }) => name).sort(), 'key listeners in src/ (a new one needs a KEY_LISTENERS row)')
       .toEqual(Object.keys(KEY_LISTENERS).sort());
+    const shape = ({ keys = [], anyCase = [], reads = [] }, unanalysed = []) =>
+      ({ keys: [...keys].sort(), anyCase: [...anyCase].sort(), reads: [...reads].sort(), unanalysed });
+    expect(Object.fromEntries(listeners.map(({ name, reads }) => [name, shape(reads, reads.unanalysed)])),
+      'what each handler reads of its event, from its source (KEY_LISTENERS)')
+      .toEqual(Object.fromEntries(Object.entries(KEY_LISTENERS).map(([name, entry]) => [name, shape(entry)])));
     // Keys set as properties, or in the pages' markup, would escape the scan.
     for (const { file, lexed } of lexedFiles(repoRoot, 'src')) {
-      expect(lexed.code.match(/\.onkey(down|up|press)\s*=/g), `${file} sets an onkey handler`).toBeNull();
+      expect(lexed.code.match(/(?<![\w$])onkey(down|up|press)(?![\w$])/g), `${file} names an onkey handler`).toBeNull();
     }
     expect(readFileSync(join(repoRoot, 'index.html'), 'utf8')).not.toMatch(/onkey(down|up|press)=/i);
 
     const ownSource = readFileSync(fileURLToPath(import.meta.url), 'utf8');
-    for (const [name, { what, rows = [], here, pinnedBy = {} }] of Object.entries(KEY_LISTENERS)) {
+    for (const [name, { what, keys = [], here, suite, pinnedBy = {} }] of Object.entries(KEY_LISTENERS)) {
       expect(what, name).toMatch(/\w/);
-      expect(rows.length + (here ? 1 : 0) + Object.keys(pinnedBy).length, `${name} is pressed somewhere`)
-        .toBeGreaterThan(0);
-      for (const row of rows) expect(Object.keys(LISTENER_ROWS), `${name}'s row`).toContain(row);
+      const rows = LISTENER_ROWS.filter(({ covers }) => covers.includes(name));
+      expect(rows.length + (here ? 1 : 0) + (suite ? 1 : 0), `${name} has one place that presses its keys`).toBe(1);
       if (here) expect(ownSource, `${name}'s tables here`).toContain(`describe('${here}'`);
-      // A light check that the suite named is the one that presses these keys:
-      // it exists, and names each key as a string.
-      for (const [suite, keys] of Object.entries(pinnedBy)) {
-        expect(existsSync(join(repoRoot, suite)), `${suite} (${name})`).toBe(true);
-        const source = readFileSync(join(repoRoot, suite), 'utf8');
-        expect(keys.filter(key => !new RegExp(`(['"])${escapeRegExp(key)}\\1`).test(source)),
-          `keys ${suite} never names (${name})`).toEqual([]);
+      // A light check of the other suites named: each exists, and names the keys.
+      const suites = suite ? { [suite]: keys, ...pinnedBy } : pinnedBy;
+      for (const [file, named] of Object.entries(suites)) {
+        expect(existsSync(join(repoRoot, file)), `${file} (${name})`).toBe(true);
+        const source = readFileSync(join(repoRoot, file), 'utf8');
+        expect(named.filter(key => !new RegExp(`(['"])${escapeRegExp(key)}\\1`).test(source)),
+          `keys ${file} never names (${name})`).toEqual([]);
       }
     }
+    expect(LISTENER_ROWS.flatMap(({ covers }) => covers).filter(name => !(name in KEY_LISTENERS)),
+      'rows covering a listener the inventory does not have').toEqual([]);
   });
 
-  test.each(Object.keys(LISTENER_ROWS))('%s', title => LISTENER_ROWS[title]());
+  test('the listener scan fails closed: an alias, a computed name, an unread type, a stray event name, an event it cannot follow', () => {
+    const scan = source => keyListenersIn([{ file: 'fixture.js', lexed: lex(source) }]);
+    const read = handler => {
+      const { listeners: [listener], unread } = scan(`document.addEventListener('keydown', ${handler});`);
+      expect(unread).toEqual([]);
+      const { keys, anyCase, reads, unanalysed } = listener.reads;
+      return { keys: [...keys].sort(), anyCase: [...anyCase].sort(), reads: [...reads].sort(), unanalysed };
+    };
+    const none = { keys: [], anyCase: [], reads: [] };
+    // Round 2's review: an alias registers a listener no call shows, so the
+    // scan reports the alias, and the event type named outside a call.
+    expect(scan("const listen = document.addEventListener.bind(document);\nlisten('keydown', event => {\n" +
+      "  if (event.key === 'F4') event.preventDefault();\n});")).toEqual({
+      listeners: [],
+      unread: ['fixture.js: document.addEventListener, not called',
+        "fixture.js:2 names 'keydown' outside a listener call"]
+    });
+    // A computed name is still a call, and is read like one.
+    expect(scan("document['addEventListener']('keydown', e => e.key === 'q');").listeners
+      .map(({ name, reads }) => [name, [...reads.keys]])).toEqual([['fixture.js: document keydown', ['q']]]);
+    expect(scan('target.addEventListener(type, handler);').unread)
+      .toEqual(['fixture.js:1 addEventListener(type, …)']);
+    // Round 2's review: a property read by a computed name is a property read.
+    expect(read("e => { if (e['repeat']) return; if (e.key === 'a' || 'b' === e.key) e.preventDefault(); }"))
+      .toEqual({ keys: ['a', 'b'], anyCase: [], reads: ['preventDefault', 'repeat'], unanalysed: [] });
+    expect(read("e => { switch (e.key) { case 'c': break; } " +
+      "return ['d'].includes(e.key) || e.key.toLowerCase() === 'e'; }"))
+      .toEqual({ keys: ['c', 'd'], anyCase: ['e'], reads: [], unanalysed: [] });
+    // Anything else done with the key or the event is reported, not ignored.
+    expect(read('e => { const key = e.key; run(key); }'))
+      .toEqual({ ...none, unanalysed: ['line 1: key, which holds the key, is used other than in a comparison'] });
+    expect(read('e => { const copy = e; }'))
+      .toEqual({ ...none, unanalysed: ['line 1: e is used other than by reading a property of it'] });
+    expect(read('e => { elsewhere(e); }')).toEqual({ ...none, unanalysed: [
+      'line 1: e is passed to elsewhere, which the scan cannot follow (no function elsewhere in this file)'] });
+    expect(read('e => { menu.handle(e); }'))
+      .toEqual({ ...none, unanalysed: ['line 1: e is used other than by reading a property of it'] });
+    // An event passed to a function of the same file is followed there, as is
+    // a method a constructor binds.
+    const followed = scan("function follow(event, extra) { return event.key === 'f' && event.shiftKey; }\n" +
+      "document.addEventListener('keydown', e => follow(e, 1));").listeners[0].reads;
+    expect([[...followed.keys], [...followed.reads], followed.unanalysed]).toEqual([['f'], ['shiftKey'], []]);
+    expect(scan("class Pane {\n  constructor() { this.onKey = this.onKey.bind(this);\n" +
+      "    document.addEventListener('keyup', this.onKey); }\n  onKey(event) { return event.key === 'g'; }\n}")
+      .listeners.map(({ name, reads }) => [name, [...reads.keys], reads.unanalysed]))
+      .toEqual([['fixture.js: document keyup', ['g'], []]]);
+  });
+
+  test.each(LISTENER_ROWS.map(row => [row.title, row]))('%s', async (title, row) => {
+    const log = keyLog();
+    await row.run(log);
+    expect(log.findings(), 'keys a sweep found doing something their listener does not compare').toEqual({});
+    for (const listener of row.covers) {
+      expect(log.unpressed(listener), `keys ${listener} compares that the row never pressed on it`).toEqual([]);
+      expect(log.swept(listener), `the row swept every other key past ${listener}`).toBe(true);
+    }
+  });
 });
