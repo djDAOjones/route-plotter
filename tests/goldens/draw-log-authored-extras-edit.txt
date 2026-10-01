@@ -6,7 +6,7 @@ main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -24
 main save
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -234,7 +234,7 @@ main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -24
 main save
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -462,7 +462,7 @@ main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -24
 main save
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -1095,7 +1095,7 @@ main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -24
 main save
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -2055,7 +2055,7 @@ main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -24
 main save
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -3144,7 +3144,7 @@ main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -24
 main save
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round

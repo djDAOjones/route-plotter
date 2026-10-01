@@ -17,9 +17,12 @@ main translate -188.571 -428.111
 main drawImage [canvas mask] 0 0 660 660
 main restore
 main save
+main translate 330 330
+main scale 1.75 1.75
+main translate -188.571 -428.111
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -123,9 +126,12 @@ main translate -188.571 -431.577
 main drawImage [canvas mask] 0 0 660 660
 main restore
 main save
+main translate 330 330
+main scale 1.75 1.75
+main translate -188.571 -431.577
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -1301,9 +1307,12 @@ main translate -471.429 -237.6
 main drawImage [canvas mask] 0 0 660 660
 main restore
 main save
+main translate 330 330
+main scale 1.75 1.75
+main translate -471.429 -237.6
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -3017,9 +3026,12 @@ main translate -471.429 -237.6
 main drawImage [canvas mask] 0 0 660 660
 main restore
 main save
+main translate 330 330
+main scale 1.75 1.75
+main translate -471.429 -237.6
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -4573,9 +4585,12 @@ main translate -471.429 -237.6
 main drawImage [canvas mask] 0 0 660 660
 main restore
 main save
+main translate 330 330
+main scale 1.75 1.75
+main translate -471.429 -237.6
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
@@ -5966,9 +5981,12 @@ main translate -471.429 -237.6
 main drawImage [canvas mask] 0 0 660 660
 main restore
 main save
+main translate 330 330
+main scale 1.75 1.75
+main translate -471.429 -237.6
 main set:globalAlpha 0.005
 main set:fillStyle #fff
-main fillRect 0 0 660 660
+main fillRect -247.5 -247.5 1155 1155
 main restore
 vector clearRect 0 0 660 660
 vector set:lineCap round
