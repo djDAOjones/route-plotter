@@ -105,9 +105,10 @@ function knownText(started, key) {
  * good. A copy only this tab can vouch for (a hold whose mark cannot be
  * read) retires nothing. A kept key that cannot be read is offered by the
  * text this tab knows it by; where the store cannot be searched, each key
- * this tab knows is read on its own, and offered from this tab's copy when
- * it cannot be read, never when it is seen empty; a search that works again
- * forgets the keys it no longer lists.
+ * this tab knows is read on its own, newest first, and offered from this
+ * tab's copy when it cannot be read; one seen empty is forgotten, never
+ * offered again; a search that works again forgets the keys it no longer
+ * lists.
  */
 function readStore(app) {
   const started = thisStart(app);
@@ -133,10 +134,17 @@ function readStore(app) {
     const listed = new Set(kept.records.map(record => record.key));
     for (const key of started.keys.keys()) if (!listed.has(key)) started.keys.delete(key);
   } else {
-    for (const key of new Set([...started.seen.keys(), ...started.keys.keys()])) {
+    // In the order a search lists them, newest first, as when it works
+    for (const key of app.storageService.inKeptOrder(new Set([...started.seen.keys(), ...started.keys.keys()]))) {
       const read = app.storageService.readKept(key);
       if (!read.ok) stored.push({ text: knownText(started, key), where: 'cached', key });
       else if (read.text !== null) stored.push({ text: read.text, where: 'parked', key });
+      else {
+        // Seen empty: forgotten, so a later fault cannot bring it back. Not
+        // taken for a Discard: another key may still keep the same record.
+        started.seen.delete(key);
+        started.keys.delete(key);
+      }
     }
   }
   const keptTexts = new Set(stored.filter(offer => offer.where === 'parked' || offer.durable).map(offer => offer.text));
@@ -233,18 +241,22 @@ export function keepUnrestoredAutosave(app, text) {
   }
   const kept = app.storageService.keepUnrestored(text);
   // A record kept before this restore began, read again now, is an earlier
-  // start's, and on offer already. One another tab kept while this restore
-  // ran is this start's, and its failure is told.
-  if (kept.where === 'parked' && kept.existing && started.keptAtStart?.has(text)) {
-    showOffers(app);
-    return false;
-  }
-  started.own.add(text);
+  // start's, and on offer already, whether or not this keep could find that
+  // copy (a store that cannot be read or searched hides it from the keep):
+  // any copy the keep made is noted, to offer and discard with it, and
+  // nothing is told. One another tab kept while this restore ran is this
+  // start's, and its failure is told.
+  const earlier = started.keptAtStart?.has(text) ?? false;
+  if (!earlier) started.own.add(text);
   if (kept.where === 'parked') started.keys.set(kept.key, text);
   else if (kept.where === 'held') {
     started.heldText = text;
     started.heldDurable = kept.durable;
   } else started.unkept.unshift(text);
+  if (earlier) {
+    showOffers(app);
+    return false;
+  }
   return tell(app, text);
 }
 

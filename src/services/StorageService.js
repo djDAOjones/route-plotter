@@ -322,6 +322,17 @@ export class StorageService {
   }
 
   /**
+   * Kept records' keys in the order a search lists them, newest first
+   * (DEF-28): those this tab knows, offered when the store cannot be
+   * searched, come in the same order as when it can.
+   * @param {Iterable<string>} keys
+   * @returns {string[]}
+   */
+  inKeptOrder(keys) {
+    return [...keys].sort(newestKeptFirst);
+  }
+
+  /**
    * One kept record, read by the key it was kept under, for when the store
    * cannot be searched (DEF-28).
    * @param {string} key
