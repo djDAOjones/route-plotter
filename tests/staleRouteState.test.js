@@ -99,6 +99,9 @@ test.each(['Preview', 'Edit'])('in %s, a route deleted down to one waypoint whil
 
   expect([engine.state.isWaiting(), engine.getPauseState().isWaiting, engine.state.pauseWaypointIndex]).toEqual([false, false, -1]);
   expect(ended.mock.calls).toEqual([[waitedAt]]);
+  // And nothing else the route scheduled, its pauses and beacons among them, once its retiming has run
+  await timingSettled();
+  expect(routeState(app)).toEqual(NO_ROUTE);
 });
 
 test('a route with a leg at its own speed, deleted down to one, keeps its duration and plays through it evenly', async () => {
@@ -901,4 +904,50 @@ test('an HTML export made mid-drag runs the route’s queued rebuild, and change
   expect({ dirty: app._isDirty, revision: app._editRevision, history: app.undoService.createSnapshot(), pending: app.storageService._pendingAutoSave })
     .toEqual(before);
   expect(localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY)).toEqual([]);
+});
+
+test.each(['Preview', 'Edit'])('in %s, a route deleted down to one while it plays goes on playing, as the transport is kept', async (mode) => {
+  // Whether it is playing is part of the transport, which a route that goes
+  // leaves as it was (Clear All's reset is its own)
+  const app = await derivedByPreview(threeStops());
+  if (mode === 'Edit') app.eventBus.emit('motion:preview-mode-change', false);
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('c'));
+  await timingSettled();
+  app.animationEngine.play();
+  expect(app.animationEngine.isPlaying()).toBe(true);
+
+  app.eventBus.emit('waypoint:delete', app.getWaypointById('a'));
+
+  expect(app.animationEngine.isPlaying()).toBe(true);
+  await timingSettled();
+  expect(app.animationEngine.isPlaying()).toBe(true);
+});
+
+test.each([80, 650].flatMap(speed => ['made', 'cleared'].map(action => [speed, action])))('at %i px/s, a rejoin %s times the route at that speed: live, in recovery, in the saved file, reopened, and in the path’s own travel', async (speed, action) => {
+  // A rejoin retimes the route at once, by its own call, not the retime a
+  // move queues. A long trunk, so a trunk timed at the wrong speed shows in
+  // the total at 650 px/s; at 80 the branch's own timeline would hide it
+  // there, so the path's travel time is compared too.
+  const project = branched();
+  project.animationState.speed = speed;
+  project.waypoints.find(each => each.id === 'end').imgX = 0.9;
+  Object.assign(project.waypoints.at(-1), { imgX: 0.25, imgY: 0.21, branchRejoin: action === 'made' ? null : 'end' });
+  const app = await derivedByPreview(project);
+  app.eventBus.emit('motion:preview-mode-change', false);
+  await timingSettled();
+  const { work } = await droppedOn(app, 'end', { atOnce: true });
+  expect(work).toEqual({ built: 1, timed: 1, toasts: 1 });
+  expect(app.getWaypointById('b').branchRejoin).toBe(action === 'made' ? 'end' : null);
+  const live = app.animationEngine.state.duration;
+  const travel = app.animationEngine.pathDuration;
+  const recovery = recoveryOnLeaving();
+  const saved = await savedProject(app);
+  const reopened = await reopenedDuration(saved);
+
+  expect(app.animationEngine.state.speed).toBe(speed);
+  const expected = rebuiltAt(app, speed);
+  for (const [where, duration] of [['live', live], ['recovery', recovery.animationState.duration], ['the saved file', saved.animationState.duration], ['reopened', reopened]]) {
+    expect(duration, where).toBeCloseTo(expected, 6);
+  }
+  expect(travel, 'the path’s own travel').toBeCloseTo(app.animationEngine.pathDuration, 6);
 });
