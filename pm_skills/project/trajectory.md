@@ -48,6 +48,12 @@ project can store, as the outline does: a node, link or bend past a crowd's or
 the scene's counts is refused, in the outline's words. The project-wide
 budgets, which no editor checks yet, stay DEF-04's. (2026-09-29)
 
+DEF-44 — A still editor queues no frames: a frame that draws no camera
+(no waypoints, Edit mode, Camera movement off) puts the camera on its
+target, so a cold start, a restored session, Edit mode after Preview and a
+video exported from Edit mode go idle instead of drawing about 60 frames a
+second. (2026-10-01)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its
