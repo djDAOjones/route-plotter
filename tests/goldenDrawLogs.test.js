@@ -1440,7 +1440,7 @@ describe('golden draw logs (TST-02)', () => {
           const exported = expectTintOnTheImage(exporter, 'export');
           const played = expectTintOnTheImage(player, 'player');
 
-          // Non-vacuity: at 50%, and at 25%, the bottom of its range, the image leaves a margin on every side, which
+          // Non-vacuity: at 50%, and at 25% (below the slider's 50%, but accepted in a project), the image leaves a margin on every side, which
           // a tint over the canvas or over the unzoomed image would darken,
           // and outside the editor it is drawn under the camera.
           const drawn = { edit, preview, export: exported, player: played };
