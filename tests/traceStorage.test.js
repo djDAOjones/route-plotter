@@ -14,7 +14,7 @@
 import { expect, test, vi } from 'vitest';
 import { LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
-import { LARGE, bytesOf, major, refused, reopened, trace, traced, undrawn, withRoute } from './helpers/traceProject.js';
+import { LARGE, bytesOf, major, refused, reopened, trace, traced, undrawn, withBackground, withMarkerImage, withRoute } from './helpers/traceProject.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { getRetainedBackgroundDataURL, stageProjectModel } from '../src/app/persistence.js';
 import { STORAGE } from '../src/config/constants.js';
@@ -245,6 +245,31 @@ const valuesIn = value => 1 + (value && typeof value === 'object' ? Object.value
 
 
 
+
+test.each([
+  ['no image', false, false],
+  ['a custom image', true, false],
+  ['a background', false, true],
+])('a trace whose project would hold exactly its 100,000 values is traced, with %s, and its file and recovery reopen', async (_, image, background) => {
+  // A name that is an array (a file may name a major so), copied into its
+  // node's label, fills the project the trace would make to its budget,
+  // which is the loader's and is inclusive.
+  const app = await withRoute([major('start', []), major('end', 'Library')]);
+  if (image) withMarkerImage(app);
+  const backgroundData = background ? await withBackground(app) : null;
+  const layer = app.scene.flowLayers[0];
+  app.waypoints[0].name = Array(Math.floor((100000 - valuesIn(traced(app, layer))) / 2)).fill(null);
+  expect(valuesIn(traced(app, layer))).toBe(100000);
+  const reopensFrom = async zip => (await undrawn()).loadProject(zip);
+  expect(await reopensFrom(await app.imageAssetService.exportZip(app._buildProjectSnapshot({ includeAssets: false }), backgroundData))).toBe(true);
+
+  expect(trace(app, layer).traced).toBe(true);
+  const saved = app._buildProjectSnapshot({ includeAssets: false });
+  expect(valuesIn(saved)).toBe(100000);
+  expect(await reopensFrom(await app.imageAssetService.exportZip(saved, backgroundData))).toBe(true);
+  app.storageService.flushAutoSave();
+  expect(await reopened(JSON.parse(app.storageService._lastSerialized))).not.toBeNull();
+}, LARGE);
 
 test('a trace whose project would hold just over its values, counting what its crowds’ emitters hold, is not traced; the project was one that saves and reopens', async () => {
   // A name that is a long array (a file may name a major so), copied into its node's label: the project then
