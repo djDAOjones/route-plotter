@@ -29,22 +29,36 @@
  * - every keydown, keyup and keypress listener in `src/`, found by reading
  *   the source, with what its handler reads of the event: the keys it
  *   compares and every other property it reads, followed into the functions
- *   of its file the event is passed to. A use of the event the scan cannot
- *   follow, a listener added through an alias, or a type it cannot read, fails
- *   rather than passes. Each listener has one place that presses every key
- *   its handler compares, on its target, and records what each did, then
- *   presses every other key of the domain there and finds it does nothing:
- *   a row here, or for the exported player's two, its own suite.
+ *   of its file the event is passed to, at whichever argument it is passed
+ *   as. What the scan cannot read fails rather than passes: a use of the
+ *   event it cannot follow (the global `event` among them), a `case` or an
+ *   array member that is not a literal, a literal or a key inside a larger
+ *   expression, a listener added through an alias, a type or options it
+ *   cannot read. Neither page has a key handler in its markup or its inline
+ *   scripts, nor an accesskey. Each listener has one place that presses every
+ *   key its handler compares, on its target, and records what each did, then
+ *   presses every other key of the domain there and finds it does nothing
+ *   that place observes; each keydown is pressed once, and again as a held
+ *   key repeats it: a row here, or for the exported player's two, its own
+ *   suite.
  *
- * The keys probed are a bounded domain (`tests/helpers/keyDomain.js`): every
- * printable US character, and every named key of the UI Events key list, F1
- * to F24 included. The dispatcher's sweep presses each under all sixteen
- * combinations of Shift, Ctrl, Alt and Meta, once and held down; the other
- * listeners' sweeps press each without modifiers (the modifiers a handler
- * reads are pinned from its source, and Shift+Tab is pressed in the focus
- * trap). A handler compares `event.key` with literals, so a key outside the
- * domain can only reach it through a literal, which the source checks hold
- * to the domain.
+ * The keys probed are a bounded domain (`tests/helpers/keyDomain.js`): the 95
+ * printable ASCII characters, capitals included, and the 297 named keys of
+ * the UI Events key list, F1 to F24 included: 392 keys. The dispatcher's
+ * sweep presses each under all sixteen combinations of Shift, Ctrl, Alt and
+ * Meta, once and held down; the other listeners' sweeps press each without
+ * modifiers (the modifiers a handler reads are pinned from its source, and
+ * Shift+Tab is pressed in the focus trap). Where a sweep presses keys on the
+ * page itself, the dispatcher is suspended (its own `setEnabled`) for the
+ * keys it takes, so those reach the listener under test alone. A handler
+ * compares `event.key` with literals, so a key outside the domain can only
+ * reach it through a literal, which the source checks hold to the domain.
+ *
+ * Each place observes what it lists, in the one state it sets up: the route,
+ * the selection, the transport, a field, a menu, the focus, and whether a key
+ * was taken. A handler edit that changes nothing it observes there passes;
+ * so does a name the source builds at run time (`'key' + 'down'`), which no
+ * reading of the source can follow.
  *
  * Keys go to `document.body`: the canvas takes no focus, so once a user has
  * clicked it, that is where their keys land. What changed is read back as the
@@ -61,8 +75,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { formatBinding, getDefaultBindings, isMac, MODIFIER_DISPLAY } from '../src/config/keybindings.js';
+import { HTMLExportService } from '../src/services/HTMLExportService.js';
 import { bootApp } from './helpers/bootApp.js';
-import { CANDIDATE_KEYS, NAMED_KEYS } from './helpers/keyDomain.js';
+import { CANDIDATE_KEYS, NAMED_KEYS, PRINTABLE_KEYS } from './helpers/keyDomain.js';
 import { keyListenersIn, lex, lexedFiles } from './helpers/sourceScan.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -998,6 +1013,17 @@ describe('what the page shortcuts react to (TST-13)', () => {
       .toEqual(Object.keys(KEYBOARD).sort());
   });
 
+  test('the key domain: the 95 printable ASCII characters, capitals included, and 297 named keys, none twice', () => {
+    // Round 3's review: the domain had no capitals, which arrive with no
+    // modifier under Caps Lock, and the count claimed for it was not its own.
+    const printable = Array.from({ length: 0x7f - 0x20 }, (_, index) => String.fromCharCode(0x20 + index));
+    expect([...PRINTABLE_KEYS].sort(), 'every printable US character, U+0020 to U+007E').toEqual(printable.sort());
+    expect(NAMED_KEYS.filter(key => key.length < 2), 'a named key is a name, not a character').toEqual([]);
+    expect(NAMED_KEYS).toHaveLength(297);
+    expect(CANDIDATE_KEYS).toEqual([...PRINTABLE_KEYS, ...NAMED_KEYS]);
+    expect(new Set(CANDIDATE_KEYS).size, 'keys in the domain, none twice').toBe(392);
+  });
+
   test('the probe presses every key the dispatcher tests for, and sets everything it reads of the event', () => {
     // The dispatcher's source, read as `keyListenersIn` reads every key
     // handler: a use of the event or its key it cannot account for fails.
@@ -1225,7 +1251,10 @@ describe('the transport keys over time (TST-13)', () => {
 // ---------------------------------------------------------------------------
 
 describe('modifier keys held on their own (TST-13)', () => {
-  test('the canvas cursor shows what a click would do while a modifier is held', async () => {
+  // Once as each keydown first arrives, and again as a key held down repeats
+  // it (`repeat` set): the cursor must not care which.
+  const cursorTitle = 'the canvas cursor shows what a click would do while a modifier is held%s';
+  test.each([['', false], [', its keydowns repeating', true]])(cursorTitle, async (_, held) => {
     const app = await editor();
     // Cmd on a Mac, Ctrl elsewhere: the key Help writes as ⌘ or Ctrl.
     const [minorKey, minorFlag, otherKey, otherFlag] = isMac
@@ -1233,7 +1262,7 @@ describe('modifier keys held on their own (TST-13)', () => {
       : ['Control', 'ctrlKey', 'Meta', 'metaKey'];
     // Each press is logged for the listener it is for, so the test can show it
     // pressed every key the cursor's handlers compare (KEY_LISTENERS).
-    const log = keyLog();
+    const log = keyLog({ held });
     const key = (type, name, flags = {}) => {
       const listener = type === 'keyup' ? KEY_LISTENER.cursorUp : KEY_LISTENER.cursorDown;
       log.press(listener, name, document.body, flags, type);
@@ -1282,8 +1311,8 @@ describe('modifier keys held on their own (TST-13)', () => {
 
     // Every other key of the domain, pressed and let go, leaves the cursor as it is.
     const cursor = () => app.canvas.style.cursor;
-    log.sweep(KEY_LISTENER.cursorDown, document.body, cursor, { onThePage: true });
-    log.sweep(KEY_LISTENER.cursorUp, document.body, cursor, { onThePage: true, type: 'keyup' });
+    log.sweep(KEY_LISTENER.cursorDown, document.body, cursor, { page: app });
+    log.sweep(KEY_LISTENER.cursorUp, document.body, cursor, { page: app, type: 'keyup' });
     expect(log.findings(), 'keys that moved the cursor, other than the modifiers').toEqual({});
     for (const listener of [KEY_LISTENER.cursorDown, KEY_LISTENER.cursorUp]) {
       expect(log.unpressed(listener), `keys ${listener} compares that this test never pressed`).toEqual([]);
@@ -1362,9 +1391,10 @@ const KEY_LISTENER = {
  *
  * Where its keys are pressed: a row below that covers it (each key the
  * handler compares, on its target, and every other key of the domain swept
- * past it), this file's own tables (`here`), or another suite (`suite`),
- * which holds itself to the same. `pinnedBy` names other suites that press
- * some of its keys too, lightly checked: the suite exists and names them.
+ * past it, each keydown once and again held down), this file's own tables
+ * (`here`), or another suite (`suite`), which holds itself to the same.
+ * `pinnedBy` names other suites that press some of its keys too, lightly
+ * checked: the suite exists and names them.
  */
 const KEY_LISTENERS = {
   [KEY_LISTENER.crowdRename]: {
@@ -1460,9 +1490,10 @@ const NOT_REGISTRATIONS = {
 /**
  * A row's key presses, by the listener each is for, so a row can be held to
  * pressing every key its listeners compare, and to sweeping every other key
- * of the domain past them.
+ * of the domain past them. `held` presses each keydown as a key held down
+ * repeats it (`repeat` set; a keyup never repeats).
  */
-function keyLog() {
+function keyLog({ held = false } = {}) {
   const pressed = {};
   const swept = new Set();
   const findings = {};
@@ -1471,7 +1502,8 @@ function keyLog() {
     /** A key pressed for `listener`'s sake, on `target`. */
     press(listener, key, target = document.activeElement, flags = {}, type = 'keydown') {
       (pressed[listener] ??= new Set()).add(key);
-      const event = new KeyboardEvent(type, { key, bubbles: true, cancelable: true, ...flags });
+      const repeat = held && type === 'keydown';
+      const event = new KeyboardEvent(type, { key, bubbles: true, cancelable: true, repeat, ...flags });
       target.dispatchEvent(event);
       return event;
     },
@@ -1479,20 +1511,29 @@ function keyLog() {
      * Press every key of the domain that `listener` does not compare, on its
      * target (a function where the target is rebuilt): a key that changes
      * `state()` or is taken is a finding, and a row must have none. Where the
-     * key lands on the page itself (`onThePage`), the keys the page's
-     * dispatcher reacts to are left out: the dispatcher takes them.
+     * key lands on the page itself (`page`, the app), the page's dispatcher
+     * takes its own keys too, so for those it is suspended through its own
+     * `setEnabled`, as the app suspends it while it builds: they reach the
+     * listener under test alone, and the rest meet the page as it is.
      */
-    sweep(listener, target, state, { onThePage = false, type = 'keydown' } = {}) {
+    sweep(listener, target, state, { page = null, type = 'keydown' } = {}) {
       const { keys = [], anyCase = [] } = KEY_LISTENERS[listener];
       const compared = new Set([...keys, ...anyCase.flatMap(key => [key, key.toUpperCase()])]);
       const found = [];
       for (const key of CANDIDATE_KEYS) {
-        if (compared.has(key) || (onThePage && dispatched.has(key.toLowerCase()))) continue;
-        const was = state();
-        const event = log.press(listener, key, typeof target === 'function' ? target() : target, {}, type);
-        const now = state();
-        if (event.defaultPrevented || now !== was) {
-          found.push(`${key === ' ' ? 'Space' : key}: ${taken(event)}; ${now}`);
+        if (compared.has(key)) continue;
+        const dispatcher = page && dispatched.has(key.toLowerCase()) ? page.interactionHandler : null;
+        const enabled = dispatcher?.enabled;
+        dispatcher?.setEnabled(false);
+        try {
+          const was = state();
+          const event = log.press(listener, key, typeof target === 'function' ? target() : target, {}, type);
+          const now = state();
+          if (event.defaultPrevented || now !== was) {
+            found.push(`${key === ' ' ? 'Space' : key}: ${taken(event)}; ${now}`);
+          }
+        } finally {
+          dispatcher?.setEnabled(enabled);
         }
       }
       swept.add(listener);
@@ -1515,6 +1556,8 @@ function keyLog() {
  * what each did, then sweeping every other key of the domain past them.
  * Keys are pressed without modifiers, but for Shift+Tab in the focus trap:
  * the modifiers a handler reads are pinned from its source (KEY_LISTENERS).
+ * Each row runs twice from a fresh editor, its keydowns pressed once and then
+ * held down, and must record the same both times.
  */
 const LISTENER_ROWS = [
   {
@@ -1704,7 +1747,7 @@ const LISTENER_ROWS = [
       // Open again: every other key in the menu, and on the page, leaves it open where it is.
       log.press(menuButton, 'Enter', trigger);
       log.sweep(open, () => document.activeElement, state);
-      log.sweep(menuAnywhere, document.body, state, { onThePage: true });
+      log.sweep(menuAnywhere, document.body, state, { page: app });
     }
   },
 
@@ -1762,7 +1805,7 @@ const LISTENER_ROWS = [
       const state = () => `${app.areaDrawingService.isDrawing ? 'drawing' : 'not drawing'}, ` +
         `selected ${app.selectedWaypoint ? describeWaypoint(app.selectedWaypoint) : 'none'}`;
       const before = state();
-      log.sweep(KEY_LISTENER.areaDrawing, document.body, state, { onThePage: true });
+      log.sweep(KEY_LISTENER.areaDrawing, document.body, state, { page: app });
       const page = keysReachingThePage();
       const event = log.press(KEY_LISTENER.areaDrawing, 'Escape', document.body);
       page.stop();
@@ -1791,7 +1834,7 @@ const LISTENER_ROWS = [
       };
       const exporting = app.exportVideo();
       await exportRunning;
-      log.sweep(KEY_LISTENER.exportEscape, document.body, () => `cancelled ${cancelled}`, { onThePage: true });
+      log.sweep(KEY_LISTENER.exportEscape, document.body, () => `cancelled ${cancelled}`, { page: app });
       const page = keysReachingThePage();
       const event = log.press(KEY_LISTENER.exportEscape, 'Escape', document.body);
       page.stop();
@@ -1824,7 +1867,7 @@ const LISTENER_ROWS = [
         `${service.selection ? `${service.selection.kind} selected` : 'nothing selected'}, ` +
         `${graph.getNodes().length} nodes ${graph.getEdges().length} edges, ` +
         `types ${graph.getNodes().map(node => node.type).join(' ')}`;
-      log.sweep(KEY_LISTENER.networkPen, document.body, state, { onThePage: true });
+      log.sweep(KEY_LISTENER.networkPen, document.body, state, { page: app });
       const page = keysReachingThePage();
       const step = key => `${key}: ${taken(log.press(KEY_LISTENER.networkPen, key, document.body))}; ${state()}`;
       const steps = [`drawn: ${state()}`, step('t'), step('Escape'), step('Escape')];
@@ -1851,12 +1894,12 @@ const LISTENER_ROWS = [
     title: 'Escape hides an open hint; every other key leaves it open',
     covers: [KEY_LISTENER.hint],
     async run(log) {
-      await editor();
+      const app = await editor();
       document.querySelector('#pause-time-control [data-tip]').click();
       const hint = () => document.getElementById('param-tooltip');
       const state = () => (hint()?.style.display === 'block' ? `showing "${hint().textContent}"` : 'hidden');
       const shown = state();
-      log.sweep(KEY_LISTENER.hint, document.body, state, { onThePage: true });
+      log.sweep(KEY_LISTENER.hint, document.body, state, { page: app });
       const event = log.press(KEY_LISTENER.hint, 'Escape', document.body);
       // The page's own Escape takes the key too: it clears the selection.
       expect([shown, `Escape: ${taken(event)}; ${state()}`])
@@ -1920,7 +1963,59 @@ const LISTENER_ROWS = [
   }
 ];
 
+/** Each row run twice, from a fresh editor: its keydowns pressed once, then held down. */
+const ROW_RUNS = LISTENER_ROWS.flatMap(row => [[row.title, row, false], [`held down: ${row.title}`, row, true]]);
+
 const escapeRegExp = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** What the inventory compares of a handler: the keys, anyCase and reads, sorted, and every use it could not read. */
+const readShape = ({ keys = [], anyCase = [], reads = [] }, unanalysed = []) =>
+  ({ keys: [...keys].sort(), anyCase: [...anyCase].sort(), reads: [...reads].sort(), unanalysed });
+
+/** A scan's listeners, by name, as the inventory compares them with KEY_LISTENERS. */
+const scannedReads = listeners =>
+  Object.fromEntries(listeners.map(({ name, reads }) => [name, readShape(reads, reads.unanalysed)]));
+
+/** KEY_LISTENERS as the inventory holds the scan to it: with no use left unread. */
+const REVIEWED_READS = Object.fromEntries(Object.entries(KEY_LISTENERS)
+  .map(([name, entry]) => [name, readShape(entry)]));
+
+/**
+ * The pages the app runs in: the editor's `index.html`, and the exported
+ * player's page as the HTML export writes it, built without the constructor
+ * (which would fetch the player bundle) and with an empty bundle: the bundle
+ * is built from `src/player`, which the scan reads.
+ */
+const PAGES = {
+  'index.html': readFileSync(join(repoRoot, 'index.html'), 'utf8'),
+  'the exported player': Object.create(HTMLExportService.prototype)._generateHTML('Route', null, {}, '')
+};
+
+/** The scripts each page runs: the editor's bundle of `src/`, and the export's data and player bundle. */
+const PAGE_SCRIPTS = { 'index.html': ['app.js'], 'the exported player': ['inline', 'inline'] };
+
+/**
+ * How a page could take keys outside `src/`, parsed as a browser parses it:
+ * each element's inline key handler or accesskey attribute (in any spacing or
+ * case), each script it runs (`inline`, or its `src`), and the key listeners
+ * of its inline scripts, with what of their listening cannot be read, read as
+ * `src/` is.
+ */
+function keysInPage(html) {
+  const page = new DOMParser().parseFromString(html, 'text/html');
+  const attributes = [...page.querySelectorAll('*')].flatMap(element => [...element.attributes]
+    .filter(({ name }) => /^(?:onkey(?:down|up|press)|accesskey)$/i.test(name))
+    .map(({ name }) => `<${element.localName} ${name}>`));
+  const scripts = [...page.querySelectorAll('script')];
+  const inline = keyListenersIn(scripts.filter(script => !script.hasAttribute('src'))
+    .map((script, index) => ({ file: `inline script ${index + 1}`, lexed: lex(script.textContent) })));
+  return {
+    attributes,
+    scripts: scripts.map(script => script.getAttribute('src') ?? 'inline'),
+    listeners: inline.listeners.map(({ name }) => name),
+    unread: inline.unread
+  };
+}
 
 describe('every key listener the app adds (TST-13)', () => {
 
@@ -1930,16 +2025,22 @@ describe('every key listener the app adds (TST-13)', () => {
       .toEqual(Object.keys(NOT_REGISTRATIONS).sort());
     expect(listeners.map(({ name }) => name).sort(), 'key listeners in src/ (a new one needs a KEY_LISTENERS row)')
       .toEqual(Object.keys(KEY_LISTENERS).sort());
-    const shape = ({ keys = [], anyCase = [], reads = [] }, unanalysed = []) =>
-      ({ keys: [...keys].sort(), anyCase: [...anyCase].sort(), reads: [...reads].sort(), unanalysed });
-    expect(Object.fromEntries(listeners.map(({ name, reads }) => [name, shape(reads, reads.unanalysed)])),
-      'what each handler reads of its event, from its source (KEY_LISTENERS)')
-      .toEqual(Object.fromEntries(Object.entries(KEY_LISTENERS).map(([name, entry]) => [name, shape(entry)])));
+    expect(scannedReads(listeners), 'what each handler reads of its event, from its source (KEY_LISTENERS)')
+      .toEqual(REVIEWED_READS);
     // Keys set as properties, or in the pages' markup, would escape the scan.
     for (const { file, lexed } of lexedFiles(repoRoot, 'src')) {
       expect(lexed.code.match(/(?<![\w$])onkey(down|up|press)(?![\w$])/g), `${file} names an onkey handler`).toBeNull();
+      // In any case, as markup the code writes reads it; and an accesskey, a shortcut no listener sees.
+      expect(lexed.code.match(/(?<![\w$])(?:onkey(?:down|up|press)|accesskey)(?![\w$])/gi),
+        `${file} names an onkey handler or an accesskey, in any case`).toBeNull();
     }
     expect(readFileSync(join(repoRoot, 'index.html'), 'utf8')).not.toMatch(/onkey(down|up|press)=/i);
+    // Round 3's review: `onkeydown = "…"`, spaced, slipped past the line above.
+    // Each page is read as a browser parses it, and runs only what is built from src/.
+    for (const [name, html] of Object.entries(PAGES)) {
+      expect(keysInPage(html), `${name}: key handlers in its markup or inline scripts, and the scripts it runs`)
+        .toEqual({ attributes: [], scripts: PAGE_SCRIPTS[name], listeners: [], unread: [] });
+    }
 
     const ownSource = readFileSync(fileURLToPath(import.meta.url), 'utf8');
     for (const [name, { what, keys = [], here, suite, pinnedBy = {} }] of Object.entries(KEY_LISTENERS)) {
@@ -2008,8 +2109,98 @@ describe('every key listener the app adds (TST-13)', () => {
       .toEqual([['fixture.js: document keyup', ['g'], []]]);
   });
 
-  test.each(LISTENER_ROWS.map(row => [row.title, row]))('%s', async (title, row) => {
-    const log = keyLog();
+  test('the reader reports a case, a member or a comparison it cannot read; it reads a helper at each argument', () => {
+    const scan = source => keyListenersIn([{ file: 'fixture.js', lexed: lex(source) }]);
+    const read = (handler, before = '') => {
+      const { listeners: [listener], unread } = scan(`${before}document.addEventListener('keydown', ${handler});`);
+      expect(unread).toEqual([]);
+      return readShape(listener.reads, listener.reads.unanalysed);
+    };
+    const on = 'line 1: the key is compared with ';
+    // Round 3's review: a case, or a member of an array, that is not a literal
+    // was dropped, and the rest read as all the handler compares. Every one is
+    // read now, or reported; a switch nested in a case is not the key's.
+    expect(read("e => { switch (e.key) { case 'a': case EXTRA: break; case 'b': { switch (x) { case 1: } } } }"))
+      .toEqual({ keys: ['a', 'b'], anyCase: [], reads: [], unanalysed: [`${on}case EXTRA`] });
+    expect(read("e => { if (['Enter', EXTRA, ...more].includes(e.key)) e.preventDefault(); }")).toEqual({
+      keys: ['Enter'], anyCase: [], reads: ['preventDefault'],
+      unanalysed: [`${on}[…] member EXTRA`, `${on}[…] member ...more`]
+    });
+    expect(read("e => { const key = e.key.toLowerCase(); switch (key) { case 'c': case `d`: case `${x}`: } }"))
+      .toEqual({ keys: [], anyCase: ['c', 'd'], reads: [], unanalysed: [`${on}case \`\${x}\``] });
+    // A literal or a key that is part of a larger expression is not what is compared.
+    for (const [handler, part] of [
+      ["e => e.key === 'F' + n", "e.key === 'F'"],
+      ["e => x + 'q' === e.key", "'q' === e.key"],
+      ["e => 'q'.toUpperCase() === e.key || e.key === 'Q'.toLowerCase()", "e.key === 'Q'"],
+      ["e => typeof e.key === 'string'", "e.key === 'string'"],
+      ['e => e.key === `F${n}`', 'e.key === `F${']
+    ]) {
+      expect(read(handler).unanalysed, handler).toContain(`${on}${part}, not a whole literal`);
+    }
+    expect(read("e => e.key === 'a' ? 1 : e.key !== 'b' && 'c' === e.key").keys, 'whole literals')
+      .toEqual(['a', 'b', 'c']);
+    // Round 3's review: a helper passed the event first in one call and second
+    // in another was read only for the first.
+    const helper = 'function repeatOf(first, second) { return second?.repeat; }\n';
+    expect(read('e => { repeatOf(e); if (repeatOf(null, e)) return; }', helper))
+      .toEqual({ keys: [], anyCase: [], reads: ['repeat'], unanalysed: [] });
+    // The event under another name, and options the scan cannot read.
+    expect(read("e => { if (window.event.key === 'q' || top['event'].repeat || event.repeat) e.preventDefault(); }")
+      .unanalysed).toEqual(Array(3).fill('line 1: the global event, or a property named event, is read'));
+    expect(read("function (e) { return arguments[0].key === 'q'; }").unanalysed).toEqual(['line 1: arguments is read']);
+    expect(scan("document.addEventListener('keydown', e => e.key === 'a', options);").unread)
+      .toEqual(["fixture.js:1 addEventListener('keydown', …, options)"]);
+    expect(scan("document.addEventListener('keydown', e => e.key === 'a', { capture: true, once: true });")
+      .listeners.map(({ name }) => name)).toEqual(['fixture.js: document keydown (capture, once)']);
+  });
+
+  test("round 3's review's mutants of the real source fail the inventory's own comparison", () => {
+    // Each edit made in memory to the real file, read as the inventory reads it.
+    const edited = (file, edits) => {
+      let text = readFileSync(join(repoRoot, file), 'utf8');
+      for (const [anchor, replacement] of edits) {
+        expect(text.split(anchor), `the anchor in ${file}; if the source moved, move it`).toHaveLength(2);
+        text = text.replace(anchor, replacement);
+      }
+      return scannedReads(keyListenersIn([{ file, lexed: lex(text) }]).listeners);
+    };
+    // N2: a player shortcut added as a named case.
+    const player = edited('src/player/playerEntry.js', [
+      ['const TIMELINE_RESOLUTION = 10000;', "const EXTRA_PLAY_KEY = 'Q';\nconst TIMELINE_RESOLUTION = 10000;"],
+      ["      case 'k':", "      case EXTRA_PLAY_KEY:\n      case 'k':"]
+    ])[KEY_LISTENER.playerPage];
+    expect(player).not.toEqual(REVIEWED_READS[KEY_LISTENER.playerPage]);
+    expect(player).toEqual({ ...REVIEWED_READS[KEY_LISTENER.playerPage],
+      unanalysed: [expect.stringMatching(/^line \d+: the key is compared with case EXTRA_PLAY_KEY$/)] });
+    // N4: a held key ignored through a helper's second argument, the helper
+    // having been passed the event first.
+    const header = edited('src/controllers/SectionController.js', [
+      ['export class SectionController',
+        'function repeatOf(first, second) { return second?.repeat; }\n\nexport class SectionController'],
+      ["      header.addEventListener('keydown', (e) => {",
+        "      header.addEventListener('keydown', (e) => {\n        repeatOf(e);\n" +
+        '        if (repeatOf(null, e)) return;']
+    ])[KEY_LISTENER.sectionHeader];
+    expect(header).not.toEqual(REVIEWED_READS[KEY_LISTENER.sectionHeader]);
+    expect(header).toEqual({ ...REVIEWED_READS[KEY_LISTENER.sectionHeader], reads: ['preventDefault', 'repeat'] });
+  });
+
+  test('a key handler in a page, in any spacing or case, or in an inline script, is found', () => {
+    // Round 3's review: N1, a spaced handler on index.html's body.
+    expect(keysInPage('<body onkeydown = "if (event.key === \'F4\') event.preventDefault()"></body>').attributes)
+      .toEqual(['<body onkeydown>']);
+    expect(keysInPage('<div\n  ONKEYUP\n  =\n  "x"></div><svg><g onKeyPress="x"></g></svg><b accessKey="p"></b>')
+      .attributes).toEqual(['<div onkeyup>', '<g onkeypress>', '<b accesskey>']);
+    expect(keysInPage("<script src='extra.js'></script><script>document.addEventListener('keyup', e => {});" +
+      "addEventListener(type, f);</script>")).toEqual({
+      attributes: [], scripts: ['extra.js', 'inline'],
+      listeners: ['inline script 1: document keyup'], unread: ['inline script 1:1 addEventListener(type, …)']
+    });
+  });
+
+  test.each(ROW_RUNS)('%s', async (title, row, held) => {
+    const log = keyLog({ held });
     await row.run(log);
     expect(log.findings(), 'keys a sweep found doing something their listener does not compare').toEqual({});
     for (const listener of row.covers) {

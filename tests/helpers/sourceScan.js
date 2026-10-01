@@ -309,10 +309,80 @@ export function callsOf(lexed, name) {
 // ---------------------------------------------------------------------------
 
 const WORD_AT = /^[A-Za-z_$][\w$]*/;
-const COMPARED = /^(===|!==|==|!=)\s*(['"`])((?:(?!\2)[^\\\n])*)\2/;
-const COMPARED_FROM_LEFT = /(['"`])((?:(?!\1)[^\\\n])*)\1\s*(===|!==|==|!=)\s*$/;
-const LITERALS = /(['"`])((?:(?!\1)[^\\\n])*)\1/g;
+const EQUALITY = /^(?:===|!==|==|!=)/;
 const NOT_CALLS = new Set(['if', 'for', 'while', 'switch', 'return', 'typeof', 'catch', 'with', 'await', 'void']);
+
+/**
+ * A quoted string's value, or a template's with no `${`; null for anything
+ * else. Escapes are not decoded, so a literal with one is not read either.
+ */
+const QUOTED = /^(['"])((?:(?!\1)[^\\\n])*)\1$|^`((?:[^`\\$]|\$(?!\{))*)`$/;
+function quotedValue(text) {
+  const match = QUOTED.exec(text.trim());
+  if (!match) return null;
+  return match[1] ? match[2] : match[3];
+}
+
+/**
+ * The string or template that starts at `first`, or ends at `last`: its span,
+ * its text, and its value where it is a plain literal (null for a template
+ * with `${`, or a literal with an escape). Null when none is there.
+ */
+function literalFrom(lexed, first) {
+  const { kind, source } = lexed;
+  if ((kind[first] !== 's' && kind[first] !== 't') || !'\'"`'.includes(source[first])) return null;
+  let end = first + 1;
+  while (end < source.length && kind[end] === kind[first]) end += 1;
+  const text = source.slice(first, end);
+  return { start: first, end, text, value: quotedValue(text) };
+}
+function literalTo(lexed, last) {
+  const { kind, source } = lexed;
+  if (last < 0 || (kind[last] !== 's' && kind[last] !== 't')) return null;
+  let start = last;
+  while (start > 0 && kind[start - 1] === kind[last]) start -= 1;
+  const text = source.slice(start, last + 1);
+  return { start, end: last + 1, text, value: '\'"`'.includes(source[start]) ? quotedValue(text) : null };
+}
+
+/** The offset of the last character before `at` that is neither white space nor a comment, or -1. */
+function tokenBefore(lexed, at) {
+  let index = at - 1;
+  while (index >= 0 && (lexed.kind[index] === '/' || (lexed.kind[index] === 'c' && /\s/.test(lexed.code[index])))) {
+    index -= 1;
+  }
+  return index;
+}
+
+/**
+ * Whether the code after an operand that ends at `end` carries on its
+ * expression: a member, a call, or an operator that binds more tightly than
+ * `===` (`'F' + n`, `'q'.toUpperCase()`), so the operand is not what is compared.
+ */
+function carriesOn(lexed, end) {
+  const at = skipSpace(lexed.code, end);
+  if (at >= lexed.code.length) return false;
+  if (lexed.kind[at] !== 'c') return true;
+  const char = lexed.code[at];
+  if (char === '?') return lexed.code[at + 1] === '.' && !/\d/.test(lexed.code[at + 2] ?? '');
+  return '.[(`+-*/%<>'.includes(char) || /^(?:in|instanceof)(?![\w$])/.test(lexed.code.slice(at, at + 11));
+}
+
+/**
+ * Whether the code before an operand that starts at `start` binds to it more
+ * tightly than `===` does (`x + 'a' === e.key`, `typeof e.key === 'string'`,
+ * `!e.key === 'a'`), so the operand is not what is compared.
+ */
+function boundBefore(lexed, start) {
+  const at = tokenBefore(lexed, start);
+  if (at < 0 || lexed.kind[at] !== 'c') return false;
+  const before = lexed.code.slice(Math.max(0, at - 10), at + 1);
+  if (/(?:^|[^\w$])(?:typeof|void|delete|in|instanceof)$/.test(before)) return true;
+  if (/=>$/.test(before)) return false;
+  if (/(?:[=!]=|[<>]=?)$/.test(before)) return true;
+  if (/=$/.test(before)) return false;
+  return /[-+*/%!~]$/.test(before);
+}
 
 /** The parameter at `index` of a parameter list, or null for a pattern or a default the scan cannot follow. */
 function parameterAt(params, index) {
@@ -444,31 +514,132 @@ function wordsIn(lexed, word, from, to) {
   return found;
 }
 
-/** The literals of a `switch` block whose `(` closes at `close`. */
-function caseLiterals(lexed, close) {
-  const open = skipSpace(lexed.code, close + 1);
-  if (lexed.code[open] !== '{') return null;
-  const block = lexed.code.slice(open, closing(lexed, open) + 1);
-  return [...block.matchAll(/case\s+(['"`])((?:(?!\1)[^\\\n])*)\1\s*:/g)].map(match => match[2]);
+/** The `:` that ends a `case` expression begun at `from`: the first outside brackets that no `?` of its own opened. */
+function caseEnd(lexed, from, end) {
+  let depth = 0;
+  let ternaries = 0;
+  for (let at = from; at < end; at += 1) {
+    if (lexed.kind[at] !== 'c') continue;
+    const char = lexed.code[at];
+    if ('([{'.includes(char)) depth += 1;
+    else if (')]}'.includes(char)) depth -= 1;
+    else if (depth === 0 && char === '?' && !'.?'.includes(lexed.code[at + 1]) && lexed.code[at - 1] !== '?') {
+      ternaries += 1;
+    } else if (depth === 0 && char === ':') {
+      if (ternaries === 0) return at;
+      ternaries -= 1;
+    }
+  }
+  return end;
 }
 
 /**
- * How the key is compared at a use that ends at `after` and starts at `at`:
- * `=== 'x'`, `'x' ===`, inside `switch (…)` or `[…].includes(…)`. Returns the
- * literals, or null when the use is none of these.
+ * The `case` clauses of the `switch` block whose `(` closes at `close`, its
+ * own and not those of a `switch` nested in one: the literal each compares,
+ * and the text of each case that is not a literal, which the scan cannot read.
+ */
+function switchCases(lexed, close) {
+  const { code, kind } = lexed;
+  const open = skipSpace(code, close + 1);
+  if (code[open] !== '{' || kind[open] !== 'c') return null;
+  const end = closing(lexed, open);
+  const literals = [];
+  const unread = [];
+  let depth = 0;
+  for (let at = open + 1; at < end; at += 1) {
+    if (kind[at] !== 'c') continue;
+    const char = code[at];
+    if ('([{'.includes(char)) depth += 1;
+    else if (')]}'.includes(char)) depth -= 1;
+    else if (depth === 0 && code.startsWith('case', at) && !WORD.test(code[at + 4] ?? '') &&
+      !/[\w$.]/.test(code[at - 1] ?? '')) {
+      const colon = caseEnd(lexed, at + 4, end);
+      const first = skipSpace(code, at + 4);
+      const literal = literalFrom(lexed, first);
+      const text = code.slice(at + 4, colon).replace(/\s+/g, ' ').trim();
+      if (literal && literal.value !== null && skipSpace(code, literal.end) === colon) literals.push(literal.value);
+      else unread.push(`case ${text}`);
+      at = colon;
+    }
+  }
+  return { literals, unread };
+}
+
+/**
+ * The members of the array literal whose `]` is at `close`, when every one is
+ * a literal; the text of each that is not, otherwise. Null when the `[` is a
+ * member access (`keys[0]`), not an array.
+ */
+function arrayMembers(lexed, close) {
+  if (lexed.kind[close] !== 'c' || lexed.code[close] !== ']') return null;
+  // The `[` that opens it: back over code brackets.
+  let depth = 0;
+  let open = -1;
+  for (let at = close; at >= 0; at -= 1) {
+    if (lexed.kind[at] !== 'c') continue;
+    if (')]}'.includes(lexed.code[at])) depth += 1;
+    else if ('([{'.includes(lexed.code[at])) {
+      depth -= 1;
+      if (depth === 0) {
+        open = lexed.code[at] === '[' ? at : -1;
+        break;
+      }
+    }
+  }
+  if (open === -1) return null;
+  const before = tokenBefore(lexed, open);
+  if (before >= 0 && (lexed.kind[before] !== 'c' || /[\w$)\]]/.test(lexed.code[before])) &&
+    !/(?:^|[^\w$])(?:return|typeof|case|in|of|void|await|yield)$/
+      .test(lexed.code.slice(Math.max(0, before - 6), before + 1))) {
+    return null;
+  }
+  const literals = [];
+  const unread = [];
+  for (const { text, from, to } of argumentsOf(lexed, open, close)) {
+    const literal = literalFrom(lexed, skipSpace(lexed.code, from));
+    if (literal && literal.value !== null && skipSpace(lexed.code, literal.end) >= to) literals.push(literal.value);
+    else unread.push(`[…] member ${text || '(a hole)'}`);
+  }
+  return { literals, unread };
+}
+
+/**
+ * How the key is compared at a use that starts at `at` and ends at `after`:
+ * `=== 'x'`, `'x' ===`, as the subject of a `switch`, or inside
+ * `[…].includes(…)`. Returns the literals it is compared with and the parts of
+ * the comparison the scan cannot read (a case or a member that is not a
+ * literal; a literal, or the key, that is part of a larger expression), or
+ * null when the use is none of these.
  */
 function comparedWith(lexed, fn, at, after) {
   const { code } = lexed;
-  const right = COMPARED.exec(code.slice(skipSpace(code, after)));
-  if (right) return [right[3]];
-  const left = COMPARED_FROM_LEFT.exec(code.slice(Math.max(fn.start, at - 120), at));
-  if (left) return [left[2]];
-  const closeAt = skipSpace(code, after);
-  if (code[closeAt] === ')' && /switch\s*\(\s*$/.test(code.slice(Math.max(fn.start, at - 40), at))) {
-    return caseLiterals(lexed, closeAt);
+  const next = skipSpace(code, after);
+  const operator = lexed.kind[next] === 'c' ? EQUALITY.exec(code.slice(next, next + 3))?.[0] : null;
+  if (operator) {
+    const literal = literalFrom(lexed, skipSpace(code, next + operator.length));
+    if (literal) {
+      const whole = literal.value !== null && !boundBefore(lexed, at) && !carriesOn(lexed, literal.end);
+      return whole ? { literals: [literal.value], unread: [] }
+        : { literals: [], unread: [`${code.slice(at, literal.end).replace(/\s+/g, ' ')}, not a whole literal`] };
+    }
   }
-  const includes = /\[([^\]]*)\]\s*\.includes\(\s*$/.exec(code.slice(Math.max(fn.start, at - 300), at));
-  if (code[closeAt] === ')' && includes) return [...includes[1].matchAll(LITERALS)].map(match => match[2]);
+  const leftOperator = tokenBefore(lexed, at);
+  const operatorText = lexed.kind[leftOperator] === 'c'
+    ? /(?:===|!==|==|!=)$/.exec(code.slice(Math.max(0, leftOperator - 2), leftOperator + 1))?.[0] : null;
+  if (operatorText) {
+    const literal = literalTo(lexed, tokenBefore(lexed, leftOperator - operatorText.length + 1));
+    if (literal) {
+      const whole = literal.value !== null && !boundBefore(lexed, literal.start) && !carriesOn(lexed, after);
+      return whole ? { literals: [literal.value], unread: [] }
+        : { literals: [], unread: [`${code.slice(literal.start, after).replace(/\s+/g, ' ')}, not a whole literal`] };
+    }
+  }
+  const subject = code[next] === ')' && lexed.kind[next] === 'c';
+  if (subject && /switch\s*\(\s*$/.test(code.slice(Math.max(fn.start, at - 40), at))) {
+    return switchCases(lexed, next);
+  }
+  const includes = /\]\s*\.\s*includes\(\s*$/.exec(code.slice(Math.max(fn.start, at - 300), at));
+  if (subject && includes) return arrayMembers(lexed, Math.max(fn.start, at - 300) + includes.index);
   return null;
 }
 
@@ -477,9 +648,13 @@ function comparedWith(lexed, fn, at, after) {
  * compares `event.key` with (as written, or `anyCase` where it lower-cases
  * first), the other properties it reads (`reads`), and every use of the
  * event it cannot account for (`unanalysed`). It follows the event into the
- * functions of the same file it is passed to, and into a variable that holds
- * the key. Anything else it does with the event, it reports rather than
- * ignores, so a check that `unanalysed` is empty fails closed.
+ * functions of the same file it is passed to, at whichever argument it is
+ * passed as, and into a variable that holds the key. A comparison counts only
+ * where every `case` of a `switch`, and every member of an `[…].includes`, is
+ * a literal, and neither the literal nor the key is part of a larger
+ * expression; the rest, the global `event` and `arguments` included, it
+ * reports rather than ignores, so a check that `unanalysed` is empty fails
+ * closed.
  *
  * @param {Object} lexed - The handler's file, lexed
  * @param {{params: string, start: number, end: number}} fn - The handler
@@ -492,24 +667,48 @@ export function eventReads(lexed, fn, index = 0, seen = new Set()) {
     for (const name of ['keys', 'anyCase', 'reads']) for (const value of other[name]) result[name].add(value);
     result.unanalysed.push(...other.unanalysed);
   };
-  if (seen.has(fn.start)) return result;
-  seen.add(fn.start);
+  // A function is read once for each parameter the event arrives as: passed
+  // first in one call and second in another, it is read for both.
+  const visit = `${fn.start}:${index}`;
+  if (seen.has(visit)) return result;
+  seen.add(visit);
   const event = parameterAt(fn.params, index);
   if (!event) {
-    result.unanalysed.push(`${where(fn.start)}: its event parameter is a pattern or has a default`);
+    result.unanalysed.push(`${where(fn.start)}: its event parameter is a pattern, has a default or is missing`);
     return result;
   }
   const { code, source } = lexed;
   const add = (literals, anyCase) => {
     for (const literal of literals) result[anyCase ? 'anyCase' : 'keys'].add(anyCase ? literal.toLowerCase() : literal);
   };
+  /** A comparison's literals, and what of it the scan could not read. */
+  const compared = (found, anyCase, at) => {
+    add(found.literals, anyCase);
+    for (const part of found.unread) result.unanalysed.push(`${where(at)}: the key is compared with ${part}`);
+  };
+
+  // The event under another name: the global `event`, bare or as a property
+  // of the window through any of its names (`window.event`, `top['event']`),
+  // so any property named `event`; and a function's `arguments`.
+  const globals = event === 'event' ? [] : wordsIn(lexed, 'event', fn.start, fn.end);
+  const eventProperty = /\??\.\s*event(?![\w$])|\[\s*(['"`])event\1\s*\]/g;
+  for (const match of code.slice(fn.start, fn.end).matchAll(eventProperty)) {
+    globals.push(fn.start + match.index);
+  }
+  for (const at of globals.sort((a, b) => a - b)) {
+    if (lexed.kind[at] !== 'c') continue;
+    result.unanalysed.push(`${where(at)}: the global event, or a property named event, is read`);
+  }
+  for (const at of wordsIn(lexed, 'arguments', fn.start, fn.end)) {
+    result.unanalysed.push(`${where(at)}: arguments is read`);
+  }
 
   /** A variable holding the key: every use must be a comparison too. */
   const keyHeldIn = (name, declaredAt, anyCase) => {
     for (const at of wordsIn(lexed, name, declaredAt, fn.end)) {
       if (/(?:const|let|var)\s+$/.test(code.slice(Math.max(fn.start, at - 10), at))) continue;
-      const literals = comparedWith(lexed, fn, at, at + name.length);
-      if (literals) add(literals, anyCase);
+      const found = comparedWith(lexed, fn, at, at + name.length);
+      if (found) compared(found, anyCase, at);
       else result.unanalysed.push(`${where(at)}: ${name}, which holds the key, is used other than in a comparison`);
     }
   };
@@ -541,9 +740,9 @@ export function eventReads(lexed, fn, index = 0, seen = new Set()) {
         anyCase = true;
         end = code.indexOf(')', end) + 1;
       }
-      const literals = comparedWith(lexed, fn, at, end);
-      if (literals) {
-        add(literals, anyCase);
+      const found = comparedWith(lexed, fn, at, end);
+      if (found) {
+        compared(found, anyCase, at);
         continue;
       }
       const held = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*$/.exec(code.slice(Math.max(fn.start, at - 60), at));
@@ -597,16 +796,37 @@ export function eventReads(lexed, fn, index = 0, seen = new Set()) {
 }
 
 const KEY_EVENT_TYPES = ['keydown', 'keyup', 'keypress'];
+const LISTENER_FLAGS = ['capture', 'once', 'passive'];
+
+/**
+ * The flags a listener's options set, from their text: none, `true` for
+ * capture, or an object of literal `capture`, `once` and `passive` flags.
+ * Null for any other options, which the scan cannot read.
+ */
+function listenerFlags(options) {
+  if (options === undefined || options === 'false') return [];
+  if (options === 'true') return ['capture'];
+  const object = /^\{(.*)\}$/.exec(options);
+  if (!object) return null;
+  const set = {};
+  for (const entry of object[1].split(',').map(each => each.trim()).filter(Boolean)) {
+    const flag = /^(capture|once|passive)\s*:\s*(true|false)$/.exec(entry);
+    if (!flag) return null;
+    set[flag[1]] = flag[2] === 'true'; // as at run time, a later entry wins
+  }
+  return LISTENER_FLAGS.filter(flag => set[flag]);
+}
 
 /**
  * Every key listener registered in some lexed files, read as code: each
- * named by file, what it is added to, its type, `(capture)` when it listens
- * on the way down, and its number when a file adds more than one of a kind;
- * with what its handler reads of the event (`eventReads`). Also `unread`:
- * every mention of `addEventListener` that is not a call, every call whose
- * type is not a literal, and every key event type named outside an `add` or
- * `removeEventListener` call — each a way to listen the scan cannot read, so
- * a check that `unread` is empty fails closed.
+ * named by file, what it is added to, its type, its flags (`(capture)` when it
+ * listens on the way down; `once`, `passive`), and its number when a file adds
+ * more than one of a kind; with what its handler reads of the event
+ * (`eventReads`). Also `unread`: every mention of `addEventListener` that is
+ * not a call, every call whose type or options are not literals, and every
+ * key event type named outside an `add` or `removeEventListener` call — each
+ * a way to listen the scan cannot read, so a check that `unread` is empty
+ * fails closed.
  */
 export function keyListenersIn(files) {
   const found = [];
@@ -626,7 +846,11 @@ export function keyListenersIn(files) {
           continue;
         }
         if (method !== 'addEventListener' || !KEY_EVENT_TYPES.includes(type)) continue;
-        const capture = /^true$|capture:\s*true/.test(call.args[2] ?? '');
+        const flags = call.args.length > 3 ? null : listenerFlags(call.args[2]);
+        if (flags === null) {
+          unread.push(`${file}:${call.line} ${method}(${call.args[0]}, …, ${call.args.slice(2).join(', ')})`);
+          continue;
+        }
         const [from, to] = call.spans[1] ?? [0, 0];
         const inline = call.spans[1] ? functionAt(lexed, from) : null;
         let reads;
@@ -642,8 +866,8 @@ export function keyListenersIn(files) {
             reads.unanalysed.push(...each.unanalysed);
           }
         }
-        found.push({ name: `${file}: ${call.receiver} ${type}${capture ? ' (capture)' : ''}`, file, line: call.line,
-          handler: call.args[1], reads });
+        found.push({ name: `${file}: ${call.receiver} ${type}${flags.length > 0 ? ` (${flags.join(', ')})` : ''}`, file,
+          line: call.line, handler: call.args[1], reads });
       }
     }
     for (const { value, from } of stringsIn(lexed)) {

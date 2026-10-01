@@ -318,7 +318,32 @@ describe('standalone player accessibility wiring', () => {
     expect(timeline.getAttribute('aria-valuetext')).toBe('0:30 of 1:05');
   });
 
-  test("every key the player's two key listeners take, and what each does (TST-13)", async () => {
+  /**
+   * The keys each of the player's two key listeners compares, reviewed: the
+   * page's transport keys and the timeline's steps. Their source must say the
+   * same, read as the key table reads every listener's, and every other key of
+   * the domain is pressed on each and must do nothing: a key either starts or
+   * stops taking fails here.
+   */
+  const PLAYER_KEYS = {
+    page: [' ', 'ArrowLeft', 'ArrowRight', 'End', 'Home', 'k'],
+    timeline: ['ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'End', 'Home', 'PageDown', 'PageUp']
+  };
+
+  test("the player's two key listeners compare the reviewed keys, read from their source (TST-13)", () => {
+    const { listeners, unread } = keyListenersIn(lexedFiles(repoRoot, 'src/player'));
+    expect(unread, 'ways of listening in src/player the scan cannot read').toEqual([]);
+    expect(Object.fromEntries(listeners.map(({ name, reads }) => [name.replace('src/player/playerEntry.js: ', ''), {
+      keys: [...reads.keys].sort(), anyCase: [...reads.anyCase].sort(), unanalysed: reads.unanalysed
+    }])), 'the keys each compares, and any use of its event the scan cannot read (PLAYER_KEYS)').toEqual({
+      'document keydown': { keys: PLAYER_KEYS.page, anyCase: [], unanalysed: [] },
+      'timeline keydown': { keys: PLAYER_KEYS.timeline, anyCase: [], unanalysed: [] }
+    });
+  });
+
+  // Each keydown pressed once, and again as a key held down repeats it.
+  const keysTitle = "every key the player's two key listeners take, and what each does%s (TST-13)";
+  test.each([['', false], [', held down', true]])(keysTitle, async (_, held) => {
     // The key table (tests/keyTable.test.js) lists every key listener in
     // src/ and names this test for the player's: the page's transport keys,
     // which leave a focused control its own keys, and the timeline's steps.
@@ -337,7 +362,7 @@ describe('standalone player accessibility wiring', () => {
     const pressed = { page: new Set(), timeline: new Set() };
     const press = (key, target = document.body) => {
       pressed[target === timeline ? 'timeline' : 'page'].add(key);
-      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, repeat: held });
       target.dispatchEvent(event);
       const where = target === document.body ? 'the page' : `#${target.id}`;
       return `${key === ' ' ? 'Space' : key} on ${where}: ${event.defaultPrevented ? 'taken' : 'left'}; ` +
@@ -384,10 +409,16 @@ describe('standalone player accessibility wiring', () => {
     for (const where of ['page', 'timeline']) {
       expect(compared[where].filter(key => !pressed[where].has(key)), `keys the ${where}'s handler compares, unpressed`)
         .toEqual([]);
-      // Every other key: nothing taken, and the transport where it was.
+      expect([...compared[where]].sort(), `the keys the ${where}'s handler compares (PLAYER_KEYS)`)
+        .toEqual(PLAYER_KEYS[where]);
+      expect(PLAYER_KEYS[where].filter(key => !pressed[where].has(key)), `reviewed keys of the ${where}, unpressed`)
+        .toEqual([]);
+      // Every other key: nothing taken, and the transport where it was. The
+      // keys left out are the reviewed ones, not the source's, so a key the
+      // handler takes in a way the scan cannot see is still swept.
       const target = where === 'timeline' ? timeline : document.body;
       const before = press('Home', target);
-      expect(CANDIDATE_KEYS.filter(key => !compared[where].includes(key)).map(key => press(key, target))
+      expect(CANDIDATE_KEYS.filter(key => !PLAYER_KEYS[where].includes(key)).map(key => press(key, target))
         .filter(record => !record.endsWith(`left; ${before.split('; ')[1]}`)), `other keys on the ${where}`)
         .toEqual([]);
     }

@@ -2,11 +2,13 @@
  * The keys a test can press: a bounded domain, so a sweep over it can say
  * what it covered (TST-13).
  *
- * Every printable US character, and every named key of the UI Events `key`
- * list (W3C, "UI Events KeyboardEvent key Values"), with the function keys
- * from F1 to F24. A handler that compares `event.key` with literals can only
- * react to a key outside this domain through a literal, which the source
- * checks in `tests/keyTable.test.js` hold to it.
+ * Every printable US character — the 95 printable ASCII characters, capital
+ * letters included — and the 297 named keys of the UI Events `key` list (W3C,
+ * "UI Events KeyboardEvent key Values"), with the function keys from F1 to
+ * F24: 392 keys. `tests/keyTable.test.js` pins that count and content. A
+ * handler that compares `event.key` with literals can only react to a key
+ * outside this domain through a literal, which the source checks there hold
+ * to it.
  */
 
 /** The named keys, by the list's sections. */
@@ -62,9 +64,15 @@ export const NAMED_KEYS = [
   'STBInput', 'STBPower', 'Subtitle', 'Teletext', 'VideoModeNext', 'Wink', 'ZoomToggle'
 ];
 
-/** Every printable US character: the letters as typed without Shift, the digits, every symbol and Space. */
+/**
+ * Every printable US character: the letters as typed without Shift and as
+ * capitals (which arrive with Shift, or with no modifier under Caps Lock), the
+ * digits, every symbol and Space.
+ */
 export const PRINTABLE_KEYS = [
-  ...'abcdefghijklmnopqrstuvwxyz0123456789',
+  ...'abcdefghijklmnopqrstuvwxyz',
+  ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  ...'0123456789',
   ...'`~!@#$%^&*()-_=+[{]}\\|;:\'",<.>/? '
 ];
 
