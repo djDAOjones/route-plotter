@@ -1,6 +1,7 @@
 # edge-junction: a path leaving that junction inspected
 
 ## #edge-scope>div[0]>div[0] · click
+app ~ focus: "body" → "#edge-scope>div[0]>div[0]"
 storage + routePlotter_lastSection: "edge"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[259 chars, 62292118] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[260 chars, d8d460af]
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section" data-last="true" data-section="edge"
@@ -14,6 +15,7 @@ emit network:changed {commit: true}
 emit network:edge-selected {edge: {id: "ge_trace_ex-uon-2__ex-uon-b1", sourceId: "gn_trace_ex-uon-2", targetId: "gn_trace_ex-uon-b1", weight: 1, direction: "two-way", controlPoints: [0 items]}}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-2__ex-uon-b1", focusKey: null}
 model ~ scene.flowLayers[0].graph.edges[2].direction: "one-way" → "two-way"
+app ~ focus: "body" → "#network-edge-direction"
 storage + routePlotter_lastSection: "edge"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
@@ -30,8 +32,11 @@ emit network:changed {commit: true}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-2__ex-uon-b1", focusKey: null}
 model ~ scene.flowLayers[0].graph.edges[2].sourceId: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-b1"
 model ~ scene.flowLayers[0].graph.edges[2].targetId: "gn_trace_ex-uon-b1" → "gn_trace_ex-uon-2"
+app ~ focus: "body" → "#network-edge-swap"
+storage + routePlotter_lastSection: "edge"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 9a91cbe6]
 
@@ -41,6 +46,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #network-edge-weight · set 17
 emit crowd:param-changed
 model ~ scene.flowLayers[0].graph.edges[2].weight: 1 → 1.7
+app ~ focus: "body" → "#network-edge-weight"
 storage + routePlotter_lastSection: "edge"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
@@ -66,6 +72,7 @@ model - scene.flowLayers[0].graph.edges[3].targetId: "gn_trace_ex-uon-3"
 model - scene.flowLayers[0].graph.edges[3].weight: 1
 model - scene.flowLayers[0].graph.edges[3].direction: "one-way"
 model - scene.flowLayers[0].graph.edges[3].controlPoints: []
+storage + routePlotter_lastSection: "edge"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="Deleted edge — press Ctrl+Z to undo"

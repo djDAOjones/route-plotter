@@ -26,6 +26,7 @@ emit animation:seek 0
 alert "Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
 model ~ animationState.duration: 21429.352554 → 21807.894043
 model ~ timingReference.width: 660 → 1173.333333
+app ~ focus: "#export-mp4-btn" → "#export-webm-btn"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Video export failed"
 ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
 ui ~ #export-menu: div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu" → div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu"

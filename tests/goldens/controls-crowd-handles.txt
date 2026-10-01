@@ -116,8 +116,10 @@ model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].transition: "gradual"
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="3 handles" → output aria-labelledby="crowd-busyness-label" :text="Even"
 ui ~ #crowd-busyness-graph: svg aria-label="3 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 282 16"
@@ -164,6 +166,7 @@ settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[2]>label[2]>input[0] · enter 99999
+app ~ focus: "body" → "#crowd-busyness-handles>div[2]>label[2]>input[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[2]>label[2]>input[0]: input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
@@ -176,8 +179,10 @@ model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].transition: "gradual"
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness reset to even. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="3 handles" → output aria-labelledby="crowd-busyness-label" :text="Even"
 ui ~ #crowd-busyness-graph: svg aria-label="3 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 282 16"

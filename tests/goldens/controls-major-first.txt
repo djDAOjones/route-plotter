@@ -55,6 +55,7 @@ emit waypoint:selected waypoint[1]
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: "waypoint[0]" → "waypoint[1]"
 app ~ selection: "waypoint[0]" → "waypoint[1]"
+app ~ focus: "body" → "#scope-next-btn"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · minor 'Extras 2'"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input disabled="" type="hidden" value="#CC79A7" :value="#CC79A7"
 ui ~ #section-marker-content>div[1]>fieldset[0]: fieldset class="swatch-fieldset" → fieldset class="swatch-fieldset" disabled=""
@@ -131,9 +132,11 @@ model ~ waypoints[2].markerStyle: "square" → "custom-image"
 model ~ waypoints[3].markerStyle: "square" → "custom-image"
 model ~ waypoints[4].markerStyle: "square" → "custom-image"
 model ~ waypoints[5].markerStyle: "square" → "custom-image"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Marker applied to 4 later waypoints. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9708 chars, 23d173aa]
@@ -145,6 +148,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #ripple-thickness · set 4
 emit waypoint:style-changed waypoint[0]
 model ~ waypoints[0].rippleThickness: 5 → 4
+app ~ focus: "body" → "#ripple-thickness"
 storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
@@ -162,6 +166,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 emit animation:durationChange 21429.352554
 emit waypoint:style-changed waypoint[0]
 model ~ waypoints[0].rippleMaxScale: 2400 → 1700
+app ~ focus: "body" → "#ripple-max-scale"
 storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
@@ -179,6 +184,7 @@ emit waypoint:path-property-changed waypoint[0]
 model ~ waypoints[0].rippleWait: false → true
 model ~ waypoints[0].pauseMode: "none" → "timed"
 model ~ waypoints[0].pauseTime: 2750 → 9600
+app ~ focus: "body" → "#ripple-wait"
 storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
@@ -195,6 +201,8 @@ settled:
 
 ## #area-draw-btn · click
 emit area:draw-start {waypoint: waypoint[0]}
+app ~ focus: "body" → "#area-draw-btn"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui + #area-draw-banner: div aria-live="polite" role="status" style="align-items: center; background: var(--cds-interactive-01, #0f62fe); box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: rgb(255, 255, 255); display: flex; font-fami…[387 chars, b001f0ea]
 ui + #area-draw-banner>span[0]: span class="banner-text" :text="— Click to place vertices. Click near the first point to close. to cancel."
 ui + #area-draw-banner>span[0]>strong[0]: strong :text="Drawing polygon area"

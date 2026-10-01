@@ -2,6 +2,9 @@
 
 ## #marker-upload-btn · click
 file dialog #marker-upload
+app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "#marker-upload-btn"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
+ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 
 ## #marker-upload · choose nothing
 
@@ -25,6 +28,7 @@ settled:
 ## #label-color-custom-disclosure>label[0]>input[1] · pick #56b4e9
 emit waypoint:style-changed waypoint[3]
 model ~ waypoints[3].labelColor: "#009E73" → "#56b4e9"
+app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "#label-color-custom-disclosure>label[0]>input[1]"
 storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
@@ -51,11 +55,13 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 558ee059] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 550c0a3f]
 
 ## #shape-params-controls>label[0]>span[0] · click
+app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "body"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Peak sideways displacement as a percentage of the source-image coordinate scale"
 
 ## #shape-amplitude · set 17
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].shapeAmplitude: 22 → 17
+app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "#shape-amplitude"
 storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
@@ -66,11 +72,13 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 558ee059] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 560132e9]
 
 ## #shape-params-controls>label[2]>span[0] · click
+app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "body"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Number of squiggle waves per path segment"
 
 ## #shape-frequency · set 7
 emit waypoint:path-property-changed waypoint[3]
 model ~ waypoints[3].shapeFrequency: 9 → 7
+app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "#shape-frequency"
 storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
@@ -84,19 +92,24 @@ settled:
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 model ~ waypoints[4].pathShape: "wave" → "squiggle"
 model ~ waypoints[5].pathShape: "wave" → "squiggle"
+app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "body"
+storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Leg applied to 2 later waypoints. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #section-leg-content>div[2]>button[1]: button aria-label="Apply Leg onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply Leg onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 558ee059] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9690 chars, d8272fa9]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Leg applied to 2 later waypoints. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #area-circle-controls>label[0]>span[0] · click
+app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "body"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Radius of the circular highlight area"
 
 ## #area-circle-radius · set 333
 emit area:changed {waypoint: waypoint[3]}
 model ~ waypoints[3].areaHighlight.radius: 0.11 → 0.17317
+app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "#area-circle-radius"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-circle-radius: input aria-describedby="area-circle-radius-tip" max="1000" min="0" step="1" type="range" value="100" :value="204" → input aria-describedby="area-circle-radius-tip" max="1000" min="0" step="1" type="range" value="100" :value="333"

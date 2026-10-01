@@ -31,6 +31,7 @@ emit waypoint:selected waypoint[4]
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: "waypoint[5]" → "waypoint[4]"
 app ~ selection: "waypoint[5]" → "waypoint[4]"
+app ~ focus: "body" → "#scope-prev-btn"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 4 'Extras 6' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1.1·B1 'Extras 5' · branch B"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" type="button"
 ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward: No later applicable waypoint" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="No later applicable waypoint" type="button" :text="Apply onward" → button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
@@ -87,6 +88,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #pulse-amplitude · set 1
 emit waypoint:style-changed waypoint[5]
 model ~ waypoints[5].pulseAmplitude: 2.5 → 1
+app ~ focus: "body" → "#pulse-amplitude"
 storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
@@ -103,6 +105,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #pulse-cycle-speed · set 4
 emit waypoint:style-changed waypoint[5]
 model ~ waypoints[5].pulseCycleSpeed: 7 → 4
+app ~ focus: "body" → "#pulse-cycle-speed"
 storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"

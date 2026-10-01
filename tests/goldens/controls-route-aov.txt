@@ -6,6 +6,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #aov-angle · set 333
 emit motion:aov-angle-change 47.35769
 model ~ motionSettings.aovAngle: 95 → 47.35769
+app ~ focus: "body" → "#aov-angle"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
@@ -20,6 +21,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #aov-distance · set 333
 emit motion:aov-distance-change 4.634469
 model ~ motionSettings.aovDistance: 66 → 4.634469
+app ~ focus: "body" → "#aov-distance"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
@@ -34,6 +36,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #aov-dropoff · set 333
 emit motion:aov-dropoff-change 33.3
 model ~ motionSettings.aovDropoff: 23 → 33.3
+app ~ focus: "body" → "#aov-dropoff"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"

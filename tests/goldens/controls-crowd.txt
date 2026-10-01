@@ -7,6 +7,7 @@
 ## #scope-next-btn · disabled, not operated
 
 ## #crowd-scope>div[0]>div[0] · click
+app ~ focus: "body" → "#crowd-scope>div[0]>div[0]"
 storage ~ routePlotter_lastSection: "motion" → "guide"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 5c9a7faf]
 ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section" data-last="true" data-section="guide"
@@ -19,6 +20,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 emit crowd:param-changed
 emit network:guide-changed layer[0]
 model ~ scene.flowLayers[0].guideType: "graph" → "route"
+app ~ focus: "body" → "#crowd-guide-type"
 storage ~ routePlotter_lastSection: "motion" → "guide"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
@@ -36,7 +38,9 @@ settled:
 ## #network-edit-btn · click
 emit network:edit-mode-changed {active: true, layer: layer[0]}
 emit render:request
+storage ~ routePlotter_lastSection: "motion" → "guide"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Network editing — click the map to place linked nodes. Escape lifts the pen."
+ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
 ui ~ #network-edit-btn: button class="btn btn-secondary" title="Draw the network this crowd walks: nodes joined by edges" type="button" :text="Edit network" → button class="btn btn-secondary" disabled="" title="Draw the network this crowd walks: nodes joined by edges" type="button" :text="Editing network…"
 ui + #network-edit-banner: div aria-live="polite" role="status" style="align-items: center; background: var(--scope-crowd-fg, #0E4A38); box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: rgb(255, 255, 255); display: flex; font-family: …[383 chars, 0303c501]
 ui + #network-edit-banner>span[0]: span class="banner-text" :text="— click places a linked node, click a node to continue from it, drag an edge to bend it. lifts the pen."
@@ -92,11 +96,14 @@ model - scene.flowLayers[0].graph.edges[1].controlPoints[0].x: 0.52
 model - scene.flowLayers[0].graph.edges[1].controlPoints[0].y: 0.58
 model - scene.flowLayers[0].graph.edges[1].controlPoints[1].x: 0.63
 model - scene.flowLayers[0].graph.edges[1].controlPoints[1].y: 0.55
+app ~ focus: "body" → "#crowd-trace-route-btn"
+storage ~ routePlotter_lastSection: "motion" → "guide"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Traced the route into Visitors — 5 nodes, 4 paths"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="Traced the route into Visitors — 5 nodes, 4 paths"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9768 chars, 582aba3b]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Traced the route into Visitors — 5 nodes, 4 paths" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -111,11 +118,14 @@ emit ui:toast {message: "Extras 6 now waits 27.2s for Visitors"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 model ~ waypoints[5].pauseTime: 2750 → 27161
 model ~ animationState.duration: 21429.352554 → 41090.352554
+app ~ focus: "body" → "#crowd-fit-wait-btn"
+storage ~ routePlotter_lastSection: "motion" → "guide"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 6 now waits 27.2s for Visitors"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="Extras 6 now waits 27.2s for Visitors"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
 ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:41"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 41090.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -125,6 +135,7 @@ settled:
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
 ## #crowd-scope>div[1]>div[0] · click
+app ~ focus: "body" → "#crowd-scope>div[1]>div[0]"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, ee9e1b07]
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section" data-last="true" data-section="dots"
@@ -133,6 +144,7 @@ ui ~ #crowd-scope>div[1]>div[0]: div aria-controls="section-dots-content" aria-e
 ## #crowd-dot-color-group-0 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#ffffff"
+app ~ focus: "body" → "#crowd-dot-color-group-0"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -149,6 +161,7 @@ settled:
 ## #crowd-dot-color-group-1 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#f0e442"
+app ~ focus: "body" → "#crowd-dot-color-group-1"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -165,6 +178,7 @@ settled:
 ## #crowd-dot-color-group-2 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#e69f00"
+app ~ focus: "body" → "#crowd-dot-color-group-2"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -181,6 +195,7 @@ settled:
 ## #crowd-dot-color-group-3 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#d55e00"
+app ~ focus: "body" → "#crowd-dot-color-group-3"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -197,6 +212,7 @@ settled:
 ## #crowd-dot-color-group-4 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#cc79a7"
+app ~ focus: "body" → "#crowd-dot-color-group-4"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -213,6 +229,7 @@ settled:
 ## #crowd-dot-color-group-5 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#000000"
+app ~ focus: "body" → "#crowd-dot-color-group-5"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -227,10 +244,14 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-dot-color-group-6 · click
+app ~ focus: "body" → "#crowd-dot-color-group-6"
+storage ~ routePlotter_lastSection: "motion" → "dots"
+ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 
 ## #crowd-dot-color-group-6 · click, from #crowd-dot-color-group-0
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#ffffff" → "#56b4e9"
+app ~ focus: "#crowd-dot-color-group-0" → "#crowd-dot-color-group-6"
 ui ~ #crowd-dot-color: input type="hidden" value="#ffffff" :value="#ffffff" → input type="hidden" value="#56b4e9" :value="#56b4e9"
 ui ~ #crowd-dot-color-group-0: input class="swatch-radio" name="crowd-dot-color-group" type="radio" value="#FFFFFF" :checked → input class="swatch-radio" name="crowd-dot-color-group" type="radio" value="#FFFFFF" :unchecked
 ui ~ #crowd-dot-color-group-6: input class="swatch-radio" name="crowd-dot-color-group" type="radio" value="#56B4E9" :unchecked → input class="swatch-radio" name="crowd-dot-color-group" type="radio" value="#56B4E9" :checked
@@ -243,6 +264,7 @@ settled:
 ## #crowd-dot-color-group-7 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#0072b2"
+app ~ focus: "body" → "#crowd-dot-color-group-7"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -259,6 +281,7 @@ settled:
 ## #crowd-dot-color-group-8 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#009e73"
+app ~ focus: "body" → "#crowd-dot-color-group-8"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -275,6 +298,7 @@ settled:
 ## #crowd-dot-color-group-9 · click
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "transparent"
+app ~ focus: "body" → "#crowd-dot-color-group-9"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -294,6 +318,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-dot-size · set 70
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotSize: 0.45 → 0.7
+app ~ focus: "body" → "#crowd-dot-size"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -311,6 +336,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-wobble · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].wobble: 0 → 0.33
+app ~ focus: "body" → "#crowd-wobble"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
@@ -323,6 +349,7 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #crowd-scope>div[2]>div[0] · click
+app ~ focus: "body" → "#crowd-scope>div[2]>div[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 6e43a33f]
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section" data-last="true" data-section="release"
@@ -334,6 +361,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-count · set 167
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].dotCount: 60 → 167
+app ~ focus: "body" → "#crowd-count"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
@@ -351,6 +379,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-release-start · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].releaseStart: 0 → 0.33
+app ~ focus: "body" → "#crowd-release-start"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
@@ -368,6 +397,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-release-duration · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].releaseDuration: 0.45 → 0.33
+app ~ focus: "body" → "#crowd-release-duration"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
@@ -380,6 +410,9 @@ settled:
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-release-content>details[1]>summary[0] · click
+app ~ focus: "body" → "#section-release-content>details[1]>summary[0]"
+storage ~ routePlotter_lastSection: "motion" → "release"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #section-release-content>details[1]: details class="section-more" open="" → details class="section-more"
 
 ## #section-release-content>details[1]>div[1]>label[0]>span[0] · click
@@ -388,6 +421,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-onset-variance · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].onsetVariance: 0.6 → 0.33
+app ~ focus: "body" → "#crowd-onset-variance"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
@@ -405,6 +439,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-intensity-ramp · set -33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].intensityRamp: 0 → -0.33
+app ~ focus: "body" → "#crowd-intensity-ramp"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
@@ -507,6 +542,7 @@ settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[0]>label[2]>input[0] · enter 99999
+app ~ focus: "body" → "#crowd-busyness-handles>div[0]>label[2]>input[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[0]>label[2]>input[0]: input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
@@ -552,6 +588,7 @@ settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-handles>div[1]>label[2]>input[0] · enter 99999
+app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[2]>input[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[1]>label[2]>input[0]: input aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
@@ -564,9 +601,12 @@ model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 1 → 0.5
 model + scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
 model + scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
 model + scene.flowLayers[0].emitters[0].busynessEnvelope[2].transition: "gradual"
+app ~ focus: "body" → "#crowd-busyness-add"
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle added at 50%. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-summary: output aria-labelledby="crowd-busyness-label" :text="Even" → output aria-labelledby="crowd-busyness-label" :text="3 handles"
 ui ~ #crowd-busyness-graph: svg aria-label="Even busyness across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140" → svg aria-label="3 busyness handles across the release window" class="crowd-busyness-graph" role="img" viewBox="0 0 300 140"
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16"
@@ -600,15 +640,19 @@ emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 
 emit scene:semantic-changed {kind: "crowd-pattern-seed", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 model ~ scene.flowLayers[0].emitters[0].seed: 20260827 → 2109913163
+app ~ focus: "body" → "#crowd-reroll-btn"
+storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Visitors pattern re-rolled. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-seed-value: output aria-labelledby="crowd-seed-label" :text="20260827" → output aria-labelledby="crowd-seed-label" :text="2109913163"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9686 chars, f27fa380]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Visitors pattern re-rolled. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-scope>div[3]>div[0] · click
+app ~ focus: "body" → "#crowd-scope>div[3]>div[0]"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 216d91a3]
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
 ui ~ #crowd-scope>div[3]>div[0]: div aria-controls="section-motion-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-motion-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
@@ -619,6 +663,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-speed · set 34
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].speed: 0.06 → 0.34
+app ~ focus: "body" → "#crowd-speed"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-speed: input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.06 img/s" max="100" min="1" step="1" type="range" value="15" :value="6" → input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.34 img/s" max="100" min="1" step="1" type="range" value="15" :value="34"
@@ -635,6 +680,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-speed-variance · set 33
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].speedVariance: 0.35 → 0.33
+app ~ focus: "body" → "#crowd-speed-variance"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-speed-variance: input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="35%" max="100" min="0" step="1" type="range" value="20" :value="35" → input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="20" :value="33"
@@ -651,6 +697,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-lifecycle · choose "respawn"
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].lifecycleMode: "disappear" → "respawn"
+app ~ focus: "body" → "#crowd-lifecycle"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-lifecycle: select aria-describedby="crowd-lifecycle-tip" :value="disappear" → select aria-describedby="crowd-lifecycle-tip" :value="respawn"
@@ -663,6 +710,7 @@ settled:
 ## #crowd-lifecycle · choose "loop"
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].lifecycleMode: "disappear" → "loop"
+app ~ focus: "body" → "#crowd-lifecycle"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-lifecycle: select aria-describedby="crowd-lifecycle-tip" :value="disappear" → select aria-describedby="crowd-lifecycle-tip" :value="loop"
@@ -675,6 +723,7 @@ settled:
 ## #crowd-lifecycle · choose "collect"
 emit crowd:param-changed
 model ~ scene.flowLayers[0].emitters[0].lifecycleMode: "disappear" → "collect"
+app ~ focus: "body" → "#crowd-lifecycle"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-lifecycle: select aria-describedby="crowd-lifecycle-tip" :value="disappear" → select aria-describedby="crowd-lifecycle-tip" :value="collect"

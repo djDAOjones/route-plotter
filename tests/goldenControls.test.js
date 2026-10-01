@@ -9,20 +9,47 @@
  * that proves a move changed nothing.
  *
  * Each row operates one control as a user would, in a context where it is
- * shown and its card is open: a range is set and released, a select chooses
- * each of its other options, a number or text field is given its new value
- * and committed, a file input is given a file, a radio already chosen is
- * chosen from another of its group as well, a control that renames on a
- * double click is double-clicked, and renamed (typed into where the app put
- * the selection) and clicked away from, a waypoint row is Shift-, Cmd- and
- * Ctrl-clicked too, a list row is dragged (onto either half of the next
- * major's row, onto the minor's, and let go outside the list), the busyness
- * graph is dragged by a handle (inside it, out of it, and cancelled; its
- * middle handle along and past each neighbour), and anything else is clicked.
- * Drags and pointer drags go as Chromium sends them: a drop only where the
- * page accepted the drag, and a pointer's events to whatever holds its
- * capture. A disabled or read-only control is listed, not operated. The row
- * records:
+ * shown and its card is open: a range is pressed a third of the way along its
+ * track, a select is pressed and chooses each of its other options, a number,
+ * text or colour field is pressed and given its new value, which is
+ * committed, a file input is given a file, a radio already chosen is chosen
+ * from another of its group as well, a control that renames on a double click
+ * is double-clicked, and renamed (typed into where the app put the selection)
+ * and clicked away from, a waypoint row is Shift-, Cmd- and Ctrl-clicked too,
+ * a list row is dragged (onto either half of the next major's row, onto the
+ * minor's, and let go outside the list), the busyness graph is dragged by a
+ * handle (inside it, out of it, and cancelled; its middle handle along and
+ * past each neighbour), and anything else is clicked.
+ *
+ * A press goes as Chromium sends a mouse's (`press`, checked against Chromium
+ * 152): `pointerdown`; `mousedown`, unless the page cancelled that; focus
+ * moved to the nearest element a click can focus, from the one pressed up, or
+ * taken from whatever had it when there is none, unless either was cancelled;
+ * `pointerup` and `mouseup` to what is under the pointer then; and `click` to
+ * the element holding both, if the one pressed is still on the page. A
+ * double-click's second press counts 2, and its `dblclick` follows its
+ * `click` if what that clicked is still there. A range takes its value as the
+ * button goes down (`input`, before focus moves) and commits it (`change`) as
+ * it comes up. The pointer's arrival over a control (hover) is not sent: were
+ * an app listener for it wired on a control, no row would run it, and the
+ * inventory would fail. A select's popup, a colour picker and typing are not
+ * modelled either: once the press has focused the field, its value is set and
+ * committed (`input`, `change`), as Enter commits it. Ctrl-click is the one
+ * Windows and Linux send: on a Mac, Chromium takes it for the context menu
+ * (`contextmenu`, no `click`). Chromium blurs a focused element as it takes it
+ * off the page, and so does the harness, where jsdom would move focus
+ * silently; one hidden while focused keeps jsdom's focus, which the state
+ * records as the body, where Chromium's next frame puts it, but the blur
+ * Chromium sends then is not sent. jsdom's `:focus-visible`, which decides
+ * whether a field's focus shows its hint, matches Chromium's for a pressed
+ * number field, range, checkbox or button, but not for a pressed select, which
+ * Chromium 152 counts as visible: the hint a select's focus would show, and
+ * the press's own click then hides, is not shown. Drags and pointer drags go
+ * as Chromium sends them: a drop only where the page accepted the drag, and a
+ * pointer's events to whatever holds its capture. A context is reached, and a
+ * row's starting point put back, by the app's own calls and programmatic
+ * clicks: that is setup, not a row. A disabled or read-only control is
+ * listed, not operated. The row records:
  *
  * - `emit`: each event the handling emitted outside a listener, with its
  *   payload. What the app's listeners emit in turn is the event transcript's
@@ -37,6 +64,13 @@
  * - after `settled:`, what the timers it left then did, each event once, and
  *   anything still pending when the frame budget ran out.
  *
+ * A row that records entries for undo has them undone, and what the app's
+ * history holds (`_getUndoableState`: the project, the selection and the
+ * scene) must be as it held it before the row; then redone, and both that and
+ * the saved project must be what the row made them. The one exception is a
+ * waypoint's `modified` stamp, which every waypoint made from a history entry
+ * gets afresh and nothing reads back.
+ *
  * Every row starts from its context's baseline. A row is undone by reloading
  * the fixture through the real recovery path, entering the context again and
  * putting back every field's text selection; the result must equal the
@@ -50,15 +84,21 @@
  *
  * `every wired control has a row` fails when an app listener for a user
  * gesture, on an element and in its phase, was never run by a row and no
- * stated reason excuses it, and it watches for controls a row itself creates.
- * Each such listener is wrapped as it is added, so a row is credited with the
- * listeners its gesture ran, not with where its events went (an event stopped
- * on the way, or one that does not bubble, reaches no listener past that
- * point); and every event type the app listens for on a control is either a
- * gesture or says what it is instead. A waypoint row is a major's, a minor's
- * or the add row, and a layer row the route's or a crowd's: each is its own
- * control, whatever its position. Keyboard gestures belong to the key table
- * (TST-13), and are excused by gesture, not by a click row.
+ * stated reason excuses it. A control is noted with its listeners whenever it
+ * stands on the page: as a listener is added to it there, as soon as the page
+ * is idle after it was put there, right after each row's gesture, and after
+ * the row's history is undone and redone. So a control a row creates is
+ * noted, and so is one its history replay then replaces, its role read while
+ * it stood; one put up and taken down again within one run of the harness's
+ * timers, with no idle moment between, is not. Each such listener is wrapped
+ * as it is added, so a row is credited with the listeners its gesture ran,
+ * not with where its events went (an event stopped on the way, or one that
+ * does not bubble, reaches no listener past that point); and every event type
+ * the app listens for on a control is either a gesture or says what it is
+ * instead. A waypoint row is a major's, a minor's or the add row, and a layer
+ * row the route's or a crowd's: each is its own control, whatever its
+ * position. Keyboard gestures belong to the key table (TST-13), and are
+ * excused by gesture, not by a click row.
  *
  * Regenerate deliberately: `UPDATE_CONTROL_GOLDENS=1 npx vitest run
  * tests/goldenControls.test.js`, read the diff, then run it once more with
@@ -69,7 +109,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { bootApp, retireApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { FIXED_NOW, loadSnapshot } from './helpers/projectSnapshot.js';
@@ -361,6 +401,9 @@ function recordWiring() {
       wiredEvents.get(this).add(registration);
       if (!wiredSites.has(this)) wiredSites.set(this, new Set());
       wiredSites.get(this).add(addIdentity(this, registration, listener, site, options));
+      // A control wired where it stands is noted at once: the next thing to
+      // happen to it may take it off the page.
+      noteElementWiring(this);
     }
     const outlasting = this === document || this === window || this === document.body;
     if (owner && (this instanceof HTMLCanvasElement || (outlasting && !new Error().stack.includes('ParamTooltip.js')))) {
@@ -570,7 +613,7 @@ function uninstallPointerCapture() {
  * is lost once the event has been sent, as a browser processes pending
  * captures after the event.
  */
-function pointer(under, type, { pointerId = 1, clientX = 0, clientY = 0 } = {}) {
+function pointer(under, type, { pointerId = 1, clientX = 0, clientY = 0, modifiers = {} } = {}) {
   if (type === 'pointerdown') pointersDown.add(pointerId);
   if (capturesToAnnounce.delete(pointerId)) {
     pointerCaptures.get(pointerId).dispatchEvent(new PointerEvent('gotpointercapture', { bubbles: true, pointerId }));
@@ -588,6 +631,7 @@ function pointer(under, type, { pointerId = 1, clientX = 0, clientY = 0 } = {}) 
     buttons: ending ? 0 : 1,
     clientX,
     clientY,
+    ...modifiers,
   });
   sendingPointerEvent = true;
   try {
@@ -598,6 +642,130 @@ function pointer(under, type, { pointerId = 1, clientX = 0, clientY = 0 } = {}) 
   if (releasesPending.delete(pointerId) || ending) losePointerCapture(pointerId);
   if (ending) pointersDown.delete(pointerId);
   return event;
+}
+
+// ---------------------------------------------------------------------------
+// A press, and focus, as Chromium has them (checked against Chromium 152).
+// ---------------------------------------------------------------------------
+
+/**
+ * Chromium blurs a focused element as it takes it off the page (`blur`, then
+ * `focusout`, while it is still there), whether it is removed, replaced or
+ * moved; the app relies on it (a rename's field commits on `blur`). jsdom
+ * moves focus to the body silently, so its own step for a node about to go,
+ * which every removal passes through, blurs the focused element first.
+ */
+let restoreRemovalBlur = null;
+
+function blurBeforeRemoval() {
+  const implKey = Object.getOwnPropertySymbols(document).find(symbol => symbol.description === 'impl');
+  const documentImpl = document[implKey];
+  const wrapperKey = Object.getOwnPropertySymbols(documentImpl).find(symbol => symbol.description === 'wrapper');
+  const steps = Object.getPrototypeOf(documentImpl);
+  const original = steps._runPreRemovingSteps;
+  if (typeof original !== 'function' || !wrapperKey) throw new Error('jsdom no longer has the removal step this harness extends');
+  steps._runPreRemovingSteps = function blurFirst(goingImpl) {
+    const focused = this._lastFocusedElement?.[wrapperKey];
+    const going = goingImpl?.[wrapperKey];
+    if (focused && going?.contains(focused)) focused.blur();
+    return original.call(this, goingImpl);
+  };
+  restoreRemovalBlur = () => { steps._runPreRemovingSteps = original; };
+}
+
+/**
+ * What a press can focus, as Chromium finds it: a form control, a link, a
+ * details' summary, an editable element, or anything with a tabindex, while it
+ * is enabled, shown and not inert. jsdom lays nothing out, so shown is read
+ * from what the page sets inline (`hidden`, `display`), as `isShown` reads it.
+ */
+const PRESS_FOCUSABLE = 'a[href], area[href], button, input:not([type=hidden]), select, textarea, iframe, [tabindex], [contenteditable]:not([contenteditable=false]), details > summary:first-of-type';
+
+function pressFocusable(element) {
+  if (!element.isConnected || !element.matches(PRESS_FOCUSABLE) || element.matches(':disabled')) return false;
+  for (let node = element; node; node = node.parentElement) {
+    if (node.hidden || node.style?.display === 'none' || node.inert || node.hasAttribute('inert')) return false;
+  }
+  return true;
+}
+
+/**
+ * Move focus as a press does once its button is down: to the nearest element
+ * from the one pressed up that a press can focus, unless one on the way has
+ * focus already; when there is none (plain text, the page itself, or an
+ * element the press took off the page), focus leaves whatever had it.
+ */
+function focusByPress(pressed) {
+  for (let node = pressed.isConnected ? pressed : null; node; node = node.parentElement) {
+    if (!pressFocusable(node)) continue;
+    if (node !== document.activeElement) node.focus();
+    if (document.activeElement !== node) throw new Error(`a press on ${keyFor(pressed)} did not focus ${keyFor(node)}`);
+    return;
+  }
+  document.activeElement?.blur();
+}
+
+/** The nearest element holding both (each holds itself). */
+function commonAncestor(first, second) {
+  for (let node = first; node; node = node.parentElement) {
+    if (node.contains(second)) return node;
+  }
+  return document.documentElement;
+}
+
+const NO_KEYS = { shiftKey: false, metaKey: false, ctrlKey: false, altKey: false };
+
+/** A mouse event as Chromium sends it alongside a pointer's: `count` is its click count. */
+function mouseEvent(target, type, { count = 1, buttons = 0, keys = NO_KEYS } = {}) {
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, composed: true, detail: count, button: 0, buttons, ...keys });
+  target.dispatchEvent(event);
+  return event;
+}
+
+/**
+ * The primary button going down on an element: `pointerdown`; `mousedown`,
+ * unless the page cancelled `pointerdown` (nor does any mouse event follow
+ * until the button comes up); then, unless either was cancelled, the press's
+ * own effect (`onDown`: a range takes its value here) and its focus
+ * (`focusByPress`). Says whether mouse events follow (`compatible`) and
+ * whether the press did what it does (`acted`).
+ */
+function buttonDown(element, { count = 1, keys = NO_KEYS, onDown = null } = {}) {
+  const compatible = !pointer(element, 'pointerdown', { modifiers: keys }).defaultPrevented;
+  const acted = compatible && !mouseEvent(element, 'mousedown', { count, buttons: 1, keys }).defaultPrevented;
+  if (acted) {
+    onDown?.();
+    focusByPress(element);
+  }
+  return { compatible, acted };
+}
+
+/**
+ * Press the primary button on an element and let it go, as Chromium sends a
+ * mouse's: the button goes down (`buttonDown`), then `onHeld` if the press
+ * acted; `pointerup` and, unless `pointerdown` was cancelled, `mouseup`, to
+ * what is under the pointer then: the element pressed, or what took its place
+ * if the press rebuilt it; then `onUp`; and `click`, to the nearest element
+ * holding both the one pressed and that one, if the one pressed is still on
+ * the page. `count` is the press's place in a run of them, 2 for a
+ * double-click's second. Returns what was clicked, or null.
+ */
+function press(element, { count = 1, modifiers = {}, onDown = null, onHeld = null, onUp = null } = {}) {
+  const key = keyFor(element);
+  const keys = { ...NO_KEYS, ...modifiers };
+  const { compatible, acted } = buttonDown(element, { count, keys, onDown });
+  if (acted) onHeld?.();
+  const under = element.isConnected ? element : (elementAt(key) ?? document.body);
+  const up = pointer(under, 'pointerup', { modifiers: keys });
+  if (compatible) mouseEvent(up.target, 'mouseup', { count, keys });
+  onUp?.();
+  if (!element.isConnected) return null;
+  const clicked = commonAncestor(element, up.target.isConnected ? up.target : element);
+  clicked.dispatchEvent(new PointerEvent('click', {
+    bubbles: true, cancelable: true, composed: true, detail: count, button: 0, buttons: 0,
+    pointerId: 1, pointerType: 'mouse', isPrimary: true, ...keys,
+  }));
+  return clicked;
 }
 
 async function takeBrowserRequests() {
@@ -643,7 +811,7 @@ function commit(element, value) {
   fire(element, 'change');
 }
 
-/** A range is set a third of the way along its track (two thirds, if it is there already). */
+/** A range is pressed a third of the way along its track (two thirds, if its value is there already). */
 function rangeTarget(element) {
   const min = Number(element.min || 0);
   const max = Number(element.max || 100);
@@ -669,22 +837,88 @@ function chooseFile(element, file) {
 }
 
 /**
- * A double-click as a pointer gives it: each click goes to what is under the
- * pointer then. A first click that rebuilds its control (a list redrawn as it
- * selects) leaves the second click, and the double-click, to what took its
- * place.
+ * A value set as a user sets it: the control is pressed first, which focuses
+ * it and opens its picker or puts the caret in it, and once the value is
+ * chosen or typed it is committed (`input`, `change`), as choosing from a
+ * popup or pressing Enter commits it. The picker and the typing between are
+ * not sent.
+ */
+function pressAndCommit(element, value) {
+  const key = keyFor(element);
+  press(element);
+  commit(element.isConnected ? element : elementAt(key), value);
+}
+
+/**
+ * What a range does with a press at `value` (Chromium 152): it takes the
+ * value as the button goes down (`input`, while focus is still where it was),
+ * holds the pointer while the button is down, and commits the value
+ * (`change`) as it comes up, before the `click`. A press on its thumb, where
+ * its value already is, changes nothing.
+ */
+function rangePress(element, value = element.value) {
+  let moved = false;
+  const capture = type => element.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 1, pointerType: 'mouse', isPrimary: true }));
+  return {
+    onDown: () => {
+      if (element.value === value) return;
+      element.value = value;
+      moved = true;
+      fire(element, 'input');
+    },
+    onHeld: () => capture('gotpointercapture'),
+    onUp: () => {
+      if (moved) fire(element, 'change');
+      capture('lostpointercapture');
+    },
+  };
+}
+
+/** A range pressed a place along its track. */
+const slide = (element, value) => press(element, rangePress(element, value));
+
+/** A press as its control takes it: a range's on its thumb. */
+const pressControl = (element, options = {}) => press(element, {
+  ...options,
+  ...(element instanceof HTMLInputElement && element.type === 'range' ? rangePress(element) : {}),
+});
+
+/**
+ * A double-click as a pointer gives it: two presses, the second counting 2,
+ * each going to what is under the pointer then, so a first click that
+ * rebuilds its control (a list redrawn as it selects) leaves the second to
+ * what took its place; then `dblclick`, after the second `click`, if what that
+ * clicked is still on the page (Chromium sends none to a control its second
+ * click rebuilt).
  */
 function doubleClick(element) {
   const key = keyFor(element);
-  element.click();
-  const target = element.isConnected ? element : (elementAt(key) ?? element);
-  target.click();
-  target.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }));
+  pressControl(element);
+  const clicked = pressControl(element.isConnected ? element : (elementAt(key) ?? element), { count: 2 });
+  if (clicked?.isConnected) {
+    clicked.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true, composed: true, detail: 2, button: 0 }));
+  }
 }
 
-/** Toggles are undone by the same gesture, which spares a reload. */
-const click = { label: 'click', run: element => element.click() };
-const toggle = { ...click, undo: element => element.click() };
+/**
+ * A click away: a press on the page itself, which nothing on it can focus, so
+ * it takes focus from whatever had it.
+ */
+const clickAway = () => press(document.body);
+
+/**
+ * Toggles are undone by the app's own activation of the same control, which
+ * spares a reload; focus goes back to the body, where the press found it.
+ * The result must still equal the baseline, or the reload follows.
+ */
+const click = { label: 'click', run: element => pressControl(element) };
+const toggle = {
+  ...click,
+  undo: (element) => {
+    element.click();
+    document.activeElement?.blur();
+  },
+};
 const doubleClicking = { label: 'double-click', run: doubleClick };
 
 /** Rows rename on a double click the app times itself (`UIController`) or hears as `dblclick`. */
@@ -715,29 +949,29 @@ const renaming = {
   run: (element) => {
     const key = keyFor(element);
     doubleClick(element);
-    // A waypoint row opens it a frame later, once the list is rebuilt.
+    // A waypoint row opens it a frame later, once the list is rebuilt, after
+    // the frames that give focus back to the rebuilt rows.
     let field = elementAt(key)?.querySelector('input');
-    for (let frame = 0; !field && frame < 3; frame += 1) {
+    for (let frame = 0; !field && frame < 6; frame += 1) {
       vi.advanceTimersToNextTimer();
       field = elementAt(key)?.querySelector('input');
     }
     if (!field) throw new Error(`${key}: a double-click opened no name field`);
     typeIntoFocused('Renamed');
-    // A click away takes focus from the field, wherever it is.
-    document.activeElement?.blur();
+    clickAway();
   },
 };
 
 /**
  * The only click handler in the sidebar that reads a modifier key: a waypoint
  * row's, where Shift selects the rows between and Cmd or Ctrl adds or removes
- * one (see `the only sidebar click that reads a modifier`).
+ * one (see `the only sidebar click that reads a modifier`). The key is held
+ * through the whole press. Ctrl-click is as Windows and Linux send it: on a
+ * Mac, Chromium sends `contextmenu` and no `click` for it, so the row's
+ * Ctrl-click is not reached there (Cmd-click is the Mac's).
  */
 const MODIFIED_CLICKS = '.waypoint-row:not(.waypoint-add-btn)';
-const modifiedClick = (label, modifiers) => ({
-  label,
-  run: element => element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ...modifiers })),
-});
+const modifiedClick = (label, modifiers) => ({ label, run: element => press(element, { modifiers }) });
 const shiftClicking = modifiedClick('shift-click', { shiftKey: true });
 const commandClicking = modifiedClick('Cmd-click', { metaKey: true });
 const controlClicking = modifiedClick('Ctrl-click', { ctrlKey: true });
@@ -770,8 +1004,8 @@ function choosingFromAnother(radio) {
   const otherKey = keyFor(other);
   return [{
     label: `click, from ${otherKey}`,
-    prepare: () => elementAt(otherKey).click(),
-    run: element => element.click(),
+    prepare: () => press(elementAt(otherKey)),
+    run: element => press(element),
   }];
 }
 
@@ -854,15 +1088,18 @@ const listShown = () => [...document.getElementById('waypoint-list').children]
   .join(', ');
 
 /**
- * Drag a row by its handle, as Chromium sends the drag: `dragstart` at the
- * row; `dragenter` and `dragover` at the row under the pointer, over the half
- * given; there, a `drop` only if the page cancelled that `dragover` (so
- * accepting it) and left it an effect the drag's source allows, or else a
- * `dragleave`; and last,
+ * Drag a row by its handle, as Chromium sends the drag: the button goes down
+ * on the handle (`pointerdown`, `mousedown`, and focus to the row's button)
+ * and the pointer moves (`pointermove`, `mousemove`); `dragstart` at the row,
+ * and the pointer's own events end there (`pointercancel`); `dragenter` and
+ * `dragover` at the row under the pointer, over the half given; there, a
+ * `drop` only if the page cancelled that `dragover` (so accepting it) and left
+ * it an effect the drag's source allows, or else a `dragleave`; and last,
  * `dragend` at the row it began from, though its drop may have rebuilt the
- * list. `away` takes the pointer out of the list before letting go, over the
- * page, which accepts no drop. The row records where the list shows the
- * block while the pointer is over its target: where it will land.
+ * list (no `mouseup` or `click` follows a drag). `away` takes the pointer out
+ * of the list before letting go, over the page, which accepts no drop. The
+ * row records where the list shows the block while the pointer is over its
+ * target: where it will land.
  */
 function dragging(label, ontoOf, { half, away = false }) {
   return {
@@ -885,7 +1122,12 @@ function dragging(label, ontoOf, { half, away = false }) {
       };
       const layout = layOutList();
       try {
-        if (send(row, 'dragstart').defaultPrevented) return;
+        const handle = row.querySelector('.waypoint-handle') ?? row;
+        if (!buttonDown(handle).acted) throw new Error(`${keyFor(row)}: the page cancelled the press a drag starts with`);
+        pointer(handle, 'pointermove');
+        mouseEvent(handle, 'mousemove', { count: 0, buttons: 1 });
+        if (send(row, 'dragstart').defaultPrevented) throw new Error(`${keyFor(row)}: the page refused the drag`);
+        pointer(handle, 'pointercancel');
         const box = onto.getBoundingClientRect();
         const clientY = box.top + (half === 'upper' ? box.height / 4 : (3 * box.height) / 4);
         let target = onto;
@@ -951,7 +1193,11 @@ const GRAPH_BOX = { left: 0, top: 0, right: 300, bottom: 150, width: 300, height
  * corner; one outside the graph is over the page instead), and finish with
  * `finish` at the last of them. Each event goes where a browser would send it
  * (`pointer`), so a graph that did not capture the pointer never hears one
- * outside it.
+ * outside it; and the mouse's go with them, as a press's do: `mousedown` and
+ * the press's focus unless the page cancelled `pointerdown` (the graph does,
+ * on a handle), `mousemove` and `mouseup` to where the pointer's went unless
+ * it did, and a `click` once the button comes up (not for a cancelled
+ * gesture) if the handle pressed is still on the page.
  */
 function busynessGesture(label, handleIndex, moves, finish = 'pointerup') {
   return {
@@ -963,10 +1209,22 @@ function busynessGesture(label, handleIndex, moves, finish = 'pointerup') {
       const measure = vi.spyOn(graph, 'getBoundingClientRect').mockReturnValue(GRAPH_BOX);
       const under = ([x, y]) => (x >= 0 && x <= GRAPH_BOX.width && y >= 0 && y <= GRAPH_BOX.height ? graph : document.body);
       try {
-        pointer(handle, 'pointerdown', { clientX: moves[0][0], clientY: moves[0][1] });
-        for (const move of moves) pointer(under(move), 'pointermove', { clientX: move[0], clientY: move[1] });
+        const compatible = !pointer(handle, 'pointerdown', { clientX: moves[0][0], clientY: moves[0][1] }).defaultPrevented;
+        if (compatible && !mouseEvent(handle, 'mousedown', { buttons: 1 }).defaultPrevented) focusByPress(handle);
+        for (const move of moves) {
+          const moved = pointer(under(move), 'pointermove', { clientX: move[0], clientY: move[1] });
+          if (compatible) mouseEvent(moved.target, 'mousemove', { count: 0, buttons: 1 });
+        }
         const last = moves.at(-1);
-        pointer(under(last), finish, { clientX: last[0], clientY: last[1] });
+        const ended = pointer(under(last), finish, { clientX: last[0], clientY: last[1] });
+        if (finish === 'pointerup') {
+          if (compatible) mouseEvent(ended.target, 'mouseup');
+          if (handle.isConnected) {
+            commonAncestor(handle, ended.target).dispatchEvent(new PointerEvent('click', {
+              bubbles: true, cancelable: true, composed: true, detail: 1, button: 0, pointerId: 1, pointerType: 'mouse', isPrimary: true,
+            }));
+          }
+        }
       } finally {
         measure.mockRestore();
       }
@@ -1008,23 +1266,23 @@ function singleGestures(element) {
   if (element instanceof HTMLSelectElement) {
     return [...element.options]
       .filter(option => !option.disabled && option.value !== element.value)
-      .map(option => ({ label: `choose ${JSON.stringify(option.value)}`, run: each => commit(each, option.value) }));
+      .map(option => ({ label: `choose ${JSON.stringify(option.value)}`, run: each => pressAndCommit(each, option.value) }));
   }
   if (element instanceof HTMLInputElement) {
     switch (element.type) {
       case 'range': {
         const target = rangeTarget(element);
-        return [{ label: `set ${target}`, run: each => commit(each, String(target)) }];
+        return [{ label: `set ${target}`, run: each => slide(each, String(target)) }];
       }
       case 'number':
         return [
-          { label: 'enter 24', run: each => commit(each, '24') },
-          { label: 'enter 99999', run: each => commit(each, '99999') },
+          { label: 'enter 24', run: each => pressAndCommit(each, '24') },
+          { label: 'enter 99999', run: each => pressAndCommit(each, '99999') },
         ];
       case 'text':
-        return [{ label: 'type "Typed"', run: each => commit(each, 'Typed') }];
+        return [{ label: 'type "Typed"', run: each => pressAndCommit(each, 'Typed') }];
       case 'color':
-        return [{ label: 'pick #56b4e9', run: each => commit(each, '#56b4e9') }];
+        return [{ label: 'pick #56b4e9', run: each => pressAndCommit(each, '#56b4e9') }];
       case 'file':
         return [
           { label: 'choose nothing', run: each => chooseFile(each, null) },
@@ -1079,6 +1337,20 @@ function junctionOf(graph) {
   const node = graph.getNodes().find(each => getGraphDepartureShares(graph, each.id).length >= 2);
   expect(node, 'the fixture network has a junction').toBeDefined();
   return node;
+}
+
+/**
+ * A toast goes when its own timer takes it down, and a baseline's settling
+ * runs every timer. So, where a context exists to press a toast's buttons,
+ * the app shows its toasts as it does, but without that timer: the toast a
+ * user reaches in time.
+ */
+function holdToasts(app) {
+  if (vi.isMockFunction(app.showToast)) return;
+  const show = app.showToast;
+  vi.spyOn(app, 'showToast').mockImplementation(function heldToast(message, duration, action) {
+    return show.call(this, message, 0, action);
+  });
 }
 
 /** jsdom has neither WebCodecs nor MediaRecorder, so a WebM export stops at its first step. */
@@ -1302,6 +1574,19 @@ const CONTEXTS = [
     },
     logs: WEBM_UNSUPPORTED,
   },
+  // A toast's buttons stand only until its timer runs, as every row's
+  // settling does, so no other context's rows reach them.
+  {
+    name: 'toast',
+    about: `waypoint ${MAJOR}'s label typed in where it overlaps something, so a toast offers to move it (held: its timer stopped)`,
+    roots: ['#toast-container'],
+    enter: async (app) => {
+      holdToasts(app);
+      selectWaypoint(MAJOR)(app);
+      await settle(6);
+      choose('waypoint-label', 'Typed');
+    },
+  },
 ];
 
 const VALUE_CONTROLS = 'input:not([type=hidden]), select, textarea, [data-card-action]';
@@ -1349,17 +1634,26 @@ function waypointRowRole(element) {
   return row.classList.contains('waypoint-item-minor') ? 'minor' : 'major';
 }
 
+/** A toast's button: its offer's action, or Dismiss. The class says it, on a toast that has gone too. */
+function toastButtonRole(element) {
+  const button = element?.closest?.('.toast-action, .toast-dismiss');
+  if (!button) return '*';
+  return button.classList.contains('toast-action') ? 'action' : 'dismiss';
+}
+
 /**
  * The control an element is, from its key (`keyFor`'s, or the one it had when
  * an event reached it). A list's rows are instances of a few controls,
  * whichever position a row stands at, so the position gives way to the row's
- * role: a waypoint row is a major's, a minor's or the add row, and a layer
- * row the route's (the first) or a crowd's.
+ * role: a waypoint row is a major's, a minor's or the add row, a layer row the
+ * route's (the first) or a crowd's, and a toast's button, in whichever toast,
+ * its offer's action or Dismiss.
  */
 function controlOf(element, key = keyFor(element)) {
   return key
     .replace(/^#layers-strip>li\[(\d+)\]/, (_, index) => `#layers-strip>li[${index === '0' ? 'route' : 'crowd'}]`)
-    .replace(/^#waypoint-list>li\[\d+\]/, () => `#waypoint-list>li[${waypointRowRole(element)}]`);
+    .replace(/^#waypoint-list>li\[\d+\]/, () => `#waypoint-list>li[${waypointRowRole(element)}]`)
+    .replace(/^#toast-container>div\[\d+\](>button\[\d+\])?/, (_, button) => `#toast-container>div[toast]${button ? `>button[${toastButtonRole(element)}]` : ''}`);
 }
 
 /** The element a key names in the current document (keys are `keyFor`'s). */
@@ -1634,6 +1928,9 @@ async function runRow(session, key, operation, name) {
     session.invoked = invoked;
     invoked = null;
   }
+  // What the gesture wired, before anything (its history replayed below)
+  // can take it off the page.
+  noteWiring();
   await flush();
   const asked = await takeBrowserRequests();
   const after = capture(session);
@@ -1660,9 +1957,10 @@ async function runRow(session, key, operation, name) {
 }
 
 /**
- * The project as its history holds it (`_getUndoableState`), without the
- * `modified` stamp every waypoint made gets when it is made, from a history
- * entry as from a file, and never reads back.
+ * What the app's history holds (`_getUndoableState`: the waypoints, the
+ * selection, the styles and the scene), without the `modified` stamp every
+ * waypoint made gets when it is made, from a history entry as from a file,
+ * and never reads back.
  */
 function undoable(state) {
   const copy = JSON.parse(typeof state === 'string' ? state : JSON.stringify(state));
@@ -1672,14 +1970,17 @@ function undoable(state) {
 
 /**
  * A row that recorded an entry for undo, and can be undone: its own entries
- * undone, the project is as its history held it before the row; redone, it
- * is what the row made it. What an entry holds, and that undoing it puts it
- * back, not only that there is one. A row whose entries are not simply added
- * on top of the history it began with (it undid; the history was full) is
- * undone and redone once, and its result compared.
+ * undone, what history holds is as it held it before the row; redone, it is
+ * what the row made it, selection included, and so is the saved project.
+ * What an entry holds, and that undoing and redoing it put it back, not only
+ * that there is one. A row whose entries are not simply added on top of the
+ * history it began with (it undid; the history was full) is undone and redone
+ * once, and its result compared. The controls each step rebuilds are noted
+ * for the inventory while they stand.
  */
 async function expectHistoryRestores(session, name, before) {
   const made = modelState(session.app);
+  const madeHeld = undoable(session.app._getUndoableState());
   const now = session.app.undoService.createSnapshot();
   const own = now.undoStack.length - before.undoStack.length;
   const added = own > 0 && before.undoStack.every((entry, index) => now.undoStack[index] === entry);
@@ -1687,6 +1988,7 @@ async function expectHistoryRestores(session, name, before) {
   for (let step = 0; step < steps; step += 1) {
     session.app.undo();
     await settle();
+    noteWiring();
   }
   if (added) {
     expect(undoable(session.app._getUndoableState()), `${name}: undone, the project is not as it was before the row`)
@@ -1695,6 +1997,7 @@ async function expectHistoryRestores(session, name, before) {
   for (let step = 0; step < steps; step += 1) {
     session.app.redo();
     await settle();
+    noteWiring();
   }
   vi.clearAllTimers();
   session.emits.take();
@@ -1702,6 +2005,8 @@ async function expectHistoryRestores(session, name, before) {
   const differences = modelChanges(made, modelState(session.app))
     .filter(line => !/^model ~ waypoints\[\d+\]\.modified: /.test(line));
   expect(differences, `${name}: undone and redone, the project is not what the row made it`).toEqual([]);
+  expect(undoable(session.app._getUndoableState()), `${name}: undone and redone, what history holds is not what the row made it`)
+    .toEqual(madeHeld);
 }
 
 /**
@@ -1743,32 +2048,66 @@ async function restore(session, element, operation, settled) {
 // ---------------------------------------------------------------------------
 
 /**
- * Every control seen wired for a user gesture, with its registrations, and
- * every registration a row's gesture ran, by control.
+ * The inventory: every control seen wired for a user gesture, with its
+ * registrations (`wiredSeen`), and every registration a row's gesture ran, by
+ * control (`coverage`). Wiring is noted while a context's test runs
+ * (`inventoryContext` names it); a self-test may note into one of its own.
  */
-const wiredSeen = new Map();
-const coverage = new Map();
+const newInventory = () => ({ wiredSeen: new Map(), coverage: new Map() });
+let inventory = newInventory();
+let inventoryContext = null;
 /** Each control and gesture a row has recorded, as `control · label`. */
 const recordedLabels = new Set();
 /** The controls rows have operated. */
 const operatedControls = new Set();
 
-function noteWiring(context) {
-  for (const element of document.querySelectorAll('*')) {
-    const registrations = wiredSites.get(element);
-    if (!registrations) continue;
-    const key = controlOf(element);
-    const seen = wiredSeen.get(key) ?? { excluded: exclusionFor(element), context: context.name, registrations: new Set() };
-    for (const registration of registrations) seen.registrations.add(registration);
-    wiredSeen.set(key, seen);
-  }
+/**
+ * Note an element's registrations under the control it is, while it stands on
+ * the page: its key, its role and whether a reason excuses it are read from
+ * where it stands, and are kept once it has gone.
+ */
+function noteElementWiring(element) {
+  if (!inventoryContext || !element.isConnected) return;
+  const registrations = wiredSites.get(element);
+  if (!registrations) return;
+  const key = controlOf(element);
+  const seen = inventory.wiredSeen.get(key) ?? { excluded: exclusionFor(element), context: inventoryContext, registrations: new Set() };
+  for (const registration of registrations) seen.registrations.add(registration);
+  inventory.wiredSeen.set(key, seen);
+}
+
+/** Note every wired element on the page now. */
+function noteWiring() {
+  for (const element of document.querySelectorAll('*')) noteElementWiring(element);
+}
+
+/**
+ * Note each wired element put on the page once the page is idle after it
+ * (a mutation observer's records arrive then), so a control that is built,
+ * shown and later replaced is noted while it stood, even when no row's scan
+ * finds it: a history replay can rebuild the controls a row's gesture wired
+ * before the row ends.
+ */
+let wiringObserver = null;
+
+function watchWiring() {
+  wiringObserver = new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (!(node instanceof Element) || !node.isConnected) continue;
+        noteElementWiring(node);
+        for (const element of node.querySelectorAll('*')) noteElementWiring(element);
+      }
+    }
+  });
+  wiringObserver.observe(document, { childList: true, subtree: true });
 }
 
 /** Credit what a row's gesture ran: each listener's registration, to the control it is on. */
 function noteCoverage(invocations) {
   for (const { control, registration } of invocations) {
-    if (!coverage.has(control)) coverage.set(control, new Set());
-    coverage.get(control).add(registration);
+    if (!inventory.coverage.has(control)) inventory.coverage.set(control, new Set());
+    inventory.coverage.get(control).add(registration);
   }
 }
 
@@ -1777,6 +2116,7 @@ function noteCoverage(invocations) {
  * of a type that is neither a gesture nor said to be something else.
  */
 function inventoryGaps() {
+  const { wiredSeen, coverage } = inventory;
   const missing = [];
   const unclassified = [];
   for (const [key, { excluded, context, registrations }] of wiredSeen) {
@@ -1817,7 +2157,9 @@ describe('control → bus goldens (TST-04)', () => {
     globalThis.APP_VERSION = '0.0.0-test';
     await import('../src/main.js');
     recordWiring();
+    watchWiring();
     watchDispatch();
+    blurBeforeRemoval();
     installStorage();
     installPointerCapture();
     removePalette = applyMapPalette();
@@ -1831,8 +2173,15 @@ describe('control → bus goldens (TST-04)', () => {
     growingMocks.push(...narration, ...downloads, digests);
   });
 
+  // Only a context's own test notes wiring into the inventory.
+  afterEach(() => {
+    inventoryContext = null;
+  });
+
   afterAll(() => {
     unwatchDispatch();
+    wiringObserver?.disconnect();
+    restoreRemovalBlur?.();
     uninstallStorage();
     uninstallPointerCapture();
     EventTarget.prototype.addEventListener = originalAddEventListener;
@@ -1854,8 +2203,9 @@ describe('control → bus goldens (TST-04)', () => {
       vi.useFakeTimers(FAKE_TIMERS);
       installClipboard(context.clipboard ?? copying);
       const stub = context.stub?.();
+      inventoryContext = context.name;
       let session = await startSession(context);
-      noteWiring(context);
+      noteWiring();
 
       const sections = [`# ${context.name}: ${context.about}`];
       for (const key of controlsOf(context)) {
@@ -1873,7 +2223,7 @@ describe('control → bus goldens (TST-04)', () => {
           if (!operation.notOperated) operatedControls.add(control);
           sections.push(`\n## ${key} · ${operation.label}${lines.length ? `\n${lines.join('\n')}` : ''}`);
           // Controls a row creates (a handle, an editor) are wired too.
-          noteWiring(context);
+          noteWiring();
           session = await restore(session, elementAt(key), operation, settled);
         }
       }
@@ -1893,7 +2243,7 @@ describe('control → bus goldens (TST-04)', () => {
   test('every wired control has a row that runs each listener it has for a gesture, or a reason it has none', () => {
     // Were the wiring not recorded, nothing would be missing either: the app
     // wires about 300 elements across these contexts.
-    expect(wiredSeen.size).toBeGreaterThan(200);
+    expect(inventory.wiredSeen.size).toBeGreaterThan(200);
     const { missing, unclassified } = inventoryGaps();
     expect(unclassified).toEqual([]);
     expect(missing).toEqual([]);
@@ -2022,6 +2372,53 @@ describe('control → bus goldens (TST-04)', () => {
     }
   });
 
+  test('a listener a drag\'s commit adds to a busyness field, which the row\'s own undo then replaces, is in the inventory, noted while the field stood', async () => {
+    // The row replays its history before it ends, and the replay rebuilds the
+    // busyness fields: a scan of the page after the row finds only the new
+    // ones. The field is noted as the listener is added, where it stands.
+    vi.useFakeTimers(FAKE_TIMERS);
+    installClipboard(copying);
+    const kept = inventory;
+    inventory = newInventory();
+    inventoryContext = 'crowd';
+    const session = await startSession(CONTEXTS.find(each => each.name === 'crowd'));
+    const { app } = session;
+    const announce = app.announce;
+    let wired = null;
+    let control = null;
+    const spy = vi.spyOn(app, 'announce').mockImplementation(function announceAndWire(message, ...rest) {
+      if (String(message).startsWith('Busyness handle moved')) {
+        wired = document.querySelector('#crowd-busyness-handles input[data-busyness-field="value"]');
+        control = controlOf(wired);
+        wired.addEventListener('dblclick', () => { throw new Error('a listener no row runs'); });
+      }
+      return announce.call(this, message, ...rest);
+    });
+    try {
+      await runRow(session, keyFor(document.querySelector(BUSYNESS_GRAPH)), END_HANDLE_DRAGS[0], 'crowd: a drag whose commit wires a field');
+      noteCoverage(session.invoked);
+      expect(wired, 'the drag was committed').not.toBeNull();
+      expect(wired.readOnly || wired.disabled, 'a user can double-click the field').toBe(false);
+      expect(wired.isConnected, 'undoing the drag replaced the field').toBe(false);
+      const scanned = inventory;
+      inventory = newInventory();
+      noteWiring();
+      const scanAfter = [...(inventory.wiredSeen.get(control)?.registrations ?? [])];
+      inventory = scanned;
+      expect(scanAfter.filter(identity => identity.startsWith('dblclick')), 'a scan after the row').toEqual([]);
+      const { missing } = inventoryGaps();
+      expect(missing.filter(line => line.startsWith(`${control} dblclick`))).toEqual([
+        expect.stringMatching(new RegExp(`^${control.replace(/[[\]>]/g, '\\$&')} dblclick at tests/goldenControls\\.test\\.js:\\d+:\\d+ \\(seen in crowd\\)$`)),
+      ]);
+    } finally {
+      spy.mockRestore();
+      inventory = kept;
+      inventoryContext = null;
+      session.ui.disconnect();
+      retire(session);
+    }
+  }, 60_000);
+
   test('a drag\'s data can be read where a browser lets a page read it: written at dragstart, read at drop, only its formats seen in between', () => {
     const { transfer, sending } = dragData();
     sending('dragstart');
@@ -2106,6 +2503,107 @@ describe('control → bus goldens (TST-04)', () => {
     ]);
   });
 
+  test('a press, a double-click and a removal go as Chromium 152 sends them: focus moves as the button goes down, unless the page cancels it', () => {
+    // Each sequence is the one Chromium 152 sent for a real mouse in the same
+    // page, less the pointer's arrival (hover), which rows do not send.
+    const page = document.createElement('div');
+    document.body.append(page);
+    const make = (tag, id, parent = page) => {
+      const element = document.createElement(tag);
+      element.id = id;
+      parent.append(element);
+      return element;
+    };
+    const field = make('input', 'field');
+    const play = make('button', 'play');
+    const plain = make('div', 'plain');
+    make('button', 'nodown').addEventListener('pointerdown', event => event.preventDefault());
+    make('button', 'nomouse').addEventListener('mousedown', event => event.preventDefault());
+    const list = make('ul', 'list');
+    const rebuild = () => {
+      list.replaceChildren();
+      make('button', 'row', make('li', 'item', list));
+    };
+    rebuild();
+    list.addEventListener('click', rebuild);
+    // Named, not given an id: what takes its place stands where it stood.
+    const named = (name) => {
+      const button = document.createElement('button');
+      button.dataset.name = name;
+      return button;
+    };
+    const replaced = make('div', 'slot').appendChild(named('replaced'));
+    replaced.addEventListener('mousedown', () => replaced.replaceWith(named('replacement')));
+    const types = ['pointerdown', 'mousedown', 'blur', 'focusout', 'focus', 'focusin', 'pointerup', 'mouseup', 'click', 'dblclick', 'contextmenu'];
+    const heard = [];
+    const hear = (event) => {
+      const name = element => (element === document.body ? 'body' : element?.id || element?.dataset?.name);
+      const count = event instanceof MouseEvent && !event.type.startsWith('pointer') ? ` ×${event.detail}` : '';
+      heard.push(`${event.type} ${name(event.target)}${count}, focus on ${name(document.activeElement)}${event.target.isConnected ? '' : ', off the page'}`);
+    };
+    for (const type of types) originalWindowAddEventListener.call(window, type, hear, true);
+    const sent = (run) => {
+      heard.length = 0;
+      run();
+      return [...heard];
+    };
+    try {
+      field.focus();
+      expect(sent(() => press(play)), 'a press on a button, with a field focused').toEqual([
+        'pointerdown play, focus on field', 'mousedown play ×1, focus on field',
+        'blur field, focus on body', 'focusout field, focus on body', 'focus play, focus on play', 'focusin play, focus on play',
+        'pointerup play, focus on play', 'mouseup play ×1, focus on play', 'click play ×1, focus on play',
+      ]);
+      expect(sent(() => press(plain)), 'a press on plain text').toEqual([
+        'pointerdown plain, focus on play', 'mousedown plain ×1, focus on play',
+        'blur play, focus on body', 'focusout play, focus on body',
+        'pointerup plain, focus on body', 'mouseup plain ×1, focus on body', 'click plain ×1, focus on body',
+      ]);
+      play.focus();
+      expect(sent(() => press(document.getElementById('nodown'))), 'pointerdown cancelled').toEqual([
+        'pointerdown nodown, focus on play', 'pointerup nodown, focus on play', 'click nodown ×1, focus on play',
+      ]);
+      expect(sent(() => press(document.getElementById('nomouse'))), 'mousedown cancelled').toEqual([
+        'pointerdown nomouse, focus on play', 'mousedown nomouse ×1, focus on play',
+        'pointerup nomouse, focus on play', 'mouseup nomouse ×1, focus on play', 'click nomouse ×1, focus on play',
+      ]);
+      document.activeElement.blur();
+      expect(sent(() => doubleClick(play)), 'a double-click').toEqual([
+        'pointerdown play, focus on body', 'mousedown play ×1, focus on body', 'focus play, focus on play', 'focusin play, focus on play',
+        'pointerup play, focus on play', 'mouseup play ×1, focus on play', 'click play ×1, focus on play',
+        'pointerdown play, focus on play', 'mousedown play ×2, focus on play',
+        'pointerup play, focus on play', 'mouseup play ×2, focus on play', 'click play ×2, focus on play', 'dblclick play ×2, focus on play',
+      ]);
+      // Each click rebuilds the row: the second press goes to the new one,
+      // and its click rebuilds that too, so no `dblclick` follows.
+      expect(sent(() => doubleClick(document.getElementById('row'))), 'a double-click on a row each click rebuilds').toEqual([
+        'pointerdown row, focus on play', 'mousedown row ×1, focus on play',
+        'blur play, focus on body', 'focusout play, focus on body', 'focus row, focus on row', 'focusin row, focus on row',
+        'pointerup row, focus on row', 'mouseup row ×1, focus on row', 'click row ×1, focus on row',
+        'blur row, focus on body', 'focusout row, focus on body',
+        'pointerdown row, focus on body', 'mousedown row ×2, focus on body', 'focus row, focus on row', 'focusin row, focus on row',
+        'pointerup row, focus on row', 'mouseup row ×2, focus on row', 'click row ×2, focus on row',
+        'blur row, focus on body', 'focusout row, focus on body',
+      ]);
+      // A control replaced as the button goes down is not clicked; the
+      // button comes up over what took its place.
+      expect(sent(() => press(replaced)), 'a press whose control is replaced as the button goes down').toEqual([
+        'pointerdown replaced, focus on body', 'mousedown replaced ×1, focus on body',
+        'pointerup replacement, focus on body', 'mouseup replacement ×1, focus on body',
+      ]);
+      // Moved, replaced or removed, a focused element is blurred while it is
+      // still on the page.
+      field.focus();
+      expect(sent(() => page.append(field)), 'the focused field moved').toEqual(['blur field, focus on body', 'focusout field, focus on body']);
+      field.focus();
+      expect(sent(() => field.remove()), 'the focused field removed').toEqual(['blur field, focus on body', 'focusout field, focus on body']);
+      expect(field.isConnected).toBe(false);
+    } finally {
+      for (const type of types) window.removeEventListener(type, hear, true);
+      page.remove();
+    }
+  });
+
   test('a listener wrapped to note that it ran is added and removed as it would be unwrapped', () => {
     const target = document.createElement('button');
     document.body.append(target);
@@ -2159,6 +2657,36 @@ describe('control → bus goldens (TST-04)', () => {
     retire(session);
   }, 60_000);
 
+  test('a click on Play, from a field that has focus, moves focus to Play before Play\'s handler runs, and plays', async () => {
+    // Chromium focuses a pressed button as the mouse button goes down, before
+    // its click, so a handler that reads focus finds Play focused and the
+    // field already blurred; `click()` alone would leave focus in the field.
+    vi.useFakeTimers(FAKE_TIMERS);
+    installClipboard(copying);
+    const session = await startSession(CONTEXTS.find(each => each.name === 'route'));
+    const { app } = session;
+    const field = document.getElementById('export-res-x');
+    const heard = [];
+    const focusNow = () => (document.activeElement === document.body ? 'body' : keyFor(document.activeElement));
+    field.focus();
+    field.addEventListener('blur', () => heard.push(`field blurred, focus on ${focusNow()}`));
+    const emit = app.eventBus.emit;
+    app.eventBus.emit = function heardEmit(name, ...args) {
+      if (name === 'ui:animation:play') heard.push(`play asked for, focus on ${focusNow()}`);
+      return emit.call(this, name, ...args);
+    };
+    try {
+      click.run(document.getElementById('play-btn'));
+      await settle(3);
+      expect(heard).toEqual(['field blurred, focus on body', 'play asked for, focus on #play-btn']);
+      expect(app.animationEngine.state.isPlaying, 'playing').toBe(true);
+    } finally {
+      app.eventBus.emit = emit;
+      session.ui.disconnect();
+      retire(session);
+    }
+  }, 60_000);
+
   test('a text selection a row leaves is put back, so the next row types where a fresh app would', async () => {
     const context = CONTEXTS.find(each => each.name === 'major');
     vi.useFakeTimers(FAKE_TIMERS);
@@ -2209,6 +2737,41 @@ describe('control → bus goldens (TST-04)', () => {
         .rejects.toThrow('a redo that does nothing: undone and redone, the project is not what the row made it');
     } finally {
       for (const spy of spies) spy.mockRestore();
+      session.ui.disconnect();
+      retire(session);
+    }
+  }, 60_000);
+
+  test('undone and redone, a marker change to a mixed selection gets all three selected waypoints back, and a redo that keeps only one of them fails', async () => {
+    // The saved project holds no selection; what history holds does, and the
+    // redo is compared with it too.
+    vi.useFakeTimers(FAKE_TIMERS);
+    installClipboard(copying);
+    const session = await startSession(CONTEXTS.find(each => each.name === 'mixed'));
+    const { app } = session;
+    const selected = () => app.selectedWaypoints.map(waypoint => app.waypoints.indexOf(waypoint));
+    expect(selected()).toEqual([MINOR, OTHER_MAJOR, MAJOR]);
+    const redo = app.redo;
+    let spy = null;
+    try {
+      // The row as the mixed golden runs it, whose history `runRow` replays.
+      const markerStyle = singleGestures(document.getElementById('marker-style')).find(each => each.label === 'choose "dot"');
+      await runRow(session, '#marker-style', markerStyle, 'mixed #marker-style choose "dot", undone and redone');
+      expect(selected(), 'the selection, once the row was undone and redone').toEqual([MINOR, OTHER_MAJOR, MAJOR]);
+      // A redo that brings back only the first of them.
+      spy = vi.spyOn(app, 'redo').mockImplementation(function redoKeepingOne(...args) {
+        const result = redo.apply(this, args);
+        this.selectedWaypoints = this.selectedWaypoints.slice(0, 1);
+        return result;
+      });
+      const history = app.undoService.createSnapshot();
+      choose('marker-style', 'square');
+      await settle();
+      expect(app.undoService.createSnapshot().undoStack.length, 'the change recorded an entry').toBe(history.undoStack.length + 1);
+      await expect(expectHistoryRestores(session, 'a redo that keeps one', history))
+        .rejects.toThrow('a redo that keeps one: undone and redone, what history holds is not what the row made it');
+    } finally {
+      spy?.mockRestore();
       session.ui.disconnect();
       retire(session);
     }

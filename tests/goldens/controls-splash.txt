@@ -19,6 +19,7 @@ ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash
 ui - #splash>div[0]: div class="splash-content" (and 148 inside, 03fcc657)
 
 ## #splash-help>div[0]>details[2]>summary[0] · click
+app ~ focus: "#splash-title" → "#splash-help>div[0]>details[2]>summary[0]"
 ui ~ #splash-help>div[0]>details[2]: details class="controls-accordion" open="" → details class="controls-accordion"
 
 ## #splash-close · click
@@ -31,6 +32,8 @@ ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash
 ui - #splash>div[0]: div class="splash-content" (and 148 inside, 03fcc657)
 
 ## #splash-dont-show · click
+app ~ focus: "#splash-title" → "#splash-dont-show"
 ui ~ #splash-dont-show: input type="checkbox" :unchecked → input type="checkbox" :checked
 
 ## #splash>div[0]>p[5]>a[0] · click
+app ~ focus: "#splash-title" → "#splash>div[0]>p[5]>a[0]"

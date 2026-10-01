@@ -69,7 +69,10 @@
 **W5 — deepen the characterisation** (TST-04 first)
 
 - [~] **TST-04 Sidebar control and readout goldens** · Characterisation
-  [ready] — Control→bus: PR #57 (every app listener for a gesture its 30 contexts wire, run by a row).
+  [ready] — Control→bus: PR #57 (31 contexts; every app listener for a
+  gesture on a control, noted while the control stands, run by a row or
+  excused; presses as Chromium sends them; history compared both ways,
+  selection included); key presses are left to TST-13, which merges first.
   Left: model→control state per selection path, readouts included. First,
   because nothing guards the readouts (§14.5), so W4 waits on it. **P1**
 - [ ] **TST-13 Key table, element IDs, HTML ranges** · Characterisation

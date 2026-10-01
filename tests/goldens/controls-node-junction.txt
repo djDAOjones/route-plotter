@@ -1,6 +1,7 @@
 # node-junction: a node where the crowd chooses between paths inspected
 
 ## #node-scope>div[0]>div[0] · click
+app ~ focus: "body" → "#node-scope>div[0]>div[0]"
 storage + routePlotter_lastSection: "node"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[259 chars, 62292118] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[260 chars, 7424b4d9]
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section" data-last="true" data-section="node"
@@ -14,6 +15,7 @@ emit network:changed {commit: true}
 emit network:node-selected {node: {id: "gn_trace_ex-uon-2", x: 0.4, y: 0.47, type: "entry", label: "Trent Building", anchorWaypointId: "ex-uon-2", _resolvedX: 0.4, _resolvedY: 0.47}}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
 model ~ scene.flowLayers[0].graph.nodes[1].type: "normal" → "entry"
+app ~ focus: "body" → "#network-node-type"
 storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
@@ -29,6 +31,7 @@ emit network:changed {commit: true}
 emit network:node-selected {node: {id: "gn_trace_ex-uon-2", x: 0.4, y: 0.47, type: "exit", label: "Trent Building", anchorWaypointId: "ex-uon-2", _resolvedX: 0.4, _resolvedY: 0.47}}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
 model ~ scene.flowLayers[0].graph.nodes[1].type: "normal" → "exit"
+app ~ focus: "body" → "#network-node-type"
 storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
@@ -43,6 +46,7 @@ settled:
 ## #network-path-weight-1 · enter 24
 emit crowd:param-changed
 model ~ scene.flowLayers[0].graph.edges[1].weight: 1 → 24
+app ~ focus: "body" → "#network-path-weight-1"
 storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
@@ -58,6 +62,7 @@ settled:
 ## #network-path-weight-1 · enter 99999
 emit crowd:param-changed
 model ~ scene.flowLayers[0].graph.edges[1].weight: 1 → 99999
+app ~ focus: "body" → "#network-path-weight-1"
 storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
@@ -73,6 +78,7 @@ settled:
 ## #network-path-weight-2 · enter 24
 emit crowd:param-changed
 model ~ scene.flowLayers[0].graph.edges[2].weight: 1 → 24
+app ~ focus: "body" → "#network-path-weight-2"
 storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
@@ -88,6 +94,7 @@ settled:
 ## #network-path-weight-2 · enter 99999
 emit crowd:param-changed
 model ~ scene.flowLayers[0].graph.edges[2].weight: 1 → 99999
+app ~ focus: "body" → "#network-path-weight-2"
 storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
@@ -147,6 +154,7 @@ model - scene.flowLayers[0].graph.edges[3].targetId: "gn_trace_ex-uon-3"
 model - scene.flowLayers[0].graph.edges[3].weight: 1
 model - scene.flowLayers[0].graph.edges[3].direction: "one-way"
 model - scene.flowLayers[0].graph.edges[3].controlPoints: []
+storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"

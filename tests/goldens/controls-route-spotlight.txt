@@ -2,6 +2,9 @@
 
 ## #head-upload-btn · click
 file dialog #head-upload
+app ~ focus: "body" → "#head-upload-btn"
+storage ~ routePlotter_lastSection: "video" → "head"
+ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="head" → div class="settings-section expanded" data-last="true" data-section="head"
 
 ## #head-upload · choose nothing
 
@@ -24,6 +27,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #head-rotation-mode · choose "fixed"
 model ~ styles.pathHead.rotationMode: "auto" → "fixed"
+app ~ focus: "body" → "#head-rotation-mode"
 storage ~ routePlotter_lastSection: "video" → "head"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="head" → div class="settings-section expanded" data-last="true" data-section="head"
@@ -37,6 +41,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #head-rotation-offset · set -60
 model ~ styles.pathHead.rotationOffset: 45 → -60
+app ~ focus: "body" → "#head-rotation-offset"
 storage ~ routePlotter_lastSection: "video" → "head"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="head" → div class="settings-section expanded" data-last="true" data-section="head"
@@ -52,6 +57,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #reveal-size · set 333
 emit motion:reveal-size-change 2.920882
 model ~ motionSettings.revealSize: 62 → 2.920882
+app ~ focus: "body" → "#reveal-size"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
@@ -66,6 +72,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #reveal-feather · set 333
 emit motion:reveal-feather-change 4.634469
 model ~ motionSettings.revealFeather: 71 → 4.634469
+app ~ focus: "body" → "#reveal-feather"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
@@ -80,6 +87,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #reveal-trail · set 333
 emit motion:reveal-trail-change 4.634469
 model ~ motionSettings.revealTrail: 38 → 4.634469
+app ~ focus: "body" → "#reveal-trail"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
