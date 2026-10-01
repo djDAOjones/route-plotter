@@ -1604,10 +1604,19 @@ describe('golden draw logs (TST-02)', () => {
               calculated.mockRestore();
             }
           };
+          // The size the settings give, worked out here and not asked of the
+          // renderer: the Spotlight's is a share of the canvas's mean side, the
+          // cone's distance a share of its diagonal (this instant is past the
+          // intro, so neither is scaled down)
+          const [width, height] = [app.displayWidth, app.displayHeight];
+          const expected = mode === BACKGROUND_VISIBILITY.SPOTLIGHT
+            ? app.motionSettings.revealSize / 100 * (width + height) / 2
+            : app.motionSettings.aovDistance / 100 * Math.hypot(width, height);
           const off = edgeWith({ zoom: 1, centerX: 330, centerY: 330, enabled: false });
           const zoomed = edgeWith({ zoom: 1.75, centerX: 330, centerY: 330, enabled: true });
           const deep = edgeWith({ zoom: 4, centerX: 330, centerY: 330, enabled: true });
-          expect(off.radius).toBeGreaterThan(0);
+          expect(expected).toBeGreaterThan(0);
+          for (const each of [off, zoomed, deep]) expect(each.radius).toBeCloseTo(expected, 2);
           expect([zoomed.radius, deep.radius]).toEqual([off.radius, off.radius]);
           expect(zoomed.transform).toMatch(/^1\.75 0 0 1\.75 /);
           expect(deep.transform).toMatch(/^4 0 0 4 /);

@@ -50,7 +50,7 @@ budgets, which no editor checks yet, stay DEF-04's. (2026-09-29)
 
 DEF-27 — The instant spotlight and angle of view follow the camera, so the
 circle or cone stays on the head at any zoom, and the contrast tint covers the
-image and nothing else at any background zoom, moving with the camera.
+image's rectangle and no margin at any background zoom, moving with the camera.
 (2026-09-29)
 
 ## Before the big run (2026-09-28)
