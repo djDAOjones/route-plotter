@@ -6,8 +6,13 @@
 # emit caused; "·" marks a counted step, an undo entry with what an Undo would
 # take back. Each phase ends with the change it made to the project, the
 # selection and the undo history; "recovery" compares the copy browser
-# recovery holds with the project. Written by tests/eventTranscript.test.js
-# (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1 and read the diff.
+# recovery holds with the project. "undo, performed" then undoes the undo
+# entries the row saved, one at a time, and redoes them: before each Undo its
+# entry is compared with the project, after it the entry under it, and after
+# the Redos the project as it stood. A waypoint handed out that is not the
+# route's own object is marked "a copy" or "not in the route". Written by
+# tests/eventTranscript.test.js (TST-05); regenerate with
+# UPDATE_EVENT_GOLDENS=1 and read the diff.
 
 ## background:upload
 fixture: open day
@@ -417,6 +422,10 @@ later: autosave written 1, render 2, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13369.7251
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:nudge under a 2x editor zoom (DEF-16)
 fixture: open day
@@ -456,6 +465,10 @@ later: autosave written 1, render 2, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 14203.6662
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:nudge with two waypoints selected
 fixture: open day
@@ -493,6 +506,10 @@ later: autosave written 1, render 2, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13348.9913
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:nudge past the map's edge
 fixture: open day
@@ -530,6 +547,10 @@ later: autosave written 1, render 2, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 14613.076
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:nudge past the map's edge, zoomed out to 50%
 fixture: open day
@@ -566,6 +587,10 @@ later: autosave written 1, render 2, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13448.3816
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:add
 fixture: open day
@@ -666,6 +691,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 18750.609
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:add, a minor after the selected waypoint
 fixture: open day
@@ -764,6 +793,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13338.9065
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:add with Shift held, snapped to 15°
 fixture: open day
@@ -864,6 +897,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 18920.2669
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:add, the first waypoint of an empty route
 fixture: empty route
@@ -955,6 +992,10 @@ later: autosave written 1, render 1
   selection: [wp#1] wp#1 (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:add after the first waypoint of a branch (DEF-22)
 fixture: open day, two-waypoint branch
@@ -1057,6 +1098,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 17117.1452
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## route:branch-arm
 fixture: open day
@@ -1221,6 +1266,12 @@ later: autosave written 1, render 2, retime 1
   selection: [wp#1] wp#1 (unchanged)
   history: stack 3, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the 2 entries it saved, then redone:
+  before Undo 1, its entry against the project: the same
+  after Undo 1, the entry under it against the project: the same
+  before Undo 2, its entry against the project: the same
+  after Undo 2, the entry under it against the project: the same
+  after the Redos, the project as it stood against the project: the same
 
 ## route:branch-rejoin
 fixture: open day
@@ -1261,6 +1312,10 @@ later: autosave written 1, render 2, retime 1
   selection: none (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:selected
 fixture: open day
@@ -1478,6 +1533,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 9008.8918
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:delete, the primary of three selected
 fixture: open day
@@ -1525,6 +1584,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 9008.8918
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:delete-selected
 fixture: open day
@@ -1565,6 +1628,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13221.8933
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:delete-selected with two waypoints selected
 fixture: open day
@@ -1615,6 +1682,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 9008.8918
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoints:clear-all
 fixture: open day
@@ -1760,6 +1831,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 19614.8499
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:name-changed
 fixture: open day
@@ -1783,6 +1858,10 @@ later: autosave written 1, undo saved 1
   selection: none (unchanged)
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:show-context-menu
 fixture: open day
@@ -1877,6 +1956,13 @@ later: autosave written 1, render 2, retime 1
   selection: [ex-uon-2a] ex-uon-2a (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project:
+    ~ selectedWaypointId: null -> "ex-uon-2a"
+    ~ selectedWaypointIds: [] -> ["ex-uon-2a"]
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project:
+    ~ selection: "[ex-uon-2a] ex-uon-2a" -> "none"
 
 ## waypoint:insert-adjacent
 fixture: open day
@@ -1979,6 +2065,13 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 14834.9207
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project:
+    ~ selectedWaypointId: null -> "wp#1"
+    ~ selectedWaypointIds: [] -> ["wp#1"]
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project:
+    ~ selection: "[wp#1] wp#1" -> "none"
 
 ## waypoint:insert-adjacent after the first waypoint of a branch (DEF-22)
 fixture: open day, two-waypoint branch
@@ -2084,6 +2177,13 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 17117.1452
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project:
+    ~ selectedWaypointId: null -> "wp#1"
+    ~ selectedWaypointIds: [] -> ["wp#1"]
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project:
+    ~ selection: "[wp#1] wp#1" -> "none"
 
 ## waypoint:insert-adjacent after the last waypoint of a branch (DEF-22)
 fixture: open day, two-waypoint branch
@@ -2186,6 +2286,13 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 15583.5784
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project:
+    ~ selectedWaypointId: null -> "wp#1"
+    ~ selectedWaypointIds: [] -> ["wp#1"]
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project:
+    ~ selection: "[wp#1] wp#1" -> "none"
 
 ## waypoint:request-rename
 fixture: open day
@@ -2393,11 +2500,11 @@ recovery: as the project stands
 
 ## video:export-request
 fixture: open day
-given: the format at its default, MP4; the app's whole exportVideo replaced, since jsdom has no encoder, by a note of what it was asked for and the settings it reads before its first await
+given: the format at its default, MP4; the app's whole exportVideo replaced, since jsdom has no encoder, by a note of what it was asked for and the app's export settings as it is entered
 at once: nothing counted
   video:export-request "webm"
     toast "Tip: Switch to Preview mode to see exactly how the export will look" for 6000 ms
-    exportVideo called (replaced) with [{"format":"webm"}]: it would read format "mp4", 30 fps, 1920x1080, path only false, in Edit
+    exportVideo called (replaced) with [{"format":"webm"}]; entry settings: format "mp4", 30 fps, 1920x1080, path only false, in Edit
   model:
     (unchanged)
   selection: none (unchanged)
@@ -2688,6 +2795,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 10827.6795 -> 10247.7011
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## coordinate:canvas-to-image
 fixture: open day
@@ -3031,6 +3142,13 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 10827.6795 -> 10827.6803
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project:
+    ~ selectedWaypointId: null -> "wp#1"
+    ~ selectedWaypointIds: [] -> ["wp#1"]
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project:
+    ~ selection: "[wp#1] wp#1" -> "none"
 
 ## waypoint:insert-on-leg between the two waypoints of a branch (DEF-22)
 fixture: open day, two-waypoint branch
@@ -3136,6 +3254,13 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 15617.1452
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project:
+    ~ selectedWaypointId: null -> "wp#1"
+    ~ selectedWaypointIds: [] -> ["wp#1"]
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project:
+    ~ selection: "[wp#1] wp#1" -> "none"
 
 ## help:toggle
 fixture: open day
@@ -3290,6 +3415,10 @@ later: autosave written 1, render 2, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 20100.9696
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## waypoint:select-all
 fixture: open day

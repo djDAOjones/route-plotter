@@ -6,8 +6,13 @@
 # emit caused; "·" marks a counted step, an undo entry with what an Undo would
 # take back. Each phase ends with the change it made to the project, the
 # selection and the undo history; "recovery" compares the copy browser
-# recovery holds with the project. Written by tests/eventTranscript.test.js
-# (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1 and read the diff.
+# recovery holds with the project. "undo, performed" then undoes the undo
+# entries the row saved, one at a time, and redoes them: before each Undo its
+# entry is compared with the project, after it the entry under it, and after
+# the Redos the project as it stood. A waypoint handed out that is not the
+# route's own object is marked "a copy" or "not in the route". Written by
+# tests/eventTranscript.test.js (TST-05); regenerate with
+# UPDATE_EVENT_GOLDENS=1 and read the diff.
 
 ## scene-outline:command update-waypoint
 fixture: open day
@@ -46,6 +51,10 @@ later: autosave written 1, render 2, retime 1
   selection: none (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## scene-outline:command update-crowd
 fixture: open day
@@ -73,6 +82,10 @@ later: autosave written 1, render 1
   selection: none (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## scene-outline:command update-emitter
 fixture: open day
@@ -100,6 +113,10 @@ later: autosave written 1, render 1
   selection: none (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## scene-outline:command create-polygon
 fixture: open day
@@ -150,6 +167,10 @@ later: autosave written 1, render 1
   selection: [ex-uon-3] ex-uon-3 (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## scene-outline:command add-crowd
 fixture: open day
@@ -208,6 +229,10 @@ later: autosave written 1, render 1
   selection: none (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## scene-outline:command delete-crowd
 fixture: open day
@@ -240,6 +265,10 @@ later: autosave written 1, render 1
   selection: none (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## network:changed
 fixture: open day
@@ -266,6 +295,10 @@ later: autosave written 1, render 1
   selection: none (unchanged)
   history: stack 2, redo 0 (unchanged)
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same
 
 ## crowd:param-changed
 fixture: open day
@@ -291,3 +324,7 @@ later: autosave written 1, render 1, undo saved 1
   selection: none (unchanged)
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery: as the project stands
+undo, performed on the entry it saved, then redone:
+  before the Undo, its entry against the project: the same
+  after the Undo, the entry under it against the project: the same
+  after the Redo, the project as it stood against the project: the same

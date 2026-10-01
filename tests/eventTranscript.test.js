@@ -36,14 +36,28 @@
  * the clock runs on ten seconds, and each step a timer takes there carries
  * its time, so the 50 ms retime, the 400 ms undo grouping and the 1 s
  * autosave write are pinned to their delays. Last, each row compares the
- * copy browser recovery holds with the project as it stands.
+ * copy browser recovery holds, storage as every write, removal and clear
+ * left it, with the project as it stands; then undoes each undo entry it
+ * saved, one Undo at a time, and redoes them, as Ctrl+Z and Ctrl+Shift+Z
+ * would, comparing the project before each Undo with its entry, after it
+ * with the entry under it, and after the Redos with the project as it
+ * stood. The project there is read from the saved-project snapshot and the
+ * app's selection, not from the undo state.
+ *
+ * Among the runtime fields, the app's waypoint lookup (`getWaypointById`)
+ * finds each of the route's waypoints by id as itself, or says which it
+ * misses or holds wrongly; a row starts with it whole. A waypoint the app
+ * hands out or keeps for a component (in an emit, an answer, a selection,
+ * the hover or the armed branch) that is not the route's own object is
+ * marked as a copy or as not in the route: a copy cannot be edited through.
  *
  * What is not recorded: drawing (the renderer is a counter: the draw logs
  * are TST-02's); inspector and control state beyond those fields (TST-04's);
  * timers due more than ten seconds after an act; frames the engine books for
  * itself (it runs each frame it is asked for once, as with the clock frozen
- * it would never stop); and the work behind the two replaced steps, image
- * decoding and the whole of `exportVideo`, which jsdom cannot do.
+ * it would never stop); the work behind the two replaced steps, image
+ * decoding and the whole of `exportVideo`, which jsdom cannot do; and the
+ * recovery copy loaded back (the saved shape's round trips are TST-06's).
  *
  * The scene-edit transcript adds the commits CON-03 will merge that the bus
  * reaches: the scene outline's commands, the guide network's commit and the
@@ -51,8 +65,10 @@
  *
  * Defects are pinned as they stand, and their rows are named: the live J/K/L
  * speed surviving a pause (DEF-15), the keyboard nudge under an editor zoom
- * (DEF-16), and inserts that split a branch run (DEF-22). Their fixes change
- * those rows; a change anywhere else is to be explained, not regenerated.
+ * (DEF-16), and inserts that split a branch run (DEF-22). One fix of each,
+ * tried as this file was written, changed only rows named for it; another
+ * fix may change more, and a change outside the named rows is to be
+ * explained, not regenerated.
  *
  * Every event the two files subscribe to has a row or a stated reason it has
  * none, and every row's event must still be subscribed: a new listener cannot
@@ -60,8 +76,9 @@
  *
  * Regenerate deliberately: `UPDATE_EVENT_GOLDENS=1 npx vitest run
  * tests/eventTranscript.test.js`, then read the diff. Goldens are written
- * only when every test in the file has run; a filtered run writes nothing
- * and fails.
+ * only when every test in the file has run to its end, the structural
+ * checks with the rows; a filtered run, or one with a failure, writes
+ * nothing and fails.
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -456,10 +473,12 @@ const COUNT_ORDER = [
  * transcript counts (`· autosave`, `· path`, `· undo saved` …), so a commit's
  * order is kept and not only its totals. In "later", a line no emit caused
  * carries the fake clock's time since the act ended, so each timer's delay is
- * part of the record.
+ * part of the record. It knows the row's app, so that a waypoint it describes
+ * can be told from a copy.
  */
 class Recorder {
-  constructor() {
+  constructor(app) {
+    this.app = app;
     this.phases = [];
     this.depth = 0;
   }
@@ -467,6 +486,11 @@ class Recorder {
   begin(name, { timed = false } = {}) {
     this.phase = { name, lines: [], counts: new Map(), startedAt: timed ? Date.now() : null };
     this.phases.push(this.phase);
+  }
+
+  /** Record no more: what the app does from here goes to no phase. */
+  stop() {
+    this.phase = { name: null, lines: [], counts: new Map(), startedAt: null };
   }
 
   /** Add a line where the record has got to; returns its index. */
@@ -513,7 +537,9 @@ function before(object, name, take) {
 /**
  * What an Undo of this entry would take back: the entry against the one
  * under it. A waypoint or node that appears whole is named, not listed field
- * by field, because the model diff lists it.
+ * by field. Its fields are not taken from the model diff: once the row is
+ * recorded, the entry is undone, and before that every field of it is
+ * compared with the project (`undoAndRedo`).
  */
 function undoEntryChange(under, entry) {
   if (!under) return ['(the first entry)'];
@@ -589,13 +615,36 @@ function formatText(value, limit = 200) {
   return JSON.stringify(text);
 }
 
+/**
+ * Whether a waypoint the app hands out is the route's own object: what a
+ * component is given to edit through. A copy with a route waypoint's id
+ * edits nothing the route holds (a drag of it moves no waypoint), so it is
+ * told apart, as is a waypoint no longer in the route; the route's own is
+ * named by its id alone.
+ */
+function routeStanding(app, waypoint) {
+  if (!app || app.waypoints.includes(waypoint)) return null;
+  return app.waypoints.some(each => each.id === waypoint.id) ? 'a copy' : 'not in the route';
+}
+
+/** A waypoint by id, marked when it is not the route's own object. */
+function waypointName(app, waypoint) {
+  if (waypoint === null || waypoint === undefined) return null;
+  if (typeof waypoint !== 'object' || waypoint.id === undefined) return String(waypoint);
+  const standing = routeStanding(app, waypoint);
+  return standing ? `${waypoint.id} (${standing})` : waypoint.id;
+}
+
 /** A compact, deterministic summary of an emitted value. */
 function summarise(value, depth = 0) {
   if (value === null || value === undefined || typeof value === 'boolean') return String(value);
   if (typeof value === 'number') return formatNumber(value);
   if (typeof value === 'string') return formatText(value, 60);
   if (typeof value === 'function') return 'fn';
-  if (value instanceof Waypoint) return `wp(${value.id})`;
+  if (value instanceof Waypoint) {
+    const standing = routeStanding(recording?.app, value);
+    return `wp(${value.id}${standing ? `, ${standing}` : ''})`;
+  }
   if (typeof File !== 'undefined' && value instanceof File) return `File(${value.name})`;
   if (typeof Element !== 'undefined' && value instanceof Element) {
     return `<${value.tagName.toLowerCase()}${value.id ? `#${value.id}` : ''}>`;
@@ -663,6 +712,29 @@ function contextMenuState() {
   return `${menu.getAttribute('aria-label')}: ${items.join(' | ')}`;
 }
 
+/** What the waypoint lookup holds when it finds each waypoint as itself. */
+const LOOKUP_WHOLE = 'each waypoint, by id, as itself';
+
+/**
+ * The app's waypoint lookup (`waypointsById`, read by `getWaypointById`, and
+ * so by the scene outline, undo's restore and every handler given an id)
+ * against the route: whole, or each waypoint it misses or finds as another
+ * object, and each id it holds that the route has not.
+ */
+function lookupState(app) {
+  const lookup = app.waypointsById;
+  if (!lookup) return 'none';
+  const wrong = [];
+  for (const waypoint of app.waypoints) {
+    if (!lookup.has(waypoint.id)) wrong.push(`${waypoint.id} missing`);
+    else if (lookup.get(waypoint.id) !== waypoint) wrong.push(`${waypoint.id} found as another object`);
+  }
+  for (const id of lookup.keys()) {
+    if (!app.waypoints.some(each => each.id === id)) wrong.push(`${id} held, not in the route`);
+  }
+  return wrong.length > 0 ? wrong.join('; ') : LOOKUP_WHOLE;
+}
+
 /** What the app holds outside the saved project: transport, route, editor. */
 function runtimeState(app) {
   const engine = app.animationEngine;
@@ -701,8 +773,11 @@ function runtimeState(app) {
         `${problem.code}${problem.branchId ? ` (${problem.branchId})` : ''}`),
       branchPaths: (app.branchPaths ?? []).map(each => `${each.id}: ${each.pathPoints.length} points`),
     },
-    hover: app.canvasHover ? `${app.canvasHover.type} ${app.canvasHover.waypoint?.id ?? ''}`.trim() : null,
-    branchArmed: app.interactionHandler?.branchArmed?.id ?? null,
+    lookup: lookupState(app),
+    hover: app.canvasHover
+      ? `${app.canvasHover.type} ${waypointName(app, app.canvasHover.waypoint) ?? ''}`.trim()
+      : null,
+    branchArmed: waypointName(app, app.interactionHandler?.branchArmed),
     crowd: app.selectedCrowd?.id ?? null,
     dirty: app._isDirty,
     // The format a video export is asked for: an export setting the saved
@@ -728,14 +803,17 @@ function describeSelection(list, primary) {
   return list.length === 0 && !primary ? 'none' : `[${list.join(' ')}] ${primary ?? '-'}`;
 }
 
-/** The app's selection, and the copies its components hold where they differ. */
+/**
+ * The app's selection, and the copies its components hold where they differ;
+ * a selected object that is not the route's own waypoint is marked.
+ */
 function selectionOf(app) {
-  const ids = list => [...(list ?? [])].map(each => each?.id ?? String(each));
-  const own = describeSelection(ids(app.selectedWaypoints), app.selectedWaypoint?.id ?? null);
-  const handler = describeSelection(ids(app.interactionHandler?.selectedWaypoints),
-    app.interactionHandler?.selectedWaypoint?.id ?? null);
-  const inspector = describeSelection(ids(app.uiController?.selectedWaypoints),
-    app.uiController?.selectedWaypoint?.id ?? null);
+  const names = list => [...(list ?? [])].map(each => waypointName(app, each) ?? String(each));
+  const own = describeSelection(names(app.selectedWaypoints), waypointName(app, app.selectedWaypoint));
+  const handler = describeSelection(names(app.interactionHandler?.selectedWaypoints),
+    waypointName(app, app.interactionHandler?.selectedWaypoint));
+  const inspector = describeSelection(names(app.uiController?.selectedWaypoints),
+    waypointName(app, app.uiController?.selectedWaypoint));
   return [own, handler !== own ? `canvas ${handler}` : null, inspector !== own ? `inspector ${inspector}` : null]
     .filter(Boolean).join('; ');
 }
@@ -822,19 +900,25 @@ function countsText(counts) {
 }
 
 /**
- * The copy browser recovery holds: the last autosave handed to storage in
- * this test, unless the key was removed after it, as Clear All removes it.
- * Calls on the two storage mocks are ordered by Vitest's call counter.
+ * The copy browser recovery holds: storage replayed from every write, removal
+ * and clear made in this test, in the order made (Vitest numbers the calls on
+ * all three storage mocks in one sequence), and the autosave key read back.
+ * A removal of the key, as Clear All makes, or a clear of everything, leaves
+ * nothing; a write after either is held again.
  */
 function storedRecovery() {
-  const last = mock => mock.calls
-    .map((args, index) => ({ args, order: mock.invocationCallOrder[index] }))
-    .filter(({ args }) => args[0] === STORAGE.AUTOSAVE_KEY)
-    .at(-1);
-  const written = last(localStorage.setItem.mock);
-  const removed = last(localStorage.removeItem.mock);
-  if (!written || (removed && removed.order > written.order)) return null;
-  return JSON.parse(written.args[1]);
+  const calls = mock => mock.calls.map((args, index) => ({ args, order: mock.invocationCallOrder[index] }));
+  const operations = [
+    ...calls(localStorage.setItem.mock).map(each => ({ ...each, kind: 'write' })),
+    ...calls(localStorage.removeItem.mock).map(each => ({ ...each, kind: 'remove' })),
+    ...calls(localStorage.clear.mock).map(each => ({ ...each, kind: 'clear' })),
+  ].sort((a, b) => a.order - b.order);
+  let held = null;
+  for (const { kind, args } of operations) {
+    if (kind === 'clear') held = null;
+    else if (String(args[0]) === STORAGE.AUTOSAVE_KEY) held = kind === 'write' ? String(args[1]) : null;
+  }
+  return held === null ? null : JSON.parse(held);
 }
 
 /**
@@ -853,6 +937,85 @@ function recoveryLines(app) {
     : ['recovery (stored -> project):', ...gap];
 }
 
+const flattened = value => {
+  const into = new Map();
+  flatten(into, '', value);
+  return into;
+};
+
+/** The project as the saved-project snapshot has it, and the selection. */
+function projectNow(app) {
+  const project = flattened(app._buildProjectSnapshot({ includeAssets: false }));
+  project.set('selection', formatLeaf(selectionOf(app)));
+  return project;
+}
+
+/**
+ * The project in an undo entry's shape (`_getUndoableState`), read from the
+ * saved-project snapshot and the app's selection rather than from that
+ * function: an entry is compared with the project, not with itself.
+ */
+function projectAsUndoEntry(app) {
+  const { waypoints, styles, scene } = app._buildProjectSnapshot({ includeAssets: false });
+  return flattened({
+    waypoints,
+    selectedWaypointId: app.selectedWaypoint?.id || null,
+    selectedWaypointIds: (app.selectedWaypoints || []).map(each => each.id),
+    styles,
+    scene,
+  });
+}
+
+/**
+ * Once the row's record is complete, Undo each entry it saved, one at a
+ * time, then Redo them, as Ctrl+Z and Ctrl+Shift+Z would, and say how the
+ * project compares: before each Undo with its entry, after it with the entry
+ * under it, and after the Redos with the project as it stood. Each Undo and
+ * Redo has its promise continuations and ten seconds of timers; the clock is
+ * put back first, as before each act, so the waypoints a restore rebuilds
+ * are stamped as at boot.
+ */
+async function undoAndRedo(app, saved) {
+  if (saved === 0) return [];
+  const settle = async () => {
+    await drainPromises();
+    await vi.advanceTimersByTimeAsync(LATER_MS);
+    await drainPromises();
+  };
+  const lines = [`undo, performed on the ${saved === 1 ? 'entry' : `${saved} entries`} it saved, then redone:`];
+  const compare = (label, was, is) => {
+    const gap = diffLines(was, is);
+    if (gap[0] === '  (unchanged)') lines.push(`  ${label}: the same`);
+    else lines.push(`  ${label}:`, ...gap.map(line => `  ${line}`));
+  };
+  const stood = projectNow(app);
+  let undone = 0;
+  while (undone < saved) {
+    const name = saved === 1 ? 'the Undo' : `Undo ${undone + 1}`;
+    const stack = app.undoService._undoStack;
+    const [entry, under] = [stack.at(-1), stack.at(-2)];
+    if (under === undefined) {
+      lines.push(`  before ${name}: no entry under its entry, so nothing to undo`);
+      break;
+    }
+    compare(`before ${name}, its entry against the project`, flattened(JSON.parse(entry)), projectAsUndoEntry(app));
+    vi.setSystemTime(FIXED_NOW);
+    app.eventBus.emit('history:undo');
+    await settle();
+    compare(`after ${name}, the entry under it against the project`, flattened(JSON.parse(under)),
+      projectAsUndoEntry(app));
+    undone += 1;
+  }
+  for (let redone = 0; redone < undone; redone += 1) {
+    vi.setSystemTime(FIXED_NOW);
+    app.eventBus.emit('history:redo');
+    await settle();
+  }
+  compare(`after the Redo${undone === 1 ? '' : 's'}, the project as it stood against the project`, stood,
+    projectNow(app));
+  return lines;
+}
+
 /**
  * Drive one row on a fresh app and return its transcript section.
  *
@@ -861,7 +1024,8 @@ function recoveryLines(app) {
  * that is "later". The project, selection and history are read before the
  * act and after each phase, so a change shows in the phase that made it. The
  * engine runs only the frames it is asked for, so a playing transport shows
- * one frame there, not a loop.
+ * one frame there, not a loop. What recovery holds is read then, before the
+ * undo entries the row saved are undone and redone.
  */
 async function transcribe(row) {
   const app = await bootWith(row.fixture);
@@ -870,10 +1034,12 @@ async function transcribe(row) {
   if (row.setup) await row.setup(app, context);
   await settleSetup(app);
 
-  const recorder = new Recorder();
+  const recorder = new Recorder(app);
   const states = [observe(app, row)];
+  expect(lookupState(app), 'before the act, the waypoint lookup disagrees with the route').toBe(LOOKUP_WHOLE);
   instrument(app, recorder);
   recording = recorder;
+  let recovery;
   try {
     recorder.begin('at once');
     await row.act(app, { ...context, reply: () => recorder.reply() });
@@ -883,10 +1049,14 @@ async function transcribe(row) {
     await vi.advanceTimersByTimeAsync(LATER_MS);
     await drainPromises();
     states.push(observe(app, row));
+    recovery = recoveryLines(app);
+    recorder.stop();
   } finally {
     recording = null;
     recorder.restore();
   }
+  const saved = recorder.phases.reduce((sum, phase) => sum + (phase.counts.get('undo saved') ?? 0), 0);
+  const performed = await undoAndRedo(app, saved);
 
   const lines = [`## ${row.title}`, `fixture: ${row.fixture}`];
   if (row.given) lines.push(`given: ${row.given}`);
@@ -902,7 +1072,7 @@ async function transcribe(row) {
   for (const key of row.watch ?? []) {
     if (first.model.get(key) === last.model.get(key)) lines.push(`kept ${key} = ${last.model.get(key)}`);
   }
-  lines.push(...recoveryLines(app));
+  lines.push(...recovery, ...performed);
   return nameNewIds(lines.join('\n'));
 }
 
@@ -940,8 +1110,12 @@ function checkedSwatch(input) {
   return picker?.querySelector('input[type="radio"]:checked')?.value ?? 'none';
 }
 
-/** What a video export reads from the app before its first await (`exporting.js`). */
-function exportHandoff(app) {
+/**
+ * The app's export settings as `exportVideo` is entered, before the real one
+ * would apply the request it is handed (`exporting.js`): the entry settings
+ * the replaced function was called on, not a run of the export.
+ */
+function exportEntrySettings(app) {
   const { format, frameRate, resolutionX, resolutionY, pathOnly } = app.exportSettings;
   return `format ${JSON.stringify(format)}, ${frameRate} fps, ${resolutionX}x${resolutionY}, path only ${pathOnly}` +
     `, in ${app.previewMode ? 'Preview' : 'Edit'}`;
@@ -1283,10 +1457,10 @@ const CONTROLLER_ROWS = [
   {
     event: 'video:export-request', fixture: 'open day',
     given: 'the format at its default, MP4; the app\'s whole exportVideo replaced, since jsdom has no encoder, by'
-      + ' a note of what it was asked for and the settings it reads before its first await',
+      + ' a note of what it was asked for and the app\'s export settings as it is entered',
     setup: app => {
       app.exportVideo = (...asked) => recording?.note(
-        `exportVideo called (replaced) with ${JSON.stringify(asked)}: it would read ${exportHandoff(app)}`);
+        `exportVideo called (replaced) with ${JSON.stringify(asked)}; entry settings: ${exportEntrySettings(app)}`);
     },
     act: app => emit(app, 'video:export-request', 'webm'),
   },
@@ -1798,8 +1972,13 @@ function transcriptHeader(golden) {
     '# emit caused; "·" marks a counted step, an undo entry with what an Undo would',
     '# take back. Each phase ends with the change it made to the project, the',
     '# selection and the undo history; "recovery" compares the copy browser',
-    '# recovery holds with the project. Written by tests/eventTranscript.test.js',
-    '# (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1 and read the diff.',
+    '# recovery holds with the project. "undo, performed" then undoes the undo',
+    '# entries the row saved, one at a time, and redoes them: before each Undo its',
+    '# entry is compared with the project, after it the entry under it, and after',
+    '# the Redos the project as it stood. A waypoint handed out that is not the',
+    '# route\'s own object is marked "a copy" or "not in the route". Written by',
+    '# tests/eventTranscript.test.js (TST-05); regenerate with',
+    '# UPDATE_EVENT_GOLDENS=1 and read the diff.',
   ].join('\n');
 }
 
@@ -1820,23 +1999,37 @@ function goldenText(golden) {
 }
 
 /**
+ * Every test this file declares, by suite and title, and the ones that have
+ * run to their end: the structural checks as well as the rows.
+ */
+const declaredTests = new Set();
+const finishedTests = new Set();
+
+/** Declare a test that counts as run only once its body has run to its end. */
+function fileTest(suite, title, body, timeout) {
+  const key = `${suite} > ${title}`;
+  declaredTests.add(key);
+  test(title, async () => {
+    await body();
+    finishedTests.add(key);
+  }, timeout);
+}
+
+/**
  * Whole files are compared, and written, once every test has run, in
- * whatever order they ran. A run that left a test unrecorded (a `-t`
+ * whatever order they ran. A run that left a row unrecorded (a `-t`
  * filter, a failure) has compared each section it recorded in its own test,
- * and compares no whole file; asked to regenerate, it writes nothing and
- * fails, so a partial run cannot overwrite a golden.
+ * and compares no whole file. Asked to regenerate, a run in which any test
+ * of the file did not run to its end, a structural check or a row, writes
+ * nothing and fails, so a partial run cannot overwrite a golden.
  */
 afterAll(() => {
-  const missing = [
-    ...(recorded.registrations === null ? ['the registration test'] : []),
-    ...GOLDENS.flatMap(golden => golden.rows
-      .filter(row => !recorded.sections.get(golden.file).has(row.title))
-      .map(row => `${golden.file}: ${row.title}`)),
-  ];
+  const unfinished = [...declaredTests].filter(key => !finishedTests.has(key));
   if (UPDATING) {
-    if (missing.length > 0) {
-      throw new Error(`UPDATE_EVENT_GOLDENS=1 wrote nothing: ${missing.length} tests did not record, ` +
-        `starting with "${missing[0]}". Regenerate with a run of the whole file.`);
+    if (unfinished.length > 0) {
+      throw new Error(`UPDATE_EVENT_GOLDENS=1 wrote nothing: ${unfinished.length} of ${declaredTests.size} ` +
+        `tests did not run to their end, starting with "${unfinished[0]}". Regenerate with a run of the ` +
+        'whole file.');
     }
     writeFileSync(goldenPath(REGISTRATIONS), recorded.registrations, 'utf8');
     for (const golden of GOLDENS) writeFileSync(goldenPath(golden.file), goldenText(golden), 'utf8');
@@ -1852,7 +2045,9 @@ afterAll(() => {
 });
 
 describe('the bus listeners', () => {
-  test('once the app is ready, every listener is where the golden says, in the same order', async () => {
+  const suite = 'the bus listeners';
+
+  fileTest(suite, 'once the app is ready, every listener is where the golden says, in the same order', async () => {
     const { app, noted } = await bootNotingListeners();
     const text = registrationGolden(listenerTable(app, noted));
     expect(text, 'a listener whose module could not be read').not.toMatch(/\((unknown|unattributed)\)/);
@@ -1863,7 +2058,8 @@ describe('the bus listeners', () => {
     expect(text).toBe(readFileSync(path, 'utf8'));
   });
 
-  test('every event the two wiring files subscribe to has a row or a stated reason, and no more', async () => {
+  const coverage = 'every event the two wiring files subscribe to has a row or a stated reason, and no more';
+  fileTest(suite, coverage, async () => {
     const { noted } = await bootNotingListeners();
     for (const golden of GOLDENS.filter(each => each.source)) {
       const subscribed = new Set(noted.filter(each => each.module === golden.source).map(each => each.eventName));
@@ -1879,7 +2075,7 @@ describe('the bus listeners', () => {
     }
   });
 
-  test('every scene-edit row\'s event is still subscribed by the module it names', async () => {
+  fileTest(suite, 'every scene-edit row\'s event is still subscribed by the module it names', async () => {
     const { noted } = await bootNotingListeners();
     const unheard = SCENE_EDIT_ROWS.filter(row =>
       !noted.some(each => each.module === row.module && each.eventName === row.event));
@@ -1887,17 +2083,38 @@ describe('the bus listeners', () => {
   });
 });
 
+describe('the recovery copy', () => {
+  fileTest('the recovery copy', 'is storage as every write, removal and clear left it, in the order made', () => {
+    const key = STORAGE.AUTOSAVE_KEY;
+    expect(storedRecovery(), 'nothing written yet').toBe(null);
+    localStorage.setItem(key, '{"copy":1}');
+    localStorage.setItem('anotherKey', '{}');
+    expect(storedRecovery(), 'a write').toEqual({ copy: 1 });
+    localStorage.clear();
+    expect(storedRecovery(), 'a clear after a write').toBe(null);
+    localStorage.setItem(key, '{"copy":2}');
+    expect(storedRecovery(), 'a write after a clear').toEqual({ copy: 2 });
+    localStorage.removeItem('anotherKey');
+    expect(storedRecovery(), 'another key removed').toEqual({ copy: 2 });
+    localStorage.removeItem(key);
+    expect(storedRecovery(), 'the key removed').toBe(null);
+    localStorage.setItem(key, '{"copy":3}');
+    expect(storedRecovery(), 'a write after a removal').toEqual({ copy: 3 });
+  });
+});
+
 for (const golden of GOLDENS) {
-  describe(`the transcript of ${golden.source ?? 'the scene-edit commits'}`, () => {
+  const suite = `the transcript of ${golden.source ?? 'the scene-edit commits'}`;
+  describe(suite, () => {
     const expected = goldenSections(golden.file);
     const titles = golden.rows.map(row => row.title);
 
-    test('has one row per title', () => {
+    fileTest(suite, 'has one row per title', () => {
       expect(new Set(titles).size).toBe(titles.length);
     });
 
     for (const row of golden.rows) {
-      test(`${row.title} does what its transcript records`, async () => {
+      fileTest(suite, `${row.title} does what its transcript records`, async () => {
         const text = await transcribe(row);
         recorded.sections.get(golden.file).set(row.title, text);
         if (UPDATING) return;
