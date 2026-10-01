@@ -8,16 +8,20 @@
  * waypoints, Edit mode, Camera movement off) the gap never closed, and a view
  * that should be still ran about 60 frames a second, against the rule that a
  * stable paused view queues none. A frame that draws no camera now puts it on
- * its target; Preview, where it is drawn, still eases it.
+ * its target: in Edit mode, with Camera movement off, and under the author's
+ * viewport zoom, which takes the camera's place. Where it is drawn, in Preview
+ * and in the exported player, it still eases.
  *
- * Frames run only when a test runs them, 20 ms apart, so a loop that never
- * sleeps shows as a frame still queued after hundreds, not as a timeout. The
- * last two tests hold the camera to settling in one call, not a frame late.
+ * Frames run only when a test runs them, so a loop that never sleeps shows as
+ * a frame still queued after hundreds, not as a timeout. They run on one
+ * clock, which `performance.now()` reads too (the camera's zoom rate limit
+ * does): it starts at zero, as on a page just opened, and moves 20 ms a frame.
  */
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { buildExampleProjects } from '../src/examples/index.js';
+import { PlayerApp } from '../src/player/PlayerApp.js';
 import { CameraService } from '../src/services/CameraService.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
 
@@ -41,11 +45,13 @@ beforeEach(() => {
   frames = frameHarness();
   globalThis.requestAnimationFrame = frames.request;
   globalThis.cancelAnimationFrame = frames.cancel;
+  performance.now.mockImplementation(() => frames.now());
 });
 
 afterEach(() => {
   globalThis.requestAnimationFrame = originalRequest;
   globalThis.cancelAnimationFrame = originalCancel;
+  performance.now.mockImplementation(() => Date.now());
   localStorage.getItem.mockImplementation(() => null);
 });
 
@@ -65,6 +71,12 @@ function frameHarness() {
       return id;
     }),
     cancel: vi.fn((id) => { pending.delete(id); }),
+    /** The clock, in ms: frames and `performance.now()` both read it. */
+    now: () => now,
+    /** Move the clock on without running a frame. */
+    wait(ms) {
+      now += ms;
+    },
     /** Run the oldest queued frame. */
     runNext() {
       const [id, callback] = pending.entries().next().value;
@@ -110,6 +122,7 @@ async function routeWithCamera() {
   for (const waypoint of app.waypoints) waypoint.camera.zoom = 3;
   app.eventBus.emit('ui:animation:skip-start');
   frames.runUntilIdle();
+  expect(frames.pending.size, 'the camera came to rest at the start').toBe(0);
   expect(app.previewMode).toBe(true);
   expect(app.exportSettings.includeCamera).toBe(true);
   return app;
@@ -217,6 +230,41 @@ describe('DEF-44: a still view queues no animation frame', () => {
     expect(drawn().at(-1)).toMatchObject({ zoom: 1, enabled: false });
   });
 
+  test('zooming the view in while the camera eases in Preview goes idle, and undoing it draws the camera where it belongs', async () => {
+    // The author's viewport zoom takes the camera's place on the canvas
+    // (DEF-61), and the camera eased out of sight beneath it: some 48 frames,
+    // each drawn the same.
+    const app = await routeWithCamera();
+    const drawn = watchCamera(app);
+    playAMomentAndPause(app);
+    expect(frames.pending.size, 'the camera is still easing').toBeGreaterThan(0);
+    expect(app.selectedWaypoint, 'Zoom in centres on the selection').toBeTruthy();
+
+    app.eventBus.emit('canvas:zoom-in');
+    expect(app.viewport.zoom).toBeCloseTo(1.5);
+    expectIdle('under Zoom in’s first step, 1.5×');
+    app.eventBus.emit('canvas:zoom-in');
+    expect(app.viewport.zoom).toBeCloseTo(2.25);
+    expectIdle('under a 2.25× viewport zoom');
+
+    // Scrubbed under the zoom, where the camera belongs moves out of sight.
+    app.eventBus.emit('ui:animation:seek', app.animationEngine.getProgress() + 0.02);
+    expectIdle('under the zoom, after a scrub');
+
+    // Undoing the zoom draws one frame and wakes no loop, so that frame must
+    // already show the camera where it belongs: when the loop next runs, it
+    // finds nothing left to draw.
+    app.eventBus.emit('canvas:zoom-reset');
+    expect(app.viewport.zoom).toBe(1);
+    const shown = drawn().at(-1);
+    expect(shown.enabled).toBe(true);
+    expect(shown.zoom).toBeCloseTo(3);
+    const before = drawn().length;
+    app.animationEngine.requestUpdate();
+    expectIdle('the zoom undone');
+    expect(drawn().slice(before), 'frames drawn after the zoom was undone').toEqual([]);
+  });
+
   test('Skip to start in Edit mode, after the camera zoomed in Preview, goes idle', async () => {
     // A reset puts the zoom's rate limiter back to 1× (`resetRateLimiter`),
     // short of the 3× target, and only a frame that drew the camera took it
@@ -229,6 +277,21 @@ describe('DEF-44: a still view queues no animation frame', () => {
 
     app.eventBus.emit('ui:animation:skip-start');
     expectIdle('Edit mode, after Skip to start');
+  });
+
+  test('Skip to start in Edit mode with every waypoint removed, after the camera zoomed in Preview, goes idle', async () => {
+    // Edit mode returns before the camera's own no-waypoint branch, so the
+    // Edit frame alone must settle the 1× rate limit a reset leaves below
+    // the 3× target it remembers.
+    const app = await routeWithCamera();
+    app.elements.modeToggleBtn.click();
+    expectIdle('Edit mode');
+    for (const waypoint of [...app.waypoints]) app.eventBus.emit('waypoint:delete', waypoint);
+    expect(app.waypoints).toEqual([]);
+    expectIdle('Edit mode, every waypoint removed');
+
+    app.eventBus.emit('ui:animation:skip-start');
+    expectIdle('Edit mode, every waypoint removed, after Skip to start');
   });
 
   test('removing every waypoint while the camera is zoomed in Preview goes idle', async () => {
@@ -311,6 +374,74 @@ describe('DEF-44: the camera settles where no frame eases it', () => {
     expect(camera.isZoomTransitioning(1200, 800)).toBe(false);
     expect([camera._rateLimitedZoom, camera._smoothedZoom]).toEqual([1, 1]);
     expect([camera._smoothedCenterX, camera._smoothedCenterY]).toEqual([600, 400]);
+  });
+
+});
+
+describe('DEF-44: a camera that is drawn still eases', () => {
+
+  test('the zoom eases toward a new target a frame at a time, even when its rate limit allows the whole step', () => {
+    // After a pause of a second or more the rate limit lets the zoom jump to
+    // its target; the zoom's own easing must still take it there gradually.
+    const camera = new CameraService();
+    const frameAt = (zoom) => camera.calculateCameraState({
+      progress: 0.5,
+      waypoints: [{ camera: { zoom } }, { camera: { zoom } }],
+      waypointProgressValues: [0, 1],
+      headPosition: { x: 600, y: 400 },
+      canvasWidth: 1200,
+      canvasHeight: 800,
+      animationDuration: 10000,
+    });
+    frames.wait(1500);
+    expect(frameAt(2).zoom).toBe(2);
+
+    frames.wait(1500);
+    const zooms = [];
+    for (let frame = 0; frame < 5; frame += 1) {
+      zooms.push(frameAt(4).zoom);
+      frames.wait(FRAME_MS);
+    }
+    expect(zooms[0], 'one frame closes only part of the step').toBeLessThan(2.5);
+    for (let frame = 1; frame < zooms.length; frame += 1) {
+      expect(zooms[frame], `frame ${frame + 1} zooms on`).toBeGreaterThan(zooms[frame - 1]);
+    }
+    expect(zooms.at(-1)).toBeLessThan(4);
+  });
+
+  test('the exported player keeps easing its camera after a pause, then goes idle', async () => {
+    // The player gates its loop as the editor does (`PlayerApp.start`): a
+    // paused view stays awake only while its camera visibly eases.
+    const app = await routeWithCamera();
+    const project = JSON.parse(JSON.stringify(app._buildProjectSnapshot()));
+    const player = new PlayerApp(document.createElement('canvas'));
+    try {
+      await player.load(project, app.background.image);
+      const drawn = watchCamera(player);
+      player.start();
+      frames.runUntilIdle();
+      expect(frames.pending.size, 'the player came to rest at the start').toBe(0);
+
+      player.animationEngine.play();
+      for (let frame = 0; frame < 15; frame += 1) frames.runNext();
+      player.animationEngine.pause();
+
+      let previous = drawn().at(-1);
+      for (let frame = 0; frame < 3; frame += 1) {
+        expect(frames.pending.size, `easing frame ${frame + 1} is queued`).toBeGreaterThan(0);
+        frames.runNext();
+        const current = drawn().at(-1);
+        expect(current.enabled).toBe(true);
+        expect(current.zoom).toBeCloseTo(3);
+        expect(Math.hypot(current.centerX - previous.centerX, current.centerY - previous.centerY),
+          `easing frame ${frame + 1} moves the camera`).toBeGreaterThan(0.1);
+        previous = current;
+      }
+      const ran = frames.runUntilIdle();
+      expect(frames.pending.size, `the paused player: a frame is still queued after ${ran}`).toBe(0);
+    } finally {
+      player.animationEngine.stop();
+    }
   });
 
 });
