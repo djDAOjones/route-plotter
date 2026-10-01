@@ -847,6 +847,29 @@ test('a branch end dropped on a minor, its rejoin refused, is back where it was,
   expect(saved.animationState.duration).toBe(app.animationEngine.state.duration);
 });
 
+test.each([80, 650])('at %i px/s, a branch end dropped on a minor, its rejoin refused, is timed at that speed: Save Project holds the route rebuilt at it, and the path’s own travel', async (speed) => {
+  // The refusal's rebuild times the route by the queued retime, at the speed
+  // set; one at the default speed passed the default-speed test above. At 80
+  // the branch's own timeline hides a trunk timed wrong in the total, so the
+  // path's travel time is compared too.
+  const project = branched();
+  project.animationState.speed = speed;
+  const app = await derivedByPreview(project);
+  app.eventBus.emit('motion:preview-mode-change', false);
+  await timingSettled();
+
+  const { end, start, work } = await droppedOn(app, 'minor');
+
+  expect(work).toEqual({ built: 1, timed: 1, toasts: 1 });
+  expect(end).toMatchObject({ ...start, branchRejoin: 'end' });
+  const travel = app.animationEngine.pathDuration;
+  const saved = await savedProject(app);
+  expect(app.animationEngine.state.speed).toBe(speed);
+  const expected = rebuiltAt(app, speed);
+  expect(saved.animationState.duration).toBeCloseTo(expected, 6);
+  expect(travel, 'the path’s own travel').toBeCloseTo(app.animationEngine.pathDuration, 6);
+});
+
 test.each([
   ['cleared, dropped on the major it rejoins at', 1, null],
   ['made again, dropped there once more', 2, 'end'],
@@ -950,21 +973,50 @@ test('an HTML export made mid-drag runs the route’s queued rebuild, and change
   expect(localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY)).toEqual([]);
 });
 
-test.each(['Preview', 'Edit'])('in %s, a route deleted down to one while it plays goes on playing, as the transport is kept', async (mode) => {
-  // Whether it is playing is part of the transport, which a route that goes
-  // leaves as it was (Clear All's reset is its own)
+test.each(['Preview', 'Edit'].flatMap(mode => [2, -2].map(rate => [mode, rate])))('in %s, a route deleted down to one while it plays at %ix goes on playing at that rate, as the transport is kept', async (mode, rate) => {
+  // Whether it is playing, and at what rate, is part of the transport, which
+  // a route that goes leaves as it was (Clear All's reset is its own)
   const app = await derivedByPreview(threeStops());
   if (mode === 'Edit') app.eventBus.emit('motion:preview-mode-change', false);
   app.eventBus.emit('waypoint:delete', app.getWaypointById('c'));
   await timingSettled();
   app.animationEngine.play();
-  expect(app.animationEngine.isPlaying()).toBe(true);
+  app.animationEngine.setPlaybackSpeed(rate);
+  expect([app.animationEngine.isPlaying(), app.animationEngine.state.playbackSpeed]).toEqual([true, rate]);
 
   app.eventBus.emit('waypoint:delete', app.getWaypointById('a'));
 
-  expect(app.animationEngine.isPlaying()).toBe(true);
+  expect([app.animationEngine.isPlaying(), app.animationEngine.state.playbackSpeed]).toEqual([true, rate]);
   await timingSettled();
+  expect([app.animationEngine.isPlaying(), app.animationEngine.state.playbackSpeed]).toEqual([true, rate]);
+});
+
+test.each(['Preview', 'Edit'])('in %s, a stop moved while the route plays is saved with its duration at the speed set: in recovery, in the saved file, and reopened', async (mode) => {
+  // Each save settles the route's timing itself, playing or not: a settle that
+  // passed over a playing transport left recovery and the file with the
+  // duration from before the move
+  const project = threeStops();
+  project.animationState.speed = 80;
+  const app = await derivedByPreview(project);
+  if (mode === 'Edit') {
+    app.eventBus.emit('motion:preview-mode-change', false);
+    await timingSettled();
+  }
+  app.animationEngine.play();
   expect(app.animationEngine.isPlaying()).toBe(true);
+  const before = app.animationEngine.state.duration;
+
+  move(app, 'b', 0.25, 0.7);
+  const recovery = recoveryOnLeaving();
+  const saved = await savedProject(app);
+  const reopened = await reopenedDuration(saved);
+
+  app.animationEngine.pause();
+  const expected = rebuiltAt(app, 80);
+  expect(expected).not.toBeCloseTo(before, 0);
+  for (const [where, duration] of [['recovery', recovery.animationState.duration], ['the saved file', saved.animationState.duration], ['reopened', reopened]]) {
+    expect(duration, where).toBeCloseTo(expected, 6);
+  }
 });
 
 test.each([80, 650].flatMap(speed => ['made', 'cleared'].map(action => [speed, action])))('at %i px/s, a rejoin %s times the route at that speed: live, in recovery, in the saved file, reopened, and in the path’s own travel', async (speed, action) => {
