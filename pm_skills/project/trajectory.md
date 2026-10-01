@@ -21,12 +21,14 @@
 
 Outcome: written when W5 closes.
 
-TST-05 — What every event the two wiring files subscribe to does is
-pinned, one fresh app per row: the emits it causes, and what it says,
-changes and saves, at once and after its timers. The dispatch order of
-all 194 boot listeners is pinned too, so W7's CLR-01 split must leave
-both unchanged. DEF-15, DEF-16 and DEF-22 are pinned as they stand.
-(2026-10-01)
+TST-05 — For every event the two wiring files subscribe to, in the
+scenarios its rows name, one fresh app per row: the emits it causes and
+each step in order, what it says and shows, the project, selection and
+undo change at once and after ten seconds of timers (each delay pinned),
+and whether browser recovery holds the project as it stands. The
+dispatch order of all 194 boot listeners is pinned too, so W9's CLR-01
+split must leave both unchanged. DEF-15, DEF-16 and DEF-22 are pinned as
+they stand. (2026-10-01)
 
 ## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
 

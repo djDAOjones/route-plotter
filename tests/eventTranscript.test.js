@@ -2,11 +2,11 @@
  * TST-05 — the event transcript.
  *
  * `wiringControllers.js` and `wiringBus.js` subscribe the app to 96 EventBus
- * events, and 52 of them were named in no test. W7 splits the 1,228-line
- * function that registers most of them into ordered, named methods (CLR-01),
- * and later waves move and merge what they do (CON-02, CON-03). So before any
- * of it moves, this file writes down what each event does, and in which order
- * its listeners run.
+ * events, and 52 of them were named in no test. W9 splits the 1,228-line
+ * function that registers most of them into ordered, named methods (CLR-01)
+ * and merges what they do (CON-02, CON-03). So before any of it moves, this
+ * file writes down what each event does, and in which order its listeners
+ * run.
  *
  * Two kinds of golden do that.
  *
@@ -17,25 +17,33 @@
  * splitting a function into methods called in the same order, leaves it
  * byte-identical, while reordering listeners or moving one to another module
  * changes it. Two listeners from one module on one event could swap without
- * changing it; the transcript shows that swap wherever the order matters.
+ * changing it; today the one such pair is `waypoint:add-at-center`, whose
+ * first listener is dead, and the transcript shows any swap whose order
+ * matters.
  *
- * `event-transcript-*.txt` drives every event the two files subscribe to,
- * one fresh app per row, with a bundled example loaded, in Edit mode, nothing
- * selected and the transport paused at the start unless the row says
- * otherwise. For each it keeps every event emitted on the bus while it ran,
- * nested under the emit that caused it, with what the app said, the toasts it
- * showed and any listener that threw; the model diff (waypoints and their
- * fields, the route's trunk and branches, the scene, the settings), with the
- * transport, editor and inspector state beside it; the selection and the undo
- * history before and after; and how often the app autosaved, rendered,
- * queued a render, rebuilt the path and retimed. Timers are faked once the
- * fixture is loaded, so what a handler does at once is kept apart from what
- * its timers do: the clock then runs on ten seconds, and the 50 ms retime,
- * the 400 ms undo grouping, the 1 s autosave write and the queued frames run
- * in order. Drawing is not kept, because the draw logs are TST-02's: the
- * renderer is replaced by a counter. The engine runs each frame it is asked
- * for once and does not loop, because with the clock frozen it would never
- * stop.
+ * `event-transcript-*.txt` drives, one fresh app per row, every event the two
+ * files subscribe to in the scenarios its rows name, with a bundled example
+ * loaded, in Edit mode, nothing selected and the transport paused at the
+ * start unless the row says otherwise. Each row keeps, phase by phase: every
+ * event emitted on the bus, nested under the emit that caused it; each step
+ * the app takes that the transcript counts, where it took it (autosave,
+ * path, retime, queued render, render, each autosave written to storage, and
+ * each undo entry with what an Undo of it would take back); what the app
+ * said and showed, and the values the two replaced steps were handed; then
+ * the change that phase made to the project, the selection and the undo
+ * history, with the transport, editor and inspector fields listed in
+ * `runtimeState`. "At once" is the emit and its promise continuations; then
+ * the clock runs on ten seconds, and each step a timer takes there carries
+ * its time, so the 50 ms retime, the 400 ms undo grouping and the 1 s
+ * autosave write are pinned to their delays. Last, each row compares the
+ * copy browser recovery holds with the project as it stands.
+ *
+ * What is not recorded: drawing (the renderer is a counter: the draw logs
+ * are TST-02's); inspector and control state beyond those fields (TST-04's);
+ * timers due more than ten seconds after an act; frames the engine books for
+ * itself (it runs each frame it is asked for once, as with the clock frozen
+ * it would never stop); and the work behind the two replaced steps, image
+ * decoding and the whole of `exportVideo`, which jsdom cannot do.
  *
  * The scene-edit transcript adds the commits CON-03 will merge that the bus
  * reaches: the scene outline's commands, the guide network's commit and the
@@ -44,15 +52,16 @@
  * Defects are pinned as they stand, and their rows are named: the live J/K/L
  * speed surviving a pause (DEF-15), the keyboard nudge under an editor zoom
  * (DEF-16), and inserts that split a branch run (DEF-22). Their fixes change
- * those rows, and should change no others.
+ * those rows; a change anywhere else is to be explained, not regenerated.
  *
  * Every event the two files subscribe to has a row or a stated reason it has
  * none, and every row's event must still be subscribed: a new listener cannot
  * arrive unrecorded, and a removed one cannot leave a row that pins nothing.
  *
  * Regenerate deliberately: `UPDATE_EVENT_GOLDENS=1 npx vitest run
- * tests/eventTranscript.test.js`, then read the diff. The goldens are only
- * written by a run of the whole file.
+ * tests/eventTranscript.test.js`, then read the diff. Goldens are written
+ * only when every test in the file has run; a filtered run writes nothing
+ * and fails.
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -260,7 +269,7 @@ const drawFrame = RenderingService.prototype.render;
 const hadScrollIntoView = 'scrollIntoView' in Element.prototype;
 beforeAll(() => {
   RenderingService.prototype.render = function countFrame() {
-    recording?.count('render');
+    recording?.step('render');
   };
   if (!hadScrollIntoView) {
     Element.prototype.scrollIntoView = function noteScroll() {
@@ -441,23 +450,49 @@ const COUNT_ORDER = [
   'autosave', 'autosave written', 'render', 'queued render', 'path', 'retime', 'undo saved', 'undo unchanged',
 ];
 
+/**
+ * One row's record, phase by phase, every line in the order it happened. An
+ * emit is a line, nested under the emit that caused it. So is each step the
+ * transcript counts (`· autosave`, `· path`, `· undo saved` …), so a commit's
+ * order is kept and not only its totals. In "later", a line no emit caused
+ * carries the fake clock's time since the act ended, so each timer's delay is
+ * part of the record.
+ */
 class Recorder {
   constructor() {
     this.phases = [];
     this.depth = 0;
   }
 
-  begin(name) {
-    this.phase = { name, lines: [], counts: new Map() };
+  begin(name, { timed = false } = {}) {
+    this.phase = { name, lines: [], counts: new Map(), startedAt: timed ? Date.now() : null };
     this.phases.push(this.phase);
   }
 
+  /** Add a line where the record has got to; returns its index. */
   note(text) {
-    this.phase.lines.push(`${'  '.repeat(this.depth + 1)}${text}`);
+    const { startedAt } = this.phase;
+    const when = startedAt !== null && this.depth === 0 ? `+${Date.now() - startedAt} ms ` : '';
+    this.phase.lines.push(`${'  '.repeat(this.depth + 1)}${when}${text}`);
+    return this.phase.lines.length - 1;
   }
 
-  count(name) {
+  tally(name) {
     this.phase.counts.set(name, (this.phase.counts.get(name) ?? 0) + 1);
+  }
+
+  /** A counted step: tallied for the phase, and a line where it happened. */
+  step(name) {
+    this.tally(name);
+    return this.note(`· ${name}`);
+  }
+
+  /** Finish a step's line once its outcome is known, with detail under it. */
+  complete(index, text, detail = []) {
+    const lines = this.phase.lines;
+    const indent = `${lines[index].match(/^ */)[0]}    `;
+    lines[index] = lines[index].replace(/· .*$/, `· ${text}`);
+    lines.splice(index + 1, 0, ...detail.map(line => `${indent}${line.trimStart()}`));
   }
 
   /** A callback for a request/response event, noting what it was answered. */
@@ -476,9 +511,22 @@ function before(object, name, take) {
 }
 
 /**
+ * What an Undo of this entry would take back: the entry against the one
+ * under it. A waypoint or node that appears whole is named, not listed field
+ * by field, because the model diff lists it.
+ */
+function undoEntryChange(under, entry) {
+  if (!under) return ['(the first entry)'];
+  const [was, is] = [new Map(), new Map()];
+  flatten(was, '', JSON.parse(under));
+  flatten(is, '', JSON.parse(entry));
+  return diffLines(was, is, { fields: false });
+}
+
+/**
  * Listen to everything the row's app does: each emit (nested by cause), what
- * it says and shows, the counts, and any listener that throws, which is
- * noted where it happened and does not stop the listeners after it, as in
+ * it says and shows, each counted step, and any listener that throws, which
+ * is noted where it happened and does not stop the listeners after it, as in
  * production (the harness would otherwise fail the test on it).
  */
 function instrument(app, recorder) {
@@ -501,21 +549,28 @@ function instrument(app, recorder) {
   bus.onListenerError = (error, { eventName }) => {
     recorder.note(`! a listener for ${eventName} threw ${error?.name}: ${error?.message}`);
   };
-  before(app, 'autoSave', () => recorder.count('autosave'));
-  before(app, 'queueRender', () => recorder.count('queued render'));
-  before(app, 'calculatePath', () => recorder.count('path'));
-  before(app, 'updateAnimationDuration', () => recorder.count('retime'));
-  before(app, 'announce', message => recorder.note(`said ${JSON.stringify(message)}`));
-  before(app, 'showToast', message => recorder.note(`toast ${JSON.stringify(message)}`));
+  before(app, 'autoSave', () => recorder.step('autosave'));
+  before(app, 'queueRender', () => recorder.step('queued render'));
+  before(app, 'calculatePath', () => recorder.step('path'));
+  before(app, 'updateAnimationDuration', () => recorder.step('retime'));
+  before(app, 'announce', (message, priority) => recorder.note(
+    `said ${JSON.stringify(message)}${priority && priority !== 'polite' ? ` (${priority})` : ''}`));
+  before(app, 'showToast', (message, duration, action) => recorder.note(
+    `toast ${JSON.stringify(message)}${duration === undefined ? '' : ` for ${duration} ms`}` +
+    `${action?.label ? ` offering ${JSON.stringify(action.label)}` : ''}`));
   before(app, 'showSelectWaypointPrompt', () => recorder.note('prompted "Select a waypoint to zoom"'));
   before(app.uiController, 'startRenameFor', waypoint => recorder.note(`rename started for ${summarise(waypoint)}`));
   before(app.storageService, '_writeSerialized', key => {
-    if (key === STORAGE.AUTOSAVE_KEY) recorder.count('autosave written');
+    if (key === STORAGE.AUTOSAVE_KEY) recorder.step('autosave written');
   });
   const saveState = app.undoService.saveState;
   app.undoService.saveState = function recordedSave(...args) {
+    const under = this._undoStack.at(-1);
+    const at = recorder.note('· undo save');
     const result = saveState.apply(this, args);
-    recorder.count(result?.saved ? 'undo saved' : 'undo unchanged');
+    const outcome = result?.saved ? 'undo saved' : 'undo unchanged';
+    recorder.tally(outcome);
+    recorder.complete(at, outcome, result?.saved ? undoEntryChange(under, this._undoStack.at(-1)) : []);
     return result;
   };
 }
@@ -618,7 +673,8 @@ function runtimeState(app) {
   return {
     previewMode: app.previewMode,
     canvas: `${formatNumber(app.displayWidth)}x${formatNumber(app.displayHeight)}`,
-    viewport: `zoom ${formatNumber(app.viewport.zoom)} pan ${formatNumber(app.viewport.panX)},${formatNumber(app.viewport.panY)}`,
+    viewport: `zoom ${formatNumber(app.viewport.zoom)} pan ${formatNumber(app.viewport.panX)},` +
+      `${formatNumber(app.viewport.panY)}`,
     transport: {
       playing: state.isPlaying,
       paused: state.isPaused,
@@ -649,6 +705,9 @@ function runtimeState(app) {
     branchArmed: app.interactionHandler?.branchArmed?.id ?? null,
     crowd: app.selectedCrowd?.id ?? null,
     dirty: app._isDirty,
+    // The format a video export is asked for: an export setting the saved
+    // project leaves out, so the model diff cannot show it.
+    exportFormat: app.exportSettings.format ?? null,
     ui: {
       playButton: elements.playBtn?.style.display || '(stylesheet)',
       pauseButton: elements.pauseBtn?.style.display || '(stylesheet)',
@@ -659,7 +718,8 @@ function runtimeState(app) {
         ? app._shareDisclosureTitle?.textContent
         : 'closed',
       contextMenu: contextMenuState(),
-      sections: `waypoints ${sections?.hasWaypoints} selection ${sections?.hasSelection} crowd ${sections?.hasCrowdSelection}`,
+      sections: `waypoints ${sections?.hasWaypoints} selection ${sections?.hasSelection}` +
+        ` crowd ${sections?.hasCrowdSelection}`,
     },
   };
 }
@@ -680,10 +740,11 @@ function selectionOf(app) {
     .filter(Boolean).join('; ');
 }
 
-function observe(app) {
+function observe(app, row = {}) {
   const model = new Map();
   flatten(model, '', app._buildProjectSnapshot({ includeAssets: false }));
   flatten(model, 'runtime', runtimeState(app));
+  if (row.observe) flatten(model, 'row', row.observe(app));
   return {
     model,
     selection: selectionOf(app),
@@ -700,10 +761,11 @@ function entityPrefixes(key) {
 
 /**
  * The model diff. An entry that appears whole (a new waypoint, node or
- * layer) is listed with its fields under one `+`; one that disappears is one
- * `-` line; anything else is a changed, added or removed field.
+ * layer) is listed with its fields under one `+`, or named alone without
+ * `fields`; one that disappears is one `-` line; anything else is a
+ * changed, added or removed field.
  */
-function diffLines(before, after) {
+function diffLines(before, after, { fields = true } = {}) {
   const known = map => new Set([...map.keys()].flatMap(entityPrefixes));
   const knownBefore = known(before);
   const knownAfter = known(after);
@@ -724,7 +786,7 @@ function diffLines(before, after) {
         opened.add(root);
         lines.push(`  + ${root}`);
       }
-      lines.push(`      ${key.slice(root.length).replace(/^\./, '')} = ${is}`);
+      if (fields) lines.push(`      ${key.slice(root.length).replace(/^\./, '')} = ${is}`);
     } else {
       const root = entityPrefixes(key).find(prefix => !knownAfter.has(prefix));
       if (!root) {
@@ -760,12 +822,46 @@ function countsText(counts) {
 }
 
 /**
+ * The copy browser recovery holds: the last autosave handed to storage in
+ * this test, unless the key was removed after it, as Clear All removes it.
+ * Calls on the two storage mocks are ordered by Vitest's call counter.
+ */
+function storedRecovery() {
+  const last = mock => mock.calls
+    .map((args, index) => ({ args, order: mock.invocationCallOrder[index] }))
+    .filter(({ args }) => args[0] === STORAGE.AUTOSAVE_KEY)
+    .at(-1);
+  const written = last(localStorage.setItem.mock);
+  const removed = last(localStorage.removeItem.mock);
+  if (!written || (removed && removed.order > written.order)) return null;
+  return JSON.parse(written.args[1]);
+}
+
+/**
+ * The project as browser recovery holds it, against the project as it
+ * stands: what a reload now would lose or bring back stale.
+ */
+function recoveryLines(app) {
+  const copy = storedRecovery();
+  if (!copy) return ['recovery: nothing stored'];
+  const [stored, live] = [new Map(), new Map()];
+  flatten(stored, '', copy);
+  flatten(live, '', app._buildProjectSnapshot({ includeAssets: false }));
+  const gap = diffLines(stored, live, { fields: false });
+  return gap[0] === '  (unchanged)'
+    ? ['recovery: as the project stands']
+    : ['recovery (stored -> project):', ...gap];
+}
+
+/**
  * Drive one row on a fresh app and return its transcript section.
  *
  * The act runs, then its promise continuations; that is "at once". Then the
  * clock runs on `LATER_MS`, and every timer due in that time runs, in order;
- * that is "later". The engine runs only the frames it is asked for, so a
- * playing transport shows one frame there, not a loop.
+ * that is "later". The project, selection and history are read before the
+ * act and after each phase, so a change shows in the phase that made it. The
+ * engine runs only the frames it is asked for, so a playing transport shows
+ * one frame there, not a loop.
  */
 async function transcribe(row) {
   const app = await bootWith(row.fixture);
@@ -775,34 +871,38 @@ async function transcribe(row) {
   await settleSetup(app);
 
   const recorder = new Recorder();
-  const was = observe(app);
+  const states = [observe(app, row)];
   instrument(app, recorder);
   recording = recorder;
   try {
     recorder.begin('at once');
     await row.act(app, { ...context, reply: () => recorder.reply() });
     await drainPromises();
-    recorder.begin('later');
+    states.push(observe(app, row));
+    recorder.begin('later', { timed: true });
     await vi.advanceTimersByTimeAsync(LATER_MS);
     await drainPromises();
+    states.push(observe(app, row));
   } finally {
     recording = null;
     recorder.restore();
   }
-  const is = observe(app);
 
   const lines = [`## ${row.title}`, `fixture: ${row.fixture}`];
   if (row.given) lines.push(`given: ${row.given}`);
   if (row.how) lines.push(`act: ${row.how}`);
-  for (const phase of recorder.phases) {
+  recorder.phases.forEach((phase, index) => {
+    const [was, is] = [states[index], states[index + 1]];
     lines.push(`${phase.name}: ${countsText(phase.counts)}`, ...phase.lines);
-  }
-  lines.push('model:', ...diffLines(was.model, is.model));
+    lines.push('  model:', ...diffLines(was.model, is.model).map(line => `  ${line}`));
+    lines.push(`  selection: ${change(was.selection, is.selection)}`);
+    lines.push(`  history: ${change(was.history, is.history)}`);
+  });
+  const [first, last] = [states[0], states.at(-1)];
   for (const key of row.watch ?? []) {
-    if (was.model.get(key) === is.model.get(key)) lines.push(`  kept ${key} = ${is.model.get(key)}`);
+    if (first.model.get(key) === last.model.get(key)) lines.push(`kept ${key} = ${last.model.get(key)}`);
   }
-  lines.push(`selection: ${change(was.selection, is.selection)}`);
-  lines.push(`history: ${change(was.history, is.history)}`);
+  lines.push(...recoveryLines(app));
   return nameNewIds(lines.join('\n'));
 }
 
@@ -834,6 +934,24 @@ function legPlus(app, index) {
   return { screen: screenAt(app, mid.x, mid.y), image: mid };
 }
 
+/** The swatch shown as chosen for a colour input, as its picker shows it. */
+function checkedSwatch(input) {
+  const picker = document.querySelector(`.swatch-picker[data-target-input="${input}"]`);
+  return picker?.querySelector('input[type="radio"]:checked')?.value ?? 'none';
+}
+
+/** What a video export reads from the app before its first await (`exporting.js`). */
+function exportHandoff(app) {
+  const { format, frameRate, resolutionX, resolutionY, pathOnly } = app.exportSettings;
+  return `format ${JSON.stringify(format)}, ${frameRate} fps, ${resolutionX}x${resolutionY}, path only ${pathOnly}` +
+    `, in ${app.previewMode ? 'Preview' : 'Edit'}`;
+}
+
+/** Select several waypoints, with one as primary, as the canvas does. */
+function multiSelect(app, ids, primary) {
+  emit(app, 'waypoint:multi-selected', { waypoints: ids.map(id => wp(app, id)), primary: wp(app, primary) });
+}
+
 /** J/K/L with L pressed twice: playing forward at 2x. */
 function playAtDoubleSpeed(app) {
   emit(app, 'animation:jkl-forward');
@@ -853,16 +971,21 @@ const JKL_STATE = ['runtime.jkl.live', 'runtime.jkl.unused', 'runtime.transport.
 const CONTROLLER_ROWS = [
   {
     event: 'background:upload', fixture: 'open day',
-    given: 'decoding the file gives a 1600x900 image (the app\'s loadImageFileAsset answers a prepared asset)',
-    setup: app => {
+    given: 'decoding replaced, since jsdom decodes no images: the app\'s loadImageFileAsset notes the file it is'
+      + ' given and answers a prepared 1600x900 image',
+    setup: (app, context) => {
       const asset = new ImageAsset({
         id: 'asset-upload', base64: PIXEL_DATA_URL, name: 'campus.png', width: 1600, height: 900,
         mimeType: 'image/png', size: 68,
       });
       asset._imageElement = stubImage([1600, 900]);
-      app.loadImageFileAsset = async () => asset;
+      context.file = new File([new Uint8Array(68)], 'campus.png', { type: 'image/png' });
+      app.loadImageFileAsset = async file => {
+        recording?.note(`decoding asked for ${summarise(file)}${file === context.file ? ', the file uploaded' : ''}`);
+        return asset;
+      };
     },
-    act: app => emit(app, 'background:upload', new File([new Uint8Array(68)], 'campus.png', { type: 'image/png' })),
+    act: (app, { file }) => emit(app, 'background:upload', file),
   },
   { event: 'background:overlay-change', fixture: 'open day', act: app => emit(app, 'background:overlay-change', 40) },
   { event: 'background:mode-change', fixture: 'open day', act: app => emit(app, 'background:mode-change', 'fill') },
@@ -950,6 +1073,22 @@ const CONTROLLER_ROWS = [
     act: app => emit(app, 'waypoint:nudge', { waypoint: wp(app, 'ex-uon-3'), dxFraction: 0, dyFraction: -0.02 }),
   },
   {
+    event: 'waypoint:nudge', title: 'waypoint:nudge past the map\'s edge', fixture: 'open day',
+    given: 'ex-uon-3 selected', how: 'a nudge of 30% of the canvas to the right (CON-13: the clamp at 100% zoom)',
+    setup: app => select(app, 'ex-uon-3'),
+    act: app => emit(app, 'waypoint:nudge', { waypoint: wp(app, 'ex-uon-3'), dxFraction: 0.3, dyFraction: 0 }),
+  },
+  {
+    event: 'waypoint:nudge', title: 'waypoint:nudge past the map\'s edge, zoomed out to 50%', fixture: 'open day',
+    given: 'the map zoomed out to 50%, ex-uon-3 selected',
+    how: 'a nudge of 30% of the canvas to the right (CON-13: the clamp zoomed out)',
+    setup: app => {
+      emit(app, 'background:zoom-change', 50);
+      select(app, 'ex-uon-3');
+    },
+    act: app => emit(app, 'waypoint:nudge', { waypoint: wp(app, 'ex-uon-3'), dxFraction: 0.3, dyFraction: 0 }),
+  },
+  {
     event: 'waypoint:add', fixture: 'open day', given: 'ex-uon-3 selected',
     setup: app => select(app, 'ex-uon-3'),
     act: app => emit(app, 'waypoint:add', { imgX: 0.9, imgY: 0.3, isMajor: true, shiftKey: false }),
@@ -959,6 +1098,12 @@ const CONTROLLER_ROWS = [
     given: 'ex-uon-2 selected',
     setup: app => select(app, 'ex-uon-2'),
     act: app => emit(app, 'waypoint:add', { imgX: 0.7, imgY: 0.5, isMajor: false, shiftKey: false }),
+  },
+  {
+    event: 'waypoint:add', title: 'waypoint:add with Shift held, snapped to 15°', fixture: 'open day',
+    given: 'ex-uon-3 selected',
+    setup: app => select(app, 'ex-uon-3'),
+    act: app => emit(app, 'waypoint:add', { imgX: 0.95, imgY: 0.37, isMajor: true, shiftKey: true }),
   },
   {
     event: 'waypoint:add', title: 'waypoint:add, the first waypoint of an empty route', fixture: 'empty route',
@@ -1006,6 +1151,31 @@ const CONTROLLER_ROWS = [
     act: app => emit(app, 'waypoint:toggle-select', wp(app, 'ex-uon-3')),
   },
   {
+    event: 'waypoint:toggle-select', title: 'waypoint:toggle-select, the primary out of four', fixture: 'open day',
+    given: 'ex-uon-1, ex-uon-2, ex-uon-2a and ex-uon-3 selected, ex-uon-3 primary',
+    how: 'ex-uon-3 toggled off: the reducer CON-02 merges promotes a survivor (here the last)',
+    setup: app => multiSelect(app, ['ex-uon-1', 'ex-uon-2', 'ex-uon-2a', 'ex-uon-3'], 'ex-uon-3'),
+    act: app => emit(app, 'waypoint:toggle-select', wp(app, 'ex-uon-3')),
+  },
+  {
+    event: 'waypoint:toggle-select', title: 'waypoint:toggle-select, another out of three', fixture: 'open day',
+    given: 'ex-uon-1, ex-uon-2a and ex-uon-3 selected, ex-uon-3 primary', how: 'ex-uon-1 toggled off',
+    setup: app => multiSelect(app, ['ex-uon-1', 'ex-uon-2a', 'ex-uon-3'], 'ex-uon-3'),
+    act: app => emit(app, 'waypoint:toggle-select', wp(app, 'ex-uon-1')),
+  },
+  {
+    event: 'waypoint:toggle-select', title: 'waypoint:toggle-select, two down to one', fixture: 'open day',
+    given: 'ex-uon-1 and ex-uon-3 selected, ex-uon-3 primary', how: 'ex-uon-3 toggled off',
+    setup: app => multiSelect(app, ['ex-uon-1', 'ex-uon-3'], 'ex-uon-3'),
+    act: app => emit(app, 'waypoint:toggle-select', wp(app, 'ex-uon-3')),
+  },
+  {
+    event: 'waypoint:toggle-select', title: 'waypoint:toggle-select, the only one', fixture: 'open day',
+    given: 'ex-uon-1 selected', how: 'ex-uon-1 toggled off',
+    setup: app => select(app, 'ex-uon-1'),
+    act: app => emit(app, 'waypoint:toggle-select', wp(app, 'ex-uon-1')),
+  },
+  {
     event: 'waypoint:deselected', fixture: 'open day', given: 'ex-uon-2 selected',
     setup: app => select(app, 'ex-uon-2'),
     act: app => emit(app, 'waypoint:deselected'),
@@ -1013,6 +1183,13 @@ const CONTROLLER_ROWS = [
   {
     event: 'waypoint:delete', fixture: 'open day', given: 'ex-uon-1 selected',
     setup: app => select(app, 'ex-uon-1'),
+    act: app => emit(app, 'waypoint:delete', wp(app, 'ex-uon-1')),
+  },
+  {
+    event: 'waypoint:delete', title: 'waypoint:delete, the primary of three selected', fixture: 'open day',
+    given: 'ex-uon-1, ex-uon-2a and ex-uon-3 selected, ex-uon-1 primary',
+    how: 'ex-uon-1 deleted: deleting promotes a survivor (here the last), the other reducer CON-02 merges',
+    setup: app => multiSelect(app, ['ex-uon-1', 'ex-uon-2a', 'ex-uon-3'], 'ex-uon-1'),
     act: app => emit(app, 'waypoint:delete', wp(app, 'ex-uon-1')),
   },
   {
@@ -1053,6 +1230,13 @@ const CONTROLLER_ROWS = [
     },
   },
   {
+    event: 'canvas:show-context-menu', title: 'canvas:show-context-menu in the margin, zoomed out to 50%',
+    fixture: 'open day', given: 'the map zoomed out to 50%',
+    how: 'a right-click in the margin beside the map (CON-13: the bounds rule zoomed out)',
+    setup: app => emit(app, 'background:zoom-change', 50),
+    act: app => emit(app, 'canvas:show-context-menu', { x: 30, y: 380, canvasX: 20, canvasY: 330 }),
+  },
+  {
     event: 'waypoint:toggle-type', fixture: 'open day',
     act: app => emit(app, 'waypoint:toggle-type', wp(app, 'ex-uon-2a')),
   },
@@ -1090,13 +1274,19 @@ const CONTROLLER_ROWS = [
     event: 'video:resolution-change', fixture: 'open day',
     act: app => emit(app, 'video:resolution-change', { width: 1280, height: null }),
   },
+  {
+    event: 'video:resolution-change', title: 'video:resolution-change, a new height', fixture: 'open day',
+    act: app => emit(app, 'video:resolution-change', { width: null, height: 720 }),
+  },
   { event: 'video:resolution-native', fixture: 'open day', act: app => emit(app, 'video:resolution-native') },
   { event: 'background:zoom-change', fixture: 'open day', act: app => emit(app, 'background:zoom-change', 150) },
   {
     event: 'video:export-request', fixture: 'open day',
-    given: 'the app\'s exportVideo replaced by a note, since jsdom has no encoder',
+    given: 'the format at its default, MP4; the app\'s whole exportVideo replaced, since jsdom has no encoder, by'
+      + ' a note of what it was asked for and the settings it reads before its first await',
     setup: app => {
-      app.exportVideo = () => recording?.note('exportVideo called (replaced)');
+      app.exportVideo = (...asked) => recording?.note(
+        `exportVideo called (replaced) with ${JSON.stringify(asked)}: it would read ${exportHandoff(app)}`);
     },
     act: app => emit(app, 'video:export-request', 'webm'),
   },
@@ -1138,6 +1328,17 @@ const CONTROLLER_ROWS = [
   },
   {
     event: 'coordinate:check-bounds', fixture: 'open day', how: 'a point on the map, then one in the margin beside it',
+    act: (app, { reply }) => {
+      const inside = screenAt(app, 0.5, 0.5);
+      emit(app, 'coordinate:check-bounds', { canvasX: inside.x, canvasY: inside.y }, reply());
+      emit(app, 'coordinate:check-bounds', { canvasX: 20, canvasY: inside.y }, reply());
+    },
+  },
+  {
+    event: 'coordinate:check-bounds', title: 'coordinate:check-bounds, zoomed out to 50%', fixture: 'open day',
+    given: 'the map zoomed out to 50%',
+    how: 'a point on the map, then one in the margin beside it (CON-13: the bounds rule zoomed out)',
+    setup: app => emit(app, 'background:zoom-change', 50),
     act: (app, { reply }) => {
       const inside = screenAt(app, 0.5, 0.5);
       emit(app, 'coordinate:check-bounds', { canvasX: inside.x, canvasY: inside.y }, reply());
@@ -1225,6 +1426,12 @@ const CONTROLLER_ROWS = [
     act: app => emit(app, 'waypoint:duplicate'),
   },
   { event: 'waypoint:select-all', fixture: 'open day', act: app => emit(app, 'waypoint:select-all') },
+  {
+    event: 'waypoint:select-all', title: 'waypoint:select-all, keeping the selected waypoint as primary',
+    fixture: 'open day', given: 'ex-uon-3 selected',
+    setup: app => select(app, 'ex-uon-3'),
+    act: app => emit(app, 'waypoint:select-all'),
+  },
   {
     event: 'ui:toast', fixture: 'open day',
     act: app => emit(app, 'ui:toast', { message: 'Shift-click deletes; Ctrl+Z brings it back', duration: 3000 }),
@@ -1321,6 +1528,19 @@ const BUS_ROWS = [
     },
   },
   {
+    event: 'waypoint:position-changed', title: 'waypoint:position-changed, a group drag past the map\'s edge',
+    fixture: 'open day', given: 'ex-uon-1 and ex-uon-3 selected, ex-uon-3 primary',
+    how: 'one pointer move dragging both, ex-uon-3 to 1.3 across (CON-13: one shared delta kept on the map)',
+    setup: app => multiSelect(app, ['ex-uon-1', 'ex-uon-3'], 'ex-uon-3'),
+    act: app => {
+      const dragGroup = ['ex-uon-1', 'ex-uon-3'].map(id => wp(app, id))
+        .map(waypoint => ({ waypoint, imgX: waypoint.imgX, imgY: waypoint.imgY }));
+      emit(app, 'waypoint:position-changed', {
+        waypoint: wp(app, 'ex-uon-3'), imgX: 1.3, imgY: 0.42, isDragging: true, shiftKey: false, dragGroup,
+      });
+    },
+  },
+  {
     event: 'waypoint:drag-ended', fixture: 'open day', given: 'ex-uon-3 dragged to (0.8, 0.5)',
     setup: (app, context) => dragTo(app, context, 'ex-uon-3', 0.8, 0.5),
     act: (app, { dragGroup }) => {
@@ -1369,10 +1589,20 @@ const BUS_ROWS = [
   },
   {
     event: 'ui:refresh-swatches', fixture: 'open day',
+    given: 'the area fill\'s hidden input set to None without an input event, as the inspector writes it, so its'
+      + ' swatches still show the old choice (jsdom loads no stylesheet, so only None has a swatch value)',
+    setup: () => {
+      document.querySelector('#area-fill-color').value = 'transparent';
+    },
+    observe: () => ({
+      areaFillSwatch: checkedSwatch('#area-fill-color'),
+      areaBorderSwatch: checkedSwatch('#area-border-color'),
+    }),
     act: app => emit(app, 'ui:refresh-swatches', { targets: ['#area-fill-color', '#area-border-color'] }),
   },
   {
-    event: 'waypoint:path-property-changed', fixture: 'open day', how: 'ex-uon-2\'s leg colour set, then reported on the bus',
+    event: 'waypoint:path-property-changed', fixture: 'open day',
+    how: 'ex-uon-2\'s leg colour set, then reported on the bus',
     act: app => {
       wp(app, 'ex-uon-2').segmentColor = '#009E73';
       emit(app, 'waypoint:path-property-changed', wp(app, 'ex-uon-2'));
@@ -1386,7 +1616,8 @@ const BUS_ROWS = [
     },
   },
   {
-    event: 'waypoint:speed-changed', fixture: 'open day', how: 'ex-uon-2\'s leg speed set to 2x, then reported on the bus',
+    event: 'waypoint:speed-changed', fixture: 'open day',
+    how: 'ex-uon-2\'s leg speed set to 2x, then reported on the bus',
     act: app => {
       wp(app, 'ex-uon-2').segmentSpeed = 2;
       emit(app, 'waypoint:speed-changed', { waypoint: wp(app, 'ex-uon-2'), segmentSpeed: 2 });
@@ -1417,7 +1648,8 @@ const BUS_ROWS = [
     act: app => app.animationEngine.reset(),
   },
   {
-    event: 'animation:waypointWaitEnd', fixture: 'open day', how: 'the notice the engine sends as a wait ends, sent alone',
+    event: 'animation:waypointWaitEnd', fixture: 'open day',
+    how: 'the notice the engine sends as a wait ends, sent alone',
     act: app => emit(app, 'animation:waypointWaitEnd', 1),
   },
 ];
@@ -1431,8 +1663,13 @@ const crowdLayer = app => app.scene.getFlowLayers().find(each => each.id === 'ex
 function emitterCommand(app, changes) {
   const layer = crowdLayer(app);
   const emitter = layer.emitters[0];
-  const command = { action: 'update-emitter', layerId: layer.id, emitterId: emitter.id, outlineOriginalValues: {} };
-  for (const field of ['releaseStart', 'releaseDuration', 'onsetVariance', 'speedVariance', 'wobble', 'intensityRamp']) {
+  const command = {
+    action: 'update-emitter', layerId: layer.id, emitterId: emitter.id, outlineOriginalValues: {},
+  };
+  const percentFields = [
+    'releaseStart', 'releaseDuration', 'onsetVariance', 'speedVariance', 'wobble', 'intensityRamp',
+  ];
+  for (const field of percentFields) {
     command[field] = String(emitter[field] * 100);
     command.outlineOriginalValues[field] = { display: command[field], canonical: emitter[field] };
   }
@@ -1556,29 +1793,77 @@ function transcriptHeader(golden) {
       : '# What the scene-edit commits CON-03 will merge do, reached through the bus.',
     '# A row starts in Edit mode, nothing selected, the transport paused at the',
     '# start, unless its "given" says otherwise. "at once" is the emit and its',
-    '# promise continuations; "later" runs the clock on ten seconds, so the',
-    '# retime, undo grouping, autosave write and queued frames run in order.',
-    '# Nested lines are what an emit caused. Written by',
-    '# tests/eventTranscript.test.js (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1',
-    '# and read the diff.',
+    '# promise continuations; "later" runs the clock on ten seconds, and each line',
+    '# no emit caused carries the time since the act. Nested lines are what an',
+    '# emit caused; "·" marks a counted step, an undo entry with what an Undo would',
+    '# take back. Each phase ends with the change it made to the project, the',
+    '# selection and the undo history; "recovery" compares the copy browser',
+    '# recovery holds with the project. Written by tests/eventTranscript.test.js',
+    '# (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1 and read the diff.',
   ].join('\n');
 }
+
+const REGISTRATIONS = 'event-registrations.txt';
+
+/**
+ * What this run recorded, kept until the file ends: the registration golden
+ * and each transcript's sections, by row title.
+ */
+const recorded = {
+  registrations: null,
+  sections: new Map(GOLDENS.map(golden => [golden.file, new Map()])),
+};
+
+function goldenText(golden) {
+  const sections = recorded.sections.get(golden.file);
+  return `${transcriptHeader(golden)}\n\n${golden.rows.map(row => sections.get(row.title)).join('\n\n')}\n`;
+}
+
+/**
+ * Whole files are compared, and written, once every test has run, in
+ * whatever order they ran. A run that left a test unrecorded (a `-t`
+ * filter, a failure) has compared each section it recorded in its own test,
+ * and compares no whole file; asked to regenerate, it writes nothing and
+ * fails, so a partial run cannot overwrite a golden.
+ */
+afterAll(() => {
+  const missing = [
+    ...(recorded.registrations === null ? ['the registration test'] : []),
+    ...GOLDENS.flatMap(golden => golden.rows
+      .filter(row => !recorded.sections.get(golden.file).has(row.title))
+      .map(row => `${golden.file}: ${row.title}`)),
+  ];
+  if (UPDATING) {
+    if (missing.length > 0) {
+      throw new Error(`UPDATE_EVENT_GOLDENS=1 wrote nothing: ${missing.length} tests did not record, ` +
+        `starting with "${missing[0]}". Regenerate with a run of the whole file.`);
+    }
+    writeFileSync(goldenPath(REGISTRATIONS), recorded.registrations, 'utf8');
+    for (const golden of GOLDENS) writeFileSync(goldenPath(golden.file), goldenText(golden), 'utf8');
+    return;
+  }
+  for (const golden of GOLDENS) {
+    const sections = recorded.sections.get(golden.file);
+    if (!golden.rows.every(row => sections.has(row.title))) continue;
+    const path = goldenPath(golden.file);
+    expect(existsSync(path), `Missing golden ${path}`).toBe(true);
+    expect(readFileSync(path, 'utf8'), `${golden.file} differs from the rows just recorded`).toBe(goldenText(golden));
+  }
+});
 
 describe('the bus listeners', () => {
   test('once the app is ready, every listener is where the golden says, in the same order', async () => {
     const { app, noted } = await bootNotingListeners();
     const text = registrationGolden(listenerTable(app, noted));
     expect(text, 'a listener whose module could not be read').not.toMatch(/\((unknown|unattributed)\)/);
-    const path = goldenPath('event-registrations.txt');
-    if (UPDATING) {
-      writeFileSync(path, text, 'utf8');
-      return;
-    }
+    recorded.registrations = text;
+    if (UPDATING) return;
+    const path = goldenPath(REGISTRATIONS);
     expect(existsSync(path), `Missing golden ${path}`).toBe(true);
     expect(text).toBe(readFileSync(path, 'utf8'));
   });
 
-  test('every event the two wiring files subscribe to has a transcript row or a stated reason, and no more', async () => {
+  test('every event the two wiring files subscribe to has a row or a stated reason, and no more', async () => {
     const { noted } = await bootNotingListeners();
     for (const golden of GOLDENS.filter(each => each.source)) {
       const subscribed = new Set(noted.filter(each => each.module === golden.source).map(each => each.eventName));
@@ -1605,7 +1890,6 @@ describe('the bus listeners', () => {
 for (const golden of GOLDENS) {
   describe(`the transcript of ${golden.source ?? 'the scene-edit commits'}`, () => {
     const expected = goldenSections(golden.file);
-    const computed = new Map();
     const titles = golden.rows.map(row => row.title);
 
     test('has one row per title', () => {
@@ -1615,24 +1899,11 @@ for (const golden of GOLDENS) {
     for (const row of golden.rows) {
       test(`${row.title} does what its transcript records`, async () => {
         const text = await transcribe(row);
-        computed.set(row.title, text);
+        recorded.sections.get(golden.file).set(row.title, text);
         if (UPDATING) return;
         expect(expected.has(row.title), `No section for "${row.title}" in ${golden.file}`).toBe(true);
         expect(text).toBe(expected.get(row.title));
       }, 20000);
     }
-
-    test('the golden file is byte-identical to the rows just recorded', () => {
-      const missing = titles.filter(title => !computed.has(title));
-      expect(missing, 'rows that did not record: run the whole file').toEqual([]);
-      const text = `${transcriptHeader(golden)}\n\n${titles.map(title => computed.get(title)).join('\n\n')}\n`;
-      const path = goldenPath(golden.file);
-      if (UPDATING) {
-        writeFileSync(path, text, 'utf8');
-        return;
-      }
-      expect(existsSync(path), `Missing golden ${path}`).toBe(true);
-      expect(text).toBe(readFileSync(path, 'utf8'));
-    });
   });
 }
