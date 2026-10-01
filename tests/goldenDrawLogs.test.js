@@ -1474,6 +1474,7 @@ describe('golden draw logs (TST-02)', () => {
        * mask that cuts it are drawn under one transform, the camera's, and the
        * route is drawn under it too; the mask's circle, or its cone's arc, is
        * centred where the route's path ends, so the mask stays on the head.
+       * Returns the frame.
        */
       function expectMaskUnderTheCamera(host, label) {
         const frame = frameAt(host, 0.5, { state: true });
@@ -1487,6 +1488,7 @@ describe('golden draw logs (TST-02)', () => {
         expect(transformOf(edge), `${label}: the mask's edge`).toBe(mask);
         const [x, y] = edge.split(' ').slice(2, 4);
         expect(strokeEnds(frame), `${label}: the route ends where the mask is centred`).toContain(`${x} ${y} @ ${mask}`);
+        return frame;
       }
 
       for (const mode of [BACKGROUND_VISIBILITY.SPOTLIGHT, BACKGROUND_VISIBILITY.ANGLE_OF_VIEW]) {
@@ -1514,6 +1516,36 @@ describe('golden draw logs (TST-02)', () => {
         });
       }
 
+      /**
+       * Under the author's viewport zoom `zoom`, set here on an app in
+       * Preview with the camera on and the tint at -40: at 0.5 the image, the
+       * mask, the tint and the route are drawn under the viewport alone, its
+       * whole matrix, and the mask is centred where the route ends. Returns
+       * the frame.
+       */
+      function expectUnderTheViewportAlone(app, zoom) {
+        app.setZoom(zoom, app.waypoints[1]);
+        const label = `at ${zoom}×`;
+        const frame = frameAt(app, 0.5, { state: true });
+        const { panX, panY } = app.viewport;
+        const viewport = [zoom, 0, 0, zoom, -zoom * panX, -zoom * panY].map(n => Number(n.toFixed(3))).join(' ');
+        const image = placement(onlyLine(frame, isImage, `${label}: the image`));
+        const tint = placement(onlyLine(frame, line => line.startsWith('main fillRect ')
+          && / globalAlpha=0\.4( |$)/.test(line), `${label}: the tint`));
+        const mask = transformOf(onlyLine(frame, line => line.startsWith('main fill @ ')
+          && line.includes(' globalCompositeOperation=destination-in'), `${label}: the mask`));
+        const edge = onlyLine(frame, line => line.startsWith('main arc ')
+          && line.includes(' globalCompositeOperation=destination-in'), `${label}: the mask's edge`);
+        const route = [...new Set(frame.filter(line => /^vector (moveTo|lineTo) /.test(line)).map(transformOf))];
+        expect(image.transform.split(' ').map(Number).join(' '), label).toBe(viewport);
+        expect(tint, `${label}: the tint`).toEqual(image);
+        expect([mask, transformOf(edge)], `${label}: the mask`).toEqual([image.transform, image.transform]);
+        expect(route, `${label}: the route`).toEqual([image.transform]);
+        const [x, y] = edge.split(' ').slice(2, 4);
+        expect(strokeEnds(frame), `${label}: the route ends where the mask is centred`).toContain(`${x} ${y} @ ${mask}`);
+        return frame;
+      }
+
       for (const mode of [BACKGROUND_VISIBILITY.SPOTLIGHT, BACKGROUND_VISIBILITY.ANGLE_OF_VIEW]) {
         test(`under the author's viewport zoom, the instant ${mode}'s image, its mask, the tint and the route are drawn under the viewport alone, though the camera is on`, async () => {
           // DEF-61's rule, which the instant modes and the tint now follow:
@@ -1524,28 +1556,19 @@ describe('golden draw logs (TST-02)', () => {
           fixture.project.background.overlay = -40;
           const app = await appWithFixture(fixture);
           enterMode(app, 'preview');
-          for (const zoom of [1.5, 2]) {
-            app.setZoom(zoom, app.waypoints[1]);
-            const label = `at ${zoom}×`;
-            const frame = frameAt(app, 0.5, { state: true });
-            const { panX, panY } = app.viewport;
-            const viewport = [zoom, 0, 0, zoom, -zoom * panX, -zoom * panY].map(n => Number(n.toFixed(3))).join(' ');
-            const image = placement(onlyLine(frame, isImage, `${label}: the image`));
-            const tint = placement(onlyLine(frame, line => line.startsWith('main fillRect ')
-              && / globalAlpha=0\.4( |$)/.test(line), `${label}: the tint`));
-            const mask = transformOf(onlyLine(frame, line => line.startsWith('main fill @ ')
-              && line.includes(' globalCompositeOperation=destination-in'), `${label}: the mask`));
-            const edge = onlyLine(frame, line => line.startsWith('main arc ')
-              && line.includes(' globalCompositeOperation=destination-in'), `${label}: the mask's edge`);
-            const route = [...new Set(frame.filter(line => /^vector (moveTo|lineTo) /.test(line)).map(transformOf))];
-            expect(image.transform.split(' ').map(Number).join(' '), label).toBe(viewport);
-            expect(tint, `${label}: the tint`).toEqual(image);
-            expect([mask, transformOf(edge)], `${label}: the mask`).toEqual([image.transform, image.transform]);
-            expect(route, `${label}: the route`).toEqual([image.transform]);
-            const [x, y] = edge.split(' ').slice(2, 4);
-            expect(strokeEnds(frame), `${label}: the route ends where the mask is centred`).toContain(`${x} ${y} @ ${mask}`);
-          }
+          for (const zoom of [1.5, 2]) expectUnderTheViewportAlone(app, zoom);
         });
+      }
+
+      /**
+       * The matrix a camera puts on a canvas with no transform of its own (at
+       * pixel density 1, with no viewport zoom), worked out here and not asked
+       * of the renderer: the camera's centre to the canvas's middle, zoomed
+       * about it, to the transcript's thousandths.
+       */
+      function cameraMatrix({ zoom, centerX, centerY }, width, height) {
+        return [zoom, 0, 0, zoom, width / 2 - zoom * centerX, height / 2 - zoom * centerY]
+          .map(n => Number(n.toFixed(3))).join(' ');
       }
 
       for (const mode of [BACKGROUND_VISIBILITY.SPOTLIGHT, BACKGROUND_VISIBILITY.ANGLE_OF_VIEW]) {
@@ -1601,13 +1624,15 @@ describe('golden draw logs (TST-02)', () => {
                 && line.includes(' globalCompositeOperation=destination-in'), 'the mask\'s edge');
               // The gradient that feathers the edge (the fixture's feather and
               // dropoff are not zero), as visible as the edge: its outer circle
-              // and its centre
+              // and its centre, and its inner circle's centre, which away from
+              // the edge's would push the feather to one side, though the edge
+              // and the outer circle were right
               const gradient = onlyLine(frame, line => line.startsWith('main createRadialGradient '), 'the mask\'s gradient');
-              const [, , , , , gx, gy, outer] = gradient.split(' ');
+              const [, , ix, iy, , gx, gy, outer] = gradient.split(' ');
               return {
                 radius: Number(edge.split(' ')[4]),
                 centre: edge.split(' ').slice(2, 4).map(Number),
-                gradient: { outer: Number(outer), centre: [Number(gx), Number(gy)] },
+                gradient: { outer: Number(outer), centre: [Number(gx), Number(gy)], innerCentre: [Number(ix), Number(iy)] },
                 transform: transformOf(edge),
               };
             } finally {
@@ -1630,12 +1655,120 @@ describe('golden draw logs (TST-02)', () => {
             expect(each.radius).toBeCloseTo(expected, 2);
             expect(each.gradient.outer).toBeCloseTo(expected, 2);
             expect(each.gradient.centre).toEqual(each.centre);
+            expect(each.gradient.innerCentre).toEqual(each.centre);
           }
           expect([zoomed.radius, deep.radius]).toEqual([off.radius, off.radius]);
           expect(zoomed.transform).toMatch(/^1\.75 0 0 1\.75 /);
           expect(deep.transform).toMatch(/^4 0 0 4 /);
         });
+
+        test(`half way through its one-second intro, the instant ${mode}'s circle or cone is 87.5% of the size the settings give it, with the camera on as with it off`, async () => {
+          // The intro grows the circle or cone from nothing over the first
+          // second, easing out (cubic), so 500 ms in it is 1 - 0.5³ = 87.5% of
+          // the size the settings give it. The camera zooms it on top of that,
+          // as it zooms the image; it does not take the intro's place
+          // (Codex's fourth review of DEF-27: a cone that skipped its intro
+          // under the camera passed).
+          const fixture = fixtures().find(each => each.id === 'authored-extras');
+          fixture.project.motionSettings.backgroundVisibility = mode;
+          const app = await appWithFixture(fixture);
+          enterMode(app, 'preview');
+          const [width, height] = [app.displayWidth, app.displayHeight];
+          const expected = (1 - (1 - 500 / 1000) ** 3) * (mode === BACKGROUND_VISIBILITY.SPOTLIGHT
+            ? app.motionSettings.revealSize / 100 * (width + height) / 2
+            : app.motionSettings.aovDistance / 100 * Math.hypot(width, height));
+          for (const camera of [
+            { zoom: 1, centerX: 330, centerY: 330, enabled: false },
+            { zoom: 1.75, centerX: 330, centerY: 330, enabled: true },
+            { zoom: 4, centerX: 330, centerY: 330, enabled: true },
+          ]) {
+            const label = camera.enabled ? `camera at ${camera.zoom}×` : 'camera off';
+            const calculated = vi.spyOn(app, '_calculateCameraState').mockReturnValue(camera);
+            try {
+              const frame = frameAt(app, 500 / app.animationEngine.state.duration, { state: true });
+              expect(app.animationEngine.getTime(), `${label}: the instant`).toBeCloseTo(500, 6);
+              const edge = onlyLine(frame, line => line.startsWith('main arc ')
+                && line.includes(' globalCompositeOperation=destination-in'), `${label}: the mask's edge`);
+              const gradient = onlyLine(frame, line => line.startsWith('main createRadialGradient '), `${label}: the mask's gradient`);
+              expect(Number(edge.split(' ')[4]), `${label}: the edge`).toBeCloseTo(expected, 2);
+              expect(Number(gradient.split(' ')[7]), `${label}: the gradient's outer circle`).toBeCloseTo(expected, 2);
+              expect(transformOf(edge), label).toBe(camera.enabled ? cameraMatrix(camera, width, height) : '1 0 0 1 0 0');
+            } finally {
+              calculated.mockRestore();
+            }
+          }
+        });
       }
+
+      test(`with no dropoff, the instant ${BACKGROUND_VISIBILITY.ANGLE_OF_VIEW}'s cone, which has no gradient, is drawn with its image under the route's camera in every host, and under the viewport alone at a viewport zoom`, async () => {
+        // At 0% View Dropoff, the control's lowest setting, the cone is filled
+        // solid and makes no gradient: the renderer's other branch, which the
+        // fixture's 23% never reaches. A camera put on the gradient's branch
+        // alone passed every test above (Codex's fourth review of DEF-27).
+        const fixture = fixtures().find(each => each.id === 'authored-extras');
+        fixture.project.motionSettings.backgroundVisibility = BACKGROUND_VISIBILITY.ANGLE_OF_VIEW;
+        fixture.project.motionSettings.aovDropoff = 0;
+        fixture.project.background.overlay = -40;
+        const app = await appWithFixture(fixture);
+        enterMode(app, 'preview');
+        const { app: exporter, player } = await exportAndPlayer(fixture);
+        const gradients = frame => frame.filter(line => line.startsWith('main createRadialGradient '));
+        // Under the fixture's own camera, at its authored 1.75× at 0.5
+        for (const [label, host] of [['preview', app], ['export', exporter], ['player', player]]) {
+          expect(host.motionSettings.aovDropoff, label).toBe(0);
+          expect(gradients(expectMaskUnderTheCamera(host, label)), `${label}: no gradient`).toEqual([]);
+        }
+        // And DEF-61's rule, as for the feathered cone
+        for (const zoom of [1.5, 2]) {
+          expect(gradients(expectUnderTheViewportAlone(app, zoom)), `at ${zoom}×: no gradient`).toEqual([]);
+        }
+      });
+
+      test(`with no dropoff, the instant ${BACKGROUND_VISIBILITY.ANGLE_OF_VIEW}'s cone is the distance the settings give it at any camera zoom, drawn with its image and the route under the camera, on the head, in every host`, async () => {
+        // The solid cone again, with the camera off, at 1.75× and at 4×, about
+        // a centre away from the canvas's middle. Its distance is worked out
+        // here from the settings, as the feathered cone's is, and read off its
+        // edge, there being no gradient to read; the camera's matrix is
+        // worked out here too.
+        const fixture = fixtures().find(each => each.id === 'authored-extras');
+        fixture.project.motionSettings.backgroundVisibility = BACKGROUND_VISIBILITY.ANGLE_OF_VIEW;
+        fixture.project.motionSettings.aovDropoff = 0;
+        const app = await appWithFixture(fixture);
+        enterMode(app, 'preview');
+        const { app: exporter, player } = await exportAndPlayer(fixture);
+        for (const [name, host] of [['preview', app], ['export', exporter], ['player', player]]) {
+          expect(host.motionSettings.aovDropoff, name).toBe(0);
+          const [width, height] = [host.displayWidth, host.displayHeight];
+          const distance = fixture.project.motionSettings.aovDistance / 100 * Math.hypot(width, height);
+          for (const camera of [
+            { zoom: 1, centerX: 330, centerY: 330, enabled: false },
+            { zoom: 1.75, centerX: 137.25, centerY: 211.75, enabled: true },
+            { zoom: 4, centerX: 137.25, centerY: 211.75, enabled: true },
+          ]) {
+            const label = `${name}, camera ${camera.enabled ? `at ${camera.zoom}×` : 'off'}`;
+            const calculated = vi.spyOn(host, '_calculateCameraState').mockReturnValue(camera);
+            let frame;
+            try {
+              frame = frameAt(host, 0.5, { state: true });
+            } finally {
+              calculated.mockRestore();
+            }
+            expect(frame.filter(line => line.startsWith('main createRadialGradient ')), `${label}: no gradient`).toEqual([]);
+            const image = transformOf(onlyLine(frame, isImage, `${label}: the image`));
+            const edge = onlyLine(frame, line => line.startsWith('main arc ')
+              && line.includes(' globalCompositeOperation=destination-in'), `${label}: the cone's edge`);
+            const fill = transformOf(onlyLine(frame, line => line.startsWith('main fill @ ')
+              && line.includes(' globalCompositeOperation=destination-in'), `${label}: the cone`));
+            const route = [...new Set(frame.filter(line => /^vector (moveTo|lineTo) /.test(line)).map(transformOf))];
+            expect(image, `${label}: the image`).toBe(camera.enabled ? cameraMatrix(camera, width, height) : '1 0 0 1 0 0');
+            expect([transformOf(edge), fill], `${label}: the cone`).toEqual([image, image]);
+            expect(route, `${label}: the route`).toEqual([image]);
+            expect(Number(edge.split(' ')[4]), `${label}: the distance`).toBeCloseTo(distance, 2);
+            const [x, y] = edge.split(' ').slice(2, 4);
+            expect(strokeEnds(frame), `${label}: the route ends at the cone's tip`).toContain(`${x} ${y} @ ${image}`);
+          }
+        }
+      });
 
     });
 
