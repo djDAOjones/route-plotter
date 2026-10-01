@@ -36,10 +36,13 @@
  *
  * ## Running and importing
  * The build runs only when Node runs this file as a script (`node build.js`,
- * as every npm script does); importing it runs nothing (SPL-06). Tests import
- * the pure checks the build applies, and the two release-safety steps
- * (`publishBuiltOutput`, `rollBackFailedBuild`), which act only on the paths
- * they are given.
+ * as every npm script does); importing it starts no build and reads none of
+ * its inputs (SPL-06). On Node 24.0 and 24.1 the entry check resolves two
+ * paths to decide (isEntryScript). Tests call the pure checks the build
+ * applies, and the two release-safety steps (`publishBuiltOutput`,
+ * `rollBackFailedBuild`), which act only on the paths they are given; they
+ * import this file only in a copy of the repository
+ * (tests/helpers/buildScriptHarness.js).
  */
 
 import * as esbuild from 'esbuild';
@@ -129,7 +132,7 @@ function verifyPublicAssetHashes(manifest, sourceRoot = '.') {
 
 // The approved manifest and what the build derives from it. main() reads and
 // verifies the manifest before any build step, so every step sees these set;
-// importing this file leaves them empty and reads nothing.
+// importing this file leaves them empty and reads no manifest.
 let publicAssetManifest = null;
 let approvedPublicImageFiles = [];
 let approvedPublicImageHashes = new Map();
@@ -377,15 +380,19 @@ function listOutputFiles(root, relativeDir = '') {
 }
 
 /**
- * Check a generated index.html against the release it belongs to: every
- * stylesheet carries this release's `?v=`, the example backgrounds are exactly
- * the owner-approved images in manifest order, and nothing loads from another
- * origin. Pure: the caller reads the file and looks for what it references.
+ * Check a generated index.html against the release it belongs to: at least
+ * one stylesheet carries a `?v=`, and every one that does carries this
+ * release's; the example backgrounds are exactly the owner-approved images in
+ * manifest order; and no double-quoted `src`, `href` or `data-image` points at
+ * another origin. Only those double-quoted attributes are read, and a
+ * stylesheet without a `?v=` is not checked (both as before SPL-06). Pure:
+ * the caller reads the file and looks for what it references.
  * @param {string} html - the generated index.html
  * @param {string} version - the version the build stamped
  * @param {string[]} approvedImages - the manifest's image paths, in order
- * @returns {string[]} the local paths it references, without query or
- *   fragment, in document order
+ * @returns {string[]} the local paths its double-quoted `src`, `href` and
+ *   `data-image` attributes reference, without query or fragment, in
+ *   document order
  */
 export function checkGeneratedIndex(html, version, approvedImages) {
   const stylesheetVersions = [...html.matchAll(/href="styles\/[^"?]+\.css\?v=([^"]+)"/g)]
@@ -687,7 +694,8 @@ export function resolveBuildMode(argv) {
  * there the script path is compared with this module's path, both resolved:
  * `process.argv[1]` keeps a symlink, or the macOS `/tmp` alias, as typed, and
  * an unresolved comparison would skip the build without a word. Pure apart
- * from the `realpath` it is given.
+ * from the `realpath` it is given (by default fs.realpathSync, so on those
+ * versions importing this file resolves those two paths).
  * @param {boolean|undefined} moduleIsMain - `import.meta.main`
  * @param {string|undefined} scriptPath - `process.argv[1]`
  * @param {string} modulePath - this file's path
@@ -911,8 +919,9 @@ async function main(argv) {
   }
 }
 
-// Importing this file (as the tests do) runs nothing: the build starts only
-// when Node runs it as a script.
+// Importing this file starts nothing: the build starts only when Node runs it
+// as a script. The tests import it only in a copy of the repository, in case
+// this ever breaks (tests/helpers/buildScriptHarness.js).
 if (isEntryScript(import.meta.main, process.argv[1], fileURLToPath(import.meta.url))) {
   await main(process.argv);
 }

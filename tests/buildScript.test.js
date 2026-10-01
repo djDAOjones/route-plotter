@@ -9,16 +9,15 @@
  * stamp and its check, the Pages inventory, the command line) plus the two
  * release-safety steps, which act only on the paths they are given.
  *
- * Loading it here is guarded. If the entry guard ever broke, importing
- * build.js in this worker, whose working directory is the repository, would
- * start a real release build: version.json bumped and docs/ replaced. So a
- * separate Node process imports it first, from an empty scratch directory
- * (every path the build writes is relative to its working directory), and
- * this file imports it only when that import ran nothing. That is why the
- * import below is dynamic.
+ * Nothing here runs or imports build.js in the repository. Run, it builds
+ * where it runs; imported with a broken entry guard, it would do the same:
+ * version.json bumped, docs/ replaced. So it is run, and imported, only in a
+ * fresh copy of the repository, and the exports are called in the process
+ * that imported them there (helpers/buildScriptHarness.js says why, and
+ * helpers/buildScriptHost.mjs what that process watches). Whatever a broken
+ * build.js did would land in the copy, where these tests look for it.
  */
 
-import { spawnSync } from 'node:child_process';
 import {
   chmodSync,
   existsSync,
@@ -26,19 +25,27 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 
+import {
+  childArguments,
+  copyRepository,
+  projectRoot,
+  removeCopy,
+  runBuildScript,
+  snapshotTree,
+  startBuildModule,
+  treeChanges,
+} from './helpers/buildScriptHarness.js';
 import { allowConsole, recordedConsole } from './helpers/consoleGuard.js';
 
-const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-const buildScript = join(projectRoot, 'build.js');
 const manifest = JSON.parse(readFileSync(join(projectRoot, 'public-assets.json'), 'utf8'));
 const packageScripts = JSON.parse(readFileSync(join(projectRoot, 'package.json'), 'utf8')).scripts;
 const indexHtml = readFileSync(join(projectRoot, 'index.html'), 'utf8');
@@ -46,7 +53,8 @@ const approvedImages = manifest.assets.map(asset => asset.path);
 const NO_CACHE_TAGS = '\n  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">' +
   '\n  <meta http-equiv="Pragma" content="no-cache">\n  <meta http-equiv="Expires" content="0">';
 const RELEASE = '3.2.999';
-const SPAWN_TIMEOUT = 60000;
+// A broken build.js may run a whole build in the copy before it is caught.
+const SPAWN_TIMEOUT = 120000;
 
 const EXPORTS = [
   'checkArtifactInventory',
@@ -61,8 +69,12 @@ const EXPORTS = [
 ];
 
 const scratchDirectories = [];
-let importProbe = null;
-let build = null;
+let copy = null; // the copy of the repository every run and import happens in
+let buildScript = null; // the copy's build.js
+let copyBefore = null; // the copy's files before anything ran there
+let copyAfterImport = null;
+let host = null; // the process that imported build.js in the copy
+let hostFailure = null;
 
 function scratchDirectory(name) {
   const directory = mkdtempSync(join(tmpdir(), `route-plotter-${name}-`));
@@ -128,92 +140,135 @@ function escapeRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** The message a call throws, or null when it does not throw. */
-function thrownMessage(call) {
+/** The message a call throws or rejects with, or null when it does neither. */
+async function thrownMessage(call) {
   try {
-    call();
+    await call();
   } catch (error) {
     return error.message;
   }
   return null;
 }
 
-/**
- * Import build.js in its own Node process, from an empty scratch directory,
- * and report what that did.
- */
-function importInScratchProcess() {
-  const cwd = scratchDirectory('build-import');
-  const result = spawnSync(process.execPath, [
-    '--input-type=module',
-    '--eval',
-    `const build = await import(${JSON.stringify(pathToFileURL(buildScript).href)});\n` +
-      'process.stdout.write(JSON.stringify(Object.keys(build).sort()));',
-  ], { cwd, encoding: 'utf8', timeout: SPAWN_TIMEOUT });
-  return {
-    status: result.status,
-    stdout: result.stdout,
-    stderr: result.stderr,
-    leftBehind: readdirSync(cwd),
-  };
-}
-
-function runScript(script, args) {
-  return spawnSync(process.execPath, [script, ...args], {
-    cwd: projectRoot,
-    encoding: 'utf8',
-    timeout: SPAWN_TIMEOUT,
-  });
-}
-
 beforeAll(async () => {
-  importProbe = importInScratchProcess();
-  const ranNothing = importProbe.status === 0 && importProbe.stderr === '' && importProbe.leftBehind.length === 0;
-  if (ranNothing) build = await import('../build.js');
+  copy = copyRepository();
+  buildScript = join(copy, 'build.js');
+  copyBefore = snapshotTree(copy);
+  try {
+    host = await startBuildModule(copy);
+  } catch (error) {
+    hostFailure = error;
+  }
+  copyAfterImport = snapshotTree(copy);
 }, SPAWN_TIMEOUT);
 
-/** build.js's exports, once it is known that importing it runs nothing. */
+afterAll(async () => {
+  await host?.stop();
+  if (copy) removeCopy(copy);
+});
+
+/** build.js's exports, each called in the process that imported them in the copy. */
 function loaded() {
-  if (!build) {
-    throw new Error('build.js was not imported here: importing it in a scratch process ran something (first test)');
-  }
-  return build;
+  if (!host) throw new Error(`build.js was not imported in the copy: ${hostFailure?.message}`);
+  return host.build;
+}
+
+/**
+ * What the entry check does on Node 24.0 and 24.1: resolve the script path
+ * and this module's path, to compare them. Nothing else may happen.
+ */
+function entryCheckPaths() {
+  const scriptPath = childArguments(copy)[0];
+  return scriptPath
+    ? [`fs.realpathSync(${scriptPath})`, `fs.realpathSync(${realpathSync(buildScript)})`]
+    : [];
+}
+
+/** An import that started nothing: the exports, and no other trace. */
+function expectNothingStarted(evaluation, calls) {
+  expect(evaluation.error).toBeNull();
+  expect(evaluation.exports).toEqual(EXPORTS);
+  expect(evaluation.calls, 'files touched or processes started by build.js').toEqual(calls);
+  expect(evaluation.pending, 'timers or other work build.js started').toEqual([]);
+  expect(evaluation.output, 'what build.js printed').toEqual([]);
+  expect(evaluation.changed, 'what build.js changed in the process').toEqual([]);
 }
 
 describe('the entry guard', () => {
-  test('importing build.js runs nothing: no output, no exit, no file written', () => {
-    expect(importProbe.stderr).toBe('');
-    expect(importProbe.status).toBe(0);
-    expect(importProbe.leftBehind).toEqual([]);
-    expect(JSON.parse(importProbe.stdout)).toEqual(EXPORTS);
+  test('importing build.js starts nothing: no file read or written, nothing printed or started, no exit', () => {
+    expect(hostFailure?.message).toBeUndefined();
+    const { importMetaMain, first } = host.report;
+
+    expectNothingStarted(first, importMetaMain ? [] : entryCheckPaths());
+    expect(treeChanges(copyBefore, copyAfterImport), 'the copy, after the import').toEqual([]);
   });
 
-  test('run as a script, it does what the command line asks', () => {
-    const result = runScript(buildScript, ['--verify-public-assets-only']);
+  test('imported a second time in the same process, it still starts nothing', () => {
+    expect(hostFailure?.message).toBeUndefined();
+    const { importMetaMain, second } = host.report;
+
+    expectNothingStarted(second, importMetaMain ? [] : entryCheckPaths());
+    expect(treeChanges(copyBefore, copyAfterImport), 'the copy, after the import').toEqual([]);
+  });
+
+  test('imported where Node has no import.meta.main (24.0 and 24.1), it only resolves the two paths it compares', async () => {
+    const before = snapshotTree(copy);
+    const withoutMain = await startBuildModule(copy, { importMetaMain: false });
+    try {
+      expectNothingStarted(withoutMain.report.first, entryCheckPaths());
+      expect(await withoutMain.strays()).toEqual({ calls: [], pending: [], output: [] });
+    } finally {
+      await withoutMain.stop();
+    }
+    expect(withoutMain.raw).toEqual({ stdout: '', stderr: '' });
+    expect(treeChanges(before, snapshotTree(copy))).toEqual([]);
+  }, SPAWN_TIMEOUT);
+
+  test('run as a script, it does what the command line asks, and verifying writes nothing', () => {
+    const before = snapshotTree(copy);
+    const result = runBuildScript(copy, buildScript, ['--verify-public-assets-only']);
 
     expect(result.stderr).toBe('');
     expect(result.stdout).toBe('Verified 6 approved public image hashes\n');
     expect(result.status).toBe(0);
+    expect(treeChanges(before, snapshotTree(copy))).toEqual([]);
   }, SPAWN_TIMEOUT);
 
   test('run through a symlink, as through the macOS /tmp alias, it still runs', () => {
     const link = join(scratchDirectory('build-link'), 'build.js');
     symlinkSync(buildScript, link);
-    const result = runScript(link, ['--verify-public-assets-only']);
+    const before = snapshotTree(copy);
+    const result = runBuildScript(copy, link, ['--verify-public-assets-only']);
 
     expect(result.stderr).toBe('');
     expect(result.stdout).toBe('Verified 6 approved public image hashes\n');
     expect(result.status).toBe(0);
+    expect(treeChanges(before, snapshotTree(copy))).toEqual([]);
   }, SPAWN_TIMEOUT);
 
-  test("Node's own answer decides, when it gives one", () => {
+  test('run as a script where Node has no import.meta.main, it still runs, also through a symlink', () => {
+    const link = join(scratchDirectory('build-link'), 'build.js');
+    symlinkSync(buildScript, link);
+    const before = snapshotTree(copy);
+
+    for (const script of [buildScript, link]) {
+      const result = runBuildScript(copy, script, ['--verify-public-assets-only'], { importMetaMain: false });
+
+      expect(result.stderr).toBe('');
+      expect(result.stdout).toBe('Verified 6 approved public image hashes\n');
+      expect(result.status).toBe(0);
+    }
+    expect(treeChanges(before, snapshotTree(copy))).toEqual([]);
+  }, SPAWN_TIMEOUT);
+
+  test("Node's own answer decides, when it gives one", async () => {
     const { isEntryScript } = loaded();
 
-    expect(isEntryScript(true, undefined, buildScript)).toBe(true);
-    expect(isEntryScript(false, buildScript, buildScript)).toBe(false);
+    expect(await isEntryScript(true, undefined, buildScript)).toBe(true);
+    expect(await isEntryScript(false, buildScript, buildScript)).toBe(false);
   });
 
-  test('without it (Node 24.0 and 24.1), the resolved script path must be this file', () => {
+  test('without it (Node 24.0 and 24.1), the resolved script path must be this file', async () => {
     const { isEntryScript } = loaded();
     const directory = scratchDirectory('entry');
     const link = join(directory, 'linked-build.js');
@@ -221,11 +276,11 @@ describe('the entry guard', () => {
     symlinkSync(buildScript, link);
     writeFileSync(other, '');
 
-    expect(isEntryScript(undefined, buildScript, buildScript)).toBe(true);
-    expect(isEntryScript(undefined, link, buildScript)).toBe(true);
-    expect(isEntryScript(undefined, other, buildScript)).toBe(false);
-    expect(isEntryScript(undefined, undefined, buildScript)).toBe(false);
-    expect(isEntryScript(undefined, join(directory, 'missing.js'), buildScript)).toBe(false);
+    expect(await isEntryScript(undefined, buildScript, buildScript)).toBe(true);
+    expect(await isEntryScript(undefined, link, buildScript)).toBe(true);
+    expect(await isEntryScript(undefined, other, buildScript)).toBe(false);
+    expect(await isEntryScript(undefined, undefined, buildScript)).toBe(false);
+    expect(await isEntryScript(undefined, join(directory, 'missing.js'), buildScript)).toBe(false);
   });
 });
 
@@ -238,46 +293,46 @@ describe('the command line', () => {
     return ['/usr/local/bin/node', '/repo/build.js', ...flags];
   }
 
-  test('each npm script asks for the build it is named for', () => {
+  test('each npm script asks for the build it is named for', async () => {
     const { resolveBuildMode } = loaded();
 
-    expect(resolveBuildMode(argvOf('dev'))).toEqual({ mode: 'watch', serve: true });
-    expect(resolveBuildMode(argvOf('start'))).toEqual({ mode: 'watch', serve: true });
-    expect(resolveBuildMode(argvOf('build'))).toEqual({ mode: 'release', analyze: false });
-    expect(resolveBuildMode(argvOf('build:check'))).toEqual({ mode: 'check', analyze: false });
+    expect(await resolveBuildMode(argvOf('dev'))).toEqual({ mode: 'watch', serve: true });
+    expect(await resolveBuildMode(argvOf('start'))).toEqual({ mode: 'watch', serve: true });
+    expect(await resolveBuildMode(argvOf('build'))).toEqual({ mode: 'release', analyze: false });
+    expect(await resolveBuildMode(argvOf('build:check'))).toEqual({ mode: 'check', analyze: false });
   });
 
-  test('verification only checks the images, whatever else is asked', () => {
+  test('verification only checks the images, whatever else is asked', async () => {
     const { resolveBuildMode } = loaded();
 
-    expect(resolveBuildMode(['node', 'build.js', '--verify-public-assets-only']))
+    expect(await resolveBuildMode(['node', 'build.js', '--verify-public-assets-only']))
       .toEqual({ mode: 'verify-public-assets', manifestFile: './public-assets.json' });
-    expect(resolveBuildMode(['node', 'build.js', '--watch', '--verify-public-assets-only', 'candidate.json']))
+    expect(await resolveBuildMode(['node', 'build.js', '--watch', '--verify-public-assets-only', 'candidate.json']))
       .toEqual({ mode: 'verify-public-assets', manifestFile: 'candidate.json' });
   });
 
-  test('--watch is the dev build, which writes docs/, even beside --check', () => {
+  test('--watch is the dev build, which writes docs/, even beside --check', async () => {
     const { resolveBuildMode } = loaded();
 
-    expect(resolveBuildMode(['node', 'build.js', '--watch', '--check']))
+    expect(await resolveBuildMode(['node', 'build.js', '--watch', '--check']))
       .toEqual({ mode: 'watch', serve: false });
   });
 
-  test('--analyze is read by the production builds', () => {
+  test('--analyze is read by the production builds', async () => {
     const { resolveBuildMode } = loaded();
 
-    expect(resolveBuildMode(['node', 'build.js', '--check', '--analyze']))
+    expect(await resolveBuildMode(['node', 'build.js', '--check', '--analyze']))
       .toEqual({ mode: 'check', analyze: true });
-    expect(resolveBuildMode(['node', 'build.js', '--analyze']))
+    expect(await resolveBuildMode(['node', 'build.js', '--analyze']))
       .toEqual({ mode: 'release', analyze: true });
   });
 });
 
 describe('the public asset manifest', () => {
-  test('the approved manifest passes as it is', () => {
+  test('the approved manifest passes as it is', async () => {
     const { validatePublicAssetManifest } = loaded();
 
-    expect(validatePublicAssetManifest(manifest)).toBe(manifest);
+    expect(await validatePublicAssetManifest(manifest)).toBe(manifest);
   });
 
   const unsupported = 'Public asset manifest has an unsupported shape';
@@ -308,12 +363,12 @@ describe('the public asset manifest', () => {
       'Invalid SHA-256 for public image: images/Court.png'],
     ['a hash a character short', m => { m.assets[0].sha256 = m.assets[0].sha256.slice(1); },
       'Invalid SHA-256 for public image: images/Court.png'],
-  ])('refuses %s', (_name, change, message) => {
+  ])('refuses %s', async (_name, change, message) => {
     const { validatePublicAssetManifest } = loaded();
     const candidate = structuredClone(manifest);
     change(candidate);
 
-    expect(thrownMessage(() => validatePublicAssetManifest(candidate))).toBe(message);
+    expect(await thrownMessage(() => validatePublicAssetManifest(candidate))).toBe(message);
   });
 });
 
@@ -322,9 +377,9 @@ describe('the release stamp on index.html', () => {
   const authoredAppSource = indexHtml.match(/src="app\.js[^"]*"/)[0];
   const authoredStylesheets = [...indexHtml.matchAll(/href="(styles\/[^"?]+\.css)[^"]*"/g)];
 
-  test('stamps the title, app.js and every stylesheet, and adds the no-cache tags', () => {
+  test('stamps the title, app.js and every stylesheet, and adds the no-cache tags', async () => {
     const { rewriteIndexHtml } = loaded();
-    const html = rewriteIndexHtml(indexHtml, RELEASE);
+    const html = await rewriteIndexHtml(indexHtml, RELEASE);
 
     expect(authoredStylesheets).toHaveLength(6);
     expect(html).toContain(`<title>Route Plotter v${RELEASE}</title>`);
@@ -337,9 +392,9 @@ describe('the release stamp on index.html', () => {
     expect(html).toContain(`<meta charset="UTF-8">${NO_CACHE_TAGS}`);
   });
 
-  test('changes nothing else', () => {
+  test('changes nothing else', async () => {
     const { rewriteIndexHtml } = loaded();
-    let html = rewriteIndexHtml(indexHtml, RELEASE)
+    let html = (await rewriteIndexHtml(indexHtml, RELEASE))
       .replace(NO_CACHE_TAGS, '')
       .replace(`<title>Route Plotter v${RELEASE}</title>`, authoredTitle)
       .replace(`src="app.js?v=${RELEASE}"`, authoredAppSource);
@@ -350,26 +405,26 @@ describe('the release stamp on index.html', () => {
     expect(html).toBe(indexHtml);
   });
 
-  test('without a version, adds only the no-cache tags', () => {
+  test('without a version, adds only the no-cache tags', async () => {
     const { rewriteIndexHtml } = loaded();
 
-    expect(rewriteIndexHtml(indexHtml, null))
+    expect(await rewriteIndexHtml(indexHtml, null))
       .toBe(indexHtml.replace('<meta charset="UTF-8">', `<meta charset="UTF-8">${NO_CACHE_TAGS}`));
   });
 
-  test('restamping replaces the earlier stamp rather than adding to it', () => {
+  test('restamping replaces the earlier stamp rather than adding to it', async () => {
     const { rewriteIndexHtml } = loaded();
 
-    expect(rewriteIndexHtml(rewriteIndexHtml(indexHtml, '3.2.1'), '3.2.2'))
-      .toBe(rewriteIndexHtml(indexHtml, '3.2.2'));
+    expect(await rewriteIndexHtml(await rewriteIndexHtml(indexHtml, '3.2.1'), '3.2.2'))
+      .toBe(await rewriteIndexHtml(indexHtml, '3.2.2'));
   });
 });
 
 describe('the check of a generated index.html', () => {
-  test('a stamped shell passes, and every local file it needs is one the build ships', () => {
+  test('a stamped shell passes, and every local file it needs is one the build ships', async () => {
     const { checkGeneratedIndex, expectedArtifactInventory, rewriteIndexHtml } = loaded();
-    const references = checkGeneratedIndex(rewriteIndexHtml(indexHtml, RELEASE), RELEASE, approvedImages);
-    const shipped = new Set(expectedArtifactInventory(manifest));
+    const references = await checkGeneratedIndex(await rewriteIndexHtml(indexHtml, RELEASE), RELEASE, approvedImages);
+    const shipped = new Set(await expectedArtifactInventory(manifest));
 
     expect(references).toEqual(expect.arrayContaining([
       'app.js',
@@ -379,49 +434,55 @@ describe('the check of a generated index.html', () => {
     expect(references.filter(reference => !shipped.has(reference))).toEqual([]);
   });
 
-  test('a stylesheet without this release\'s version fails the build', () => {
+  // What is checked is the `?v=` of each stylesheet that has one; a stylesheet
+  // without one beside stamped ones is not caught (inherited; the SPL-06 row
+  // records it).
+  test('a stylesheet stamped for another release, or none stamped at all, fails the build', async () => {
     const { checkGeneratedIndex, rewriteIndexHtml } = loaded();
-    const stamped = rewriteIndexHtml(indexHtml, RELEASE);
+    const stamped = await rewriteIndexHtml(indexHtml, RELEASE);
     const message = `Generated index does not cache-bust every stylesheet with v=${RELEASE}`;
 
     const oneStale = stamped.replace(`styles/main.css?v=${RELEASE}`, 'styles/main.css?v=3.2.998');
     expect(oneStale).not.toBe(stamped);
-    expect(thrownMessage(() => checkGeneratedIndex(oneStale, RELEASE, approvedImages))).toBe(message);
-    expect(thrownMessage(() => checkGeneratedIndex(indexHtml, RELEASE, approvedImages))).toBe(message);
+    expect(await thrownMessage(() => checkGeneratedIndex(oneStale, RELEASE, approvedImages))).toBe(message);
+    expect(await thrownMessage(() => checkGeneratedIndex(indexHtml, RELEASE, approvedImages))).toBe(message);
     const noStylesheet = stamped.replace(/<link rel="stylesheet"[^>]*>/g, '');
-    expect(thrownMessage(() => checkGeneratedIndex(noStylesheet, RELEASE, approvedImages))).toBe(message);
+    expect(await thrownMessage(() => checkGeneratedIndex(noStylesheet, RELEASE, approvedImages))).toBe(message);
   });
 
-  test('the example backgrounds must be exactly the approved images, in order', () => {
+  test('the example backgrounds must be exactly the approved images, in order', async () => {
     const { checkGeneratedIndex, rewriteIndexHtml } = loaded();
-    const stamped = rewriteIndexHtml(indexHtml, RELEASE);
+    const stamped = await rewriteIndexHtml(indexHtml, RELEASE);
     const message = 'Generated index example images do not match the owner-approved public asset manifest';
 
-    expect(thrownMessage(() => checkGeneratedIndex(stamped, RELEASE, [...approvedImages].reverse()))).toBe(message);
-    expect(thrownMessage(() => checkGeneratedIndex(stamped, RELEASE, approvedImages.slice(1)))).toBe(message);
+    expect(await thrownMessage(() => checkGeneratedIndex(stamped, RELEASE, [...approvedImages].reverse())))
+      .toBe(message);
+    expect(await thrownMessage(() => checkGeneratedIndex(stamped, RELEASE, approvedImages.slice(1)))).toBe(message);
     const extra = stamped.replace('</body>', '<button data-image="images/Extra.png">Extra</button></body>');
-    expect(thrownMessage(() => checkGeneratedIndex(extra, RELEASE, approvedImages))).toBe(message);
+    expect(await thrownMessage(() => checkGeneratedIndex(extra, RELEASE, approvedImages))).toBe(message);
   });
 
-  test('a resource from another origin fails the build', () => {
+  // Only double-quoted src, href and data-image values are read; a
+  // single-quoted one is not (inherited; the SPL-06 row records it).
+  test('a double-quoted reference to another origin fails the build', async () => {
     const { checkGeneratedIndex, rewriteIndexHtml } = loaded();
-    const stamped = rewriteIndexHtml(indexHtml, RELEASE);
+    const stamped = await rewriteIndexHtml(indexHtml, RELEASE);
 
     for (const reference of ['https://cdn.example.com/x.js', 'http://cdn.example.com/x.js', '//cdn.example.com/x.js']) {
       const html = stamped.replace('</body>', `<script src="${reference}"></script></body>`);
-      expect(thrownMessage(() => checkGeneratedIndex(html, RELEASE, approvedImages)))
+      expect(await thrownMessage(() => checkGeneratedIndex(html, RELEASE, approvedImages)))
         .toBe(`Generated index contains outbound resource references: ${reference}`);
     }
   });
 
-  test('local references come back without query or fragment, in document order', () => {
+  test('local references come back without query or fragment, in document order', async () => {
     const { checkGeneratedIndex } = loaded();
     const html = '<link rel="stylesheet" href="styles/a.css?v=1"><script src="app.js?v=1"></script>' +
       '<a href="#top">Top</a><a href="mailto:someone@example.invalid">Mail</a>' +
       '<img src="data:image/png;base64,AA=="><a href="LICENSE.txt#terms">Licence</a>' +
       '<a href="styles/a.css?v=1">Again</a>';
 
-    expect(checkGeneratedIndex(html, '1', [])).toEqual(['styles/a.css', 'app.js', 'LICENSE.txt', 'styles/a.css']);
+    expect(await checkGeneratedIndex(html, '1', [])).toEqual(['styles/a.css', 'app.js', 'LICENSE.txt', 'styles/a.css']);
   });
 });
 
@@ -451,29 +512,29 @@ describe('the Pages inventory', () => {
     'styles/tooltip.css',
   ];
 
-  test('is the shell, the approved images and archives, the notices and the bundles, sorted', () => {
+  test('is the shell, the approved images and archives, the notices and the bundles, sorted', async () => {
     const { expectedArtifactInventory } = loaded();
 
-    expect(expectedArtifactInventory(manifest)).toEqual(inventory);
+    expect(await expectedArtifactInventory(manifest)).toEqual(inventory);
   });
 
-  test('a build holding exactly that passes', () => {
+  test('a build holding exactly that passes', async () => {
     const { checkArtifactInventory } = loaded();
 
-    expect(thrownMessage(() => checkArtifactInventory([...inventory], manifest))).toBeNull();
+    expect(await thrownMessage(() => checkArtifactInventory([...inventory], manifest))).toBeNull();
   });
 
-  test('a missing file, a stray file or an unapproved project ZIP fails the build', () => {
+  test('a missing file, a stray file or an unapproved project ZIP fails the build', async () => {
     const { checkArtifactInventory } = loaded();
     const without = file => inventory.filter(entry => entry !== file);
 
-    expect(thrownMessage(() => checkArtifactInventory(without('player.js'), manifest)))
+    expect(await thrownMessage(() => checkArtifactInventory(without('player.js'), manifest)))
       .toBe('Build artifact inventory mismatch (missing: player.js; unexpected: none)');
-    expect(thrownMessage(() => checkArtifactInventory([...inventory, 'notes.md'].sort(), manifest)))
+    expect(await thrownMessage(() => checkArtifactInventory([...inventory, 'notes.md'].sort(), manifest)))
       .toBe('Build artifact inventory mismatch (missing: none; unexpected: notes.md)');
-    expect(thrownMessage(() => checkArtifactInventory([...inventory, 'examples/my-project.zip'].sort(), manifest)))
+    expect(await thrownMessage(() => checkArtifactInventory([...inventory, 'examples/my-project.zip'].sort(), manifest)))
       .toBe('Build artifact inventory mismatch (missing: none; unexpected: examples/my-project.zip)');
-    expect(thrownMessage(() => checkArtifactInventory([...without('app.js.map'), 'app.js.bak'].sort(), manifest)))
+    expect(await thrownMessage(() => checkArtifactInventory([...without('app.js.map'), 'app.js.bak'].sort(), manifest)))
       .toBe('Build artifact inventory mismatch (missing: app.js.map; unexpected: app.js.bak)');
   });
 });
@@ -484,31 +545,31 @@ describe('publishing a build', () => {
     return { published: join(root, 'docs'), staging: join(root, 'staging'), backup: join(root, 'backup') };
   }
 
-  test('swaps the new tree in and removes the old one', () => {
+  test('swaps the new tree in and removes the old one', async () => {
     const { publishBuiltOutput } = loaded();
     const { published, staging, backup } = setUp();
     writeTree(published, { 'app.js': 'old', 'stale.txt': 'from an older build' });
     writeTree(staging, { 'app.js': 'new', 'styles/main.css': 'new' });
 
-    publishBuiltOutput(staging, published, backup);
+    await publishBuiltOutput(staging, published, backup);
 
     expect(readTree(published)).toEqual({ 'app.js': 'new', 'styles/main.css': 'new' });
     expect(existsSync(staging)).toBe(false);
     expect(existsSync(backup)).toBe(false);
   });
 
-  test('a first publish moves the tree in', () => {
+  test('a first publish moves the tree in', async () => {
     const { publishBuiltOutput } = loaded();
     const { published, staging, backup } = setUp();
     writeTree(staging, { 'app.js': 'new' });
 
-    publishBuiltOutput(staging, published, backup);
+    await publishBuiltOutput(staging, published, backup);
 
     expect(readTree(published)).toEqual({ 'app.js': 'new' });
     expect(existsSync(backup)).toBe(false);
   });
 
-  test('an old tree that cannot be removed after the swap is a warning, not a failure', () => {
+  test('an old tree that cannot be removed after the swap is a warning, not a failure', async () => {
     allowConsole(/stale backup could not be removed/);
     const { publishBuiltOutput } = loaded();
     const { published, staging, backup } = setUp();
@@ -516,7 +577,7 @@ describe('publishing a build', () => {
     lockDirectory(join(published, 'locked'));
     writeTree(staging, { 'app.js': 'new' });
 
-    expect(thrownMessage(() => publishBuiltOutput(staging, published, backup))).toBeNull();
+    expect(await thrownMessage(() => publishBuiltOutput(staging, published, backup))).toBeNull();
 
     expect(readTree(published)).toEqual({ 'app.js': 'new' });
     expect(existsSync(join(backup, 'locked', 'held.txt'))).toBe(true);
@@ -525,12 +586,12 @@ describe('publishing a build', () => {
     )]);
   });
 
-  test('a swap that fails puts the old tree back and fails', () => {
+  test('a swap that fails puts the old tree back and fails', async () => {
     const { publishBuiltOutput } = loaded();
     const { published, staging, backup } = setUp();
     writeTree(published, { 'app.js': 'old' });
 
-    expect(thrownMessage(() => publishBuiltOutput(staging, published, backup))).toMatch(/^ENOENT/);
+    expect(await thrownMessage(() => publishBuiltOutput(staging, published, backup))).toMatch(/^ENOENT/);
 
     expect(readTree(published)).toEqual({ 'app.js': 'old' });
     expect(existsSync(backup)).toBe(false);
@@ -547,47 +608,47 @@ describe('a failed build', () => {
     return { root, staging, versionFile: join(root, 'version.json') };
   }
 
-  test('a release build puts version.json back byte for byte, and removes its staging output', () => {
+  test('a release build puts version.json back byte for byte, and removes its staging output', async () => {
     const { rollBackFailedBuild } = loaded();
     const { staging, versionFile } = setUp();
     writeFileSync(versionFile, '{"build":693}');
 
-    rollBackFailedBuild(staging, { isCheckBuild: false, versionFile, originalVersionContents: before });
+    await rollBackFailedBuild(staging, { isCheckBuild: false, versionFile, originalVersionContents: before });
 
     expect(readFileSync(versionFile)).toEqual(before);
     expect(existsSync(staging)).toBe(false);
   });
 
-  test('a release build removes the version.json it created', () => {
+  test('a release build removes the version.json it created', async () => {
     const { rollBackFailedBuild } = loaded();
     const { staging, versionFile } = setUp();
     writeFileSync(versionFile, '{"build":1}');
 
-    rollBackFailedBuild(staging, { isCheckBuild: false, versionFile, originalVersionContents: null });
+    await rollBackFailedBuild(staging, { isCheckBuild: false, versionFile, originalVersionContents: null });
 
     expect(existsSync(versionFile)).toBe(false);
     expect(existsSync(staging)).toBe(false);
   });
 
-  test('a check build leaves version.json alone: it never changed it', () => {
+  test('a check build leaves version.json alone: it never changed it', async () => {
     const { rollBackFailedBuild } = loaded();
     const { staging, versionFile } = setUp();
     writeFileSync(versionFile, 'written since by another build');
 
-    rollBackFailedBuild(staging, { isCheckBuild: true, versionFile, originalVersionContents: before });
+    await rollBackFailedBuild(staging, { isCheckBuild: true, versionFile, originalVersionContents: before });
 
     expect(readFileSync(versionFile, 'utf8')).toBe('written since by another build');
     expect(existsSync(staging)).toBe(false);
   });
 
-  test('staging output that cannot be removed does not stop the rollback', () => {
+  test('staging output that cannot be removed does not stop the rollback', async () => {
     allowConsole(/temporary output could not be removed/);
     const { rollBackFailedBuild } = loaded();
     const { staging, versionFile } = setUp();
     writeFileSync(versionFile, '{"build":693}');
     lockDirectory(join(staging, 'locked'));
 
-    expect(thrownMessage(() => rollBackFailedBuild(
+    expect(await thrownMessage(() => rollBackFailedBuild(
       staging, { isCheckBuild: false, versionFile, originalVersionContents: before }
     ))).toBeNull();
 
@@ -598,17 +659,51 @@ describe('a failed build', () => {
     )]);
   });
 
-  test('a rollback that fails is reported, and the staging output still goes', () => {
+  test('a rollback that fails is reported, and the staging output still goes', async () => {
     allowConsole(/Version rollback also failed/);
     const { rollBackFailedBuild } = loaded();
     const { root, staging } = setUp();
     const versionFile = join(root, 'no-such-directory', 'version.json');
 
-    expect(thrownMessage(() => rollBackFailedBuild(
+    expect(await thrownMessage(() => rollBackFailedBuild(
       staging, { isCheckBuild: false, versionFile, originalVersionContents: before }
     ))).toBeNull();
 
     expect(existsSync(staging)).toBe(false);
     expect(recordedConsole()).toEqual([expect.stringMatching(/^error: Version rollback also failed: Error: ENOENT/)]);
+  });
+});
+
+describe('the checks a release applies', () => {
+  test('are pure: no file touched, nothing printed or started, and their arguments left as they were', async () => {
+    expect(hostFailure?.message).toBeUndefined();
+    const stamped = (await host.call('rewriteIndexHtml', [indexHtml, RELEASE])).value;
+    const inventory = (await host.call('expectedArtifactInventory', [manifest])).value;
+
+    for (const [name, args] of [
+      ['validatePublicAssetManifest', [manifest]],
+      ['rewriteIndexHtml', [indexHtml, RELEASE]],
+      ['checkGeneratedIndex', [stamped, RELEASE, approvedImages]],
+      ['expectedArtifactInventory', [manifest]],
+      ['checkArtifactInventory', [inventory, manifest]],
+      ['resolveBuildMode', [['node', 'build.js', '--check']]],
+      ['isEntryScript', [false, buildScript, buildScript]],
+    ]) {
+      const { error, calls, pending, output, argumentsChanged } = await host.call(name, args);
+
+      expect({ name, error, calls, pending, output, argumentsChanged })
+        .toEqual({ name, error: undefined, calls: [], pending: [], output: [], argumentsChanged: false });
+    }
+  });
+});
+
+describe('after every test', () => {
+  test('nothing build.js started ran later, nothing reached the terminal, and the copy is as it was', async () => {
+    expect(hostFailure?.message).toBeUndefined();
+
+    expect(await host.strays()).toEqual({ calls: [], pending: [], output: [] });
+    await host.stop();
+    expect(host.raw).toEqual({ stdout: '', stderr: '' });
+    expect(treeChanges(copyBefore, snapshotTree(copy))).toEqual([]);
   });
 });
