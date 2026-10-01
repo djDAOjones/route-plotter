@@ -69,7 +69,12 @@
  * scene) must be as it held it before the row; then redone, and both that and
  * the saved project must be what the row made them. The one exception is a
  * waypoint's `modified` stamp, which every waypoint made from a history entry
- * gets afresh and nothing reads back.
+ * gets afresh and nothing reads back. Those comparisons go through the app's
+ * own serializer, which writes history, so the waypoints selected (the
+ * primary, the one last chosen, and each one selected) are also read from
+ * the app itself: each entry history keeps must hold the ones selected as it
+ * was kept, each undo and redo must give back the ones its entry was kept
+ * with, and the redo the ones the row left.
  *
  * Every row starts from its context's baseline. A row is undone by reloading
  * the fixture through the real recovery path, entering the context again and
@@ -95,10 +100,15 @@
  * not with where its events went (an event stopped on the way, or one that
  * does not bubble, reaches no listener past that point); and every event type
  * the app listens for on a control is either a gesture or says what it is
- * instead. A waypoint row is a major's, a minor's or the add row, and a layer
- * row the route's or a crowd's: each is its own control, whatever its
- * position. Keyboard gestures belong to the key table (TST-13), and are
- * excused by gesture, not by a click row.
+ * instead. A handler set through an element's `on…` property is a listener
+ * too, recorded, noted and credited as one; a handler set on the document or
+ * the window, or written as a content attribute, fails the inventory, as
+ * nothing here can account for it (`recordHandlers`). The inventory is of
+ * controls: the app's own `addEventListener` listeners on the document and
+ * the window are not in it. A waypoint row is a major's, a minor's or the
+ * add row, and a layer row the route's or a crowd's: each is its own
+ * control, whatever its position. Keyboard gestures belong to the key table
+ * (TST-13), and are excused by gesture, not by a click row.
  *
  * Regenerate deliberately: `UPDATE_CONTROL_GOLDENS=1 npx vitest run
  * tests/goldenControls.test.js`, read the diff, then run it once more with
@@ -437,6 +447,184 @@ function watchDispatch() {
 
 function unwatchDispatch() {
   for (const type of GESTURE_TYPES) window.removeEventListener(type, noteDispatch, true);
+}
+
+// ---------------------------------------------------------------------------
+// Event handlers: listeners set through a property, or written as an attribute.
+// ---------------------------------------------------------------------------
+
+/**
+ * A listener can also be an event handler: a function given to an element's
+ * `on<type>` property (`field.ondblclick = fn`), which HTML runs on the way up
+ * as a listener added where the first one was set, and replaces when another
+ * is set. jsdom adds it from inside, not through `addEventListener`, so the
+ * properties themselves are replaced where jsdom defines them (HTML's
+ * GlobalEventHandlers and WindowEventHandlers: on the element interfaces'
+ * prototypes, the document's and the window). On an element, a handler is a
+ * registration of its own (`dblclick (handler)`), known by where it was set,
+ * noted at once and run inside a wrapper that notes it ran, as a listener is;
+ * the property reads back what was set.
+ *
+ * What the harness cannot account for fails the inventory instead
+ * (`unsupported`), with where it was set:
+ * - a handler set on the document or the window, or on the body for an event
+ *   the body hands to the window: it is no control's, the harness would not
+ *   take it back from a retired app, and the window Vitest gives these tests
+ *   keeps one set on it without registering it, so no row could run it;
+ * - a handler written as a content attribute (`setAttribute('ondblclick',
+ *   …)`, or in markup): the page's Content-Security-Policy (`script-src 'self'
+ *   blob:`) keeps Chromium from running an inline handler, and jsdom runs it.
+ */
+const handlerOriginals = new WeakMap();
+
+/** The events a body or frameset hands its handler for to the window (HTML's "determining the target of an event handler"). */
+const BODY_HANDS_TO_WINDOW = new Set(['blur', 'error', 'focus', 'load', 'resize', 'scroll']);
+
+/** The handler properties replaced, as `[owner, name, descriptor]`, to put back. */
+const replacedHandlerProperties = [];
+let restoreInlineHandlers = null;
+
+function noteUnsupported(what, site) {
+  if (inventoryContext) inventory.unsupported.push(`${what} at ${site} (seen in ${inventoryContext})`);
+}
+
+/**
+ * A handler set on an element: a registration, as a listener added there is
+ * (`recordWiring`); returns what jsdom is given in its place.
+ */
+function wireHandler(element, type, value, site) {
+  if (value === null || (typeof value !== 'function' && typeof value !== 'object')) return value;
+  const identity = identityOf(`${type} (handler)`, site);
+  if (!wiredEvents.has(element)) wiredEvents.set(element, new Set());
+  wiredEvents.get(element).add(registrationOf(type, false));
+  if (!wiredSites.has(element)) wiredSites.set(element, new Set());
+  wiredSites.get(element).add(identity);
+  noteElementWiring(element);
+  if (typeof value !== 'function' || !GESTURE_TYPES.has(type)) return value;
+  const wrapper = function ranByRow(...args) {
+    if (invoked) invoked.push({ control: controlOf(this, dispatchKeys.get(this) ?? keyFor(this)), registration: identity });
+    return value.apply(this, args);
+  };
+  handlerOriginals.set(wrapper, value);
+  return wrapper;
+}
+
+/**
+ * A handler being set on `target` through a property of one `kind` of owner:
+ * an element's, the body's (which hands it to the window), the document's or
+ * the window's. Returns what the property is to be given.
+ */
+function handlerFor(target, kind, type, value, site) {
+  const handsToWindow = kind === 'body'
+    || (kind === 'element' && ['body', 'frameset'].includes(target.localName) && BODY_HANDS_TO_WINDOW.has(type));
+  if (kind === 'element' && !handsToWindow) return target instanceof Element ? wireHandler(target, type, value, site) : value;
+  if (value !== null && (typeof value === 'function' || typeof value === 'object')) {
+    if (kind === 'document') noteUnsupported(`${target === document ? 'document' : 'a document'}.on${type}`, site);
+    else noteUnsupported(handsToWindow ? `window.on${type}, set on the ${target.localName}` : `window.on${type}`, site);
+  }
+  return value;
+}
+
+/** The element interfaces on the global, whose prototypes jsdom defines an element's handler properties on. */
+function elementPrototypes() {
+  return Object.getOwnPropertyNames(globalThis)
+    .filter(name => name.endsWith('Element'))
+    .map(name => globalThis[name]?.prototype)
+    .filter(prototype => prototype && Element.prototype.isPrototypeOf(prototype));
+}
+
+function recordHandlers() {
+  const view = document.defaultView;
+  const owners = [
+    ...elementPrototypes().map(prototype => [prototype, prototype === HTMLBodyElement.prototype || prototype === HTMLFrameSetElement.prototype ? 'body' : 'element']),
+    [Document.prototype, 'document'],
+    [globalThis, 'window'],
+    ...(view && view !== globalThis ? [[view, 'window']] : []),
+  ];
+  for (const [owner, kind] of owners) {
+    for (const name of Object.getOwnPropertyNames(owner)) {
+      const descriptor = /^on[a-z]+$/.test(name) ? Object.getOwnPropertyDescriptor(owner, name) : null;
+      if (!descriptor?.set || !descriptor.get || !descriptor.configurable) continue;
+      const type = name.slice(2);
+      replacedHandlerProperties.push([owner, name, descriptor]);
+      Object.defineProperty(owner, name, {
+        configurable: true,
+        enumerable: descriptor.enumerable,
+        get() {
+          const value = descriptor.get.call(this);
+          return handlerOriginals.get(value) ?? value;
+        },
+        set(value) {
+          // Read in the setter itself, whose caller is then the stack's fourth line
+          const site = registrationSite();
+          descriptor.set.call(this, handlerFor(this, kind, type, value, site));
+        },
+      });
+    }
+  }
+  const replaced = owner => replacedHandlerProperties.some(([each, name]) => each === owner && name === 'ondblclick');
+  if (![HTMLElement.prototype, SVGElement.prototype, Document.prototype, globalThis].every(replaced)) {
+    throw new Error('jsdom no longer defines the event handler properties where this harness replaces them');
+  }
+}
+
+function unrecordHandlers() {
+  for (const [owner, name, descriptor] of replacedHandlerProperties.splice(0)) Object.defineProperty(owner, name, descriptor);
+  restoreInlineHandlers?.();
+}
+
+/** The first place in the app or the tests on the way to here, past `skip` frames of this harness. */
+function siteOnTheWay(skip) {
+  const limit = Error.stackTraceLimit;
+  Error.stackTraceLimit = 60;
+  let stack;
+  try {
+    stack = new Error().stack;
+  } finally {
+    Error.stackTraceLimit = limit;
+  }
+  for (const frame of stack.split('\n').slice(2 + skip)) {
+    const place = frame.match(/((?:src|tests)\/[^\s():]+:\d+:\d+)/);
+    if (place) return place[1];
+  }
+  return 'an unknown place';
+}
+
+/**
+ * jsdom turns an `on<type>` content attribute into a handler in one step,
+ * however the attribute was written (`setAttribute`, markup, an attribute
+ * node), on an HTML element and on an SVG one; there it is noted as
+ * unsupported.
+ */
+function watchInlineHandlers() {
+  const implOf = node => node[Object.getOwnPropertySymbols(node).find(symbol => symbol.description === 'impl')];
+  const stepsOf = (impl) => {
+    for (let prototype = impl; prototype; prototype = Object.getPrototypeOf(prototype)) {
+      if (Object.hasOwn(prototype, '_globalEventChanged')) return prototype;
+    }
+    return null;
+  };
+  const html = implOf(document.createElement('div'));
+  const svg = implOf(document.createElementNS('http://www.w3.org/2000/svg', 'g'));
+  const wrapperKey = html && Object.getOwnPropertySymbols(html).find(symbol => symbol.description === 'wrapper');
+  const owners = [...new Set([html, svg].map(impl => impl && stepsOf(impl)))];
+  if (!wrapperKey || owners.some(owner => typeof owner?._globalEventChanged !== 'function')) {
+    throw new Error('jsdom no longer has the step that turns an on-attribute into a handler, which this harness watches');
+  }
+  const originals = owners.map(owner => [owner, owner._globalEventChanged]);
+  for (const [owner, original] of originals) {
+    owner._globalEventChanged = function inlineHandler(type) {
+      if (this.getAttributeNS(null, `on${type}`) !== null && `on${type}` in this) {
+        const element = this[wrapperKey];
+        const where = element.isConnected ? controlOf(element) : `a ${element.localName} off the page`;
+        noteUnsupported(`${where} on${type}, a content attribute`, siteOnTheWay(1));
+      }
+      return original.call(this, type);
+    };
+  }
+  restoreInlineHandlers = () => {
+    for (const [owner, original] of originals) owner._globalEventChanged = original;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1800,7 +1988,9 @@ async function openSession(context) {
     await booted.ready;
     return booted;
   }));
+  session.history = watchHistory(session.app);
   expect(await establish(session.app, context), `${context.name} is still busy after settling`).toBe(true);
+  expect(session.history.takeMiskept(), `${context.name}: history kept other waypoints selected than the app had`).toEqual([]);
   session.emits = recordEmits(session.app);
   return session;
 }
@@ -1951,9 +2141,69 @@ async function runRow(session, key, operation, name) {
     await expectHistoryRestores(session, name, history);
     settledComplete = capture(session, { complete: true });
   }
+  expect(session.history.takeMiskept(), `${name}: history kept other waypoints selected than the app had`).toEqual([]);
+  session.history.forgetDropped();
   random.mockRestore();
   if (later.length > 0) lines.push('settled:', ...later.map(line => `  ${line}`));
   return { lines, settled: settledComplete };
+}
+
+/**
+ * The waypoints selected, as the app holds them: the primary (the one last
+ * chosen, whose fields the panel shows) and each one selected, by id.
+ */
+function waypointSelection(app) {
+  return {
+    primary: app.selectedWaypoint?.id ?? null,
+    selected: (app.selectedWaypoints ?? []).map(waypoint => waypoint.id),
+  };
+}
+
+/** The waypoints selected that a history entry holds, as the app's serializer wrote them. */
+function selectionHeld(entry) {
+  const state = JSON.parse(entry);
+  return { primary: state.selectedWaypointId ?? null, selected: state.selectedWaypointIds ?? [] };
+}
+
+/**
+ * The waypoints selected when each history entry was kept, read from the app
+ * as it keeps the entry, not from the entry: what an entry holds is written
+ * by the app's serializer (`_getUndoableState`), and a comparison made only
+ * through it shares its mistakes. An entry kept holding other waypoints
+ * selected than the app had is noted (`takeMiskept`). Entries are known by
+ * their text, as history keeps them.
+ */
+function watchHistory(app) {
+  const service = app.undoService;
+  const keptWith = new Map();
+  let miskept = [];
+  const keeping = original => function keptWithSelection(state, ...rest) {
+    const entry = JSON.stringify(state);
+    const selected = waypointSelection(app);
+    keptWith.set(entry, selected);
+    const held = selectionHeld(entry);
+    if (JSON.stringify(held) !== JSON.stringify(selected)) {
+      miskept.push(`kept ${JSON.stringify(held)} while ${JSON.stringify(selected)} was selected`);
+    }
+    return original.call(this, state, ...rest);
+  };
+  service.saveState = keeping(service.saveState);
+  service.reset = keeping(service.reset);
+  return {
+    selectionKept: entry => keptWith.get(entry) ?? null,
+    takeMiskept() {
+      const taken = miskept;
+      miskept = [];
+      return taken;
+    },
+    /** Forget the entries history no longer keeps. */
+    forgetDropped() {
+      const retained = new Set(service.getRetainedSerializedStates());
+      for (const entry of keptWith.keys()) {
+        if (!retained.has(entry)) keptWith.delete(entry);
+      }
+    },
+  };
 }
 
 /**
@@ -1976,19 +2226,30 @@ function undoable(state) {
  * that there is one. A row whose entries are not simply added on top of the
  * history it began with (it undid; the history was full) is undone and redone
  * once, and its result compared. The controls each step rebuilds are noted
- * for the inventory while they stand.
+ * for the inventory while they stand. Last, the waypoints selected, read from
+ * the app and not through its serializer (`watchHistory`): each entry the row
+ * kept holds the ones selected as it was kept, each undo and redo gave back
+ * the ones its entry was kept with, and the redo the ones the row left.
  */
 async function expectHistoryRestores(session, name, before) {
   const made = modelState(session.app);
   const madeHeld = undoable(session.app._getUndoableState());
+  const madeSelection = waypointSelection(session.app);
   const now = session.app.undoService.createSnapshot();
   const own = now.undoStack.length - before.undoStack.length;
   const added = own > 0 && before.undoStack.every((entry, index) => now.undoStack[index] === entry);
   const steps = added ? own : 1;
+  const kept = added ? now.undoStack.slice(before.undoStack.length) : [now.lastState];
+  // What each step gave back, compared once the rest has been
+  const givenBack = [];
+  const noteGivenBack = (step) => {
+    givenBack.push({ step, selected: waypointSelection(session.app), entry: session.app.undoService.createSnapshot().lastState });
+  };
   for (let step = 0; step < steps; step += 1) {
     session.app.undo();
     await settle();
     noteWiring();
+    noteGivenBack(`undo ${step + 1} of ${steps}`);
   }
   if (added) {
     expect(undoable(session.app._getUndoableState()), `${name}: undone, the project is not as it was before the row`)
@@ -1998,6 +2259,7 @@ async function expectHistoryRestores(session, name, before) {
     session.app.redo();
     await settle();
     noteWiring();
+    noteGivenBack(`redo ${step + 1} of ${steps}`);
   }
   vi.clearAllTimers();
   session.emits.take();
@@ -2007,6 +2269,16 @@ async function expectHistoryRestores(session, name, before) {
   expect(differences, `${name}: undone and redone, the project is not what the row made it`).toEqual([]);
   expect(undoable(session.app._getUndoableState()), `${name}: undone and redone, what history holds is not what the row made it`)
     .toEqual(madeHeld);
+  for (const entry of kept) {
+    expect(selectionHeld(entry), `${name}: history kept an entry holding other waypoints selected than the app had`)
+      .toEqual(session.history.selectionKept(entry));
+  }
+  for (const { step, selected, entry } of givenBack) {
+    expect(selected, `${name}: after ${step}, the waypoints selected are not those history kept its entry with`)
+      .toEqual(session.history.selectionKept(entry));
+  }
+  expect(waypointSelection(session.app), `${name}: undone and redone, the waypoints selected are not those the row left`)
+    .toEqual(madeSelection);
 }
 
 /**
@@ -2049,11 +2321,12 @@ async function restore(session, element, operation, settled) {
 
 /**
  * The inventory: every control seen wired for a user gesture, with its
- * registrations (`wiredSeen`), and every registration a row's gesture ran, by
- * control (`coverage`). Wiring is noted while a context's test runs
- * (`inventoryContext` names it); a self-test may note into one of its own.
+ * registrations (`wiredSeen`), every registration a row's gesture ran, by
+ * control (`coverage`), and the wiring the harness cannot account for
+ * (`unsupported`: `recordHandlers`). Wiring is noted while a context's test
+ * runs (`inventoryContext` names it); a self-test may note into one of its own.
  */
-const newInventory = () => ({ wiredSeen: new Map(), coverage: new Map() });
+const newInventory = () => ({ wiredSeen: new Map(), coverage: new Map(), unsupported: [] });
 let inventory = newInventory();
 let inventoryContext = null;
 /** Each control and gesture a row has recorded, as `control · label`. */
@@ -2112,11 +2385,12 @@ function noteCoverage(invocations) {
 }
 
 /**
- * The registrations for a gesture no row ran and nothing excuses, and those
- * of a type that is neither a gesture nor said to be something else.
+ * The registrations for a gesture no row ran and nothing excuses, those of a
+ * type that is neither a gesture nor said to be something else, and the
+ * wiring the harness cannot account for.
  */
 function inventoryGaps() {
-  const { wiredSeen, coverage } = inventory;
+  const { wiredSeen, coverage, unsupported } = inventory;
   const missing = [];
   const unclassified = [];
   for (const [key, { excluded, context, registrations }] of wiredSeen) {
@@ -2131,7 +2405,7 @@ function inventoryGaps() {
       missing.push(`${key} ${registration} (seen in ${context})`);
     }
   }
-  return { missing, unclassified };
+  return { missing, unclassified, unsupported: [...unsupported] };
 }
 
 function expectGolden(name, text) {
@@ -2157,6 +2431,8 @@ describe('control → bus goldens (TST-04)', () => {
     globalThis.APP_VERSION = '0.0.0-test';
     await import('../src/main.js');
     recordWiring();
+    recordHandlers();
+    watchInlineHandlers();
     watchWiring();
     watchDispatch();
     blurBeforeRemoval();
@@ -2186,6 +2462,7 @@ describe('control → bus goldens (TST-04)', () => {
     uninstallPointerCapture();
     EventTarget.prototype.addEventListener = originalAddEventListener;
     EventTarget.prototype.removeEventListener = originalRemoveEventListener;
+    unrecordHandlers();
     HTMLCanvasElement.prototype.getContext = originalGetContext;
     window.addEventListener = originalWindowAddEventListener;
     document.removeEventListener('click', noteFileDialog, true);
@@ -2244,8 +2521,9 @@ describe('control → bus goldens (TST-04)', () => {
     // Were the wiring not recorded, nothing would be missing either: the app
     // wires about 300 elements across these contexts.
     expect(inventory.wiredSeen.size).toBeGreaterThan(200);
-    const { missing, unclassified } = inventoryGaps();
+    const { missing, unclassified, unsupported } = inventoryGaps();
     expect(unclassified).toEqual([]);
+    expect(unsupported, 'wiring set where no row can account for it').toEqual([]);
     expect(missing).toEqual([]);
   });
 
@@ -2409,6 +2687,46 @@ describe('control → bus goldens (TST-04)', () => {
       const { missing } = inventoryGaps();
       expect(missing.filter(line => line.startsWith(`${control} dblclick`))).toEqual([
         expect.stringMatching(new RegExp(`^${control.replace(/[[\]>]/g, '\\$&')} dblclick at tests/goldenControls\\.test\\.js:\\d+:\\d+ \\(seen in crowd\\)$`)),
+      ]);
+    } finally {
+      spy.mockRestore();
+      inventory = kept;
+      inventoryContext = null;
+      session.ui.disconnect();
+      retire(session);
+    }
+  }, 60_000);
+
+  test('a handler a drag\'s commit sets through a busyness field\'s ondblclick property, which the row\'s own undo then replaces, is in the inventory, noted while the field stood', async () => {
+    // As above, but set as a handler, which jsdom adds without
+    // `addEventListener` (the review's IDL-LISTENER, put in for this test).
+    vi.useFakeTimers(FAKE_TIMERS);
+    installClipboard(copying);
+    const kept = inventory;
+    inventory = newInventory();
+    inventoryContext = 'crowd';
+    const session = await startSession(CONTEXTS.find(each => each.name === 'crowd'));
+    const { app } = session;
+    const announce = app.announce;
+    let wired = null;
+    let control = null;
+    const spy = vi.spyOn(app, 'announce').mockImplementation(function announceAndWire(message, ...rest) {
+      if (String(message).startsWith('Busyness handle moved')) {
+        wired = document.querySelector('#crowd-busyness-handles input[data-busyness-field="value"]');
+        control = controlOf(wired);
+        wired.ondblclick = () => { throw new Error('a handler no row runs'); };
+      }
+      return announce.call(this, message, ...rest);
+    });
+    try {
+      await runRow(session, keyFor(document.querySelector(BUSYNESS_GRAPH)), END_HANDLE_DRAGS[0], 'crowd: a drag whose commit sets a handler');
+      noteCoverage(session.invoked);
+      expect(wired, 'the drag was committed').not.toBeNull();
+      expect(wired.readOnly || wired.disabled, 'a user can double-click the field').toBe(false);
+      expect(wired.isConnected, 'undoing the drag replaced the field').toBe(false);
+      const { missing } = inventoryGaps();
+      expect(missing.filter(line => line.startsWith(`${control} dblclick`))).toEqual([
+        expect.stringMatching(new RegExp(`^${control.replace(/[[\]>]/g, '\\$&')} dblclick \\(handler\\) at tests/goldenControls\\.test\\.js:\\d+:\\d+ \\(seen in crowd\\)$`)),
       ]);
     } finally {
       spy.mockRestore();
@@ -2604,6 +2922,53 @@ describe('control → bus goldens (TST-04)', () => {
     }
   });
 
+  test('a range pressed along its track takes the value as the button goes down and commits it as the button comes up, before the click; pressed where its value is, it sends neither', () => {
+    // The first is the sequence Chromium 152 sent for a real mouse pressing a
+    // range at a point, a field focused, less the pointer's arrival (hover).
+    const page = document.createElement('div');
+    const field = document.createElement('input');
+    field.id = 'field';
+    const range = document.createElement('input');
+    Object.assign(range, { id: 'range', type: 'range', min: '0', max: '100', value: '10' });
+    page.append(field, range);
+    document.body.append(page);
+    const types = ['pointerdown', 'mousedown', 'input', 'blur', 'focusout', 'focus', 'focusin', 'gotpointercapture', 'pointerup', 'mouseup', 'change', 'lostpointercapture', 'click'];
+    const heard = [];
+    const focusNow = () => (document.activeElement === document.body ? 'body' : document.activeElement?.id);
+    const hear = event => heard.push(`${event.type} ${event.target.id}, value ${range.value}, focus on ${focusNow()}`);
+    for (const type of types) originalWindowAddEventListener.call(window, type, hear, true);
+    const sent = (run) => {
+      field.focus();
+      heard.length = 0;
+      run();
+      return [...heard];
+    };
+    try {
+      expect(sent(() => slide(range, '33')), 'pressed a third of the way along its track').toEqual([
+        'pointerdown range, value 10, focus on field', 'mousedown range, value 10, focus on field',
+        'input range, value 33, focus on field',
+        'blur field, value 33, focus on body', 'focusout field, value 33, focus on body',
+        'focus range, value 33, focus on range', 'focusin range, value 33, focus on range',
+        'gotpointercapture range, value 33, focus on range',
+        'pointerup range, value 33, focus on range', 'mouseup range, value 33, focus on range',
+        'change range, value 33, focus on range', 'lostpointercapture range, value 33, focus on range',
+        'click range, value 33, focus on range',
+      ]);
+      expect(sent(() => pressControl(range)), 'pressed on its thumb, where its value is').toEqual([
+        'pointerdown range, value 33, focus on field', 'mousedown range, value 33, focus on field',
+        'blur field, value 33, focus on body', 'focusout field, value 33, focus on body',
+        'focus range, value 33, focus on range', 'focusin range, value 33, focus on range',
+        'gotpointercapture range, value 33, focus on range',
+        'pointerup range, value 33, focus on range', 'mouseup range, value 33, focus on range',
+        'lostpointercapture range, value 33, focus on range',
+        'click range, value 33, focus on range',
+      ]);
+    } finally {
+      for (const type of types) window.removeEventListener(type, hear, true);
+      page.remove();
+    }
+  });
+
   test('a listener wrapped to note that it ran is added and removed as it would be unwrapped', () => {
     const target = document.createElement('button');
     document.body.append(target);
@@ -2635,6 +3000,64 @@ describe('control → bus goldens (TST-04)', () => {
       expect(ran).toEqual([]);
     } finally {
       target.remove();
+    }
+  });
+
+  test('a handler set through an element\'s on-property is a registration where it was set, missing until a row\'s gesture runs it; one set on the document or the window, or written as a content attribute, cannot be accounted for', () => {
+    const kept = inventory;
+    inventory = newInventory();
+    inventoryContext = 'a fixture';
+    const field = document.createElement('input');
+    const button = document.createElement('button');
+    document.body.append(field, button);
+    const fieldControl = controlOf(field);
+    const buttonControl = controlOf(button);
+    const ran = [];
+    const onDouble = function onDouble(event) {
+      ran.push(`field ${event.type}, on the field: ${this === field}`);
+      return false;
+    };
+    const here = /^(.+) at tests\/goldenControls\.test\.js:\d+:\d+ \(seen in a fixture\)$/;
+    const missing = () => inventoryGaps().missing.map(line => line.match(here)?.[1] ?? line);
+    let inline = null;
+    try {
+      field.ondblclick = onDouble;
+      button.onclick = () => ran.push('button click');
+      expect(field.ondblclick, 'the property reads back what was set').toBe(onDouble);
+      expect(missing(), 'neither has run').toEqual([`${fieldControl} dblclick (handler)`, `${buttonControl} click (handler)`]);
+      // Run by a row's gesture, a handler is credited; run outside one, not
+      invoked = [];
+      dispatchKeys = new WeakMap();
+      try {
+        button.click();
+      } finally {
+        noteCoverage(invoked);
+        invoked = null;
+      }
+      const double = new MouseEvent('dblclick', { bubbles: true, cancelable: true });
+      field.dispatchEvent(double);
+      expect(ran).toEqual(['button click', 'field dblclick, on the field: true']);
+      expect(double.defaultPrevented, 'a handler that returns false cancels its event, wrapped or not').toBe(true);
+      expect(missing(), 'the button\'s ran in a row').toEqual([`${fieldControl} dblclick (handler)`]);
+
+      document.ondblclick = () => {};
+      window.ondblclick = () => {};
+      document.body.onfocus = () => {};
+      inline = document.createElement('div');
+      document.body.append(inline);
+      inline.setAttribute('ondblclick', 'void 0');
+      expect(inventoryGaps().unsupported.map(line => line.match(here)?.[1] ?? line)).toEqual([
+        'document.ondblclick', 'window.ondblclick', 'window.onfocus, set on the body', `${controlOf(inline)} ondblclick, a content attribute`,
+      ]);
+    } finally {
+      document.ondblclick = null;
+      window.ondblclick = null;
+      document.body.onfocus = null;
+      inline?.remove();
+      field.remove();
+      button.remove();
+      inventory = kept;
+      inventoryContext = null;
     }
   });
 
@@ -2742,7 +3165,7 @@ describe('control → bus goldens (TST-04)', () => {
     }
   }, 60_000);
 
-  test('undone and redone, a marker change to a mixed selection gets all three selected waypoints back, and a redo that keeps only one of them fails', async () => {
+  test('undone and redone, a marker change to a mixed selection gets all three selected waypoints back, the one chosen last still the primary, and a redo that keeps only one of them fails', async () => {
     // The saved project holds no selection; what history holds does, and the
     // redo is compared with it too.
     vi.useFakeTimers(FAKE_TIMERS);
@@ -2750,7 +3173,9 @@ describe('control → bus goldens (TST-04)', () => {
     const session = await startSession(CONTEXTS.find(each => each.name === 'mixed'));
     const { app } = session;
     const selected = () => app.selectedWaypoints.map(waypoint => app.waypoints.indexOf(waypoint));
+    const primary = () => app.waypoints.indexOf(app.selectedWaypoint);
     expect(selected()).toEqual([MINOR, OTHER_MAJOR, MAJOR]);
+    expect(primary(), 'the primary: the waypoint chosen last').toBe(MAJOR);
     const redo = app.redo;
     let spy = null;
     try {
@@ -2758,6 +3183,7 @@ describe('control → bus goldens (TST-04)', () => {
       const markerStyle = singleGestures(document.getElementById('marker-style')).find(each => each.label === 'choose "dot"');
       await runRow(session, '#marker-style', markerStyle, 'mixed #marker-style choose "dot", undone and redone');
       expect(selected(), 'the selection, once the row was undone and redone').toEqual([MINOR, OTHER_MAJOR, MAJOR]);
+      expect(primary(), 'the primary, once the row was undone and redone').toBe(MAJOR);
       // A redo that brings back only the first of them.
       spy = vi.spyOn(app, 'redo').mockImplementation(function redoKeepingOne(...args) {
         const result = redo.apply(this, args);
@@ -2772,6 +3198,121 @@ describe('control → bus goldens (TST-04)', () => {
         .rejects.toThrow('a redo that keeps one: undone and redone, what history holds is not what the row made it');
     } finally {
       spy?.mockRestore();
+      session.ui.disconnect();
+      retire(session);
+    }
+  }, 60_000);
+
+  test('a history that keeps no primary for a mixed selection fails, though what its serializer reads back agrees with itself after undo and redo', async () => {
+    // The review's MULTI-PRIMARY, put in for this test: the app's serializer
+    // drops the primary of a selection of more than one. What history holds
+    // then agrees with itself before and after, and the saved project holds
+    // no selection: only the app's own selection tells.
+    vi.useFakeTimers(FAKE_TIMERS);
+    installClipboard(copying);
+    const session = await startSession(CONTEXTS.find(each => each.name === 'mixed'));
+    const { app } = session;
+    const serialize = app._getUndoableState;
+    const spy = vi.spyOn(app, '_getUndoableState').mockImplementation(function withoutPrimary(...args) {
+      const state = serialize.apply(this, args);
+      return state.selectedWaypointIds.length > 1 ? { ...state, selectedWaypointId: null } : state;
+    });
+    try {
+      const ids = app.selectedWaypoints.map(waypoint => waypoint.id);
+      const history = app.undoService.createSnapshot();
+      choose('marker-style', 'dot');
+      await settle();
+      expect(app.undoService.createSnapshot().undoStack.length, 'the change recorded an entry').toBe(history.undoStack.length + 1);
+      expect(session.history.takeMiskept(), 'the entry, as it was kept').toEqual([
+        `kept ${JSON.stringify({ primary: null, selected: ids })} while ${JSON.stringify({ primary: app.waypoints[MAJOR].id, selected: ids })} was selected`,
+      ]);
+      await expect(expectHistoryRestores(session, 'a history without the primary', history))
+        .rejects.toThrow('a history without the primary: history kept an entry holding other waypoints selected than the app had');
+      expect(app.selectedWaypoint, 'redone, no waypoint is the primary').toBeNull();
+    } finally {
+      spy.mockRestore();
+      session.ui.disconnect();
+      retire(session);
+    }
+  }, 60_000);
+
+  test('an undo or a redo that loses the primary of a mixed selection fails, even through a serializer that cannot tell', async () => {
+    // A serializer that names the primary by the last waypoint selected, as
+    // the mixed context's is, reads back that primary however the app lost
+    // it; the app's own selection, against the one it had as the entry was
+    // kept, tells.
+    vi.useFakeTimers(FAKE_TIMERS);
+    installClipboard(copying);
+    const session = await startSession(CONTEXTS.find(each => each.name === 'mixed'));
+    const { app } = session;
+    const serialize = app._getUndoableState;
+    const spies = [vi.spyOn(app, '_getUndoableState').mockImplementation(function primaryByLastSelected(...args) {
+      const state = serialize.apply(this, args);
+      return { ...state, selectedWaypointId: state.selectedWaypointIds.at(-1) ?? null };
+    })];
+    const losingPrimary = (method) => {
+      const original = app[method];
+      spies.push(vi.spyOn(app, method).mockImplementation(function losePrimary(...args) {
+        const result = original.apply(this, args);
+        if (this.selectedWaypoints.length > 1) this.selectedWaypoint = null;
+        return result;
+      }));
+    };
+    const change = async (style) => {
+      const history = app.undoService.createSnapshot();
+      choose('marker-style', style);
+      await settle();
+      expect(app.undoService.createSnapshot().undoStack.length, `${style} recorded an entry`).toBe(history.undoStack.length + 1);
+      return history;
+    };
+    try {
+      expect(app.waypoints.indexOf(app.selectedWaypoint), 'the primary is the last selected, as that serializer has it').toBe(MAJOR);
+      // An entry first, so that undoing gives back a mixed selection
+      await change('square');
+      losingPrimary('undo');
+      await expect(expectHistoryRestores(session, 'an undo that loses the primary', await change('dot')))
+        .rejects.toThrow('an undo that loses the primary: after undo 1 of 1, the waypoints selected are not those history kept its entry with');
+      spies.pop().mockRestore();
+      expect(app.waypoints.indexOf(app.selectedWaypoint), 'the redo gave the primary back').toBe(MAJOR);
+      losingPrimary('redo');
+      await expect(expectHistoryRestores(session, 'a redo that loses the primary', await change('flag')))
+        .rejects.toThrow('a redo that loses the primary: after redo 1 of 1, the waypoints selected are not those history kept its entry with');
+      expect(session.history.takeMiskept(), 'each entry held the waypoints the app had selected').toEqual([]);
+    } finally {
+      for (const spy of spies) spy.mockRestore();
+      session.ui.disconnect();
+      retire(session);
+    }
+  }, 60_000);
+
+  test('a row that makes another waypoint the primary once history has kept its entry fails, undone and redone, even through a serializer that cannot tell', async () => {
+    // History gives back the primary it kept, not the one the row left; a
+    // serializer that names the primary by the last waypoint selected reads
+    // back the same either way, and so does every entry it was kept with.
+    vi.useFakeTimers(FAKE_TIMERS);
+    installClipboard(copying);
+    const session = await startSession(CONTEXTS.find(each => each.name === 'mixed'));
+    const { app } = session;
+    const serialize = app._getUndoableState;
+    const spy = vi.spyOn(app, '_getUndoableState').mockImplementation(function primaryByLastSelected(...args) {
+      const state = serialize.apply(this, args);
+      return { ...state, selectedWaypointId: state.selectedWaypointIds.at(-1) ?? null };
+    });
+    try {
+      const history = app.undoService.createSnapshot();
+      choose('marker-style', 'dot');
+      await settle();
+      expect(app.undoService.createSnapshot().undoStack.length, 'the change recorded an entry').toBe(history.undoStack.length + 1);
+      // The same three, the minor now the primary, which records nothing
+      app.eventBus.emit('waypoint:multi-selected', { waypoints: [...app.selectedWaypoints], primary: app.waypoints[MINOR] });
+      await settle();
+      expect(app.undoService.createSnapshot().undoStack.length, 'the new primary recorded no entry').toBe(history.undoStack.length + 1);
+      expect(session.history.takeMiskept(), 'the entry held the waypoints the app had selected').toEqual([]);
+      await expect(expectHistoryRestores(session, 'a primary chosen after the entry', history))
+        .rejects.toThrow('a primary chosen after the entry: undone and redone, the waypoints selected are not those the row left');
+      expect(app.waypoints.indexOf(app.selectedWaypoint), 'redone, the primary history kept').toBe(MAJOR);
+    } finally {
+      spy.mockRestore();
       session.ui.disconnect();
       retire(session);
     }

@@ -49,8 +49,7 @@ ui - #codec-mp4-reduced: button class="btn btn-secondary" style="" :text="Export
 ui - #codec-webm: button class="btn btn-primary" :text="Export WebM at 7680×4320"
 
 ## #codec-mp4-reduced · click
-emit video:resolution-change {width: 4000, height: 2250}
-emit video:export-request "mp4"
+emit video:export-request {format: "mp4", resolution: {width: 4000, height: 2250}}
 emit video:export-error {error: Error("Video export not supported: MP4 export requires a supported H.264 WebCodecs encoder")}
 emit motion:preview-mode-change false
 emit animation:seek 0
