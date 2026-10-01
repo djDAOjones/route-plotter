@@ -12,19 +12,15 @@
  */
 
 import { expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
-import { LOAD_REFUSED, loadSnapshot } from './helpers/projectSnapshot.js';
+import { LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
+import { LARGE, bytesOf, major, refused, reopened, trace, traced, undrawn, withRoute } from './helpers/traceProject.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { getRetainedBackgroundDataURL, stageProjectModel } from '../src/app/persistence.js';
 import { STORAGE } from '../src/config/constants.js';
-import { applyTraceToLayer, traceRouteIntoGraph } from '../src/utils/routeTrace.js';
-import { ImageAsset } from '../src/models/ImageAsset.js';
 
-const major = (id, name = id, extra = {}) => ({ id, name, imgX: 0.2, imgY: 0.3, isMajor: true, ...extra });
 
-/** Hundreds of majors take a while to trace, check and reopen, more under load. */
-const LARGE = 30000;
+
 
 /** A route of two majors with `bends` minors between them, in a zig-zag. */
 function routeWithBends(bends) {
@@ -41,29 +37,9 @@ function routeWithBends(bends) {
   ];
 }
 
-/** An app with `waypoints` open, and a crowd added, as the author adds one, unless `scene` has crowds. */
-async function withRoute(waypoints, scene = null) {
-  const app = await bootApp();
-  await app.ready;
-  expect(await loadSnapshot(app, { coordVersion: 9, waypoints, ...(scene ? { scene } : {}) })).toBe(true);
-  if (!scene) app.addCrowd();
-  return app;
-}
 
-/** A fresh app with `snapshot` open as saved, or null when the loader refuses it. */
-async function reopened(snapshot) {
-  const fresh = await bootApp();
-  await fresh.ready;
-  return (await loadSnapshot(fresh, snapshot)) ? fresh : null;
-}
 
-/** Trace the route into `layer`, and hear what the author is told. */
-function trace(app, layer) {
-  const toast = vi.fn();
-  app.eventBus.on('ui:toast', toast);
-  const traced = app.traceRouteIntoCrowd(layer);
-  return { traced, told: toast.mock.calls.map(([{ message }]) => message) };
-}
+
 
 test('a leg of 256 bends traces into the crowd, and the project reopens with them', async () => {
   const app = await withRoute(routeWithBends(256));
@@ -78,27 +54,6 @@ test('a leg of 256 bends traces into the crowd, and the project reopens with the
   expect(fresh.scene.flowLayers[0].graph.toJSON()).toEqual(layer.graph.toJSON());
 });
 
-/**
- * Refused: the crowd keeps its network, nothing is recorded or saved, the
- * author is told `message`, once, and the project still reopens as it was
- * (unless it never did: `reopens: false`). `unchanged` is checked before the
- * reopening, which boots another app.
- */
-async function refused(app, layer, message, unchanged = () => {}, { reopens = true } = {}) {
-  const network = JSON.stringify(layer.graph.toJSON());
-  const undo = app.undoService.createSnapshot();
-  const saving = vi.spyOn(app, 'autoSave');
-
-  const { traced, told } = trace(app, layer);
-
-  expect(traced).toBe(false);
-  expect(told).toEqual([message]);
-  expect(JSON.stringify(layer.graph.toJSON())).toBe(network);
-  expect(app.undoService.createSnapshot()).toEqual(undo);
-  expect(saving).not.toHaveBeenCalled();
-  unchanged();
-  if (reopens) expect(await reopened(app._buildProjectSnapshot())).not.toBeNull();
-}
 
 test('a leg of 257 bends is not traced, and the author is told which leg, and why', async () => {
   const app = await withRoute(routeWithBends(257));
@@ -284,33 +239,12 @@ test('a leg of 257 bends from a major with no name is refused, as a leg of the r
     + 'Remove some of its minor waypoints, then trace again.');
 });
 
-/** What a string or a value takes in a file: its UTF-8 bytes, and how many values it holds (each object, array and item). */
-const bytesOf = text => new TextEncoder().encode(text).length;
+/** How many values a value holds in a file: each object, array and item. */
 const valuesIn = value => 1 + (value && typeof value === 'object' ? Object.values(value).reduce((sum, each) => sum + valuesIn(each), 0) : 0);
 
-/** A project's file metadata as Save Project writes it, with no background: `project.json` and its images' manifest. */
-const fileMetadata = (project, manifest = []) => JSON.stringify({ ...project, assetManifest: manifest }, null, 2);
 
-/** A custom marker image on the first waypoint, as the author adds one: a file then carries it, and its manifest names it. */
-function withMarkerImage(app) {
-  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-  const asset = new ImageAsset({
-    id: 'custom', name: 'icon.png', base64: png, width: 1, height: 1, mimeType: 'image/png', size: ImageAsset.inspectDataURL(png).byteLength,
-  });
-  app.imageAssetService.addAsset(asset);
-  app.waypoints[0].customImageAssetId = asset.id;
-  app.waypoints[0].markerStyle = 'custom';
-}
 
-/** The project the trace would make, worked out here: the project as saved, the crowd's network the trace's. */
-function traced(app, layer) {
-  const project = app._buildProjectSnapshot({ includeAssets: false });
-  const network = { graph: new layer.graph.constructor() };
-  applyTraceToLayer(network, traceRouteIntoGraph(app.waypoints));
-  project.scene.flowLayers = project.scene.flowLayers.map(each => (each.id === layer.id
-    ? { ...layer.toJSON(), guideType: 'graph', graph: network.graph.toJSON() } : each));
-  return project;
-}
+
 
 test('a trace whose project would hold just over its values, counting what its crowds’ emitters hold, is not traced; the project was one that saves and reopens', async () => {
   // A name that is a long array (a file may name a major so), copied into its node's label: the project then
@@ -324,52 +258,12 @@ test('a trace whose project would hold just over its values, counting what its c
   expect(valuesIn(after)).toBeGreaterThan(100000);
   expect(() => stageProjectModel(JSON.parse(JSON.stringify(after)))).toThrow('Project metadata is too deeply nested or complex');
   expect(bytesOf(app.imageAssetService.prepareArchive(after).projectJSON)).toBeLessThan(2 * 1024 * 1024);
-  const reopensFrom = async zip => { const fresh = await bootApp(); await fresh.ready; return fresh.loadProject(zip); };
+  const reopensFrom = async zip => (await undrawn()).loadProject(zip);
   expect(await reopensFrom(await app.imageAssetService.exportZip(before))).toBe(true);
 
   await refused(app, layer, 'This route can’t be traced into a crowd: Project metadata is too deeply nested or complex.');
 });
 
-test.each([
-  ['exactly 2 MB is traced, and the file and recovery reopen', 0, false],
-  ['a byte more is not traced', 1, false],
-  ['exactly 2 MB, its images’ manifest counted, is traced, and the file and recovery reopen', 0, true],
-  ['a byte more, its images’ manifest counted, is not traced', 1, true],
-])('a trace whose file metadata would be %s', async (_, over, image) => {
-  const limit = 2 * 1024 * 1024;
-  const app = await withRoute(Array.from({ length: 900 }, (_, index) => major(`w${index}`, 'q'.repeat(40))));
-  const layer = app.scene.flowLayers[0];
-  if (image) withMarkerImage(app);
-  // Worked out here, and as Save Project's own preparation writes it (the
-  // manifest taken from it once, before the names grow)
-  const manifest = JSON.parse(app.imageAssetService.prepareArchive(traced(app, layer)).projectJSON).assetManifest;
-  expect(manifest).toHaveLength(image ? 1 : 0);
-  expect(fileMetadata(traced(app, layer), manifest)).toBe(app.imageAssetService.prepareArchive(traced(app, layer)).projectJSON);
-  const reopensFrom = async zip => { const fresh = await bootApp(); await fresh.ready; return fresh.loadProject(zip); };
-  expect(await reopensFrom(await app.imageAssetService.exportZip(app._buildProjectSnapshot({ includeAssets: false })))).toBe(true);
-  // The first major's name appears twice (the waypoint and its node), the crowd's once: make up the bytes to the limit
-  let gap = limit + over - bytesOf(fileMetadata(traced(app, layer), manifest));
-  expect(gap).toBeGreaterThan(0);
-  if (gap % 2) {
-    layer.name += 'x';
-    gap -= 1;
-  }
-  app.waypoints[0].name += 'q'.repeat(gap / 2);
-  expect(bytesOf(fileMetadata(traced(app, layer), manifest))).toBe(limit + over);
-
-  if (over) {
-    await refused(app, layer, 'This route can’t be traced into a crowd: Project metadata exceeds the 2 MB limit.');
-    return;
-  }
-  expect(trace(app, layer).traced).toBe(true);
-  const saved = app._buildProjectSnapshot({ includeAssets: false });
-  expect(bytesOf(app.imageAssetService.prepareArchive(saved).projectJSON)).toBe(limit);
-  const fresh = await bootApp();
-  await fresh.ready;
-  expect(await fresh.loadProject(await app.imageAssetService.exportZip(saved))).toBe(true);
-  app.storageService.flushAutoSave();
-  expect(await reopened(JSON.parse(app.storageService._lastSerialized))).not.toBeNull();
-}, LARGE);
 
 test('a trace that would give the project more values than it can hold is not traced', async () => {
   const app = await withRoute(Array.from({ length: 1400 }, (_, index) => major(`w${index}`)));
