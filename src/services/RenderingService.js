@@ -463,7 +463,8 @@ export class RenderingService {
     // The author's viewport zoom takes the animation camera's place for the
     // background, as it does for the vector layer below: applied on top of
     // the viewport, the camera drew the map at their product and the route
-    // at the viewport's alone, off the map (DEF-61).
+    // at the viewport's alone, off the map (DEF-61). Every background mode
+    // and the tint take this camera, so all are drawn under one transform.
     const frameCamera = hasZoom ? null : state.cameraState;
     if (hasZoom) {
       ctx.save();
@@ -496,7 +497,7 @@ export class RenderingService {
           const headPos = state.imageToCanvas(headPosNorm.x, headPosNorm.y);
           const currentTimeMs = state.animationEngine.getTime();
           this.renderBackgroundWithSpotlight(
-            ctx, state.background, cw, ch, headPos, motionSettings, currentTimeMs, state.cameraState
+            ctx, state.background, cw, ch, headPos, motionSettings, currentTimeMs, frameCamera
           );
         }
       } else if (bgMode === BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL && hasPath && motionVisibilityService) {
@@ -515,7 +516,7 @@ export class RenderingService {
           const headPos = state.imageToCanvas(headPosNorm.x, headPosNorm.y);
           const currentTimeMs = state.animationEngine.getTime();
           this.renderBackgroundWithAOV(
-            ctx, state.background, cw, ch, headPos, direction, motionSettings, currentTimeMs, state.cameraState
+            ctx, state.background, cw, ch, headPos, direction, motionSettings, currentTimeMs, frameCamera
           );
         }
       } else if (bgMode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW_REVEAL && hasPath && motionVisibilityService) {
@@ -535,7 +536,7 @@ export class RenderingService {
       }
 
       // 2) Contrast overlay (in zoomed space, under the image's camera) - only affects image area
-      this.renderOverlay(ctx, state.background.overlay, cw, ch, state.background, state.cameraState);
+      this.renderOverlay(ctx, state.background.overlay, cw, ch, state.background, frameCamera);
     } finally {
       if (hasZoom) {
         ctx.restore();

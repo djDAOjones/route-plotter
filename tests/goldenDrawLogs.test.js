@@ -1401,6 +1401,28 @@ describe('golden draw logs (TST-02)', () => {
       }
 
       for (const fit of ['fit', 'fill']) {
+        test(`at 400% background zoom the tint covers exactly the image, past every edge, under its camera (fit ${fit})`, async () => {
+          const fixture = fixtures().find(each => each.id === 'authored-extras');
+          fixture.project.background.fit = fit;
+          fixture.project.background.overlay = -40;
+          fixture.project.exportSettings.backgroundZoom = 400;
+          const app = await appWithFixture(fixture);
+          enterMode(app, 'edit');
+          const edit = expectTintOnTheImage(app, 'edit');
+          enterMode(app, 'preview');
+          const preview = expectTintOnTheImage(app, 'preview');
+          const { app: exporter, player } = await exportAndPlayer(fixture);
+          const exported = expectTintOnTheImage(exporter, 'export');
+          const played = expectTintOnTheImage(player, 'player');
+
+          // Non-vacuity: at 400% the image overhangs every edge of the
+          // canvas, where a tint held to a smaller zoom would leave bands.
+          const drawn = { edit, preview, export: exported, player: played };
+          for (const [label, { rect: [x, y] }] of Object.entries(drawn)) {
+            expect(Math.max(x, y), `${label}: the overhang`).toBeLessThan(0);
+          }
+        });
+
         test(`at 50% background zoom the tint covers exactly the image, under its camera (fit ${fit})`, async () => {
           // 'fill' has no control any more, but a project saved with it still
           // loads (`authored-extras` has it), and the image is drawn contained
@@ -1493,6 +1515,40 @@ describe('golden draw logs (TST-02)', () => {
       }
 
       for (const mode of [BACKGROUND_VISIBILITY.SPOTLIGHT, BACKGROUND_VISIBILITY.ANGLE_OF_VIEW]) {
+        test(`under the author's viewport zoom, the instant ${mode}'s image, its mask, the tint and the route are drawn under the viewport alone, though the camera is on`, async () => {
+          // DEF-61's rule, which the instant modes and the tint now follow:
+          // the viewport zoom takes the camera's place, as it does for the
+          // vector layer, so the mask stays on the head.
+          const fixture = fixtures().find(each => each.id === 'authored-extras');
+          fixture.project.motionSettings.backgroundVisibility = mode;
+          fixture.project.background.overlay = -40;
+          const app = await appWithFixture(fixture);
+          enterMode(app, 'preview');
+          for (const zoom of [1.5, 2]) {
+            app.setZoom(zoom, app.waypoints[1]);
+            const label = `at ${zoom}×`;
+            const frame = frameAt(app, 0.5, { state: true });
+            const { panX, panY } = app.viewport;
+            const viewport = [zoom, 0, 0, zoom, -zoom * panX, -zoom * panY].map(n => Number(n.toFixed(3))).join(' ');
+            const image = placement(onlyLine(frame, isImage, `${label}: the image`));
+            const tint = placement(onlyLine(frame, line => line.startsWith('main fillRect ')
+              && / globalAlpha=0\.4( |$)/.test(line), `${label}: the tint`));
+            const mask = transformOf(onlyLine(frame, line => line.startsWith('main fill @ ')
+              && line.includes(' globalCompositeOperation=destination-in'), `${label}: the mask`));
+            const edge = onlyLine(frame, line => line.startsWith('main arc ')
+              && line.includes(' globalCompositeOperation=destination-in'), `${label}: the mask's edge`);
+            const route = [...new Set(frame.filter(line => /^vector (moveTo|lineTo) /.test(line)).map(transformOf))];
+            expect(image.transform.split(' ').map(Number).join(' '), label).toBe(viewport);
+            expect(tint, `${label}: the tint`).toEqual(image);
+            expect([mask, transformOf(edge)], `${label}: the mask`).toEqual([image.transform, image.transform]);
+            expect(route, `${label}: the route`).toEqual([image.transform]);
+            const [x, y] = edge.split(' ').slice(2, 4);
+            expect(strokeEnds(frame), `${label}: the route ends where the mask is centred`).toContain(`${x} ${y} @ ${mask}`);
+          }
+        });
+      }
+
+      for (const mode of [BACKGROUND_VISIBILITY.SPOTLIGHT, BACKGROUND_VISIBILITY.ANGLE_OF_VIEW]) {
         test(`with the camera on but within a thousandth of 1×, as it is while it settles, the instant ${mode}'s image, its mask and the tint are drawn as with the camera off`, async () => {
           // While the camera eases back to 1× it stays on, its zoom within a
           // thousandth of 1× and its centre still away from the canvas's
@@ -1514,6 +1570,7 @@ describe('golden draw logs (TST-02)', () => {
                   && / globalAlpha=0\.4( |$)/.test(line), 'the tint')),
                 mask: transformOf(onlyLine(frame, line => line.startsWith('main fill @ ')
                   && line.includes(' globalCompositeOperation=destination-in'), 'the mask')),
+                route: [...new Set(frame.filter(line => /^vector (moveTo|lineTo) /.test(line)).map(transformOf))][0],
               };
             } finally {
               calculated.mockRestore();
@@ -1523,7 +1580,37 @@ describe('golden draw logs (TST-02)', () => {
           const off = drawnWith({ zoom: 1, centerX: 330, centerY: 330, enabled: false });
           expect(settling).toEqual(off);
           expect(settling.tint).toEqual(settling.image);
-          expect(settling.mask).toBe(settling.image.transform);
+          expect([settling.mask, settling.route]).toEqual([settling.image.transform, settling.image.transform]);
+          // Just past the thousandth, all four are under the camera, the route too
+          const past = drawnWith({ zoom: 1.002, centerX: 100, centerY: 80, enabled: true });
+          expect(past.image.transform).toMatch(/^1\.002 0 0 1\.002 /);
+          expect(past.tint).toEqual(past.image);
+          expect([past.mask, past.route]).toEqual([past.image.transform, past.image.transform]);
+        });
+
+        test(`the instant ${mode}'s circle or cone is the size the settings give it at any camera zoom, drawn under the camera, so it grows with it`, async () => {
+          const fixture = fixtures().find(each => each.id === 'authored-extras');
+          fixture.project.motionSettings.backgroundVisibility = mode;
+          const app = await appWithFixture(fixture);
+          enterMode(app, 'preview');
+          const edgeWith = (camera) => {
+            const calculated = vi.spyOn(app, '_calculateCameraState').mockReturnValue(camera);
+            try {
+              const frame = frameAt(app, 0.5, { state: true });
+              const edge = onlyLine(frame, line => line.startsWith('main arc ')
+                && line.includes(' globalCompositeOperation=destination-in'), 'the mask\'s edge');
+              return { radius: Number(edge.split(' ')[4]), transform: transformOf(edge) };
+            } finally {
+              calculated.mockRestore();
+            }
+          };
+          const off = edgeWith({ zoom: 1, centerX: 330, centerY: 330, enabled: false });
+          const zoomed = edgeWith({ zoom: 1.75, centerX: 330, centerY: 330, enabled: true });
+          const deep = edgeWith({ zoom: 4, centerX: 330, centerY: 330, enabled: true });
+          expect(off.radius).toBeGreaterThan(0);
+          expect([zoomed.radius, deep.radius]).toEqual([off.radius, off.radius]);
+          expect(zoomed.transform).toMatch(/^1\.75 0 0 1\.75 /);
+          expect(deep.transform).toMatch(/^4 0 0 4 /);
         });
       }
 
