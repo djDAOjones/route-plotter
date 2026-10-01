@@ -1094,3 +1094,108 @@ test('a finished export no longer listens for its pause and resume', async () =>
   app.eventBus.emit('video:export-resumed');
   expect(document.getElementById('export-dropdown-btn').textContent).toBe(label);
 });
+
+test.each(['cancelled with Escape', 'its encoder fails', 'its route has no duration'])('an export that ends early because %s takes its pause, resume and Escape listeners off: none of them hears anything after', async (ending) => {
+  // The finished case is tested above; these end before the encoder
+  // finishes, and the harness's own clear-up would hide listeners left.
+  const { app, running } = await exportingApp();
+  const added = vi.spyOn(window, 'addEventListener');
+  const cancel = vi.spyOn(app.videoExporter, 'cancel');
+  const listening = () => ['video:export-paused', 'video:export-resumed'].map(name => app.eventBus.listenerCount(name));
+  const before = listening();
+  const label = document.getElementById('export-dropdown-btn').textContent;
+  if (ending === 'its encoder fails') {
+    allowConsole(/Video export failed/);
+    vi.spyOn(app.videoExporter, 'export').mockRejectedValueOnce(new Error('the encoder failed'));
+  }
+  if (ending === 'its route has no duration') vi.spyOn(app, 'invalidateAnimationTiming').mockReturnValueOnce(0);
+  const first = app.exportVideo();
+  if (ending === 'cancelled with Escape') {
+    await running;
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  }
+  await first;
+  cancel.mockClear();
+  const heard = vi.fn();
+  window.addEventListener('keydown', heard);
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  app.eventBus.emit('video:export-paused');
+  app.eventBus.emit('video:export-resumed');
+  const observed = {
+    listening: listening(), escapeHeard: heard.mock.calls.length, cancelled: cancel.mock.calls.length,
+    label: document.getElementById('export-dropdown-btn').textContent,
+  };
+  // Anything left is taken off only once it has been seen
+  window.removeEventListener('keydown', heard);
+  for (const [type, listener, options] of added.mock.calls) {
+    if (type === 'keydown' && listener.name === 'onEscapeKey') window.removeEventListener(type, listener, options);
+  }
+
+  expect(observed).toEqual({ listening: before, escapeHeard: 1, cancelled: 0, label });
+  expect([app._videoExportRunning, app.animationEngine._transportSuspended]).toEqual([false, false]);
+});
+
+test('an export begun partway through Edit, with a comet trail of 20%, puts the transport back where it was, and the path’s place', async () => {
+  // Edit and Preview time the route differently, and the transport's place
+  // is restored into the timeline the mode gives: the mode first, then the
+  // transport, or the place moves.
+  const { app, running, finish } = await exportingApp();
+  app._setPreviewMode(false);
+  app.eventBus.emit('motion:path-visibility-change', 'instantaneous');
+  app.eventBus.emit('motion:path-trail-change', 0.2);
+  app.animationEngine.seekToProgress(0.37);
+  const before = app.animationEngine.state.captureTransportState();
+  const place = app.animationEngine.state.pathProgress;
+  const duration = app.animationEngine.state.duration;
+  const first = app.exportVideo();
+  await running;
+  // The export times the route as Preview does: not the timeline it began in
+  expect(app.animationEngine.state.duration).not.toBe(duration);
+  finish();
+  await first;
+
+  expect(app.animationEngine.state.captureTransportState()).toEqual(before);
+  expect(app.animationEngine.state.pathProgress).toBeCloseTo(place, 10);
+  expectTransportFree(app);
+});
+
+test.each(['full', 'reduced'].flatMap(stage => ['can', 'cannot'].map(answer => [stage, answer])))('an old %s-size probe saying H.264 %s take that size, answering while a later MP4 click’s probe is out, asks for nothing, and the later click’s MP4 exports', async (stage, answer) => {
+  // A request's mark only ever advances: one reset when an export ended
+  // would give the next click the mark an old probe still holds.
+  const { app, running, finish, frames } = await exportingApp();
+  exportSize(app, 3840, 2160);
+  const answers = [];
+  const probe = vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockImplementation(() => new Promise(resolve => answers.push(resolve)));
+  const encode = vi.spyOn(app.videoExporter, 'export');
+  app.elements.exportMp4Btn.click();
+  if (stage === 'reduced') {
+    answers[0](null);
+    await answered();
+  }
+  const old = answers.at(-1);
+  app.elements.exportWebmBtn.click();
+  await running;
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+  app.elements.exportMp4Btn.click();
+  const latest = answers.at(-1);
+  expect(latest).not.toBe(old);
+  const probes = probe.mock.calls.length;
+
+  old(answer === 'can' ? { codec: 'avc1' } : null);
+  await answered();
+  const observed = {
+    probes: probe.mock.calls.length - probes, shown: codecDialogShown(),
+    inert: document.getElementById('app').hasAttribute('inert'), encodings: encode.mock.calls.length,
+  };
+  // Whatever a broken version left waiting is let go before the checks
+  for (const resolve of answers) resolve({ codec: 'avc1' });
+  latest({ codec: 'avc1' });
+  await vi.waitFor(() => expect(frames.length).toBeGreaterThanOrEqual(4));
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+
+  expect(observed).toEqual({ probes: 0, shown: false, inert: false, encodings: 1 });
+  expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['webm', 'mp4']);
+  expect(frames).toHaveLength(6);
+});
