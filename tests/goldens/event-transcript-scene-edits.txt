@@ -1,0 +1,188 @@
+# What the scene-edit commits CON-03 will merge do, reached through the bus.
+# A row starts in Edit mode, nothing selected, the transport paused at the
+# start, unless its "given" says otherwise. "at once" is the emit and its
+# promise continuations; "later" runs the clock on ten seconds, so the
+# retime, undo grouping, autosave write and queued frames run in order.
+# Nested lines are what an emit caused. Written by
+# tests/eventTranscript.test.js (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1
+# and read the diff.
+
+## scene-outline:command update-waypoint
+fixture: open day
+act: ex-uon-2 moved to 45% across in the outline
+at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
+  scene-outline:command {action: "update-waypoint", segmentSpeed: "1", waitSeconds: "2", waypointId: "ex-uon-2", x: "45", y: "47"}
+    animation:durationChange 13386.1287  (no listener)
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    said "Major waypoint updated."
+  scene-outline:update {crowds: [{…}], focusKey: "waypoint:ex-uon-2:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 13386.1287  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 13386.1287
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 316 points"]
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints[ex-uon-2].imgX: 0.4 -> 0.45
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## scene-outline:command update-crowd
+fixture: open day
+act: the crowd renamed in the outline
+at once: autosave 1, queued render 1, undo saved 1
+  scene-outline:command {action: "update-crowd", guideType: "graph", layerId: "ex-uon-crowd", name: "Open day visitors", visible: "shown"}
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    said "Open day visitors updated."
+  scene-outline:update {crowds: [{…}], focusKey: "crowd:ex-uon-crowd:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 1
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ scene.flowLayers[ex-uon-crowd].name: "Visitors" -> "Open day visitors"
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## scene-outline:command update-emitter
+fixture: open day
+act: the crowd's dots raised from 60 to 80 in the outline
+at once: autosave 1, queued render 1, undo saved 1
+  scene-outline:command {action: "update-emitter", dotColor: "#56B4E9", dotCount: "80", dotSize: 0.45, emitterId: "ex-uon-emitter", intensityRamp: "0", layerId: "ex-uon-crowd", lifecycleMode: "disappear", …+7}
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    said "Primary emitter updated."
+  scene-outline:update {crowds: [{…}], focusKey: "emitter:ex-uon-crowd:ex-uon-emitter:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 1
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ scene.flowLayers[ex-uon-crowd].emitters[ex-uon-emitter].dotCount: 60 -> 80
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## scene-outline:command create-polygon
+fixture: open day
+at once: autosave 1, queued render 2, undo saved 1
+  scene-outline:command {action: "create-polygon", waypointId: "ex-uon-3"}
+    waypoint:selected wp(ex-uon-3)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+    said "Polygon created with three vertices."
+  scene-outline:update {crowds: [{…}], focusKey: "vertex:ex-uon-3:0:select", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "vertex:ex-uon-3:0"}
+later: autosave written 1, render 1
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints[ex-uon-3].areaHighlight.enabled: false -> true
+  - waypoints[ex-uon-3].areaHighlight.points = []
+  + waypoints[ex-uon-3].areaHighlight.points[0]
+      x = 0.78
+      y = 0.38
+  + waypoints[ex-uon-3].areaHighlight.points[1]
+      x = 0.74
+      y = 0.46
+  + waypoints[ex-uon-3].areaHighlight.points[2]
+      x = 0.82
+      y = 0.46
+  ~ waypoints[ex-uon-3].areaHighlight.shape: "none" -> "polygon"
+selection: none -> [ex-uon-3] ex-uon-3
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## scene-outline:command add-crowd
+fixture: open day
+at once: autosave 1, queued render 1, undo saved 1
+  scene-outline:command {action: "add-crowd"}
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    scene:semantic-changed {kind: "crowd-added", layerId: "fl#1"}
+    crowd:selected FlowLayer(fl#1)
+    said "Crowd 1 added — dots follow the route"
+  scene-outline:update {crowds: [{…}, {…}], focusKey: "crowd:fl#1:select", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "crowd:fl#1"}
+later: autosave written 1, render 1
+model:
+  ~ runtime.crowd: null -> "fl#1"
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection false crowd true"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ scene.flowLayers#order: ex-uon-crowd -> ex-uon-crowd fl#1
+  + scene.flowLayers[fl#1]
+      emitters#order = em#1
+      emitters[em#1].busynessEnvelope[0].time = 0
+      emitters[em#1].busynessEnvelope[0].transition = "gradual"
+      emitters[em#1].busynessEnvelope[0].value = 1
+      emitters[em#1].busynessEnvelope[1].time = 1
+      emitters[em#1].busynessEnvelope[1].transition = "gradual"
+      emitters[em#1].busynessEnvelope[1].value = 1
+      emitters[em#1].dotColor = "#56B4E9"
+      emitters[em#1].dotCount = 50
+      emitters[em#1].dotSize = 0.4
+      emitters[em#1].id = "em#1"
+      emitters[em#1].intensityRamp = 0
+      emitters[em#1].lifecycleMode = "respawn"
+      emitters[em#1].onsetVariance = 0.2
+      emitters[em#1].releaseDuration = 1
+      emitters[em#1].releaseStart = 0
+      emitters[em#1].seed = 834248658
+      emitters[em#1].speed = 0.15
+      emitters[em#1].speedVariance = 0.2
+      emitters[em#1].wobble = 0
+      graph.edges = []
+      graph.nodes = []
+      guideType = "route"
+      id = "fl#1"
+      name = "Crowd 1"
+      visible = true
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## scene-outline:command delete-crowd
+fixture: open day
+at once: autosave 1, queued render 1, undo saved 1
+  scene-outline:command {action: "delete-crowd", layerId: "ex-uon-crowd"}
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    scene:semantic-changed {kind: "crowd-deleted", layerId: "ex-uon-crowd"}
+    ui:toast {message: "Deleted Visitors — press Ctrl+Z to undo"}
+      toast "Deleted Visitors — press Ctrl+Z to undo"
+  scene-outline:update {crowds: [], focusKey: "crowds:add", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 1
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.undoDisabled: true -> false
+  + scene.flowLayers = []
+  - scene.flowLayers#order = ex-uon-crowd
+  - scene.flowLayers[ex-uon-crowd]
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## network:changed
+fixture: open day
+act: the first edge of the crowd's network weighted 3, then committed
+at once: autosave 1, queued render 1, undo saved 1
+  network:changed {commit: true}
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 1
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ scene.flowLayers[ex-uon-crowd].graph.edges[ge_trace_ex-uon-1__ex-uon-2].weight: 1 -> 3
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## crowd:param-changed
+fixture: open day
+act: the crowd's walking speed set on its card, then reported on the bus
+at once: autosave 1, queued render 1
+  crowd:param-changed
+later: autosave written 1, render 1, undo saved 1
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ scene.flowLayers[ex-uon-crowd].emitters[ex-uon-emitter].speed: 0.06 -> 0.08
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0

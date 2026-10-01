@@ -1,0 +1,2244 @@
+# What each event wiringControllers.js subscribes to does, one fresh app per row.
+# A row starts in Edit mode, nothing selected, the transport paused at the
+# start, unless its "given" says otherwise. "at once" is the emit and its
+# promise continuations; "later" runs the clock on ten seconds, so the
+# retime, undo grouping, autosave write and queued frames run in order.
+# Nested lines are what an emit caused. Written by
+# tests/eventTranscript.test.js (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1
+# and read the diff.
+
+## background:upload
+fixture: open day
+given: decoding the file gives a 1600x900 image (the app's loadImageFileAsset answers a prepared asset)
+at once: autosave 1, render 1, queued render 2, path 2
+  background:upload File(campus.png)
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 14240.7577  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 14240.7577
+  ~ exportSettings.resolutionX: 1920 -> 1600
+  ~ exportSettings.resolutionY: 1080 -> 900
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## background:overlay-change
+fixture: open day
+at once: autosave 1, render 1
+  background:overlay-change 40
+later: autosave written 1
+model:
+  ~ background.overlay: 0 -> 40
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## background:mode-change
+fixture: open day
+at once: autosave 1, render 1
+  background:mode-change "fill"
+later: autosave written 1
+model:
+  ~ background.fit: "fit" -> "fill"
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## ui:animation:play
+fixture: open day
+given: paused at the start, as loaded
+at once: nothing counted
+  ui:animation:play
+    animation:play undefined
+      said "Playing animation"
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.transport.pathProgress: 0 -> 0.0038
+  ~ runtime.transport.paused: true -> false
+  ~ runtime.transport.playing: false -> true
+  ~ runtime.transport.progress: 0 -> 0.0013
+  ~ runtime.transport.timeMs: 0 -> 16.6768
+  ~ runtime.ui.pauseButton: "none" -> "inline-block"
+  ~ runtime.ui.playButton: "inline-block" -> "none"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## ui:animation:play at the end
+fixture: open day
+given: paused at the end
+at once: retime 1
+  ui:animation:play
+    animation:reset undefined
+      said "Animation reset"
+      animation:durationChange 13336.2163  (no listener)
+      ui:slider:update-speed 150
+    animation:play undefined
+      said "Playing animation"
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.transport.pathProgress: 1 -> 0.0038
+  ~ runtime.transport.paused: true -> false
+  ~ runtime.transport.playing: false -> true
+  ~ runtime.transport.progress: 1 -> 0.0013
+  ~ runtime.transport.timeMs: 13336.2163 -> 16.6768
+  ~ runtime.ui.pauseButton: "none" -> "inline-block"
+  ~ runtime.ui.playButton: "inline-block" -> "none"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## ui:animation:pause
+fixture: open day
+given: playing from the start
+at once: nothing counted
+  ui:animation:pause
+    animation:pause undefined
+      said "Animation paused"
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.transport.paused: false -> true
+  ~ runtime.ui.pauseButton: "inline-block" -> "none"
+  ~ runtime.ui.playButton: "none" -> "inline-block"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## ui:animation:skip-start
+fixture: open day
+given: paused half way
+at once: retime 1
+  ui:animation:skip-start
+    animation:reset undefined
+      said "Animation reset"
+      animation:durationChange 13336.2163  (no listener)
+      ui:slider:update-speed 150
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.transport.pathProgress: 0.5 -> 0
+  ~ runtime.transport.paused: true -> false
+  ~ runtime.transport.progress: 0.5 -> 0
+  ~ runtime.transport.timeMs: 6668.1082 -> 0
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## ui:animation:skip-end
+fixture: open day
+given: paused at the start, as loaded
+at once: nothing counted
+  ui:animation:skip-end
+    animation:seek 13336.2163  (no listener)
+later: nothing counted
+model:
+  ~ runtime.transport.pathProgress: 0 -> 1
+  ~ runtime.transport.progress: 0 -> 1
+  ~ runtime.transport.timeMs: 0 -> 13336.2163
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## ui:animation:seek
+fixture: open day
+at once: nothing counted
+  ui:animation:seek 0.5
+    animation:seek 6668.1082  (no listener)
+later: nothing counted
+model:
+  ~ runtime.transport.pathProgress: 0 -> 0.5
+  ~ runtime.transport.progress: 0 -> 0.5
+  ~ runtime.transport.timeMs: 0 -> 6668.1082
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## animation:speed-change
+fixture: open day
+given: paused half way
+at once: autosave 1, retime 1
+  animation:speed-change 400
+    animation:speedChange 400  (no listener)
+    animation:durationChange 10626.0811  (no listener)
+    animation:seek 5313.0406  (no listener)
+    animation:seek 5313.0406  (no listener)
+later: autosave written 1
+model:
+  ~ animationState.duration: 13336.2163 -> 10626.0811
+  ~ animationState.speed: 150 -> 400
+  ~ runtime.dirty: false -> true
+  ~ runtime.transport.timeMs: 6668.1082 -> 5313.0406
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## animation:jkl-reverse
+fixture: open day
+given: paused half way
+at once: nothing counted
+  animation:jkl-reverse
+    animation:playbackSpeedChange -1
+    animation:play undefined
+      said "Playing animation"
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.jkl.live: "0 x1" -> "-1 x1"
+  ~ runtime.transport.pathProgress: 0.5 -> 0.4962
+  ~ runtime.transport.paused: true -> false
+  ~ runtime.transport.playbackSpeed: 1 -> -1
+  ~ runtime.transport.playing: false -> true
+  ~ runtime.transport.progress: 0.5 -> 0.4987
+  ~ runtime.transport.timeMs: 6668.1082 -> 6651.4314
+  ~ runtime.ui.pauseButton: "none" -> "inline-block"
+  ~ runtime.ui.playButton: "inline-block" -> "none"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## animation:jkl-forward
+fixture: open day
+given: paused at the start, as loaded
+at once: nothing counted
+  animation:jkl-forward
+    animation:playbackSpeedChange 1
+    animation:play undefined
+      said "Playing animation"
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.jkl.live: "0 x1" -> "1 x1"
+  ~ runtime.transport.pathProgress: 0 -> 0.0038
+  ~ runtime.transport.paused: true -> false
+  ~ runtime.transport.playing: false -> true
+  ~ runtime.transport.progress: 0 -> 0.0013
+  ~ runtime.transport.timeMs: 0 -> 16.6768
+  ~ runtime.ui.pauseButton: "none" -> "inline-block"
+  ~ runtime.ui.playButton: "inline-block" -> "none"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## animation:jkl-forward after L, L and a pause (DEF-15)
+fixture: open day
+given: L pressed twice from the start, then the pause button
+at once: nothing counted
+  animation:jkl-forward
+    animation:playbackSpeedChange 4
+    animation:play undefined
+      said "Playing animation"
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.jkl.live: "1 x2" -> "1 x4"
+  ~ runtime.transport.pathProgress: 0 -> 0.0154
+  ~ runtime.transport.paused: true -> false
+  ~ runtime.transport.playbackSpeed: 1 -> 4
+  ~ runtime.transport.progress: 0 -> 0.005
+  ~ runtime.transport.timeMs: 0 -> 66.707
+  ~ runtime.ui.pauseButton: "none" -> "inline-block"
+  ~ runtime.ui.playButton: "inline-block" -> "none"
+  kept runtime.jkl.unused = "0 x1"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## ui:animation:toggle
+fixture: open day
+given: paused half way
+at once: nothing counted
+  ui:animation:toggle
+    animation:playbackSpeedChange 1
+    animation:play undefined
+      said "Playing animation"
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.jkl.live: "0 x1" -> "1 x1"
+  ~ runtime.transport.pathProgress: 0.5 -> 0.5038
+  ~ runtime.transport.paused: true -> false
+  ~ runtime.transport.playing: false -> true
+  ~ runtime.transport.progress: 0.5 -> 0.5013
+  ~ runtime.transport.timeMs: 6668.1082 -> 6684.7849
+  ~ runtime.ui.pauseButton: "none" -> "inline-block"
+  ~ runtime.ui.playButton: "inline-block" -> "none"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## ui:animation:toggle while playing at 2x
+fixture: open day
+given: L pressed twice from the start: playing forward at 2x
+at once: nothing counted
+  ui:animation:toggle
+    animation:playbackSpeedChange 1
+    animation:pause undefined
+      said "Animation paused"
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.jkl.live: "1 x2" -> "0 x1"
+  ~ runtime.transport.paused: false -> true
+  ~ runtime.transport.playbackSpeed: 2 -> 1
+  ~ runtime.ui.pauseButton: "inline-block" -> "none"
+  ~ runtime.ui.playButton: "none" -> "inline-block"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:nudge
+fixture: open day
+given: ex-uon-3 selected
+at once: autosave 1, render 1, queued render 1, path 1
+  waypoint:nudge {dxFraction: 0.005, dyFraction: 0, waypoint: wp(ex-uon-3)}
+later: autosave written 1, render 2, retime 1, undo saved 1
+  animation:durationChange 13369.7251  (no listener)
+  animation:update AnimationState  (no listener)
+  undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+model:
+  ~ animationState.duration: 13336.2163 -> 13369.7251
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 321 points"]
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints[ex-uon-3].imgX: 0.78 -> 0.7863
+selection: [ex-uon-3] ex-uon-3 (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:nudge under a 2x editor zoom (DEF-16)
+fixture: open day
+given: ex-uon-3 selected, the editor zoomed to 2x on it
+act: the right-arrow nudge the canvas sends at that zoom
+at once: autosave 1, render 1, queued render 1, path 1
+  waypoint:nudge {dxFraction: 0.0025, dyFraction: 0, waypoint: wp(ex-uon-3)}
+later: autosave written 1, render 2, retime 1, undo saved 1
+  animation:durationChange 14203.6662  (no listener)
+  animation:update AnimationState  (no listener)
+  undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+model:
+  ~ animationState.duration: 13336.2163 -> 14203.6662
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 379 points"]
+  ~ runtime.route.pathPoints: 402 -> 459
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints[ex-uon-3].imgX: 0.78 -> 0.9216
+  ~ waypoints[ex-uon-3].imgY: 0.42 -> 0.38
+selection: [ex-uon-3] ex-uon-3 (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:nudge with two waypoints selected
+fixture: open day
+given: ex-uon-1 and ex-uon-3 selected, ex-uon-3 primary
+at once: autosave 1, render 1, queued render 1, path 1
+  waypoint:nudge {dxFraction: 0, dyFraction: -0.02, waypoint: wp(ex-uon-3)}
+later: autosave written 1, render 2, retime 1, undo saved 1
+  animation:durationChange 13348.9913  (no listener)
+  animation:update AnimationState  (no listener)
+  undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+model:
+  ~ animationState.duration: 13336.2163 -> 13348.9913
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 313 points"]
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints[ex-uon-1].imgY: 0.63 -> 0.61
+  ~ waypoints[ex-uon-3].imgY: 0.42 -> 0.4
+selection: [ex-uon-1 ex-uon-3] ex-uon-3 (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:add
+fixture: open day
+given: ex-uon-3 selected
+at once: autosave 1, queued render 2, path 1, undo saved 1
+  waypoint:add {imgX: 0.9, imgY: 0.3, isMajor: true, shiftKey: false}
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 18750.609  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 18750.609
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 402 -> 502
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3 wp#1"
+  ~ runtime.timeline.beacons: 2 -> 3
+  ~ runtime.timeline.pauses: 2 -> 3
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 -> ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 wp#1
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "ripple"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.9
+      imgY = 0.3
+      isMajor = true
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "on"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "timed"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: [ex-uon-3] ex-uon-3 -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:add, a minor after the selected waypoint
+fixture: open day
+given: ex-uon-2 selected
+at once: autosave 1, queued render 2, path 1, undo saved 1
+  waypoint:add {imgX: 0.7, imgY: 0.5, isMajor: false, shiftKey: false}
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(wp#1), wp(ex-uon-b1), …+1]
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 13338.9065  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 13338.9065
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 402 -> 502
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b wp#1 ex-uon-3"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 -> ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b wp#1 ex-uon-b1 ex-uon-3
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "none"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#D55E00"
+      dotSize = 4
+      id = "wp#1"
+      imgX = 0.7
+      imgY = 0.5
+      isMajor = false
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "off"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "none"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#D55E00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: [ex-uon-2] ex-uon-2 (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:add, the first waypoint of an empty route
+fixture: empty route
+at once: autosave 1, queued render 1, undo saved 1
+  waypoint:add {imgX: 0.3, imgY: 0.4, isMajor: true, shiftKey: false}
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(wp#1)]
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 1, minorCount: 0, route: [{…}], selectionKey: null}
+later: autosave written 1, render 1
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.sections: "waypoints false selection false crowd false" -> "waypoints true selection false crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  - waypoints = []
+  + waypoints#order = wp#1
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "none"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#D55E00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.3
+      imgY = 0.4
+      isMajor = true
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "fade-up"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "timed"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#D55E00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: none -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:add after the first waypoint of a branch (DEF-22)
+fixture: open day, two-waypoint branch
+act: the semantic insert, as the scene outline makes it
+at once: autosave 1, queued render 2, path 1, undo saved 1
+  waypoint:add {imgX: 0.53, imgY: 0.22, insertAfterId: "ex-uon-b1", isMajor: true}
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: null}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 17117.1452  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 17117.1452
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 353 points"] -> ["ex-uon-branch: 117 points", "ex-uon-branch: 117 points"]
+  ~ runtime.route.branches: ["ex-uon-branch: ex-uon-2 to ex-uon-3: ex-uon-b1 ex-uon-b2"] -> ["ex-uon-branch: ex-uon-2 to end: ex-uon-b1", "ex-uon-branch: - to ex-uon-3: ex-uon-b2"]
+  ~ runtime.route.pathPoints: 402 -> 635
+  ~ runtime.route.problems: [] -> ["branch-run-split (ex-uon-branch)", "branch-fork-undeclared (ex-uon-branch)"]
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b wp#1 ex-uon-3"
+  ~ runtime.timeline.pauses: 2 -> 3
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-b2 ex-uon-3 -> ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 wp#1 ex-uon-b2 ex-uon-3
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "none"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.53
+      imgY = 0.22
+      isMajor = true
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "on"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "timed"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: none -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## route:branch-arm
+fixture: open day
+at once: nothing counted
+  route:branch-arm {waypoint: wp(ex-uon-1)}
+    said "Branching from Main entrance. Click where the branch should go."
+    ui:toast {message: "Branch from Main entrance — click where …(68 chars)"}
+      toast "Branch from Main entrance — click where it should go (Esc to cancel)"
+later: nothing counted
+model:
+  ~ runtime.branchArmed: null -> "ex-uon-1"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## route:branch-arm on a minor waypoint
+fixture: open day
+at once: nothing counted
+  route:branch-arm {waypoint: wp(ex-uon-2a)}
+    ui:toast {message: "Branch from a major waypoint — minors only shape a leg"}
+      toast "Branch from a major waypoint — minors only shape a leg"
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## route:branch-cancel
+fixture: open day
+given: a branch armed at ex-uon-1
+at once: nothing counted
+  route:branch-cancel
+    said "Branch cancelled."
+    ui:toast {message: "Branch cancelled"}
+      toast "Branch cancelled"
+later: nothing counted
+model:
+  ~ runtime.branchArmed: "ex-uon-1" -> null
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## route:branch-place
+fixture: open day
+given: a branch armed at ex-uon-1
+at once: autosave 2, queued render 4, path 2, retime 1, undo saved 2
+  route:branch-place {imgX: 0.2, imgY: 0.3}
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    animation:durationChange 13336.2163  (no listener)
+    waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 2}
+      waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]
+    said "Branch added from Main entrance."
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 13336.2163  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.branchArmed: "ex-uon-1" -> null
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["br_wp#1: 167 points", "ex-uon-branch: 318 points"]
+  ~ runtime.route.branches: ["ex-uon-branch: ex-uon-2 to ex-uon-3: ex-uon-b1"] -> ["br_wp#1: ex-uon-1 to end: wp#1", "ex-uon-branch: ex-uon-2 to ex-uon-3: ex-uon-b1"]
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 -> ex-uon-1 wp#1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "none"
+      branchFrom = "ex-uon-1"
+      branchId = "br_wp#1"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.2
+      imgY = 0.3
+      isMajor = true
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "on"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "timed"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: none -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 3, redo 0
+
+## route:branch-rejoin
+fixture: open day
+act: the branch end dropped on the waypoint it already rejoins
+at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
+  route:branch-rejoin {targetId: "ex-uon-3", waypoint: wp(ex-uon-b1)}
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    animation:durationChange 13336.2163  (no listener)
+    waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    said "Branch now ends here"
+    ui:toast {message: "Branch now ends here"}
+      toast "Branch now ends here"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 13336.2163  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 117 points"]
+  ~ runtime.route.branches: ["ex-uon-branch: ex-uon-2 to ex-uon-3: ex-uon-b1"] -> ["ex-uon-branch: ex-uon-2 to end: ex-uon-b1"]
+  ~ runtime.ui.undoDisabled: true -> false
+  - waypoints[ex-uon-b1].branchRejoin = "ex-uon-3"
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:selected
+fixture: open day
+at once: queued render 1
+  waypoint:selected wp(ex-uon-2)
+    ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+    waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}
+later: render 1
+model:
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+selection: none -> [ex-uon-2] ex-uon-2
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:multi-selected
+fixture: open day
+at once: queued render 1
+  waypoint:multi-selected {primary: wp(ex-uon-3), waypoints: [wp(ex-uon-3), wp(ex-uon-1)]}
+    ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+    waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}
+later: render 1
+model:
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+selection: none -> [ex-uon-1 ex-uon-3] ex-uon-3
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:toggle-select
+fixture: open day
+given: ex-uon-1 selected
+at once: queued render 1
+  waypoint:toggle-select wp(ex-uon-3)
+    waypoint:multi-selected {primary: wp(ex-uon-3), waypoints: [wp(ex-uon-1), wp(ex-uon-3)]}
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}
+later: render 1
+model:
+  (unchanged)
+selection: [ex-uon-1] ex-uon-1 -> [ex-uon-1 ex-uon-3] ex-uon-3
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:deselected
+fixture: open day
+given: ex-uon-2 selected
+at once: queued render 1
+  waypoint:deselected
+    waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: render 1
+model:
+  ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
+selection: [ex-uon-2] ex-uon-2 -> none
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:delete
+fixture: open day
+given: ex-uon-1 selected
+at once: autosave 1, queued render 2, path 1, undo saved 1
+  waypoint:delete wp(ex-uon-1)
+    waypoint:deleted 0
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}
+        toast "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+      said "A crowd node lost the waypoint it followed and is back at its own position."
+      waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    said "Waypoint deleted"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 9008.8918  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 9008.8918
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 402 -> 302
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3"
+  ~ runtime.timeline.pauses: 2 -> 1
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 -> ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3
+  - waypoints[ex-uon-1]
+selection: [ex-uon-1] ex-uon-1 -> none
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:delete-selected
+fixture: open day
+given: ex-uon-2a selected
+at once: autosave 1, queued render 2, path 1, undo saved 1
+  waypoint:delete-selected
+    waypoint:deleted 2
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    said "Waypoint deleted"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 13221.8933  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 13221.8933
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 402 -> 373
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 ex-uon-2 ex-uon-2b ex-uon-3"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 -> ex-uon-1 ex-uon-2 ex-uon-2b ex-uon-b1 ex-uon-3
+  - waypoints[ex-uon-2a]
+selection: [ex-uon-2a] ex-uon-2a -> none
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:delete-selected with two waypoints selected
+fixture: open day
+given: ex-uon-1 and ex-uon-2a selected
+at once: autosave 1, queued render 3, path 1, undo saved 1
+  waypoint:delete-selected
+    waypoint:deleted 0
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}
+        toast "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
+      said "A crowd node lost the waypoint it followed and is back at its own position."
+      waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    waypoint:deselected
+      waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    said "2 waypoints deleted"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 9008.8918  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 9008.8918
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 402 -> 225
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-2 ex-uon-2b ex-uon-3"
+  ~ runtime.timeline.pauses: 2 -> 1
+  ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 -> ex-uon-2 ex-uon-2b ex-uon-b1 ex-uon-3
+  - waypoints[ex-uon-1]
+  - waypoints[ex-uon-2a]
+selection: [ex-uon-1 ex-uon-2a] ex-uon-2a -> none
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoints:clear-all
+fixture: open day
+at once: render 1, retime 1
+  waypoints:clear-all
+    animation:reset undefined
+      said "Animation reset"
+      ui:slider:update-speed 150
+    animation:durationChange 0  (no listener)
+    animation:pause undefined
+      said "Animation paused"
+    waypoint:list-updated []
+    app:cleared
+    undo:state-change {canRedo: false, canUndo: false, redoCount: 0, undoCount: 0}
+    said "Project cleared"
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 0, minorCount: 0, route: [], selectionKey: null}
+later: render 1
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 0
+  ~ runtime.route.pathPoints: 402 -> 0
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints false selection false crowd false"
+  + scene.flowLayers = []
+  - scene.flowLayers#order = ex-uon-crowd
+  - scene.flowLayers[ex-uon-crowd]
+  + waypoints = []
+  - waypoints#order = ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3
+  - waypoints[ex-uon-1]
+  - waypoints[ex-uon-2]
+  - waypoints[ex-uon-2a]
+  - waypoints[ex-uon-2b]
+  - waypoints[ex-uon-3]
+  - waypoints[ex-uon-b1]
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:add-at-center
+fixture: open day
+given: nothing selected; both of the file's listeners for this event run
+at once: autosave 1, queued render 2, path 1, undo saved 1
+  waypoint:add-at-center
+    waypoint:add {imgX: 0.5, imgY: 0.5, isMajor: true}
+      waypoint:added wp(wp#1)
+        undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+        waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]
+    said "Waypoint added at center"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 19614.8499  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 19614.8499
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 402 -> 539
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3 wp#1"
+  ~ runtime.timeline.beacons: 2 -> 3
+  ~ runtime.timeline.pauses: 2 -> 3
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 -> ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 wp#1
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "ripple"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.5
+      imgY = 0.5
+      isMajor = true
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "on"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "timed"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: none -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:name-changed
+fixture: open day
+act: ex-uon-2 renamed in the list, then reported on the bus
+at once: autosave 1
+  waypoint:name-changed {name: "Trent", waypoint: wp(ex-uon-2)}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, undo saved 1
+  undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints[ex-uon-2].name: "Trent Building" -> "Trent"
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:show-context-menu
+fixture: open day
+at once: queued render 1
+  waypoint:show-context-menu {waypoint: wp(ex-uon-2), x: 400, y: 300}
+    waypoint:selected wp(ex-uon-2)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}
+later: render 1
+model:
+  ~ runtime.ui.contextMenu: "closed" -> "Waypoint actions: Rename | Convert to minor waypoint | Insert waypoint before | Insert waypoint after | Delete waypoint"
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+selection: none -> [ex-uon-2] ex-uon-2
+history: stack 1, redo 0 (unchanged)
+
+## canvas:show-context-menu
+fixture: open day
+act: a right-click on the map, clear of the route
+at once: nothing counted
+  canvas:show-context-menu {canvasX: 400.0349, canvasY: 561, x: 410.0349, y: 621}
+later: nothing counted
+model:
+  ~ runtime.ui.contextMenu: "closed" -> "Canvas actions: Add waypoint here | Add minor waypoint here"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:toggle-type
+fixture: open day
+at once: autosave 1, queued render 3, path 1, retime 1, undo saved 1
+  waypoint:toggle-type wp(ex-uon-2a)
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    animation:durationChange 13336.2163  (no listener)
+    waypoint:selected wp(ex-uon-2a)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    said "Converted to major waypoint"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2a"}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 13336.2163  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ runtime.dirty: false -> true
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints[ex-uon-2a].isMajor: false -> true
+selection: none -> [ex-uon-2a] ex-uon-2a
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:insert-adjacent
+fixture: open day
+at once: autosave 1, queued render 3, path 1, undo saved 1
+  waypoint:insert-adjacent {waypoint: wp(ex-uon-1), where: "after"}
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]
+    waypoint:selected wp(wp#1)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]
+    said "Waypoint inserted after"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:wp#1"}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 14834.9207  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 14834.9207
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 402 -> 502
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 wp#1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3"
+  ~ runtime.timeline.pauses: 2 -> 3
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 -> ex-uon-1 wp#1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "none"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.28
+      imgY = 0.55
+      isMajor = true
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "on"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "timed"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: none -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:insert-adjacent after the first waypoint of a branch (DEF-22)
+fixture: open day, two-waypoint branch
+at once: autosave 1, queued render 3, path 1, undo saved 1
+  waypoint:insert-adjacent {waypoint: wp(ex-uon-b1), where: "after"}
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+    waypoint:selected wp(wp#1)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+    said "Waypoint inserted after"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 17117.1452  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 17117.1452
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 353 points"] -> ["ex-uon-branch: 117 points", "ex-uon-branch: 117 points"]
+  ~ runtime.route.branches: ["ex-uon-branch: ex-uon-2 to ex-uon-3: ex-uon-b1 ex-uon-b2"] -> ["ex-uon-branch: ex-uon-2 to end: ex-uon-b1", "ex-uon-branch: - to ex-uon-3: ex-uon-b2"]
+  ~ runtime.route.pathPoints: 402 -> 635
+  ~ runtime.route.problems: [] -> ["branch-run-split (ex-uon-branch)", "branch-fork-undeclared (ex-uon-branch)"]
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b wp#1 ex-uon-3"
+  ~ runtime.timeline.pauses: 2 -> 3
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-b2 ex-uon-3 -> ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 wp#1 ex-uon-b2 ex-uon-3
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "none"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.53
+      imgY = 0.22
+      isMajor = true
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "on"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "timed"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: none -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:insert-adjacent after the last waypoint of a branch (DEF-22)
+fixture: open day, two-waypoint branch
+at once: autosave 1, queued render 3, path 1, undo saved 1
+  waypoint:insert-adjacent {waypoint: wp(ex-uon-b2), where: "after"}
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-b2), …+2]
+    waypoint:selected wp(wp#1)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-b2), …+2]
+    said "Waypoint inserted after"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 15583.5784  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 15583.5784
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 402 -> 502
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b wp#1 ex-uon-3"
+  ~ runtime.timeline.pauses: 2 -> 3
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-b2 ex-uon-3 -> ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-b2 wp#1 ex-uon-3
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "none"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.7
+      imgY = 0.31
+      isMajor = true
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "on"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "timed"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: none -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:request-rename
+fixture: open day
+at once: queued render 1
+  waypoint:request-rename wp(ex-uon-2)
+    waypoint:selected wp(ex-uon-2)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}
+later: render 1
+  rename started for wp(ex-uon-2)
+model:
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+selection: none -> [ex-uon-2] ex-uon-2
+history: stack 1, redo 0 (unchanged)
+
+## video:frame-rate-change
+fixture: open day
+at once: nothing counted
+  video:frame-rate-change 25
+later: nothing counted
+model:
+  ~ exportSettings.frameRate: 30 -> 25
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## video:layers-change
+fixture: open day
+at once: autosave 1
+  video:layers-change true
+later: autosave written 1
+model:
+  ~ exportSettings.pathOnly: false -> true
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## video:camera-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, queued render 1
+  video:camera-change true
+later: autosave written 1, render 1
+model:
+  ~ exportSettings.includeCamera: false -> true
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## video:text-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, queued render 1
+  video:text-change false
+later: autosave written 1, render 1
+model:
+  ~ exportSettings.includeText: true -> false
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## video:resolution-change
+fixture: open day
+at once: render 1, queued render 1, path 1
+  video:resolution-change {height: null, width: 1280}
+later: render 2, retime 1
+  animation:durationChange 12634.8425  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 12634.8425
+  ~ exportSettings.resolutionX: 1920 -> 1280
+  ~ runtime.canvas: "1173.3333x660" -> "782.2222x660"
+  ~ timingReference.width: 1173.3333 -> 782.2222
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## video:resolution-native
+fixture: open day
+at once: render 1, queued render 1, path 1
+  video:resolution-native
+later: render 2, retime 1
+  animation:durationChange 13336.2163  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ exportSettings.resolutionX: 1920 -> 2914
+  ~ exportSettings.resolutionY: 1080 -> 2061
+  ~ runtime.canvas: "1173.3333x660" -> "933.1587x660"
+  ~ timingReference.width: 1173.3333 -> 933.1587
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## background:zoom-change
+fixture: open day
+at once: autosave 1, render 1
+  background:zoom-change 150
+later: autosave written 1
+model:
+  ~ exportSettings.backgroundZoom: 100 -> 150
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## video:export-request
+fixture: open day
+given: the app's exportVideo replaced by a note, since jsdom has no encoder
+at once: nothing counted
+  video:export-request "webm"
+    toast "Tip: Switch to Preview mode to see exactly how the export will look"
+    exportVideo called (replaced)
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## html:export-request
+fixture: open day
+at once: nothing counted
+  html:export-request
+    toast "Tip: Switch to Preview mode to see exactly how the export will look"
+later: nothing counted
+model:
+  ~ runtime.ui.shareDisclosure: "closed" -> "Export standalone HTML?"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:preview-mode-change
+fixture: open day
+at once: queued render 1, retime 1
+  motion:preview-mode-change true
+    animation:durationChange 13336.2163  (no listener)
+later: render 1
+model:
+  ~ runtime.previewMode: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:path-visibility-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, queued render 1, retime 1
+  motion:path-visibility-change "instantaneous"
+    animation:durationChange 13336.2163  (no listener)
+later: autosave written 1, render 1
+model:
+  ~ motionSettings.pathVisibility: "show-on-progression" -> "instantaneous"
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:path-trail-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, queued render 1, retime 1
+  motion:path-trail-change 0.25
+    animation:durationChange 13336.2163  (no listener)
+later: autosave written 1, render 1
+model:
+  ~ motionSettings.pathTrail: 0 -> 0.25
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:waypoint-visibility-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, render 1
+  motion:waypoint-visibility-change "hide-before"
+later: autosave written 1
+model:
+  ~ motionSettings.waypointVisibility: "show-on-progression" -> "hide-before"
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:background-visibility-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, queued render 1, retime 1
+  motion:background-visibility-change "spotlight-reveal"
+    animation:durationChange 14336.2163  (no listener)
+later: autosave written 1, render 1
+model:
+  ~ animationState.duration: 13336.2163 -> 14336.2163
+  ~ motionSettings.backgroundVisibility: "always-show" -> "spotlight-reveal"
+  ~ runtime.dirty: false -> true
+  ~ runtime.timeline.introMs: 0 -> 1000
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:reveal-size-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, render 1
+  motion:reveal-size-change 15
+later: autosave written 1
+model:
+  ~ motionSettings.revealSize: 30 -> 15
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:reveal-feather-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, render 1
+  motion:reveal-feather-change 30
+later: autosave written 1
+model:
+  ~ motionSettings.revealFeather: 40 -> 30
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:reveal-trail-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, render 1
+  motion:reveal-trail-change 50
+later: autosave written 1
+model:
+  ~ motionSettings.revealTrail: 100 -> 50
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:aov-angle-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, render 1
+  motion:aov-angle-change 90
+later: autosave written 1
+model:
+  ~ motionSettings.aovAngle: 60 -> 90
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:aov-distance-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, render 1
+  motion:aov-distance-change 40
+later: nothing counted
+model:
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## motion:aov-dropoff-change
+fixture: open day
+given: Preview mode
+at once: autosave 1, render 1
+  motion:aov-dropoff-change 70
+later: autosave written 1
+model:
+  ~ motionSettings.aovDropoff: 50 -> 70
+  ~ runtime.dirty: false -> true
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## waypoints:reordered
+fixture: PARM walk
+act: ex-parm-2 dragged above ex-parm-1 in the list
+at once: autosave 1, queued render 2, path 1, undo saved 1
+  waypoints:reordered [wp(ex-parm-2), wp(ex-parm-1), wp(ex-parm-3)]
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    waypoint:list-updated [wp(ex-parm-2), wp(ex-parm-1), wp(ex-parm-1a), wp(ex-parm-3)]
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 10247.7011  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 10827.6795 -> 10247.7011
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 368 -> 577
+  ~ runtime.route.trunk: "ex-parm-1 ex-parm-1a ex-parm-2 ex-parm-3" -> "ex-parm-2 ex-parm-1 ex-parm-1a ex-parm-3"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-parm-1 ex-parm-1a ex-parm-2 ex-parm-3 -> ex-parm-2 ex-parm-1 ex-parm-1a ex-parm-3
+selection: none (unchanged)
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## coordinate:canvas-to-image
+fixture: open day
+act: the screen point of ex-uon-2
+at once: nothing counted
+  coordinate:canvas-to-image {canvasX: 493.3508, canvasY: 310.2}, fn
+    answered {x: 0.4, y: 0.47}
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## coordinate:image-to-canvas
+fixture: open day
+at once: nothing counted
+  coordinate:image-to-canvas {imgX: 0.4, imgY: 0.47}, fn
+    answered {x: 493.3508, y: 310.2}
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## coordinate:check-bounds
+fixture: open day
+act: a point on the map, then one in the margin beside it
+at once: nothing counted
+  coordinate:check-bounds {canvasX: 586.6667, canvasY: 330}, fn
+    answered true
+  coordinate:check-bounds {canvasX: 20, canvasY: 330}, fn
+    answered false
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:check-branch-handle
+fixture: open day
+act: the branch handle of the first waypoint a bound crowd enters from, then a point on the map
+at once: nothing counted
+  waypoint:check-branch-handle {x: 284.3927, y: 400.8}, fn
+    answered wp(ex-uon-1)
+  waypoint:check-branch-handle {x: 400.0349, y: 561}, fn
+    answered null
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:check-at-position
+fixture: open day
+act: the screen point of ex-uon-2
+at once: nothing counted
+  waypoint:check-at-position {x: 493.3508, y: 310.2}, fn
+    answered wp(ex-uon-2)
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## area:check-handle
+fixture: authored extras
+given: ex-uon-2 (a rectangle area) selected
+act: the centre handle of its area
+at once: nothing counted
+  area:check-handle {screenX: 276.3914, screenY: 491.7}, fn
+    answered {imageToScreen: fn, type: "center", waypoint: wp(ex-uon-2)}
+later: nothing counted
+model:
+  (unchanged)
+selection: [ex-uon-2] ex-uon-2 (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## canvas:hover-move
+fixture: open day
+act: the pointer over ex-uon-2
+at once: queued render 1
+  canvas:hover-move {x: 493.3508, y: 310.2}, fn
+    answered "waypoint"
+later: render 1
+model:
+  ~ runtime.hover: null -> "waypoint ex-uon-2"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## canvas:hover-move over a leg's "+"
+fixture: PARM walk
+act: the pointer over the midpoint of the first leg
+at once: queued render 1
+  canvas:hover-move {x: 385.2974, y: 435.4434}, fn
+    answered "leg-plus"
+later: render 1
+model:
+  ~ runtime.hover: null -> "leg-plus ex-parm-1"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## canvas:hover-clear
+fixture: open day
+given: the pointer over ex-uon-2
+at once: queued render 1
+  canvas:hover-clear
+later: render 1
+model:
+  ~ runtime.hover: "waypoint ex-uon-2" -> null
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## segment:check-at-position
+fixture: PARM walk
+act: the midpoint of the first leg
+at once: nothing counted
+  segment:check-at-position {x: 385.2974, y: 435.4434}, fn
+    answered {midImg: {x: 0.2601, y: 0.6598}, onPlus: true, waypoint: wp(ex-parm-1), waypointIndex: 0}
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## segment:check-at-position on a branched route
+fixture: open day
+act: the midpoint of the first leg
+at once: nothing counted
+  segment:check-at-position {x: 383.02, y: 360.6263}, fn
+    answered null
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## segment:clicked
+fixture: open day
+at once: queued render 1
+  segment:clicked {waypoint: wp(ex-uon-2)}
+    waypoint:selected wp(ex-uon-2)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    section:flash {section: "leg"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}
+later: render 1
+  scrolled <div> into view
+model:
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+selection: none -> [ex-uon-2] ex-uon-2
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:insert-on-leg
+fixture: PARM walk
+act: the "+" on the first leg
+at once: autosave 1, queued render 3, path 1, undo saved 1
+  waypoint:insert-on-leg {imgX: 0.2601, imgY: 0.6598, waypointIndex: 0}
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(ex-parm-1), wp(wp#1), wp(ex-parm-1a), wp(ex-parm-2), wp(ex-parm-3)]
+    waypoint:selected wp(wp#1)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-parm-1), wp(wp#1), wp(ex-parm-1a), wp(ex-parm-2), wp(ex-parm-3)]
+    said "Minor waypoint added to leg"
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:wp#1"}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 10827.6803  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 10827.6795 -> 10827.6803
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 368 -> 402
+  ~ runtime.route.trunk: "ex-parm-1 ex-parm-1a ex-parm-2 ex-parm-3" -> "ex-parm-1 wp#1 ex-parm-1a ex-parm-2 ex-parm-3"
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-parm-1 ex-parm-1a ex-parm-2 ex-parm-3 -> ex-parm-1 wp#1 ex-parm-1a ex-parm-2 ex-parm-3
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "none"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.2601
+      imgY = 0.6598
+      isMajor = false
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "off"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "none"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: none -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:insert-on-leg between the two waypoints of a branch (DEF-22)
+fixture: open day, two-waypoint branch
+act: halfway between ex-uon-b1 and ex-uon-b2
+at once: autosave 1, queued render 3, path 1, undo saved 1
+  waypoint:insert-on-leg {imgX: 0.53, imgY: 0.22, waypointIndex: 4}
+    waypoint:added wp(wp#1)
+      undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+    waypoint:selected wp(wp#1)
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+    said "Minor waypoint added to leg"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 15617.1452  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 15617.1452
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 353 points"] -> ["ex-uon-branch: 117 points", "ex-uon-branch: 117 points"]
+  ~ runtime.route.branches: ["ex-uon-branch: ex-uon-2 to ex-uon-3: ex-uon-b1 ex-uon-b2"] -> ["ex-uon-branch: ex-uon-2 to end: ex-uon-b1", "ex-uon-branch: - to ex-uon-3: ex-uon-b2"]
+  ~ runtime.route.pathPoints: 402 -> 635
+  ~ runtime.route.problems: [] -> ["branch-run-split (ex-uon-branch)", "branch-fork-undeclared (ex-uon-branch)"]
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b wp#1 ex-uon-3"
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-b2 ex-uon-3 -> ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 wp#1 ex-uon-b2 ex-uon-3
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "none"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.53
+      imgY = 0.22
+      isMajor = false
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "off"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "none"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: none -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## help:toggle
+fixture: open day
+at once: nothing counted
+  help:toggle
+later: nothing counted
+model:
+  ~ runtime.ui.splash: "none" -> "flex"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## help:show-shortcuts
+fixture: open day
+at once: nothing counted
+  help:show-shortcuts
+later: nothing counted
+model:
+  ~ runtime.ui.splash: "none" -> "flex"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:deselect
+fixture: open day
+given: ex-uon-2 selected
+at once: queued render 1
+  waypoint:deselect
+    waypoint:deselected
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    said "Selection cleared"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: render 1
+model:
+  ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
+selection: [ex-uon-2] ex-uon-2 -> none
+history: stack 1, redo 0 (unchanged)
+
+## waypoint:duplicate
+fixture: open day
+given: ex-uon-2 selected
+at once: autosave 1, queued render 2, path 1, undo saved 1
+  waypoint:duplicate
+    waypoint:add {imgX: 0.42, imgY: 0.49, isMajor: true}
+      waypoint:added wp(wp#1)
+        undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+        waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]
+    said "Waypoint duplicated"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}
+later: autosave written 1, render 2, retime 1
+  animation:durationChange 20100.9696  (no listener)
+  animation:update AnimationState  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 20100.9696
+  ~ runtime.dirty: false -> true
+  ~ runtime.route.pathPoints: 402 -> 578
+  ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3 wp#1"
+  ~ runtime.timeline.beacons: 2 -> 3
+  ~ runtime.timeline.pauses: 2 -> 3
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints#order: ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 -> ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3 wp#1
+  + waypoints[wp#1]
+      areaHighlight.borderColor = "#0072B2"
+      areaHighlight.borderStyle = "solid"
+      areaHighlight.borderWidth = 2
+      areaHighlight.centerX = 0.5
+      areaHighlight.centerY = 0.5
+      areaHighlight.enabled = false
+      areaHighlight.fadeInMs = 500
+      areaHighlight.fadeOutMs = 500
+      areaHighlight.fillColor = "#56B4E9"
+      areaHighlight.fillOpacity = 0.3
+      areaHighlight.height = 0.1
+      areaHighlight.points = []
+      areaHighlight.radius = 0.05
+      areaHighlight.shape = "none"
+      areaHighlight.visibility = "hide-before"
+      areaHighlight.width = 0.1
+      beaconStyle = "ripple"
+      camera.zoom = 1
+      camera.zoomMode = "continuous"
+      created = 1790154000000
+      customImage = null
+      customImageAssetId = null
+      customImageRotation = "fixed"
+      customImageRotationOffset = 0
+      dotColor = "#E69F00"
+      dotSize = 8
+      id = "wp#1"
+      imgX = 0.42
+      imgY = 0.49
+      isMajor = true
+      label = ""
+      labelBgColor = "#FFFFFF"
+      labelBgOpacity = 0.85
+      labelColor = "#1a1a1a"
+      labelMode = "on"
+      labelOffsetX = 0
+      labelOffsetY = 0
+      labelPlacedByHand = false
+      labelSize = 16
+      labelWidth = 15
+      markerStyle = "dot"
+      modified = 1790154000000
+      name = ""
+      pathShape = "line"
+      pauseMode = "timed"
+      pauseTime = 1500
+      pulseAmplitude = 1
+      pulseCycleSpeed = 4
+      rippleMaxScale = 1000
+      rippleThickness = 2
+      rippleWait = true
+      segmentColor = "#E69F00"
+      segmentSpeed = 1
+      segmentStyle = "solid"
+      segmentWidth = 3
+      shapeAmplitude = 10
+      shapeFrequency = 5
+selection: [ex-uon-2] ex-uon-2 -> [wp#1] wp#1
+history: stack 1, redo 0 -> stack 2, redo 0
+
+## waypoint:select-all
+fixture: open day
+at once: queued render 1
+  waypoint:select-all
+    waypoint:multi-selected {primary: wp(ex-uon-1), waypoints: [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]}
+      ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    said "All waypoints selected"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-1"}
+later: render 1
+model:
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+selection: none -> [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3] ex-uon-1
+history: stack 1, redo 0 (unchanged)
+
+## ui:toast
+fixture: open day
+at once: nothing counted
+  ui:toast {duration: 3000, message: "Shift-click deletes; Ctrl+Z brings it back"}
+    toast "Shift-click deletes; Ctrl+Z brings it back"
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## canvas:zoom-in
+fixture: open day
+given: ex-uon-2 selected
+at once: render 1
+  canvas:zoom-in
+later: nothing counted
+model:
+  ~ runtime.viewport: "zoom 1 pan 0,0" -> "zoom 1.5 pan 102.2397,90.2"
+selection: [ex-uon-2] ex-uon-2 (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## canvas:zoom-in with nothing selected
+fixture: open day
+at once: nothing counted
+  canvas:zoom-in
+    prompted "Select a waypoint to zoom"
+later: nothing counted
+model:
+  (unchanged)
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## canvas:zoom-out
+fixture: open day
+given: ex-uon-2 selected, zoomed in once
+at once: render 1
+  canvas:zoom-out
+later: nothing counted
+model:
+  ~ runtime.viewport: "zoom 1.5 pan 102.2397,90.2" -> "zoom 1 pan -93.3159,-19.8"
+selection: [ex-uon-2] ex-uon-2 (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## canvas:zoom-reset
+fixture: open day
+given: ex-uon-2 selected, zoomed in once
+at once: render 1
+  canvas:zoom-reset
+later: nothing counted
+model:
+  ~ runtime.viewport: "zoom 1.5 pan 102.2397,90.2" -> "zoom 1 pan 0,0"
+selection: [ex-uon-2] ex-uon-2 (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## undo:state-change
+fixture: open day
+at once: nothing counted
+  undo:state-change {canRedo: true, canUndo: true, redoCount: 1, undoCount: 1}
+later: nothing counted
+model:
+  ~ runtime.ui.redoDisabled: true -> false
+  ~ runtime.ui.undoDisabled: true -> false
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)
+
+## history:undo
+fixture: open day
+given: ex-uon-3 nudged right, its undo entry saved
+at once: autosave 1, render 1, queued render 1, path 1
+  history:undo
+    undo:state-change {canRedo: true, canUndo: false, redoCount: 1, undoCount: 0}
+    waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    said "Undo"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+later: autosave written 1, render 1, retime 1
+  animation:durationChange 13336.2163  (no listener)
+model:
+  ~ animationState.duration: 13472.2206 -> 13336.2163
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 330 points"] -> ["ex-uon-branch: 318 points"]
+  ~ runtime.ui.redoDisabled: true -> false
+  ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
+  ~ runtime.ui.undoDisabled: false -> true
+  ~ waypoints[ex-uon-3].imgX: 0.8051 -> 0.78
+selection: [ex-uon-3] ex-uon-3 -> none
+history: stack 2, redo 0 -> stack 1, redo 1
+
+## history:redo
+fixture: open day
+given: ex-uon-3 nudged right, then undone
+at once: autosave 1, render 1, queued render 1, path 1
+  history:redo
+    undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+    waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
+    said "Redo"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}
+later: autosave written 1, render 1, retime 1
+  animation:durationChange 13472.2206  (no listener)
+model:
+  ~ animationState.duration: 13336.2163 -> 13472.2206
+  ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 330 points"]
+  ~ runtime.ui.redoDisabled: false -> true
+  ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
+  ~ runtime.ui.undoDisabled: true -> false
+  ~ waypoints[ex-uon-3].imgX: 0.78 -> 0.8051
+selection: none -> [ex-uon-3] ex-uon-3
+history: stack 1, redo 1 -> stack 2, redo 0
+
+## file:save
+fixture: open day
+at once: nothing counted
+  file:save
+later: nothing counted
+model:
+  ~ runtime.ui.shareDisclosure: "closed" -> "Save project file?"
+selection: none (unchanged)
+history: stack 1, redo 0 (unchanged)

@@ -1,0 +1,347 @@
+# Every listener on the app's EventBus once `app.ready` has resolved, per event
+# in dispatch order. Each is named by the module that added it and its place
+# among that module's listeners for the event. Written by
+# tests/eventTranscript.test.js (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1.
+#
+# 194 listeners on 135 events, from 11 modules:
+#   AreaDrawingService.js 5
+#   AreaEditService.js 8
+#   InteractionHandler.js 5
+#   SceneOutlineController.js 5
+#   SectionController.js 14
+#   UIController.js 10
+#   crowds.js 7
+#   network.js 19
+#   sceneOutline.js 24
+#   wiringBus.js 19
+#   wiringControllers.js 78
+
+animation:complete
+  wiringBus.js#1
+animation:jkl-forward
+  wiringControllers.js#1
+animation:jkl-reverse
+  wiringControllers.js#1
+animation:pause
+  wiringBus.js#1
+animation:play
+  wiringBus.js#1
+animation:playbackSpeedChange
+  UIController.js#1
+animation:reset
+  wiringBus.js#1
+animation:speed-change
+  wiringControllers.js#1
+animation:waypointWaitEnd
+  wiringBus.js#1
+app:cleared
+  InteractionHandler.js#1
+  AreaDrawingService.js#1
+  AreaEditService.js#1
+  SectionController.js#1
+  network.js#1
+  SceneOutlineController.js#1
+  sceneOutline.js#1
+area:changed
+  wiringBus.js#1
+  sceneOutline.js#1
+area:check-handle
+  wiringControllers.js#1
+area:draw-click
+  AreaDrawingService.js#1
+area:draw-completed
+  wiringBus.js#1
+  sceneOutline.js#1
+area:draw-mode-changed
+  wiringBus.js#1
+  InteractionHandler.js#1
+area:draw-move
+  AreaDrawingService.js#1
+area:draw-start
+  AreaDrawingService.js#1
+area:edit-cancel
+  AreaEditService.js#1
+area:edit-end
+  AreaEditService.js#1
+area:edit-move
+  AreaEditService.js#1
+area:edit-start
+  AreaEditService.js#1
+area:vertex-selected
+  sceneOutline.js#1
+background:mode-change
+  wiringControllers.js#1
+background:overlay-change
+  wiringControllers.js#1
+background:upload
+  wiringControllers.js#1
+background:zoom-change
+  wiringControllers.js#1
+canvas:hover-clear
+  wiringControllers.js#1
+canvas:hover-move
+  wiringControllers.js#1
+canvas:show-context-menu
+  wiringControllers.js#1
+canvas:zoom-in
+  wiringControllers.js#1
+canvas:zoom-out
+  wiringControllers.js#1
+canvas:zoom-reset
+  wiringControllers.js#1
+coordinate:canvas-to-image
+  wiringControllers.js#1
+coordinate:check-bounds
+  wiringControllers.js#1
+coordinate:image-to-canvas
+  wiringControllers.js#1
+crowd:deselected
+  UIController.js#1
+  SectionController.js#1
+  crowds.js#1
+  network.js#1
+  sceneOutline.js#1
+crowd:param-changed
+  crowds.js#1
+  sceneOutline.js#1
+crowd:selected
+  UIController.js#1
+  SectionController.js#1
+  crowds.js#1
+  network.js#1
+  sceneOutline.js#1
+file:save
+  wiringControllers.js#1
+help:show-shortcuts
+  wiringControllers.js#1
+help:toggle
+  wiringControllers.js#1
+history:redo
+  wiringControllers.js#1
+history:undo
+  wiringControllers.js#1
+html:export-request
+  wiringControllers.js#1
+motion:aov-angle-change
+  wiringControllers.js#1
+motion:aov-distance-change
+  wiringControllers.js#1
+motion:aov-dropoff-change
+  wiringControllers.js#1
+motion:background-visibility-change
+  wiringControllers.js#1
+motion:path-trail-change
+  wiringControllers.js#1
+motion:path-visibility-change
+  wiringControllers.js#1
+motion:preview-mode-change
+  InteractionHandler.js#1
+  network.js#1
+  wiringControllers.js#1
+motion:reveal-feather-change
+  wiringControllers.js#1
+motion:reveal-size-change
+  wiringControllers.js#1
+motion:reveal-trail-change
+  wiringControllers.js#1
+motion:waypoint-visibility-change
+  wiringControllers.js#1
+network:changed
+  network.js#1
+  sceneOutline.js#1
+network:click
+  network.js#1
+network:control-deselected
+  sceneOutline.js#1
+network:control-selected
+  sceneOutline.js#1
+network:drag-cancel
+  network.js#1
+network:drag-end
+  network.js#1
+network:drag-move
+  network.js#1
+network:drag-start
+  network.js#1
+network:edge-deselected
+  UIController.js#1
+  SectionController.js#1
+  sceneOutline.js#1
+network:edge-selected
+  UIController.js#1
+  SectionController.js#1
+  network.js#1
+  sceneOutline.js#1
+network:edit-mode-changed
+  UIController.js#1
+  InteractionHandler.js#1
+  SectionController.js#1
+  network.js#1
+network:guide-changed
+  network.js#1
+network:hover-clear
+  network.js#1
+network:hover-move
+  network.js#1
+network:node-deselected
+  UIController.js#1
+  SectionController.js#1
+  network.js#1
+  sceneOutline.js#1
+network:node-selected
+  UIController.js#1
+  SectionController.js#1
+  network.js#1
+  sceneOutline.js#1
+project:replaced
+  UIController.js#1
+  InteractionHandler.js#1
+  AreaDrawingService.js#1
+  AreaEditService.js#1
+  SectionController.js#1
+  network.js#1
+  SceneOutlineController.js#1
+  sceneOutline.js#1
+render:request
+  wiringBus.js#1
+route:branch-arm
+  wiringControllers.js#1
+route:branch-cancel
+  wiringControllers.js#1
+route:branch-place
+  wiringControllers.js#1
+route:branch-rejoin
+  wiringControllers.js#1
+scene-outline:accepted
+  SceneOutlineController.js#1
+scene-outline:command
+  sceneOutline.js#1
+scene-outline:error
+  SceneOutlineController.js#1
+scene-outline:update
+  SceneOutlineController.js#1
+scene:flow-layers
+  network.js#1
+scene:semantic-changed
+  sceneOutline.js#1
+section:flash
+  SectionController.js#1
+segment:check-at-position
+  wiringControllers.js#1
+segment:clicked
+  wiringControllers.js#1
+ui:animation:pause
+  wiringControllers.js#1
+ui:animation:play
+  wiringControllers.js#1
+ui:animation:seek
+  wiringControllers.js#1
+ui:animation:skip-end
+  wiringControllers.js#1
+ui:animation:skip-start
+  wiringControllers.js#1
+ui:animation:toggle
+  wiringControllers.js#1
+ui:refresh-swatches
+  wiringBus.js#1
+ui:slider:update-speed
+  UIController.js#1
+ui:toast
+  wiringControllers.js#1
+undo:state-change
+  wiringControllers.js#1
+video:camera-change
+  wiringControllers.js#1
+video:export-request
+  wiringControllers.js#1
+video:frame-rate-change
+  wiringControllers.js#1
+video:layers-change
+  wiringControllers.js#1
+video:resolution-change
+  wiringControllers.js#1
+video:resolution-native
+  wiringControllers.js#1
+video:text-change
+  wiringControllers.js#1
+waypoint:add
+  wiringControllers.js#1
+waypoint:add-at-center
+  wiringControllers.js#1
+  wiringControllers.js#2
+waypoint:added
+  wiringBus.js#1
+waypoint:check-at-position
+  wiringControllers.js#1
+waypoint:check-branch-handle
+  wiringControllers.js#1
+waypoint:delete
+  wiringControllers.js#1
+waypoint:delete-selected
+  wiringControllers.js#1
+waypoint:deleted
+  wiringBus.js#1
+waypoint:deselect
+  crowds.js#1
+  wiringControllers.js#1
+waypoint:deselected
+  AreaEditService.js#1
+  SectionController.js#1
+  sceneOutline.js#1
+  wiringControllers.js#1
+waypoint:drag-cancelled
+  wiringBus.js#1
+waypoint:drag-ended
+  wiringBus.js#1
+waypoint:duplicate
+  wiringControllers.js#1
+waypoint:insert-adjacent
+  wiringControllers.js#1
+waypoint:insert-on-leg
+  wiringControllers.js#1
+waypoint:list-updated
+  SectionController.js#1
+  crowds.js#1
+  sceneOutline.js#1
+waypoint:multi-selected
+  SectionController.js#1
+  crowds.js#1
+  sceneOutline.js#1
+  wiringControllers.js#1
+waypoint:name-changed
+  sceneOutline.js#1
+  wiringControllers.js#1
+waypoint:nudge
+  wiringControllers.js#1
+waypoint:path-property-changed
+  wiringBus.js#1
+waypoint:pause-changed
+  wiringBus.js#1
+  sceneOutline.js#1
+waypoint:position-changed
+  wiringBus.js#1
+waypoint:request-rename
+  wiringControllers.js#1
+waypoint:select-all
+  wiringControllers.js#1
+waypoint:selected
+  AreaEditService.js#1
+  SectionController.js#1
+  crowds.js#1
+  sceneOutline.js#1
+  wiringControllers.js#1
+waypoint:show-context-menu
+  wiringControllers.js#1
+waypoint:speed-changed
+  wiringBus.js#1
+  sceneOutline.js#1
+waypoint:style-changed
+  wiringBus.js#1
+waypoint:toggle-select
+  wiringControllers.js#1
+waypoint:toggle-type
+  wiringControllers.js#1
+waypoints:clear-all
+  wiringControllers.js#1
+waypoints:reordered
+  wiringControllers.js#1
