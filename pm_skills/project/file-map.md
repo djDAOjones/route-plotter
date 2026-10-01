@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 346 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 348 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -14,9 +14,9 @@
 - `reviews` — 16 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
-- `src` — 100 file(s)
+- `src` — 101 file(s)
 - `styles` — 6 file(s)
-- `tests` — 112 file(s)
+- `tests` — 113 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -275,6 +275,7 @@
 - `src/services/index.js` — Barrel exports for the core application services used by consumers
 - `src/utils/CatmullRom.js` — Catmull-Rom spline interpolation
 - `src/utils/Easing.js` — Easing functions (linear, quad, cubic, etc.)
+- `src/utils/announcementQueue.js` — DEF-45: the editor live region's one writer: each message in turn, held `ANNOUNCEMENTS.HOLD_MS` and cleared after the last; a message identical to the one it would follow dropped, at most `MAX_WAITING` waiting (the oldest polite gives way), assertive ahead of polite
 - `src/utils/assetReferences.js` — Image-ID reachability collector and pure minimum-oldest-history admission planner for count/byte/pixel limits
 - `src/utils/branchTiming.js` — Pure per-run branch timing: builds each run's
 - `src/utils/busynessEnvelope.js` — Pure busyness-handle normalisation/validation, segment-area compilation and inverse-density sampling for seeded release times
@@ -321,6 +322,7 @@
 - `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
 - `tests/backgroundModeOverlay.test.js` — DEF-01: no background visibility mode draws text or a panel on the main canvas, with the reveal mask proved to have run
 - `tests/bootApp.test.js` — TST-01: the whole app boots from the shipped shell, sizes its canvas to the harness viewport, loads its bundled background, and carries an authoring intent from the bus to the model and the canvas, and (DEF-33) a cold start announces nothing and a restored session only its restore, while a pause the author makes is announced
+- `tests/announcements.test.js` — DEF-45: every text the live region shows, under a fake clock: a legacy recovery point's background warning, then "Previous session restored", and Open Project's, then "Project loaded", each for its 2 s; no earlier clear blanks a later message; duplicates dropped, at most three waiting, assertive ahead of polite, blank messages ignored; the waypoint list's reorder message queues through `ui:announce`
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms, (DEF-35) handles dragged off the image stay there, as far as a project can store a point, and (DEF-17) a polygon drawn in the booted app names its waypoint, so the editor and the outline follow it unless the selection changed during the draw
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts

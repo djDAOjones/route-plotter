@@ -48,6 +48,12 @@ project can store, as the outline does: a node, link or bend past a crowd's or
 the scene's counts is refused, in the outline's words. The project-wide
 budgets, which no editor checks yet, stay DEF-04's. (2026-09-29)
 
+DEF-45 — Announcements are read in turn: a recovery warning is no longer
+replaced, in the same moment, by "Previous session restored" or "Project
+loaded"; each message keeps the live region for 2 s, no earlier message's clear
+blanks a later one, and the waypoint list's own messages wait their turn.
+(2026-10-01)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its

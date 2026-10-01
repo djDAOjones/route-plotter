@@ -81,6 +81,7 @@ import { loadExampleBackground } from './app/backgroundLoading.js';
 import { clearProject } from './app/projectReset.js';
 import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
 import { boundEntryWaypointIds } from './utils/routeAnchors.js';
+import { createAnnouncementQueue } from './utils/announcementQueue.js';
 
 // Main application class for Route Plotter v3
 class RoutePlotter {
@@ -449,6 +450,10 @@ class RoutePlotter {
       areaDeleteControls: document.getElementById('area-delete-controls'),
       areaDeleteBtn: document.getElementById('area-delete-btn')
     };
+
+    // The live region's one writer: every announcement, a component's too
+    // (`ui:announce`), is read in turn (DEF-45).
+    this._announcements = createAnnouncementQueue(this.elements.announcer);
     
     this.ready = this.init().catch(error => {
       const appRoot = document.getElementById('app');
@@ -867,13 +872,15 @@ class RoutePlotter {
   }
   
   // ----- Accessibility and persistence helpers -----
+  /**
+   * Announce a message to screen readers. Messages are read in turn, each
+   * for its own time in the live region, so one announced just before
+   * another is not lost (DEF-45; the rules are in utils/announcementQueue.js).
+   * @param {string} message
+   * @param {'polite'|'assertive'} [priority='polite'] - Assertive waits ahead of polite messages
+   */
   announce(message, priority = 'polite') {
-    const el = document.getElementById('announcer');
-    if (!el) return;
-    el.setAttribute('aria-live', priority);
-    el.textContent = message;
-    // Clear after a short delay so repeated messages are announced
-    setTimeout(() => { el.textContent = ''; }, 2000);
+    this._announcements.announce(message, priority);
   }
   
   /**

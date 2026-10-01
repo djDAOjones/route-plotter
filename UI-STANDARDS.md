@@ -70,6 +70,8 @@ Nielsen's heuristics are **hard rules**, not aspirations.
   or error. The UI must never appear frozen.
 - Important status changes must be announced programmatically, not
   only shown visually.
+- Announce through the app's `announce()` (components emit `ui:announce`);
+  never write the live region directly: the queue reads each message in turn.
 - Auto-save, export, import, and recovery states must be visible.
 
 ### Empty and no-data states

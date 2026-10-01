@@ -1316,6 +1316,12 @@ export const wiringControllersMixin = {
     this.eventBus.on('ui:toast', ({ message, duration }) => {
       this.showToast(message, duration);
     });
+
+    // Announcement request from components (UIController's list reorders):
+    // queued with the app's own, so it waits its turn too (DEF-45)
+    this.eventBus.on('ui:announce', ({ message }) => {
+      this.announce(message);
+    });
     
     // Path head (route-global) is wired directly in setupEventListeners;
     // the old pathhead:* event pair duplicated every mutation, undo
