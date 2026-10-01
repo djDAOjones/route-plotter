@@ -117,17 +117,12 @@ moved, and account for every survivor)
 - [ ] **DEF-44 A paused editor never idles** · Live defect [ready] **P2**
 - [ ] **DEF-42 A beacon-style change keeps the old schedule** · Live defect
   [ready] **P3**
-- [ ] **DEF-43 A polygon draw outlives its target** · Live defect [ready]
-  **P3**
 - [ ] **DEF-45 Announcements overwrite each other** · Accessibility [ready]
   **P3**
 - [ ] **DEF-06 Clear All leaves stale route state** · Live defect [ready] —
   Visible since DEF-08 (#37, unreleased): a route cut to one waypoint draws
   its last marker, paused, at a stale grow scale. Land it before the
   release. **P3**
-- [ ] **DEF-27 Instant spotlight and AoV ignore camera zoom** · Live defect
-  [ready] — §20 Q17: the camera applies there too (ground rule 8; TST-02 has
-  shipped). **P3**
 
 **Defects after their W5 test** (§13 ground rule 8)
 
