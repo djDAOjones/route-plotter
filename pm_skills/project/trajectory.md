@@ -68,6 +68,11 @@ the export. Once its transport is suspended, each part of an export's
 clean-up runs whether or not another fails, and its controls are freed
 whatever failed. (2026-09-28)
 
+DEF-43 — A polygon draw follows its waypoint through an undo or a redo, and
+ends, saying so in a toast, when its waypoint is deleted or undone away,
+rather than closing onto a waypoint the project no longer has; and Draw Area
+asked for again keeps the draw in progress. (2026-09-29)
+
 DEF-06 — What a route scheduled no longer outlives it: Clear All, deleting
 down to one waypoint, undo, redo and loading a one-waypoint project clear its
 path, branches, structure, pauses, beacons and waits, and resolve its crowd

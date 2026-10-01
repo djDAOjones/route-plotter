@@ -272,6 +272,8 @@ export const undoRedoMixin = {
     // Restore waypoints
     this.waypoints = state.waypoints.map(wpData => Waypoint.fromJSON(wpData));
     this.waypoints.forEach(wp => this._addWaypointToMap(wp));
+    // An area draw follows its waypoint to the restored copy, or ends (DEF-43).
+    this.followAreaDrawTarget?.();
 
     // Waypoint snapshots store only asset IDs. Rehydrate every referenced
     // custom marker without allowing a slow, superseded restore to overwrite a
