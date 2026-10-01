@@ -460,6 +460,11 @@ export class RenderingService {
     // Apply zoom/pan transform for background
     const viewport = state.viewport;
     const hasZoom = viewport && viewport.zoom > 1;
+    // The author's viewport zoom takes the animation camera's place for the
+    // background, as it does for the vector layer below: applied on top of
+    // the viewport, the camera drew the map at their product and the route
+    // at the viewport's alone, off the map (DEF-61).
+    const frameCamera = hasZoom ? null : state.cameraState;
     if (hasZoom) {
       ctx.save();
     }
@@ -498,7 +503,7 @@ export class RenderingService {
         const progress = state.animationEngine.getPathProgress();
         const currentTimeMs = state.animationEngine.getTime();
         motionVisibilityService.buildSpotlightRevealMask(state.pathPoints, progress, cw, ch, motionSettings, state.imageToCanvas, currentTimeMs);
-        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, state.cameraState);
+        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, frameCamera);
       } else if (bgMode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW && hasPath && motionVisibilityService) {
         // Angle of View: instant cone mask at head position (resets each frame)
         // Path points are in normalized coords, transform to canvas coords for rendering
@@ -518,11 +523,11 @@ export class RenderingService {
           state.pathPoints, progress, cw, ch, motionSettings,
           state.waypoints, state.waypointProgressValues, state.animationEngine, state.imageToCanvas, currentTimeMs
         );
-        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, state.cameraState);
+        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, frameCamera);
       } else {
         // Always Show (default): render background normally
         // Pass camera state for zoom/pan effect centered on path head
-        this.renderBackground(ctx, state.background, cw, ch, state.cameraState);
+        this.renderBackground(ctx, state.background, cw, ch, frameCamera);
       }
 
       // 2) Contrast overlay (in zoomed space) - only affects image area
