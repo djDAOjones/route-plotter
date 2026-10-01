@@ -1423,14 +1423,14 @@ describe('golden draw logs (TST-02)', () => {
           }
         });
 
-        test(`at 50% background zoom the tint covers exactly the image, under its camera (fit ${fit})`, async () => {
+        for (const zoom of [50, 25]) test(`at ${zoom}% background zoom the tint covers exactly the image, under its camera (fit ${fit})`, async () => {
           // 'fill' has no control any more, but a project saved with it still
           // loads (`authored-extras` has it), and the image is drawn contained
           // whatever it says.
           const fixture = fixtures().find(each => each.id === 'authored-extras');
           fixture.project.background.fit = fit;
           fixture.project.background.overlay = -40;
-          fixture.project.exportSettings.backgroundZoom = 50;
+          fixture.project.exportSettings.backgroundZoom = zoom;
           const app = await appWithFixture(fixture);
           enterMode(app, 'edit');
           const edit = expectTintOnTheImage(app, 'edit');
@@ -1440,7 +1440,7 @@ describe('golden draw logs (TST-02)', () => {
           const exported = expectTintOnTheImage(exporter, 'export');
           const played = expectTintOnTheImage(player, 'player');
 
-          // Non-vacuity: at 50% the image leaves a margin on every side, which
+          // Non-vacuity: at 50%, and at 25%, the bottom of its range, the image leaves a margin on every side, which
           // a tint over the canvas or over the unzoomed image would darken,
           // and outside the editor it is drawn under the camera.
           const drawn = { edit, preview, export: exported, player: played };
@@ -1599,7 +1599,17 @@ describe('golden draw logs (TST-02)', () => {
               const frame = frameAt(app, 0.5, { state: true });
               const edge = onlyLine(frame, line => line.startsWith('main arc ')
                 && line.includes(' globalCompositeOperation=destination-in'), 'the mask\'s edge');
-              return { radius: Number(edge.split(' ')[4]), transform: transformOf(edge) };
+              // The gradient that feathers the edge (the fixture's feather and
+              // dropoff are not zero), as visible as the edge: its outer circle
+              // and its centre
+              const gradient = onlyLine(frame, line => line.startsWith('main createRadialGradient '), 'the mask\'s gradient');
+              const [, , , , , gx, gy, outer] = gradient.split(' ');
+              return {
+                radius: Number(edge.split(' ')[4]),
+                centre: edge.split(' ').slice(2, 4).map(Number),
+                gradient: { outer: Number(outer), centre: [Number(gx), Number(gy)] },
+                transform: transformOf(edge),
+              };
             } finally {
               calculated.mockRestore();
             }
@@ -1616,7 +1626,11 @@ describe('golden draw logs (TST-02)', () => {
           const zoomed = edgeWith({ zoom: 1.75, centerX: 330, centerY: 330, enabled: true });
           const deep = edgeWith({ zoom: 4, centerX: 330, centerY: 330, enabled: true });
           expect(expected).toBeGreaterThan(0);
-          for (const each of [off, zoomed, deep]) expect(each.radius).toBeCloseTo(expected, 2);
+          for (const each of [off, zoomed, deep]) {
+            expect(each.radius).toBeCloseTo(expected, 2);
+            expect(each.gradient.outer).toBeCloseTo(expected, 2);
+            expect(each.gradient.centre).toEqual(each.centre);
+          }
           expect([zoomed.radius, deep.radius]).toEqual([off.radius, off.radius]);
           expect(zoomed.transform).toMatch(/^1\.75 0 0 1\.75 /);
           expect(deep.transform).toMatch(/^4 0 0 4 /);
