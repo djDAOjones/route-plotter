@@ -38,6 +38,11 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
+DEF-61 — Under the author's viewport zoom, the map is drawn under the zoom
+alone, as the route already was, not the animation camera as well: the route
+no longer leaves the map in Preview, or in a video exported while zoomed in.
+(2026-09-29)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its
