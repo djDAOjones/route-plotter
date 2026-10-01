@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 350 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 351 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 116 file(s)
+- `tests` — 117 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -28,7 +28,7 @@
 - `Route Plotter v3.code-workspace` — VS Code workspace definition for this repository
 - `THIRD_PARTY_NOTICES.md` — Checked licence, copyright and source notices for the exact direct runtime and development dependencies
 - `UI-STANDARDS.md` — Carbon-first UI, UoN/Okabe-Ito token and WCAG 2.2 AAA interaction contract
-- `build.js` — esbuild/watch server plus clean staged production builds, explicit Pages allowlist, versioned static references and non-mutating build checks
+- `build.js` — esbuild/watch server plus clean staged production builds, explicit Pages allowlist, versioned static references and non-mutating build checks; builds only when run as a script (importing it runs nothing), and exports its release checks and the publish and failed-build rollback steps for tests (SPL-06)
 - `index.html` — Single-page app shell (sidebar + canvas + controls)
 - `package.json` — Project metadata and scripts
 - `public-assets.json` — Owner-approved public image allowlist pinned to exact paths and SHA-256 hashes
@@ -330,6 +330,7 @@
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
 - `tests/branchHandle.test.js` — COMPOSE-04 contract: which waypoints are
 - `tests/branchTiming.test.js` — ROUTE-01b contract: run timing, master
+- `tests/buildScript.test.js` — SPL-06: importing `build.js` runs nothing (shown by a separate process, in an empty directory, before this file imports it) and, run as a script, also through a symlink, it still runs; each npm script's mode; the image manifest's refusals; the index.html release stamp and its check; the exact Pages inventory; and publishing and the failed-build rollback in a temporary directory, a locked directory standing in for a cloud-sync lock
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
 - `tests/crowdArrival.test.js` — COMPOSE-02 contract: onset/journey maths,
 - `tests/consoleGuard.test.js` — TST-10: the rule deciding which console output fails a test, and the declaration a test uses for output it provokes

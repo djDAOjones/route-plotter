@@ -81,11 +81,8 @@
   W7 and W10. **P1**
 - [ ] **TST-03 Visibility mode matrix** · Characterisation [ready] **P1**
 - [ ] **TST-08 Mixin composition guards** · Characterisation [ready] **P1**
-- [ ] **SPL-06 `build.js` entry guard and exported functions** · Refactor
-  [ready] — Pulled forward from W9: TST-11 needs it, and `build.js` exports
-  nothing today. **P2**
 - [ ] **TST-11 Behavioural tests for source-text assertions** ·
-  Characterisation [gated: SPL-06 impl] **P1**
+  Characterisation [ready] **P1**
 - [ ] **TST-14 Shell and ContextMenu safety tests** · Characterisation
   [ready] **P1**
 - [ ] **TST-16 Tighten the round-2 predicates** · Characterisation [ready]
