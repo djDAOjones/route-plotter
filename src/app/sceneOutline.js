@@ -12,8 +12,8 @@ import {
   buildSceneOutlineSnapshot,
   sceneOutlineKey,
 } from '../utils/sceneSemantics.js';
-import { FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
 import { SCENE_LIMITS } from '../models/Scene.js';
+import { networkRoom, NETWORK_FULL } from '../utils/networkBudget.js';
 import { EMITTER_LIMITS } from '../models/Emitter.js';
 import { PROJECT_MODEL_LIMITS } from './persistence.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
@@ -649,20 +649,9 @@ export const sceneOutlineMixin = {
     this.announce('Primary emitter updated.');
   },
 
-  _outlineGraphCounts() {
-    return this.scene.getFlowLayers().reduce((totals, layer) => ({
-      nodes: totals.nodes + layer.graph.getNodes().length,
-      edges: totals.edges + layer.graph.getEdges().length,
-    }), { nodes: 0, edges: 0 });
-  },
-
   _outlineAddNode(command) {
     const layer = this._outlineLayer(command.layerId);
-    const totals = this._outlineGraphCounts();
-    if (layer.graph.getNodes().length >= FLOW_LAYER_LIMITS.MAX_GRAPH_NODES
-        || totals.nodes >= SCENE_LIMITS.MAX_GRAPH_NODES_TOTAL) {
-      throw new Error('The project node limit has been reached.');
-    }
+    if (!networkRoom(this.scene.getFlowLayers(), layer).node) throw new Error(NETWORK_FULL.node);
     if (!NODE_TYPES.has(command.type)) throw new Error('Choose a valid node type.');
     const node = layer.graph.addNode({
       x: percentDraft(command, 'x', 'Horizontal position'),
@@ -735,11 +724,7 @@ export const sceneOutlineMixin = {
       edge.sourceId === target.id || edge.targetId === target.id
     );
     if (joined) throw new Error('Those nodes are already connected.');
-    const totals = this._outlineGraphCounts();
-    if (layer.graph.getEdges().length >= FLOW_LAYER_LIMITS.MAX_GRAPH_EDGES
-        || totals.edges >= SCENE_LIMITS.MAX_GRAPH_EDGES_TOTAL) {
-      throw new Error('The project edge limit has been reached.');
-    }
+    if (!networkRoom(this.scene.getFlowLayers(), layer).edge) throw new Error(NETWORK_FULL.edge);
     const edge = layer.graph.addEdge({
       sourceId: source.id,
       targetId: target.id,
@@ -805,14 +790,7 @@ export const sceneOutlineMixin = {
   _outlineAddControl(command) {
     const layer = this._outlineLayer(command.layerId);
     const edge = this._outlineEdge(layer, command.edgeId);
-    const layerControlCount = layer.graph.getEdges().reduce(
-      (sum, candidate) => sum + candidate.controlPoints.length,
-      0
-    );
-    if (edge.controlPoints.length >= FLOW_LAYER_LIMITS.MAX_CONTROL_POINTS_PER_EDGE
-        || layerControlCount >= FLOW_LAYER_LIMITS.MAX_CONTROL_POINTS_TOTAL) {
-      throw new Error('The project bend-point limit has been reached.');
-    }
+    if (!networkRoom(this.scene.getFlowLayers(), layer, edge).bend) throw new Error(NETWORK_FULL.bend);
     const index = edge.addControlPoint(
       percent(command.x, 'Horizontal position'),
       percent(command.y, 'Vertical position')

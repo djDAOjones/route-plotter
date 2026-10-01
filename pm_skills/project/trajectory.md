@@ -47,6 +47,11 @@ meanwhile, by the size fields or a fixed-size preset, applies to the
 display, the background placed for it, and to the next export once it ends.
 (2026-09-29)
 
+DEF-59 — The network editor's pen keeps a crowd within the six graph counts a
+project can store, as the outline does: a node, link or bend past a crowd's or
+the scene's counts is refused, in the outline's words. The project-wide
+budgets, which no editor checks yet, stay DEF-04's. (2026-09-29)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its
