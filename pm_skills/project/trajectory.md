@@ -73,6 +73,11 @@ ends, saying so in a toast, when its waypoint is deleted or undone away,
 rather than closing onto a waypoint the project no longer has; and Draw Area
 asked for again keeps the draw in progress. (2026-09-29)
 
+DEF-27 — The instant spotlight and angle of view follow the camera, so the
+circle or cone stays on the head at any zoom, and the contrast tint covers the
+image's rectangle and no margin at any background zoom, moving with the camera.
+(2026-09-29)
+
 DEF-06 — What a route scheduled no longer outlives it: Clear All, deleting
 down to one waypoint, undo, redo and loading a one-waypoint project clear its
 path, branches, structure, pauses, beacons and waits, and resolve its crowd

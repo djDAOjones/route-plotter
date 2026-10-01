@@ -116,9 +116,6 @@ moved, and account for every survivor)
   [ready] **P3**
 - [ ] **DEF-45 Announcements overwrite each other** · Accessibility [ready]
   **P3**
-- [ ] **DEF-27 Instant spotlight and AoV ignore camera zoom** · Live defect
-  [ready] — §20 Q17: the camera applies there too (ground rule 8; TST-02 has
-  shipped). **P3**
 
 **Defects after their W5 test** (§13 ground rule 8)
 
