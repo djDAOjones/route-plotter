@@ -1074,12 +1074,13 @@ async function htmlExported(app) {
 }
 
 /**
- * The route at 80 px/s in `mode`, playing, a stop dragged and not yet let go
- * (which saves nothing): its rebuild still queued, the duration the one from
- * before the drag. No recovery written and no save has run that rebuild, so
- * what a save made next holds is that save's own settling.
+ * The route at 80 px/s in `mode`, playing (at `rate`, 1× unless given), a
+ * stop dragged and not yet let go (which saves nothing): its rebuild still
+ * queued, the duration the one from before the drag. No recovery written and
+ * no save has run that rebuild, so what a save made next holds is that save's
+ * own settling.
  */
-async function playingMidDrag(mode, { background = false } = {}) {
+async function playingMidDrag(mode, { background = false, rate = 1 } = {}) {
   const project = threeStops();
   project.animationState.speed = 80;
   const app = await derivedByPreview(project);
@@ -1089,12 +1090,13 @@ async function playingMidDrag(mode, { background = false } = {}) {
   }
   if (background) await withBackground(app);
   app.animationEngine.play();
+  if (rate !== 1) app.animationEngine.setPlaybackSpeed(rate);
   const before = app.animationEngine.state.duration;
 
   dragging(app, 'b', 0.25, 0.7);
 
-  expect({ playing: app.animationEngine.isPlaying(), queued: Boolean(app._durationUpdateTimeout), duration: app.animationEngine.state.duration })
-    .toEqual({ playing: true, queued: true, duration: before });
+  expect({ playing: app.animationEngine.isPlaying(), rate: app.animationEngine.state.playbackSpeed, queued: Boolean(app._durationUpdateTimeout), duration: app.animationEngine.state.duration })
+    .toEqual({ playing: true, rate, queued: true, duration: before });
   return { app, before };
 }
 
@@ -1135,6 +1137,75 @@ test.each(['Preview', 'Edit'])('in %s, an HTML export made mid-drag while the ro
   expect(expected).not.toBeCloseTo(rebuiltAt(app, ANIMATION.DEFAULT_SPEED), 0);
   expect(embedded.waypoints.find(each => each.id === 'b')).toMatchObject({ imgX: 0.25, imgY: 0.7 });
   expect(embedded.animationState.duration, 'the embedded project').toBeCloseTo(expected, 6);
+});
+
+/**
+ * Rates the transport plays at other than 1×. A rate multiplies how fast the
+ * timeline plays; the route's speed (80 px/s here) is the project's, and its
+ * duration is the route's at that speed, whatever the rate. 2× and -2× (in
+ * reverse) are what L and J reach, each pressed twice; 0.5× is a rate the
+ * engine's transport takes (any from 0.1× to 16×, either way) and the
+ * exported player's menu offers, though no key in the editor reaches it.
+ */
+const PLAYBACK_RATES = [2, -2, 0.5];
+
+/**
+ * A snapshot made while the route at 80 px/s plays at `rate` leaves the
+ * transport playing at that rate, and holds the route with the duration it
+ * has at 80 px/s, in the snapshot, live and, where it `reopens`, reopened:
+ * the route rebuilt once the transport is paused, and so back at 1×, with no
+ * rate in the rebuild, and checked to differ from the route timed at 80 px/s
+ * times the rate. The speed saved is 80 px/s, and the rate is not saved.
+ */
+async function heldAtTheSpeedAuthored(app, { rate, before, snapshot, reopens }) {
+  expect({ playing: app.animationEngine.isPlaying(), rate: app.animationEngine.state.playbackSpeed }, 'the transport')
+    .toEqual({ playing: true, rate });
+  const live = app.animationEngine.state.duration;
+  app.animationEngine.pause();
+  expect({ rate: app.animationEngine.state.playbackSpeed, speed: app.animationEngine.state.speed }).toEqual({ rate: 1, speed: 80 });
+  const expected = rebuiltAt(app, 80);
+  expect(expected).not.toBeCloseTo(before, 0);
+  expect(expected, 'the route timed at the rate played').not.toBeCloseTo(rebuiltAt(app, 80 * Math.abs(rate)), 0);
+  expect(snapshot.waypoints.find(each => each.id === 'b')).toMatchObject({ imgX: 0.25, imgY: 0.7 });
+  expect(snapshot.animationState).toMatchObject({ mode: 'constant-time', speed: 80 });
+  expect(snapshot.animationState).not.toHaveProperty('playbackSpeed');
+  for (const [where, duration] of [['the snapshot', snapshot.animationState.duration], ['live', live]]) {
+    expect(duration, where).toBeCloseTo(expected, 6);
+  }
+  if (reopens) expect(await reopenedDuration(snapshot), 'reopened').toBeCloseTo(expected, 6);
+}
+
+test.each(['Preview', 'Edit'].flatMap(mode => PLAYBACK_RATES.map(rate => [mode, rate])))('in %s, a stop let go while the route at 80 px/s plays at %s×, its rebuild still queued, writes recovery holding the route’s duration at 80 px/s, not at the rate played, and recovery reopens with it', async (mode, rate) => {
+  // Every other snapshot in this file is made at 1×: a retime that timed the
+  // route at its speed times the transport's rate passed the whole gate, and
+  // at 2× saved and reopened 8,089 ms for a route that rebuilds at 11,519
+  const { app, before } = await playingMidDrag(mode, { rate });
+  const b = app.getWaypointById('b');
+
+  // Let go, as the canvas reports it: the drop records the move and writes recovery
+  app.eventBus.emit('waypoint:drag-ended', { waypoint: b, dragGroup: [{ waypoint: b, imgX: 0.5, imgY: 0.5 }] });
+  const recovery = recoveryOnLeaving();
+
+  await heldAtTheSpeedAuthored(app, { rate, before, snapshot: recovery, reopens: true });
+});
+
+test.each(['Preview', 'Edit'].flatMap(mode => PLAYBACK_RATES.map(rate => [mode, rate])))('in %s, Save Project made mid-drag while the route at 80 px/s plays at %s×, nothing having run the route’s rebuild before it, saves the route with its duration at 80 px/s, not at the rate played, and the file reopens with it', async (mode, rate) => {
+  const { app, before } = await playingMidDrag(mode, { rate });
+
+  const saved = await savedProject(app);
+
+  await heldAtTheSpeedAuthored(app, { rate, before, snapshot: saved, reopens: true });
+});
+
+test.each(['Preview', 'Edit'].flatMap(mode => PLAYBACK_RATES.map(rate => [mode, rate])))('in %s, an HTML export made mid-drag while the route at 80 px/s plays at %s×, nothing having run the route’s rebuild before it, embeds the route with its duration at 80 px/s, not at the rate played', async (mode, rate) => {
+  // Not reopened: the exported player rebuilds the route's timing from the
+  // speed it embeds (the plan's exception), so that speed is held to the one
+  // authored too
+  const { app, before } = await playingMidDrag(mode, { background: true, rate });
+
+  const embedded = await htmlExported(app);
+
+  await heldAtTheSpeedAuthored(app, { rate, before, snapshot: embedded, reopens: false });
 });
 
 test.each([80, 650].flatMap(speed => ['made', 'cleared'].map(action => [speed, action])))('at %i px/s, a rejoin %s times the route at that speed: live, in recovery, in the saved file, reopened, and in the path’s own travel', async (speed, action) => {
