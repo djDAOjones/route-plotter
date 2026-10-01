@@ -84,8 +84,9 @@ const MARKS = new Set(['clearRect', 'fillRect', 'strokeRect', 'fill', 'stroke', 
 /**
  * A frame's calls on every canvas, in order, each with its arguments, the
  * transform it was made under and the drawing state it was made in (alpha,
- * compositing, filter and the rest), the canvases named by what they are, so
- * that two apps' frames can be compared.
+ * compositing, filter and the rest, as the test recorder keeps them: not the
+ * bitmap, nor a clip region), the canvases named by what they are, so that two
+ * apps' frames can be compared.
  */
 function transcriptOf(calls, names) {
   const nameOf = id => names[id] ?? 'other';
@@ -129,7 +130,16 @@ async function exporting(app) {
   const frames = [];
   const transcripts = [];
   const between = [];
+  const clipped = [];
   const main = contextIdFor(app.canvas);
+  /** The canvases an export draws on, by what they are: the export's own, the path's layer and the reveal mask. */
+  const roles = () => {
+    const names = { [main]: 'main', [contextIdFor(app.renderingService.vectorCanvas)]: 'vector' };
+    const mask = app.motionVisibilityService?.revealMaskCanvas;
+    if (mask) names[contextIdFor(mask)] = 'mask';
+    return names;
+  };
+  const clipsIn = (calls, names) => calls.filter(([, name]) => name === 'clip').map(([surface]) => `${names[surface] ?? 'other'} clip`);
   recordCallOrder(true);
   let started;
   let release;
@@ -143,10 +153,14 @@ async function exporting(app) {
     async export({ renderFrame }) {
       const token = backgroundToken();
       const frame = async (progress) => {
-        // What the export's canvas was given since the last frame, outside any frame
-        between.push(takeOrderedCalls().filter(([surface]) => surface === main).map(([, name]) => name));
+        // What any canvas was given since the last frame, outside any frame
+        // (before the first, the export's setting up)
+        const outside = takeOrderedCalls();
+        between.push(outside.map(([surface, name]) => `${roles()[surface] ?? 'other'} ${name}`));
+        clipped.push(...clipsIn(outside, roles()));
         await renderFrame(progress);
         const calls = takeOrderedCalls();
+        clipped.push(...clipsIn(calls, roles()));
         const vector = contextIdFor(app.renderingService.vectorCanvas);
         const layer = `[canvas #${vector}]`;
         /** A draw: its surface, its rectangle, the transform, and the alpha and compositing it was drawn with. */
@@ -173,7 +187,7 @@ async function exporting(app) {
           layerErased: lastStroke >= 0 && calls.slice(lastStroke + 1, put)
             .some(([surface, name]) => surface === vector && (name === 'clearRect' || name === 'canvas.width' || name === 'canvas.height')),
         });
-        transcripts.push(transcriptOf(calls, { [main]: 'main', [vector]: 'vector' }));
+        transcripts.push(transcriptOf(calls, roles()));
       };
       await frame(0.1);
       started();
@@ -197,6 +211,7 @@ async function exporting(app) {
     frames,
     transcripts,
     between,
+    clipped,
     completes: async () => { release(); await done; },
     fails: async () => { allowConsole(/Video export failed/); outcome = 'failed'; release(); await done; },
     'is cancelled with Escape': async () => {
@@ -295,9 +310,13 @@ test.each(KINDS.flatMap(([kind, pathOnly]) => CHANGES.map(([label, change]) => [
   expect(geometry(app)).toEqual(began);
   await run.completes();
   expect(run.frames).toEqual(Array(3).fill(frameOf(began.canvas[0], began.canvas[1], pathOnly)));
-  // Nothing is done to the export's canvas between its frames: a size chosen
-  // meanwhile leaves it as the last frame left it
+  // Nothing is done to any canvas between its frames: a size chosen
+  // meanwhile leaves each as the last frame left it
   expect(run.between.slice(1)).toEqual([[], []]);
+  // Nothing in this app clips, and the recorder keeps no clip region: a clip
+  // on any canvas, from the export's setting up to its last frame, could
+  // hide what every call above still makes
+  expect(run.clipped).toEqual([]);
   // Call for call, as the same export draws its frames with no size chosen
   const unchanged = await framesWithNoSizeChosen(pathOnly);
   expect(unchanged).toHaveLength(3);
