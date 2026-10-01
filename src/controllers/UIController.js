@@ -234,6 +234,16 @@ export class UIController {
     /** @private @type {Array<Object>} */
     this._waypointsCache = [];
 
+    /**
+     * Each export the author asks for, counted: a codec probe still out for
+     * one asked for before a later one, or before an export started, asks for
+     * nothing when it answers (DEF-46).
+     * @private @type {number}
+     */
+    this._exportIntent = 0;
+    /** @type {boolean} Whether a video export is the app's (DEF-46) */
+    this._exportRunning = false;
+
     // Bind methods that are passed as callbacks
     this.updateWaypointList = this.updateWaypointList.bind(this);
     this.updateWaypointEditor = this.updateWaypointEditor.bind(this);
@@ -511,22 +521,27 @@ export class UIController {
       this._codecModal.style.display = 'none';
       this._codecFocusTrap.deactivate();
     };
+    this._closeCodecModal = closeModal;
+    // The dialog answers for the MP4 click that opened it, while that is the
+    // export the author last asked for (DEF-46).
+    const current = () => this._codecModalIntent === this._exportIntent;
     
+    // Closing it gives focus back, which can ask for another export first: a
+    // choice counts only while its dialog's request is still the last.
     this._codecWebmBtn.addEventListener('click', () => {
       closeModal();
-      this.eventBus.emit('video:export-request', 'webm');
+      if (current()) this.eventBus.emit('video:export-request', 'webm');
     });
     
     this._codecMp4Btn?.addEventListener('click', () => {
       closeModal();
-      // Apply the reduced resolution stored when modal was configured
-      if (this._codecReducedRes) {
-        this.eventBus.emit('video:resolution-change', {
-          width: this._codecReducedRes.w,
-          height: this._codecReducedRes.h
-        });
-      }
-      this.eventBus.emit('video:export-request', 'mp4');
+      if (!current()) return;
+      // At the reduced resolution stored when the modal was configured: one
+      // request, so the app applies the size only if it starts the export.
+      const resolution = this._codecReducedRes
+        ? { width: this._codecReducedRes.w, height: this._codecReducedRes.h }
+        : undefined;
+      this.eventBus.emit('video:export-request', { format: 'mp4', resolution });
     });
     
     cancelBtn.addEventListener('click', () => closeModal());
@@ -539,6 +554,35 @@ export class UIController {
     this._codecModal.addEventListener('focustrap:escape', () => closeModal());
   }
   
+  /**
+   * An export has been asked for, by whatever route (the app calls this for
+   * every request it does not refuse as one already runs; an MP4 click, for
+   * itself, before its probe): a codec probe still out for an export asked
+   * for before asks for nothing when it answers, and a codec dialog one
+   * opened closes, giving focus back, so neither its choices nor its hold on
+   * Escape outlive it (DEF-46).
+   * @returns {number} This request's own mark, taken before the dialog
+   *   closes: whatever closing it sets off may ask for another after it
+   */
+  exportRequested() {
+    this._exportIntent += 1;
+    const intent = this._exportIntent;
+    this._closeCodecModal?.();
+    return intent;
+  }
+
+  /**
+   * Whether a video export is the app's (DEF-46): while it is, Export MP4
+   * asks for nothing, not even a probe, whatever sends it a click. The app
+   * says so before anything its export does can call back (closing a codec
+   * dialog gives focus back, before the buttons are disabled), and again
+   * once the export has let go.
+   * @param {boolean} running
+   */
+  exportRunning(running) {
+    this._exportRunning = running;
+  }
+
   /**
    * Show the codec-unsupported modal configured for the appropriate scenario.
    * @param {Object} [opts] - Options for the modal
@@ -572,6 +616,7 @@ export class UIController {
       this._codecReducedRes = null;
     }
     
+    this._codecModalIntent = this._exportIntent;
     this._codecModal.style.display = 'flex';
     this._codecFocusTrap?.activate();
   }
@@ -887,14 +932,29 @@ export class UIController {
     
     // Export MP4 button — cascading H.264 probe at actual export dimensions
     this.elements.exportMp4Btn?.addEventListener('click', async () => {
+      // Disabled while an export runs: a click sent to it then (a script's)
+      // asks for nothing, not even a probe, whose dialog would open over the
+      // export (DEF-46).
+      if (this.elements.exportMp4Btn.disabled || this._exportRunning) return;
       const w = parseInt(this.elements.exportResX?.value) || 1920;
       const h = parseInt(this.elements.exportResY?.value) || 1080;
       console.log(`🎬 [Export] MP4 probe at ${w}×${h}`);
       
-      // 1. Probe at actual export dimensions
+      // 1. Probe at actual export dimensions. The answer counts only while
+      //    this is the export the author last asked for, and none has started
+      //    since: a double click asks once, and a probe that answers after
+      //    WebM was chosen, or after an export ended, asks for nothing. The
+      //    click is itself a request: a codec dialog still open closes, and
+      //    anything its closing asks for comes after it.
+      const intent = this.exportRequested();
+      // Closing that dialog gives focus back at once, and whatever that sets
+      // off may have started another export, or asked for one, by now: this
+      // click then asks for nothing, not even a probe.
+      if (this._exportRunning || intent !== this._exportIntent) return;
       const fullConfig = await VideoExporter._testWebCodecsConfig(
         w, h, undefined, undefined, 'mp4'
       );
+      if (intent !== this._exportIntent) return;
       if (fullConfig) {
         this.eventBus.emit('video:export-request', 'mp4');
         return;
@@ -927,6 +987,7 @@ export class UIController {
       const reducedConfig = await VideoExporter._testWebCodecsConfig(
         rW, rH, undefined, undefined, 'mp4'
       );
+      if (intent !== this._exportIntent) return;
       if (reducedConfig) {
         this._showCodecModal({ fullW: w, fullH: h, reducedW: rW, reducedH: rH });
         return;
@@ -936,7 +997,7 @@ export class UIController {
       this._showCodecModal();
     });
     
-    // Export WebM button
+    // Export WebM button (the app's request supersedes a probe still out: DEF-46)
     this.elements.exportWebmBtn?.addEventListener('click', () => {
       this.eventBus.emit('video:export-request', 'webm');
     });
