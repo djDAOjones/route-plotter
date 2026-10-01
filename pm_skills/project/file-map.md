@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 350 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 351 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 116 file(s)
+- `tests` — 117 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -321,6 +321,7 @@
 - `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
 - `tests/backgroundModeOverlay.test.js` — DEF-01: no background visibility mode draws text or a panel on the main canvas, with the reveal mask proved to have run
 - `tests/bootApp.test.js` — TST-01: the whole app boots from the shipped shell, sizes its canvas to the harness viewport, loads its bundled background, and carries an authoring intent from the bus to the model and the canvas, and (DEF-33) a cold start announces nothing and a restored session only its restore, while a pause the author makes is announced
+- `tests/areaDrawTarget.test.js` — DEF-43: a polygon draw whose waypoint is deleted (its row's ×, with others selected, from the outline), undone or redone away ends, and one toast says so, on the test's clock from Draw Area on (the time the app reads included) from the next frame to the moment its dismissal begins at five seconds, checked every 250 ms and at each point the page's changes are delivered against a stated list (its own text; the app's own polite, atomic region, relevant to additions (an `additions` or `all` token); from the toast up to `<html>`: no role, nothing hidden, `aria-hidden`, inert, busy or silenced, and by the stylesheet displayed, `visibility: visible`, not transparent by opacity or an `opacity(0)` filter, content not hidden; its text colour's alpha above 0, as this environment's CSS parser reads the colour (a custom property's value included; a value it cannot read, or one taking its colour from where it is used, `currentcolor` or `light-dark()` even inside another, fails); the page watched from the document, so a replaced root is still seen; the region placed as the stylesheet places it); screen position, occlusion, speech, changes undone within a task and work scheduled before Draw Area are not checked; Clear All, a project opened, a draw already cancelled, ended with Escape or closed, another waypoint's deletion, a failed open, and an undo or redo that keeps its waypoint say nothing of it for five seconds (no toast asked for with the message, through the bus or by a call to `showToast`, the class's method watched since the project opened; the message nowhere in the toasts' region the page started with, which must stay the page's at every change and sample, attributes included, in its light-DOM text, however marked up); the draw stays ended when the deletion is undone, and goes on through another waypoint's deletion; through an undo or a redo that restores its waypoint it goes on, and its polygon lands on the waypoint the project has; each of those three is checked on both sides of the closing boundary (three vertices), its vertices placed and the polygon closed by taps through the canvas's pointer events: begun with two vertices, it is still drawn on the canvas after the change, and taps there add its third vertex and close the polygon; begun with three, able to close already, it is still drawn there, and a tap on its first vertex closes it; either way the polygon is on the live waypoint and in the project's snapshot; after a project that failed to open over it, begun with two vertices, it is still drawn on the canvas, and taps there add its last vertex and close the polygon; a draw whose waypoint goes before the polygon can close (no, one or two vertices) ends too, and is told; opening a project with the same waypoints ends it; Draw Area asked for again keeps the draw in progress, with two vertices or with three (which a tap then closes), also after a redo at both counts, and for another waypoint starts afresh
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms, (DEF-35) handles dragged off the image stay there, as far as a project can store a point, and (DEF-17) a polygon drawn in the booted app names its waypoint, so the editor and the outline follow it unless the selection changed during the draw
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts
