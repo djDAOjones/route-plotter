@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 350 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 351 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 116 file(s)
+- `tests` — 117 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -333,6 +333,7 @@
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
 - `tests/crowdArrival.test.js` — COMPOSE-02 contract: onset/journey maths,
 - `tests/consoleGuard.test.js` — TST-10: the rule deciding which console output fails a test, and the declaration a test uses for output it provokes
+- `tests/contextMenu.test.js` — TST-14: the context menu's contract: role=menu anatomy with native-button items and text-only labels; opening at the pointer, measured unseen and clamped 8px inside the viewport; arrows wrapping through disabled items, Home/End, Escape and Tab closing, Enter and Space left to the browser, other keys kept from the page's shortcuts; a press outside, any scroll, a resize or window blur closing it with focus given back (a chosen item does not: DEF-70); disabled items focusable, explained and inert; nothing left listening after any close; and, in the booted app, the right-click menus for a waypoint and the map
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
 - `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit; and (DEF-30) a once-listener that throws still fires only once, removing only itself
@@ -388,7 +389,7 @@
 - `tests/publicationBoundary.test.js` — Approved-image hashes, CSP/same-origin shell, exact Pages inventory and manifest-tamper rejection
 - `tests/releaseSafety.test.js` — Clean-build rollback, versioned CSS references, dry-run deployment safety, and the DEF-18 refusals (unknown options, mistyped npm settings) and check-gate contracts
 - `tests/renderReference.test.js` — Reference migration, aspect/export scaling, label clamp, camera, area-border and no-timeline-mutation contracts
-- `tests/restartSafety.test.sh` — Shell contract for exact owned-process restart, readiness and foreign-listener refusal
+- `tests/restartSafety.test.sh` — Shell contract for `scripts/restart.sh`, every check an `if` that says what broke (TST-14): unknown options stop it and only `--hard-reset` asks for `docs/` to go; the dev-wrapper and exact-record identity rules (command, start token, directory, wrapper); the watcher tree claimed only in this checkout; a newer record kept by an exiting wrapper; a stop that spares an unmatched process; the record writer's refusals; the status-keeping wait; and the foreign-listener refusal against stubbed `lsof`/`ps` (LISTEN only; names the port and holder; kills nothing). Not readiness: that is `main`'s
 - `tests/revealTrail.test.js` — REVEAL-01 contract: the reveal fades as a pure
   function of distance behind the head, measured as a fraction of the path, with
   the maximum a sentinel for "never fades"; plus BUG-02's hard-edge inner radius
