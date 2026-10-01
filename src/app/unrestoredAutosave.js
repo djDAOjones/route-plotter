@@ -52,19 +52,24 @@ function offersOf(app) {
  * now; `keys`, the keys it kept them under itself; `unkept`, those it could
  * keep only in memory; `heldText`, one it held, and `heldDurable`, once that
  * is seen kept where every tab knows. And what it has seen of other tabs:
- * `seen`, each kept key it has read, with its text; `discarded`, each record
- * whose every kept copy it saw go, which only the author's Discard or Clear
- * All does, so a restore still in progress here keeps it no more; and
+ * `seen`, each kept key it has read, with its text; `gone`, each key it knew
+ * a record by and then read empty where the store could not be searched,
+ * offered and looked for no more, but kept apart, with its text, until a
+ * search can say whether any copy of that record is left; `discarded`, each
+ * record whose every kept copy it saw go, which only the author's Discard or
+ * Clear All does, so a restore still in progress here keeps it no more;
  * `keptAtStart`, the text of each record kept before this start's restore
- * began, which, read again by that restore, is an earlier start's. A kept
- * key's text never changes while the key is there, so what `keys` and
- * `seen` know of a key holds until a search shows the key gone, or the
- * author's Discard or Clear All here removes it.
+ * began, which, read again by that restore, is an earlier start's; and
+ * `unreadAtStart`, each key listed then whose record could not be read,
+ * whose text, once read, joins `keptAtStart`. A kept key's text never
+ * changes while the key is there, so what `keys` and `seen` know of a key
+ * holds until a search shows the key gone, or the author's Discard or Clear
+ * All here removes it.
  */
 function thisStart(app) {
   app._unrestoredThisStart ??= {
     own: new Set(), keys: new Map(), heldText: null, heldDurable: false, unkept: [],
-    seen: new Map(), discarded: new Set(), keptAtStart: null,
+    seen: new Map(), gone: new Map(), discarded: new Set(), keptAtStart: null, unreadAtStart: new Set(),
   };
   return app._unrestoredThisStart;
 }
@@ -107,8 +112,11 @@ function knownText(started, key) {
  * text this tab knows it by; where the store cannot be searched, each key
  * this tab knows is read on its own, newest first, and offered from this
  * tab's copy when it cannot be read; one seen empty is forgotten, never
- * offered again; a search that works again forgets the keys it no longer
- * lists.
+ * offered again, though kept apart as gone (`noteDiscards`); a search that
+ * works again forgets the keys it no longer lists. A key listed at this
+ * start whose record could not be read then is read with them, and what it
+ * holds, once read, it held then: a record kept before this start's restore
+ * began.
  */
 function readStore(app) {
   const started = thisStart(app);
@@ -134,18 +142,32 @@ function readStore(app) {
     const listed = new Set(kept.records.map(record => record.key));
     for (const key of started.keys.keys()) if (!listed.has(key)) started.keys.delete(key);
   } else {
-    // In the order a search lists them, newest first, as when it works
-    for (const key of app.storageService.inKeptOrder(new Set([...started.seen.keys(), ...started.keys.keys()]))) {
+    // In the order a search lists them, newest first, as when it works; with
+    // them, the keys listed at this start whose records could not be read then
+    for (const key of app.storageService.inKeptOrder(new Set([...started.seen.keys(), ...started.keys.keys(), ...started.unreadAtStart]))) {
       const read = app.storageService.readKept(key);
-      if (!read.ok) stored.push({ text: knownText(started, key), where: 'cached', key });
+      const known = knownText(started, key);
+      if (!read.ok && known === null) unreadable += 1;
+      else if (!read.ok) stored.push({ text: known, where: 'cached', key });
       else if (read.text !== null) stored.push({ text: read.text, where: 'parked', key });
       else {
         // Seen empty: forgotten, so a later fault cannot bring it back. Not
-        // taken for a Discard: another key may still keep the same record.
+        // taken for a Discard yet, since another key may still keep the same
+        // record, but kept apart as gone, for a search to settle.
+        if (known !== null) started.gone.set(key, known);
         started.seen.delete(key);
         started.keys.delete(key);
+        started.unreadAtStart.delete(key);
       }
     }
+  }
+  // A key listed at this start whose record could not be read then holds,
+  // read now, what it held then (a kept key's text never changes): a record
+  // kept before this start's restore began, as one read then is.
+  for (const { key, text, where } of stored) {
+    if (where !== 'parked' || !started.unreadAtStart.delete(key)) continue;
+    started.keptAtStart.add(text);
+    started.seen.set(key, text);
   }
   const keptTexts = new Set(stored.filter(offer => offer.where === 'parked' || offer.durable).map(offer => offer.text));
   noteDiscards(started, kept, parked, keptTexts);
@@ -169,6 +191,8 @@ function readStore(app) {
     discardable: byText.size + unreadable,
     unreadable,
     searched: kept.ok,
+    // Listed by the search, but neither read nor known by their text
+    unreadKeys: kept.records.filter(record => !parked.has(record.key)).map(record => record.key),
   };
 }
 
@@ -176,13 +200,18 @@ function readStore(app) {
  * Note the records the author has discarded in another tab: a kept key this
  * tab read goes only by Discard or Clear All, so once one has gone and its
  * record is kept nowhere else, a restore of it still in progress here keeps
- * it no more. A hold that ends is not taken for one: a build that knows no
- * mark may have written over it. Nor is a key this tab never read (it may
- * have come and gone between two reads): that choice this tab cannot see.
+ * it no more. A key seen empty where the store could not be searched
+ * (`gone`) has gone too, but only a search that works can say that no
+ * other key keeps its record, so only then is it taken for one. A hold that
+ * ends is not taken for one: a build that knows no mark may have written
+ * over it. Nor is a key this tab never read (it may have come and gone
+ * between two reads): that choice this tab cannot see.
  */
 function noteDiscards(started, kept, parked, keptTexts) {
   if (!kept.ok) return;
   const present = new Set(kept.records.map(record => record.key));
+  for (const [key, text] of started.gone) started.seen.set(key, text);
+  started.gone.clear();
   for (const [key, text] of started.seen) {
     if (present.has(key)) continue;
     started.seen.delete(key);
@@ -226,12 +255,17 @@ function showOffers(app, read = readStore(app)) {
  */
 export function keepUnrestoredAutosave(app, text) {
   const started = thisStart(app);
+  // What this tab knows is brought up to date first, as a storage event
+  // would: no event need have come since a search began to work again (it
+  // may show every copy of the record gone), or since a key listed at this
+  // start became readable.
+  const { offers } = readStore(app);
   // The author discarded it in another tab while this restore ran, so it is
   // not kept again. But a restore in another tab that had not seen that
   // choice may have kept it since: that copy is on offer, and, unless it was
   // kept before this start began, is this start's, and its failure is told.
   if (started.discarded.has(text)) {
-    const again = readStore(app).offers.some(each => each.text === text);
+    const again = offers.some(each => each.text === text);
     if (!again || started.keptAtStart?.has(text)) {
       showOffers(app);
       return false;
@@ -275,25 +309,33 @@ function tell(app, text) {
 
 /**
  * At start-up, before this start's restore, offer what earlier starts kept,
- * so what the restore reports can point to it. A record an earlier start
- * held is not restored again: it is on offer.
+ * so what the restore reports can point to it, and note what was kept then:
+ * the records read, and the keys listed whose records could not be read,
+ * which decide which records are an earlier start's. A record an earlier
+ * start held is not restored again: it is on offer.
  */
 export function offerKeptAutosave(app) {
-  const offers = showOffers(app);
+  const read = readStore(app);
+  const offers = showOffers(app, read);
   thisStart(app).keptAtStart = new Set(offers.map(offer => offer.text));
+  thisStart(app).unreadAtStart = new Set(read.unreadKeys);
   const [first] = offers;
   if (first) app.announce(messageFor(first), 'assertive');
 }
 
 /**
  * What a restore's report adds while a record kept earlier is on offer: that
- * report is announced over the offer's own.
+ * report is announced over the offer's own, so it says what the notice says
+ * of that record, read from the store now (one offered only from this tab's
+ * copy, where the store cannot be read, is not called kept).
  * @returns {string} A sentence to append, or ''
  */
 export function keptEarlierNote(app) {
-  return offersOf(app).some(offer => offer.earlier)
+  const offer = showOffers(app).find(each => each.earlier);
+  if (!offer) return '';
+  return offer.where === 'parked'
     ? " An earlier session couldn't be restored, and is kept until you discard it."
-    : '';
+    : ` ${messageFor(offer)}`;
 }
 
 /**

@@ -1993,6 +1993,244 @@ describe('another tab during this start’s restore, and what Clear All says it 
     expect(heard().filter(call => call.message.startsWith(NOW))).toEqual([{ message: `${NOW} ${CACHED}`, priority: 'assertive' }]);
   });
 
+  // Codex’s round-10 cases: a Discard seen through a store that cannot be
+  // searched, a key listed at the start that could not be read then, and what
+  // a restore that works says of a record kept earlier
+  test.each([
+    ['once the notice has read the store again', true],
+    ['though nothing has read the store since', false],
+  ])('a record the author discards in another tab, its key then read empty here while the store cannot be searched, is not kept again by a restore still in progress that fails once a search works, %s, nor found by a later start', async (_, readAgain) => {
+    allowConsole(/Failed to search localStorage/);
+    const record = await recordWithBackground();
+    const faults = { search: false };
+    const { app, store, heard, fail } = await startRestoring(record, {}, { searchFails: () => faults.search });
+    const otherTab = new StorageService();
+    const copy = otherTab.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key: copy.key }));
+    expect(otherTab.discardKept({ ...copy, text: record })).toBe(true);
+    faults.search = true;
+    window.dispatchEvent(new StorageEvent('storage', { key: copy.key }));
+    expect(notice().hidden).toBe(true);
+    faults.search = false;
+    if (readAgain) refresh();
+
+    fail();
+    await app.ready;
+
+    expect(kept(store)).toEqual([]);
+    expect(app._unrestoredOffers).toEqual([]);
+    expect(notice().hidden).toBe(true);
+    expect(heard().filter(call => call.message.includes("couldn't be restored"))).toEqual([]);
+    vi.mocked(ImageAsset.decodeDataURL).mockRestore();
+    const { app: later } = await restart(Object.getPrototypeOf(app));
+    expect(later._unrestoredOffers).toEqual([]);
+    expect(kept(store)).toEqual([]);
+  });
+
+  test('a record the author discards in another tab, its key read empty here while the store cannot be searched, is kept again, and told, by a restore that fails before a search works: none has shown every copy gone', async () => {
+    allowConsole(/Failed to search localStorage/);
+    const record = await recordWithBackground();
+    const faults = { search: false };
+    const { app, store, heard, fail } = await startRestoring(record, {}, { searchFails: () => faults.search });
+    const otherTab = new StorageService();
+    const copy = otherTab.keepUnrestored(record);
+    window.dispatchEvent(new StorageEvent('storage', { key: copy.key }));
+    expect(otherTab.discardKept({ ...copy, text: record })).toBe(true);
+    faults.search = true;
+    window.dispatchEvent(new StorageEvent('storage', { key: copy.key }));
+
+    fail();
+    await app.ready;
+
+    expect(kept(store)).toEqual([record]);
+    expect(app._unrestoredOffers.map(({ text, earlier }) => ({ text, earlier }))).toEqual([{ text: record, earlier: false }]);
+    expect(heard().filter(call => call.message.startsWith(NOW))).toEqual([{ message: `${NOW} ${KEPT}`, priority: 'assertive' }]);
+    // A search that works then finds the copy this keep made, and leaves it on offer.
+    faults.search = false;
+    refresh();
+    expect(heading()).toBe(NOW);
+    expect(kept(store)).toEqual([record]);
+    vi.mocked(ImageAsset.decodeDataURL).mockRestore();
+    const { app: later } = await restart(Object.getPrototypeOf(app));
+    expect(later._unrestoredOffers.map(({ text, earlier }) => ({ text, earlier }))).toEqual([{ text: record, earlier: true }]);
+  });
+
+  test('a copy removed in another tab, read empty here while the store cannot be searched, is no Discard once a search finds another copy: a restore still in progress keeps its record', async () => {
+    allowConsole(/Failed to search localStorage/, /Failed to load from localStorage/, /Failed to remove from localStorage/);
+    const record = await recordWithBackground();
+    const faults = { search: false, remove: null, read: null };
+    const { app, store, fail } = await startRestoring(record, {}, {
+      searchFails: () => faults.search, removalFails: [key => key === faults.remove], readFails: [key => key === faults.read],
+    });
+    const otherTab = new StorageService();
+    const first = otherTab.keepUnrestored(record);
+    faults.search = true;
+    const second = otherTab.keepUnrestored(record);
+    faults.search = false;
+    window.dispatchEvent(new StorageEvent('storage', { key: second.key }));
+    // The other tab's Discard removes the first copy, and cannot remove the second.
+    faults.remove = second.key;
+    expect(otherTab.discardKept({ ...first, text: record })).toBe(false);
+    faults.remove = null;
+    faults.search = true;
+    window.dispatchEvent(new StorageEvent('storage', { key: first.key }));
+    faults.search = false;
+    refresh();
+    faults.read = second.key;
+
+    fail();
+    await app.ready;
+
+    expect(app._unrestoredOffers.map(({ text, earlier }) => ({ text, earlier }))).toEqual([{ text: record, earlier: false }]);
+    expect(kept(store)).toEqual([record, record]);
+  });
+
+  test.each([
+    ['once the notice has read it', true],
+    ['though nothing has read the store since', false],
+  ])('a record kept before this start under a key listed then but unreadable stays an earlier start’s when that key can be read before this start’s restore of it fails, %s, and nothing is told', async (_, readAgain) => {
+    allowConsole(/Failed to load from localStorage/);
+    const record = await recordWithBackground();
+    const key = keptKey(1, 'earlier');
+    const faults = { read: true };
+    const { app, store, heard, fail } = await startRestoring(record, { [key]: record }, { readFails: [each => faults.read && each === key] });
+    expect(notice().hidden).toBe(true);
+    faults.read = false;
+    if (readAgain) {
+      refresh();
+      expect(heading()).toBe(EARLIER);
+    }
+
+    fail();
+    await app.ready;
+
+    expect(heading()).toBe(EARLIER);
+    expect(app._unrestoredOffers.map(({ text, earlier }) => ({ text, earlier }))).toEqual([{ text: record, earlier: true }]);
+    expect(heard().filter(call => call.message.startsWith(NOW))).toEqual([]);
+    expect(kept(store)).toEqual([record]);
+  });
+
+  test('a record kept before this start under a key listed then but unreadable stays an earlier start’s when that key can be read by itself, though the store cannot be searched, as this start’s restore of it fails', async () => {
+    allowConsole(/Failed to load from localStorage|Failed to search localStorage/);
+    const record = await recordWithBackground();
+    const key = keptKey(1, 'earlier');
+    const faults = { read: true, search: false };
+    const { app, store, heard, fail } = await startRestoring(record, { [key]: record }, {
+      readFails: [each => faults.read && each === key], searchFails: () => faults.search,
+    });
+    faults.read = false;
+    faults.search = true;
+    refresh();
+    expect(heading()).toBe(EARLIER);
+
+    fail();
+    await app.ready;
+
+    expect(heading()).toBe(EARLIER);
+    expect(heard().filter(call => call.message.startsWith(NOW))).toEqual([]);
+    // The keep could not find that copy, so made another: kept, not lost
+    expect(kept(store)).toEqual([record, record]);
+    faults.search = false;
+    refresh();
+    expect(heading()).toBe(EARLIER);
+    expect(clearNote().textContent).toBe("The session that couldn't be restored will be discarded too.");
+  });
+
+  test.each([
+    ['the store could not be searched at the start, nor as the restore failed', { search: true, read: false }, { search: true, read: false }, 2],
+    ['the store could not be searched at the start, though it could as the restore failed', { search: true, read: false }, { search: false, read: false }, 1],
+    ['the key it was kept under could not be read at the start, nor as the restore failed', { search: false, read: true }, { search: false, read: true }, 2],
+    ['the key it was kept under could not be read at the start, nor the store searched as the restore failed', { search: false, read: true }, { search: true, read: true }, 2],
+  ])('a record kept before this start, which this start’s restore fails on where %s, is taken for this start’s and told, and stays so once found: which start kept it, this tab could not tell', async (_, atStart, asItFails, copies) => {
+    allowConsole(/Failed to load from localStorage|Failed to search localStorage/);
+    const record = await recordWithBackground();
+    const key = keptKey(1, 'earlier');
+    const faults = { ...atStart };
+    const { app, store, heard, fail } = await startRestoring(record, { [key]: record }, {
+      searchFails: () => faults.search, readFails: [each => faults.read && each === key],
+    });
+    expect(notice().hidden).toBe(true);
+    Object.assign(faults, asItFails);
+
+    fail();
+    await app.ready;
+
+    expect(heading()).toBe(NOW);
+    expect(app._unrestoredOffers.map(({ text, earlier }) => ({ text, earlier }))).toEqual([{ text: record, earlier: false }]);
+    expect(heard().filter(call => call.message.startsWith(NOW))).toEqual([{ message: `${NOW} ${KEPT}`, priority: 'assertive' }]);
+    Object.assign(faults, { search: false, read: false });
+    refresh();
+    expect(app._unrestoredOffers.map(({ text, earlier }) => ({ text, earlier }))).toEqual([{ text: record, earlier: false }]);
+    expect(kept(store)).toEqual(Array(copies).fill(record));
+  });
+
+  test('a copy this start makes of a record kept before it stays on offer, an earlier start’s, when another tab then discards the older copy and this tab cannot search the store', async () => {
+    allowConsole(/Failed to load from localStorage|Failed to search localStorage/);
+    const record = await recordWithBackground();
+    const old = keptKey(1, 'old');
+    const faults = { search: false, read: null };
+    const { app, store, fail } = await startRestoring(record, { [old]: record }, {
+      searchFails: () => faults.search, readFails: [key => key === faults.read],
+    });
+    faults.search = true;
+    fail();
+    await app.ready;
+    const [newer] = [...store.keys()].filter(key => isKept(key) && key !== old);
+    expect(store.get(newer)).toBe(record);
+    // Another tab can search, but cannot read the new copy, so its Discard
+    // removes only the older one; this tab then cannot search.
+    faults.search = false;
+    faults.read = newer;
+    expect(new StorageService().discardKept({ text: record, where: 'parked', key: old })).toBe(true);
+    faults.read = null;
+    faults.search = true;
+    refresh();
+
+    expect(store.get(newer)).toBe(record);
+    expect(app._unrestoredOffers.map(({ text, where, earlier }) => ({ text, where, earlier }))).toEqual([{ text: record, where: 'parked', earlier: true }]);
+    expect(heading()).toBe(EARLIER);
+    const [blob] = download();
+    expect(await blob.text()).toBe(record);
+  });
+
+  test.each([
+    ['once the notice has read the store again', true],
+    ['though nothing has read the store since', false],
+  ])('a restore that works, while a record kept earlier can be offered only from this tab’s copy, says of it what the notice says, %s', async (_, readAgain) => {
+    allowConsole(/Failed to load from localStorage|Failed to search localStorage/);
+    const record = await recordWithBackground();
+    const key = keptKey(1, 'earlier');
+    const faults = { active: false };
+    useStorage({ [AUTOSAVE]: record, [key]: 'earlier T' }, {
+      searchFails: () => faults.active, readFails: [each => faults.active && each === key],
+    });
+    // The restore's background decodes only when told, and then for real.
+    const decode = ImageAsset.decodeDataURL;
+    let release;
+    const reached = new Promise((resolveReached) => {
+      vi.spyOn(ImageAsset, 'decodeDataURL').mockImplementationOnce((...args) => new Promise((resolveDecode) => {
+        release = () => resolveDecode(decode.apply(ImageAsset, args));
+        resolveReached();
+      }));
+    });
+    const app = await bootApp();
+    const heard = listen(app);
+    await reached;
+    expect(status()).toBe(KEPT);
+    faults.active = true;
+    if (readAgain) {
+      refresh();
+      expect(status()).toBe(CACHED);
+    }
+
+    release();
+    await app.ready;
+
+    expect(app.waypoints).toHaveLength(2);
+    expect(heading()).toBe(EARLIER);
+    expect(status()).toBe(CACHED);
+    expect(heard().at(-1)).toEqual({ message: `Previous session restored. ${EARLIER} ${CACHED}`, priority: 'assertive' });
+  });
 });
 
 describe('a store that cannot be searched, or read, and the records this tab knows (DEF-28)', () => {
@@ -2098,6 +2336,28 @@ describe('a store that cannot be searched, or read, and the records this tab kno
     store.delete(keptKey(1, 'q'));
     refresh();
 
+    expect(notice().hidden).toBe(true);
+  });
+
+  // Codex’s round-10 case: a key this start kept a record under, not one an
+  // earlier start kept, read empty
+  test('a key this start kept a record under, read empty while the store cannot be searched, is forgotten: a later fault reading it does not bring its record back', async () => {
+    allowConsole(denied);
+    const faults = { search: false, read: false };
+    const { app } = await bootRecording({}, { searchFails: () => faults.search, readFails: [key => faults.read && isKept(key)] });
+    keepUnrestoredAutosave(app, 'current T');
+    const [offered] = app._unrestoredOffers;
+    expect(offered).toMatchObject({ text: 'current T', where: 'parked', earlier: false });
+    // The author discards it in another tab; this tab cannot search, but reads its key empty.
+    expect(new StorageService().discardKept(offered)).toBe(true);
+    faults.search = true;
+    refresh();
+    expect(app._unrestoredOffers).toEqual([]);
+
+    faults.read = true;
+    refresh();
+
+    expect(app._unrestoredOffers).toEqual([]);
     expect(notice().hidden).toBe(true);
   });
 
