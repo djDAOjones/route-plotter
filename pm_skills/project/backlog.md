@@ -133,7 +133,8 @@ moved, and account for every survivor)
 - [ ] **DEF-13 A focused button swallows every shortcut** · Accessibility
   [ready] — TST-13's key table pins its cells. **P1**
 - [ ] **DEF-32 Activating a list row loses focus** · Accessibility
-  [ready] **P1**
+  [ready] — TST-13 pins a focused row, not where focus goes once a row is
+  activated: the fix starts with that before/after regression. **P1**
 - [ ] **DEF-14 A hint click stops a label toggling** · Accessibility
   [gated: TST-04 impl] **P1**
 - [ ] **DEF-15 L resumes at the old J/K/L speed** · Live defect

@@ -11,16 +11,28 @@
  * what the code does without them (SEG-025: "8 are missing today").
  *
  * Three views, because each misses something the others catch: the booted
- * app's `elements` bag, every id the running app asks for, and every literal
- * id in `src/` (which reaches code no test flow runs).
+ * app's `elements` bag, every id the running app asks for, and every
+ * `getElementById` call in `src/`, read as code (which reaches code no test
+ * flow runs). That last scan reads each file whole, so a call written across
+ * lines, or with a comment inside it, is still a call, and one inside a
+ * comment or a string is not; its fixtures below pin that. Every call is
+ * accounted for: a literal id, checked against its page, or one of the eleven
+ * ids built at run time, each listed with what it looks up and whether the
+ * running-app flow reaches it.
+ *
+ * The ids the editor builds on demand are built here, twice, to show each is
+ * then found under the id it was looked up by and reused — or, for one of
+ * them, that it is built and never attached (a defect, pinned as it stands).
  */
 
-import { readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { attachTooltip, detachTooltip } from '../src/components/Tooltip.js';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
 import { bootApp } from './helpers/bootApp.js';
+import { callsOf, lex, lexedFiles, literalValue } from './helpers/sourceScan.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -87,14 +99,86 @@ const DERIVED_LOOKUPS = {
 };
 
 /**
+ * Every `getElementById` in `src/` whose id is built at run time, by file and
+ * argument as written, with how many calls share it, whether the running-app
+ * flow below reaches each (`runs`), and what it looks up. The ids the flow's
+ * calls ask for are held against the page there, with every other id it asks
+ * for; a call it does not reach is checked as the reason says, or not at all.
+ */
+const DYNAMIC_LOOKUPS = {
+  'src/app/crowds.js id': { calls: 3, runs: true,
+    what: "each crowd slider wiring itself (_wireCrowdSlider), and syncCrowdEditor's writes to the sliders " +
+      'and readouts' },
+  'src/app/crowds.js `${id}-value`': { calls: 1, runs: true, what: "a crowd slider's readout" },
+  "src/app/crowds.js id.slice(0, -'-value'.length)": { calls: 1, runs: true,
+    what: "the control a crowd readout belongs to, for its aria-valuetext (DERIVED_LOOKUPS)" },
+  'src/app/privacy.js disclosure.returnFocusId': { calls: 1, runs: true,
+    what: 'where focus returns when a share dialog closes: the File or the Export menu button' },
+  'src/app/wiringDom.js `${tabName}-tab`': { calls: 1, runs: false,
+    what: 'a sidebar tab: the handler is wired to .tab-btn, which the shell does not have, so it never runs' },
+  'src/components/ParamTooltip.js id': { calls: 2, runs: true,
+    what: "a hint's control (its label's `for`), and a free id for the hint's description" },
+  'src/components/ParamTooltip.js existingId': { calls: 1, runs: false,
+    what: 'a hint wired by an earlier init: the app inits its hints once (main.js), so it never runs' },
+  'src/controllers/UIController.js elementId': { calls: 1, runs: true,
+    what: 'each control the visibility registry shows and hides' }
+};
+
+/**
  * Ids the editor builds the first time it needs them, so the shell rightly
- * lacks them.
+ * lacks them. `twice` is what building one twice does: how many elements
+ * carried the id, whether the id then finds one in the page, and whether the
+ * second build reused the first's.
  */
 const CREATED_ON_DEMAND = {
-  'camera-zoom-warning': 'camera.js adds it under the camera zoom control when a zoom cannot be reached in time',
-  'zoom-prompt': 'viewport.js adds the "Select a waypoint to zoom" prompt',
-  'tooltip-container': 'Tooltip.js adds its container, though no element carries data-tooltip (DEL-05)'
+  'camera-zoom-warning': {
+    why: 'camera.js builds it when a waypoint asks the camera for a zoom it cannot reach in time',
+    twice: { built: 2, inPage: false, reused: false },
+    // Proposed defect: the warning never shows. Its anchor, `.camera-controls`
+    // or the zoom slider's `.control-group`, left the shell when the camera
+    // zoom moved into the waypoint card, so the element is built detached, the
+    // lookup that should reuse it finds nothing, and every warning builds
+    // another. Fixing it changes this row.
+    defect: 'built detached: no .camera-controls or .control-group holds the zoom slider any more'
+  },
+  'zoom-prompt': {
+    why: 'viewport.js adds the "Select a waypoint to zoom" prompt',
+    twice: { built: 1, inPage: true, reused: true }
+  },
+  'tooltip-container': {
+    why: 'Tooltip.js adds its container, though no element carries data-tooltip (DEL-05)',
+    twice: { built: 1, inPage: true, reused: true }
+  }
 };
+
+/** Every `getElementById` call in `src/`, read as code, with its file and line. */
+function lookupCalls() {
+  const calls = [];
+  for (const { file, lexed } of lexedFiles(repoRoot, 'src')) {
+    const { calls: found, others } = callsOf(lexed, 'getElementById');
+    for (const { line, args } of found) {
+      calls.push({ file, line, args, id: args.length === 1 ? literalValue(args[0]) : null });
+    }
+    for (const index of others) calls.push({ file, line: lexed.source.slice(0, index).split('\n').length, args: null });
+  }
+  return calls;
+}
+
+/** The literal-id lookups, as `{ id, file, line }`. */
+function literalLookups() {
+  return lookupCalls().filter(({ id }) => id !== null).map(({ id, file, line }) => ({ id, file, line }));
+}
+
+/** The calls whose id is built at run time, keyed as DYNAMIC_LOOKUPS is, with their lines. */
+function dynamicLookups() {
+  const found = {};
+  for (const { file, line, args, id } of lookupCalls()) {
+    if (id !== null) continue;
+    const key = `${file} ${args === null ? '(not a call)' : args.join(', ')}`;
+    (found[key] ??= []).push(line);
+  }
+  return found;
+}
 
 describe('element ids (TST-13)', () => {
 
@@ -115,8 +199,15 @@ describe('element ids (TST-13)', () => {
     }
   });
 
-  test('every id the app asks for, starting and with a waypoint and a crowd selected, is there', async () => {
-    const lookups = vi.spyOn(document, 'getElementById');
+  test('every id the app asks for, starting, with a waypoint and a crowd selected and both share dialogs, is there', async () => {
+    const native = Document.prototype.getElementById;
+    const callers = new Set();
+    const lookups = vi.spyOn(document, 'getElementById').mockImplementation(function lookup(id) {
+      // The `src/` line that asked, to show which built-at-run-time calls ran.
+      const frame = new Error().stack.match(/\/(src\/[\w/.-]+\.js):(\d+):\d+/);
+      if (frame) callers.add(`${frame[1]}:${frame[2]}`);
+      return native.call(this, id);
+    });
     let asked;
     try {
       const app = await bootApp();
@@ -128,6 +219,14 @@ describe('element ids (TST-13)', () => {
       app.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
       app.eventBus.emit('waypoint:selected', app.waypoints[0]);
       document.getElementById('add-crowd-btn').click();
+      // Each share dialog looks up the button focus returns to; cancel each.
+      for (const share of [() => app.requestProjectSave(), () => app.requestHTMLExport()]) {
+        const choice = share();
+        await vi.waitFor(() => expect(document.getElementById('share-disclosure-modal').style.display).toBe('flex'));
+        await Promise.resolve();
+        document.getElementById('share-disclosure-cancel').click();
+        await choice;
+      }
       asked = new Set(lookups.mock.calls.map(([id]) => id));
     } finally {
       lookups.mockRestore();
@@ -136,45 +235,42 @@ describe('element ids (TST-13)', () => {
     // Asked for, and still absent once the app has built what it builds.
     const absent = [...asked].filter(id => !document.getElementById(id));
     expect(asked.size).toBeGreaterThan(300);
+    expect(asked.has('file-dropdown-btn') && asked.has('export-dropdown-btn'), 'both return-focus buttons asked for')
+      .toBe(true);
     expect(absent.sort(), 'ids the app asked for that the page does not have')
       .toEqual([...MISSING_IDS, ...Object.keys(DERIVED_LOOKUPS)].sort());
+
+    // Which built-at-run-time calls this flow reached.
+    const reached = Object.fromEntries(Object.entries(dynamicLookups())
+      .map(([key, lines]) => [key, lines.some(line => callers.has(`${key.split(' ')[0]}:${line}`))]));
+    expect(reached, 'the built-at-run-time lookups this flow reaches (DYNAMIC_LOOKUPS.runs)')
+      .toEqual(Object.fromEntries(Object.entries(DYNAMIC_LOOKUPS).map(([key, { runs }]) => [key, runs])));
+    // The tab handler that never runs has nothing to click.
+    expect(document.querySelectorAll('.tab-btn')).toHaveLength(0);
   });
 
-  /**
-   * Every `getElementById('literal')` in `src/`, with comments removed. Ids
-   * built at run time are left to the test above: the crowd sliders
-   * (`_wireCrowdSlider`, `syncCrowdEditor`), the visibility registry, the
-   * share dialog's return focus and ParamTooltip's hint ids all run in its
-   * flows. One never runs: wiringDom.js's sidebar-tab handler looks up
-   * `${tabName}-tab`, but the shell has no `.tab-btn` to click.
-   */
-  function literalLookups() {
-    const files = [];
-    const walk = dir => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        const path = join(dir, entry.name);
-        if (entry.isDirectory()) walk(path);
-        else if (entry.name.endsWith('.js')) files.push(path);
-      }
-    };
-    walk(join(repoRoot, 'src'));
-
-    const found = [];
-    for (const path of files) {
-      const file = relative(repoRoot, path);
-      // Blank out block comments (keeping line numbers) and whole-line // comments.
-      const code = readFileSync(path, 'utf8')
-        .replace(/^[ \t]*\/\*[\s\S]*?\*\//gm, block => block.replace(/[^\n]/g, ''))
-        .split('\n')
-        .map(line => (line.trim().startsWith('//') ? '' : line));
-      code.forEach((line, index) => {
-        for (const [, , id] of line.matchAll(/getElementById\(\s*(['"`])([^'"`$\\]+)\1\s*\)/g)) {
-          found.push({ id, file, line: index + 1 });
-        }
-      });
-    }
-    return found;
-  }
+  test('the scan reads calls as code: across lines, with spacing and comments, and not in comments or strings', () => {
+    const scan = source => callsOf(lex(source), 'getElementById').calls
+      .map(({ line, args }) => [line, args.length === 1 ? literalValue(args[0]) ?? args[0] : args]);
+    expect(scan("document.getElementById('one')")).toEqual([[1, 'one']]);
+    expect(scan("const detail = document.getElementById(\n  'split'\n);")).toEqual([[1, 'split']]);
+    expect(scan('\n\nx = document.getElementById (  "spaced"  )')).toEqual([[3, 'spaced']]);
+    expect(scan("document.getElementById(/* why */ 'commented' // and why\n)")).toEqual([[1, 'commented']]);
+    expect(scan("// document.getElementById('line-comment')\n/* document.getElementById('block-comment') */"))
+      .toEqual([]);
+    expect(scan("s = \"getElementById('in-a-string')\"; t = `getElementById('in-a-template')`;")).toEqual([]);
+    expect(scan("t = `${document.getElementById('in-a-template-expression')}`;"))
+      .toEqual([[1, 'in-a-template-expression']]);
+    // A regular expression with slashes in it is not a comment, and division is not a regular expression.
+    expect(scan("re = /\\/\\//; document.getElementById('after-a-regex')")).toEqual([[1, 'after-a-regex']]);
+    expect(scan("a = b / c; document.getElementById('after-a-division') // x / y"))
+      .toEqual([[1, 'after-a-division']]);
+    expect(scan('document.getElementById(`plain-template`)')).toEqual([[1, 'plain-template']]);
+    expect(scan('document.getElementById(`${name}-built`)')).toEqual([[1, '`${name}-built`']]);
+    // An alias is not a call, but the scan still sees it.
+    const alias = 'const byId = document.getElementById; byId("aliased")';
+    expect(callsOf(lex(alias), 'getElementById')).toEqual({ calls: [], others: [alias.indexOf('getElementById')] });
+  });
 
   test('every literal id in src/ is declared by the page it is looked up in', () => {
     const lookups = literalLookups();
@@ -200,5 +296,98 @@ describe('element ids (TST-13)', () => {
     // The missing bag entries are the ones main.js builds the bag from.
     const bagIds = new Set(editor.filter(({ file }) => file === 'src/main.js').map(({ id }) => id));
     for (const id of MISSING_IDS) expect(bagIds.has(id), `#${id} is looked up in main.js`).toBe(true);
+  });
+
+  test('every getElementById in src/ is a literal id or one of the lookups built at run time listed here', () => {
+    const dynamic = Object.fromEntries(Object.entries(dynamicLookups()).map(([key, lines]) => [key, lines.length]));
+    expect(dynamic, 'calls whose id is not a literal (a new one needs a DYNAMIC_LOOKUPS row; an alias is not a call)')
+      .toEqual(Object.fromEntries(Object.entries(DYNAMIC_LOOKUPS).map(([key, { calls }]) => [key, calls])));
+    expect(Object.values(DYNAMIC_LOOKUPS).filter(({ what }) => !/\w/.test(what))).toEqual([]);
+  });
+
+  /**
+   * Build one created-on-demand id twice, as the app does, and say what
+   * happened: the elements that carried the id, whether the page then has one,
+   * and whether the second build found the first's.
+   */
+  async function buildTwice(id, build) {
+    const descriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'id');
+    const carried = [];
+    Object.defineProperty(Element.prototype, 'id', {
+      ...descriptor,
+      set(value) {
+        if (value === id) carried.push(this);
+        descriptor.set.call(this, value);
+      }
+    });
+    const found = [];
+    try {
+      for (let time = 0; time < 2; time += 1) {
+        await build();
+        found.push(document.getElementById(id));
+      }
+    } finally {
+      Object.defineProperty(Element.prototype, 'id', descriptor);
+    }
+    return {
+      built: carried.length,
+      inPage: found.every(element => element !== null && element.isConnected),
+      reused: found[0] !== null && found[0] === found[1] && carried.length === 1
+    };
+  }
+
+  test('the camera zoom warning is built when a zoom cannot be reached in time, but never attached (proposed defect)', async () => {
+    const app = await bootApp();
+    running.push(app);
+    await app.ready;
+    document.getElementById('splash-close').click();
+    await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+    // Two majors a few pixels apart: the leg between them is too short for 16×.
+    app.eventBus.emit('waypoint:add', { imgX: 0.48, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.52, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:selected', app.waypoints[1]);
+    const shown = vi.spyOn(app, '_showZoomWarning');
+    const zoom = document.getElementById('camera-zoom');
+    const twice = await buildTwice('camera-zoom-warning', () => {
+      zoom.value = String(zoom.value === '1' ? 0.99 : 1);
+      zoom.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(shown, 'the warning was asked for each time').toHaveBeenCalledTimes(2);
+    expect(shown.mock.calls[0][0][0]).toMatchObject({ fromWpIndex: 0, toWpIndex: 1 });
+    expect(document.querySelector('.camera-controls')).toBeNull();
+    expect(zoom.closest('.control-group')).toBeNull();
+    expect(twice, CREATED_ON_DEMAND['camera-zoom-warning'].defect)
+      .toEqual(CREATED_ON_DEMAND['camera-zoom-warning'].twice);
+  });
+
+  test('the zoom prompt is built once, under its id, and reused', async () => {
+    const app = await bootApp();
+    running.push(app);
+    await app.ready;
+    document.getElementById('splash-close').click();
+    // With nothing selected, a zoom asks for a waypoint.
+    app.eventBus.emit('waypoint:deselected');
+    const twice = await buildTwice('zoom-prompt', () => app.eventBus.emit('canvas:zoom-in'));
+    expect(document.getElementById('zoom-prompt').textContent).toBe('Select a waypoint to zoom');
+    expect(twice, CREATED_ON_DEMAND['zoom-prompt'].why).toEqual(CREATED_ON_DEMAND['zoom-prompt'].twice);
+  });
+
+  test("the tooltip container is built once, under its id, and reused (Tooltip.js's own path)", async () => {
+    document.body.innerHTML = '<button type="button" id="has-a-tooltip">Help</button>';
+    const button = document.getElementById('has-a-tooltip');
+    attachTooltip(button, 'A hint');
+    try {
+      const twice = await buildTwice('tooltip-container', async () => {
+        button.dispatchEvent(new Event('focus'));
+        // The tooltip shows after its 300 ms delay.
+        await vi.waitFor(() => expect(button.getAttribute('aria-describedby')).toBe('tooltip-container'));
+        button.dispatchEvent(new Event('blur'));
+        await vi.waitFor(() => expect(button.hasAttribute('aria-describedby')).toBe(false));
+      });
+      expect(twice, CREATED_ON_DEMAND['tooltip-container'].why).toEqual(CREATED_ON_DEMAND['tooltip-container'].twice);
+      expect(document.querySelectorAll('[role="tooltip"]')).toHaveLength(1);
+    } finally {
+      detachTooltip(button);
+    }
   });
 });

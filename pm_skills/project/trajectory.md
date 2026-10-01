@@ -22,10 +22,13 @@
 Outcome: written when W5 closes.
 
 TST-13 — The key table, the element ids and the HTML ranges are pinned:
-Help's 36 entries against what each key and click does (18 name an event
-nothing listens to), every id the app looks up against the page it runs in
-(8 missing), and every range and number field against the numbers the code
-gives it, so drift on either side fails. (2026-09-29)
+Help as it renders (31 rows of 36 bindings; Shift+arrow and K shown
+nowhere) and each key and click (18 name an event nothing listens to);
+every key the dispatcher and each key listener in src/ react to; every
+id the app looks up, against its page (8 missing; the camera zoom
+warning never shows); and every range and number field's markup, code
+and handler. Write coverage is two sampled flows. (2026-09-29; reworked
+2026-10-01)
 
 ## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
 

@@ -311,4 +311,56 @@ describe('standalone player accessibility wiring', () => {
     app.onFrame(app.animationEngine.state);
     expect(timeline.getAttribute('aria-valuetext')).toBe('0:30 of 1:05');
   });
+
+  test("every key the player's two key listeners take, and what each does (TST-13)", async () => {
+    // The key table (tests/keyTable.test.js) lists every key listener in
+    // src/ and names this test for the player's: the page's transport keys,
+    // which leave a focused control its own keys, and the timeline's steps.
+    vi.useFakeTimers();
+    installPlayerShell();
+    window.__ROUTE_PLOTTER_PROJECT__ = { coordVersion: 9 };
+    window.__ROUTE_PLOTTER_BG__ = null;
+
+    const app = await importAndBootPlayer();
+    const state = app.animationEngine.state;
+    const timeline = document.getElementById('timeline');
+    const playButton = document.getElementById('play-btn');
+    const press = (key, target = document.body) => {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      const where = target === document.body ? 'the page' : `#${target.id}`;
+      return `${key === ' ' ? 'Space' : key} on ${where}: ${event.defaultPrevented ? 'taken' : 'left'}; ` +
+        `${app.animationEngine.isPlaying() ? 'playing' : 'paused'} at ${state.currentTime / 1000} s`;
+    };
+
+    expect([
+      press('ArrowRight'), press('ArrowRight'), press('ArrowLeft'), press('End'), press('Home'),
+      press(' '), press('k'), press('k'), press(' '), press('j'), press(' ', playButton),
+      ...['ArrowRight', 'ArrowUp', 'PageUp', 'ArrowLeft', 'ArrowDown', 'PageDown', 'End', 'Home', 'k']
+        .map(key => press(key, timeline))
+    ]).toEqual([
+      'ArrowRight on the page: taken; paused at 1 s',
+      'ArrowRight on the page: taken; paused at 2 s',
+      'ArrowLeft on the page: taken; paused at 1 s',
+      'End on the page: taken; paused at 65 s',
+      'Home on the page: taken; paused at 0 s',
+      'Space on the page: taken; playing at 0 s',
+      'k on the page: taken; paused at 0 s',
+      'k on the page: taken; playing at 0 s',
+      'Space on the page: taken; paused at 0 s',
+      'j on the page: left; paused at 0 s',
+      // A focused button keeps Space for itself.
+      'Space on #play-btn: left; paused at 0 s',
+      'ArrowRight on #timeline: taken; paused at 5 s',
+      'ArrowUp on #timeline: taken; paused at 10 s',
+      'PageUp on #timeline: taken; paused at 20 s',
+      'ArrowLeft on #timeline: taken; paused at 15 s',
+      'ArrowDown on #timeline: taken; paused at 10 s',
+      'PageDown on #timeline: taken; paused at 0 s',
+      'End on #timeline: taken; paused at 65 s',
+      'Home on #timeline: taken; paused at 0 s',
+      // The timeline keeps its own keys: K there neither plays nor is taken.
+      'k on #timeline: left; paused at 0 s'
+    ]);
+  });
 });

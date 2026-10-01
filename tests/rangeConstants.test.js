@@ -8,13 +8,30 @@
  * slider position into a model value. Nothing tied the two, so they drifted
  * (SEG-023: "the ranges appear in both HTML and JS"; CON-14 lists five). This
  * pins them together, reading the shipped `index.html` from disk and the real
- * modules, so drift on either side fails:
+ * modules:
  *
+ * - every field's `type`, `min`, `max`, `value` and `step` is a reviewed
+ *   contract, so a change to the markup alone fails, whether or not the code
+ *   has a number of its own for that attribute;
  * - every range and number field is paired with its code, or says why not;
  * - each bound the code defines means the same as the field's `min`/`max`;
  * - each default the code defines is where the field's `value` puts the thumb;
- * - every value the app writes into a field, on a new project and on a project
- *   at the limits load accepts, fits the field's `min`, `max` and `step`.
+ * - each field's own `input` or `change` handler, driven in the booted app at
+ *   the field's min, max, default and a position between, gives the model (or
+ *   the bus) what the pairing's scale says; a number field typed past its ends
+ *   keeps the clamp its reasons name. A scale copied here from inline code is
+ *   held to the handler this way, not only to its own copy;
+ * - in two flows (a new project: start-up, a selected waypoint, a crowd and a
+ *   network edge, and typing past each number field; and a project at the
+ *   limits load accepts, with a waypoint, its crowd, two edges and a waypoint
+ *   between selected), every value the app writes into a field fits its `min`,
+ *   `max` and `step`, or is pinned; and which fields those flows write is
+ *   exact, each one they leave alone named with why.
+ *
+ * Not covered: writes from flows other than those two (undo and redo, the
+ * size presets, a multiple selection, a project opened from a file rather
+ * than loaded as a snapshot). The two flows are the selections a user makes
+ * most; they are a sample of the app's writers, not all of them.
  *
  * Disagreements that exist today are pinned with the reason, not failed, so a
  * fix — or a new drift — changes this file. CON-14 (owner decision
@@ -55,6 +72,82 @@ const attribute = (id, name) => {
   return text === null || text === undefined ? null : Number(text);
 };
 
+/**
+ * What each field's markup says, reviewed: its type, `min`, `max`, `value`
+ * and `step`, with `null` for an attribute the markup leaves out. The tests
+ * below compare an attribute with the code where the code has a number of its
+ * own; this table holds every attribute, so a new grid, bound or default in
+ * the markup alone is a change to this file too, not a quiet pass.
+ */
+const FIELD_CONTRACT = {
+  'dot-size': ['range', 4, 16, 8, 1],
+  'waypoint-pause-time': ['range', 0, 1000, 500, 1],
+  'camera-zoom': ['range', 0, 1, 0, 0.01],
+  'camera-selected-zoom': ['range', 0, 1, 0, 0.01],
+  'ripple-thickness': ['range', 1, 10, 2, 0.5],
+  'ripple-max-scale': ['range', 500, 4000, 1000, 100],
+  'pulse-amplitude': ['range', 0, 3, 1, 0.1],
+  'pulse-cycle-speed': ['range', 1, 10, 4, 0.5],
+  'label-size': ['range', 16, 48, 16, 1],
+  'label-bg-opacity': ['range', 0, 100, 85, 1],
+  'label-width': ['range', 5, 50, 15, 1],
+  'label-offset-x': ['range', -50, 50, 0, 1],
+  'label-offset-y': ['range', -50, 50, -5, 1],
+  'segment-width': ['range', 0, 1000, 333, 1],
+  'waypoint-segment-speed': ['range', 0, 1000, 500, 1],
+  'shape-amplitude': ['range', 1, 50, 10, 1],
+  'shape-frequency': ['range', 1, 20, 5, 1],
+  'area-circle-radius': ['range', 0, 1000, 100, 1],
+  'area-rect-width': ['range', 0, 1000, 125, 1],
+  'area-rect-height': ['range', 0, 1000, 125, 1],
+  'area-fill-opacity': ['range', 0, 100, 30, 1],
+  'area-border-width': ['range', 1, 10, 2, 1],
+  'area-fade-in': ['range', 0, 10000, 500, 100],
+  'area-fade-out': ['range', 0, 10000, 500, 100],
+  'head-rotation-offset': ['range', -180, 180, 0, 5],
+  'path-head-size': ['range', 4, 24, 8, 1],
+  // No value: start-up writes the thumb from ANIMATION.DEFAULT_SPEED.
+  'animation-speed-right': ['range', 1, 4000, null, 5],
+  'graphics-scale': ['range', -200, 200, 0, 1],
+  'path-trail': ['range', 0, 1000, 590, 1],
+  'reveal-size': ['range', 0, 1000, 500, 1],
+  'reveal-feather': ['range', 0, 1000, 500, 1],
+  'reveal-trail': ['range', 0, 1000, 1000, 1],
+  'aov-angle': ['range', 0, 1000, 500, 1],
+  'aov-distance': ['range', 0, 1000, 500, 1],
+  'aov-dropoff': ['range', 0, 1000, 500, 1],
+  'path-glow-intensity': ['range', 0, 100, 50, 1],
+  'bg-overlay': ['range', -1000, 1000, 0, 1],
+  'background-zoom': ['range', 50, 400, 100, 1],
+  'export-res-x': ['number', 100, 7680, 1920, 1],
+  'export-res-y': ['number', 100, 4320, 1080, 1],
+  'export-frame-rate': ['number', 10, 60, 25, 1],
+  'crowd-dot-size': ['range', 5, 200, 40, 5],
+  'crowd-wobble': ['range', 0, 100, 0, 1],
+  'crowd-count': ['range', 1, 500, 50, 1],
+  'crowd-release-start': ['range', 0, 100, 0, 1],
+  'crowd-release-duration': ['range', 0, 100, 100, 1],
+  'crowd-onset-variance': ['range', 0, 100, 20, 1],
+  'crowd-intensity-ramp': ['range', -100, 100, 0, 1],
+  'crowd-speed': ['range', 1, 100, 15, 1],
+  'crowd-speed-variance': ['range', 0, 100, 20, 1],
+  'network-edge-weight': ['range', 1, 50, 10, 1],
+  'timeline-slider': ['range', 0, 1000, 0, 1]
+};
+
+/**
+ * The clamps a number field's `change` handler applies to what is typed
+ * (inline in UIController.js), as [lowest kept, highest kept]. The reasons
+ * below that name these numbers are built from this table, and the handler
+ * test types past both ends to hold the table to the handler.
+ */
+const TYPED_CLAMPS = {
+  'export-res-x': [100, 7680],
+  'export-res-y': [100, 4320],
+  'export-frame-rate': [1, 60]
+};
+const clampText = id => TYPED_CLAMPS[id].join('–');
+
 const running = [];
 afterEach(() => {
   for (const app of running.splice(0)) app.interactionHandler.destroy();
@@ -75,10 +168,11 @@ const percent = slider => slider / 100;
 /**
  * Each field whose numbers the code also defines: `toModel` turns a position
  * into what the app stores (the real scale where one is exported; where the
- * mapping is written inline, the same arithmetic, named with its file), and
- * `min`, `max` and `value` are the code's own bound and default in the
- * model's unit, with where each comes from. A missing entry means the code
- * defines no such number.
+ * mapping is written inline, the same arithmetic, named with its file, which
+ * the handler test holds to the handler itself), and `min`, `max` and `value`
+ * are the code's own bound and default in the model's unit, with where each
+ * comes from. A missing entry means the code defines no such number; the
+ * field's markup for it is still pinned, in FIELD_CONTRACT.
  */
 const PAIRINGS = {
   'dot-size': { toModel: s => s,
@@ -242,7 +336,8 @@ const PAIRINGS = {
 
 /**
  * Fields whose defaults live on the running app rather than in a module,
- * read from a booted one. The field's `min` and `max` have no counterpart.
+ * read from a booted one. The field's `min` and `max` have no counterpart in
+ * the code; FIELD_CONTRACT pins them.
  */
 const APP_DEFAULTS = {
   'head-rotation-offset': { toModel: s => s, value: app => app.styles.pathHead.rotationOffset },
@@ -255,14 +350,23 @@ const APP_DEFAULTS = {
   }
 };
 
-/** Fields with no number of their own in the code, and why. */
+/**
+ * Fields with no number of their own in the code, and why. Each still has
+ * `toModel`, the mapping its handler applies, which the handler test holds to
+ * the handler: the speed curve is copied here from UIController.js, where it
+ * is private.
+ */
 const NO_COUNTERPART = {
-  'animation-speed-right': 'its curve (SPEED_CURVE, UIController.js) is private; the booted tests below pin ' +
-    'what the app writes into it',
-  'export-res-x': "its 100–7680 clamp is written inline in the field's change handler (UIController.js), and " +
-    "its default follows the background's size; LOAD_LIMITS pins what load accepts",
-  'export-res-y': "its 100–4320 clamp is written inline in the field's change handler (UIController.js), and " +
-    "its default follows the background's size; LOAD_LIMITS pins what load accepts"
+  'animation-speed-right': {
+    toModel: s => Math.round(4000 ** (1 - (s - 1) / 3999)),
+    why: 'its curve (SPEED_CURVE, UIController.js) is private: the copy here is held to what the handler sends, ' +
+      'and the booted tests below pin what the app writes into it' },
+  'export-res-x': { toModel: s => s,
+    why: `its ${clampText('export-res-x')} clamp is written inline in the field's change handler (UIController.js), ` +
+      "and start-up sets it to the background's width; LOAD_LIMITS pins what load accepts" },
+  'export-res-y': { toModel: s => s,
+    why: `its ${clampText('export-res-y')} clamp is written inline in the field's change handler (UIController.js), ` +
+      "and start-up sets it to the background's height; LOAD_LIMITS pins what load accepts" }
 };
 
 /**
@@ -369,7 +473,8 @@ const rounded = value => Number(value.toFixed(4));
  * Record every value the app writes into one of the shell's range and number
  * fields, before the browser sanitises it: the value the code meant is the
  * one to hold against the field's bounds. Values a test types as a user are
- * left out.
+ * left out. Each write also keeps the module that made it, the first `src/`
+ * file on its stack, so a flow can say which writers it ran.
  */
 function recordWrites() {
   const native = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
@@ -380,7 +485,10 @@ function recordWrites() {
     enumerable: native.enumerable,
     get() { return native.get.call(this); },
     set(value) {
-      if (!typing && FIELDS.has(this.id)) writes.push({ id: this.id, value: Number(value) });
+      if (!typing && FIELDS.has(this.id)) {
+        const writer = new Error().stack.match(/\/(src\/[\w/.-]+\.js)/)?.[1] ?? 'outside src/';
+        writes.push({ id: this.id, value: Number(value), writer });
+      }
       native.set.call(this, value);
     }
   });
@@ -409,9 +517,88 @@ function misfits(writes) {
   return [...found].sort();
 }
 
+/** The fields no write reached. */
+const unwritten = writes => [...FIELDS.keys()].filter(id => !writes.some(write => write.id === id)).sort();
+
+/** Each module that wrote, and the fields it wrote. */
+function writersOf(writes) {
+  const byWriter = {};
+  for (const { id, writer } of writes) (byWriter[writer] ??= new Set()).add(id);
+  return Object.fromEntries(Object.entries(byWriter).sort(([a], [b]) => a.localeCompare(b))
+    .map(([writer, ids]) => [writer, [...ids].sort()]));
+}
+
+/**
+ * The fields the new-project flow leaves alone, and why: each then shows its
+ * markup's `value` until something else writes it.
+ */
+const NOT_WRITTEN_ON_A_NEW_PROJECT = {
+  'aov-angle': 'nothing in src/ writes the Angle of view sliders: their thumbs keep the markup (DEF-20)',
+  'aov-distance': 'as aov-angle (DEF-20)',
+  'aov-dropoff': 'as aov-angle; its markup happens to mean the default, MOTION.AOV_DROPOFF_DEFAULT',
+  'background-zoom': 'written only when a project loads (persistence.js)',
+  'bg-overlay': 'written only when a project loads (persistence.js)',
+  'path-trail': 'written only when a project loads (persistence.js), so a new project shows the markup (DEF-20)',
+  'graphics-scale': "written only when the route's styles are restored (undoRedo.js: load, undo, redo) and by " +
+    'its own double-click reset',
+  'head-rotation-offset': "written only when the route's styles are restored (undoRedo.js: load, undo, redo)",
+  'path-glow-intensity': "written only when the route's styles are restored (undoRedo.js: load, undo, redo) and " +
+    'by its own double-click reset',
+  'timeline-slider': 'written as the transport moves (playback.js, UIController.js); nothing in this flow plays ' +
+    'or seeks'
+};
+
+/** The fields the limits flow leaves alone, and why. */
+const NOT_WRITTEN_AT_THE_LIMITS = {
+  'aov-angle': 'nothing in src/ writes the Angle of view sliders, not even a load: the project holds 95°, the ' +
+    'thumb keeps the markup (DEF-20)',
+  'aov-distance': 'as aov-angle (DEF-20)',
+  'aov-dropoff': 'as aov-angle (DEF-20)'
+};
+
+/**
+ * The modules each flow's writes came from (the first `src/` frame on the
+ * stack), and the fields each wrote. A writer that stops running in a flow
+ * shows here; a writer moved to another module changes its key, which is a
+ * move to review, not a failure of the app.
+ */
+const WRITERS_ON_A_NEW_PROJECT = {
+  'src/app/camera.js': ['camera-selected-zoom', 'camera-zoom'],
+  'src/app/crowds.js': [
+    'crowd-count', 'crowd-dot-size', 'crowd-intensity-ramp', 'crowd-onset-variance', 'crowd-release-duration',
+    'crowd-release-start', 'crowd-speed', 'crowd-speed-variance', 'crowd-wobble'
+  ],
+  'src/app/editorPanel.js': [
+    'dot-size', 'label-bg-opacity', 'label-offset-x', 'label-offset-y', 'label-size', 'label-width',
+    'path-head-size', 'pulse-amplitude', 'pulse-cycle-speed', 'ripple-max-scale', 'ripple-thickness',
+    'segment-width', 'shape-amplitude', 'shape-frequency', 'waypoint-pause-time', 'waypoint-segment-speed'
+  ],
+  'src/app/network.js': ['network-edge-weight'],
+  'src/app/wiringControllers.js': ['export-res-x', 'export-res-y'],
+  'src/controllers/UIController.js': [
+    'animation-speed-right', 'area-border-width', 'area-circle-radius', 'area-fade-in', 'area-fade-out',
+    'area-fill-opacity', 'area-rect-height', 'area-rect-width', 'dot-size', 'export-frame-rate', 'export-res-x',
+    'export-res-y', 'reveal-feather', 'reveal-size', 'reveal-trail', 'ripple-max-scale', 'ripple-thickness',
+    'segment-width', 'waypoint-pause-time', 'waypoint-segment-speed'
+  ],
+  'src/main.js': ['path-head-size']
+};
+const WRITERS_AT_THE_LIMITS = {
+  ...WRITERS_ON_A_NEW_PROJECT,
+  // Load restores the route's own settings and moves the transport.
+  'src/app/persistence.js': ['background-zoom', 'bg-overlay', 'export-frame-rate', 'export-res-x', 'export-res-y',
+    'path-trail'],
+  'src/app/playback.js': ['timeline-slider'],
+  'src/app/undoRedo.js': ['graphics-scale', 'head-rotation-offset', 'path-glow-intensity', 'path-head-size'],
+  // Nothing here is typed, so the frame-rate and size handlers do not write.
+  'src/controllers/UIController.js': WRITERS_ON_A_NEW_PROJECT['src/controllers/UIController.js']
+    .filter(id => !['export-frame-rate', 'export-res-x', 'export-res-y'].includes(id))
+};
+
 /**
  * What a new project's own flows write that its fields cannot hold: start-up,
- * selecting a waypoint, adding a crowd, and typing past each number field.
+ * selecting a waypoint, adding a crowd, drawing a network edge and selecting
+ * it, and typing past each number field.
  */
 const NEW_PROJECT_MISFITS = {
   'animation-speed-right 1445': "speedToSlider(ANIMATION.DEFAULT_SPEED) is off the field's 5-step grid " +
@@ -420,8 +607,9 @@ const NEW_PROJECT_MISFITS = {
   'waypoint-pause-time 1.5': 'editorPanel.js writes the pause in seconds rather than slider units; ' +
     'a later write in the ' +
     'same selection puts 302 back (the three-writer order dependence of CON-01)',
-  'export-frame-rate 5': "the field's change handler clamps to 1–60, not the field's 10–60, so 5 fps is kept " +
-    "(CON-14's frame rate ×4)"
+  'export-frame-rate 5': `the field's change handler clamps to ${clampText('export-frame-rate')}, not the ` +
+    `field's ${FIELD_CONTRACT['export-frame-rate'][1]}–${FIELD_CONTRACT['export-frame-rate'][2]}, ` +
+    "so 5 fps is kept (CON-14's frame rate ×4)"
 };
 
 /**
@@ -464,15 +652,27 @@ function limitsProject() {
     dotCount: EMITTER_LIMITS.MAX_DOT_COUNT,
     speed: EMITTER_LIMITS.MAX_SPEED
   });
+  // Load asks only that an edge's weight is finite and above 0; an edge keeps
+  // no less than GraphEdge's smallest weight. One edge at that floor, one heavy.
+  const [light, heavy] = project.scene.flowLayers[0].graph.edges;
+  light.weight = new GraphEdge({ sourceId: 'a', targetId: 'b', weight: 0 }).weight;
+  heavy.weight = 1000;
   return project;
 }
 
+/** The two edges `limitsProject` sets, as their ids. */
+const LIMIT_EDGES = (() => {
+  const [light, heavy] = authoredExtrasProject().scene.flowLayers[0].graph.edges;
+  return { light: light.id, heavy: heavy.id };
+})();
+
 /**
- * What loading `limitsProject` and selecting its first waypoint, its crowd
- * and its next major waypoint writes that the fields cannot hold. Most are
- * values load accepts beyond the field's reach: a browser pins the thumb to
- * the field's end while the readout, written from the model, says otherwise,
- * and the first touch of the slider cuts the value to the field's range.
+ * What loading `limitsProject` and selecting its first waypoint, its crowd,
+ * its lightest and heaviest edges and its next major waypoint writes that the
+ * fields cannot hold. Most are values load accepts beyond the field's reach:
+ * a browser pins the thumb to the field's end while the readout, written from
+ * the model, says otherwise, and the first touch of the slider cuts the value
+ * to the field's range.
  * CON-14 decided the UI range is the authoritative one. The rest fall between
  * a field's steps, or are written in another unit, as each says.
  */
@@ -500,6 +700,10 @@ const LIMIT_MISFITS = {
   'label-offset-x 1000': 'load accepts ±1,000%; the slider stops at TEXT_LABEL.OFFSET_MAX (50)',
   'label-offset-y -1000': 'load accepts ±1,000%; the slider stops at TEXT_LABEL.OFFSET_MIN (−50)',
   'label-width 100': 'load accepts up to 100%; the slider stops at TEXT_LABEL.WIDTH_MAX (50)',
+  'network-edge-weight 0': "GraphEdge's smallest weight, 0.01, is 0.1 on a slider of the weight × 10, written " +
+    "rounded to 0: below the slider's 1 (a weight of 0.1), as its min disagreement says",
+  'network-edge-weight 10000': 'load accepts any weight above 0; 1,000 is 10,000 on a slider that stops at 50 ' +
+    '(a weight of 5)',
   'path-trail 2763': 'load accepts any finite trail; 640 path lengths is 2,763 on a slider that stops at ' +
     'MOTION.PATH_TRAIL_MAX (4 path lengths)',
   'pulse-amplitude 100': 'load accepts up to 100; the slider stops at 3',
@@ -513,16 +717,172 @@ const LIMIT_MISFITS = {
     '(Joe, 2026-09-28: the slider stays a fine control)'
 };
 
+// ---------------------------------------------------------------------------
+// Each field's own handler
+// ---------------------------------------------------------------------------
+
+const onWaypoint = read => ['waypoint', app => read(app.selectedWaypoint)];
+const onArea = name => ['waypoint', app => app.selectedWaypoint.areaHighlight[name]];
+const onRoute = read => ['route', read];
+const onCrowd = name => ['crowd', app => app.selectedCrowd.emitters[0][name]];
+
+/**
+ * Where each field's handler leaves its value, in the pairing's unit, and the
+ * selection it needs: the first of two major waypoints, nothing more (the
+ * route's own settings), a crowd, or a network edge. The Duration slider is
+ * read as the speed its handler sends: the engine then rounds it to its own
+ * 5 px/s grid, which is the engine's business, not the field's.
+ */
+const RECEIVED = {
+  'dot-size': onWaypoint(wp => wp.dotSize),
+  'waypoint-pause-time': onWaypoint(wp => wp.pauseTime / 1000),
+  'camera-zoom': onWaypoint(wp => wp.camera.zoom),
+  // The multiple-selection slider: with one waypoint selected it writes that one.
+  'camera-selected-zoom': onWaypoint(wp => wp.camera.zoom),
+  'ripple-thickness': onWaypoint(wp => wp.rippleThickness),
+  'ripple-max-scale': onWaypoint(wp => wp.rippleMaxScale),
+  'pulse-amplitude': onWaypoint(wp => wp.pulseAmplitude),
+  'pulse-cycle-speed': onWaypoint(wp => wp.pulseCycleSpeed),
+  'label-size': onWaypoint(wp => wp.labelSize),
+  'label-bg-opacity': onWaypoint(wp => wp.labelBgOpacity),
+  'label-width': onWaypoint(wp => wp.labelWidth),
+  'label-offset-x': onWaypoint(wp => wp.labelOffsetX),
+  'label-offset-y': onWaypoint(wp => wp.labelOffsetY),
+  'segment-width': onWaypoint(wp => wp.segmentWidth),
+  'waypoint-segment-speed': onWaypoint(wp => wp.segmentSpeed),
+  'shape-amplitude': onWaypoint(wp => wp.shapeAmplitude),
+  'shape-frequency': onWaypoint(wp => wp.shapeFrequency),
+  'area-circle-radius': onArea('radius'),
+  'area-rect-width': onArea('width'),
+  'area-rect-height': onArea('height'),
+  'area-fill-opacity': onArea('fillOpacity'),
+  'area-border-width': onArea('borderWidth'),
+  'area-fade-in': onArea('fadeInMs'),
+  'area-fade-out': onArea('fadeOutMs'),
+  'head-rotation-offset': onRoute(app => app.styles.pathHead.rotationOffset),
+  'path-head-size': onRoute(app => app.styles.pathHead.size),
+  'animation-speed-right': onRoute((app, sent) => sent('animation:speed-change')),
+  'graphics-scale': onRoute(app => app.styles.graphicsScale),
+  'path-trail': onRoute(app => app.motionSettings.pathTrail),
+  'reveal-size': onRoute(app => app.motionSettings.revealSize),
+  'reveal-feather': onRoute(app => app.motionSettings.revealFeather),
+  'reveal-trail': onRoute(app => app.motionSettings.revealTrail),
+  'aov-angle': onRoute(app => app.motionSettings.aovAngle),
+  'aov-distance': onRoute(app => app.motionSettings.aovDistance),
+  'aov-dropoff': onRoute(app => app.motionSettings.aovDropoff),
+  'path-glow-intensity': onRoute(app => app.styles.pathGlow.intensity),
+  'bg-overlay': onRoute(app => app.background.overlay),
+  'background-zoom': onRoute(app => app.exportSettings.backgroundZoom),
+  'export-res-x': onRoute(app => app.exportSettings.resolutionX),
+  'export-res-y': onRoute(app => app.exportSettings.resolutionY),
+  'export-frame-rate': onRoute(app => app.exportSettings.frameRate),
+  'timeline-slider': onRoute(app => app.animationEngine.getProgress()),
+  'crowd-dot-size': onCrowd('dotSize'),
+  'crowd-wobble': onCrowd('wobble'),
+  'crowd-count': onCrowd('dotCount'),
+  'crowd-release-start': onCrowd('releaseStart'),
+  'crowd-release-duration': onCrowd('releaseDuration'),
+  'crowd-onset-variance': onCrowd('onsetVariance'),
+  'crowd-intensity-ramp': onCrowd('intensityRamp'),
+  'crowd-speed': onCrowd('speed'),
+  'crowd-speed-variance': onCrowd('speedVariance'),
+  'network-edge-weight': ['edge', app => app.networkEditService.selectedEdge().weight]
+};
+
+/** The mapping a field's handler should apply, from its pairing. */
+const toModelOf = id => (PAIRINGS[id] ?? APP_DEFAULTS[id] ?? NO_COUNTERPART[id]).toModel;
+
+/** The field's min, max and markup value, and one position between them, on its own grid. */
+function positionsOf(id) {
+  const [, min, max, value, step] = FIELD_CONTRACT[id];
+  const onGrid = steps => Number((min + steps * step).toFixed(6));
+  const third = Math.round(((max - min) / step) * 0.37);
+  const between = onGrid(third) === value ? onGrid(third + 1) : onGrid(third);
+  return [...new Set([min, max, value, between].filter(position => position !== null))];
+}
+
+const precise = value => (typeof value === 'number' ? Number(value.toPrecision(6)) : value);
+
+/** Put a value in a field as a user does, and fire the event its handler listens for. */
+function setAsUser(id, value) {
+  const field = document.getElementById(id);
+  field.value = String(value);
+  field.dispatchEvent(new Event(field.type === 'number' ? 'change' : 'input', { bubbles: true }));
+}
+
+/** A booted editor, Help closed and its image loaded. */
+async function openEditor() {
+  const app = await bootApp();
+  running.push(app);
+  await app.ready;
+  document.getElementById('splash-close').click();
+  await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+  return app;
+}
+
+/** Two majors across the image, the first selected, so every waypoint card shows it. */
+function selectFirstOfTwo(app) {
+  app.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
+  app.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
+  app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+}
+
+/** A click on the canvas at an image position (jsdom's canvas sits at the page origin). */
+function clickCanvas(app, [imgX, imgY]) {
+  const { x, y } = app.imageToCanvas(imgX, imgY);
+  for (const type of ['pointerdown', 'pointerup']) {
+    app.canvas.dispatchEvent(new PointerEvent(type, {
+      bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true,
+      button: type === 'pointerdown' ? 0 : -1, buttons: type === 'pointerdown' ? 1 : 0, clientX: x, clientY: y
+    }));
+  }
+}
+
+/** Select a crowd's edge as the scene outline does: the Edge card then shows it. */
+function selectEdge(app, layer, edgeId) {
+  app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'edge', layerId: layer.id, edgeId });
+  expect(app.networkEditService.selectedEdge()?.id).toBe(edgeId);
+}
+
+/**
+ * Give the selected crowd a network of its own and draw one edge on it, as a
+ * user does: Custom network in the Guide card hands over the pen, and two
+ * clicks place two linked nodes. Then select that edge.
+ */
+function drawAndSelectAnEdge(app) {
+  const guide = document.getElementById('crowd-guide-type');
+  guide.value = 'graph';
+  guide.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(app.networkEditService.active).toBe(true);
+  clickCanvas(app, [0.3, 0.2]);
+  clickCanvas(app, [0.6, 0.2]);
+  const layer = app.selectedCrowd;
+  const edges = layer.graph.getEdges();
+  expect(edges).toHaveLength(1);
+  selectEdge(app, layer, edges[0].id);
+}
+
 describe('index.html ranges against the code (TST-13)', () => {
+
+  test("every field's type, min, max, value and step are the reviewed contract", () => {
+    const found = Object.fromEntries([...FIELDS].map(([id, input]) => [id, [
+      input.getAttribute('type'), attribute(id, 'min'), attribute(id, 'max'), attribute(id, 'value'),
+      attribute(id, 'step')
+    ]]));
+    expect(found, 'the markup of every range and number field (FIELD_CONTRACT is the reviewed copy)')
+      .toEqual(FIELD_CONTRACT);
+  });
 
   test('every range and number field in index.html is paired with its code, or says why not', () => {
     const paired = new Set([...Object.keys(PAIRINGS), ...Object.keys(APP_DEFAULTS), ...Object.keys(NO_COUNTERPART)]);
     expect([...FIELDS.keys()].filter(id => !paired.has(id)), 'a new field needs a pairing').toEqual([]);
     expect([...paired].filter(id => !FIELDS.has(id)), 'a paired field has gone from index.html').toEqual([]);
     expect(FIELDS.size).toBe(52);
-    const explained = [...Object.values(NO_COUNTERPART), ...Object.values(DISAGREEMENTS).map(({ why }) => why),
+    const explained = [...Object.values(NO_COUNTERPART).map(({ why }) => why),
+      ...Object.values(DISAGREEMENTS).map(({ why }) => why),
       ...Object.values(LOAD_LIMITS).map(({ why }) => why), ...Object.values(NEW_PROJECT_MISFITS),
-      ...Object.values(LIMIT_MISFITS)];
+      ...Object.values(LIMIT_MISFITS), ...Object.values(NOT_WRITTEN_ON_A_NEW_PROJECT),
+      ...Object.values(NOT_WRITTEN_AT_THE_LIMITS)];
     expect(explained.filter(why => !/\w/.test(why ?? '')), 'every pinned entry says why').toEqual([]);
   });
 
@@ -578,8 +938,72 @@ describe('index.html ranges against the code (TST-13)', () => {
       const max = attribute(id, 'max');
       expect({ html: max, means: rounded(toModel(max)) }, `${id}: ${why}`).toEqual({ html, means });
       expect(load, `${id}: load now stops where the field does`).toBeGreaterThan(means);
+      // The reason names the number the handler test holds the handler to.
+      expect(why, `${id}: the reason names where the field stops`).toContain(means.toLocaleString('en-GB'));
     }
   });
+
+  test("each field's own handler gives the model what its pairing says, at min, max, default and between", async () => {
+    const app = await openEditor();
+    // Start-up sets the export size to the background's own.
+    const { naturalWidth, naturalHeight } = app.background.image;
+    expect([app.exportSettings.resolutionX, app.exportSettings.resolutionY]).toEqual([naturalWidth, naturalHeight]);
+    expect(['export-res-x', 'export-res-y'].map(id => document.getElementById(id).value))
+      .toEqual([String(naturalWidth), String(naturalHeight)]);
+    selectFirstOfTwo(app);
+
+    const emit = vi.spyOn(app.eventBus, 'emit');
+    const sent = name => emit.mock.calls.filter(([event]) => event === name).at(-1)?.[1];
+    const found = {};
+    const expected = {};
+    const drive = async scope => {
+      for (const [id, [needs, read]] of Object.entries(RECEIVED)) {
+        if (needs !== scope) continue;
+        const toModel = toModelOf(id);
+        found[id] = {};
+        expected[id] = {};
+        for (const position of positionsOf(id)) {
+          // The Duration slider's handler ignores input for 50 ms after the
+          // app moves its thumb (isUpdatingSlider, UIController.js), as
+          // start-up does; a user's drag comes later than that.
+          if (id === 'animation-speed-right') await new Promise(resolve => setTimeout(resolve, 60));
+          setAsUser(id, position);
+          found[id][position] = precise(read(app, sent));
+          expected[id][position] = precise(toModel(position));
+        }
+        // Typed past either end, a number field keeps the clamp its reasons name.
+        if (TYPED_CLAMPS[id]) {
+          const [lowest, highest] = TYPED_CLAMPS[id];
+          for (const [typed, kept] of [[lowest - 5, lowest], [highest + 5, highest]]) {
+            setAsUser(id, typed);
+            found[id][`typed ${typed}`] = precise(read(app, sent));
+            expected[id][`typed ${typed}`] = kept;
+          }
+        }
+        // Typed at what load accepts, a number field keeps where LOAD_LIMITS says it stops.
+        if (LOAD_LIMITS[id] && FIELD_CONTRACT[id][0] === 'number') {
+          setAsUser(id, LOAD_LIMITS[id].load);
+          found[id][`typed ${LOAD_LIMITS[id].load}`] = precise(read(app, sent));
+          expected[id][`typed ${LOAD_LIMITS[id].load}`] = LOAD_LIMITS[id].means;
+        }
+      }
+    };
+    try {
+      await drive('waypoint');
+      await drive('route');
+      document.getElementById('add-crowd-btn').click();
+      expect(app.selectedCrowd).toBeTruthy();
+      await drive('crowd');
+      drawAndSelectAnEdge(app);
+      await drive('edge');
+    } finally {
+      emit.mockRestore();
+    }
+
+    expect(Object.keys(found).sort(), 'every field was driven').toEqual([...FIELDS.keys()].sort());
+    expect(found, "what each field's handler gave the model (its pairing's toModel says what it should)")
+      .toEqual(expected);
+  }, 60000);
 
   test('on a new project, every value the app writes into a field fits it, except the pinned writes', async () => {
     const recorder = recordWrites();
@@ -594,6 +1018,8 @@ describe('index.html ranges against the code (TST-13)', () => {
       // Selecting fills every waypoint card; adding a crowd fills the crowd card.
       app.eventBus.emit('waypoint:selected', app.waypoints[0]);
       document.getElementById('add-crowd-btn').click();
+      // Selecting an edge fills the Edge card, network.js's weight writer.
+      drawAndSelectAnEdge(app);
       // A user types past each number field's bounds; its change handler
       // writes back what it keeps.
       for (const [id, typedValue] of [
@@ -608,6 +1034,10 @@ describe('index.html ranges against the code (TST-13)', () => {
       expect(recorder.writes.length, 'the fields were written (not a silent empty pass)').toBeGreaterThan(50);
       expect(misfits(recorder.writes), 'writes outside a field or off its step (NEW_PROJECT_MISFITS pins them)')
         .toEqual(Object.keys(NEW_PROJECT_MISFITS).sort());
+      expect(unwritten(recorder.writes), 'fields this flow never writes (NOT_WRITTEN_ON_A_NEW_PROJECT says why)')
+        .toEqual(Object.keys(NOT_WRITTEN_ON_A_NEW_PROJECT).sort());
+      expect(writersOf(recorder.writes), 'the modules that wrote the fields, and which fields each wrote')
+        .toEqual(WRITERS_ON_A_NEW_PROJECT);
     } finally {
       recorder.restore();
     }
@@ -629,6 +1059,9 @@ describe('index.html ranges against the code (TST-13)', () => {
         .find(row => row.textContent.includes(crowd))
         .click();
       expect(app.selectedCrowd?.name).toBe(crowd);
+      // Its network's lightest and heaviest edges fill the Edge card in turn.
+      selectEdge(app, app.selectedCrowd, LIMIT_EDGES.light);
+      selectEdge(app, app.selectedCrowd, LIMIT_EDGES.heavy);
       // The next major waypoint keeps the fixture's values, between the limits
       // and off any coarser grid (a 27 px label), so a step must hold them too.
       const between = app.waypoints.find((waypoint, index) => index > 0 && waypoint.isMajor);
@@ -637,6 +1070,10 @@ describe('index.html ranges against the code (TST-13)', () => {
 
       expect(misfits(recorder.writes), 'writes outside a field or off its step (LIMIT_MISFITS pins them)')
         .toEqual(Object.keys(LIMIT_MISFITS).sort());
+      expect(unwritten(recorder.writes), 'fields this flow never writes (NOT_WRITTEN_AT_THE_LIMITS says why)')
+        .toEqual(Object.keys(NOT_WRITTEN_AT_THE_LIMITS).sort());
+      expect(writersOf(recorder.writes), 'the modules that wrote the fields, and which fields each wrote')
+        .toEqual(WRITERS_AT_THE_LIMITS);
     } finally {
       recorder.restore();
     }
