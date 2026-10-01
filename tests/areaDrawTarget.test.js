@@ -35,9 +35,18 @@ function withStyles() {
   document.head.append(style);
 }
 
+/**
+ * The app's `showToast`, watched from the moment the project opens: before
+ * Draw Area, so a reference to the method taken from then on (bound into a
+ * listener, say) is a call the silence check sees. One taken while the app
+ * booted is set up before the instrumentation, outside the claim.
+ */
+let toasts = null;
+
 async function openDay() {
   const app = await bootApp();
   await app.ready;
+  toasts = vi.spyOn(app, 'showToast');
   withStyles();
   shellRegion = toastRegion();
   // The welcome dialog, open at start, makes the page behind it inert.
@@ -245,25 +254,28 @@ function watchTold() {
 /**
  * Nothing said of the draw, from `act` for a toast's five seconds on the
  * test's clock: no toast asked for with the message, through the bus or by a
- * call to the app's `showToast`, and the message nowhere in the toasts'
- * region (the one the page started with, which stays the one the page has)
- * at each point the page's changes are delivered or 250 ms sample, however
- * it is marked up.
+ * call to the app's `showToast` (watched since the project opened), and the
+ * message nowhere in the toasts' region (the one the page started with,
+ * which stays the one the page has, checked each time) at each point the
+ * page's changes, attributes among them, are delivered or 250 ms sample,
+ * however it is marked up.
  */
 async function expectNothingTold(app, act) {
   const asked = [];
   const heard = ({ message } = {}) => asked.push(message);
   app.eventBus.on('ui:toast', heard);
-  const shown = vi.spyOn(app, 'showToast');
+  toasts.mockClear();
   let calls = [];
   const seen = [];
+  const swapped = [];
   const look = () => {
+    if (toastRegion() !== shellRegion) swapped.push(toastRegion()?.outerHTML ?? null);
     for (const region of new Set([shellRegion, toastRegion()])) {
       if (region?.textContent.includes(GONE)) seen.push(region.textContent);
     }
   };
   const observer = new MutationObserver(look);
-  observer.observe(document, { subtree: true, childList: true, characterData: true });
+  observer.observe(document, { subtree: true, childList: true, characterData: true, attributes: true });
   if (!vi.isFakeTimers()) vi.useFakeTimers({ toFake: CLOCK });
   try {
     const acting = act();
@@ -276,12 +288,12 @@ async function expectNothingTold(app, act) {
   } finally {
     observer.disconnect();
     app.eventBus.off('ui:toast', heard);
-    calls = shown.mock.calls.map(([message]) => message);
-    shown.mockRestore();
+    calls = toasts.mock.calls.map(([message]) => message);
   }
   expect(asked.filter(message => String(message).includes(GONE))).toEqual([]);
   expect(calls.filter(message => String(message).includes(GONE))).toEqual([]);
   expect(seen).toEqual([]);
+  expect(swapped).toEqual([]);
   expect(toastRegion()).toBe(shellRegion);
 }
 
@@ -388,11 +400,11 @@ test.each([
   });
 });
 
-test('a draw goes on, unannounced, when a project fails to open over it', async () => {
+test('a draw goes on, unannounced, when a project fails to open over it, and its author finishes it on the canvas', async () => {
   const app = await openDay();
   const target = app.getWaypointById('ex-uon-2');
   drawFor(app, target);
-  placeTriangle(app);
+  TRIANGLE.slice(0, 2).forEach(({ x, y }) => place(app, x, y));
   allowConsole(LOAD_REFUSED);
   vi.spyOn(app, 'pruneImageAssets').mockImplementationOnce(() => { throw new Error('late failure'); });
 
@@ -400,9 +412,19 @@ test('a draw goes on, unannounced, when a project fails to open over it', async 
     expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(false);
   });
 
-  expect(drawing(app)).toMatchObject({ active: true, vertices: 3 });
-  place(app, 0.2, 0.2);
-  expect(target.areaHighlight).toMatchObject({ shape: 'polygon', points: TRIANGLE });
+  // Still drawn on the canvas: a tap there adds the last vertex, and one on the first closes it
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 2, canvasDraws: true });
+  tap(app, TRIANGLE[2].x, TRIANGLE[2].y);
+  expect(drawing(app)).toMatchObject({ active: true, vertices: 3, canvasDraws: true });
+  tap(app, TRIANGLE[0].x, TRIANGLE[0].y);
+
+  expect(drawing(app)).toEqual(ENDED);
+  expect(target.areaHighlight.shape).toBe('polygon');
+  expect(target.areaHighlight.points).toHaveLength(TRIANGLE.length);
+  target.areaHighlight.points.forEach((point, index) => {
+    expect(point.x).toBeCloseTo(TRIANGLE[index].x, 6);
+    expect(point.y).toBeCloseTo(TRIANGLE[index].y, 6);
+  });
 });
 
 test('a draw ended by a deletion stays ended when the deletion is undone', async () => {
