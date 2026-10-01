@@ -596,7 +596,9 @@ describe('the menu in the booted app', () => {
   test('a right-click on the map offers to add a waypoint there, and a minor one only once a route exists', async () => {
     const app = await bootedApp();
 
-    rightClick(app, 0.5, 0.5);
+    // Off the centre, with x and y apart, so a waypoint put anywhere but where
+    // the right-click landed shows.
+    rightClick(app, 0.3, 0.7);
     const menu = appMenu(app);
     expect(menu.menu.getAttribute('aria-label')).toBe('Canvas actions');
     expect(labelsOf(menu)).toEqual(['Add waypoint here', 'Add minor waypoint here']);
@@ -610,18 +612,81 @@ describe('the menu in the booted app', () => {
     itemCalled(menu, 'Add waypoint here').click();
     expect(menu.isOpen).toBe(false);
     expect(app.waypoints).toHaveLength(1);
-    expect(app.waypoints[0].isMajor).toBe(true);
-    expect(app.waypoints[0].imgX).toBeCloseTo(0.5, 3);
-    expect(app.waypoints[0].imgY).toBeCloseTo(0.5, 3);
+    const [first] = app.waypoints;
+    expect(first.isMajor).toBe(true);
+    expect(first.imgX).toBeCloseTo(0.3, 3);
+    expect(first.imgY).toBeCloseTo(0.7, 3);
 
     // The route's only major waypoint cannot be made minor from its own menu.
-    rightClick(app, 0.5, 0.5);
+    rightClick(app, first.imgX, first.imgY);
     expect(menu.menu.getAttribute('aria-label')).toBe('Waypoint actions');
     const convert = itemCalled(menu, 'Convert to minor waypoint');
     expect(convert.getAttribute('aria-disabled')).toBe('true');
     expect(convert.title).toBe('The route needs at least one major waypoint');
     convert.click();
-    expect(app.waypoints[0].isMajor).toBe(true);
+    expect(first.isMajor).toBe(true);
     expect(menu.isOpen).toBe(true);
+    press('Escape');
+
+    // With a route, the map's menu offers a minor waypoint too, and puts it
+    // where the right-click landed.
+    rightClick(app, 0.8, 0.25);
+    expect(menu.menu.getAttribute('aria-label')).toBe('Canvas actions');
+    const enabledMinor = itemCalled(menu, 'Add minor waypoint here');
+    expect(enabledMinor.getAttribute('aria-disabled')).toBeNull();
+    expect(enabledMinor.title).toBe('');
+    enabledMinor.click();
+    expect(menu.isOpen).toBe(false);
+    expect(app.waypoints).toHaveLength(2);
+    const added = app.waypoints.find(waypoint => waypoint !== first);
+    expect(added.isMajor).toBe(false);
+    expect(added.imgX).toBeCloseTo(0.8, 3);
+    expect(added.imgY).toBeCloseTo(0.25, 3);
+  });
+
+  test('the waypoint menu\'s other items act on the waypoint that was right-clicked', async () => {
+    const app = await appWithTwoWaypoints();
+    const [first, second] = app.waypoints;
+
+    // Insert before the second: a major waypoint halfway back to the first.
+    rightClick(app, second.imgX, second.imgY);
+    const menu = appMenu(app);
+    itemCalled(menu, 'Insert waypoint before').click();
+    expect(app.waypoints).toHaveLength(3);
+    const middle = app.waypoints[1];
+    expect(app.waypoints).toEqual([first, middle, second]);
+    expect(middle.isMajor).toBe(true);
+    expect(middle.imgX).toBeCloseTo(0.5, 3);
+    expect(middle.imgY).toBeCloseTo(0.5, 3);
+
+    // Insert after the first: halfway on to the waypoint after it.
+    rightClick(app, first.imgX, first.imgY);
+    itemCalled(menu, 'Insert waypoint after').click();
+    expect(app.waypoints).toHaveLength(4);
+    const early = app.waypoints[1];
+    expect(app.waypoints).toEqual([first, early, middle, second]);
+    expect(early.isMajor).toBe(true);
+    expect(early.imgX).toBeCloseTo(0.375, 3);
+    expect(early.imgY).toBeCloseTo(0.5, 3);
+
+    // With other major waypoints left, conversion is offered, and converts
+    // only this one.
+    rightClick(app, middle.imgX, middle.imgY);
+    const convert = itemCalled(menu, 'Convert to minor waypoint');
+    expect(convert.getAttribute('aria-disabled')).toBeNull();
+    convert.click();
+    expect(app.waypoints.map(waypoint => waypoint.isMajor)).toEqual([true, true, false, true]);
+
+    // Rename opens this waypoint's name for editing, in its row of the list,
+    // a frame later.
+    rightClick(app, second.imgX, second.imgY);
+    itemCalled(menu, 'Rename').click();
+    await vi.waitFor(
+      () => expect(document.activeElement.classList.contains('waypoint-rename-input')).toBe(true),
+      { timeout: 3000 }
+    );
+    const row = document.activeElement.closest('.waypoint-item');
+    expect(row.dataset.routeIndex).toBe(String(app.waypoints.indexOf(second)));
+    press('Escape');
   });
 });
