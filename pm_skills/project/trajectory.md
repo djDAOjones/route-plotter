@@ -68,6 +68,16 @@ the export. Once its transport is suspended, each part of an export's
 clean-up runs whether or not another fails, and its controls are freed
 whatever failed. (2026-09-28)
 
+DEF-43 — A polygon draw follows its waypoint through an undo or a redo, and
+ends, saying so in a toast, when its waypoint is deleted or undone away,
+rather than closing onto a waypoint the project no longer has; and Draw Area
+asked for again keeps the draw in progress. (2026-09-29)
+
+DEF-27 — The instant spotlight and angle of view follow the camera, so the
+circle or cone stays on the head at any zoom, and the contrast tint covers the
+image's rectangle and no margin at any background zoom, moving with the camera.
+(2026-09-29)
+
 DEF-44 — A still editor goes idle: a frame that draws no camera (no
 waypoints, Edit mode, Camera movement off, the author's viewport zoom)
 puts the camera on its target, so a cold start, a restored session, Edit
