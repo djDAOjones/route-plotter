@@ -117,9 +117,6 @@ moved, and account for every survivor)
   Visible since DEF-08 (#37, unreleased): a route cut to one waypoint draws
   its last marker, paused, at a stale grow scale. Land it before the
   release. **P3**
-- [ ] **DEF-27 Instant spotlight and AoV ignore camera zoom** · Live defect
-  [ready] — §20 Q17: the camera applies there too (ground rule 8; TST-02 has
-  shipped). **P3**
 
 **Defects after their W5 test** (§13 ground rule 8)
 
