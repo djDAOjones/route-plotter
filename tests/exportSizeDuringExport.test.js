@@ -8,21 +8,23 @@
  * were drawn at 1173×660 into a 1280×720 video, still flagged as export
  * frames. A window resize already waited for the export to end; now every
  * size change does: the running export keeps its canvas, and the display
- * and the next export take the new size once it ends. A path-only export
- * hides the background while it runs, and put the display back before the
- * background, so the image kept the place it had at the old size; the
- * background now comes back first.
+ * and the next export take the new size once it ends, the last one chosen
+ * when several are (a width then a height, a preset after a preset). A
+ * path-only export hides the background while it runs, and put the display
+ * back before the background, so the image kept the place it had at the old
+ * size; the background now comes back first.
  *
  * The frames are read from the calls the test recorder keeps, not from
  * pixels. A size choice that changes any call or its state fails the
  * comparison with the same export drawn with no size chosen; a fault both
  * share meets only the absolute checks (`frameOf`): the background and the
- * path layer drawn, placed and shown (alpha, compositing, filter), every draw
- * on that layer and on the reveal mask shown, and nothing emptying or
- * erasing any of them once drawn, but the reveal mask cutting the background
- * to what it reveals. They do not see how much the mask's gradients reveal,
- * a draw that paints over the background, or a stroke's own colour, width
- * and shape.
+ * path layer drawn, placed and shown (alpha, compositing, filter), the reveal
+ * mask drawn on before it is put on, every draw on that layer and on the mask
+ * shown, and nothing emptying or erasing any of them once drawn, but the
+ * reveal mask cutting the background to what it reveals. They do not see how
+ * much the mask's gradients reveal (a mask drawn only with transparent
+ * gradients passes), a draw that paints over the background, or a stroke's
+ * own colour, width and shape.
  */
 
 import { afterEach, expect, test, vi } from 'vitest';
@@ -184,9 +186,10 @@ async function framesWithNoSizeChosen(pathOnly) {
  * filter it was drawn with, the state that decides whether a draw shows at
  * all); every draw of the path's own layer (the renderer's vector canvas) on
  * the main canvas, the same; whether the path was drawn on that layer before
- * it was put there; how any draw on that layer, or on the reveal mask, before
- * it is put on the main canvas, fails to show as drawn (alpha 0, a filter, a
- * compositing that does not paint, pixels written as they are), and whether
+ * it was put there, and the reveal mask drawn on before it was put there; how
+ * any draw on that layer, or on the reveal mask, before it is put on the
+ * main canvas, fails to show as drawn (alpha 0, a filter, a compositing that
+ * does not paint, pixels written as they are), and whether
  * either is emptied once drawn on; whether the main canvas was cleared after
  * the frame's first draw that must survive, so that what the encoder captures
  * next would have lost it, and every draw after that one that takes away or
@@ -270,6 +273,11 @@ async function exporting(app) {
           // The same of the reveal mask, which decides where the background shows
           maskErased: emptiedOnceDrawnOn(calls, mask, maskPut),
           maskUnseen: unseenOn(calls, mask, maskPut),
+          // Whether the mask was drawn on in the frame before it was put on
+          // the main canvas (not, if it was not put there): every check above
+          // holds of a mask with no draw, which, put on under
+          // `destination-in`, would keep none of the background
+          maskDrawn: maskPut >= 0 && calls.slice(0, maskPut).some(([surface, name]) => surface === mask && DRAWS.has(name)),
           // Each draw on the main canvas, once the first that must survive is
           // on it, that takes away or replaces what is beneath it, by its
           // compositing or as pixels written as they are, with its arguments,
@@ -345,23 +353,24 @@ function portraitDisplay() {
  * on the main canvas, fitted at the zoom, nothing moved, at full alpha,
  * composited over and unfiltered (none, path only); the renderer's own path
  * layer, drawn on in the frame, put on the main canvas over the whole of it
- * the same way; every draw on that layer and on the reveal mask, strokes and
- * fills alike, made at an alpha above 0, unfiltered and painting over what is
- * there, and neither emptied once drawn on before it is put on the main
- * canvas; and the main canvas neither cleared after the first draw that must
- * survive nor emptied (given a size or reset) during the frame, nothing after
- * that draw taking away or replacing what is beneath it but the reveal mask,
- * put over the whole frame under `destination-in` (none, path only), and
- * nothing drawn once the path layer is on it.
+ * the same way; the reveal mask drawn on in the frame before it is put on
+ * (not put on, path only); every draw on that layer and on the reveal mask,
+ * strokes and fills alike, made at an alpha above 0, unfiltered and painting
+ * over what is there, and neither emptied once drawn on before it is put on
+ * the main canvas; and the main canvas neither cleared after the first draw
+ * that must survive nor emptied (given a size or reset) during the frame,
+ * nothing after that draw taking away or replacing what is beneath it but
+ * the reveal mask, put over the whole frame under `destination-in` (none,
+ * path only), and nothing drawn once the path layer is on it.
  *
  * These are calls, not pixels. A fault that both this export and the one
  * with no size chosen share passes the comparison between them, and meets
  * only these checks, which do not judge what needs pixels or a path's
- * geometry: how much of the background the mask's gradients let show,
- * whether a draw that paints over the background before the path layer hides
- * it, and whether a stroke or fill on that layer shows in its own colour,
- * width and shape (a transparent colour or gradient, an empty or off-canvas
- * path would not).
+ * geometry: how much of the background the mask's gradients let show (a
+ * mask drawn only with transparent gradients passes), whether a draw that
+ * paints over the background before the path layer hides it, and whether a
+ * stroke or fill on that layer shows in its own colour, width and shape (a
+ * transparent colour or gradient, an empty or off-canvas path would not).
  */
 const frameOf = (width, height, pathOnly) => {
   const { x, y, w, h } = fitted(width, height);
@@ -377,6 +386,7 @@ const frameOf = (width, height, pathOnly) => {
     layerUnseen: [],
     maskErased: false,
     maskUnseen: [],
+    maskDrawn: !pathOnly,
     erasedAfter: pathOnly ? [] : [['drawImage', '[canvas mask]', 0, 0, width, height, IDENTITY, 1, 'destination-in', 'none']],
   };
 };
@@ -468,4 +478,62 @@ test.each(KINDS.flatMap(([kind, pathOnly]) => ENDINGS.map(ending => [kind, endin
   expect(next.frames).toEqual(Array(3).fill(frameOf(1080, 1920, pathOnly)));
   // Booting the app to compare with replaces this one's page: last.
   expect(restored).toEqual(await chosenWithoutExporting(pathOnly));
+});
+
+/** A size chosen by a preset, or typed into the width or height field, as a person chooses it. */
+const preset = name => () => document.getElementById(`preset-${name}`).click();
+const typed = (field, size) => (app) => {
+  const input = field === 'width' ? app.elements.exportResX : app.elements.exportResY;
+  input.value = String(size);
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+};
+
+/**
+ * Several sizes chosen one after another during one export. Each succession
+ * ends at 1080×1920, by a preset, the height field or the width field, and
+ * no size chosen before its last is that size, so the display and the next
+ * export are at it only if the last choice is taken: a fix that kept the
+ * first choice and dropped the rest passed every test above, which choose
+ * one size each (Codex's tenth review). Typed, a size is two choices, a
+ * width and a height, each changing one number, so a fix that took only the
+ * last choice's own number fails too.
+ */
+const SUCCESSIONS = [
+  ['the 1:1 preset, its width, its height, then the 9:16 preset', [preset('1-1'), typed('width', 1280), typed('height', 1920), preset('9-16')]],
+  ['its width, then its height', [typed('width', 1080), typed('height', 1920)]],
+  ['its height, then its width', [typed('height', 1920), typed('width', 1080)]],
+];
+
+test.each(KINDS.flatMap(([kind, pathOnly]) => SUCCESSIONS.flatMap(([label, choices]) => ENDINGS.map(ending => [kind, label, ending, pathOnly, choices]))))('an export %s given several sizes while it runs (%s), which then %s, draws every frame at the size it began at, and leaves the display and the next export at the last size chosen', async (_, __, ending, pathOnly, choices) => {
+  const { app, image } = await withBackground(pathOnly);
+  const run = await exporting(app);
+  const began = geometry(app);
+
+  for (const choose of choices) {
+    choose(app);
+    expect(geometry(app)).toEqual(began);
+  }
+  await run[ending]();
+
+  // Every frame the running export drew (only the first, drawn before the
+  // sizes were chosen, if it failed or was cancelled) at the size it began
+  // at, no canvas given anything between them, and nothing clipped
+  const drawn = ending === 'completes' ? 3 : 1;
+  expect(run.frames).toEqual(Array(drawn).fill(frameOf(began.canvas[0], began.canvas[1], pathOnly)));
+  expect(run.between.slice(1)).toEqual(Array(drawn - 1).fill([]));
+  expect(run.clipped).toEqual([]);
+  // The display at the last size chosen, at the numbers worked out in the
+  // test, and the fields showing it
+  expect(app._isExportMode).toBeFalsy();
+  expect(app.background.image).toBe(image);
+  expect(placement(app)).toEqual({ ...portraitDisplay(), settings: [1080, 1920, 175] });
+  expect([app.elements.exportResX.value, app.elements.exportResY.value]).toEqual(['1080', '1920']);
+  const next = await exporting(app);
+  await next.completes();
+  expect(next.frames).toEqual(Array(3).fill(frameOf(1080, 1920, pathOnly)));
+  // Call for call, as the same export draws those frames with no size
+  // chosen. Booting the app to compare with may replace this one's page: last.
+  expect(run.transcripts).toHaveLength(drawn);
+  const unchanged = await framesWithNoSizeChosen(pathOnly);
+  run.transcripts.forEach((frame, index) => expect(frame, `frame ${index + 1}`).toEqual(unchanged[index]));
 });
