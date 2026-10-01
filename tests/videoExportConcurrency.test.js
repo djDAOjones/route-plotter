@@ -1078,6 +1078,73 @@ test.each([
   expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
 });
 
+test('after an MP4 export whose encoder failed, the next click on Export MP4 asks the encoder again and exports MP4', async () => {
+  // Through the button both times: a WebM export, or one started directly,
+  // in between would free a controller the failure had left holding
+  const { app, frames, finish } = await exportingApp();
+  allowConsole(/Video export failed/);
+  const probe = vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue({ codec: 'avc1' });
+  const encode = vi.spyOn(app.videoExporter, 'export').mockRejectedValueOnce(new Error('the encoder failed'));
+
+  document.getElementById('export-mp4-btn').click();
+  await vi.waitFor(() => expect(alert).toHaveBeenLastCalledWith('Export failed: the encoder failed'));
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+  expect(exportButtons()).toEqual([false, false, false, false]);
+  const [probes, drawn] = [probe.mock.calls.length, frames.length];
+
+  document.getElementById('export-mp4-btn').click();
+  await vi.waitFor(() => expect(frames).toHaveLength(drawn + 1));
+  finish();
+  await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
+
+  expect(probe.mock.calls.length).toBe(probes + 1);
+  expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['mp4', 'mp4']);
+  expect(frames).toHaveLength(drawn + 3);
+});
+
+test.each([
+  ['Preview’s mode', app => vi.spyOn(app, '_setPreviewMode'), true],
+  ['the transport', app => vi.spyOn(app.animationEngine, 'restoreTransportState'), false],
+])('a clean-up that fails to put back %s still puts back what follows it, and draws again', async (_, step, transportBack) => {
+  // Each put-back step has its own guard: a step that throws must not take
+  // the steps after it with it
+  const { app, running, finish } = await exportingApp();
+  const transport = app.animationEngine.state.captureTransportState();
+  const failed = app.exportVideo().catch(error => error);
+  await running;
+  const fault = step(app).mockImplementationOnce(() => { throw new Error('the step failed'); });
+  const redraw = vi.spyOn(app, 'queueRender');
+  finish();
+  const error = await failed;
+
+  expect(error.message).toBe('the step failed');
+  expect(fault).toHaveBeenCalled();
+  // The final redraw comes after the failed step
+  expect(Math.max(...redraw.mock.invocationCallOrder)).toBeGreaterThan(fault.mock.invocationCallOrder[0]);
+  if (transportBack) {
+    expect(app.animationEngine.state.captureTransportState()).toEqual(transport);
+    expectTransportFree(app);
+  }
+  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
+});
+
+test('an export paused and resumed says so, each in turn, and shows it on its menu', async () => {
+  const { app, running, finish } = await exportingApp();
+  const said = vi.spyOn(app, 'announce');
+  const menu = document.getElementById('export-dropdown-btn');
+  const done = app.exportVideo();
+  await running;
+
+  app.eventBus.emit('video:export-paused');
+  expect(menu.textContent).toBe('Export paused — return to tab');
+  expect(said).toHaveBeenLastCalledWith('Video export paused. Return to this tab to resume.');
+  app.eventBus.emit('video:export-resumed');
+  expect(menu.textContent).toBe('Exporting...');
+  expect(said).toHaveBeenLastCalledWith('Video export resumed');
+  finish();
+  await done;
+});
+
 test('a finished export no longer listens for its pause and resume', async () => {
   const { app, running, finish } = await exportingApp();
   const listening = () => ['video:export-paused', 'video:export-resumed'].map(event => app.eventBus.listenerCount(event));
