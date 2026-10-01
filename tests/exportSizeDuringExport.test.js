@@ -12,6 +12,17 @@
  * hides the background while it runs, and put the display back before the
  * background, so the image kept the place it had at the old size; the
  * background now comes back first.
+ *
+ * The frames are read from the calls the test recorder keeps, not from
+ * pixels. A size choice that changes any call or its state fails the
+ * comparison with the same export drawn with no size chosen; a fault both
+ * share meets only the absolute checks (`frameOf`): the background and the
+ * path layer drawn, placed and shown (alpha, compositing, filter), every draw
+ * on that layer and on the reveal mask shown, and nothing emptying or
+ * erasing any of them once drawn, but the reveal mask cutting the background
+ * to what it reveals. They do not see how much the mask's gradients reveal,
+ * a draw that paints over the background, or a stroke's own colour, width
+ * and shape.
  */
 
 import { afterEach, expect, test, vi } from 'vitest';
@@ -89,6 +100,48 @@ const EMPTIES = new Set(['canvas.width', 'canvas.height', 'reset']);
 /** The calls that draw or erase on a canvas. */
 const MARKS = new Set(['clearRect', 'fillRect', 'strokeRect', 'fill', 'stroke', 'fillText', 'strokeText', 'drawImage', 'putImageData', ...EMPTIES]);
 
+/** Those that draw, as against emptying a canvas. */
+const DRAWS = new Set(['fillRect', 'strokeRect', 'fill', 'stroke', 'fillText', 'strokeText', 'drawImage', 'putImageData']);
+
+/**
+ * The compositing under which a draw paints over what is there and takes
+ * none of it away: `source-over`, `lighter` (the path's glow) and the blend
+ * modes. Any other draws only beneath or within what is there
+ * (`destination-over`, `source-atop`), or takes away what is beneath, where
+ * it falls or everywhere else (`destination-in`, as the reveal mask is put
+ * on, `destination-out`, `copy`, ...).
+ */
+const PAINTS = new Set(['source-over', 'lighter', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge',
+  'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity']);
+
+/**
+ * How the draws on one of the renderer's layers (the path's, the reveal
+ * mask), made before it is put on the main canvas at `end` (in the whole
+ * frame if it is not), fail to show as drawn, each kind once: at alpha 0,
+ * through a filter (the app sets none, and one such as `opacity(0)` hides a
+ * draw as alpha 0 does), with a compositing that does not paint (an erasing
+ * one among them), or as pixels written by `putImageData`, which heeds
+ * neither alpha nor compositing.
+ */
+function unseenOn(calls, surface, end) {
+  return [...new Set((end < 0 ? calls : calls.slice(0, end))
+    .filter(([on, name]) => on === surface && DRAWS.has(name))
+    .map(entry => [entry[1], entry.state.globalAlpha ?? 1, entry.state.globalCompositeOperation ?? 'source-over', entry.state.filter ?? 'none'])
+    .filter(([name, alpha, compositing, filter]) => name === 'putImageData' || !(alpha > 0) || !PAINTS.has(compositing) || filter !== 'none')
+    .map(draw => JSON.stringify(draw)))];
+}
+
+/**
+ * Whether one of the renderer's layers is emptied (cleared, given a size by
+ * any route, or reset) once anything is drawn on it in the frame, before it
+ * is put on the main canvas at `end` (in the whole frame if it is not).
+ */
+function emptiedOnceDrawnOn(calls, surface, end) {
+  const on = (end < 0 ? calls : calls.slice(0, end)).filter(([at]) => at === surface);
+  const first = on.findIndex(([, name]) => DRAWS.has(name));
+  return first >= 0 && on.slice(first + 1).some(([, name]) => name === 'clearRect' || EMPTIES.has(name));
+}
+
 /**
  * A frame's calls on every canvas, in order, each with its arguments, the
  * transform it was made under and the drawing state it was made in (alpha,
@@ -131,10 +184,14 @@ async function framesWithNoSizeChosen(pathOnly) {
  * filter it was drawn with, the state that decides whether a draw shows at
  * all); every draw of the path's own layer (the renderer's vector canvas) on
  * the main canvas, the same; whether the path was drawn on that layer before
- * it was put there; whether the main canvas was cleared after the frame's
- * first draw that must survive, so that what the encoder captures next would
- * have lost it; and whether the main canvas was emptied during the frame
- * (given a size, by any route, or reset).
+ * it was put there; how any draw on that layer, or on the reveal mask, before
+ * it is put on the main canvas, fails to show as drawn (alpha 0, a filter, a
+ * compositing that does not paint, pixels written as they are), and whether
+ * either is emptied once drawn on; whether the main canvas was cleared after
+ * the frame's first draw that must survive, so that what the encoder captures
+ * next would have lost it, and every draw after that one that takes away or
+ * replaces what is beneath it; and whether the main canvas was emptied during
+ * the frame (given a size, by any route, or reset).
  */
 async function exporting(app) {
   const frames = [];
@@ -170,9 +227,13 @@ async function exporting(app) {
         clipped.push(...clipsIn(outside, roles()));
         await renderFrame(progress);
         const calls = takeOrderedCalls();
-        clipped.push(...clipsIn(calls, roles()));
+        const names = roles();
+        clipped.push(...clipsIn(calls, names));
         const vector = contextIdFor(app.renderingService.vectorCanvas);
         const layer = `[canvas #${vector}]`;
+        const maskCanvas = app.motionVisibilityService?.revealMaskCanvas;
+        const mask = maskCanvas ? contextIdFor(maskCanvas) : null;
+        const named = arg => (typeof arg === 'string' ? arg.replace(/^\[canvas #(\d+)\]$/, (_, id) => `[canvas ${names[id] ?? 'other'}]`) : arg);
         /**
          * A draw: its surface, its rectangle (every number it was given, so
          * that a source rectangle drawn into nothing does not pass for the
@@ -186,6 +247,7 @@ async function exporting(app) {
         const background = calls.filter(([, name, source]) => name === 'drawImage' && source === token).map(drawOf);
         const composite = ([surface, name, source]) => surface === main && name === 'drawImage' && source === layer;
         const put = calls.findIndex(composite);
+        const maskPut = calls.findIndex(([surface, name, source]) => surface === main && name === 'drawImage' && source === `[canvas #${mask}]`);
         const onMain = calls.filter(([surface]) => surface === main);
         const kept = onMain.findIndex(([, name, source]) => name === 'drawImage' && (source === token || source === layer));
         const lastStroke = calls.findLastIndex(([surface, name], at) => at < put && surface === vector && name === 'stroke');
@@ -200,11 +262,24 @@ async function exporting(app) {
           emptied: onMain.some(([, name]) => EMPTIES.has(name)),
           // Anything that draws or erases on the main canvas once the path is on it
           afterPath: put < 0 ? [] : calls.slice(put + 1).filter(([surface, name]) => surface === main && MARKS.has(name)).map(([, name]) => name),
-          // The path layer emptied between its last stroke and being put on the main canvas
-          layerErased: lastStroke >= 0 && calls.slice(lastStroke + 1, put)
-            .some(([surface, name]) => surface === vector && (name === 'clearRect' || EMPTIES.has(name))),
+          // The path layer emptied once anything is drawn on it (so also
+          // between its last stroke and being put on the main canvas)
+          layerErased: emptiedOnceDrawnOn(calls, vector, put),
+          // Its draws, its strokes among them, that do not show as drawn
+          layerUnseen: unseenOn(calls, vector, put),
+          // The same of the reveal mask, which decides where the background shows
+          maskErased: emptiedOnceDrawnOn(calls, mask, maskPut),
+          maskUnseen: unseenOn(calls, mask, maskPut),
+          // Each draw on the main canvas, once the first that must survive is
+          // on it, that takes away or replaces what is beneath it, by its
+          // compositing or as pixels written as they are, with its arguments,
+          // transform, alpha, compositing and filter
+          erasedAfter: kept < 0 ? [] : onMain.slice(kept + 1)
+            .filter(entry => DRAWS.has(entry[1]) && (entry[1] === 'putImageData' || !PAINTS.has(entry.state.globalCompositeOperation ?? 'source-over')))
+            .map(entry => [entry[1], ...entry.slice(2).map(named), [...entry.transform],
+              entry.state.globalAlpha ?? 1, entry.state.globalCompositeOperation ?? 'source-over', entry.state.filter ?? 'none']),
         });
-        transcripts.push(transcriptOf(calls, roles()));
+        transcripts.push(transcriptOf(calls, names));
       };
       await frame(0.1);
       started();
@@ -270,12 +345,23 @@ function portraitDisplay() {
  * on the main canvas, fitted at the zoom, nothing moved, at full alpha,
  * composited over and unfiltered (none, path only); the renderer's own path
  * layer, drawn on in the frame, put on the main canvas over the whole of it
- * the same way; and the main canvas neither cleared after the first of those
- * nor emptied (given a size or reset) during the frame. These are calls, not
- * pixels: what the reveal mask lets show of the background, whether a draw
- * over the background before the path layer hides it, and how visible the
- * strokes on that layer are, are judged only by the comparison with the
- * export that has no size chosen, which a fault both share passes.
+ * the same way; every draw on that layer and on the reveal mask, strokes and
+ * fills alike, made at an alpha above 0, unfiltered and painting over what is
+ * there, and neither emptied once drawn on before it is put on the main
+ * canvas; and the main canvas neither cleared after the first draw that must
+ * survive nor emptied (given a size or reset) during the frame, nothing after
+ * that draw taking away or replacing what is beneath it but the reveal mask,
+ * put over the whole frame under `destination-in` (none, path only), and
+ * nothing drawn once the path layer is on it.
+ *
+ * These are calls, not pixels. A fault that both this export and the one
+ * with no size chosen share passes the comparison between them, and meets
+ * only these checks, which do not judge what needs pixels or a path's
+ * geometry: how much of the background the mask's gradients let show,
+ * whether a draw that paints over the background before the path layer hides
+ * it, and whether a stroke or fill on that layer shows in its own colour,
+ * width and shape (a transparent colour or gradient, an empty or off-canvas
+ * path would not).
  */
 const frameOf = (width, height, pathOnly) => {
   const { x, y, w, h } = fitted(width, height);
@@ -288,6 +374,10 @@ const frameOf = (width, height, pathOnly) => {
     emptied: false,
     afterPath: [],
     layerErased: false,
+    layerUnseen: [],
+    maskErased: false,
+    maskUnseen: [],
+    erasedAfter: pathOnly ? [] : [['drawImage', '[canvas mask]', 0, 0, width, height, IDENTITY, 1, 'destination-in', 'none']],
   };
 };
 

@@ -230,7 +230,12 @@ function createRecordingContext(canvas) {
   // Records a size given to the canvas through its attributes and not yet
   // recorded (`trackCanvasSize` supplies it). Whatever the context is asked
   // calls it first, so such a size lands in the transcript, and resets the
-  // state, where it was given.
+  // state, before anything else is done with this canvas. Calls made
+  // meanwhile on other canvases can come before it in the cross-canvas
+  // transcript; nothing they draw depends on it, as a draw from this canvas
+  // asks it first. Asking every canvas before each call would put such a
+  // size before every later call on any canvas, but took the golden draw logs
+  // to about five times their CPU time (DEF-53).
   let settle = () => {};
 
   // Rebuilt only after the drawing state changes, not once per call.

@@ -49,7 +49,7 @@ project or file past its budgets) is refused, saying why, whether or not the
 project already failed that check, so a traced crowd reopens (its images all
 there). The archive's whole size, which its images dominate, stays Save
 Project's check (DEF-04).
-
+(2026-09-29)
 
 DEF-53 — A video export keeps the canvas size it began with: a size chosen
 meanwhile, by the size fields or a fixed-size preset, applies to the
