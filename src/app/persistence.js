@@ -34,6 +34,11 @@ import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
 import { buildExampleProjects } from '../examples/index.js';
+import {
+  keepUnrestoredAutosave,
+  keptEarlierNote,
+  recoveryFailureGuidance,
+} from './unrestoredAutosave.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -685,7 +690,41 @@ function replaceImmediateRecovery(app) {
 function reportAutosaveFailure(app) {
   if (app._autosaveFailureWarningShown) return;
   app._autosaveFailureWarningShown = true;
-  app.announce('Auto-save failed. Save a project file to keep your work.');
+  // A kept record that could not be restored may be what stops the write
+  // (DEF-28): it stays, and the report says what the author can do.
+  app.announce('Auto-save failed. Save a project file to keep your work.' + recoveryFailureGuidance(app));
+}
+
+/**
+ * Write the project to browser recovery (debounced), reporting a failure.
+ * @param {Object} app
+ * @returns {{ok: boolean, pending?: boolean, unchanged?: boolean, error?: Error}}
+ */
+function writeRecovery(app) {
+  try {
+    const prepared = prepareAutosaveSnapshot(app);
+    reportAutosaveOmissions(app, prepared);
+    if (prepared.error) console.warn('Auto-save recovery was reduced:', prepared.error);
+    if (!prepared.snapshot) {
+      app.storageService.cancelAutoSave?.();
+      reportAutosaveFailure(app);
+      return { ok: false, error: prepared.error };
+    }
+
+    // StorageService reports the outcome of the actual delayed write. A
+    // quota/security failure must never be presented or cached as success.
+    const result = app.storageService.autoSave(prepared.snapshot, outcome => {
+      if (outcome?.ok) app._autosaveFailureWarningShown = false;
+      else reportAutosaveFailure(app);
+    });
+    if (result?.ok === false) reportAutosaveFailure(app);
+    return result;
+  } catch (e) {
+    console.error('Error saving state:', e);
+    app.storageService.cancelAutoSave?.();
+    reportAutosaveFailure(app);
+    return { ok: false, error: e };
+  }
 }
 
 function captureLiveState(app) {
@@ -942,7 +981,15 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     }
     throw error;
   }
+}
 
+/**
+ * What follows a commit. The staged project is live by now, so a failure
+ * here is not a project that failed to load (DEF-28 keeps a recovery record
+ * only when the commit itself failed).
+ * @param {Object} app
+ */
+function completeProjectReplacement(app) {
   // Warnings are once-per-project, not once per browser session. A freshly
   // opened/recovered baseline must be able to warn about its own omissions.
   app._autosaveAssetWarningShown = false;
@@ -1062,6 +1109,7 @@ export const persistenceMixin = {
       if (!isAsyncProjectOperationCurrent(this, operation)) return false;
       staged.backgroundSourceDataURL = imported.backgroundBase64 || null;
       commitStagedProject(this, staged, { markClean: true });
+      completeProjectReplacement(this);
 
       // Replace the previous session's recovery point with the newly loaded
       // project. If the browser quota rejects it, remove the stale recovery
@@ -1070,7 +1118,7 @@ export const persistenceMixin = {
       const recoveryUnavailable = recovery.attempted && !recovery.saved;
       
       this.announce(recoveryUnavailable
-        ? 'Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.'
+        ? 'Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.' + recoveryFailureGuidance(this)
         : 'Project loaded');
       console.log(`📦 Project loaded: ${file.name} (${this.waypoints.length} waypoints, ${this.imageAssetService.getAssetCount()} assets)`);
       return true;
@@ -1207,49 +1255,61 @@ export const persistenceMixin = {
   autoSave() {
     // Mark as dirty when changes are made
     this.markDirty();
+    return writeRecovery(this);
+  },
 
-    try {
-      const prepared = prepareAutosaveSnapshot(this);
-      reportAutosaveOmissions(this, prepared);
-      if (prepared.error) console.warn('Auto-save recovery was reduced:', prepared.error);
-      if (!prepared.snapshot) {
-        this.storageService.cancelAutoSave?.();
-        reportAutosaveFailure(this);
-        return { ok: false, error: prepared.error };
-      }
-
-      // StorageService reports the outcome of the actual delayed write. A
-      // quota/security failure must never be presented or cached as success.
-      const result = this.storageService.autoSave(prepared.snapshot, outcome => {
-        if (outcome?.ok) this._autosaveFailureWarningShown = false;
-        else reportAutosaveFailure(this);
-      });
-      if (result?.ok === false) reportAutosaveFailure(this);
-      return result;
-    } catch (e) {
-      console.error('Error saving state:', e);
-      this.storageService.cancelAutoSave?.();
-      reportAutosaveFailure(this);
-      return { ok: false, error: e };
-    }
+  /**
+   * Write the project to browser recovery (debounced), without marking it
+   * changed: for when recovery can be written again (DEF-28).
+   */
+  saveRecovery() {
+    return writeRecovery(this);
   },
   
   async loadAutosave() {
     console.debug('📥 [loadAutosave] Loading saved state...');
+    // A record that cannot be restored is kept for the author to download or
+    // discard, never cleared or left for the next autosave to overwrite
+    // (DEF-28). It is read once, as text, and each refusal below keeps that
+    // same text: a second read could find another record. A record held
+    // because it could not be restored, or one that may be, is on offer,
+    // not tried again.
+    const hold = this.storageService.holdState?.();
+    if (hold && hold.state !== 'none') return false;
+    const text = this.storageService.loadAutoSaveText();
+    if (text === null) return false;
+    const refuse = (error) => {
+      console.warn('Autosave was not restored; current state was left unchanged:', error);
+      return keepUnrestoredAutosave(this, text);
+    };
     try {
-      const data = this.storageService.loadAutoSave();
-      if (!data) return false;
-
-      const MIN_COORD_VERSION = 6;
-      if (!data.coordVersion || data.coordVersion < MIN_COORD_VERSION) {
-        console.log('Old data version detected (v' + (data.coordVersion || 1) + '), clearing saved data for v' + MIN_COORD_VERSION);
-        this.storageService.clearAutoSave();
-        return false;
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        return refuse(error);
       }
 
-      const staged = await stageProject(this, data);
+      const MIN_COORD_VERSION = 6;
+      if (!data?.coordVersion || data.coordVersion < MIN_COORD_VERSION) {
+        console.log('Old data version detected (v' + (data?.coordVersion || 1) + '); kept, not restored, for v' + MIN_COORD_VERSION);
+        return keepUnrestoredAutosave(this, text);
+      }
+
+      let staged;
+      try {
+        staged = await stageProject(this, data);
+      } catch (error) {
+        return refuse(error);
+      }
       staged.backgroundSourceDataURL = data.backgroundImage || null;
-      commitStagedProject(this, staged);
+      try {
+        commitStagedProject(this, staged);
+      } catch (error) {
+        // The commit rolled back, so this record was not restored either.
+        return refuse(error);
+      }
+      completeProjectReplacement(this);
       // Legacy recovery points may contain image bytes and original filenames.
       // Restore them once, then immediately replace or clear the local record
       // so browser storage conforms to the model-only policy going forward.
@@ -1257,12 +1317,17 @@ export const persistenceMixin = {
       console.debug(`📷 Loaded ${staged.assets.length} image assets`);
       console.debug('Loaded waypoints:', staged.waypoints.length);
       console.debug('Loaded flow layers:', staged.scene.getFlowLayers().length);
-      this.announce(recovery.attempted && !recovery.saved
-        ? 'Previous session restored, but browser recovery is now unavailable. Save a project file to keep it safe.'
-        : 'Previous session restored');
+      if (recovery.attempted && !recovery.saved) {
+        this.announce('Previous session restored, but browser recovery is now unavailable. Save a project file to keep it safe.' + recoveryFailureGuidance(this));
+      } else {
+        // Announced over a record kept earlier, so it names that record too.
+        const earlier = keptEarlierNote(this);
+        this.announce(earlier ? `Previous session restored.${earlier}` : 'Previous session restored', earlier ? 'assertive' : 'polite');
+      }
       return true;
     } catch (error) {
-      console.warn('Autosave was not restored; current state was left unchanged:', error);
+      // After the commit: the project is live, so there is no record to keep.
+      console.warn('Restoring the autosave did not finish after it was loaded:', error);
       return false;
     }
   },

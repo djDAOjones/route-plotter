@@ -36,16 +36,19 @@ export function freezeClock(at = FIXED_NOW) {
  * Load a snapshot back into the app through the real recovery path.
  *
  * `loadAutosave` reports a refusal as `false` plus a `console.warn`, so a
- * caller that expects the refusal must declare that warning.
+ * caller that expects the refusal must declare that warning. A refusal also
+ * keeps the record and offers it, as for any recovery record that cannot be
+ * restored (DEF-28).
  *
  * @param {Object} app - A booted RoutePlotter
  * @param {Object} snapshot - A project snapshot
  * @returns {Promise<boolean>} True when the project loaded
  */
 export function loadSnapshot(app, snapshot) {
-  // A fresh parse each call: the loader keeps references into what it is
-  // given, so handing it the live object would let a load mutate its source.
-  app.storageService.loadAutoSave = () => JSON.parse(JSON.stringify(snapshot));
+  // The record as the browser would hold it: the loader parses its own copy
+  // of the text, so a load cannot mutate the source.
+  const text = JSON.stringify(snapshot);
+  app.storageService.loadAutoSaveText = () => text;
   return app.loadAutosave();
 }
 

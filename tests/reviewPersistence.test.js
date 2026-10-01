@@ -45,7 +45,12 @@ function makeApp() {
     cancelAutoSave: vi.fn(),
     saveAutoSave: vi.fn(() => true),
     clearAutoSave: vi.fn(() => true),
-    loadAutoSave: vi.fn(),
+    // The restore reads the record as text, once, and keeps that text when
+    // it refuses it (DEF-28).
+    loadAutoSaveText: vi.fn(() => null),
+    keepUnrestored: vi.fn(() => ({ where: 'parked', key: 'routePlotter_keptAutosave:0-stub', existing: false })),
+    holdState: vi.fn(() => ({ state: 'none' })),
+    listKept: vi.fn(() => ({ ok: true, records: [] })),
   };
   const animationState = {
     mode: 'constant-speed', speed: 5, duration: 10, playbackSpeed: 1,
@@ -886,7 +891,7 @@ describe('transactional project loading', () => {
     expect(app.announce.mock.calls.filter(([message]) => message.includes('custom images'))).toHaveLength(1);
 
     const restoreApp = makeApp();
-    restoreApp.storageService.loadAutoSave.mockReturnValue(saved.snapshot);
+    restoreApp.storageService.loadAutoSaveText.mockReturnValue(JSON.stringify(saved.snapshot));
     await expect(persistenceMixin.loadAutosave.call(restoreApp)).resolves.toBe(true);
     expect(restoreApp.waypoints[0]).toMatchObject({
       markerStyle: 'dot', customImage: null, customImageAssetId: null,
@@ -901,7 +906,7 @@ describe('transactional project loading', () => {
     const privateAsset = makeAsset('legacy-asset', 'legacy-private-name.png');
     const decodedImage = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
     vi.spyOn(ImageAsset, 'decodeDataURL').mockResolvedValue(decodedImage);
-    app.storageService.loadAutoSave.mockReturnValue({
+    app.storageService.loadAutoSaveText.mockReturnValue(JSON.stringify({
       ...validProject({
         waypoints: [{
           id: 'legacy-wp', imgX: 0.2, imgY: 0.3,
@@ -913,7 +918,7 @@ describe('transactional project loading', () => {
       }),
       imageAssets: [privateAsset.toJSON()],
       backgroundImage: PIXEL_PNG,
-    });
+    }));
 
     await expect(persistenceMixin.loadAutosave.call(app)).resolves.toBe(true);
 
@@ -955,7 +960,7 @@ describe('transactional project loading', () => {
     vi.spyOn(ImageAsset, 'decodeDataURL').mockResolvedValue(decodedImage);
     expect(largeDataURL.length).toBeGreaterThan(PROJECT_MODEL_LIMITS.MAX_STRING_LENGTH);
 
-    app.storageService.loadAutoSave.mockReturnValue({
+    app.storageService.loadAutoSaveText.mockReturnValue(JSON.stringify({
       ...validProject({
         waypoints: [{
           id: 'legacy-large-wp', imgX: 0.2, imgY: 0.3,
@@ -964,7 +969,7 @@ describe('transactional project loading', () => {
       }),
       imageAssets: [privateAsset.toJSON()],
       backgroundImage: largeDataURL,
-    });
+    }));
 
     await expect(persistenceMixin.loadAutosave.call(app)).resolves.toBe(true);
     expect(app.imageAssetService.getAssetIds()).toEqual(['legacy-large-asset']);

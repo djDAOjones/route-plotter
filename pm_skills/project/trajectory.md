@@ -68,6 +68,12 @@ the export. Once its transport is suspended, each part of an export's
 clean-up runs whether or not another fails, and its controls are freed
 whatever failed. (2026-09-28)
 
+DEF-28 — A recovery record that cannot be restored is kept under a key of
+its own, or held in the recovery key where no copy fits, and offered to the
+author (Download it, Discard) instead of being cleared or overwritten; each
+further record gets its own key; Clear All discards them and says so.
+(2026-09-28) — see decision-log.
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its

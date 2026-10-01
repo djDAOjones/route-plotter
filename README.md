@@ -152,6 +152,61 @@ the immediate replacement after opening a project file or restoring recovery
 at startup clears the old point if the new one cannot be written. Real storage failures are
 reported.
 
+A recovery record that cannot be restored (the loader refuses it, it is not
+valid JSON, its format is older than the app reads, or the commit fails and
+rolls back) is kept until the author chooses. It is copied, exactly as read,
+to a key of its own (`routePlotter_keptAutosave:`, when it was kept, a count
+and a random part), which autosave never writes, and only then removed from the recovery key; the
+author is told, and a notice offers **Download it** and **Discard**, again at
+each start, until they choose. Each such record has its own key, so a second
+one never displaces the first. Where no copy fits, nothing is removed to make
+room: the record stays in the recovery key, held, marked in
+`routePlotter_heldAutosave` (its length and two hashes) so that no tab of the
+app writes or clears it there and no later start restores it; autosave fails,
+and says so, until the author discards it. A mark goes only on a recovery key
+read to hold that record, so a tab that cannot read it never takes another
+record's mark. If the mark cannot be written, or the key cannot be read, the
+notice says only this tab is keeping the record, and to download it now; if
+the record then leaves the recovery key, this tab still offers it. Tabs open
+at the same time share no lock (`localStorage` has none), so the mark
+narrows, and cannot close, the moment in which a tab that has not yet seen it
+writes over the record; two tabs choosing the same key for a kept record at
+the same moment could likewise collide. The notice offers one record at a
+time, this start's first, and follows what other tabs keep, hold, discard or
+write over; each record is one offer, and one session in Clear All's count,
+in its question and in what it says it did, however many copies of it there
+are; and a record this start could not restore stays this start's, and its
+failure is announced, wherever it is kept, even by another tab while this
+start's restore ran, and even kept again there after the author discarded it;
+one kept before this start began stays an earlier start's, even when a store
+that cannot be read or searched hides its copy from this start's keep, and
+even when the key it was kept under, listed at the start, could not be read
+then, once that key can be read by the time the restore fails. Where this tab
+cannot tell by then (the store could not be searched at the start, or that
+key still cannot be read), the record is taken for this start's, and its
+failure announced. The announcement says what the notice then offers, and
+nothing of a record no longer on offer; a restore that works, while a record
+kept earlier is on offer, says of it what the notice says. Where the store
+cannot be searched, the records this tab knows, and the keys listed at the
+start that it could not read then, are looked for by their keys, newest
+first, as a search lists them: one read there is offered as kept; one whose
+key cannot be read either stays on offer from this tab's copy, saying the
+browser's storage can't be read at the moment, and can still be downloaded;
+one seen empty is forgotten, and not offered again; and once a search works
+again, what it lists is what is offered. Discard removes every copy of the record it
+can read, wherever it has moved, and says it failed if the store cannot be
+searched, or the key it was offered under cannot be read. A restore still in progress when
+the author discards its record in another tab (by Discard or Clear All)
+keeps it no more, once this tab has seen that tab keep it and then seen it
+go, whether a search showed it gone or its key was read empty while the
+store could not be searched; the latter counts once a search shows no other
+copy left, so a restore that fails before any search works keeps the record
+again, since nothing has shown every copy gone. A hold another tab ends is
+not taken for such a choice, since a build
+that knows no mark writing over it looks the same. Only that
+Discard and **Clear All** remove one, and Clear All's dialog says so. When storage cannot hold both a kept record and a new autosave, the
+record stays, and the autosave's failure report says how to free space.
+
 Other localStorage keys: `routePlotter_splashShown`, `routePlotter_previewTipDismissed`, `routePlotter_sectionState` and `routePlotter_lastSection`. `routePlotter_customKeybindings` is read only by the help panel (Keybindings below); `routePlotter_preferences` has read/write helpers in `StorageService` with no callers.
 
 ### Project save/load (ZIP)

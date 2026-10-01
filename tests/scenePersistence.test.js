@@ -60,7 +60,10 @@ function makeFakeApp() {
     },
     storageService: {
       autoSave(data) { captured.autosaved = data; },
-      loadAutoSave() { return app._autosavePayload; },
+      loadAutoSaveText() { return app._autosavePayload ? JSON.stringify(app._autosavePayload) : null; },
+      keepUnrestored(text) { captured.parked = text; return { where: 'parked', key: 'routePlotter_keptAutosave:0-fake', existing: false }; },
+      holdState() { return { state: 'none' }; },
+      listKept() { return { ok: true, records: [] }; },
       clearAutoSave() { captured.cleared = true; },
     },
     imageAssetService: {
@@ -176,13 +179,14 @@ describe('coordVersion 9 scene persistence', () => {
       });
     });
 
-    test('a pre-v6 autosave should still be cleared by the version gate', async () => {
+    test('a pre-v6 autosave is kept aside by the version gate, never cleared (DEF-28)', async () => {
       const app = makeFakeApp();
       app._autosavePayload = { coordVersion: 5 };
 
-      await persistenceMixin.loadAutosave.call(app);
+      await expect(persistenceMixin.loadAutosave.call(app)).resolves.toBe(false);
 
-      expect(app._captured.cleared).toBe(true);
+      expect(app._captured.cleared).not.toBe(true);
+      expect(app._captured.parked).toBe('{"coordVersion":5}');
       expect(app.scene.isEmpty()).toBe(true);
     });
   });
