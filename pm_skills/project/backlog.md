@@ -107,8 +107,6 @@ moved, and account for every survivor)
 **Defects runnable now**
 
 - [ ] **DEF-44 A paused editor never idles** · Live defect [ready] **P2**
-- [ ] **DEF-46 A second export spoils the first** · Live defect [ready]
-  **P2**
 - [ ] **DEF-42 A beacon-style change keeps the old schedule** · Live defect
   [ready] **P3**
 - [ ] **DEF-43 A polygon draw outlives its target** · Live defect [ready]
