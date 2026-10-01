@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 350 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 352 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -14,9 +14,9 @@
 - `reviews` — 16 file(s)
 - `scripts` — 5 file(s)
 - `specs` — 15 file(s)
-- `src` — 100 file(s)
+- `src` — 101 file(s)
 - `styles` — 6 file(s)
-- `tests` — 116 file(s)
+- `tests` — 117 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -208,7 +208,7 @@
 - `src/app/network.js` — Network editing mixin (Phase 4): Guide-card entry point (Edit network + auto-enter), pointer routing into NetworkEditService, node/edge/control hit-testing on the engine's edge polylines, Node/Edge card wiring, traffic-share readout, restore re-binding, and (DEF-59) the scene's crowds for the pen's budgets, answered to its bus query (`scene:flow-layers`)
 - `src/app/operationGeneration.js` — Project-generation, per-channel request-token and edit-revision helpers for stale async-work rejection
 - `src/app/pathTiming.js` — path recalc, easing, segment/leg timing, duration updates
-- `src/app/persistence.js` — Transactional bounded project/ZIP staging, commit and rollback; honest autosave recovery, save revisions and the shared coordVersion-9 snapshot including timing and visual references
+- `src/app/persistence.js` — Transactional bounded project/ZIP staging, commit and rollback; honest autosave recovery, save revisions and the shared coordVersion-9 snapshot including timing and visual references; what recovery did or could not do is announced as must-hear (DEF-45)
 - `src/app/playback.js` — Single keyboard-command path, canonical transport/JKL, preview mode, demand-driven render keepalive and time display
 - `src/app/pointer.js` — canvas pointer fallbacks and hit-testing
 - `src/app/privacy.js` — Explicit export disclosures plus fixed-schema diagnostics preview, public/private support hand-off, exact-address fallback and modal recovery
@@ -275,6 +275,7 @@
 - `src/services/index.js` — Barrel exports for the core application services used by consumers
 - `src/utils/CatmullRom.js` — Catmull-Rom spline interpolation
 - `src/utils/Easing.js` — Easing functions (linear, quad, cubic, etc.)
+- `src/utils/announcementQueue.js` — DEF-45: the one writer for the editor's `#announcer`: each message in turn, held `ANNOUNCEMENTS.HOLD_MS`, the region cleared and polite again after the last; a message marked essential, and every assertive one, never gives way; at most `MAX_WAITING` routine messages wait (the oldest gives way); a message identical to the one it would follow merged into it; blank and whitespace-only messages ignored; text written as text
 - `src/utils/assetReferences.js` — Image-ID reachability collector and pure minimum-oldest-history admission planner for count/byte/pixel limits
 - `src/utils/branchTiming.js` — Pure per-run branch timing: builds each run's
 - `src/utils/busynessEnvelope.js` — Pure busyness-handle normalisation/validation, segment-area compilation and inverse-density sampling for seeded release times
@@ -321,6 +322,7 @@
 - `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
 - `tests/backgroundModeOverlay.test.js` — DEF-01: no background visibility mode draws text or a panel on the main canvas, with the reveal mask proved to have run
 - `tests/bootApp.test.js` — TST-01: the whole app boots from the shipped shell, sizes its canvas to the harness viewport, loads its bundled background, and carries an authoring intent from the bus to the model and the canvas, and (DEF-33) a cold start announces nothing and a restored session only its restore, while a pause the author makes is announced
+- `tests/announcements.test.js` — DEF-45: every text written to the editor's live region, under a fake clock: the legacy restore's warning, then "Previous session restored", and Open Project's, then "Project loaded", each for its 2 s; the background, custom-image and combined warnings, recovery unavailable after Open Project and after a restore, and an auto-save failure, each still written though the author plays and pauses or routine messages follow; no earlier clear blanks a later message; duplicates merged, at most three routine messages waiting, assertive and must-hear ones never giving way, blank and whitespace messages ignored, text never parsed as markup, no region no throw; the waypoint list's reorder message queues through `ui:announce`
 - `tests/areaEdit.test.js` — Screen-space area-handle hit targets and one-commit polygon editing through zoom/pan transforms, (DEF-35) handles dragged off the image stay there, as far as a project can store a point, and (DEF-17) a polygon drawn in the booted app names its waypoint, so the editor and the outline follow it unless the selection changed during the draw
 - `tests/assetAdmission.test.js` — Pure minimum-prefix image admission at exact count, 40 MiB and 48-million-pixel boundaries plus fail-closed inputs
 - `tests/assetPruning.test.js` — Reference collection, deterministic sweep and transactional marker/head admission, redo and rollback contracts

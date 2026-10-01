@@ -111,6 +111,15 @@ export const INTERACTION = {
   PAN_SENSITIVITY: 1
 };
 
+// Screen-reader announcements, written in turn to the editor's #announcer live
+// region (DEF-45; the rules are in utils/announcementQueue.js). The hold is the
+// 2 s every message already had before its clear: the time that clear assumed
+// a screen reader needs to pick a message up, now given to each in turn.
+export const ANNOUNCEMENTS = {
+  HOLD_MS: 2000,                  // Time each message keeps the region before the next, or the clear
+  MAX_WAITING: 3                  // Routine messages that may wait; must-hear ones do not count, and never give way
+};
+
 // Storage keys for persistence
 export const STORAGE = {
   AUTOSAVE_KEY: 'routePlotter_autosave',
