@@ -17,6 +17,19 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## W5 — deepen the characterisation (2026-09-29 →; merged, not yet released)
+
+Outcome: written when W5 closes.
+
+TST-16 — The round-2 audit's incomplete predicates are tight: problem
+lists are exact, a looping crowd is held to no dot finishing, the reveal
+trail is checked on lit points, the asset limits are literal, ZIP round
+trips compare bytes, a degenerate hit is finite and placed, the dragged
+waypoint is shown winning, and undo, redo, reset, clear and what they
+announce have tests. DEF-12, DEF-22, DEF-25, CON-04 and CON-09 are pinned
+as they stand, so each fix starts from a baseline it must change on
+purpose. (2026-10-01)
+
 ## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
 
 Outcome: written when the run's last such defect has merged.

@@ -88,8 +88,6 @@
   Characterisation [gated: SPL-06 impl] **P1**
 - [ ] **TST-14 Shell and ContextMenu safety tests** · Characterisation
   [ready] **P1**
-- [ ] **TST-16 Tighten the round-2 predicates** · Characterisation [ready]
-  **P1**
 
 **W4 — remove clearly dead code** (§20 Q8; mutate every branch of anything
 moved, and account for every survivor)

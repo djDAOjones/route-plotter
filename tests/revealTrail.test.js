@@ -62,6 +62,14 @@ describe('reveal trail weighting', () => {
     const dense = alpha(300, 600, 600, 25);
 
     expect(sparse).toBeCloseTo(dense, 12);
+    // Half a path behind a 25% trail is long gone in both, so that pair
+    // compares two zeros (TST-16). A point a sixth of the path behind is lit,
+    // at a third, in both.
+    expect(sparse).toBe(0);
+    const sparseLit = alpha(50, 60, 60, 25);
+    const denseLit = alpha(500, 600, 600, 25);
+    expect(sparseLit).toBeCloseTo(1 / 3, 12);
+    expect(denseLit).toBeCloseTo(sparseLit, 12);
   });
 
   test('it is a pure function of position, not an accumulation', () => {
@@ -72,6 +80,14 @@ describe('reveal trail weighting', () => {
     expect(forwards).toEqual(backwards);
     // And repeated evaluation never drifts.
     expect(alpha(30, 60, 100, 30)).toBe(alpha(30, 60, 100, 30));
+    // Two of those three values, and the repeated one, are zero, which an
+    // accumulation would leave at zero too (TST-16): the same, over lit points.
+    expect(forwards).toEqual([expect.closeTo(2 / 3, 12), 0, 0]);
+    const litForwards = [35, 40, 45].map(h => alpha(30, h, 100, 30));
+    const litBackwards = [45, 40, 35].map(h => alpha(30, h, 100, 30)).reverse();
+    expect(litForwards).toEqual([expect.closeTo(5 / 6, 12), expect.closeTo(2 / 3, 12), expect.closeTo(1 / 2, 12)]);
+    expect(litBackwards).toEqual(litForwards);
+    expect(alpha(30, 40, 100, 30)).toBe(alpha(30, 40, 100, 30));
   });
 
   test('a point at or ahead of the head is fully lit', () => {
@@ -95,8 +111,9 @@ describe('spotlight inner radius (BUG-02)', () => {
 
   test('a zero feather still leaves a paintable gap', () => {
     expect(MOTION.SPOTLIGHT_FEATHER_DEFAULT).toBe(0); // the shape of the bug
-    expect(inner(24, 0)).toBeLessThan(24);
-    expect(inner(24, 0)).toBeGreaterThan(0);
+    // Exactly half a pixel inside the outer radius: a hard edge that paints.
+    // Anything between 0 and 24 passed the range this replaced (TST-16).
+    expect(inner(24, 0)).toBe(23.5);
   });
 
   test('a real feather is honoured unchanged', () => {
@@ -106,7 +123,9 @@ describe('spotlight inner radius (BUG-02)', () => {
 
   test('a feather wider than the spotlight clamps to the centre', () => {
     expect(inner(24, 100)).toBe(0);
-    expect(inner(24, -5)).toBeLessThan(24); // negative feather is not a hard edge either
+    // A negative feather is read as none: the same half-pixel hard edge, not a
+    // gradient five pixels wide (TST-16; it was only held below 24).
+    expect(inner(24, -5)).toBe(23.5);
   });
 
   test('a zero-radius spotlight has nothing to paint', () => {
