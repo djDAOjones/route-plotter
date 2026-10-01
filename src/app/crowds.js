@@ -23,6 +23,9 @@ import {
   normalizeBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
 import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
+import { FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
+import { GraphModel } from '../models/GraphModel.js';
+import { stageProjectModel } from './persistence.js';
 import { waitForCrowdMs } from '../utils/crowdArrival.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
@@ -39,6 +42,65 @@ export function formatCrowdReleaseBias(percent) {
   const rounded = Math.round(percent);
   if (rounded === 0) return 'Even';
   return rounded < 0 ? `Earlier ${Math.abs(rounded)}%` : `Later ${rounded}%`;
+}
+
+/**
+ * Why `project` could not be saved as a file, or opened again, or null: the
+ * loader's model checks (`stageProjectModel`), run on its JSON, as a file or
+ * recovery holds it (where the model shares a value, its JSON repeats it),
+ * and the file's own (`prepareArchive`: the metadata a ZIP of it carries).
+ * @param {Object} app
+ * @param {Object} project - A project snapshot, built without assets
+ * @returns {string|null}
+ */
+function unstorable(app, project) {
+  const cache = app._autosaveBackgroundCache;
+  const background = cache && cache.image === app.background?.image ? cache.dataURL : null;
+  try {
+    stageProjectModel(JSON.parse(JSON.stringify(project)));
+    app.imageAssetService.prepareArchive(project, background);
+    return null;
+  } catch (error) {
+    return error.message;
+  }
+}
+
+/**
+ * Why a traced network could not be stored, or null. The project the trace
+ * would make is checked as it would be saved and opened (`unstorable`),
+ * before the trace replaces anything: a network the loader refuses (a leg
+ * with more bends than a path can hold, more nodes than a scene can hold,
+ * labels past the project's text budget), or a file too big to save, left a
+ * project that could not be saved or would not reopen (DEF-52). A leg with
+ * too many bends is named. A reason the project had before the trace refuses
+ * it too: the project it would make could not be saved or opened either, and
+ * one reason can hide another behind the same words. Browser recovery holds
+ * the same model, compact and without its images, so a project whose file
+ * metadata fits its 2 MB fits recovery's 4 MB.
+ * @param {Object} app
+ * @param {FlowLayer} layer
+ * @param {{nodes: Array, edges: Array}} trace
+ * @returns {string|null}
+ */
+function traceStorageProblem(app, layer, trace) {
+  const limit = FLOW_LAYER_LIMITS.MAX_CONTROL_POINTS_PER_EDGE;
+  const crowded = trace.edges.find(edge => edge.controlPoints.length > limit);
+  if (crowded) {
+    const from = trace.nodes.find(node => node.id === crowded.sourceId)?.label;
+    const leg = from ? `The leg from ${from}` : 'A leg of the route';
+    return `${leg} has ${crowded.controlPoints.length} bends, more than the ${limit} a crowd’s path can hold. `
+      + 'Remove some of its minor waypoints, then trace again.';
+  }
+  const graph = new GraphModel();
+  for (const node of trace.nodes) graph.addNode(node);
+  for (const edge of trace.edges) graph.addEdge(edge);
+  const project = app._buildProjectSnapshot({ includeAssets: false });
+  const traced = { ...layer.toJSON(), guideType: 'graph', graph: graph.toJSON() };
+  const reason = unstorable(app, {
+    ...project,
+    scene: { ...project.scene, flowLayers: project.scene.flowLayers.map(each => (each.id === layer.id ? traced : each)) },
+  });
+  return reason ? `This route can’t be traced into a crowd: ${reason}.` : null;
 }
 
 export const crowdsMixin = {
@@ -606,6 +668,11 @@ export const crowdsMixin = {
     const trace = traceRouteIntoGraph(this.waypoints);
     if (trace.problems.length > 0) {
       this.eventBus.emit('ui:toast', { message: trace.problems[0].detail });
+      return false;
+    }
+    const unstorable = traceStorageProblem(this, layer, trace);
+    if (unstorable) {
+      this.eventBus.emit('ui:toast', { message: unstorable });
       return false;
     }
 
