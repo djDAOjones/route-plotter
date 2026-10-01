@@ -389,15 +389,29 @@ function assertProjectSettings(data) {
   }
 }
 
-async function stageProject(app, projectData, { backgroundBase64 = null, imageAssets = null } = {}) {
+/**
+ * The checks a project's model passes to open, run without opening it: its
+ * size and shape, its settings, its waypoints and its scene, each as staging
+ * checks them (staging runs this first). An action about to change the
+ * project can run it on the project it would make, and refuse one that
+ * would not reopen (DEF-52).
+ * @param {Object} projectData - A project snapshot
+ * @returns {{ waypoints: Array<Waypoint>, scene: Scene }} Staged, not installed
+ */
+export function stageProjectModel(projectData) {
   if (!projectData || typeof projectData !== 'object' || Array.isArray(projectData)) {
     throw new Error('Invalid project data');
   }
   assertSafeProjectEnvelope(projectData);
   assertProjectSettings(projectData);
+  return {
+    waypoints: stageWaypoints(projectData.waypoints),
+    scene: Scene.fromJSON(projectData.scene || {}),
+  };
+}
 
-  const waypoints = stageWaypoints(projectData.waypoints);
-  const scene = Scene.fromJSON(projectData.scene || {});
+async function stageProject(app, projectData, { backgroundBase64 = null, imageAssets = null } = {}) {
+  const { waypoints, scene } = stageProjectModel(projectData);
   let stagedAssets = imageAssets;
   if (stagedAssets == null) {
     const serializedAssets = projectData.imageAssets ?? [];
