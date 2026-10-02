@@ -48,4 +48,4 @@
 
 ## Signed
 
-- Owner (delegated, not reviewed): Joe, 2026-10-01 — see the maintainer's V3-FIELD instruction (lab item V3-FIELD-2); reviewed line due within two weeks (3.8)
+- Owner: Joe, 2026-10-02.

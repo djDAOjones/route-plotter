@@ -106,4 +106,4 @@ frozen v2 line remains served from
 
 ## Signed
 
-- Owner (delegated, not reviewed): Joe, 2026-10-01 — see the maintainer's instruction of 2026-10-01 to run V3-FIELD on this project (the lab's V3-FIELD-2); the owner's reviewed line is due within two weeks (3.8)
+- Owner: Joe, 2026-10-02.
