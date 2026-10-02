@@ -1,0 +1,148 @@
+{
+  "permissions": {
+    "deny": [
+      "RemoteTrigger",
+      "EnterWorktree",
+      "ExitWorktree",
+      "CronCreate",
+      "CronDelete",
+      "CronList",
+      "ScheduleWakeup",
+      "SendMessage",
+      "Workflow",
+      "ReportFindings",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(gh *)",
+      "Bash(git clone *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(npx -y *)",
+      "Bash(npx --yes *)",
+      "Bash(pip install *)",
+      "Bash(brew *)",
+      "Read(//Users/joe/.ssh/**)",
+      "Edit(//Users/joe/.ssh/**)",
+      "Write(//Users/joe/.ssh/**)",
+      "Read(//Users/joe/.aws/**)",
+      "Edit(//Users/joe/.aws/**)",
+      "Write(//Users/joe/.aws/**)",
+      "Read(//Users/joe/.gnupg/**)",
+      "Edit(//Users/joe/.gnupg/**)",
+      "Write(//Users/joe/.gnupg/**)",
+      "Read(//Users/joe/.config/gcloud/**)",
+      "Edit(//Users/joe/.config/gcloud/**)",
+      "Write(//Users/joe/.config/gcloud/**)",
+      "Read(//Users/joe/.claude/**)",
+      "Edit(//Users/joe/.claude/**)",
+      "Write(//Users/joe/.claude/**)",
+      "Read(//Users/joe/.codex/**)",
+      "Edit(//Users/joe/.codex/**)",
+      "Write(//Users/joe/.codex/**)",
+      "Read(//Users/joe/.npmrc/**)",
+      "Edit(//Users/joe/.npmrc/**)",
+      "Write(//Users/joe/.npmrc/**)"
+    ]
+  },
+  "autoMemoryEnabled": false,
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": false,
+    "filesystem": {
+      "denyRead": [
+        "/Users/joe/.ssh",
+        "/Users/joe/.aws",
+        "/Users/joe/.gnupg",
+        "/Users/joe/.config/gcloud",
+        "/Users/joe/.claude",
+        "/Users/joe/.codex",
+        "/Users/joe/.npmrc"
+      ],
+      "denyWrite": [
+        "/Users/joe/.ssh",
+        "/Users/joe/.aws",
+        "/Users/joe/.gnupg",
+        "/Users/joe/.config/gcloud",
+        "/Users/joe/.claude",
+        "/Users/joe/.codex",
+        "/Users/joe/.npmrc"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "*"
+      ],
+      "strictAllowlist": false
+    },
+    "credentials": {
+      "envVars": [
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "mode": "deny"
+        },
+        {
+          "name": "CLAUDE_CODE_OAUTH_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "mode": "deny"
+        },
+        {
+          "name": "GITHUB_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "GH_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "NPM_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "AWS_SECRET_ACCESS_KEY",
+          "mode": "deny"
+        }
+      ]
+    }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/tools/session.mjs\" --harness claude",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear|fork",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/tools/session.mjs\" --harness claude",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/tools/session.mjs\" --harness claude",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "_pm_next_v3": "INTAKE ONLY: the network is open so official sources can be read for digests, whatever the Network line says for sessions. Run `claude --settings .claude/settings.intake.json`, with the owner present. Ordinary sessions use settings.json. Session hooks (3.15): SessionStart(compact) adds the re-read and session-end notice; tools/session.mjs on PostToolUse and the other SessionStart sources watches this session's context against the profile's Session line (200k tokens of context). They force nothing and cannot show that a re-read happened; where the client does not run them, or denies them the transcript, the Session line is an instruction only. Claude Code merges hooks from every settings file it loads, so with the project settings present each hook runs twice in intake; the sensor's state makes the second threshold notice silent, and the compaction notice repeats."
+}
