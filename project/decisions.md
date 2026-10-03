@@ -18,6 +18,14 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-03 — V3-CONFIRM — The working clone sits beside the owner's checkout, kept on the device; gh runs outside the sandbox
+
+**Decision:** sessions work in the fresh clone `route-plotter/` beside the owner's OneDrive checkout, in the same folder, with OneDrive's Always Keep on This Device set on it, because the owner keeps the project's working copy with its other files; and `gh` runs outside the sandbox (`sandbox.excludedCommands`), so each `gh` call asks unless the owner pre-approves it.
+
+**Rationale:** the owner's instruction of 2026-10-03: a fresh clone, but inside the project's OneDrive folder rather than elsewhere on the disk. The working setup in `DEV-INFRASTRUCTURE.md` said "outside OneDrive" because OneDrive can evict `.git` internals to online-only, and git then fails with `mmap failed: Operation timed out`; keeping the clone's folder on the device removes that cause, so the setup and the rules file now name the clone and the setting. The owner's checkout stays his: fast-forward only, when clean. The clone was made on 2026-10-03 from `main` at 662b2e2 with `npm ci`; `npm run check` passed there (93 test files, 1566 tests) and the session hook ran from its path. On `gh` (8ebaad9, #80): under the strict allowlist a sandboxed `gh` is refused, and with `api.github.com` added it fails TLS verification on macOS (x509 OSStatus -26276, the sandbox denies Go the system trust service); tested headless on Claude Code 2.1.267, an excluded `gh` reaches GitHub and a sandboxed `git push` authenticates. The owner chose this over `api.github.com` plus `enableWeakerNetworkIsolation`, which keeps `gh` sandboxed but which the client marks as reduced security.
+
+**Supersedes:** none
+
 ## 2026-10-02 — V3-CONFIRM — The owner signs the ledger, confirms Network and Handoff, installs the session hooks
 
 **Decision:** the profile, brief and rules carry the owner's reviewed signature of 2026-10-02 in place of the delegated lines; the Network line (listed hosts github.com, registry.npmjs.org) and the Handoff split (Claude Code executes; Codex reviews read-only) are confirmed and lose their `[guess]`; `.claude/settings.json` and `.claude/settings.intake.json` are committed from `tools/harness.mjs`, with the two session hooks, and `.gitignore` admits those two files — because the owner answered the three open intake questions on 2026-10-02 ("sign both now", the recommended Network and Handoff, "install Claude Code side in both").
