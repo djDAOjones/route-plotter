@@ -17,6 +17,16 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## W5 — deepen the characterisation (2026-09-29 →; merged, not yet released)
+
+Outcome: written when W5 closes.
+
+TST-14 — The restart script's safety checks can fail now, on a Mac as
+well as in CI: a foreign listener on port 3000 is shown to stop the boot
+with nothing killed; its ownership record, its search for this checkout's
+watcher and how it stops what it owns are checked against stand-in
+processes; and the context menu has its first tests. (2026-10-01)
+
 ## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
 
 Outcome: written when the run's last such defect has merged.

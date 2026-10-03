@@ -86,8 +86,6 @@
   nothing today. **P2**
 - [ ] **TST-11 Behavioural tests for source-text assertions** ·
   Characterisation [gated: SPL-06 impl] **P1**
-- [ ] **TST-14 Shell and ContextMenu safety tests** · Characterisation
-  [ready] **P1**
 - [ ] **TST-16 Tighten the round-2 predicates** · Characterisation [ready]
   **P1**
 
