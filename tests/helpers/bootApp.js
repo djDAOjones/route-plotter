@@ -33,6 +33,20 @@ afterEach(() => {
   if (failures.length > 1) throw new AggregateError(failures, 'The booted app could not be stopped');
 });
 
+/**
+ * Stop one booted app before its test ends and let it go, for a test that
+ * replaces its app many times: kept until the test ended, hundreds of them
+ * would exhaust the worker's heap.
+ * @param {Object} app - An app `bootApp` returned
+ */
+export function retireApp(app) {
+  if (!booted.delete(app)) return;
+  const failures = stopApp(app);
+  if (window.app === app) delete window.app;
+  if (failures.length === 1) throw failures[0];
+  if (failures.length > 1) throw new AggregateError(failures, 'The booted app could not be stopped');
+}
+
 function stopApp(app) {
   const failures = [];
   const attempt = (step) => {

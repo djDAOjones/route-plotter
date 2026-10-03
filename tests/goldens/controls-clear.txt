@@ -1,0 +1,153 @@
+# clear: Clear All asked to confirm
+
+## #clear-confirm-modal · click
+app ~ focus: "#clear-cancel" → "#file-dropdown-btn"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+ui ~ #app: div inert="" → div
+ui ~ #clear-confirm-modal: div aria-labelledby="modal-title-clear" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #clear-confirm-modal>div[0]: div class="modal-content"
+ui - #modal-title-clear: h3 :text="Clear all waypoints?"
+ui - #clear-confirm-modal>div[0]>p[1]: p :text="This will remove all waypoints and reset the canvas. This action cannot be undone."
+ui - #clear-confirm-modal>div[0]>div[2]: div class="modal-buttons"
+ui - #clear-cancel: button class="btn btn-secondary" type="button" :text="Cancel"
+ui - #clear-confirm: button class="btn btn-danger" type="button" :text="Clear"
+
+## #clear-cancel · click
+app ~ focus: "#clear-cancel" → "#file-dropdown-btn"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+ui ~ #app: div inert="" → div
+ui ~ #clear-confirm-modal: div aria-labelledby="modal-title-clear" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #clear-confirm-modal>div[0]: div class="modal-content"
+ui - #modal-title-clear: h3 :text="Clear all waypoints?"
+ui - #clear-confirm-modal>div[0]>p[1]: p :text="This will remove all waypoints and reset the canvas. This action cannot be undone."
+ui - #clear-confirm-modal>div[0]>div[2]: div class="modal-buttons"
+ui - #clear-cancel: button class="btn btn-secondary" type="button" :text="Cancel"
+ui - #clear-confirm: button class="btn btn-danger" type="button" :text="Clear"
+
+## #clear-confirm · click
+emit waypoints:clear-all
+emit scene-outline:update {route: [], crowds: [], majorCount: 0, minorCount: 0, selectionKey: null, focusKey: null}
+model + waypoints: []
+model + scene.flowLayers: []
+model ~ styles.pathHead.imageAssetId: "asset-extras-head" → null
+model ~ animationState.mode: "constant-time" → "constant-speed"
+model ~ animationState.duration: 21429.352554 → 0
+model + imageAssets: []
+model - imageAssets[0].id: "asset-extras-marker"
+model - imageAssets[0].base64: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+model - imageAssets[0].name: "asset-extras-marker.png"
+model - imageAssets[0].width: 100
+model - imageAssets[0].height: 100
+model - imageAssets[0].mimeType: "image/png"
+model - imageAssets[0].size: 68
+model - imageAssets[1].id: "asset-extras-head"
+model - imageAssets[1].base64: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+model - imageAssets[1].name: "asset-extras-head.png"
+model - imageAssets[1].width: 100
+model - imageAssets[1].height: 100
+model - imageAssets[1].mimeType: "image/png"
+model - imageAssets[1].size: 68
+model - waypoints[0]: 62 values (1902b04d)
+model - waypoints[1]: 57 values (e95f6fe0)
+model - waypoints[2]: 57 values (16482480)
+model - waypoints[3]: 57 values (daa7e7ca)
+model - waypoints[4]: 60 values (ea562594)
+model - waypoints[5]: 57 values (42c9f4ff)
+model - scene.flowLayers[0]: 76 values (8e75d5cf)
+app ~ focus: "#clear-cancel" → "#file-dropdown-btn"
+storage - routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574]
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Project cleared"
+ui ~ #app: div inert="" → div
+ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
+ui ~ #settings-help-placeholder: div (not shown) → div class="waypoint-editor-placeholder" style="display: block;"
+ui + #settings-help-placeholder>div[0]: div class="waypoint-instructions" (and 16 inside, bfe4740d)
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-right-tip" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-right-tip" max="4000" min="1" step="5" type="range" :value="1292"
+ui ~ #total-time: span class="time" :text="0:21" → span class="time" :text="0:00"
+ui ~ #add-crowd-btn: button class="btn btn-secondary add-crowd-btn" title="Add a crowd of dots that follows the route" type="button" :text="+ Add crowd" → button class="btn btn-secondary add-crowd-btn" title="Add a crowd and draw the network it follows" type="button" :text="+ Add crowd"
+ui ~ #waypoint-list>li[0]: li class="waypoint-item waypoint-item-add" → li aria-live="polite" class="waypoint-list-empty" role="status"
+ui + #waypoint-list>li[0]>p[0]: p :text="No waypoints yet"
+ui + #waypoint-list>li[0]>p[1]: p class="hint" :text="Click on the map to add waypoints"
+ui ~ #clear-confirm-modal: div aria-labelledby="modal-title-clear" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #layers-strip>li[1]: li class="layer-item"
+ui - #layers-strip>li[1]>button[0]: button aria-pressed="false" class="layer-row" type="button"
+ui - #layers-strip>li[1]>button[0]>span[0]: span class="layer-swatch" style="background-color: rgb(86, 180, 233);"
+ui - #layers-strip>li[1]>button[0]>span[1]: span class="layer-title" title="Double-click to rename" :text="Visitors"
+ui - #layers-strip>li[1]>button[1]: button aria-label="Hide Visitors" aria-pressed="true" class="layer-visibility" title="Hide crowd" type="button"
+ui - #layers-strip>li[1]>button[1]>svg[0]: svg aria-hidden="true" fill="none" height="14" stroke-width="1.5" stroke="currentColor" viewBox="0 0 16 16" width="14"
+ui - #layers-strip>li[1]>button[1]>svg[0]>path[0]: path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z"
+ui - #layers-strip>li[1]>button[1]>svg[0]>circle[1]: circle cx="8" cy="8" r="2"
+ui - #layers-strip>li[1]>button[2]: button aria-label="Delete Visitors" class="layer-delete" title="Delete crowd" type="button" :text="×"
+ui - #waypoint-list>li[0]>button[0]: button aria-label="Add new waypoint at center of map" class="waypoint-row waypoint-add-btn" type="button"
+ui - #waypoint-list>li[0]>button[0]>span[0]: span aria-hidden="true" class="waypoint-add-icon" :text="+"
+ui - #waypoint-list>li[0]>button[0]>span[1]: span :text="Add Waypoint"
+ui - #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true"
+ui - #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[1]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[1]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[1]>button[0]>span[2]: span class="waypoint-title" :text="Extras 1"
+ui - #waypoint-list>li[1]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[1]>span[1]>button[0]: button aria-label="Move Extras 1 up" class="waypoint-move-btn" disabled="" type="button" :text="▲"
+ui - #waypoint-list>li[1]>span[1]>button[1]: button aria-label="Move Extras 1 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[1]>button[2]: button aria-label="Delete Extras 1" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false"
+ui - #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[2]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot"
+ui - #waypoint-list>li[2]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed"
+ui - #waypoint-list>li[2]>button[0]>span[2]: span class="waypoint-title" :text="Extras 2"
+ui - #waypoint-list>li[2]>button[0]>span[3]: span aria-hidden="true" class="waypoint-fork-mark" :text="⑂"
+ui - #waypoint-list>li[2]>button[0]>span[4]: span class="sr-only" :text=", a branch leaves here"
+ui - #waypoint-list>li[2]>button[0]>span[5]: span class="waypoint-minor-tag" :text="minor"
+ui - #waypoint-list>li[2]>button[0]>span[6]: span class="sr-only" :text=", minor waypoint shaping the leg after waypoint 1, reorders with it"
+ui - #waypoint-list>li[2]>button[1]: button aria-label="Delete Extras 2" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true"
+ui - #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[3]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[3]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3"
+ui - #waypoint-list>li[3]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[3]>span[1]>button[0]: button aria-label="Move Extras 3 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[3]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
+ui - #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[4]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[4]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[4]>button[0]>span[2]: span class="waypoint-title" :text="Extras 4"
+ui - #waypoint-list>li[4]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼"
+ui - #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false"
+ui - #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[5]>button[0]>span[0]: span aria-hidden="true" class="waypoint-minor-dot"
+ui - #waypoint-list>li[5]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle is-fixed"
+ui - #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5"
+ui - #waypoint-list>li[5]>button[0]>span[3]: span class="waypoint-minor-tag" :text="branch"
+ui - #waypoint-list>li[5]>button[0]>span[4]: span class="sr-only" :text=", branch B leaving waypoint 1.1, rejoins at Extras 6"
+ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×"
+ui - #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true"
+ui - #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-list>li[6]>button[0]>span[0]: span aria-hidden="true" class="waypoint-color-dot" style="background-color: rgb(204, 121, 167);"
+ui - #waypoint-list>li[6]>button[0]>span[1]: span aria-hidden="true" class="waypoint-handle" :text="≡"
+ui - #waypoint-list>li[6]>button[0]>span[2]: span class="waypoint-title" :text="Extras 6"
+ui - #waypoint-list>li[6]>span[1]: span class="waypoint-move-btns"
+ui - #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up" class="waypoint-move-btn" type="button" :text="▲"
+ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
+ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
+ui - #clear-confirm-modal>div[0]: div class="modal-content"
+ui - #modal-title-clear: h3 :text="Clear all waypoints?"
+ui - #clear-confirm-modal>div[0]>p[1]: p :text="This will remove all waypoints and reset the canvas. This action cannot be undone."
+ui - #clear-confirm-modal>div[0]>div[2]: div class="modal-buttons"
+ui - #clear-cancel: button class="btn btn-secondary" type="button" :text="Cancel"
+ui - #clear-confirm: button class="btn btn-danger" type="button" :text="Clear"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 0, mode: "constant-speed", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0} (repeatedly)
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Project cleared" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #timeline-slider: input aria-label="Timeline position" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-label="Timeline position" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="500"
+  still pending after settling: 1 timer(s)
