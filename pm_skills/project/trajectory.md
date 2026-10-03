@@ -78,6 +78,16 @@ circle or cone stays on the head at any zoom, and the contrast tint covers the
 image's rectangle and no margin at any background zoom, moving with the camera.
 (2026-09-29)
 
+DEF-06 — What a route scheduled no longer outlives it: Clear All, deleting
+down to one waypoint, undo, redo and loading a one-waypoint project clear its
+path, branches, structure, pauses, beacons and waits, and resolve its crowd
+anchors again, so no marker is drawn at the grow scale of a route that is
+gone; a route that comes back gets its timing back, browser recovery and a
+saved file keep a route with its own duration (a branch end whose rejoin is
+refused rebuilt where it is put back), and a constant-time duration
+a project was opened with, and no rebuild has replaced, is kept, and timed
+as a fresh start times it, whatever project came before. (2026-09-28)
+
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its
