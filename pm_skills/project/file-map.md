@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 351 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 356 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 117 file(s)
+- `tests` — 122 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -312,11 +312,14 @@
 
 ## tests
 
+- `tests/elementIds.test.js` — TST-13: every id the app looks up is declared by the page it runs in, `index.html` or the exported player's page: its `elements` bag, every id the running app asks for, and every `getElementById` call in `src/` read as code (across lines and comments, computed names too; any other mention fails; fixtures pin it), each a literal id or one of 11 built at run time, listed with whether the flow reaches it; and which ids each file looks up, and how often, as a reviewed list. Except the eight missing today and three built on demand, each built twice: two are found and reused, the camera zoom warning is never attached (DEF-69)
 - `tests/Emitter.test.js` — Emitter defaults, bounds, updates, collision-safe reseeding and persistence contracts
 - `tests/FlowLayer.test.js` — Flow-layer guide, emitter CRUD and hydration/round-trip contracts
 - `tests/GraphEdge.test.js` — Graph-edge direction, weight, control-point and serialisation contracts
 - `tests/GraphModel.test.js` — Graph CRUD, adjacency, referential-integrity and hydration contracts
 - `tests/GraphNode.test.js` — Graph-node type, normalised-position and serialisation contracts
+- `tests/keyTable.test.js` — TST-13 key table: Help as rendered (31 rows of 36 configured bindings; the five left out, and its prose's chords) and each entry's chord, apart from what the dispatcher accepts; every entry pressed or clicked, and what it changed; the 19 entries naming an event their key does not send, by exact name; every key the dispatcher reacts to over a 392-key domain (printable ASCII, capitals included, and UI Events named keys, F1–F24) × 16 modifier sets, pressed once and held, held to its own key literals (DEF-63); modifier clicks, drags and cursor; DEF-13's cells; the transport over time (DEF-15, DEF-62); every keydown/keyup listener in `src/`, with the keys and properties its handler reads from the source (these fail rather than pass: a use, `case`, array member, comparison or option the reader cannot read, and a key handler in either page's markup or inline scripts; a name built at run time is beyond it), each key pressed on its target and every other domain key swept past it, once and held, in its row's one state, here or for the player's two in their suite
+- `tests/rangeConstants.test.js` — TST-13: all 52 range and number fields in `index.html`: type, min, max, value and step as a reviewed contract; paired with the code's bounds and defaults, but for the pinned disagreements; each field's own handler driven at min, max, default and between, against its pairing's scale, number fields typed past their clamps; in two sampled flows (a new project, and one at load's limits, each with a waypoint, crowd and edge selected) every written value fits or is pinned (CON-14's list), with which fields each flow writes, from which modules, and why the rest are not
 - `tests/Scene.test.js` — Ordered flow-layer CRUD, movement, clearing and persistence contracts
 - `tests/accessibilityAudit.test.js` — REV-05 structural accessibility guard:
 - `tests/backgroundModeOverlay.test.js` — DEF-01: no background visibility mode draws text or a panel on the main canvas, with the reveal mask proved to have run
@@ -379,7 +382,7 @@
 - `tests/playerAccessibility.test.js` — Aggregate-summary privacy/counting and discrete/coalesced transport-announcement contracts
 - `tests/playerApp.test.js` — Golden app-to-exported-player timeline, reset, reveal, swarm and text parity contracts, and the player's Graphics scale fallback (DEF-34)
 - `tests/playerCore.test.js` — PlayerCore builders, pause budgets, timeline windows, inverse mappings
-- `tests/playerEntryAccessibility.test.js` — Exported-player summary, keyboard/transport live-region and playback-speed integration contracts
+- `tests/playerEntryAccessibility.test.js` — Exported-player summary, keyboard/transport live-region and playback-speed integration contracts; the keys the player's two key listeners compare, a reviewed list held to their source, each pressed and every other domain key swept, once and held, and the error panel when the project is missing (TST-13)
 - `tests/previewTipStorage.test.js` — DEF-48: the app starts, and shows the preview tip, with every storage call blocked or `localStorage` itself unreachable; a full store does not throw from the tip's timer; a tip shown once is remembered
 - `tests/privacy.test.js` — Export disclosures, byte-identical diagnostics, support navigation/address fallback, mode isolation, focus recovery and no automatic sharing
 - `tests/projectSnapshotShape.test.js` — TST-06 save-shape goldens: a file snapshot per bundled example, `load(save(x))` idempotence, the assets-included/excluded shape, and the `modified` restamp characterised
@@ -409,6 +412,8 @@
 - `tests/helpers/consoleGuard.js` — TST-10 console guard: records console.error/warn, fails the test on anything undeclared, and holds the short allowlist of known warts
 - `tests/helpers/drawLog.js` — TST-02 transcript capture: drains the main, offscreen vector and reveal-mask canvases as rounded, diffable draw-log lines, names each composited canvas by its surface (TST-17), can end each line with the state its call was made in: transform, open saves and styles (DEF-36), can instead end each line that marks a canvas with just the state it draws with (DEF-39), drops a frame it takes from those canvases' own transcripts, which otherwise held a background's data URL per call (DEF-38), and compares two frames
 - `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)
+- `tests/helpers/sourceScan.js` — TST-13 source reader: lexes JavaScript far enough to tell code from comments, strings, templates and regular expressions, so a scan finds a call written across lines or by a computed name and reports any other mention; what a key handler reads of its event, followed into its file's functions at each argument it is passed as, reporting every use it cannot follow, `case` or array member that is not a literal, and literal or key inside a larger expression; every key listener in some files, reporting a type or options it cannot read. Not names built at run time
+- `tests/helpers/keyDomain.js` — TST-13 key domain: every printable ASCII character, capitals included, and every UI Events named key (F1–F24), 392 keys, shared by the key table's sweeps and the player suite's
 - `tests/helpers/bootApp.js` — TST-01 boot harness: builds the shipped index.html shell, stubs APP_VERSION/matchMedia/fetch/layout, and starts the real RoutePlotter
 - `tests/helpers/traceProject.js` — DEF-52's trace helpers, shared by `traceStorage.test.js` and `traceStorageLimits.test.js`: an app that does not draw (the harness keeps every canvas call), routes of majors, a trace and a refused one, and a project's file metadata worked out as Save Project writes it, with an image's manifest and a background's file
 - `tests/fixtures/authoredExtras.js` — TST-06 fixture: the Open day example with every field of the save shape moved off its default, including two image assets and authored camera zooms

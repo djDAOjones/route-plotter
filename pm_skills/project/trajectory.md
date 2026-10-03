@@ -17,6 +17,18 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## W5 — deepen the characterisation (2026-09-29 →; merged, not yet released)
+
+Outcome: written when W5 closes.
+
+TST-13 — Key table, element ids and HTML ranges pinned: Help as it
+renders (31 rows of 36 bindings; Shift+arrow and K shown nowhere) and
+each key and click (18 name an unheard event); each key listener's keys,
+read from its source, pressed on its target, other keys swept; each id
+lookup against its page and a per-file list (8 missing; DEF-69); each
+range field's markup, code and handler; writes in two sampled flows.
+(2026-09-29; reworked 2026-10-01)
+
 ## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
 
 Outcome: written when the run's last such defect has merged.
