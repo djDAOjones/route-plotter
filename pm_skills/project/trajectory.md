@@ -17,6 +17,22 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
+## W5 — deepen the characterisation (2026-09-29 →; merged, not yet released)
+
+Outcome: written when W5 closes.
+
+TST-05 — For every event the two
+wiring files subscribe to, in the scenarios its rows name, one fresh app
+per row: the emits it causes and each step in order, what it says and
+shows, the project, selection and undo change at once and after ten
+seconds of timers (each delay pinned), whether the app's waypoint lookup
+still finds each waypoint and the waypoints it hands out are the route's
+own, whether browser recovery (every storage write, removal and clear
+replayed) holds the project as it stands, and each undo entry it saved,
+undone and redone, against the project. The dispatch order of all 194
+boot listeners is pinned too, so W9's CLR-01 split must leave both
+unchanged. DEF-15, DEF-16 and DEF-22 are pinned as they stand. (2026-10-01)
+
 ## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
 
 Outcome: written when the run's last such defect has merged.

@@ -74,8 +74,6 @@
   waits on it. **P1**
 - [ ] **TST-13 Key table, element IDs, HTML ranges** · Characterisation
   [ready] — Gates DEL-05, DEF-13, DEF-15 and DEF-32. **P1**
-- [ ] **TST-05 Event transcript golden** · Characterisation [ready] — Gates
-  DEF-15, DEF-22 and W6. **P1**
 - [ ] **TST-09 Camera, dots, curvature, minor-end and time domains** ·
   Characterisation [ready] — With branched and intro/tail fixtures; gates
   W7 and W10. **P1**
@@ -132,12 +130,13 @@ moved, and account for every survivor)
 - [ ] **DEF-14 A hint click stops a label toggling** · Accessibility
   [gated: TST-04 impl] **P1**
 - [ ] **DEF-15 L resumes at the old J/K/L speed** · Live defect
-  [gated: TST-05, TST-13 impl] **P2**
+  [gated: TST-13 impl] — TST-05's transcript pins it as it stands. **P2**
 - [ ] **DEF-19 Camera-zoom edits skip undo** · Live defect
   [gated: TST-04 impl] **P2**
 - [ ] **DEF-22 An inserted waypoint splits a branch run** · Live defect
-  [gated: TST-05 impl] — §20 Q7: it joins the run of the waypoint before
-  it; at the fork, the trunk. **P2**
+  [ready] — §20 Q7: it joins the run of the waypoint before
+  it; at the fork, the trunk. TST-05 pins its three insert paths as they
+  stand; on a branched route the leg's own insert cannot be reached (DEF-64). **P2**
 
 ### Icebox
 
