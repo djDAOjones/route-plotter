@@ -9,7 +9,7 @@
 
 import { RENDERING, INTERACTION, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUND_VISIBILITY, MOTION, TEXT_LABEL } from '../config/constants.js';
 import { Easing } from '../utils/Easing.js';
-import { waypointPointIndices, legMidpointIndex } from '../utils/segmentHitTest.js';
+import { routeRuns, waypointPointIndices, legMidpointIndex } from '../utils/segmentHitTest.js';
 import { BeaconRenderer } from './BeaconRenderer.js';
 import { AreaHighlightRenderer } from './AreaHighlightRenderer.js';
 import { branchPathProgressAt } from '../utils/branchTiming.js';
@@ -266,26 +266,42 @@ export class RenderingService {
    * Resolve hovered-leg polyline span and validate the hover against
    * current data (route edits can leave a stale hover until the next
    * mousemove re-tests). Returns null when the hover no longer applies.
+   *
+   * The span lies on the hovered leg's own run, the trunk or the branch it
+   * was hit on (DEF-64), so `pathPoints` and `waypoints` are that run's,
+   * and `legIndex` counts its legs.
    * @param {Object} state - Render state
-   * @returns {{a: number, b: number, legIndex: number}|null} Point span
+   * @returns {{a: number, b: number, legIndex: number, wpIndices: Array<number>,
+   *            pathPoints: Array<{x: number, y: number}>, waypoints: Array<Object>}|null} Point span
    * @private
    */
   _hoverLegSpan(state) {
-    const { hover, waypoints, pathPoints, waypointProgressValues } = state;
-    const legIndex = hover?.waypointIndex;
-    if (typeof legIndex !== 'number' || legIndex < 0 || legIndex >= waypoints.length - 1) return null;
-    if (waypoints[legIndex] !== hover.waypoint) return null;
+    const { hover, waypoints } = state;
+    const ownerIndex = hover?.waypointIndex;
+    if (typeof ownerIndex !== 'number' || ownerIndex < 0 || waypoints[ownerIndex] !== hover.waypoint) return null;
+
+    const branchId = hover.branchId ?? null;
+    const run = routeRuns({
+      waypoints,
+      pathPoints: state.pathPoints,
+      progressValues: state.waypointProgressValues,
+      branchPaths: state.branchPaths
+    }).find(each => each.branchId === branchId);
+    if (!run) return null;
+    const legIndex = run.waypoints.indexOf(hover.waypoint);
+    if (legIndex < 0 || legIndex >= run.waypoints.length - 1) return null;
+    const { pathPoints, progressValues } = run;
     if (!pathPoints || pathPoints.length < 2) return null;
 
     const totalPoints = pathPoints.length;
-    const segments = waypoints.length - 1;
-    const wpIndices = (waypointProgressValues && waypointProgressValues.length === waypoints.length)
-      ? waypointPointIndices(waypointProgressValues, totalPoints)
-      : waypoints.map((_, i) => Math.round((i / segments) * (totalPoints - 1)));
+    const segments = run.waypoints.length - 1;
+    const wpIndices = (progressValues && progressValues.length === run.waypoints.length)
+      ? waypointPointIndices(progressValues, totalPoints)
+      : run.waypoints.map((_, i) => Math.round((i / segments) * (totalPoints - 1)));
     const a = wpIndices[legIndex];
     const b = wpIndices[legIndex + 1];
     if (!(b > a)) return null;
-    return { a, b, legIndex, wpIndices };
+    return { a, b, legIndex, wpIndices, pathPoints, waypoints: run.waypoints };
   }
 
   /**
@@ -298,7 +314,9 @@ export class RenderingService {
   renderLegHover(ctx, state) {
     const span = this._hoverLegSpan(state);
     if (!span) return;
-    const { waypoints, pathPoints, styles, imageToCanvas } = state;
+    const { styles, imageToCanvas } = state;
+    // The hovered leg's own run, the trunk or a branch (DEF-64)
+    const { waypoints, pathPoints } = span;
 
     // Width follows the leg's rendered thickness: styled by the last
     // major at or before the leg (same rule as renderPath)
@@ -380,10 +398,12 @@ export class RenderingService {
     }
 
     if (hover.type === 'leg' || hover.type === 'leg-plus') {
+      // A leg that offers no insert, a branch's, shows no "+" (DEF-64)
+      if (hover.canInsert === false) return;
       const span = this._hoverLegSpan(state);
       if (!span) return;
       const midIdx = legMidpointIndex(span.wpIndices, span.legIndex);
-      const midImg = state.pathPoints[midIdx];
+      const midImg = span.pathPoints[midIdx];
       if (!midImg) return;
       const pos = imageToCanvas(midImg.x, midImg.y);
       this._drawPlusHandle(ctx, pos.x, pos.y, null, hover.type === 'leg-plus');

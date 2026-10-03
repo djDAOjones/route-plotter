@@ -68,6 +68,12 @@ the export. Once its transport is suspended, each part of an export's
 clean-up runs whether or not another fails, and its controls are freed
 whatever failed. (2026-09-28)
 
+DEF-64 — A branched route's legs can be hovered and clicked as an unbranched
+route's can: each is hit along its own run, the trunk or its branch, and a
+click selects the waypoint it leaves rather than adding one at the route's
+end. Only a trunk leg offers the "+", so no waypoint inserted there splits a
+branch's run (DEF-22). (2026-10-01)
+
 DEF-43 — A polygon draw follows its waypoint through an undo or a redo, and
 ends, saying so in a toast, when its waypoint is deleted or undone away,
 rather than closing onto a waypoint the project no longer has; and Draw Area

@@ -1167,16 +1167,23 @@ export const wiringControllersMixin = {
             hover = {
               type: segmentHit.onPlus ? 'leg-plus' : 'leg',
               waypoint: segmentHit.waypoint,
-              waypointIndex: segmentHit.waypointIndex
+              waypointIndex: segmentHit.waypointIndex,
+              // The leg's run, which the glow is drawn along, and whether it
+              // offers the "+" (DEF-64)
+              branchId: segmentHit.branchId,
+              canInsert: segmentHit.canInsert
             };
           }
         }
       }
 
       const prev = this.canvasHover;
+      // A fork owns its trunk leg and each branch's first leg, so the run
+      // tells those legs apart (DEF-64)
       const changed = (prev?.type !== hover?.type) ||
                       (prev?.waypoint !== hover?.waypoint) ||
                       (prev?.waypointIndex !== hover?.waypointIndex) ||
+                      (prev?.branchId !== hover?.branchId) ||
                       (prev?.handle?.type !== hover?.handle?.type) ||
                       (prev?.handle?.vertexIndex !== hover?.handle?.vertexIndex);
       if (changed) {
