@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 351 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 354 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 117 file(s)
+- `tests` — 120 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -28,7 +28,7 @@
 - `Route Plotter v3.code-workspace` — VS Code workspace definition for this repository
 - `THIRD_PARTY_NOTICES.md` — Checked licence, copyright and source notices for the exact direct runtime and development dependencies
 - `UI-STANDARDS.md` — Carbon-first UI, UoN/Okabe-Ito token and WCAG 2.2 AAA interaction contract
-- `build.js` — esbuild/watch server plus clean staged production builds, explicit Pages allowlist, versioned static references and non-mutating build checks
+- `build.js` — esbuild/watch server plus clean staged production builds, explicit Pages allowlist, versioned static references and non-mutating build checks; builds only when run as a script (importing it starts no build and reads none of its inputs; on Node 24.0 and 24.1 its entry check resolves two paths), and exports its release checks and the publish and failed-build rollback steps, which tests import only in a copy of the repository (SPL-06)
 - `index.html` — Single-page app shell (sidebar + canvas + controls)
 - `package.json` — Project metadata and scripts
 - `public-assets.json` — Owner-approved public image allowlist pinned to exact paths and SHA-256 hashes
@@ -331,6 +331,7 @@
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
 - `tests/branchHandle.test.js` — COMPOSE-04 contract: which waypoints are
 - `tests/branchTiming.test.js` — ROUTE-01b contract: run timing, master
+- `tests/buildScript.test.js` — SPL-06, run and imported only in a copy of the repository (`helpers/buildScriptHarness.js`): importing `build.js` there, natively, a second time in the same process, and as on Node 24.0/24.1 without `import.meta.main`, starts nothing (its code touches no file bar the two paths 24.0/24.1's entry check resolves, prints nothing, starts no timer or other work, leaves the process and the copy as they were); run as a script, also through a symlink and without `import.meta.main`, it still runs and verifying writes nothing; each npm script's mode; the image manifest's refusals; the index.html release stamp and its check; the exact Pages inventory; the checks touch nothing and never change their arguments; and publishing and the failed-build rollback in a temporary directory, a locked directory standing in for a cloud-sync lock
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
 - `tests/crowdArrival.test.js` — COMPOSE-02 contract: onset/journey maths,
 - `tests/consoleGuard.test.js` — TST-10: the rule deciding which console output fails a test, and the declaration a test uses for output it provokes
@@ -411,6 +412,8 @@
 - `tests/helpers/projectSnapshot.js` — TST-06 save-shape vocabulary: loads a snapshot back through the real recovery path and normalises one for comparison (rounds numbers, masks the restamped `modified`)
 - `tests/helpers/bootApp.js` — TST-01 boot harness: builds the shipped index.html shell, stubs APP_VERSION/matchMedia/fetch/layout, and starts the real RoutePlotter
 - `tests/helpers/traceProject.js` — DEF-52's trace helpers, shared by `traceStorage.test.js` and `traceStorageLimits.test.js`: an app that does not draw (the harness keeps every canvas call), routes of majors, a trace and a refused one, and a project's file metadata worked out as Save Project writes it, with an image's manifest and a background's file
+- `tests/helpers/buildScriptHarness.js` — SPL-06: runs and imports `build.js` only in a fresh copy of the repository in the temporary directory (its non-hidden top-level files, so no `.git`, and the five directories the build reads or writes, `node_modules` linked), never in it, since a test worker cannot change directory; imports it in a child process working there with the worker's environment, arguments and Node flags pointed at the copy, calls the exports in that process, and snapshots the copy to show what changed
+- `tests/helpers/buildScriptHost.mjs` — SPL-06: that child process: watches what `build.js`'s own code does (fs and child_process calls, timers and other pending work, output, the process's directory, environment, exit code and listeners), imports it natively twice or through vm without `import.meta.main` (Node 24.0/24.1), reports, and answers each call to an export with what it touched and printed and whether it changed its arguments
 - `tests/fixtures/authoredExtras.js` — TST-06 fixture: the Open day example with every field of the save shape moved off its default, including two image assets and authored camera zooms
 - `tests/goldens/draw-log-authored-extras-edit.txt` — TST-02 golden: the editor draw transcript for the authored-extras fixture, its canvas set-up frame and five instants
 - `tests/goldens/draw-log-authored-extras-export.txt` — TST-02 golden: the export-canvas draw transcript for the authored-extras fixture, its canvas set-up frame and five instants
