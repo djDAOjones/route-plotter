@@ -68,6 +68,9 @@ describe('image asset archive round trips', () => {
     const reloaded = await new ImageAssetService().importZip(await blobBytes(exported));
 
     expect(reloaded.imageAssets.map(asset => asset.id)).toEqual(['safe-id_1']);
+    // The bytes too, not only the ID (TST-16): byte for byte what was imported.
+    expect(reloaded.imageAssets[0].base64).toBe(PIXEL_DATA_URL);
+    expect(reloaded.imageAssets[0].base64).toBe(imported.imageAssets[0].base64);
   });
 
   test('a saved ZIP includes reachable bytes and excludes assets swept before export', async () => {
@@ -85,6 +88,7 @@ describe('image asset archive round trips', () => {
     const reloaded = await new ImageAssetService().importZip(await blobBytes(exported));
 
     expect(reloaded.imageAssets.map(asset => asset.id)).toEqual(['keep']);
+    expect(reloaded.imageAssets[0].base64).toBe(PIXEL_DATA_URL);
     expect(reloaded.projectData.waypoints).toEqual([{ customImageAssetId: 'keep' }]);
   });
 
@@ -105,6 +109,7 @@ describe('image asset archive round trips', () => {
 
     expect(reloaded.imageAssets).toHaveLength(PROJECT_ARCHIVE_LIMITS.MAX_ASSETS);
     expect(reloaded.imageAssets.map(asset => asset.id)).toEqual(assets.map(asset => asset.id));
+    expect(reloaded.imageAssets.every(asset => asset.base64 === PIXEL_DATA_URL)).toBe(true);
     expect(reloaded.projectData.waypoints).toEqual(projectData.waypoints);
   });
 
