@@ -27,7 +27,7 @@
 
 ### Environment
 
-- Work in a fresh clone outside the owner's OneDrive checkout; update it only by fast-forward, when clean.
+- Work in the clone `route-plotter/` beside the owner's OneDrive checkout, kept on the device so `.git` is never evicted; update his checkout only by fast-forward, when clean.
 - Vitest needs the threads pool and no file parallelism, or it reports no tests and exits 0.
 - Every close reads `DEV-INFRASTRUCTURE.md` → Quality gate and its close-out boot check (watcher stopped and generated files restored before a commit; readiness checked or reported as not verified when runtime behaviour changed).
 - One record: a fact lives in its owning document and is linked, never restated, in `CLAUDE.md`, `.claude/`, `.codex/` or a handover; a close updates only documents whose owned facts changed; durable cross-tool knowledge moves into its owned document; `/context` lists what Claude Code loaded.
