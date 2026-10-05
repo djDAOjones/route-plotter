@@ -74,3 +74,4 @@
 - A click on a hover-opened hint closes it, so the first click of a double-click meant to select its text dismisses it (Codex, UI-03 review r2, advisory) — (from: UI-03, 2026-10-05)
 - The test of Escape in a scene-outline field checks where focus lands, not that the form resets (Codex, UI-03 review r2) — (from: UI-03, 2026-10-05)
 - v3.2.700's full export check: the Open day example exported from the live site as MP4 and HTML, saved to disk and opened there (the HTML by file, the MP4 in a desktop player); owed under the owner's tenth-release check until the run saves it through his Chrome, with his word for each download — (from: GATELESS-1, 2026-10-05)
+- A "Hold at start", so Preview shows the 2 s start buffer that only video export adds today — (from: CROWD-05, 2026-10-05)

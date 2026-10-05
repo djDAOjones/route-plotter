@@ -18,6 +18,22 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — CROWD-05 — The animation never ends before anything that ends; its end hold follows TST-04 as CROWD-06
+
+**Decision:** CROWD-05 becomes scene-wide: the procedural duration is the latest end of every animation that concludes, measured so that nothing timed as a fraction of the timeline moves. CROWD-06 adds one project-wide "Hold at end" control (Pacing, 0–10 s, default 2 s) after TST-04, and retires "Wait here for this crowd". The owner set the rule and the control's purpose, and delegated the rest.
+
+**Rationale:** the owner, relayed verbatim by the Backlog status session: "all animations that do conclude should be taken into account with the procedurally generated duration, so that animations never end before any animation that will end does end. the extra control is for both looping / ongoing situations, and also for generally adding some padding to the end. happy for you to push back. do whats best". The Backlog status session's calls under that delegation:
+- One project-wide control, not one per crowd.
+- Its place in Pacing under Duration.
+- The 2 s default, mirroring the export's start buffer.
+- The split, so TST-04's PR need not absorb a new control and CROWD-06 lands beside DEF-20.
+- No hold in part 1, so lengths and end-frame goldens change once.
+- CROWD-05's place ahead of Phase 1. The run keeps CROWD-05 `[!]` until the owner places it, because the grant admits no new feature work without his word in the run's chat.
+
+**Supersedes:** none
+
+**Deferred:** CROWD-06
+
 ## 2026-10-05 — CROWD-05 — The animation running until every crowd dot finishes is filed, waiting on the owner's word
 
 **Decision:** CROWD-05 joins the backlog as a `[!]` line, because the owner reported from use that a crowd going from Entry to Exit is cut off when the route ends and asked for it to be filed, not started; he agreed its shape in outline, and starting it waits on his word.
