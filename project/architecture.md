@@ -1,0 +1,143 @@
+# Architecture — Route Plotter
+
+## Tech stack
+
+| Technology | Reason |
+| --- | --- |
+| Vanilla JavaScript (ES modules) | No framework overhead, full Canvas API control |
+| Canvas 2D | Direct pixel manipulation for path rendering and animation |
+| esbuild | Fast bundling, simple config, ESM output |
+| Vitest + jsdom | Unit testing with DOM simulation |
+| axe-core | Automated accessibility audit in the test suite |
+| mediabunny | MP4/WebM mux layer |
+| jszip | Project ZIP import/export |
+| CSS custom properties | Design tokens for theming (UoN + Okabe-Ito) |
+
+## Project structure
+
+`project/structure.md` is the maintained index of directory roles; the canon file map is frozen under `pm_skills/project/`.
+`src/main.js` is the entry point and orchestrator core; its method groups are
+prototype mixins in `src/app/`.
+
+(The former `workers/` layer was deleted 2026-06-18 — it never initialised
+under the old esbuild targets; see the v2 decision-log entry. es2022 targets
+re-legalise workers if ever needed again.)
+
+## v3 direction (founded 2026-08-17)
+
+Layered scene over one master timeline: the Waypoint chain remains the
+"hero route" layer; **flow layers** (GraphModel guide networks + emitters)
+add crowd/particle animation. Everything renders as a pure function of
+(timelineMs, projectState, seed) — the deterministic-timeline mandate,
+implemented since Phase 1 (2026-08-17) by **`src/core/PlayerCore.js`**: it
+builds the timeline (segments, exact pause budgets, beacon schedules) and
+evaluates any instant with no wall-clock reads or mutation. AnimationEngine
+is demand-driven transport + events: play and visible camera settling keep its
+preview frame alive, while stable paused views leave no frame queued; export
+keeps its explicit synchronous frame loop. Beacons are closed-form in timeline
+time; play, scrub, and export share the one evaluation path (golden harness:
+`tests/goldenFrames.test.js`). Since Phase 5 (2026-08-19) the HTML
+export runs the same stack: `src/player/PlayerApp.js` (bundled to
+`docs/player.js`, inlined into exports) hydrates the coordVersion-9
+snapshot, recomputes timing in the snapshot's `timingReference` space
+to preserve the authored timeline, and renders at export resolution with the
+app's own services. A separate stable `renderReference` supplies the visual
+short-edge scale for map-bound reference-pixel values; it never participates
+in coordinate or timeline calculations. Older snapshots migrate additively
+from `timingReference` or the authored canvas (cross-check:
+`tests/playerApp.test.js` and `tests/renderReference.test.js`).
+The scene data model landed in Phase 2 (2026-08-18): `Scene` →
+`FlowLayer` (guide graph or hero route + `Emitter`s with per-emitter
+seeds, normalised release windows and two-to-eight-handle busyness envelopes),
+persisted additively as the
+coordVersion 9 `scene` block. Phases and rationale: backlog +
+decision-log 2026-08-17/18.
+
+REV-02 adds an equivalent non-canvas authoring path without changing that
+ownership: `src/utils/sceneSemantics.js` projects the canonical model into a
+plain semantic snapshot, `src/controllers/SceneOutlineController.js` renders
+lazy native DOM and emits stable-ID commands, and `src/app/sceneOutline.js`
+resolves those commands back into the existing mutation/undo/autosave paths.
+The exported player uses `src/player/playerAccessibility.js` for an aggregate
+scene description and discrete transport announcements.
+
+## Key modules
+
+| Module | Path | Responsibility |
+| --- | --- | --- |
+| RoutePlotter | `src/main.js` + `src/app/*` | Sole orchestrator: owns all services, handles app-level intents and durable commits, manages state. Method groups live as prototype mixins in `src/app/*` (Object.assign; names unique across mixins) |
+| Waypoint | `src/models/Waypoint.js` | Data model for waypoints (position, style, camera, area, etc.) |
+| AnimationEngine | `src/services/AnimationEngine.js` | Demand-driven preview scheduler, transport, timing, segment speed and pause markers |
+| PathCalculator | `src/services/PathCalculator.js` | Catmull-Rom spline, reparameterisation, curvature |
+| RenderingService | `src/services/RenderingService.js` | Canvas drawing plus project-reference scaling for path, markers, labels, effects and area borders |
+| UIController | `src/controllers/UIController.js` | Sidebar controls, waypoint list, slider sync |
+| SceneOutlineController | `src/controllers/SceneOutlineController.js` | Lazy native semantic outline, authoring forms, focus and draft state |
+| InteractionHandler | `src/handlers/InteractionHandler.js` | Captured mouse/touch/pen transactions, keyboard and drag-and-drop input |
+| CoordinateTransform | `src/services/CoordinateTransform.js` | Image ↔ canvas coordinate conversion |
+| VideoExporter | `src/services/VideoExporter.js` | MP4/WebM export via WebCodecs |
+
+## Communication patterns
+
+The rule (the owner's answer to the abstraction plan's §20 Q15, 2026-09-22;
+stated as a hard rule in `AGENTS.md`):
+
+- **Components → app: through the EventBus.** UIController,
+  SectionController, SceneOutlineController, InteractionHandler and the modal
+  tools (NetworkEditService, AreaDrawingService, AreaEditService) receive the
+  bus but no app instance. The bus carries their intents, notifications to
+  them, and synchronous callback queries such as `coordinate:canvas-to-image`.
+  UI widgets (`src/components/`) are outside this rule: they use DOM events
+  and callbacks their owner supplies.
+- **App → components: named public methods.** RoutePlotter and its mixins
+  call components directly, for example to refresh the waypoint list or start
+  a tool, but never through an underscore-private member.
+- **Modal tools: provisional edits, committed by event.** While active, the
+  tools change the model provisionally; `network:changed` (with `commit`) and
+  `area:changed` are where the app records undo history and autosaves.
+- **Durable model changes belong to the app.**
+
+Current exceptions, and what removes them:
+
+- UIController writes the model itself: pause, segment speed and
+  area-highlight settings from the inspector, and names (with `_autoNamed`)
+  from the waypoint list. CON-01 moves those writes app-side.
+- NetworkEditService edits at once, outside an active edit session, while the
+  scene outline or the network inspector has bound it for inspection: node and
+  edge deletion, node type, edge direction and reversal. Each commits through
+  `network:changed`. CON-01 routes them through app-side wiring.
+- AreaEditService calls an app-supplied coordinate callback (`imageToScreen`),
+  which InteractionHandler carries in the `area:edit-start` payload. CON-01
+  replaces it with a bus query or a value in the payload.
+- Private cross-module calls: UIController →
+  `VideoExporter._testWebCodecsConfig` (DEP-04), HTMLExportService →
+  `ImageAsset._hasExpectedSignature` (DEP-05), and `editorPanel` →
+  `uiController._updateAreaSubControls` (no plan item yet; GOV-03's
+  private-call check will detect it).
+- Kept on purpose, to be revisited in SPL-05: `renderState` carries the
+  editor tools into RenderingService, which calls their public rendering
+  methods, and NetworkEditService uses the renderer's sizing methods.
+
+Canvas authoring uses one primary-pointer transaction owned by
+`InteractionHandler`: hit-test and immutable geometry snapshot on down, a
+shared 3 CSS px tap/drag threshold, captured movement, then exactly one commit
+or restoring cancellation. Window terminal-event fallbacks are deliberately
+idempotent with captured canvas events. Area, network and waypoint drags share
+this boundary; a selected waypoint group moves by one shared bounds-safe delta.
+
+## Dependency policy
+
+- **Two bundled runtime dependencies: mediabunny and jszip** (jszip
+  bundled 2026-08-17, replacing a runtime CDN load). No new runtime
+  packages without explicit approval.
+- Dev dependencies are those in `package.json` (`DEV-INFRASTRUCTURE.md` →
+  Package management).
+
+## Dev workflow
+
+- Install: `npm ci` (Node 24 is pinned in `.nvmrc`)
+- Dev: `npm run dev` → <http://localhost:3000>
+- Build: `npm run build` → output in `docs/`
+- Check: `npm run check` (Vitest + restart-script safety contract +
+  non-mutating production build)
+- Deploy: `DEV-INFRASTRUCTURE.md` → Deployment (pull requests; the owner
+  calls each release)

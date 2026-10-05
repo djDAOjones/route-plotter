@@ -51,11 +51,6 @@ there). The archive's whole size, which its images dominate, stays Save
 Project's check (DEF-04).
 (2026-09-29)
 
-DEF-53 — A video export keeps the canvas size it began with: a size chosen
-meanwhile, by the size fields or a fixed-size preset, applies to the
-display, the background placed for it, and to the next export once it ends.
-(2026-09-29)
-
 DEF-59 — The network editor's pen keeps a crowd within the six graph counts a
 project can store, as the outline does: a node, link or bend past a crowd's or
 the scene's counts is refused, in the outline's words. The project-wide

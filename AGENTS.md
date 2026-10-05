@@ -1,212 +1,54 @@
-# AI Agent Rules — Route Plotter
+# AGENTS.md — the contract
 
-## Product identity
+Twelve rules. The ledger is `project/`; the gate and the standards are
+in `project/profile.md`. Tools enforce what they can; this states it.
 
-**Route Plotter** is a single-purpose animated route editor for maps and
-images. Its canonical mental model is background image → waypoints →
-animated path → export. It is not a GIS tool, drawing app, or general video
-editor.
-
-## Who you are working with
-
-The maintainer is a novice coder who owns macro structure, UX direction, and
-conceptual design, while relying on AI for implementation and project
-management. Do the work; explain concepts only when asked. Comments should
-make non-obvious data flow and fragile behaviour understandable.
-
-## Durable context architecture
-
-- This file is the shared agent contract. Codex loads it directly; Claude Code
-  loads it through the root `CLAUDE.md`. Keep shared rules here and do not copy
-  them into tool-specific files.
-- `README.md` and the permanent project references describe the current
-  product and engineering contracts.
-- `pm_skills/project/` is the version-controlled, evolving project memory:
-  current intent, architecture, conventions, queue, decisions, and file roles.
-- Local Codex memories and Claude auto memory are recall aids only. They are
-  generated, machine-local, and not authoritative. Move any fact that must
-  survive across tools, machines, or contributors into its owned repository
-  document through the normal end-of-task workflow.
-- Do not create a second repository memory tree or duplicate existing project
-  facts in `CLAUDE.md`, `.claude/`, `.codex/`, or ad hoc handover files.
-
-## Before every task
-
-Load only the tier the task needs so startup context stays useful.
-
-### Hot whole-file
-
-- `README.md`
-- `pm_skills/project/brief.md`
-- `pm_skills/project/architecture.md`
-- `pm_skills/project/conventions.md`
-
-### Hot sectional
-
-- `pm_skills/project/file-map.md`: read the index and only the sections for
-  directories the task touches; use the whole file only for cross-cutting work.
-- `pm_skills/project/backlog.md`: read the Active section only.
-- `pm_skills/project/decision-log.md`: scan the latest 10 headings and read only
-  relevant entries. Search older entries only when the task needs them.
-
-### Conditional
-
-- Read `_Joe/dev notes/needs consolidating and deleting/dev guide.md` for code
-  changes, debugging, persistence work, or fragile implementation areas.
-- Read `UI-STANDARDS.md` for UI, controls, layout, text, states,
-  accessibility, or user-facing behaviour.
-- Read `DEV-INFRASTRUCTURE.md` for build, dev-server, versioning, scripts,
-  configuration, or deployment work. At task close, read its Quality gate
-  section even when the rest was not needed.
-
-### Warm and cold
-
-- `pm_skills/project/trajectory.md` is warm: read on demand when
-  reconstructing shipped work, releasing, or maintaining memory.
-- `pm_skills/project/wish-list.md`, `pm_skills/project/doc-deltas.md`,
-  `pm_skills/project/archive/`, and `pm_skills/project/tickets/` are cold. Read
-  them only in their named workflow; a ticket is read only when the active
-  backlog item carries `[detail]`.
-- Memory budgets live only in `pm_skills/memory-policy.md`. Read that file for
-  task close or memory maintenance; never restate its numbers here.
-- Report a budget overrun and propose the prune; never prune without the
-  owner. The owner's prune bar outranks the policy's prune-to targets
-  (decision log, 2026-08-27, "owner sets the prune bar").
-
-## Workflow
-
-1. For non-trivial work, follow `pm_skills/integrations/task.md`; its default
-   mode is `checkpoint`. Use `full` for `[sign-off]` items or when requested.
-   For bugs, follow `pm_skills/integrations/bugfix.md`. For small work, use the
-   quick path in `pm_skills/prompts/quick-task.md`. In `task.md`'s `refactor`
-   mode, the preserved interface is `window.*` globals, DOM ids, EventBus event
-   names and persisted formats; module exports may move, with test imports
-   re-pointed.
-2. Search the full source tree before proposing changes. Check
-   `src/config/constants.js` for tuneable values and `index.html` for existing
-   controls before adding anything.
-3. Close completed work through `pm_skills/prompts/end-of-task.md`. Update only
-   the documents whose owned facts changed. Do not create narrative duplicates.
-4. If another session may be writing, follow the claim and single-memory-writer
-   procedure in `pm_skills/prompts/session-start.md` and
-   `pm_skills/memory-policy.md`.
-
-## Commit, push and release
-
-`main` is the live site (`DEV-INFRASTRUCTURE.md` → Deployment), so:
-
-- Work on a short-lived branch from `main`, one concern per branch, and open a
-  pull request. Every task and memory-only (`PM:`) commit belongs on that
-  branch.
-- Never commit to or push `main` except in two owner-authorised cases:
-  merging a pull request the owner has told you to merge, and running
-  `npm run push` for a release the owner has called. The owner may grant
-  either in advance for a named run, in a decision-log entry that states its
-  conditions; outside those conditions this rule holds unchanged. Approving
-  a merge does not call a release.
-- These rules hold in every workflow and mode. The commit-and-push close in
-  `pm_skills/integrations/task.md` step 11 commits to the working branch and
-  pushes only that branch.
-- Only `npm run push` commits `docs/` and `version.json`. Never commit the
-  copies that `npm run dev` or `npm run build` rewrite locally.
-
-## Hard rules and invariants
-
-- Waypoints store normalised image coordinates in `imgX` and `imgY`: 0–1
-  spans the image, and a point authored off it (in the margin shown below
-  100% background zoom) lies outside that. Every authoring path stops at
-  `IMAGE_COORDINATES` (`src/config/constants.js`) and load accepts exactly
-  that range, both through `src/utils/imageCoordinates.js`, so a point's
-  position never stops a project reopening. Convert through
-  `CoordinateTransform`; never persist canvas pixels on a waypoint.
-- Components (the controllers, `InteractionHandler` and the modal tools) get
-  no app instance and reach the app through the EventBus. The app
-  (`RoutePlotter` and its mixins) owns durable model changes and calls
-  components only through their public methods. Modal tools may change the
-  model provisionally while active and commit through events. The current
-  exceptions are listed in `pm_skills/project/architecture.md` →
-  Communication patterns.
-- `InteractionHandler` owns one Pointer Events transaction for mouse, touch,
-  and pen authoring. Do not add a competing canvas click/mouse/touch mutation
-  path.
-- Put all imports at the top of a file.
-- Treat `docs/` as generated build output. Never hand-edit it.
-- The only runtime dependencies are `jszip` and `mediabunny`. Do not add a
-  package without explicit approval.
-- Keep the Okabe-Ito map palette separate from UoN UI tokens. UI follows the
-  project's Carbon-first, WCAG 2.2 AAA contract in `UI-STANDARDS.md`.
-- Programmatic speed-slider updates use `ui:slider:update-speed`, never direct
-  `.value` assignment.
-- Stable paused editor and player views queue no animation frame. Active
-  playback and visible camera settling may keep preview awake; export keeps its
-  single explicit synchronous frame loop.
-- Runtime recovery must remain one documented, ownership-safe command that
-  verifies readiness, not merely process launch.
-- Do not invent synonyms for existing EventBus events. Search the `emit` and
-  `on` call sites in `src/`; `README.md` → Main event prefixes names only
-  the main prefixes.
-
-## Minimal change and documentation discipline
-
-- Do not reorganise code or edit comments outside the requested surface.
-- Match existing style: 2-space indentation, single quotes, and semicolons.
-- Add an abstraction only when it reduces real duplication, isolates fragile
-  logic, or has a clear reuse case.
-- Explain why in comments; do not restate what the code says. Follow
-  `pm_skills/project/conventions.md` for JSDoc and fragile-area guidance.
-- When an out-of-scope idea arises, add one unjudged line to
-  `pm_skills/project/wish-list.md` and continue. Triage, do not scope, it later.
-
-## Testing and persistence
-
-- Run the non-mutating canonical gate, `npm run check`, after changes. Never
-  delete, skip, or weaken an existing test to obtain a pass. Re-pointing a
-  test's import when code moves, with its assertions unchanged, is not
-  weakening it.
-- Add a focused test for new model methods, utilities, and regressions. Name
-  any browser/device verification that remains manual.
-- A persisted property needs a default, `toJSON()` and `fromJSON()` handling,
-  inclusion in the canonical project snapshot, restore handling, and a
-  save/reload round-trip test.
-
-## Files agents must not hand-edit
-
-- `docs/*` — generated build output
-- `_Joe/*` — maintainer-owned notes and evidence
-- `version.json` — build-managed version state
-- `node_modules/*` — package-manager state
-
-## Document ownership
-
-- `AGENTS.md`: shared standing instructions and hard invariants.
-- `CLAUDE.md`: minimal Claude-specific adapter only.
-- `README.md`: product overview, current architecture, glossary, and gotchas.
-- `UI-STANDARDS.md`: UI, accessibility, and usability rules.
-- `DEV-INFRASTRUCTURE.md`: build, runtime, scripts, versioning, and deployment.
-- `pm_skills/project/`: evolving shared brief, architecture, queue, decisions,
-  and file roles.
-- Local/auto memory: temporary tool-specific recall, never the shared source
-  of truth.
-
-When a fact changes, update its owner and link to it elsewhere rather than
-restating it.
-
-## Framework section aliases
-
-The vendored `pm_skills/` workflows name `AGENTS.md` sections by their
-template titles. Here is where each one lives in this file:
-
-- **Read tiers** → Before every task.
-- **Files to never edit** → Files agents must not hand-edit.
-- **Protected infrastructure** → none, by owner decision (2026-09-22); `main`
-  is guarded by Commit, push and release.
-- **One-command quality gate** → `npm run check`, described in
-  `DEV-INFRASTRUCTURE.md` → Quality gate.
-- **Capturing deferred ideas** → Minimal change and documentation discipline,
-  the `wish-list.md` rule.
-- **Traceable version identity** → `DEV-INFRASTRUCTURE.md` → Framework
-  section aliases.
-- **Security baseline** → `DEV-INFRASTRUCTURE.md` → Framework section
-  aliases.
-- **Self-explaining runtime** → `DEV-INFRASTRUCTURE.md` → Framework section
-  aliases, Maintainer diagnostics.
+1. **Read before your first change, and again after a compaction
+   before your next change:** `project/profile.md`, the rules file
+   `project/rules.md`, the Direction section of `project/brief.md`, the
+   open items in `project/backlog.md`, the latest ten entries of
+   `project/decisions.md` as their heading, Decision and Deferred
+   lines, and the latest item lines of `project/trajectory.md` within
+   its budget, never fewer than the last four shipped items.
+   Read the full brief at kick-off and after a substantial amendment;
+   read a Rationale, the full brief, a routed document or an item file
+   when the task needs it, and no sooner. Edit nothing before these are
+   read.
+2. **The owner directs; you implement.** Direction lives in the brief
+   and the backlog; you do not re-scope an item. When the record does
+   not answer a question, ask the owner. Never fetch a record from
+   outside this repository.
+3. **One item, one permanent ID.** Resume that ID across sessions.
+   Name it in every entry and every commit; one writer per checkout at
+   a time; a second session works in its own clone or worktree and
+   hands back by commit; a session stages only its own item's lines
+   from HEAD.
+4. **A decision another session would need** goes in
+   `project/decisions.md`, newest first: date, ID, a Decision line, a
+   Rationale line. A decision that changes an earlier one names it on
+   a Supersedes line.
+5. **Deferred work is a line, not a sentence.** A deferral, follow-up
+   or "later item" named in any entry, trajectory line or commit is
+   also one line in `project/wish-list.md` or `project/backlog.md`.
+   Nothing is dropped silently.
+6. **On finishing:** strike the item from the backlog, add one line to
+   `project/trajectory.md` (`- ID — outcome (date) — see decisions`),
+   and retire any open line the work paid off.
+7. **Done means the gate is green** — the command in the profile — with
+   no test deleted or skipped. Dependencies change only by decision.
+8. **A task that touches a standard** in the profile applies its rules
+   and names, at close, the digest rule it applied. An exception is a
+   decision.
+9. **Commit as `ID: summary`** with a `Verify:` line stating the gate
+   result and, optionally, a `Checked: <model> — <verdict> — <scope>`
+   line for a second model's check; commit only this item's files at
+   close; push as the profile's Push line says.
+10. **Run `node tools/check.mjs` before closing.** A structural or
+    budget failure blocks the close; review warnings, fixing them or
+    linking one existing follow-up. Informational messages create no
+    new work.
+11. **At a phase close,** reconcile the phase against its list in the
+    record, mark it closed in the backlog, name the next phase's first
+    item with a reason, and run `verbs/recall.md`.
+12. **This contract has twelve rules.** Adding one retires one, or
+    cites evidence in the decisions file.
