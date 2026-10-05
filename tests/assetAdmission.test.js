@@ -129,8 +129,14 @@ describe('image asset admission planning', () => {
   });
 
   test('pins the real 40 MiB and 48-million-pixel project boundaries', () => {
-    const halfBytes = PROJECT_ARCHIVE_LIMITS.MAX_ASSET_BYTES_TOTAL / 2;
-    const halfPixels = PROJECT_ARCHIVE_LIMITS.MAX_IMAGE_PIXELS_TOTAL / 2;
+    // Literal values (TST-16): derived from the constants on both sides, this
+    // test passed whatever the constants said.
+    const MIB_40 = 41_943_040;
+    const PIXELS_48M = 48_000_000;
+    expect(PROJECT_ARCHIVE_LIMITS.MAX_ASSET_BYTES_TOTAL).toBe(MIB_40);
+    expect(PROJECT_ARCHIVE_LIMITS.MAX_IMAGE_PIXELS_TOTAL).toBe(PIXELS_48M);
+    const halfBytes = MIB_40 / 2;
+    const halfPixels = PIXELS_48M / 2;
     const retained = asset('retained', {
       size: halfBytes,
       width: 1,
@@ -153,8 +159,8 @@ describe('image asset admission planning', () => {
       additionalDiscardCount: 0,
       metrics: {
         count: 2,
-        bytes: PROJECT_ARCHIVE_LIMITS.MAX_ASSET_BYTES_TOTAL,
-        pixels: PROJECT_ARCHIVE_LIMITS.MAX_IMAGE_PIXELS_TOTAL,
+        bytes: MIB_40,
+        pixels: PIXELS_48M,
       },
     });
 

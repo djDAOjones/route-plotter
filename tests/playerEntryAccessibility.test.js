@@ -1,4 +1,10 @@
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { CANDIDATE_KEYS } from './helpers/keyDomain.js';
+import { keyListenersIn, lexedFiles } from './helpers/sourceScan.js';
+
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const playerHarness = vi.hoisted(() => ({ latest: null }));
 
@@ -310,5 +316,132 @@ describe('standalone player accessibility wiring', () => {
     timeline.blur();
     app.onFrame(app.animationEngine.state);
     expect(timeline.getAttribute('aria-valuetext')).toBe('0:30 of 1:05');
+  });
+
+  /**
+   * The keys each of the player's two key listeners compares, reviewed: the
+   * page's transport keys and the timeline's steps. Their source must say the
+   * same, read as the key table reads every listener's, and every other key of
+   * the domain is pressed on each and must do nothing: a key either starts or
+   * stops taking fails here.
+   */
+  const PLAYER_KEYS = {
+    page: [' ', 'ArrowLeft', 'ArrowRight', 'End', 'Home', 'k'],
+    timeline: ['ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'End', 'Home', 'PageDown', 'PageUp']
+  };
+
+  test("the player's two key listeners compare the reviewed keys, read from their source (TST-13)", () => {
+    const { listeners, unread } = keyListenersIn(lexedFiles(repoRoot, 'src/player'));
+    expect(unread, 'ways of listening in src/player the scan cannot read').toEqual([]);
+    expect(Object.fromEntries(listeners.map(({ name, reads }) => [name.replace('src/player/playerEntry.js: ', ''), {
+      keys: [...reads.keys].sort(), anyCase: [...reads.anyCase].sort(), unanalysed: reads.unanalysed
+    }])), 'the keys each compares, and any use of its event the scan cannot read (PLAYER_KEYS)').toEqual({
+      'document keydown': { keys: PLAYER_KEYS.page, anyCase: [], unanalysed: [] },
+      'timeline keydown': { keys: PLAYER_KEYS.timeline, anyCase: [], unanalysed: [] }
+    });
+  });
+
+  // Each keydown pressed once, and again as a key held down repeats it.
+  const keysTitle = "every key the player's two key listeners take, and what each does%s (TST-13)";
+  test.each([['', false], [', held down', true]])(keysTitle, async (_, held) => {
+    // The key table (tests/keyTable.test.js) lists every key listener in
+    // src/ and names this test for the player's: the page's transport keys,
+    // which leave a focused control its own keys, and the timeline's steps.
+    // It holds this test to what the key table holds its own rows to: each key
+    // the handlers compare, read from their source, is pressed on its target,
+    // and every other key of the domain is pressed there and does nothing.
+    vi.useFakeTimers();
+    installPlayerShell();
+    window.__ROUTE_PLOTTER_PROJECT__ = { coordVersion: 9 };
+    window.__ROUTE_PLOTTER_BG__ = null;
+
+    const app = await importAndBootPlayer();
+    const state = app.animationEngine.state;
+    const timeline = document.getElementById('timeline');
+    const playButton = document.getElementById('play-btn');
+    const pressed = { page: new Set(), timeline: new Set() };
+    const press = (key, target = document.body) => {
+      pressed[target === timeline ? 'timeline' : 'page'].add(key);
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, repeat: held });
+      target.dispatchEvent(event);
+      const where = target === document.body ? 'the page' : `#${target.id}`;
+      return `${key === ' ' ? 'Space' : key} on ${where}: ${event.defaultPrevented ? 'taken' : 'left'}; ` +
+        `${app.animationEngine.isPlaying() ? 'playing' : 'paused'} at ${state.currentTime / 1000} s`;
+    };
+
+    expect([
+      press('ArrowRight'), press('ArrowRight'), press('ArrowLeft'), press('End'), press('Home'),
+      press(' '), press('k'), press('k'), press(' '), press('j'), press(' ', playButton),
+      ...['ArrowRight', 'ArrowUp', 'PageUp', 'ArrowLeft', 'ArrowDown', 'PageDown', 'End', 'Home', 'k']
+        .map(key => press(key, timeline))
+    ]).toEqual([
+      'ArrowRight on the page: taken; paused at 1 s',
+      'ArrowRight on the page: taken; paused at 2 s',
+      'ArrowLeft on the page: taken; paused at 1 s',
+      'End on the page: taken; paused at 65 s',
+      'Home on the page: taken; paused at 0 s',
+      'Space on the page: taken; playing at 0 s',
+      'k on the page: taken; paused at 0 s',
+      'k on the page: taken; playing at 0 s',
+      'Space on the page: taken; paused at 0 s',
+      'j on the page: left; paused at 0 s',
+      // A focused button keeps Space for itself.
+      'Space on #play-btn: left; paused at 0 s',
+      'ArrowRight on #timeline: taken; paused at 5 s',
+      'ArrowUp on #timeline: taken; paused at 10 s',
+      'PageUp on #timeline: taken; paused at 20 s',
+      'ArrowLeft on #timeline: taken; paused at 15 s',
+      'ArrowDown on #timeline: taken; paused at 10 s',
+      'PageDown on #timeline: taken; paused at 0 s',
+      'End on #timeline: taken; paused at 65 s',
+      'Home on #timeline: taken; paused at 0 s',
+      // The timeline keeps its own keys: K there neither plays nor is taken.
+      'k on #timeline: left; paused at 0 s'
+    ]);
+
+    const { listeners } = keyListenersIn(lexedFiles(repoRoot, 'src/player'));
+    const comparedBy = name => {
+      const { reads } = listeners.find(listener => listener.name === `src/player/playerEntry.js: ${name} keydown`);
+      expect(reads.unanalysed).toEqual([]);
+      return [...reads.keys];
+    };
+    const compared = { page: comparedBy('document'), timeline: comparedBy('timeline') };
+    for (const where of ['page', 'timeline']) {
+      expect(compared[where].filter(key => !pressed[where].has(key)), `keys the ${where}'s handler compares, unpressed`)
+        .toEqual([]);
+      expect([...compared[where]].sort(), `the keys the ${where}'s handler compares (PLAYER_KEYS)`)
+        .toEqual(PLAYER_KEYS[where]);
+      expect(PLAYER_KEYS[where].filter(key => !pressed[where].has(key)), `reviewed keys of the ${where}, unpressed`)
+        .toEqual([]);
+      // Every other key: nothing taken, and the transport where it was. The
+      // keys left out are the reviewed ones, not the source's, so a key the
+      // handler takes in a way the scan cannot see is still swept.
+      const target = where === 'timeline' ? timeline : document.body;
+      const before = press('Home', target);
+      expect(CANDIDATE_KEYS.filter(key => !PLAYER_KEYS[where].includes(key)).map(key => press(key, target))
+        .filter(record => !record.endsWith(`left; ${before.split('; ')[1]}`)), `other keys on the ${where}`)
+        .toEqual([]);
+    }
+  });
+
+  test('a page without its project says why, in its own error panel (TST-13)', async () => {
+    // The error detail is looked up by id: a lookup that named another id the
+    // page has would pass the id checks and leave this panel empty.
+    installPlayerShell();
+    delete window.__ROUTE_PLOTTER_PROJECT__;
+    await importAndBootPlayer();
+    expect({
+      panel: document.getElementById('player-error').hidden ? 'hidden' : 'shown',
+      detail: document.getElementById('player-error-detail').textContent,
+      controls: document.querySelector('.controls').hidden ? 'hidden' : 'shown',
+      summary: document.getElementById('scene-summary-content').textContent,
+      time: document.getElementById('current-time').textContent
+    }).toEqual({
+      panel: 'shown',
+      detail: 'This export is missing its embedded project data. Re-export the file from Route Plotter.',
+      controls: 'hidden',
+      summary: 'Scene summary unavailable.',
+      time: '0:00'
+    });
   });
 });

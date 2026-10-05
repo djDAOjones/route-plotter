@@ -86,6 +86,8 @@
   nothing today. **P2**
 - [ ] **TST-11 Behavioural tests for source-text assertions** ·
   Characterisation [gated: SPL-06 impl] **P1**
+- [ ] **TST-14 Shell and ContextMenu safety tests** · Characterisation
+  [ready] **P1**
 - [ ] **TST-16 Tighten the round-2 predicates** · Characterisation [ready]
   **P1**
 
@@ -118,9 +120,6 @@ moved, and account for every survivor)
   Visible since DEF-08 (#37, unreleased): a route cut to one waypoint draws
   its last marker, paused, at a stale grow scale. Land it before the
   release. **P3**
-- [ ] **DEF-27 Instant spotlight and AoV ignore camera zoom** · Live defect
-  [ready] — §20 Q17: the camera applies there too (ground rule 8; TST-02 has
-  shipped). **P3**
 
 **Defects after their W5 test** (§13 ground rule 8)
 

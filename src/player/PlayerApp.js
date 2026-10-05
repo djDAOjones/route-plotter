@@ -190,7 +190,10 @@ export class PlayerApp {
         this.animationEngine.state.speed = data.animationState.speed;
       }
       if (data.animationState.duration) {
+        // The saved duration is the base timeline (CROWD-05); the scene's
+        // end is measured against it below.
         this.animationEngine.state.duration = data.animationState.duration;
+        this.animationEngine.state.baseDuration = data.animationState.duration;
       }
     }
 
@@ -216,10 +219,6 @@ export class PlayerApp {
       this.updateAnimationDuration(); // markers, pauses, intro, tail, duration
       clearTimeout(this._durationUpdateTimeout);
     }
-    this._authoredTimeline = {
-      duration: this.animationEngine.state.duration,
-      mode: this.animationEngine.state.mode
-    };
 
     // --- Render space: the export resolution, like an exported video frame.
     // pathPoints are normalised, so only the coordinate mapping changes; the
@@ -230,6 +229,18 @@ export class PlayerApp {
     if (this.background.image) {
       this.updateImageTransform(this.background.image);
     }
+
+    // The scene's end against the base timeline composed above, measured
+    // with what this player draws (CROWD-05), with or without a route to
+    // rebuild: the base is kept, only what waits after it is measured. The
+    // route moments a bound crowd reads are taken here as `render` takes them.
+    this.refreshSceneEnd();
+    this._authoredTimeline = {
+      duration: this.animationEngine.state.duration,
+      baseDuration: this.animationEngine.state.baseDuration,
+      sceneEndParts: this.animationEngine.sceneEndParts,
+      mode: this.animationEngine.state.mode
+    };
 
     this.animationEngine.reset();
     this._restoreAuthoredTimeline();
@@ -252,10 +263,16 @@ export class PlayerApp {
     this._restoreAuthoredTimeline();
   }
 
-  /** AnimationState.reset() clobbers duration and mode; put the authored ones back. */
+  /**
+   * AnimationState.reset() clobbers the mode (the engine's reset keeps both
+   * durations, CROWD-05); put the authored timeline back whole, with what
+   * made up the end.
+   */
   _restoreAuthoredTimeline() {
     if (!this._authoredTimeline) return;
     this.animationEngine.state.duration = this._authoredTimeline.duration;
+    this.animationEngine.state.baseDuration = this._authoredTimeline.baseDuration;
+    this.animationEngine.sceneEndParts = this._authoredTimeline.sceneEndParts;
     this.animationEngine.state.mode = this._authoredTimeline.mode;
   }
 

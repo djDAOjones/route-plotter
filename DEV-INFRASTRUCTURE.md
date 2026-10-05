@@ -238,8 +238,11 @@ breaking change.
 - **Custom message:** `npm run push -- "custom msg"`
 - **Dry run:** `npm run push:dry-run`
 - **Working setup** (GOV-01; owner's answers to the abstraction plan's §20 Q1
-  and Q2, 2026-09-22): work in a fresh full clone outside OneDrive — a plain
-  `git clone`, not `--single-branch`, which tracks only one branch — then
+  and Q2, 2026-09-22; location ruled 2026-10-03): work in a fresh full
+  clone, `route-plotter/`, beside the owner's checkout in the same OneDrive
+  folder, with OneDrive's Always Keep on This Device set on it so `.git` is
+  never evicted — a plain `git clone`, not `--single-branch`, which tracks
+  only one branch — then
   `nvm use` and `npm ci`. Make one short-lived branch from `main` per
   concern, named for its item (e.g. `w0/def-18-push-flags`); run
   `npm run check`; push the branch; open a pull request; and wait for
@@ -291,7 +294,8 @@ breaking change.
 - **OneDrive:** the owner's checkout lives in OneDrive, which can evict tracked
   files and `.git` internals to online-only; git then fails with
   `mmap failed: Operation timed out`. That is why work and releases run from a
-  fresh clone outside it (Working setup above).
+  fresh clone kept on the device, never from the owner's checkout (Working
+  setup above).
 - **Live URL:** <https://djdaojones.github.io/route-plotter/> (Pages enabled 2026-08-19, Phase 5; the frozen v2 line stays at <https://djdaojones.github.io/router-plotter-02/>)
 
 ---

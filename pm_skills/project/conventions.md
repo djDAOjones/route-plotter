@@ -60,9 +60,6 @@ discipline. This section captures how they apply to this project:
 - After every change: `npm run check` (tests, shell contract and
   `build:check`). It is non-mutating; `npm run build` and `npm run dev`
   rewrite tracked `docs/` and `version.json`, so don't run them as a check
-- Shell tests write every check as `if <cmd>; then fail "<what broke>"; fi`:
-  a `!`-negated command never stops a `set -e` script, and the bash 3.2
-  macOS ships does not stop for a failing `[[ … ]]` either (TST-14)
 
 ## Patterns to follow
 

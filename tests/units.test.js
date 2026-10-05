@@ -557,3 +557,53 @@ describe('RenderingService.glowLayers (path glow math)', () => {
     });
   });
 });
+
+describe('RenderingService.imageRect (where the background image and its tint are drawn, DEF-27)', () => {
+  /** A background as the render state carries it: the image, and the export background zoom (1 is 100%). */
+  const background = (width, height, zoom) => ({ image: { naturalWidth: width, naturalHeight: height }, zoom });
+
+  test('contains the image in the canvas, centred, then scales it about the centre by the background zoom', () => {
+    // DEF-27's evidence: the canvas's own aspect, at 50%, leaves a margin all round
+    expect(RenderingService.imageRect(background(1612, 1140, 0.5), 806, 570))
+      .toEqual({ x: 201.5, y: 142.5, w: 403, h: 285 });
+    // A 4:3 image on a 16:9 canvas is pillarboxed at 100%, and overhangs every edge at 200%
+    expect(RenderingService.imageRect(background(1600, 1200, 1), 1280, 720)).toEqual({ x: 160, y: 0, w: 960, h: 720 });
+    expect(RenderingService.imageRect(background(1280, 960, 2), 1280, 720))
+      .toEqual({ x: -320, y: -360, w: 1920, h: 1440 });
+    // A wide image on a square canvas at 150% overhangs the sides only
+    expect(RenderingService.imageRect(background(1600, 900, 1.5), 800, 800))
+      .toEqual({ x: -200, y: 62.5, w: 1200, h: 675 });
+    // A tall image on a wide canvas at 25%
+    expect(RenderingService.imageRect(background(1000, 1500, 0.25), 1920, 1080))
+      .toEqual({ x: 870, y: 405, w: 180, h: 270 });
+  });
+
+  test('reads a missing zoom as 100%, and an image with no natural size by its width and height', () => {
+    expect(RenderingService.imageRect({ image: { naturalWidth: 1600, naturalHeight: 1200 } }, 1280, 720))
+      .toEqual({ x: 160, y: 0, w: 960, h: 720 });
+    expect(RenderingService.imageRect({ image: { width: 1600, height: 1200 }, zoom: 1.5 }, 1280, 720))
+      .toEqual(RenderingService.imageRect(background(1600, 1200, 1.5), 1280, 720));
+  });
+
+  test('is exactly the image bounds CoordinateTransform gives the route, for the same canvas, image and zoom', () => {
+    // Compared bit for bit, including sizes whose arithmetic is inexact, so
+    // the image and its tint can never drift off the route by a rounding
+    for (const [cw, ch, iw, ih, zoom] of [
+      [806, 570, 1612, 1140, 0.5],
+      [1280, 720, 1600, 1200, 1],
+      [1280, 720, 1600, 1200, 1.5],
+      [1280, 720, 1280, 960, 2],
+      [660, 660, 1600, 900, 1.75],
+      [1920, 1080, 1000, 1500, 0.25],
+    ]) {
+      const transform = new CoordinateTransform();
+      transform.setCanvasDimensions(cw, ch);
+      // The editor and the player always place the route in 'fit' (`viewport.js`)
+      transform.setImageDimensions(iw, ih, 'fit');
+      transform.setBackgroundZoom(zoom);
+      const { x, y, w, h } = transform.getImageBounds();
+      expect(RenderingService.imageRect(background(iw, ih, zoom), cw, ch), `${iw}×${ih} on ${cw}×${ch} at ${zoom}`)
+        .toEqual({ x, y, w, h });
+    }
+  });
+});
