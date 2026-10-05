@@ -595,6 +595,18 @@ lsof() {
           return 1
         fi
         state="${spec#TCP:}"
+        # Every listed state must be one lsof knows, as lsof refuses the
+        # whole query for one it does not.
+        for name in ${state//,/ }; do
+          case "${name}" in
+            CLOSED|LISTEN|SYN_SENT|SYN_RCVD|ESTABLISHED|CLOSE_WAIT|FIN_WAIT_1|CLOSING|LAST_ACK|FIN_WAIT_2|TIME_WAIT) ;;
+            *) echo "lsof: unknown TCP state name: ${name}" >&2; return 1 ;;
+          esac
+        done
+        if [[ "${state}" == ,* || "${state}" == *, || "${state}" == *,,* ]]; then
+          echo "lsof (test stub): unsupported state selection ${arg}" >&2
+          return 1
+        fi
         ;;
       -*)
         flags="${arg#-}"
