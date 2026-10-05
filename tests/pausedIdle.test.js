@@ -31,8 +31,8 @@ import { bootApp } from './helpers/bootApp.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { CameraService } from '../src/services/CameraService.js';
-import { RenderingService } from '../src/services/RenderingService.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
+import { contextIdFor, recordCallOrder, takeOrderedCalls } from './setup.js';
 
 /** Slower than the engine's 60 fps gate, so every frame updates. */
 const FRAME_MS = 20;
@@ -43,6 +43,13 @@ const NEVER_IDLE = 500;
  * easing the camera's centre out of sight took some eighty more.
  */
 const SETTLES_WITHIN = 10;
+/**
+ * A camera within this of 1× is drawn flat. This test's own figure, so which
+ * frames count as flat is not taken from the code under test, which holds it
+ * in `RenderingService`: `cameraApplies` for the image, and `render`'s own
+ * check for the vector layer.
+ */
+const FLAT_WITHIN = 0.001;
 
 let frames;
 let originalRequest;
@@ -708,14 +715,45 @@ describe('DEF-44: a camera that is drawn still eases', () => {
 
 describe('DEF-44: a residual, as on `main`, that ends by itself', () => {
 
+  /** No camera: here both layers start every frame at the identity. */
+  const NO_CAMERA = [1, 0, 0, 1, 0, 0];
+
+  /** What a frame's camera draws with: its centre at the canvas's middle, zoomed. */
+  function cameraTransform({ zoom, centerX, centerY }, width, height) {
+    return [zoom, 0, 0, zoom, width / 2 - zoom * centerX, height / 2 - zoom * centerY];
+  }
+
+  /**
+   * The transforms one frame drew its two layers with, as the canvases
+   * recorded them (`setup.js`): the background image's, on the visible
+   * canvas, and the route's first point's, on the vector layer.
+   */
+  function layersDrawnWith(player, calls) {
+    const visible = contextIdFor(player.canvas);
+    const vector = contextIdFor(player.renderingService.vectorCanvas);
+    const image = calls.find(([id, name, source]) =>
+      id === visible && name === 'drawImage' && String(source).startsWith('[image '));
+    const route = calls.find(([id, name]) => id === vector && name === 'moveTo');
+    return { image: image?.transform, route: route?.transform };
+  }
+
+  /** A recorded transform equals the expected one, to floating-point rounding. */
+  function expectTransform(actual, expected, label) {
+    expect(actual, `${label}: drawn`).toBeDefined();
+    expected.forEach((value, index) => {
+      expect(actual[index], `${label}: ${'abcdef'[index]}`).toBeCloseTo(value, 6);
+    });
+  }
+
   test('an 8K player easing its camera back to 1× from the This Zoom slider’s first step ends with frames that draw the same flat view, then goes idle', async () => {
     // Not repaired here, and on `main` too (the PR's third review): the
-    // renderer draws a camera within 0.001 of 1× flat
-    // (`RenderingService.cameraApplies`), while the camera eases its centre on
-    // to within a pixel of the canvas centre and keeps the loop awake. At 8K
-    // the zoom gets there first. Found: eight such frames; held to ten. A
-    // repair that settles the centre once it is drawn flat would end them, and
-    // this test and the plan row's residual with them.
+    // renderer draws a camera within 0.001 of 1× flat, while the camera eases
+    // its centre on to within a pixel of the canvas centre and keeps the loop
+    // awake. At 8K the zoom gets there first. Found: eight such frames; held
+    // to ten. Which frames are flat is this test's own figure (`FLAT_WITHIN`),
+    // held against the transforms both layers drew with, not the renderer's
+    // word. A repair that settles the centre once it is drawn flat would end
+    // them, and this test and the plan row's residual with them.
     const app = await bootApp();
     await app.ready;
     app.eventBus.emit('waypoint:add', { imgX: 0.96, imgY: 0.96, isMajor: true });
@@ -733,15 +771,39 @@ describe('DEF-44: a residual, as on `main`, that ends by itself', () => {
       player.start();
       frames.runUntilIdle();
       expect(frames.pending.size, 'the player came to rest at the start').toBe(0);
-      expect(RenderingService.cameraApplies(drawn().at(-1)), 'the camera drawn at the start').toBe(true);
+      const flatAt = ({ zoom }) => Math.abs(zoom - 1) <= FLAT_WITHIN;
+      expect(flatAt(drawn().at(-1)), 'the camera zoomed at the start').toBe(false);
 
-      // Paused, a seek to the end, where the camera is 1×
+      // Paused, a seek to the end, where the camera is 1×: each frame's
+      // camera, and the transforms its layers drew with
       const before = drawn().length;
-      player.animationEngine.seekToProgress(1);
-      const ran = frames.runUntilIdle();
-      expect(frames.pending.size, `the paused player: a frame is still queued after ${ran}`).toBe(0);
+      const layers = [];
+      recordCallOrder(true);
+      try {
+        player.animationEngine.seekToProgress(1);
+        while (frames.pending.size > 0 && layers.length < NEVER_IDLE) {
+          frames.runNext();
+          layers.push(layersDrawnWith(player, takeOrderedCalls()));
+        }
+      } finally {
+        recordCallOrder(false);
+      }
+      expect(frames.pending.size, `the paused player: a frame is still queued after ${layers.length}`).toBe(0);
       const eased = drawn().slice(before);
-      const flat = eased.slice(eased.findLastIndex(RenderingService.cameraApplies) + 1);
+      expect(eased.length, 'each frame drew once').toBe(layers.length);
+
+      // The background and the route each draw the camera this test expects:
+      // the frame's own, or none within FLAT_WITHIN of 1×
+      eased.forEach((camera, index) => {
+        const expected = flatAt(camera)
+          ? NO_CAMERA
+          : cameraTransform(camera, player.displayWidth, player.displayHeight);
+        const label = `frame ${index + 1}, the camera at ${camera.zoom}×`;
+        expectTransform(layers[index].image, expected, `${label}: the background image`);
+        expectTransform(layers[index].route, expected, `${label}: the route`);
+      });
+
+      const flat = eased.slice(eased.findLastIndex(camera => !flatAt(camera)) + 1);
       expect(flat.length, 'the camera eased back to 1× in view').toBeLessThan(eased.length);
       // The first frame drawn flat shows the camera's last step to 1×; each
       // after it draws that same view again.
