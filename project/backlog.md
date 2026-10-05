@@ -14,6 +14,11 @@
 
 ## Current
 
+### Ahead of Phase 1's pull requests — the owner's order of 2026-10-05
+
+- [ ] DEF-77 — "At journey end" has no visible effect — since 2026-10-05
+- [ ] UI-03 — In-place parameter help, part 1: hints on hover, in plain words, for every setting — since 2026-10-05
+
 ### Phase 1 — Land the big run's open pull requests
 
 - [~] TST-16 — Tighten the round-2 predicates · Characterisation P1 — since 2026-10-01
@@ -32,9 +37,9 @@
 
 ## Next
 
-**After Phase 1 — on the owner's word**
+**After TST-04 — the owner's order of 2026-10-05**
 
-- [!] UI-03 — In-place parameter help — since 2026-10-05 — blocked: owner word — new feature work
+- [ ] UI-04 — A hint trigger of its own (UI-03's second part) — since 2026-10-05 — blocked: TST-04 — (from: GATELESS-1, 2026-10-05)
 
 **W5 — deepen the characterisation**
 
@@ -85,7 +90,6 @@
 - [ ] DEF-74 — Redo restores no selection — since 2026-10-05 — blocked: TST-05
 - [ ] DEF-75 — Index check misses references — since 2026-10-05
 - [ ] DEF-76 — Leg-speed edit stales timing — since 2026-10-05
-- [ ] DEF-77 — "At journey end" has no visible effect — since 2026-10-05
 
 ## Icebox
 
