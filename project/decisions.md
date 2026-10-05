@@ -18,6 +18,26 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — CROWD-05 — The animation running until every crowd dot finishes is filed, waiting on the owner's word
+
+**Decision:** CROWD-05 joins the backlog as a `[!]` line, because the owner reported from use that a crowd going from Entry to Exit is cut off when the route ends and asked for it to be filed, not started; what a looping crowd does is his call.
+
+**Rationale:** his words reached this run relayed verbatim by the Backlog status session; the item quotes them. The backlog rather than the wish-list, and the ID after CROWD-04 in the canon crowd family, are this session's calls. The shape that session proposed (a crowd tail after the route, releases anchored to the route-only duration, a control for looping crowds) is in the item's notes as its proposal. The wish line owing the crowd explainer's update is retired: that session updated the doc after DEF-77 shipped.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — GATELESS-1 — The in-page export check suffices, with a save to disk after export changes and every tenth release
+
+**Decision:** a release's in-page export check is enough unless it changes the export code or `player.js`, or its build number ends in 0; then its exports are also saved to disk and opened there. v3.2.699's owed save is retired and v3.2.700's is owed, because the owner said "proceed on that basis" and asked for a check every tenth release.
+
+**Rationale:** asked whether releases after v3.2.698 still owe their saves, he asked for this session's recommendation: the in-page check captures the export's own bytes and checks the MP4's header, decode, size and length and the HTML's CSP, project and embedded player; a saved copy adds only opening from disk (the HTML as a file, the MP4 in a desktop player), which matters when export or player code changes. He answered "proceed on that basis. could we perhaps add an export check avery tenth release or something? is that practical?". Builds ending in 0 as his "every tenth release" is this session's reading, for him to confirm. The browser pane cannot save a download, so the save is his by hand from the live site, or through his own Chrome with his word for each download: his pick. This extends the same day's entry confirming the checks for v3.2.693–698.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — UI-03 — Hints open on hover, say what they mean, and cover every setting
 
 **Decision:** UI-03 part 1 lands: a mouse resting 500 ms on a hint's text opens it, it stays while the pointer is on the text, its control or the hint, and Escape dismisses it in place, in a scene-outline field too; a hint sits clear of the control it describes; thirteen unclear hints are reworded and 60 settings gain one, because the owner asked for parameters explained in place. The owner's ahead-of-Phase-1 group closes; Phase 1 resumes with TST-16 (PR #76), readiest first by PLAN-1.

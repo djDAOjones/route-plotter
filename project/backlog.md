@@ -34,6 +34,10 @@
 
 ## Next
 
+**Filed from use — waits on the owner's word**
+
+- [!] CROWD-05 — The animation runs until every crowd dot has finished — since 2026-10-05 — blocked: owner's word — what a looping crowd does after the route ends, and to start it
+
 **After TST-04 — the owner's order of 2026-10-05**
 
 - [ ] UI-04 — A hint trigger of its own (UI-03's second part) — since 2026-10-05 — blocked: TST-04 — (from: GATELESS-1, 2026-10-05)
