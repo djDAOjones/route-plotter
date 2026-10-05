@@ -429,6 +429,10 @@ export const wiringControllersMixin = {
       const next = current === targetId ? null : targetId;
       const verdict = canRejoinBranch(this.waypoints, info.branchId, next);
       if (!verdict.ok) {
+        // The drop put the branch's end back where it was: its route is
+        // rebuilt for it, or the drag's own path would time a route the
+        // project no longer has (DEF-06).
+        this.calculatePath();
         this.eventBus.emit('ui:toast', { message: verdict.reason });
         return;
       }
@@ -436,7 +440,9 @@ export const wiringControllersMixin = {
       waypoint.branchRejoin = next;
       this.saveUndoState(); // after the mutation, per the undo-stack contract
       this.calculatePath();
-      this.updateAnimationDuration();
+      // Timed now, and the rebuild the path queued with it dropped: a save
+      // would otherwise run it again (DEF-06).
+      this.invalidateAnimationTiming();
       this.updateWaypointList();
       this.autoSave();
       this.queueRender();
@@ -983,6 +989,9 @@ export const wiringControllersMixin = {
      */
     this.eventBus.on('motion:waypoint-visibility-change', (mode) => {
       this.motionSettings.waypointVisibility = mode;
+      // Hiding a waypoint before or after the head changes when its beacon
+      // settles, and so where the scene ends (CROWD-05).
+      this.refreshSceneEnd?.();
       this.autoSave();
       if (this.previewMode) this.render();
     });
@@ -1167,16 +1176,23 @@ export const wiringControllersMixin = {
             hover = {
               type: segmentHit.onPlus ? 'leg-plus' : 'leg',
               waypoint: segmentHit.waypoint,
-              waypointIndex: segmentHit.waypointIndex
+              waypointIndex: segmentHit.waypointIndex,
+              // The leg's run, which the glow is drawn along, and whether it
+              // offers the "+" (DEF-64)
+              branchId: segmentHit.branchId,
+              canInsert: segmentHit.canInsert
             };
           }
         }
       }
 
       const prev = this.canvasHover;
+      // A fork owns its trunk leg and each branch's first leg, so the run
+      // tells those legs apart (DEF-64)
       const changed = (prev?.type !== hover?.type) ||
                       (prev?.waypoint !== hover?.waypoint) ||
                       (prev?.waypointIndex !== hover?.waypointIndex) ||
+                      (prev?.branchId !== hover?.branchId) ||
                       (prev?.handle?.type !== hover?.handle?.type) ||
                       (prev?.handle?.vertexIndex !== hover?.handle?.vertexIndex);
       if (changed) {

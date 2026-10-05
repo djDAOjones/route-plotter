@@ -68,12 +68,15 @@ the export. Once its transport is suspended, each part of an export's
 clean-up runs whether or not another fails, and its controls are freed
 whatever failed. (2026-09-28)
 
-DEF-45 — Announcements are written to the live region in turn, and what
-browser recovery did or could not do is never pushed out: a recovery
-warning is no longer replaced by "Previous session restored" or "Project
-loaded", nor lost when the author plays and pauses straight away; each
-message keeps the region for 2 s, no earlier clear blanks a later one, and
-the waypoint list's own messages wait their turn. (2026-10-01)
+DEF-43 — A polygon draw follows its waypoint through an undo or a redo, and
+ends, saying so in a toast, when its waypoint is deleted or undone away,
+rather than closing onto a waypoint the project no longer has; and Draw Area
+asked for again keeps the draw in progress. (2026-09-29)
+
+DEF-27 — The instant spotlight and angle of view follow the camera, so the
+circle or cone stays on the head at any zoom, and the contrast tint covers the
+image's rectangle and no margin at any background zoom, moving with the camera.
+(2026-09-29)
 
 ## Before the big run (2026-09-28)
 

@@ -82,6 +82,10 @@ export class CameraService {
       this._targetZoom = 1;
       this._targetCenterX = canvasWidth / 2;
       this._targetCenterY = canvasHeight / 2;
+      // Nothing eases toward that target here, so the camera is put on it: a
+      // smoothed centre left at (0, 0) kept the render loop awake, about 60
+      // frames a second, from every cold start (DEF-44).
+      this.settle();
       return {
         zoom: 1,
         centerX: canvasWidth / 2,
@@ -98,6 +102,22 @@ export class CameraService {
       animationDuration
     );
     this._targetZoom = targetZoom;
+    // The target centre goes with it: where the camera comes to rest once its
+    // zoom reaches that target, which is where the frames below take it (flat
+    // on the canvas centre at 1×, otherwise on the head, held where the view
+    // stays on the canvas). Taken at the zoom the rate limit had reached in
+    // one frame, the centre `settle` paired with the target zoom put a camera
+    // no frame drew neither still nor in place: drawn again, it stopped short
+    // of the head at 16×, or eased unseen at 1× (DEF-44).
+    if (Math.abs(targetZoom - 1) < 0.001) {
+      this._targetCenterX = canvasWidth / 2;
+      this._targetCenterY = canvasHeight / 2;
+    } else {
+      const restHalfW = canvasWidth / (2 * targetZoom);
+      const restHalfH = canvasHeight / (2 * targetZoom);
+      this._targetCenterX = Math.max(restHalfW, Math.min(canvasWidth - restHalfW, headPosition?.x ?? canvasWidth / 2));
+      this._targetCenterY = Math.max(restHalfH, Math.min(canvasHeight - restHalfH, headPosition?.y ?? canvasHeight / 2));
+    }
     
     // Apply rate limiting to zoom changes
     // The rate limiter smoothly transitions toward the target, preventing visual jumps
@@ -110,8 +130,6 @@ export class CameraService {
       // Continue smoothing zoom toward 1.0 (don't snap!)
       const zoomSmooth = CAMERA_DEFAULTS.ZOOM_SMOOTHING;
       const posSmooth = CAMERA_DEFAULTS.SMOOTHING_FACTOR;
-      this._targetCenterX = canvasWidth / 2;
-      this._targetCenterY = canvasHeight / 2;
       
       this._smoothedZoom += (1 - this._smoothedZoom) * zoomSmooth;
       this._smoothedCenterX += (canvasWidth / 2 - this._smoothedCenterX) * posSmooth;
@@ -162,8 +180,6 @@ export class CameraService {
     // Clamp to boundaries
     targetCenterX = Math.max(minX, Math.min(maxX, targetCenterX));
     targetCenterY = Math.max(minY, Math.min(maxY, targetCenterY));
-    this._targetCenterX = targetCenterX;
-    this._targetCenterY = targetCenterY;
 
     this._currentZoom = zoom;
     
@@ -429,6 +445,21 @@ export class CameraService {
     this._lastZoomUpdateTime = 0;
   }
   
+  /**
+   * Put every smoothed stage of the camera on its target, so it counts as
+   * settled. For a frame that draws no camera: nothing eases the smoothed
+   * values there, and while any of them is short of its target
+   * `isZoomTransitioning` keeps the render loop awake (DEF-44). The target is
+   * where the camera comes to rest (`calculateCameraState`), so a camera
+   * settled unseen is drawn there, still, when it is drawn again.
+   */
+  settle() {
+    this._rateLimitedZoom = this._targetZoom;
+    this._smoothedZoom = this._targetZoom;
+    this._smoothedCenterX = this._targetCenterX;
+    this._smoothedCenterY = this._targetCenterY;
+  }
+
   /**
    * Check if camera is still transitioning (zoom or center position)
    * Used to keep rendering while camera transition completes

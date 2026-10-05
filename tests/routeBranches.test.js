@@ -108,40 +108,47 @@ describe('resolveRouteBranches', () => {
 });
 
 describe('resolveRouteBranches reports problems instead of repairing them', () => {
+  // Each list is exact (TST-16): a real list can carry more than the code the
+  // test is named for, and a `toContain` would let a code appear, vanish or
+  // repeat unnoticed. The extra codes below are today's, pinned as they are.
   const problemCodes = route => resolveRouteBranches(route).problems.map(p => p.code);
 
   test('a branch id that reappears elsewhere is a split run', () => {
+    // The second piece is a run of its own that declares no fork, so it is
+    // reported too. This is the list an insert inside a branch leaves (DEF-22).
     expect(problemCodes([
       wp('a'),
       wp('b1', { branchId: 'B', branchFrom: 'a' }),
       wp('mid'),
       wp('b2', { branchId: 'B' }),
-    ])).toContain(BRANCH_PROBLEM.SPLIT_RUN);
+    ])).toEqual([BRANCH_PROBLEM.SPLIT_RUN, BRANCH_PROBLEM.NO_FORK_DECLARED]);
   });
 
   test('a branch that never says where it forks from', () => {
     expect(problemCodes([wp('a'), wp('b1', { branchId: 'B' })]))
-      .toContain(BRANCH_PROBLEM.NO_FORK_DECLARED);
+      .toEqual([BRANCH_PROBLEM.NO_FORK_DECLARED]);
   });
 
   test('a fork target deleted out from under the branch', () => {
     expect(problemCodes([wp('a'), wp('b1', { branchId: 'B', branchFrom: 'gone' })]))
-      .toContain(BRANCH_PROBLEM.MISSING_FORK);
+      .toEqual([BRANCH_PROBLEM.MISSING_FORK]);
   });
 
   test('a branch forking from one of its own waypoints', () => {
+    // Following its fork link leads straight back into itself, so the cycle
+    // check reports it as well.
     expect(problemCodes([
       wp('a'),
       wp('b1', { branchId: 'B', branchFrom: 'b2' }),
       wp('b2', { branchId: 'B' }),
-    ])).toContain(BRANCH_PROBLEM.SELF_FORK);
+    ])).toEqual([BRANCH_PROBLEM.SELF_FORK, BRANCH_PROBLEM.CYCLE]);
   });
 
   test('a rejoin target deleted out from under the branch', () => {
     expect(problemCodes([
       wp('a'),
       wp('b1', { branchId: 'B', branchFrom: 'a', branchRejoin: 'gone' }),
-    ])).toContain(BRANCH_PROBLEM.MISSING_REJOIN);
+    ])).toEqual([BRANCH_PROBLEM.MISSING_REJOIN]);
   });
 
   test('a branch rejoining itself', () => {
@@ -149,22 +156,23 @@ describe('resolveRouteBranches reports problems instead of repairing them', () =
       wp('a'),
       wp('b1', { branchId: 'B', branchFrom: 'a' }),
       wp('b2', { branchId: 'B', branchRejoin: 'b1' }),
-    ])).toContain(BRANCH_PROBLEM.SELF_REJOIN);
+    ])).toEqual([BRANCH_PROBLEM.SELF_REJOIN]);
   });
 
   test('a branch of only minors has no timing of its own', () => {
     const minor = Object.assign(Waypoint.createMinor(0.5, 0.5),
       { id: 'm1', branchId: 'B', branchFrom: 'a' });
     expect(problemCodes([wp('a'), minor]))
-      .toContain(BRANCH_PROBLEM.EMPTY_OF_MAJORS);
+      .toEqual([BRANCH_PROBLEM.EMPTY_OF_MAJORS]);
   });
 
   test('two branches forking from each other are a cycle', () => {
+    // Once for each branch in the loop.
     expect(problemCodes([
       wp('a'),
       wp('b1', { branchId: 'B', branchFrom: 'c1' }),
       wp('c1', { branchId: 'C', branchFrom: 'b1' }),
-    ])).toContain(BRANCH_PROBLEM.CYCLE);
+    ])).toEqual([BRANCH_PROBLEM.CYCLE, BRANCH_PROBLEM.CYCLE]);
   });
 
   test('a malformed structure still returns its runs so the route can render', () => {
@@ -172,7 +180,7 @@ describe('resolveRouteBranches reports problems instead of repairing them', () =
       wp('a'), wp('b1', { branchId: 'B', branchFrom: 'gone' }),
     ]);
 
-    expect(structure.problems).not.toEqual([]);
+    expect(structure.problems.map(p => p.code)).toEqual([BRANCH_PROBLEM.MISSING_FORK]);
     expect(structure.branches[0].waypoints.map(w => w.id)).toEqual(['b1']);
     expect(structure.trunk.waypoints.map(w => w.id)).toEqual(['a']);
   });
