@@ -18,6 +18,14 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-44 — A still editor goes idle: a frame that draws no camera puts the camera where it would rest
+
+**Decision:** DEF-44 lands (PR #71): a frame that draws no camera (no waypoints, Edit mode, Camera movement off, the author's viewport zoom) puts the camera where it would come to rest, so a cold start, a restored session, Edit mode after Preview, a zoomed-in view and a video exported from Edit mode stop drawing frames that change nothing, because stable paused views must queue no animation frame (the rules file's Always).
+
+**Rationale:** the round its third Codex review asked for is finished by the review's first option, with no production change: an 8K player seeking to 1× from the Zoom slider's first step (1.028×) ends with eight frames that draw the same flat view, on `main` too, because the renderer draws no camera within 0.001 of 1× while the centre eases on to within a pixel. The plan row now names that tail among its bounded residuals, beside the brief runs at 1× after a resize and as the player loads, and its completion claim is narrowed to match; a test holds the tail to ten frames, ending by itself. The review's advisory is taken: the viewport-return test runs at all four edges and with the head exactly on 0, and kills T1, T2 and T4 (the resting centre unclamped in X or Y, a centre of 0 read as absent). Chromium, on a throwaway build of the branch beside live v3.2.694 (the Open day route, frames run by hand): a cold start with no waypoints draws one frame and goes idle where live still queues after 600, a scrub under a 2.25× viewport zoom draws one frame where live draws 79, and undoing that zoom queues none, the camera already where it belongs. The session's call, for the owner to confirm: naming the tail rather than settling the centre, the narrowest of the two fixes the review allowed; the residuals that stay have a wish line. Digest rule applied: house conventions → Testing and persistence. DEF-68 no longer waits on it, and DEF-69 waits on TST-13 alone.
+
+**Supersedes:** none
+
 ## 2026-10-05 — DEF-53 — A video export keeps the canvas size it began with
 
 **Decision:** DEF-53 lands (PR #64): a size chosen while a video export runs (by the size fields or a fixed-size preset) applies to the display, the background placed for it and the next export once the export ends, and never to the frames it is still writing, because the export's frames changed size mid-file.

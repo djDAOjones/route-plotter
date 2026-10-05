@@ -9,6 +9,7 @@
 
 ## Phase 1 — Land the big run's open pull requests
 
+- DEF-44 — a still editor goes idle: a frame that draws no camera puts the camera where it would come to rest, bounded residuals named (2026-10-05) — see decisions
 - DEF-53 — a video export keeps the canvas size it began with; a size chosen meanwhile applies once it ends (2026-10-05) — see decisions
 - DEF-06 — what a route scheduled no longer outlives it, and a snapshot times the route at its authoring speed (2026-10-05) — see decisions
 
