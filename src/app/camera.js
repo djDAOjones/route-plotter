@@ -294,7 +294,9 @@ export const cameraMixin = {
       headPosition,
       canvasWidth,
       canvasHeight,
-      animationDuration: this.animationEngine.state.duration
+      // The base timeline: the route's transitions keep their pace while the
+      // scene waits for what finishes after it (CROWD-05).
+      animationDuration: this.animationEngine.state.baseDuration ?? this.animationEngine.state.duration
     });
 
     // The author's viewport zoom takes the camera's place, as `hasZoom` does

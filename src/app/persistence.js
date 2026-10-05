@@ -716,6 +716,7 @@ function captureLiveState(app) {
     animationPauseState: app.animationEngine._currentPauseState
       ? { ...app.animationEngine._currentPauseState }
       : null,
+    sceneEndParts: app.animationEngine.sceneEndParts ?? null,
     nextPauseIndex: app.animationEngine.nextPauseIndex,
     jklDirection: app._jklDirection,
     jklSpeedMultiplier: app._jklSpeedMultiplier,
@@ -770,6 +771,7 @@ function restoreLiveState(app, previous) {
   app._waypointProgressCache = previous.waypointProgressCache;
   app._timingDerived = previous.timingDerived;
   if (app.animationEngine?.state) Object.assign(app.animationEngine.state, previous.animation);
+  if (app.animationEngine) app.animationEngine.sceneEndParts = previous.sceneEndParts;
   app._jklDirection = previous.jklDirection;
   app._jklSpeedMultiplier = previous.jklSpeedMultiplier;
   app.jklDirection = previous.controllerJklDirection;
@@ -815,6 +817,7 @@ function restoreLiveState(app, previous) {
     app.uiController?.setPlaybackSpeed?.(previous.animation.playbackSpeed ?? 1);
     app._updatePlayPauseUI?.();
     app.updateTimeDisplay?.(previous.animation.currentTime, previous.animation.duration);
+    app.updateDurationReadout?.();
   });
   runRollbackStep('the selection controls', () => {
     app.uiController?.setSelection?.(previous.selectedWaypoints || [], previous.selectedWaypoint);
@@ -930,6 +933,8 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     app._timingDerived = false;
     app.animationEngine.setMode?.(staged.animationState.mode);
     app.animationEngine.setSpeed?.(staged.animationState.speed);
+    // The saved duration is the base timeline (CROWD-05); what the scene
+    // waits for after it is measured once the path below is in place.
     app.animationEngine.setDuration?.(staged.animationState.duration);
     app.animationEngine.setPlaybackSpeed?.(1);
     app.animationEngine.pause?.();
@@ -1172,7 +1177,10 @@ export const persistenceMixin = {
       animationState: {
         mode: this.animationEngine.state.mode,
         speed: this.animationEngine.state.speed,
-        duration: this.animationEngine.state.duration
+        // The base timeline, not the playback duration (CROWD-05): what the
+        // scene waits for after it is recomputed on open, so a file opens as
+        // before and a save and reopen never adds to it.
+        duration: this.animationEngine.state.baseDuration ?? this.animationEngine.state.duration
         // Note: playbackSpeed intentionally NOT saved - resets to 1x on each session
       },
       background: {

@@ -9,7 +9,7 @@
 import { VIDEO_EXPORT } from '../config/constants.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 import { getRetainedBackgroundDataURL } from './persistence.js';
-import { settleSavedTiming } from './pathTiming.js';
+import { measureSceneEnd, settleSavedTiming } from './pathTiming.js';
 
 /**
  * One video export at a time. A request while one runs (a double click on
@@ -212,7 +212,7 @@ export const exportingMixin = {
         // preview timeline; the explicit invalidation also covers exports that
         // begin while Preview is already selected.
         this._setPreviewMode(true);
-        const duration = this.invalidateAnimationTiming();
+        let duration = this.invalidateAnimationTiming();
         if (duration <= 0) {
           alert('Animation duration is zero. Please check your waypoints.');
           return;
@@ -229,6 +229,11 @@ export const exportingMixin = {
         // Resize canvas to export resolution so captureStream captures at the
         // correct pixel dimensions (not screen size × DPR)
         this._enterExportMode(this.exportSettings.resolutionX, this.exportSettings.resolutionY);
+        // The scene's end, measured again in the space the export draws in
+        // (CROWD-05): a crowd bound to a route moment reads that moment there,
+        // so its dots finish where the export draws them finish. The base is
+        // kept; the editor's end is measured back after the export.
+        duration = measureSceneEnd(this);
 
         const blob = await this.videoExporter.export({
           frameRate: this.exportSettings.frameRate,
@@ -289,6 +294,9 @@ export const exportingMixin = {
         // Restore the original timeline shape before feeding its timeline
         // progress back into the engine, then restore transport flags and speed.
         putBack(() => this._setPreviewMode(wasPreviewMode));
+        // The editor's end, in the editor's space, before its timeline
+        // progress is fed back (CROWD-05), however the export ended.
+        putBack(() => measureSceneEnd(this));
         putBack(() => this.animationEngine.restoreTransportState(transportState));
         putBack(() => this.queueRender());
         if (failures.length > 0) {

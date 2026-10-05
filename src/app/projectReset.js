@@ -52,7 +52,14 @@ export function clearProject(app) {
   else app.interactionHandler?.setSelectedWaypoint?.(null);
 
   app.animationEngine.reset();
+  // Both durations to nothing, and nothing past them: the scene end the
+  // empty route queued above has nothing to measure (CROWD-05).
   app.animationEngine.setDuration(0);
+  if (app._sceneEndTimeout) {
+    clearTimeout(app._sceneEndTimeout);
+    app._sceneEndTimeout = null;
+  }
+  app.updateDurationReadout?.();
 
   app.pause();
   app.updateTimeDisplay();

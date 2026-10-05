@@ -450,8 +450,10 @@ export const wiringBusMixin = {
       
       const preservedSpeed = this.animationEngine.state.speed;
       
-      // Recalculate duration using unified method (accounts for segment speeds)
-      this.updateAnimationDuration(preservedSpeed);
+      // Recalculate duration using unified method (accounts for segment speeds).
+      // With no route to rebuild, the reset base still waits for what
+      // concludes after it, a crowd on a network (CROWD-05).
+      if (this.updateAnimationDuration(preservedSpeed) === undefined) this.refreshSceneEnd?.();
       
       // Use event to avoid feedback loop
       this.eventBus.emit('ui:slider:update-speed', preservedSpeed);

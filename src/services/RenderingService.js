@@ -1306,7 +1306,10 @@ export class RenderingService {
         if (!state.scene || !state.swarmEngine || !state.animationEngine) return;
         const layers = state.scene.getFlowLayers();
         if (layers.length === 0) return;
-        const durationMs = state.animationEngine.state.duration;
+        // Releases are fractions of the base timeline, not of the playback
+        // duration that waits for these very dots to finish (CROWD-05).
+        const engineState = state.animationEngine.state;
+        const durationMs = engineState.baseDuration ?? engineState.duration;
         if (!(durationMs > 0)) return;
         const timelineMs = state.animationEngine.getTime();
         for (const layer of layers) {
@@ -1553,7 +1556,8 @@ export class RenderingService {
     let trailProgress = 0;
     
     if (motionSettings && motionVisibilityService) {
-      const pathDuration = animationEngine.pathDuration || animationEngine.state.duration || 1;
+      const pathDuration = animationEngine.pathDuration
+        || (animationEngine.state.baseDuration ?? animationEngine.state.duration) || 1;
       const isWaiting = animationEngine.state.isWaitingAtWaypoint || false;
       
       // Check if we're in tail time (path complete, trail fading)
@@ -2258,7 +2262,8 @@ export class RenderingService {
       : (selectedWaypoint ? new Set([selectedWaypoint]) : null);
     const applyMotion = motionSettings !== null;
     // Use pathDuration (excludes pauses) for animation timing calculations
-    const pathDuration = animationEngine?.pathDuration || animationEngine?.state?.duration || 1;
+    const pathDuration = animationEngine?.pathDuration
+      || (animationEngine?.state?.baseDuration ?? animationEngine?.state?.duration) || 1;
     const currentPathProgress = animationEngine?.getPathProgress() || 0;
     
     // Pre-calculate major waypoint progress values for O(1) lookup and neighbor access
@@ -2526,7 +2531,9 @@ export class RenderingService {
     const isWaiting = animationEngine?.state?.isWaitingAtWaypoint && 
                       animationEngine?.state?.pauseWaypointIndex === wpIndex;
     const hasPassedWaypoint = currentProgress > wpProgress;
-    const animationDuration = animationEngine?.state?.duration || 10000;
+    // A fade's share of the base timeline, which the route's own pace sets,
+    // not of what the scene waits for after it (CROWD-05).
+    const animationDuration = (animationEngine?.state?.baseDuration ?? animationEngine?.state?.duration) || 10000;
     
     // Get visibility state from TextLabelService
     const { visible, opacity } = TextLabelService.getTextVisibility({

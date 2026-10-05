@@ -234,7 +234,8 @@ const LOOKED_UP = {
     label-bg-opacity-value label-color label-mode label-offset-x label-offset-x-value label-offset-y
     label-offset-y-value label-size label-size-value label-size-warning label-width label-width-value
     load-project-btn load-project-input marker-filename marker-preview marker-preview-img marker-style
-    marker-upload marker-upload-btn mode-toggle-btn path-casing-toggle path-glow-intensity path-glow-toggle
+    marker-upload marker-upload-btn mode-toggle-btn
+    pacing-duration-breakdown path-casing-toggle path-glow-intensity path-glow-toggle
     path-glow-value path-head-color path-head-size path-head-size-value path-head-style path-shape
     path-trail path-trail-value path-visibility pause-btn pause-time-control play-btn preset-1-1 preset-16-9
     preset-9-16 preset-native pulse-amplitude pulse-amplitude-value pulse-controls pulse-cycle-speed

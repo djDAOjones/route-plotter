@@ -16,9 +16,7 @@
 
 ### Ahead of Phase 1's pull requests — the owner's order of 2026-10-05 — CLOSED 2026-10-05
 
-### After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05
-
-- [ ] CROWD-05 — The animation runs until everything that finishes has finished — since 2026-10-05
+### After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05 — CLOSED 2026-10-05
 
 ### Phase 1 — Land the big run's open pull requests
 
@@ -35,6 +33,10 @@
 - [!] REV-05 — Accessibility assurance · Accessibility assurance — since 2026-10-01 — blocked: owner evidence — NVDA/VoiceOver + forced-colours + reduced-motion emulation
 
 ## Next
+
+**The built-in examples — the owner's word of 2026-10-05**
+
+- [!] EX-01 — Overhaul the built-in examples — since 2026-10-05 — blocked: the owner's direction on what each example shows — (from: CROWD-05, 2026-10-05)
 
 **After TST-04 — the owner's order of 2026-10-05**
 
@@ -89,6 +91,9 @@
 - [ ] DEF-74 — Redo restores no selection — since 2026-10-05 — blocked: TST-05
 - [ ] DEF-75 — Index check misses references — since 2026-10-05
 - [ ] DEF-76 — Leg-speed edit stales timing — since 2026-10-05
+- [ ] DEF-78 — Comet tail retimes crowds — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
+- [ ] DEF-79 — Render space moves crowd anchors — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
+- [ ] DEF-80 — Player retimes constant-time projects — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 
 ## Icebox
 

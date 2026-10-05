@@ -585,6 +585,23 @@ describe('the "At journey end" hint (DEF-77)', () => {
     control.value = String(value);
     control.dispatchEvent(new Event('input', { bubbles: true }));
   };
+  /**
+   * Turn the selected crowd onto a network nothing can end, drawn with the
+   * pen: three pass-through nodes closed into a loop of two-way paths. Since
+   * the end waits for every journey that ends (CROWD-05), this is the case
+   * the hint is left for.
+   */
+  const closedLoop = (app) => {
+    const guide = document.getElementById('crowd-guide-type');
+    guide.value = 'graph';
+    guide.dispatchEvent(new Event('change', { bubbles: true }));
+    const pen = app.networkEditService;
+    const first = pen.placeNode({ x: 0.2, y: 0.3 });
+    pen.placeNode({ x: 0.8, y: 0.3 });
+    pen.placeNode({ x: 0.5, y: 0.8 });
+    pen.clickNode(first);
+    return first;
+  };
 
   test('describes the select, and says nothing while dots reach their journey end', async () => {
     const app = await editorWithCrowd();
@@ -598,50 +615,49 @@ describe('the "At journey end" hint (DEF-77)', () => {
     expect(hint.textContent).toBe('');
   });
 
-  test('shows when no dot finishes, and clears once Speed is raised', async () => {
+  test('says nothing when no dot finishes before the route ends: the end now waits for them (CROWD-05)', async () => {
     const app = await editorWithCrowd();
     const hint = document.getElementById('crowd-lifecycle-hint');
 
-    slide('crowd-speed', 1); // 0.01 img/s: the route takes 80 s, the timeline a few
-    const durationMs = app.animationEngine.state.duration;
+    slide('crowd-speed', 1); // 0.01 img/s: the route takes 80 s, the route's own timeline a few
+    const durationMs = app.animationEngine.state.baseDuration;
     const schedules = app.swarmEngine.scheduleDots(app.selectedCrowd, {
       durationMs, routePathPoints: app.pathPoints,
     });
     expect(dotsReachingJourneyEnd(schedules, durationMs)).toBe(0);
-    expect(hint.hidden).toBe(false);
-    expect(hint.textContent).toBe(
-      'No dot reaches its journey end before the timeline ends. '
-      + 'Raise Speed or lower Window length to see this setting act.'
-    );
+    // Every one of those journeys ends, so "At journey end" acts on each dot.
+    expect(hint.hidden).toBe(true);
+    expect(hint.textContent).toBe('');
 
     slide('crowd-speed', 40);
     expect(hint.hidden).toBe(true);
     expect(hint.textContent).toBe('');
   });
 
-  test('follows the timeline, not the frame: computing it asks for no animation frame', async () => {
+  test('follows the network, not the frame or the timeline: computing it asks for no animation frame', async () => {
     const app = await editorWithCrowd();
     const hint = document.getElementById('crowd-lifecycle-hint');
-    slide('crowd-speed', 1);
+    const first = closedLoop(app);
     expect(hint.hidden).toBe(false);
 
-    // Back at a new crowd's pace the dots finish again, read straight from
-    // the model without a frame.
+    // Given an Exit the journeys end again, read straight from the model
+    // without a frame.
     const frames = vi.mocked(globalThis.requestAnimationFrame);
     frames.mockClear();
-    app.selectedCrowd.emitters[0].update({ speed: 0.4 });
+    first.type = 'exit';
     app._syncCrowdLifecycleHint();
     expect(frames).not.toHaveBeenCalled();
     expect(hint.hidden).toBe(true);
 
-    // A timeline change re-reads it: a long wait at the end lets slow dots finish.
-    app.selectedCrowd.emitters[0].update({ speed: 0.05 });
+    // A timeline change leaves it as the network has it: the end waits for
+    // every journey that ends, however slow (CROWD-05).
+    first.type = 'normal';
     app._syncCrowdLifecycleHint();
     expect(hint.hidden).toBe(false);
     app.waypoints[1].pauseMode = 'timed';
     app.waypoints[1].pauseTime = 60000;
     app.invalidateAnimationTiming();
-    expect(hint.hidden).toBe(true);
+    expect(hint.hidden).toBe(false);
   });
 
   test('on a closed loop with no Exit, names the node Type instead of Speed; an Exit clears it', async () => {
@@ -685,7 +701,7 @@ describe('the "At journey end" hint (DEF-77)', () => {
       control.dispatchEvent(new Event(type, { bubbles: true }));
     };
 
-    test('an edit that moves no dot’s release or journey schedules no dot; Speed does', async () => {
+    test('no edit schedules a dot for it, Speed included: it reads the network alone (CROWD-05)', async () => {
       const app = await editorWithCrowd();
       const hint = document.getElementById('crowd-lifecycle-hint');
       const schedule = vi.spyOn(app.swarmEngine, 'scheduleDots');
@@ -702,13 +718,17 @@ describe('the "At journey end" hint (DEF-77)', () => {
       expect(schedule).not.toHaveBeenCalled();
       expect(hint.hidden).toBe(true);
 
+      // Since the end waits for every journey that ends, Speed cannot show it.
       slide('crowd-speed', 1);
-      expect(schedule).toHaveBeenCalledTimes(1);
-      expect(hint.hidden).toBe(false);
+      expect(schedule).not.toHaveBeenCalled();
+      expect(hint.hidden).toBe(true);
 
-      // Showing, it stays put through another such edit.
+      // Showing, on a network nothing can end, it stays put through another such edit.
+      closedLoop(app);
+      expect(hint.hidden).toBe(false);
       slide('crowd-dot-size', 40);
-      expect(schedule).toHaveBeenCalledTimes(1);
+      slide('crowd-speed', 40);
+      expect(schedule).not.toHaveBeenCalled();
       expect(hint.hidden).toBe(false);
     });
 
@@ -727,26 +747,28 @@ describe('the "At journey end" hint (DEF-77)', () => {
       expect(hint.textContent).toMatch(/^No dot’s journey ends on this network\./);
       expect(schedule).not.toHaveBeenCalled();
 
-      // Given an Exit, the next committed edit schedules the dots again.
+      // Given an Exit, the next committed edit clears it, still without a
+      // dot scheduled (CROWD-05: only the network decides it now).
       pen.selectNode(first);
       pick('network-node-type', 'exit', 'change');
-      expect(schedule).toHaveBeenCalled();
+      expect(schedule).not.toHaveBeenCalled();
       expect(hint.hidden).toBe(true);
     });
 
-    test('undo and redo refresh it with the Speed they restore', async () => {
+    test('undo and redo refresh it with the network they restore', async () => {
       const app = await editorWithCrowd();
       const hint = document.getElementById('crowd-lifecycle-hint');
-      slide('crowd-speed', 1);
-      app.saveUndoState(); // what the slider's debounce does 400 ms later
-      slide('crowd-speed', 40);
+      const first = closedLoop(app);
+      expect(hint.hidden).toBe(false);
+      app.networkEditService.selectNode(first);
+      pick('network-node-type', 'exit', 'change'); // a committed edit, with its undo snapshot
       expect(hint.hidden).toBe(true);
 
       app.undo();
-      expect(app.selectedCrowd.emitters[0].speed).toBe(0.01);
+      expect(app.selectedCrowd.graph.getNode(first.id).type).toBe('normal');
       expect(hint.hidden).toBe(false);
       app.redo();
-      expect(app.selectedCrowd.emitters[0].speed).toBe(0.4);
+      expect(app.selectedCrowd.graph.getNode(first.id).type).toBe('exit');
       expect(hint.hidden).toBe(true);
     });
 
@@ -754,17 +776,17 @@ describe('the "At journey end" hint (DEF-77)', () => {
       const app = await editorWithCrowd();
       const hint = document.getElementById('crowd-lifecycle-hint');
       const slow = app.selectedCrowd;
-      slide('crowd-speed', 1);
+      closedLoop(app);
       expect(hint.hidden).toBe(false);
 
-      app.addCrowd(); // selected, at a new crowd's pace
+      app.addCrowd(); // selected, on the route, which always ends
       expect(app.selectedCrowd).not.toBe(slow);
       expect(hint.hidden).toBe(true);
       app.eventBus.emit('crowd:selected', slow);
       expect(hint.hidden).toBe(false);
 
       // An opened project starts with no crowd selected, so no hint; selecting
-      // its slow crowd shows it again.
+      // its endless crowd shows it again.
       const project = app._buildProjectSnapshot();
       expect(await loadSnapshot(app, project)).toBe(true);
       expect(app.selectedCrowd).toBeNull();

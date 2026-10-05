@@ -116,6 +116,30 @@ function fallbackExitIds(graph, edges) {
   return ends;
 }
 
+/** Whether an emitter's dots finish their journey: Disappear and Collect do. */
+function finishesJourneys(emitter) {
+  return emitter.lifecycleMode === 'disappear' || emitter.lifecycleMode === 'collect';
+}
+
+/**
+ * Everything a network walk reads, as one string (CROWD-05): each node's
+ * type and resolved position, and each path's ends, direction, weight and
+ * bends, in the order the walk meets them.
+ * @param {import('../models/GraphModel.js').GraphModel} graph
+ * @returns {string}
+ */
+function graphSignature(graph) {
+  const nodes = graph.getNodes().map(node => {
+    const { x, y } = node.position ? node.position() : node;
+    return `${node.id}:${node.type}:${x},${y}`;
+  });
+  const edges = graph.getEdges().map(edge => [
+    edge.id, edge.sourceId, edge.targetId, edge.direction, edge.weight,
+    ...edge.controlPoints.flatMap(point => [point.x, point.y]),
+  ].join(','));
+  return `${nodes.join(';')}#${edges.join(';')}`;
+}
+
 export class SwarmEngine {
   constructor() {
     /**
@@ -130,6 +154,12 @@ export class SwarmEngine {
     this._routeLengthCache = new WeakMap();
     /** @private — shared calculator for route-guide length/interpolation. */
     this._routeCalc = new PathCalculator();
+    /**
+     * Each finishing emitter's first journeys on its network, by emitter id
+     * (`_cachedJourneys`, CROWD-05).
+     * @private @type {Map<string, {key: string, lengths: Float64Array, ends: Uint8Array}>}
+     */
+    this._journeyCache = new Map();
   }
 
   /**
@@ -172,16 +202,8 @@ export class SwarmEngine {
     const durationMs = context.durationMs;
     if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return [];
 
-    let guide = null;
-    if (layer.guideType === 'route') {
-      const points = context.routePathPoints;
-      if (!Array.isArray(points) || points.length < 2) return [];
-      guide = { type: 'route', points, length: this._routeLength(points) };
-      if (guide.length <= 0) return [];
-    } else {
-      guide = this._buildGraphGuide(layer.graph);
-      if (!guide) return [];
-    }
+    const guide = this._guideFor(layer, context);
+    if (!guide) return [];
 
     const dots = [];
     for (const emitter of layer.emitters) {
@@ -205,7 +227,8 @@ export class SwarmEngine {
    * @param {Object} context Same shape as evaluate()'s
    * @param {Object} [options]
    * @param {boolean} [options.endsOnly=false] For a caller that reads only
-   *   which dots reach their journey end (the "At journey end" hint, DEF-77):
+   *   which dots reach their journey end (DEF-77; the scene end's cached
+   *   journeys are walked this way, CROWD-05):
    *   a dot standing where no path leads on to an end is not walked further,
    *   since it could only run out of hops, and gives `ends: false` with a
    *   `journeyMs` of Infinity. The crowd wait reads every finishing dot's
@@ -216,40 +239,20 @@ export class SwarmEngine {
     const durationMs = context.durationMs;
     if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return [];
 
-    let guide = null;
-    if (layer.guideType === 'route') {
-      const points = context.routePathPoints;
-      if (!Array.isArray(points) || points.length < 2) return [];
-      guide = { type: 'route', points, length: this._routeLength(points) };
-      if (guide.length <= 0) return [];
-    } else {
-      guide = this._buildGraphGuide(layer.graph);
-      if (!guide) return [];
-    }
+    const guide = this._guideFor(layer, context);
+    if (!guide) return [];
 
     const reaching = endsOnly && guide.type === 'graph' ? this._nodesReachingEnd(guide) : null;
     const schedules = [];
     for (const emitter of layer.emitters) {
-      const { seed, dotCount } = emitter;
-      const windowStart = Math.min(releaseStartFraction(emitter, context.routeAnchors || {}), 1);
-      const windowEnd = Math.min(windowStart + emitter.releaseDuration, 1);
-      const windowSpan = Math.max(0, windowEnd - windowStart);
-      const busynessEnvelope = compileBusynessEnvelope(emitter.busynessEnvelope);
+      const { dotCount } = emitter;
+      const window = this._releaseWindow(emitter, context.routeAnchors);
       // A respawning or looping dot re-enters for ever: it has no arrival to
       // wait for, and saying so is more useful than inventing one.
-      const finishes = emitter.lifecycleMode === 'disappear' || emitter.lifecycleMode === 'collect';
+      const finishes = finishesJourneys(emitter);
 
       for (let i = 0; i < dotCount; i++) {
-        const onsetFraction = dotOnsetFraction({
-          index: i,
-          dotCount,
-          onsetHash: SwarmEngine.hash(seed, i, CHANNEL_ONSET),
-          onsetVariance: emitter.onsetVariance,
-          intensityRamp: emitter.intensityRamp,
-          sampleEnvelope: value => sampleBusynessEnvelope(busynessEnvelope, value),
-          windowStart,
-          windowSpan,
-        });
+        const onsetFraction = this._onsetFraction(emitter, i, window);
         const speedMultiplier = this._journeyPace(emitter, i, 0);
         const { length, ends } = guide.type === 'route'
           ? { length: guide.length, ends: guide.length > 0 }
@@ -266,11 +269,16 @@ export class SwarmEngine {
   }
 
   /**
-   * Whether anything on the layer's guide can end a dot's journey (DEF-77).
-   * A route always ends. A network ends at an Exit, at a one-path node when
-   * it has no Exit, or at a node no path leaves; a closed loop of two-way
-   * paths has none of these, and no Speed makes its dots finish. Read from
-   * the network alone, so it costs no walk.
+   * Whether a dot's journey can end on the layer's guide (DEF-77). A route
+   * always ends. A network ends at an Exit, at a one-path node when it has no
+   * Exit, or at a node no path leaves; a closed loop of two-way paths has
+   * none of these, and no Speed makes its dots finish. Since the end waits
+   * for every journey that ends (CROWD-05), what is asked is only whether
+   * such an end lies on a path from an entry the dots are released at: an
+   * end on a part of the network no dot can reach ends no journey. Read from
+   * the network alone, so it costs no walk, and generous where a dot's own
+   * walk could not take a path (`_nodesReachingEnd`): it answers false only
+   * where no journey can end.
    * @param {FlowLayer} layer
    * @returns {boolean|null} Null where the layer has no network to release
    *   dots onto (no layer, or a network with no paths)
@@ -279,7 +287,78 @@ export class SwarmEngine {
     if (!layer) return null;
     if (layer.guideType === 'route') return true;
     const guide = this._buildGraphGuide(layer.graph);
-    return guide ? this._journeyEndIds(guide).size > 0 : null;
+    if (!guide) return null;
+    const reaching = this._nodesReachingEnd(guide);
+    return guide.entries.some(entry => reaching.has(entry.id));
+  }
+
+  /**
+   * When the last dot on the layer finishes a journey that ends (CROWD-05):
+   * the latest release plus journey of any Disappear or Collect dot whose
+   * walk reaches an end. The arithmetic is `scheduleDots`'s, and `evaluate`
+   * ends such a dot by the same sum, so at that instant none of them is
+   * still travelling. Respawn and Repeat journey never finish and are
+   * skipped before any walk; a walk that runs out of hops round a loop has
+   * no end to wait for and is not counted.
+   *
+   * Journeys are walked once and cached (`_cachedJourneys`); releases are
+   * recomputed on every call from the context, which walks nothing, so a
+   * colour, size, release or pace edit costs no walk.
+   *
+   * @param {FlowLayer} layer
+   * @param {Object} context Same shape as evaluate()'s; `durationMs` is the
+   *   base timeline the releases measure against
+   * @returns {number} ms on the timeline, or 0 when no dot finishes
+   */
+  crowdFinishMs(layer, context = {}) {
+    const durationMs = context.durationMs;
+    if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return 0;
+    const finishing = layer.emitters.filter(finishesJourneys);
+    if (finishing.length === 0) return 0;
+    const guide = this._guideFor(layer, context);
+    if (!guide) return 0;
+    const signature = guide.type === 'graph' ? graphSignature(guide.graph) : null;
+
+    let latest = 0;
+    for (const emitter of finishing) {
+      const journeys = signature === null ? null : this._cachedJourneys(emitter, guide, signature);
+      const window = this._releaseWindow(emitter, context.routeAnchors);
+      for (let i = 0; i < emitter.dotCount; i++) {
+        const length = journeys ? journeys.lengths[i] : guide.length;
+        if (!(journeys ? journeys.ends[i] : length > 0)) continue;
+        const finishMs = this._onsetFraction(emitter, i, window) * durationMs
+          + dotJourneyMs(length, emitter.speed, this._journeyPace(emitter, i, 0));
+        if (finishMs > latest) latest = finishMs;
+      }
+    }
+    return latest;
+  }
+
+  /**
+   * Every dot's first journey on a network, walked once per change to what
+   * the walk reads (CROWD-05): the network's shape, node types, path
+   * directions, weights and order (`graphSignature`), the emitter's seed and
+   * its dot count. Speed, pace variation and releases are not in the walk, so
+   * an edit to them is answered from here. Cached geometry only: a cold call
+   * and a warm one return the same lengths.
+   * @private
+   * @returns {{lengths: Float64Array, ends: Uint8Array}}
+   */
+  _cachedJourneys(emitter, guide, signature) {
+    const key = `${signature}|${emitter.seed}|${emitter.dotCount}`;
+    const cached = this._journeyCache.get(emitter.id);
+    if (cached && cached.key === key) return cached;
+    const reaching = this._nodesReachingEnd(guide);
+    const lengths = new Float64Array(emitter.dotCount);
+    const ends = new Uint8Array(emitter.dotCount);
+    for (let i = 0; i < emitter.dotCount; i++) {
+      const journey = this._journeyLength(emitter, i, guide, reaching);
+      lengths[i] = journey.length;
+      ends[i] = journey.ends ? 1 : 0;
+    }
+    const entry = { key, lengths, ends };
+    this._journeyCache.set(emitter.id, entry);
+    return entry;
   }
 
   /**
@@ -369,40 +448,74 @@ export class SwarmEngine {
   // ── emitter evaluation ─────────────────────────────────────────
 
   /**
+   * The walkable guide a layer releases its dots onto, or null where it can
+   * release none: the hero route's polyline, or the layer's own network.
+   * @private
+   */
+  _guideFor(layer, context) {
+    if (layer.guideType === 'route') {
+      const points = context.routePathPoints;
+      if (!Array.isArray(points) || points.length < 2) return null;
+      const guide = { type: 'route', points, length: this._routeLength(points) };
+      return guide.length > 0 ? guide : null;
+    }
+    return this._buildGraphGuide(layer.graph);
+  }
+
+  /**
+   * Effective release window, clipped to the timeline (the model keeps
+   * overhanging windows as authored; clipping happens here). A bound
+   * emitter starts at a route moment instead of its authored fraction
+   * (COMPOSE-01); an unbound one returns releaseStart untouched, which is
+   * what keeps every existing swarm hash byte-for-byte identical.
+   * @private
+   */
+  _releaseWindow(emitter, routeAnchors = null) {
+    const windowStart = Math.min(releaseStartFraction(emitter, routeAnchors || {}), 1);
+    const windowEnd = Math.min(windowStart + emitter.releaseDuration, 1);
+    return {
+      windowStart,
+      windowSpan: Math.max(0, windowEnd - windowStart),
+      busynessEnvelope: compileBusynessEnvelope(emitter.busynessEnvelope),
+    };
+  }
+
+  /**
+   * One dot's onset, as a fraction of the timeline. Blends the dot's
+   * even-spread slot with a uniform draw by onsetVariance (0 = metronome-even,
+   * 1 = fully random), then biases the result by intensityRamp (-1
+   * front-loaded … 1 back-loaded), then inverts the authored busyness
+   * density. A flat envelope is neutral, so historical projects retain the
+   * exact founding release schedule.
+   * @private
+   */
+  _onsetFraction(emitter, index, window) {
+    const { windowStart, windowSpan, busynessEnvelope } = window;
+    return dotOnsetFraction({
+      index,
+      dotCount: emitter.dotCount,
+      onsetHash: SwarmEngine.hash(emitter.seed, index, CHANNEL_ONSET),
+      onsetVariance: emitter.onsetVariance,
+      intensityRamp: emitter.intensityRamp,
+      sampleEnvelope: value => sampleBusynessEnvelope(busynessEnvelope, value),
+      windowStart,
+      windowSpan,
+    });
+  }
+
+  /**
    * Append one emitter's live dots to `out`.
    * @private
    */
   _evaluateEmitter(timelineMs, durationMs, emitter, guide, out, routeAnchors = null) {
-    const { seed, dotCount } = emitter;
-
-    // Effective release window, clipped to the timeline (the model keeps
-    // overhanging windows as authored; clipping happens here). A bound
-    // emitter starts at a route moment instead of its authored fraction
-    // (COMPOSE-01); an unbound one returns releaseStart untouched, which is
-    // what keeps every existing swarm hash byte-for-byte identical.
-    const windowStart = Math.min(releaseStartFraction(emitter, routeAnchors || {}), 1);
-    const windowEnd = Math.min(windowStart + emitter.releaseDuration, 1);
-    const windowSpan = Math.max(0, windowEnd - windowStart);
-    const busynessEnvelope = compileBusynessEnvelope(emitter.busynessEnvelope);
+    const { dotCount } = emitter;
+    const window = this._releaseWindow(emitter, routeAnchors);
 
     for (let i = 0; i < dotCount; i++) {
-      // Onset: blend the dot's even-spread slot with a uniform draw by
-      // onsetVariance (0 = metronome-even, 1 = fully random), then bias
-      // the result by intensityRamp (-1 front-loaded … 1 back-loaded), then
-      // invert the authored busyness density. A flat envelope is neutral, so
-      // historical projects retain the exact founding release schedule.
-      // Shared with COMPOSE-02's arrival solve, which must agree with the
-      // dots actually on screen rather than restate their arithmetic.
-      const onsetMs = dotOnsetFraction({
-        index: i,
-        dotCount,
-        onsetHash: SwarmEngine.hash(seed, i, CHANNEL_ONSET),
-        onsetVariance: emitter.onsetVariance,
-        intensityRamp: emitter.intensityRamp,
-        sampleEnvelope: value => sampleBusynessEnvelope(busynessEnvelope, value),
-        windowStart,
-        windowSpan,
-      }) * durationMs;
+      // Shared with COMPOSE-02's arrival solve and CROWD-05's scene end,
+      // which must agree with the dots actually on screen rather than
+      // restate their arithmetic.
+      const onsetMs = this._onsetFraction(emitter, i, window) * durationMs;
 
       const elapsedSec = (timelineMs - onsetMs) / 1000;
       if (elapsedSec < 0) continue; // not yet released
@@ -411,8 +524,8 @@ export class SwarmEngine {
       const distance = emitter.speed * speedMultiplier * elapsedSec;
 
       const sample = guide.type === 'route'
-        ? this._walkRoute(distance, emitter, i, speedMultiplier, guide)
-        : this._walkGraph(distance, emitter, i, speedMultiplier, guide);
+        ? this._walkRoute(distance, emitter, i, speedMultiplier, guide, timelineMs, onsetMs)
+        : this._walkGraph(distance, emitter, i, speedMultiplier, guide, timelineMs, onsetMs);
       if (!sample) continue; // lifecycle 'disappear' completed
 
       let { x, y } = sample.point;
@@ -478,11 +591,14 @@ export class SwarmEngine {
    * @private
    * @returns {{point, tangent, wobbleDistance, journey}|null}
    */
-  _walkRoute(distance, emitter, dotIndex, speedMultiplier, guide) {
+  _walkRoute(distance, emitter, dotIndex, speedMultiplier, guide, timelineMs = NaN, onsetMs = NaN) {
     const { points, length } = guide;
     const mode = emitter.lifecycleMode;
 
-    if (distance >= length) {
+    // A journey that ends is over at its own finish, by the sum the scene's
+    // end is measured with (CROWD-05), whatever rounding left of `distance`.
+    if (distance >= length || (finishesJourneys(emitter)
+        && timelineMs >= onsetMs + dotJourneyMs(length, emitter.speed, speedMultiplier))) {
       if (mode === 'disappear') return null;
       if (mode === 'collect') {
         return this._sampleAt(points, 1, false, length);
@@ -595,7 +711,7 @@ export class SwarmEngine {
    * @private
    * @returns {{point, tangent, wobbleDistance, journey}|null}
    */
-  _walkGraph(distance, emitter, dotIndex, speedMultiplier, guide) {
+  _walkGraph(distance, emitter, dotIndex, speedMultiplier, guide, timelineMs = NaN, onsetMs = NaN) {
     const { graph, entries } = guide;
     const { seed } = emitter;
     const mode = emitter.lifecycleMode;
@@ -647,6 +763,19 @@ export class SwarmEngine {
       }
 
       if (remaining <= edgeGeom.length) {
+        // On a journey's last path, the dot is over at its finish, by the sum
+        // the scene's end is measured with (CROWD-05): rounding can leave
+        // `remaining` a hair short of the path's end at that very instant.
+        // Only a dot at the end of its path is checked for being on its last.
+        const journeyLength = travelled + edgeGeom.length;
+        if (finishesJourneys(emitter)
+            && timelineMs >= onsetMs + dotJourneyMs(journeyLength, emitter.speed, speedMultiplier)) {
+          const end = this._journeyEndAfter(
+            guide, traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId,
+            traversal.edge.id, step + 1, emitter, dotIndex, hop
+          );
+          if (end) return mode === 'disappear' ? null : this._sampleNode(end, journeyLength, journey);
+        }
         const fraction = remaining / edgeGeom.length;
         const progress = traversal.reversed ? 1 - fraction : fraction;
         return this._sampleAt(edgeGeom.points, progress, traversal.reversed, travelled + remaining, journey);
@@ -662,6 +791,28 @@ export class SwarmEngine {
 
     // Hop cap reached — park the dot where the budget ran out.
     return this._sampleNode(node, travelled, journey);
+  }
+
+  /**
+   * The node a dot's journey ends at once it reaches `nodeId`, following any
+   * paths of no length from there as `_walkGraph` would, or null when a path
+   * with length lies ahead (or the walk would run out of hops first, as
+   * `_journeyLength` counts it).
+   * @private
+   */
+  _journeyEndAfter(guide, nodeId, cameFromEdgeId, step, emitter, dotIndex, hop) {
+    const { graph } = guide;
+    let node = graph.getNode(nodeId);
+    for (; node && step < MAX_HOPS; step++) {
+      const atExit = this._endsJourney(node, guide, step, true);
+      const candidates = atExit ? [] : this._traversableEdges(graph, node.id, cameFromEdgeId);
+      if (atExit || candidates.length === 0) return node;
+      const traversal = this._pickWeighted(candidates, emitter.seed, dotIndex, hop++);
+      if (this.edgeGeometry(graph, traversal.edge).length > 0) return null;
+      node = graph.getNode(traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId);
+      cameFromEdgeId = traversal.edge.id;
+    }
+    return null;
   }
 
   /**

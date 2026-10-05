@@ -705,10 +705,11 @@
             </div>
             <div id="section-pacing-content" class="section-content">
               <label id="speed-control-right" class="sidebar-control-row" for="animation-speed-right">
-                <span data-tip="Total animation playback time. Changing it speeds up or slows down every leg alike">Duration</span>
-                <input type="range" id="animation-speed-right" min="1" max="4000" step="5">
+                <span data-tip="Total animation playback time. Changing it speeds up or slows down every leg alike. The end waits for crowds and beacons that are still finishing">Duration</span>
+                <input type="range" id="animation-speed-right" min="1" max="4000" step="5" aria-describedby="pacing-duration-breakdown">
                 <span id="animation-speed-value-right" class="slider-value">10s</span>
               </label>
+              <p id="pacing-duration-breakdown" class="section-hint" hidden></p>
               <p id="pacing-comet-hint" class="section-hint" hidden>
                 In Preview, a non-zero Comet trail extends Duration while the tail clears after the route head reaches the end.
               </p>

@@ -53,6 +53,14 @@ function isPlainTimeline(tl, live) {
     && live.durationMs === tl.pathDuration;
 }
 
+/**
+ * The span a route with no path clock plays over: the base timeline when the
+ * host gives one (CROWD-05), else the whole timeline, as before.
+ */
+function noPathBaseMs(live) {
+  return live.baseDurationMs > 0 ? live.baseDurationMs : live.durationMs;
+}
+
 export const PlayerCore = {
   /**
    * Build segment timing markers for variable-speed playback.
@@ -386,7 +394,7 @@ export const PlayerCore = {
    * @param {number} timelineMs - Raw timeline time in ms (0..durationMs)
    * @param {Object} tl - Timeline: {segments, hasVariableSpeed, pathDuration,
    *                      totalPauseTime, pauses}
-   * @param {Object} live - {durationMs, startHandleMs, introMs, totalTailMs, endHandleMs}
+   * @param {Object} live - {durationMs, baseDurationMs?, startHandleMs, introMs, totalTailMs, endHandleMs}
    * @returns {{pathProgress: number, waitingIndex: number, waitElapsedMs: number,
    *            waitTotalMs: number, waitPathProgress: number, adjustedMs: number,
    *            inStartHandle: boolean, inIntro: boolean, inTail: boolean,
@@ -409,9 +417,18 @@ export const PlayerCore = {
       return { ...none, pathProgress: Math.max(0, Math.min(1, progress)), adjustedMs: timelineMs, complete: progress >= 1 };
     }
 
+    // No path clock (a constant-time duration the author set, or no route):
+    // the route plays evenly over the base timeline, and holds through
+    // whatever the scene waits for after it (CROWD-05).
     if (tl.pathDuration <= 0) {
-      const progress = durationMs > 0 ? timelineMs / durationMs : 0;
-      return { ...none, pathProgress: Math.max(0, Math.min(1, progress)), adjustedMs: timelineMs, complete: progress >= 1 };
+      const baseMs = noPathBaseMs(live);
+      const progress = baseMs > 0 ? timelineMs / baseMs : 0;
+      return {
+        ...none,
+        pathProgress: Math.max(0, Math.min(1, progress)),
+        adjustedMs: timelineMs,
+        complete: durationMs > 0 ? timelineMs >= durationMs : progress >= 1,
+      };
     }
 
     if (durationMs > 0 && timelineMs >= durationMs) {
@@ -435,6 +452,13 @@ export const PlayerCore = {
     }
     if (endHandleMs > 0 && adjustedMs >= tailStart + totalTailMs) {
       return { ...none, pathProgress: 1, adjustedMs, inEndHandle: true };
+    }
+    // Past the route's own path and waits, as under a longer branch or while
+    // the scene waits for what concludes after the route (CROWD-05), the head
+    // is at its end: exactly, not where rounding in the scan below can leave
+    // it, a hair short, at the very instant the route ends.
+    if (adjustedMs >= tailStart) {
+      return { ...none, pathProgress: 1, adjustedMs };
     }
 
     // Scan pause windows (sorted by time); [start, end) is "waiting"
@@ -475,7 +499,11 @@ export const PlayerCore = {
     // The same test as timelineToPath's fast path, so that a comet tail or a
     // longer branch keeps the two a true inverse pair (DEF-72).
     if (isPlainTimeline(tl, live)) return pathProgress;
-    if (tl.pathDuration <= 0) return pathProgress;
+    if (tl.pathDuration <= 0) {
+      // The inverse of the even mapping over the base timeline above.
+      if (!(durationMs > 0)) return pathProgress;
+      return Math.max(0, Math.min(1, (pathProgress * noPathBaseMs(live)) / durationMs));
+    }
 
     const pathTime = this.pathProgressToTime(pathProgress, tl.segments, tl.pathDuration, tl.hasVariableSpeed);
 
