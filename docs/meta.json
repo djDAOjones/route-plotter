@@ -207,7 +207,7 @@
       "format": "esm"
     },
     "src/models/AnimationState.js": {
-      "bytes": 6251,
+      "bytes": 6604,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -223,7 +223,7 @@
       "format": "esm"
     },
     "src/core/PlayerCore.js": {
-      "bytes": 26811,
+      "bytes": 27998,
       "imports": [
         {
           "path": "src/services/BeaconRenderer.js",
@@ -234,7 +234,7 @@
       "format": "esm"
     },
     "src/services/AnimationEngine.js": {
-      "bytes": 38635,
+      "bytes": 40159,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -271,7 +271,7 @@
       "format": "esm"
     },
     "src/services/AreaHighlightRenderer.js": {
-      "bytes": 13078,
+      "bytes": 13126,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -324,7 +324,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 114428,
+      "bytes": 114921,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -390,7 +390,7 @@
       "format": "esm"
     },
     "src/services/SwarmEngine.js": {
-      "bytes": 34491,
+      "bytes": 41401,
       "imports": [
         {
           "path": "src/services/PathCalculator.js",
@@ -3015,7 +3015,7 @@
       "format": "esm"
     },
     "src/app/wiringBus.js": {
-      "bytes": 18969,
+      "bytes": 19147,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -3071,8 +3071,24 @@
       ],
       "format": "esm"
     },
+    "src/utils/sceneEnd.js": {
+      "bytes": 9052,
+      "imports": [
+        {
+          "path": "src/services/BeaconRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/BeaconRenderer.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/app/pathTiming.js": {
-      "bytes": 31268,
+      "bytes": 36317,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -3108,12 +3124,17 @@
           "path": "src/utils/routeAnchors.js",
           "kind": "import-statement",
           "original": "../utils/routeAnchors.js"
+        },
+        {
+          "path": "src/utils/sceneEnd.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneEnd.js"
         }
       ],
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 54873,
+      "bytes": 55458,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3199,7 +3220,7 @@
       "format": "esm"
     },
     "src/app/exporting.js": {
-      "bytes": 17228,
+      "bytes": 17776,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3225,7 +3246,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 55158,
+      "bytes": 55324,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3328,7 +3349,7 @@
       "format": "esm"
     },
     "src/app/camera.js": {
-      "bytes": 12964,
+      "bytes": 13145,
       "imports": [
         {
           "path": "src/services/CameraService.js",
@@ -3438,7 +3459,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 45969,
+      "bytes": 46138,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3537,7 +3558,7 @@
       "format": "esm"
     },
     "src/app/sceneOutline.js": {
-      "bytes": 45469,
+      "bytes": 45665,
       "imports": [
         {
           "path": "src/controllers/SceneOutlineController.js",
@@ -3614,7 +3635,7 @@
       "format": "esm"
     },
     "src/app/projectReset.js": {
-      "bytes": 3448,
+      "bytes": 3726,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
@@ -3635,7 +3656,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 47830,
+      "bytes": 47991,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3887,13 +3908,13 @@
     }
   },
   "outputs": {
-    ".docs-build-lK4Ytz/app.js.map": {
+    ".docs-build-Ae3Cgc/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3451290
+      "bytes": 3487406
     },
-    ".docs-build-lK4Ytz/app.js": {
+    ".docs-build-Ae3Cgc/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3959,16 +3980,16 @@
           "bytesInOutput": 4910
         },
         "src/models/AnimationState.js": {
-          "bytesInOutput": 2218
+          "bytesInOutput": 2256
         },
         "src/services/BeaconRenderer.js": {
           "bytesInOutput": 10487
         },
         "src/core/PlayerCore.js": {
-          "bytesInOutput": 7261
+          "bytesInOutput": 7447
         },
         "src/services/AnimationEngine.js": {
-          "bytesInOutput": 12921
+          "bytesInOutput": 13132
         },
         "src/utils/routeBranches.js": {
           "bytesInOutput": 4418
@@ -3977,7 +3998,7 @@
           "bytesInOutput": 836
         },
         "src/services/AreaHighlightRenderer.js": {
-          "bytesInOutput": 3833
+          "bytesInOutput": 3859
         },
         "src/utils/branchTiming.js": {
           "bytesInOutput": 1671
@@ -3992,16 +4013,16 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 29114
+          "bytesInOutput": 29210
         },
         "src/utils/crowdArrival.js": {
-          "bytesInOutput": 946
+          "bytesInOutput": 843
         },
         "src/utils/graphRouting.js": {
           "bytesInOutput": 797
         },
         "src/services/SwarmEngine.js": {
-          "bytesInOutput": 8348
+          "bytesInOutput": 10073
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 1297
@@ -4187,7 +4208,7 @@
           "bytesInOutput": 18233
         },
         "src/app/wiringBus.js": {
-          "bytesInOutput": 6119
+          "bytesInOutput": 6154
         },
         "src/components/ContextMenu.js": {
           "bytesInOutput": 3100
@@ -4195,17 +4216,20 @@
         "src/app/backgroundLoading.js": {
           "bytesInOutput": 1721
         },
+        "src/utils/sceneEnd.js": {
+          "bytesInOutput": 1959
+        },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 8723
+          "bytesInOutput": 10067
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 28862
+          "bytesInOutput": 29052
         },
         "src/app/exporting.js": {
-          "bytesInOutput": 5561
+          "bytesInOutput": 5588
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 22229
+          "bytesInOutput": 22254
         },
         "src/app/undoRedo.js": {
           "bytesInOutput": 8199
@@ -4214,7 +4238,7 @@
           "bytesInOutput": 3804
         },
         "src/app/camera.js": {
-          "bytesInOutput": 4342
+          "bytesInOutput": 4383
         },
         "src/app/viewport.js": {
           "bytesInOutput": 4373
@@ -4229,7 +4253,7 @@
           "bytesInOutput": 1871
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 22872
+          "bytesInOutput": 22638
         },
         "src/app/network.js": {
           "bytesInOutput": 12029
@@ -4241,7 +4265,7 @@
           "bytesInOutput": 32631
         },
         "src/app/sceneOutline.js": {
-          "bytesInOutput": 26762
+          "bytesInOutput": 26814
         },
         "src/services/DiagnosticsService.js": {
           "bytesInOutput": 2176
@@ -4253,13 +4277,13 @@
           "bytesInOutput": 110
         },
         "src/app/projectReset.js": {
-          "bytesInOutput": 1772
+          "bytesInOutput": 1879
         },
         "src/main.js": {
-          "bytesInOutput": 22752
+          "bytesInOutput": 22823
         }
       },
-      "bytes": 1095959
+      "bytes": 1101755
     }
   }
 }
