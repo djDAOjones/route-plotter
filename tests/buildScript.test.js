@@ -14,7 +14,9 @@
  * version.json bumped, docs/ replaced. So it is run, and imported, only in a
  * fresh copy of the repository, and the exports are called in the process
  * that imported them there (helpers/buildScriptHarness.js says why, and
- * helpers/buildScriptHost.mjs what that process watches). Whatever a broken
+ * helpers/buildScriptHost.mjs what that process observes: the APIs and the
+ * process state it names, not every effect a module can have; cases near the
+ * end show it seeing three effects it once missed). Whatever a broken
  * build.js did would land in the copy, where these tests look for it.
  */
 
@@ -184,7 +186,10 @@ function entryCheckPaths() {
     : [];
 }
 
-/** An import that started nothing: the exports, and no other trace. */
+/**
+ * An import that started nothing the host observes: the exports, and no other
+ * trace in the APIs and process state it watches.
+ */
 function expectNothingStarted(evaluation, calls) {
   expect(evaluation.error).toBeNull();
   expect(evaluation.exports).toEqual(EXPORTS);
@@ -675,26 +680,96 @@ describe('a failed build', () => {
 });
 
 describe('the checks a release applies', () => {
-  test('are pure: no file touched, nothing printed or started, and their arguments left as they were', async () => {
+  // Pure as far as the host observes: no call into the APIs it watches, no
+  // pending work or output, the arguments unchanged, and none of the process
+  // state it compares changed by the call. They are called in a process that
+  // has just imported build.js, so that each is called there for the first
+  // time: a change an earlier test's call left in the shared process would be
+  // the state a later call starts from, and so not seen again.
+  test('are pure: no file touched, nothing printed or started, arguments and process left as they were', async () => {
     expect(hostFailure?.message).toBeUndefined();
     const stamped = (await host.call('rewriteIndexHtml', [indexHtml, RELEASE])).value;
     const inventory = (await host.call('expectedArtifactInventory', [manifest])).value;
+    const fresh = await startBuildModule(copy);
 
-    for (const [name, args] of [
-      ['validatePublicAssetManifest', [manifest]],
-      ['rewriteIndexHtml', [indexHtml, RELEASE]],
-      ['checkGeneratedIndex', [stamped, RELEASE, approvedImages]],
-      ['expectedArtifactInventory', [manifest]],
-      ['checkArtifactInventory', [inventory, manifest]],
-      ['resolveBuildMode', [['node', 'build.js', '--check']]],
-      ['isEntryScript', [false, buildScript, buildScript]],
-    ]) {
-      const { error, calls, pending, output, argumentsChanged } = await host.call(name, args);
+    try {
+      for (const [name, args] of [
+        ['validatePublicAssetManifest', [manifest]],
+        ['rewriteIndexHtml', [indexHtml, RELEASE]],
+        ['checkGeneratedIndex', [stamped, RELEASE, approvedImages]],
+        ['expectedArtifactInventory', [manifest]],
+        ['checkArtifactInventory', [inventory, manifest]],
+        ['resolveBuildMode', [['node', 'build.js', '--check']]],
+        ['isEntryScript', [false, buildScript, buildScript]],
+      ]) {
+        const { error, calls, pending, output, argumentsChanged, changed } = await fresh.call(name, args);
 
-      expect({ name, error, calls, pending, output, argumentsChanged })
-        .toEqual({ name, error: undefined, calls: [], pending: [], output: [], argumentsChanged: false });
+        expect({ name, error, calls, pending, output, argumentsChanged, changed }).toEqual(
+          { name, error: undefined, calls: [], pending: [], output: [], argumentsChanged: false, changed: [] }
+        );
+      }
+    } finally {
+      await fresh.stop();
     }
+  }, SPAWN_TIMEOUT);
+});
+
+// The host sees only what it names (helpers/buildScriptHost.mjs), and these
+// three it once missed: the second review of SPL-06 found each passing every
+// test above (its Y1, Y3 and Y4). Each is shown here to be seen, in a second
+// copy whose build.js is changed to do it, imported there.
+describe('what the host sees, shown with a build.js changed to do it', () => {
+  const RESOLVER = 'export function resolveBuildMode(argv) {\n';
+  let variantCopy = null; // a second copy, whose build.js each case changes
+  let source = null; // that build.js as copied
+
+  beforeAll(() => {
+    variantCopy = copyRepository();
+    source = readFileSync(join(variantCopy, 'build.js'), 'utf8');
+  }, SPAWN_TIMEOUT);
+
+  afterAll(() => {
+    if (variantCopy) removeCopy(variantCopy);
   });
+
+  /** Import the second copy's build.js, changed by `change`, in a process working in that copy. */
+  function importChanged(change) {
+    const changedSource = change(source);
+    expect(changedSource, 'the change found its place in build.js').not.toBe(source);
+    writeFileSync(join(variantCopy, 'build.js'), changedSource);
+    return startBuildModule(variantCopy);
+  }
+
+  test('a call at import to fs.realpathSync.native, a function fs.realpathSync carries, is seen (Y1)', async () => {
+    const variant = await importChanged(text => `${text}\nfs.realpathSync.native('./version.json');\n`);
+    try {
+      expect(variant.report.first.calls).toEqual(['fs.realpathSync.native(./version.json)']);
+    } finally {
+      await variant.stop();
+    }
+  }, SPAWN_TIMEOUT);
+
+  test('a file-creation mask changed at import is seen (Y3)', async () => {
+    const variant = await importChanged(text => `${text}\nprocess.umask(0o077);\n`);
+    try {
+      expect(variant.report.first.changed).toEqual(['umask']);
+    } finally {
+      await variant.stop();
+    }
+  }, SPAWN_TIMEOUT);
+
+  test('an export that sets an environment variable fails the call that does it (Y4)', async () => {
+    const variant = await importChanged(
+      text => text.replace(RESOLVER, `${RESOLVER}  process.env.SPL06_PURE_PROBE = 'changed';\n`)
+    );
+    try {
+      expect(variant.report.first.changed, 'what the import changed').toEqual([]);
+      expect(await thrownMessage(() => variant.build.resolveBuildMode(['node', 'build.js', '--check'])))
+        .toBe('build.resolveBuildMode changed the process it ran in: environment');
+    } finally {
+      await variant.stop();
+    }
+  }, SPAWN_TIMEOUT);
 });
 
 describe('after every test', () => {

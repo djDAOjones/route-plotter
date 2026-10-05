@@ -13,7 +13,8 @@
  *   whichever copy of the file it loaded. A child process imports the copy's
  *   build.js instead, with the copy as its working directory, and the tests
  *   call the exports in that process (buildScriptHost.mjs, which also says
- *   what it watches).
+ *   what it observes: the APIs and process state it names, not every
+ *   effect).
  * - That process has the worker's environment, arguments and Node flags,
  *   every path into the repository pointed at the copy, so a guard broken
  *   only for what a test import sees (Vitest's environment variables, a
@@ -161,11 +162,12 @@ export function runBuildScript(copyRoot, script, args, { importMetaMain = true }
  *   strays: Function, raw: {stdout: string, stderr: string}, stop: Function}>}
  *   `build` calls an export by name and resolves to what it returned (the
  *   very argument, when it returned one of its arguments), or rejects with
- *   what it threw, or because it changed an argument. Whatever the call
- *   printed is printed here, where the console guard judges it. `call` gives
- *   the whole answer, `strays` what build.js did outside the import and the
- *   calls, and `raw` what reached the process's own stdout and stderr (all
- *   of it once `stop` has resolved).
+ *   what it threw, or because it changed an argument or the state of the
+ *   process it ran in (the state the host compares; its answer's `changed`
+ *   names what differs). Whatever the call printed is printed here, where
+ *   the console guard judges it. `call` gives the whole answer, `strays` what
+ *   build.js did outside the import and the calls, and `raw` what reached the
+ *   process's own stdout and stderr (all of it once `stop` has resolved).
  */
 export async function startBuildModule(copyRoot, { importMetaMain = true } = {}) {
   const config = { mode: importMetaMain ? 'import' : 'import-without-main', buildPath: join(copyRoot, 'build.js') };
@@ -219,6 +221,9 @@ export async function startBuildModule(copyRoot, { importMetaMain = true } = {})
       return async (...args) => {
         const answer = await call(name, args);
         if (answer.argumentsChanged) throw new Error(`build.${name} changed the arguments it was given`);
+        if (answer.changed.length > 0) {
+          throw new Error(`build.${name} changed the process it ran in: ${answer.changed.join(', ')}`);
+        }
         if (answer.error) throw Object.assign(new Error(answer.error.message), { name: answer.error.name });
         return 'sameAs' in answer ? args[answer.sameAs] : answer.value;
       };

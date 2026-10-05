@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — SPL-06 — build.js builds only when run as a script, and exports the checks a release applies
+
+**Decision:** SPL-06 lands (PR #75): `build.js` builds only when it is run as a script, so tests can import it, and it exports the checks a release applies (the image manifest, the index.html stamp and its check, the Pages inventory, the command line) and the publish and failed-build rollback steps, which act only on the paths they are given; every mode the repository uses runs as before, because TST-11 needs a `build.js` it can load.
+
+**Rationale:** importing `build.js` starts no build and reads none of its inputs, except that on Node 24.0 and 24.1, without `import.meta.main`, its entry check resolves two paths. The round its second Codex review asked for is finished, in the tests only: the test host now wraps the functions that fs calls carry (Y1, `fs.realpathSync.native` called at import), compares the file-creation mask with the rest of the process state (Y3, `process.umask` changed at import), and compares that state before and after every export call, each pure export called first in a fresh import (Y4, `resolveBuildMode` setting an environment variable). Each of the three, applied to `build.js`, now fails the suite, and three tests show the host seeing it in a copy whose `build.js` does it. The host observes the APIs and process state it names, not every effect. Digest rules applied: house conventions → Refactor contract, and Testing and persistence. TST-11, DEF-71 and DEF-75 no longer wait on it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — REL-694 — v3.2.694 ships DEF-06
 
 **Decision:** v3.2.694 is live from deploy commit `f482ea1` (tag `v3.2.694`), released under GATELESS-1 because DEF-06's merge (`32d9220`, PR #61) changed `src/`; it ends the DEF-08 symptom v3.2.693 shipped (REL-693).

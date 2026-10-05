@@ -4,15 +4,21 @@
  * of the repository: that copy is its working directory, and it has the
  * worker's environment, arguments and Node flags, pointed at the copy.
  *
- * Its watch is installed before build.js loads, so that everything build.js
- * does is seen: each call into fs, fs/promises and child_process, and each
- * timer or other piece of pending work started, while build.js's own code is
- * on the stack (Node loading the module and its imports is not counted); and
- * everything printed. It then imports build.js and reports what that did:
- * natively, twice (a second evaluation in one process), or through vm with
- * an import.meta that has no `main`, as Node 24.0 and 24.1 give. After a
- * native import it serves calls to the exports, each answered with what the
- * call touched, started and printed, and whether its arguments changed.
+ * Its watch is installed before build.js loads. It observes the APIs and the
+ * state of this process named below, not every effect a module can have: it
+ * is not a sandbox, and what build.js did by another route would go unseen.
+ * It observes each call into fs, fs/promises and child_process (their
+ * functions, and the functions those carry, such as fs.realpathSync.native),
+ * and each timer or other piece of pending work started, while build.js's own
+ * code is on the stack (Node loading the module and its imports is not
+ * counted); everything printed; and this process's working directory,
+ * environment, exit code, listeners and file-creation mask, compared before
+ * and after. It then imports build.js and reports what that did: natively,
+ * twice (a second evaluation in one process), or through vm with an
+ * import.meta that has no `main`, as Node 24.0 and 24.1 give. After a native
+ * import it serves calls to the exports, each answered with what the call
+ * touched, started and printed, whether its arguments changed, and what of
+ * that process state it changed.
  *
  * In mode `script` it is `node build.js` on Node 24.0 or 24.1: build.js is
  * evaluated through vm, unwatched, with its path as process.argv[1].
@@ -56,22 +62,43 @@ function shown(value) {
   return typeof value;
 }
 
-/** Record each call build.js makes to an API's functions (classes are left alone). */
+/** A function to watch: classes, named with a capital, are left alone. */
+function watchable(key, value) {
+  return typeof value === 'function' && !(typeof key === 'string' && /^[A-Z]/.test(key));
+}
+
+const wrappers = new WeakMap(); // each function watched, and what replaced it
+
+/**
+ * The function, recording each call build.js makes to it. What it carries
+ * stays reachable, and a function it carries (realpathSync.native,
+ * promisify's custom forms) is watched in turn: calling it directly is a call
+ * like any other.
+ */
+function watched(label, original) {
+  if (wrappers.has(original)) return wrappers.get(original);
+  const wrapper = function (...args) {
+    if (fromBuild()) current.calls.push(`${label}(${shown(args[0])})`);
+    return Reflect.apply(original, this, args);
+  };
+  wrappers.set(original, wrapper);
+  for (const key of Reflect.ownKeys(original)) {
+    if (['length', 'name', 'prototype', 'arguments', 'caller'].includes(key)) continue;
+    const property = Object.getOwnPropertyDescriptor(original, key);
+    if ('value' in property && watchable(key, property.value)) {
+      const name = typeof key === 'symbol' ? `${label}[${key.description}]` : `${label}.${key}`;
+      property.value = watched(name, property.value);
+    }
+    Object.defineProperty(wrapper, key, property);
+  }
+  return wrapper;
+}
+
+/** Record each call build.js makes to an API's functions. */
 function watchCalls(label, api) {
   for (const name of Object.keys(api)) {
     const original = api[name];
-    if (typeof original !== 'function' || /^[A-Z]/.test(name)) continue;
-    const watched = function (...args) {
-      if (fromBuild()) current.calls.push(`${label}.${name}(${shown(args[0])})`);
-      return Reflect.apply(original, this, args);
-    };
-    // realpathSync.native, promisify's custom forms and the like stay reachable.
-    for (const key of Reflect.ownKeys(original)) {
-      if (!['length', 'name', 'prototype', 'arguments', 'caller'].includes(key)) {
-        Object.defineProperty(watched, key, Object.getOwnPropertyDescriptor(original, key));
-      }
-    }
-    api[name] = watched;
+    if (watchable(name, original)) api[name] = watched(`${label}.${name}`, original);
   }
 }
 
@@ -116,14 +143,25 @@ function watch() {
   watchOutput();
 }
 
-/** What an import must leave as it was in this process. */
+/**
+ * The state of this process the watch compares: what an import, and each call
+ * to an export, must leave as it was.
+ */
 function processState() {
   return {
     cwd: process.cwd(),
     environment: JSON.stringify(Object.entries(process.env).sort(([a], [b]) => (a < b ? -1 : 1))),
     exitCode: String(process.exitCode),
     listeners: process.eventNames().map(event => `${String(event)}:${process.listenerCount(event)}`).sort().join(),
+    // Node can read the mask only by setting it and setting it back
+    // (DEP0139); only a file created on another thread in between would see.
+    umask: process.umask().toString(8),
   };
+}
+
+/** The names of what differs between two readings of processState(). */
+function stateChanges(before, after) {
+  return Object.keys(before).filter(key => before[key] !== after[key]);
 }
 
 async function watchedEvaluation(evaluate) {
@@ -147,7 +185,7 @@ async function watchedEvaluation(evaluate) {
       exports: namespace ? Object.keys(namespace).sort() : null,
       error,
       ...seen,
-      changed: Object.keys(before).filter(key => before[key] !== after[key]),
+      changed: stateChanges(before, after),
     },
   };
 }
@@ -181,8 +219,14 @@ async function evaluateWithoutImportMetaMain(modulePath) {
   return module.namespace;
 }
 
+/**
+ * Call an export, and answer with its outcome, what it did (as `activity`),
+ * whether it changed its arguments, and what of processState() it changed:
+ * compared for each call, since the import's comparison is long past.
+ */
 function serve(build, { name, args }) {
-  const before = serialize(args);
+  const argumentsBefore = serialize(args);
+  const stateBefore = processState();
   const seen = activity();
   current = seen;
   let outcome;
@@ -201,7 +245,12 @@ function serve(build, { name, args }) {
   } finally {
     current = strays;
   }
-  return { ...outcome, ...seen, argumentsChanged: !serialize(args).equals(before) };
+  return {
+    ...outcome,
+    ...seen,
+    argumentsChanged: !serialize(args).equals(argumentsBefore),
+    changed: stateChanges(stateBefore, processState()),
+  };
 }
 
 export async function start({ mode, buildPath }) {

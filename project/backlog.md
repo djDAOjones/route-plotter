@@ -18,7 +18,6 @@
 
 - [~] DEF-53 — Export size follows the canvas · Live defect — since 2026-10-05
 - [~] DEF-44 — A paused editor never idles · Live defect P2 — since 2026-10-01
-- [~] SPL-06 — `build.js` entry guard and exported functions · Refactor P2 — since 2026-10-01
 - [~] TST-13 — Key table, element IDs, HTML ranges · Characterisation P1 — since 2026-10-01
 - [~] DEF-42 — A beacon-style change keeps the old schedule · Live defect P3 — since 2026-10-01
 - [~] TST-16 — Tighten the round-2 predicates · Characterisation P1 — since 2026-10-01
@@ -41,7 +40,7 @@
 
 - [ ] TST-09 — Camera, dots, curvature, minor-end and time domains — since 2026-10-01
 - [ ] TST-03 — Visibility mode matrix · Characterisation P1 — since 2026-10-01
-- [ ] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01 — blocked: SPL-06
+- [ ] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01
 
 **Defects after their W5 test (§13 ground rule 8)**
 
@@ -80,11 +79,11 @@
 - [ ] DEF-68 — Paused camera controls sleep — since 2026-10-05 — blocked: DEF-44
 - [ ] DEF-69 — Zoom warning unattached — since 2026-10-05 — blocked: TST-13, DEF-44
 - [ ] DEF-70 — Menu item drops focus — since 2026-10-05 — blocked: TST-14
-- [ ] DEF-71 — Unknown build flag releases — since 2026-10-05 — blocked: SPL-06
+- [ ] DEF-71 — Unknown build flag releases — since 2026-10-05
 - [ ] DEF-72 — Timeline shortcut ignores tail — since 2026-10-05 — blocked: TST-16
 - [ ] DEF-73 — Leg card misnames waypoint — since 2026-10-05 — blocked: DEF-64
 - [ ] DEF-74 — Redo restores no selection — since 2026-10-05 — blocked: TST-05
-- [ ] DEF-75 — Index check misses references — since 2026-10-05 — blocked: SPL-06
+- [ ] DEF-75 — Index check misses references — since 2026-10-05
 - [ ] DEF-76 — Leg-speed edit stales timing — since 2026-10-05 — blocked: DEF-42
 
 ## Icebox
