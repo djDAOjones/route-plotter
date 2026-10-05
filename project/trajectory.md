@@ -7,7 +7,7 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
-## The big run — defects outside the waves (merged, not yet released)
+## The big run — defects outside the waves (released in v3.2.693, 2026-10-05)
 
 - DEF-27 — the tint covers the image, and the instant spotlight and angle of view follow the camera (2026-10-01) — see decisions
 - DEF-43 — a polygon draw follows its waypoint through an undo or a redo, or ends and says so, and Draw Area again keeps it (2026-10-01) — see decisions
