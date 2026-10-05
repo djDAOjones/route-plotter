@@ -49,16 +49,30 @@ const CHANNEL_WOBBLE_FREQ = -4;
 
 /**
  * Respawned journeys (DEF-77, the owner's "Make Respawn vary"): journey k ≥ 1
- * draws its pace and sway from its own block of channels, so each pass along
- * the guide varies by the crowd's Pace and Walking variation, while journey 0
- * keeps the dot's founding draws above. 'loop' never reads these, which is
- * what keeps Repeat journey an exact replay.
+ * sways (wobble phase and frequency) by its own block of channels, so no two
+ * passes along the guide sway alike, and takes its pace from block
+ * ((k − 1) mod JOURNEY_PACE_CYCLE) + 1, so paces repeat every
+ * JOURNEY_PACE_CYCLE journeys; journey 0 keeps the dot's founding draws
+ * above. A late journey's channels lie far below zero, and `hash` reads them
+ * modulo 2³², so they stay distinct draws for the first 1.4 billion journeys.
+ * 'loop' never reads these, which is what keeps Repeat journey an exact replay.
  */
 const CHANNEL_JOURNEY_BASE = -5;
 const JOURNEY_CHANNELS = 3;
 const JOURNEY_PACE = 0;
 const JOURNEY_WOBBLE_PHASE = 1;
 const JOURNEY_WOBBLE_FREQ = 2;
+
+/**
+ * How many pace draws a dot's respawned journeys cycle through (DEF-77).
+ * Because the paces repeat, a respawning route dot skips whole cycles and
+ * walks at most two cycles' journeys to find where it is, however long it
+ * has respawned: an exact answer for a bounded frame. Probed for 500 dots
+ * respawning about 100 times a second (a route a hundredth of the image
+ * long, at Speed 1): about 0.4 ms a frame at 64, against 10 ms at 2,048.
+ * At ordinary speeds a dot's paces come round again only after minutes.
+ */
+export const JOURNEY_PACE_CYCLE = 64;
 
 /** Bound on walk length per dot per evaluation (keeps a frame O(dots × hops)). */
 const MAX_HOPS = 2048;
@@ -183,13 +197,22 @@ export class SwarmEngine {
    * Same guide resolution and same onset arithmetic `evaluate` uses, so the
    * answer describes the dots that will actually be on screen. Journey length
    * is the dot's own distance to its first exit or dead end — which differs
-   * per dot on a graph, since the walk is hash-driven.
+   * per dot on a graph, since the walk is hash-driven. A walk that runs out
+   * of hops first, round a loop with no end on it, gives the distance it
+   * walked and `ends: false` (DEF-77); a route dot's journey always ends.
    *
    * @param {FlowLayer} layer
    * @param {Object} context Same shape as evaluate()'s
-   * @returns {Array<{onsetFraction: number, journeyMs: number, finishes: boolean}>}
+   * @param {Object} [options]
+   * @param {boolean} [options.endsOnly=false] For a caller that reads only
+   *   which dots reach their journey end (the "At journey end" hint, DEF-77):
+   *   a dot standing where no path leads on to an end is not walked further,
+   *   since it could only run out of hops, and gives `ends: false` with a
+   *   `journeyMs` of Infinity. The crowd wait reads every finishing dot's
+   *   `journeyMs`, so it leaves this off.
+   * @returns {Array<import('../utils/crowdArrival.js').DotSchedule>}
    */
-  scheduleDots(layer, context = {}) {
+  scheduleDots(layer, context = {}, { endsOnly = false } = {}) {
     const durationMs = context.durationMs;
     if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return [];
 
@@ -204,6 +227,7 @@ export class SwarmEngine {
       if (!guide) return [];
     }
 
+    const reaching = endsOnly && guide.type === 'graph' ? this._nodesReachingEnd(guide) : null;
     const schedules = [];
     for (const emitter of layer.emitters) {
       const { seed, dotCount } = emitter;
@@ -227,13 +251,14 @@ export class SwarmEngine {
           windowSpan,
         });
         const speedMultiplier = this._journeyPace(emitter, i, 0);
-        const length = guide.type === 'route'
-          ? guide.length
-          : this._journeyLength(emitter, i, guide);
+        const { length, ends } = guide.type === 'route'
+          ? { length: guide.length, ends: guide.length > 0 }
+          : this._journeyLength(emitter, i, guide, reaching);
         schedules.push({
           onsetFraction,
           journeyMs: dotJourneyMs(length, emitter.speed, speedMultiplier),
           finishes: finishes && length > 0,
+          ends,
         });
       }
     }
@@ -244,28 +269,30 @@ export class SwarmEngine {
    * Whether anything on the layer's guide can end a dot's journey (DEF-77).
    * A route always ends. A network ends at an Exit, at a one-path node when
    * it has no Exit, or at a node no path leaves; a closed loop of two-way
-   * paths has none of these, and no Speed makes its dots finish.
+   * paths has none of these, and no Speed makes its dots finish. Read from
+   * the network alone, so it costs no walk.
    * @param {FlowLayer} layer
-   * @returns {boolean}
+   * @returns {boolean|null} Null where the layer has no network to release
+   *   dots onto (no layer, or a network with no paths)
    */
   hasJourneyEnd(layer) {
-    if (!layer) return false;
+    if (!layer) return null;
     if (layer.guideType === 'route') return true;
     const guide = this._buildGraphGuide(layer.graph);
-    if (!guide) return false;
-    return guide.graph.getNodes().some(node => node.type === 'exit'
-      || (guide.fallbackExits !== null && guide.fallbackExits.has(node.id))
-      || (guide.graph.getEdgesForNode(node.id).length > 0
-        && this._traversableEdges(guide.graph, node.id, null).length === 0));
+    return guide ? this._journeyEndIds(guide).size > 0 : null;
   }
 
   /**
    * How far one dot travels through a graph before its first exit or dead
-   * end. Mirrors the walk in `_walkGraph`, summing lengths instead of
-   * stopping at a distance.
+   * end, and whether it gets there: a walk that runs out of hops first gives
+   * the distance it walked and `ends: false` (DEF-77). Mirrors the walk in
+   * `_walkGraph`, summing lengths instead of stopping at a distance. Given
+   * `reaching` (`_nodesReachingEnd`), a walk that stands anywhere else stops
+   * there, its length Infinity, since it could only run out of hops.
    * @private
+   * @returns {{length: number, ends: boolean}}
    */
-  _journeyLength(emitter, dotIndex, guide) {
+  _journeyLength(emitter, dotIndex, guide, reaching = null) {
     const { graph, entries } = guide;
     const { seed } = emitter;
 
@@ -275,9 +302,10 @@ export class SwarmEngine {
     let total = 0;
 
     for (let step = 0; step < MAX_HOPS; step++) {
+      if (reaching && !reaching.has(node.id)) return { length: Infinity, ends: false };
       const atExit = this._endsJourney(node, guide, step, step > 0);
       const candidates = atExit ? [] : this._traversableEdges(graph, node.id, cameFromEdgeId);
-      if (atExit || candidates.length === 0) break;
+      if (atExit || candidates.length === 0) return { length: total, ends: true };
 
       const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
       total += this.edgeGeometry(graph, traversal.edge).length;
@@ -285,7 +313,57 @@ export class SwarmEngine {
       cameFromEdgeId = traversal.edge.id;
       if (!node) break;
     }
-    return total;
+    return { length: total, ends: false };
+  }
+
+  /**
+   * Ids of the nodes a journey can end at (DEF-77): an Exit, a fallback exit
+   * on a network with no Exit, or a node no path leaves that a dot can stand
+   * on (an entry, or the end of a path).
+   * @private
+   * @returns {Set<string>}
+   */
+  _journeyEndIds(guide) {
+    const { graph, entries, fallbackExits } = guide;
+    const entryIds = new Set(entries.map(node => node.id));
+    const ids = new Set();
+    for (const node of graph.getNodes()) {
+      const deadEnd = (entryIds.has(node.id) || graph.getEdgesForNode(node.id).length > 0)
+        && this._traversableEdges(graph, node.id, null).length === 0;
+      if (node.type === 'exit' || fallbackExits?.has(node.id) || deadEnd) ids.add(node.id);
+    }
+    return ids;
+  }
+
+  /**
+   * Ids of the nodes from which paths, taken the way a dot may take them,
+   * lead to a journey end (DEF-77). A dot anywhere else can only run out of
+   * hops. Read node by node, so it may count a node that a dot's own walk,
+   * which turns back only where there is no other way on, cannot leave for
+   * an end; never the reverse.
+   * @private
+   * @returns {Set<string>}
+   */
+  _nodesReachingEnd(guide) {
+    const { graph } = guide;
+    const leadsFrom = new Map(); // node id → ids of the nodes a path leads to it from
+    for (const node of graph.getNodes()) {
+      for (const { edge, reversed } of this._traversableEdges(graph, node.id, null)) {
+        const to = reversed ? edge.sourceId : edge.targetId;
+        if (!leadsFrom.has(to)) leadsFrom.set(to, []);
+        leadsFrom.get(to).push(node.id);
+      }
+    }
+    const reaching = this._journeyEndIds(guide);
+    const queue = [...reaching];
+    while (queue.length > 0) {
+      for (const from of leadsFrom.get(queue.pop()) || []) {
+        if (reaching.has(from)) continue;
+        reaching.add(from);
+        queue.push(from);
+      }
+    }
+    return reaching;
   }
 
   // ── emitter evaluation ─────────────────────────────────────────
@@ -375,11 +453,15 @@ export class SwarmEngine {
   /**
    * A dot's speed multiplier on one journey: journey 0 is the dot's own pace,
    * and each respawned journey draws afresh from the same Pace variation
-   * (DEF-77), so a crowd at 0% Pace variation still moves as one.
+   * (DEF-77), so a crowd at 0% Pace variation still moves as one. Respawned
+   * journeys cycle through JOURNEY_PACE_CYCLE draws: journey k ≥ 1 takes
+   * draw ((k − 1) mod JOURNEY_PACE_CYCLE) + 1.
    * @private
    */
   _journeyPace(emitter, dotIndex, journey) {
-    const channel = journey > 0 ? journeyChannel(journey, JOURNEY_PACE) : CHANNEL_SPEED;
+    const channel = journey > 0
+      ? journeyChannel(((journey - 1) % JOURNEY_PACE_CYCLE) + 1, JOURNEY_PACE)
+      : CHANNEL_SPEED;
     return Math.max(
       MIN_SPEED_MULTIPLIER,
       1 + emitter.speedVariance * (2 * SwarmEngine.hash(emitter.seed, dotIndex, channel) - 1)
@@ -414,26 +496,42 @@ export class SwarmEngine {
   }
 
   /**
-   * A respawned route dot `beyond` units past its first journey's end, at
-   * its first journey's pace. The time left is walked journey by journey,
-   * each at its own pace, so the answer is still a pure function of the
-   * instant. Past MAX_HOPS journeys the dot keeps its last pace and sway,
-   * which bounds a frame however fast the crowd moves.
+   * A respawned route dot `beyond` units past its first journey's end, in
+   * its first journey's units (distance at `firstPace`): journey k takes
+   * `length × firstPace / pace(k)` of them. The time left is walked journey
+   * by journey, each at its own pace. Paces repeat every JOURNEY_PACE_CYCLE
+   * journeys, so past the first cycle whatever whole cycles remain are
+   * skipped (the rest is reduced modulo one cycle's total) and only the last
+   * is walked: the answer is exact, still a pure function of the instant, and
+   * costs at most two cycles' steps however long the dot has respawned. The
+   * sample carries the true journey index, so its sway never repeats.
    * @private
    */
   _respawnOnRoute(beyond, emitter, dotIndex, firstPace, guide) {
     const { points, length } = guide;
+    const span = journey => (length * firstPace) / this._journeyPace(emitter, dotIndex, journey);
+    const at = (fraction, journey) => this._sampleAt(points, fraction, false, fraction * length, journey);
+
     let remaining = beyond;
-    let pace = firstPace;
-    for (let journey = 1; journey <= MAX_HOPS; journey++) {
-      const next = this._journeyPace(emitter, dotIndex, journey);
-      remaining *= next / pace; // the same time left, walked at this journey's pace
-      pace = next;
-      if (remaining < length) return this._sampleAt(points, remaining / length, false, remaining, journey);
-      remaining -= length;
+    let cycle = 0;
+    let journey = 1;
+    for (; journey <= JOURNEY_PACE_CYCLE; journey++) {
+      const units = span(journey);
+      if (remaining < units) return at(remaining / units, journey);
+      remaining -= units;
+      cycle += units;
     }
-    remaining %= length;
-    return this._sampleAt(points, remaining / length, false, remaining, MAX_HOPS);
+
+    // Journey JOURNEY_PACE_CYCLE + 1 onwards repeats the cycle's paces.
+    journey += JOURNEY_PACE_CYCLE * Math.floor(remaining / cycle);
+    remaining %= cycle;
+    for (let left = JOURNEY_PACE_CYCLE; left > 1; left--, journey++) {
+      const units = span(journey);
+      if (remaining < units) break;
+      remaining -= units;
+    }
+    // Rounding can leave the cycle's last journey a hair past its end.
+    return at(Math.min(1, remaining / span(journey)), journey);
   }
 
   /** Route polyline length, cached by array identity. @private */
@@ -491,9 +589,9 @@ export class SwarmEngine {
    * On reaching an exit node (or a dead end, which behaves as one):
    * 'disappear' ends the dot, 'collect' parks it there, 'respawn' teleports
    * it to a freshly hashed entry and keeps walking at that journey's own pace
-   * and sway (DEF-77), and 'loop' replays the dot's own first journey
-   * cyclically. `distance` is measured at the first journey's pace,
-   * `speedMultiplier`, so a respawn rescales what is left of it.
+   * (from `_journeyPace`'s cycle) and sway (DEF-77), and 'loop' replays the
+   * dot's own first journey cyclically. `distance` is measured at the first
+   * journey's pace, `speedMultiplier`, so a respawn rescales what is left of it.
    * @private
    * @returns {{point, tangent, wobbleDistance, journey}|null}
    */

@@ -59,6 +59,10 @@ export function dotJourneyMs(journeyLength, speed, speedMultiplier) {
  * @property {number} onsetFraction When the dot is released, 0–1 of the timeline
  * @property {number} journeyMs How long it then travels
  * @property {boolean} finishes False for a dot that never arrives (loop/respawn)
+ * @property {boolean} ends Whether the dot's first journey reaches its end (an
+ *   Exit, a fallback exit or a dead end) rather than running out of hops round
+ *   a loop with none on it, whatever the crowd does there (DEF-77); a route
+ *   dot's always does
  */
 
 /**
@@ -85,7 +89,8 @@ export function lastArrivalMs(schedules = [], durationMs = 0) {
  * How many dots reach their journey's end before the timeline ends,
  * whatever the crowd does there (DEF-77). Unlike `lastArrivalMs` this counts
  * repeating and respawning dots too: the question is whether "At journey
- * end" has any dot to act on, not whether the crowd can be waited for.
+ * end" has any dot to act on, not whether the crowd can be waited for. A dot
+ * whose walk only ran out of hops (`ends: false`) has reached no end.
  *
  * @param {Array<DotSchedule>} schedules
  * @param {number} durationMs Current total timeline duration
@@ -94,7 +99,7 @@ export function lastArrivalMs(schedules = [], durationMs = 0) {
 export function dotsReachingJourneyEnd(schedules = [], durationMs = 0) {
   let count = 0;
   for (const dot of schedules) {
-    if (dot.onsetFraction * durationMs + dot.journeyMs <= durationMs) count += 1;
+    if (dot.ends && dot.onsetFraction * durationMs + dot.journeyMs <= durationMs) count += 1;
   }
   return count;
 }

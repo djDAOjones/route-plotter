@@ -161,12 +161,15 @@ export const crowdsMixin = {
     // Escape backs out of Crowd scope to Route scope
     this.eventBus.on('waypoint:deselect', leaveCrowdScope);
 
-    // Central crowd param pipeline (mirrors waypoint:path-property-changed)
-    this.eventBus.on('crowd:param-changed', () => {
+    // Central crowd param pipeline (mirrors waypoint:path-property-changed).
+    // An edit that moves no dot's release or journey (its colour, size, sway
+    // or what it does at the end) says `journeys: false`, and the "At journey
+    // end" hint keeps its answer rather than schedule every dot again (DEF-77).
+    this.eventBus.on('crowd:param-changed', ({ journeys = true } = {}) => {
       this.saveUndoStateDebounced();
       this.autoSave();
       this.queueRender();
-      this._syncCrowdLifecycleHint();
+      if (journeys) this._syncCrowdLifecycleHint();
     });
 
     // Whether any dot reaches its journey end also turns on the timeline's
@@ -199,18 +202,18 @@ export const crowdsMixin = {
       if (!em) return;
       em.update({ dotColor: e.target.value });
       this.updateLayersStrip(); // Row swatch mirrors the dot colour
-      this.eventBus.emit('crowd:param-changed');
+      this.eventBus.emit('crowd:param-changed', { journeys: false });
     });
 
     this._wireCrowdSlider('crowd-dot-size', (raw) => {
       emitterOf()?.update({ dotSize: raw / 100 });
       return `${(raw / 100).toFixed(2)}×`;
-    });
+    }, { journeys: false });
 
     this._wireCrowdSlider('crowd-wobble', (raw) => {
       emitterOf()?.update({ wobble: raw / 100 });
       return `${Math.round(raw)}%`;
-    });
+    }, { journeys: false });
 
     this._wireCrowdSlider('crowd-count', (raw) => {
       emitterOf()?.update({ dotCount: raw });
@@ -251,7 +254,7 @@ export const crowdsMixin = {
       const em = emitterOf();
       if (!em) return;
       em.update({ lifecycleMode: e.target.value });
-      this.eventBus.emit('crowd:param-changed');
+      this.eventBus.emit('crowd:param-changed', { journeys: false });
     });
 
     document.getElementById('crowd-reroll-btn')?.addEventListener('click', () => {
@@ -280,9 +283,12 @@ export const crowdsMixin = {
    * being selected), value readout, param-changed pipeline.
    * @param {string} id - Element id; `${id}-value` is the readout span
    * @param {Function} apply - raw slider number → readout string (writes the model)
+   * @param {Object} [options]
+   * @param {boolean} [options.journeys=true] - False for a slider that moves
+   *   no dot's release or journey (crowd:param-changed)
    * @private
    */
-  _wireCrowdSlider(id, apply) {
+  _wireCrowdSlider(id, apply, { journeys = true } = {}) {
     const el = document.getElementById(id);
     const valueEl = document.getElementById(`${id}-value`);
     el?.addEventListener('input', (e) => {
@@ -290,7 +296,7 @@ export const crowdsMixin = {
       const text = apply(parseFloat(e.target.value));
       if (valueEl) valueEl.textContent = text;
       el.setAttribute('aria-valuetext', text);
-      this.eventBus.emit('crowd:param-changed');
+      this.eventBus.emit('crowd:param-changed', { journeys });
     });
   },
 
@@ -894,29 +900,40 @@ export const crowdsMixin = {
   /**
    * Show the hint under "At journey end" while no dot of the selected crowd
    * reaches its journey end before the timeline ends, when the setting has
-   * nothing to act on (DEF-77); on a network nothing can end, it names the
-   * node Type rather than a pace that would not help. Read from the dots' schedule, the arithmetic
-   * the renderer evaluates with, on each edit rather than per frame. The
-   * select is described by the hint, so it is emptied as well as hidden:
-   * a description is read even from a hidden element.
+   * nothing to act on (DEF-77). On a network nothing can end, read from the
+   * network alone without scheduling a dot, it names the node Type rather
+   * than a pace that would not help. Otherwise it reads the dots' schedule,
+   * the arithmetic the renderer evaluates with, without walking a dot that
+   * could only run out of hops; on each edit that can move a dot's release
+   * or journey, never per frame. The select is described by the hint, so it
+   * is emptied as well as hidden: a description is read even from a hidden
+   * element.
    * @private
    */
   _syncCrowdLifecycleHint() {
     const hint = document.getElementById('crowd-lifecycle-hint');
     if (!hint) return;
     const layer = this.selectedCrowd;
+    const engine = this.swarmEngine;
     const durationMs = this.animationEngine?.state?.duration;
-    const schedules = layer && this.swarmEngine && durationMs > 0
-      ? this.swarmEngine.scheduleDots(layer, {
-        durationMs,
-        routePathPoints: this.pathPoints,
-        routeAnchors: this.getRouteArrivalMap?.() || null,
-      })
-      : [];
-    const unreached = schedules.length > 0 && dotsReachingJourneyEnd(schedules, durationMs) === 0;
-    const endless = unreached && !this.swarmEngine.hasJourneyEnd(layer);
-    hint.hidden = !unreached;
-    hint.textContent = unreached ? (endless ? LIFECYCLE_ENDLESS_HINT : LIFECYCLE_UNREACHED_HINT) : '';
+    let message = '';
+    if (layer?.emitters.length > 0 && engine && durationMs > 0) {
+      const ends = engine.hasJourneyEnd(layer); // null: no network to release dots onto
+      if (ends === false) {
+        message = LIFECYCLE_ENDLESS_HINT;
+      } else if (ends) {
+        const schedules = engine.scheduleDots(layer, {
+          durationMs,
+          routePathPoints: this.pathPoints,
+          routeAnchors: this.getRouteArrivalMap?.() || null,
+        }, { endsOnly: true });
+        if (schedules.length > 0 && dotsReachingJourneyEnd(schedules, durationMs) === 0) {
+          message = LIFECYCLE_UNREACHED_HINT;
+        }
+      }
+    }
+    hint.hidden = !message;
+    hint.textContent = message;
   },
 
   /**

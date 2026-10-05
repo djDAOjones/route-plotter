@@ -23,6 +23,7 @@ import { PathCalculator } from '../src/services/PathCalculator.js';
 import { dotsReachingJourneyEnd } from '../src/utils/crowdArrival.js';
 import { ANIMATION } from '../src/config/constants.js';
 import { bootApp } from './helpers/bootApp.js';
+import { loadSnapshot } from './helpers/projectSnapshot.js';
 
 function makeApp({ hasRoute = true } = {}) {
   document.body.innerHTML = `
@@ -675,5 +676,102 @@ describe('the "At journey end" hint (DEF-77)', () => {
     expect(first.type).toBe('exit');
     expect(hint.hidden).toBe(true);
     expect(hint.textContent).toBe('');
+  });
+
+  describe('what it costs, and what refreshes it', () => {
+    const pick = (id, value, type = 'input') => {
+      const control = document.getElementById(id);
+      control.value = value;
+      control.dispatchEvent(new Event(type, { bubbles: true }));
+    };
+
+    test('an edit that moves no dot’s release or journey schedules no dot; Speed does', async () => {
+      const app = await editorWithCrowd();
+      const hint = document.getElementById('crowd-lifecycle-hint');
+      const schedule = vi.spyOn(app.swarmEngine, 'scheduleDots');
+
+      // Size, Walking variation, colour and the mode itself change where a dot
+      // is drawn or what it does at the end, never whether it gets there.
+      slide('crowd-dot-size', 80);
+      slide('crowd-wobble', 50);
+      pick('crowd-dot-color', '#E69F00');
+      pick('crowd-lifecycle', 'disappear', 'change');
+      const [emitter] = app.selectedCrowd.emitters;
+      expect(emitter).toMatchObject({ dotSize: 0.8, wobble: 0.5, lifecycleMode: 'disappear' });
+      expect(emitter.dotColor.toUpperCase()).toBe('#E69F00');
+      expect(schedule).not.toHaveBeenCalled();
+      expect(hint.hidden).toBe(true);
+
+      slide('crowd-speed', 1);
+      expect(schedule).toHaveBeenCalledTimes(1);
+      expect(hint.hidden).toBe(false);
+
+      // Showing, it stays put through another such edit.
+      slide('crowd-dot-size', 40);
+      expect(schedule).toHaveBeenCalledTimes(1);
+      expect(hint.hidden).toBe(false);
+    });
+
+    test('a network nothing can end shows its hint without scheduling a dot', async () => {
+      const app = await editorWithCrowd();
+      const hint = document.getElementById('crowd-lifecycle-hint');
+      pick('crowd-guide-type', 'graph', 'change');
+      const pen = app.networkEditService;
+      const first = pen.placeNode({ x: 0.2, y: 0.3 });
+      pen.placeNode({ x: 0.8, y: 0.3 });
+      pen.placeNode({ x: 0.5, y: 0.8 });
+
+      const schedule = vi.spyOn(app.swarmEngine, 'scheduleDots');
+      pen.clickNode(first); // closes the loop: a committed network edit
+      expect(hint.hidden).toBe(false);
+      expect(hint.textContent).toMatch(/^No dot’s journey ends on this network\./);
+      expect(schedule).not.toHaveBeenCalled();
+
+      // Given an Exit, the next committed edit schedules the dots again.
+      pen.selectNode(first);
+      pick('network-node-type', 'exit', 'change');
+      expect(schedule).toHaveBeenCalled();
+      expect(hint.hidden).toBe(true);
+    });
+
+    test('undo and redo refresh it with the Speed they restore', async () => {
+      const app = await editorWithCrowd();
+      const hint = document.getElementById('crowd-lifecycle-hint');
+      slide('crowd-speed', 1);
+      app.saveUndoState(); // what the slider's debounce does 400 ms later
+      slide('crowd-speed', 40);
+      expect(hint.hidden).toBe(true);
+
+      app.undo();
+      expect(app.selectedCrowd.emitters[0].speed).toBe(0.01);
+      expect(hint.hidden).toBe(false);
+      app.redo();
+      expect(app.selectedCrowd.emitters[0].speed).toBe(0.4);
+      expect(hint.hidden).toBe(true);
+    });
+
+    test('selecting another crowd, or opening a project, refreshes it', async () => {
+      const app = await editorWithCrowd();
+      const hint = document.getElementById('crowd-lifecycle-hint');
+      const slow = app.selectedCrowd;
+      slide('crowd-speed', 1);
+      expect(hint.hidden).toBe(false);
+
+      app.addCrowd(); // selected, at a new crowd's pace
+      expect(app.selectedCrowd).not.toBe(slow);
+      expect(hint.hidden).toBe(true);
+      app.eventBus.emit('crowd:selected', slow);
+      expect(hint.hidden).toBe(false);
+
+      // An opened project starts with no crowd selected, so no hint; selecting
+      // its slow crowd shows it again.
+      const project = app._buildProjectSnapshot();
+      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(app.selectedCrowd).toBeNull();
+      expect(hint.hidden).toBe(true);
+      expect(hint.textContent).toBe('');
+      app.eventBus.emit('crowd:selected', app.scene.getFlowLayer(slow.id));
+      expect(hint.hidden).toBe(false);
+    });
   });
 });
