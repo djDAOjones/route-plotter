@@ -17,19 +17,6 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
-## W5 — deepen the characterisation (2026-09-29 →; merged, not yet released)
-
-Outcome: written when W5 closes.
-
-TST-08 — The mixin composition is guarded from the parsed source: `main.js`
-must compose exactly the listed mixins in one statement that runs as it
-loads and reach the prototype nowhere else, and no module may change a
-mixin; no class member shares a mixin method's name; no instance property
-hides a method; and every call made on the app by name in `main.js` and
-`src/app/` reaches a function it has, bar the dead listener's (DEL-04),
-which must stay dead. A shape the reader cannot follow fails with its
-line. (2026-10-01)
-
 ## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
 
 Outcome: written when the run's last such defect has merged.

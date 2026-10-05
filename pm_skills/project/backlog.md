@@ -80,6 +80,7 @@
   Characterisation [ready] — With branched and intro/tail fixtures; gates
   W7 and W10. **P1**
 - [ ] **TST-03 Visibility mode matrix** · Characterisation [ready] **P1**
+- [ ] **TST-08 Mixin composition guards** · Characterisation [ready] **P1**
 - [ ] **SPL-06 `build.js` entry guard and exported functions** · Refactor
   [ready] — Pulled forward from W9: TST-11 needs it, and `build.js` exports
   nothing today. **P2**
