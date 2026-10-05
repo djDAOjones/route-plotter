@@ -22,7 +22,6 @@
 
 ### Phase 1 — Land the big run's open pull requests
 
-- [~] TST-16 — Tighten the round-2 predicates · Characterisation P1 — since 2026-10-01
 - [~] DEF-64 — Branch legs miss hover and click · Live defect — since 2026-10-05
 - [~] TST-14 — Shell and ContextMenu safety tests · Characterisation P1 — since 2026-10-01
 - [~] TST-08 — Mixin composition guards · Characterisation P1 — since 2026-10-01
@@ -87,7 +86,7 @@
 - [ ] DEF-69 — Zoom warning unattached — since 2026-10-05
 - [ ] DEF-70 — Menu item drops focus — since 2026-10-05 — blocked: TST-14
 - [ ] DEF-71 — Unknown build flag releases — since 2026-10-05
-- [ ] DEF-72 — Timeline shortcut ignores tail — since 2026-10-05 — blocked: TST-16
+- [ ] DEF-72 — Timeline shortcut ignores tail — since 2026-10-05
 - [ ] DEF-73 — Leg card misnames waypoint — since 2026-10-05 — blocked: DEF-64
 - [ ] DEF-74 — Redo restores no selection — since 2026-10-05 — blocked: TST-05
 - [ ] DEF-75 — Index check misses references — since 2026-10-05

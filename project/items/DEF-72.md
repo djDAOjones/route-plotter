@@ -17,3 +17,4 @@
 ## Notes
 
 - 2026-10-05 — Recorded from the big run's handoff, which listed it with what it waits on.
+- 2026-10-05 — Wording, from TST-16's review r1 (advisory): the head jumps on the next playback update, not the next frame (`AnimationEngine.js` 187–193).
