@@ -20,9 +20,9 @@
 
 ## 2026-10-05 — TST-05 — Every wired event and its listener order are pinned
 
-**Decision:** TST-05 lands (PR #72): golden transcripts pin every event the wiring subscribes to, the order its listeners run and what each changes; a payload the transcript abridges carries a digest of every field, and the app's waypoint lookup is checked at each step and after Undo and Redo.
+**Decision:** TST-05 lands (PR #72): golden transcripts pin every event the wiring subscribes to, the order its listeners run and what each changes; a payload the transcript abridges carries a digest of its plain fields (numbers to four decimals, class instances by name), and the app's waypoint lookup is checked at each step and after Undo and Redo.
 
-**Rationale:** Codex review r3's two mutants are killed in the tests only: the getter refusing new `wp_` IDs (B1) and the scene outline emitting `x: 0` (B2); advisories U2, U3 and U5 are killed too. A digest keeps the goldens readable but says only that a hidden field changed, not which. Every golden line that moved with the main merge traces to DEF-06, DEF-42, DEF-44, DEF-64, DEF-77 or CROWD-05; the "paused half way" rows now seek half the route's own timeline, as before CROWD-05. Digest rule applied: house conventions → Testing and persistence. DEF-15, DEF-22, DEF-65, DEF-66 and DEF-74 no longer wait on it.
+**Rationale:** Codex review r3's two mutants are killed in the tests only: the getter refusing new `wp_` IDs (B1) and the scene outline emitting `x: 0` (B2); advisories U2, U3 and U5 are killed too. A digest keeps the goldens readable but says only that a hidden field changed, not which, and misses a change past the fourth decimal. Two Chromium checks the row named are wish lines. Every golden line that moved with the main merge traces to DEF-06, DEF-42, DEF-44, DEF-64, DEF-77 or CROWD-05; the "paused half way" rows now seek half the route's own timeline, as before CROWD-05. Digest rule applied: house conventions → Testing and persistence. DEF-15, DEF-22, DEF-65, DEF-66 and DEF-74 no longer wait on it.
 
 **Supersedes:** none
 
