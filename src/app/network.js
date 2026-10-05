@@ -38,7 +38,7 @@ const NETWORK_CARD_HINTS = {
 
 /** A junction's path-weight row hint (UI-03), worded as the Edge card's Traffic hint. */
 const PATH_WEIGHT_HINT = 'How strongly dots leaving this node prefer this path, '
-  + 'shown as the share of departures that pick it';
+  + 'shown as its configured share of departures. Arriving dots avoid an immediate U-turn when another path is available';
 
 /** Compact author-facing weight text without losing useful decimals. */
 function formatWeight(weight) {

@@ -70,7 +70,5 @@
 - Pin the beacon timing the other control paths give: the ripple-wait toggle, a multi-selection's pulse cycle, ripple scale and wait, and a card's On-arrival Reset and Apply onward (Codex, DEF-42 review r2, advisory) — (from: DEF-42, 2026-10-05)
 - Ask the owner whether releases after v3.2.698 also need no save of their smoke-test exports to disk, the in-page export check being enough; until he says so, each release owes its save — (from: GATELESS-1, 2026-10-05)
 - The hint under "At journey end" refreshes after a route edit only when the timeline's length changes, so an edit that keeps the length leaves it stale until the next crowd edit — (from: DEF-77, 2026-10-05)
-- The "This Zoom" hint says the camera smoothly transitions, which is wrong when Zoom transition is Quick — (from: UI-03, 2026-10-05)
 - The scene outline's crowd labels say "Release start" and "Release length" where the crowd card says "Window start" and "Window length": one concept, two names — (from: UI-03, 2026-10-05)
 - In forced-colours mode a parameter hint has no visible border — (from: UI-03, 2026-10-05)
-- Escape inside a scene-outline field is taken by the outline, so a hover-opened hint there closes only on a second Escape or when the pointer leaves — (from: UI-03, 2026-10-05)

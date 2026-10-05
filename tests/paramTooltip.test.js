@@ -452,6 +452,37 @@ describe('a mouse resting on a hint opens it', () => {
     trigger.dispatchEvent(clickEvent());
     expect(showing()).toBe(false);
   });
+
+  test('a click on a hover-opened hint closes it, so what it covers is a click away', () => {
+    hoverOpen();
+    tooltip().dispatchEvent(clickEvent());
+    expect(showing()).toBe(false);
+
+    // The pointer still resting on the hint opens nothing more.
+    pointTo(tooltip());
+    vi.advanceTimersByTime(OPEN * 4);
+    expect(showing()).toBe(false);
+  });
+
+  test('it is placed clear of the control it describes, not over it', () => {
+    // An outline label sits above its input: a hint below the label alone
+    // would cover the field and, taking the pointer, block clicks on it.
+    const box = (top, bottom) => ({
+      top, bottom, left: 20, right: 220, width: 200, height: bottom - top, x: 20, y: top,
+    });
+    trigger.getBoundingClientRect = () => box(100, 116);
+    control.getBoundingClientRect = () => box(120, 152);
+    const frame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((run) => {
+      run(0);
+      return 0;
+    });
+    try {
+      hoverOpen();
+    } finally {
+      frame.mockRestore();
+    }
+    expect(parseFloat(tooltip().style.top)).toBeGreaterThanOrEqual(152);
+  });
 });
 
 /**
@@ -561,6 +592,9 @@ describe('every parameter control has a hint', () => {
     const app = await bootApp();
     try {
       await app.ready;
+      // Close the splash, as an author would: its focus trap outlives the
+      // boot and would take a later test's Escape.
+      document.getElementById('splash-close').click();
       // No route: a new crowd walks a custom network of its own.
       app.addCrowd({ enterNetworkEditor: false });
       document.getElementById('crowd-busyness-add').click();
@@ -666,6 +700,31 @@ describe('the scene outline’s fields have hints, drawn as the outline is', () 
       const tooltip = document.getElementById('param-tooltip');
       expect(tooltip.style.display).toBe('block');
       expect(tooltip.textContent).toBe(trigger.getAttribute('data-tip'));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('Escape in an outline field closes its hover-opened hint in place', async () => {
+    // The outline takes Escape to reset the form and stops it there; the
+    // hint must close all the same (WCAG 1.4.13 Dismissible).
+    const { container } = await drawWholeOutline();
+    vi.useFakeTimers();
+    try {
+      const form = container.querySelector('form[data-outline-action="update-edge"]');
+      const weight = form.elements.weight;
+      const trigger = [...form.querySelectorAll('[data-tip]')]
+        .find(tip => tip.getAttribute('data-tip') === hintOf(weight));
+      expect(trigger).toBeTruthy();
+      trigger.dispatchEvent(new window.PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+      vi.advanceTimersByTime(INTERACTION.HINT_HOVER_OPEN_DELAY_MS);
+      const tooltip = document.getElementById('param-tooltip');
+      expect(tooltip.style.display).toBe('block');
+
+      weight.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      expect(tooltip.style.display).toBe('none');
+      // The outline still had the key: its form's Apply took focus.
+      expect(document.activeElement).toBe(form.querySelector('[type="submit"]'));
     } finally {
       vi.useRealTimers();
     }

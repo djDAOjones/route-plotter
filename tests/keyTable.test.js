@@ -1373,7 +1373,7 @@ const KEY_LISTENER = {
   menuButton: 'src/components/Dropdown.js: trigger keydown',
   menu: 'src/components/Dropdown.js: menu keydown',
   menuAnywhere: 'src/components/Dropdown.js: document keydown',
-  hint: 'src/components/ParamTooltip.js: document keydown',
+  hint: 'src/components/ParamTooltip.js: document keydown (capture)',
   outline: 'src/controllers/SceneOutlineController.js: this.container keydown',
   sectionHeader: 'src/controllers/SectionController.js: header keydown',
   more: 'src/controllers/SectionController.js: summary keydown',

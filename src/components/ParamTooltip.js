@@ -55,8 +55,11 @@
  *   without closing it (WCAG 1.4.13 Hoverable); it closes once the pointer has
  *   left both, after a short grace for crossing the gap between them, and
  *   Escape closes it with the pointer still in place (Dismissible). It stays
- *   until then (Persistent). A click on it keeps it open as a click-opened
- *   hint would be. Touch and pen never hover-open: a tap is still a click.
+ *   until then (Persistent). A click on its trigger keeps it open as a
+ *   click-opened hint would be; a click on the hint closes it. Every hint is
+ *   placed clear of its trigger and the control it describes, so the grace
+ *   covers crossing that control. Touch and pen never hover-open: a tap is
+ *   still a click.
  *
  *   The visible tooltip stays `aria-hidden`: its text is already exposed as
  *   the control's description, and announcing both would say it twice.
@@ -237,12 +240,33 @@ function describedAt(el) {
 }
 
 /**
- * Position the tooltip below (or above if near bottom) the trigger element.
- * Uses getBoundingClientRect for viewport-relative placement.
+ * The box a hint stays clear of: its trigger and the control it describes
+ * together. A hover-opened hint takes the pointer, so placed over its own
+ * control (an outline label sits above its input) it would block clicks on
+ * the very field it explains.
+ * @param {HTMLElement} trigger - The [data-tip] element
+ * @returns {{top: number, bottom: number, left: number}}
+ */
+function anchorRect(trigger) {
+  const own = trigger.getBoundingClientRect();
+  const control = controlByTrigger.get(trigger);
+  if (!control?.isConnected || control === trigger) return own;
+  const other = control.getBoundingClientRect();
+  return {
+    top: Math.min(own.top, other.top),
+    bottom: Math.max(own.bottom, other.bottom),
+    left: own.left,
+  };
+}
+
+/**
+ * Position the tooltip below (or above if near bottom) the trigger and the
+ * control it describes. Uses getBoundingClientRect for viewport-relative
+ * placement.
  * @param {HTMLElement} trigger - The [data-tip] element that was clicked
  */
 function positionTooltip(trigger) {
-  const rect = trigger.getBoundingClientRect();
+  const rect = anchorRect(trigger);
   const tipRect = tooltipEl.getBoundingClientRect();
   const gap = 6; // px between trigger and tooltip
   const margin = 12; // px from viewport edge
@@ -452,8 +476,10 @@ export function initParamTooltips() {
       toggleTooltip(trigger);
       return;
     }
-    // Click outside — dismiss
-    if (activeTrigger && !tooltipEl?.contains(e.target)) {
+    // Click outside — dismiss. A hover-opened hint takes the pointer, so a
+    // click on the hint itself dismisses it too: the click would otherwise
+    // reach nothing, and what the hint covers is then a click away.
+    if (activeTrigger && (openedBy === 'hover' || !tooltipEl?.contains(e.target))) {
       hideTooltip();
     }
   });
@@ -490,6 +516,9 @@ export function initParamTooltips() {
   });
 
   // Escape closes, and keeps it closed while focus stays on that control.
+  // Capture phase: a control's own Escape handler (the scene outline resets
+  // its form) stops the key before it would bubble here. The key still
+  // reaches that handler, as it did before hints opened on hover.
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || !activeTrigger) return;
     const control = controlByTrigger.get(activeTrigger);
@@ -497,7 +526,7 @@ export function initParamTooltips() {
     if (control?.contains(document.activeElement)) {
       escapeDismissedControl = control;
     }
-  });
+  }, true);
 
   // Dismiss on scroll or resize (tooltip position would be stale). A pending
   // hover open goes too: what is under the pointer has moved.

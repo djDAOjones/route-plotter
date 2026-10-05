@@ -71,26 +71,30 @@ const FIELD_HINTS = Object.freeze({
   dots: 'How many dots this emitter releases in all',
   releaseStart: 'When the first dots set off, as a percentage of the timeline',
   releaseLength: 'How much of the timeline, as a percentage, the release is spread across',
-  releaseTiming: 'How unevenly dots set off: 0% evenly spaced, 100% at random',
+  releaseTiming: 'How unevenly dots set off: 0% evenly spaced, 100% at random. Release bias and Busyness ' +
+    'over time then shift set-offs, so 0% is even only with bias 0 and even busyness',
   // The bias bends set-offs towards the start below 0, the end above it
   // (dotOnsetFraction in src/utils/crowdArrival.js).
   releaseBias: 'Below 0 is earlier: more dots set off near the start of the release; above 0 is later, ' +
     'near its end; 0 favours neither',
-  speed: 'How fast the dots travel: at 1, a dot crosses the image’s width in a second',
+  speed: 'How fast the dots travel: at 1, a dot covers the image’s width in about a second; Pace variation ' +
+    'makes some faster and some slower',
   paceVariation: 'How much each dot’s pace differs: 0% moves every dot at the same speed',
   dotSize: 'Dot size, scaled with the image like other elements',
   walkingVariation: 'Sideways walking variation as dots travel: 0% follows the line exactly',
   dotColour: 'A hex colour such as #56B4E9, or transparent to hide the dots',
   journeyEnd: 'What a dot does when it reaches the end of its journey',
-  nodeType: 'Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just ' +
-    'route them onward',
+  nodeType: 'Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on. ' +
+    'With no exit, journeys end at nodes with one connection; with no entry, dots set off from any node they ' +
+    'can leave',
   nodeLabel: 'An optional name, shown after the node’s number in this outline',
   sourceNode: 'The node the new edge starts from; a one-way edge carries dots only away from it',
   destinationNode: 'The node the new edge leads to',
   newEdgeDirection: 'Two-way edges carry dots both ways; one-way edges only from Source node to Destination node',
   edgeDirection: 'Two-way edges carry dots both ways; one-way edges only from the first node in the edge’s ' +
     'name to the second',
-  pathWeight: 'How strongly dots prefer this edge at a junction: weight 2 is chosen twice as often as weight 1',
+  pathWeight: 'How strongly dots prefer this edge at a junction: between paths a dot can take, weight 2 is ' +
+    'twice as likely to be picked as weight 1. Arriving dots avoid an immediate U-turn when another path is available',
 });
 
 function el(tag, { className = '', text = '', attrs = {}, data = {} } = {}) {

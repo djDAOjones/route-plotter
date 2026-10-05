@@ -220,7 +220,7 @@
 
                   <!-- Current Waypoint Zoom -->
                   <div class="control-row control-row-inline">
-                    <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Smoothly transitions between waypoints">This Zoom</label>
+                    <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Zoom transition sets whether the camera reaches it gradually over the leg or quickly on arrival">This Zoom</label>
                     <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0"
                            aria-describedby="camera-zoom-value" aria-valuetext="1.0x">
                     <span id="camera-zoom-value" class="slider-value">1.0x</span>
@@ -1131,7 +1131,7 @@
             </div>
             <div id="section-node-content" class="section-content">
               <label for="network-node-type">
-                <span data-tip="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward">Type</span>
+                <span data-tip="Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on. With no exit, journeys end at nodes with one connection; with no entry, dots set off from any node they can leave">Type</span>
                 <select id="network-node-type">
                   <option value="normal">Pass-through</option>
                   <option value="entry">Entry</option>
