@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.698</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.698">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.698">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.698">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.698">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.698">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.698">
+  <title>Route Plotter v3.2.699</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.699">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.699">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.699">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.699">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.699">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.699">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -1100,13 +1100,15 @@
 
               <label for="crowd-lifecycle">
                 <span data-tip="What a dot does when it reaches the end of its journey">At journey end</span>
-                <select id="crowd-lifecycle">
+                <select id="crowd-lifecycle" aria-describedby="crowd-lifecycle-hint">
                   <option value="respawn">Respawn at entry</option>
                   <option value="loop">Repeat journey</option>
                   <option value="disappear">Disappear</option>
                   <option value="collect">Collect at exit</option>
                 </select>
               </label>
+              <!-- DEF-77: crowds.js fills this while no dot reaches its journey end -->
+              <p id="crowd-lifecycle-hint" class="section-hint" hidden></p>
             </div>
           </div>
 
@@ -1336,6 +1338,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.698"></script>
+  <script src="app.js?v=3.2.699"></script>
 </body>
 </html>

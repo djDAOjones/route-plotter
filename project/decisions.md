@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — REL-699 — v3.2.699 ships DEF-77
+
+**Decision:** v3.2.699 is live from deploy commit `1a42abe` (tag `v3.2.699`), released under GATELESS-1 because DEF-77's merge (`2ff2948`, PR #91) changed `src/` and `index.html`.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full, from `route-plotter/`. (1) A clean `main` equal to `origin/main` at `2ff2948`; Pages `main` `/docs`, built at `2ff2948`, tagged `rollback-v3.2.698-2ff2948`; `git fsck --connectivity-only` reported only dangling trees, and no OneDrive conflict copies. (2) `npm run check` green (101 files, 1,984 tests, 2 todo); `npm run push:dry-run` clean. (3) `npm run push` committed `1a42abe`. (4) Verify, the Pages build and deploy green on `1a42abe`. (5) The `github-pages` deployment at `1a42abe`; all 22 published files SHA-256-identical to `docs/`; the live site ready ("Route Plotter v3.2.699"); the Open day route played (frames driven by hand: 3,002 ms, then to its end at 11,594 ms, after which no frame stayed queued) and exported, at 1280×800, as MP4 (1920×1080, 13.6 s, `ftypisom`) and as HTML (its CSP, the project and the live `player.js` embedded byte for byte), captured in the page. The pane's network timed out now and then (`ERR_TIMED_OUT`): a first run's own `player.js` fetch failed after both exports, and a second's example failed to load, so its HTML export refused for want of a background image; the third run passed every check, and the live files match `docs/`. DEF-77's hint was checked in Chromium on a build of `e3aac41` before the merge. The save to disk stays owed until the owner answers the wish-list's question (GATELESS-1).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — DEF-77 — "At journey end" acts where it is seen
 
 **Decision:** DEF-77 lands (PR #91): a new crowd gets Speed 0.40 and Window length 50%, so its dots finish; a network with no Exit ends journeys at its one-connection nodes; each Respawn journey after the first draws its own variation from the seed and its index; and the panel says under "At journey end" when no dot finishes, and what to change. The owner reported the setting had no visible effect.

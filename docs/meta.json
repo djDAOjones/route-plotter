@@ -369,7 +369,7 @@
       "format": "esm"
     },
     "src/utils/crowdArrival.js": {
-      "bytes": 5529,
+      "bytes": 6534,
       "imports": [],
       "format": "esm"
     },
@@ -379,7 +379,7 @@
       "format": "esm"
     },
     "src/services/SwarmEngine.js": {
-      "bytes": 23656,
+      "bytes": 34491,
       "imports": [
         {
           "path": "src/services/PathCalculator.js",
@@ -3426,7 +3426,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 41136,
+      "bytes": 45083,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3875,13 +3875,13 @@
     }
   },
   "outputs": {
-    ".docs-build-Evdqe3/app.js.map": {
+    ".docs-build-qqXsgR/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3397218
+      "bytes": 3418708
     },
-    ".docs-build-Evdqe3/app.js": {
+    ".docs-build-qqXsgR/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3980,13 +3980,13 @@
           "bytesInOutput": 28763
         },
         "src/utils/crowdArrival.js": {
-          "bytesInOutput": 843
+          "bytesInOutput": 946
         },
         "src/utils/graphRouting.js": {
           "bytesInOutput": 797
         },
         "src/services/SwarmEngine.js": {
-          "bytesInOutput": 6313
+          "bytesInOutput": 8348
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 1297
@@ -4217,7 +4217,7 @@
           "bytesInOutput": 1422
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 21310
+          "bytesInOutput": 22377
         },
         "src/app/network.js": {
           "bytesInOutput": 11824
@@ -4247,7 +4247,7 @@
           "bytesInOutput": 22752
         }
       },
-      "bytes": 1083607
+      "bytes": 1086812
     }
   }
 }
