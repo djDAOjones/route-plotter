@@ -20,7 +20,6 @@
 
 ### Phase 1 — Land the big run's open pull requests
 
-- [~] TST-14 — Shell and ContextMenu safety tests · Characterisation P1 — since 2026-10-01
 - [~] TST-08 — Mixin composition guards · Characterisation P1 — since 2026-10-01
 - [~] TST-05 — Event transcript golden · Characterisation P1 — since 2026-10-01
 - [~] DEF-45 — Announcements overwrite each other · Accessibility P3 — since 2026-10-01
@@ -85,7 +84,7 @@
 - [ ] DEF-67 — Open announces "paused" — since 2026-10-05 — blocked: DEF-45, DEF-28
 - [ ] DEF-68 — Paused camera controls sleep — since 2026-10-05
 - [ ] DEF-69 — Zoom warning unattached — since 2026-10-05
-- [ ] DEF-70 — Menu item drops focus — since 2026-10-05 — blocked: TST-14
+- [ ] DEF-70 — Menu item drops focus — since 2026-10-05
 - [ ] DEF-71 — Unknown build flag releases — since 2026-10-05
 - [ ] DEF-73 — Leg card misnames waypoint — since 2026-10-05
 - [ ] DEF-74 — Redo restores no selection — since 2026-10-05 — blocked: TST-05
