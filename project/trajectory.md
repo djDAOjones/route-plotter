@@ -9,6 +9,8 @@
 
 ## Ahead of Phase 1's pull requests — the owner's order of 2026-10-05
 
+- RECALL — 8/8 (2026-10-05) — scores: 2,2,2,2 — local — see decisions
+- UI-03 — a mouse resting on a hint's text opens it, Escape dismisses it in place, ten unclear hints are reworded and every setting has a hint, the scene outline's included (2026-10-05) — see decisions
 - DEF-77 — "At journey end" acts where it is seen: a new crowd's dots finish, a network with no Exit ends journeys at its ends, Respawn varies each journey, and the panel says when no dot finishes and why (2026-10-05) — see decisions
 
 ## Phase 1 — Land the big run's open pull requests
