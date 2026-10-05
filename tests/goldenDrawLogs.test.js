@@ -304,8 +304,18 @@ describe('golden draw logs (TST-02)', () => {
           // Non-vacuity: a mode that drew nothing would otherwise match a
           // golden full of nothing, and the last instant always draws more
           // than the first because the route has been revealed by then.
-          expect(frames.at(-1).length).toBeGreaterThan(frames[0].length);
-          expect(frames.at(-1).length).toBeGreaterThan(20);
+          // Except where the route draws nothing of its own:
+          // `nervous-system-flow`'s legs are transparent and it has no
+          // markers, so its picture is its crowd, which the end now waits
+          // for (CROWD-05). Every dot has concluded by its last instant, which
+          // so draws what its first does, and its busiest instant is checked.
+          let shown = frames.at(-1);
+          if (fixture.id === 'nervous-system-flow') {
+            expect(frames.at(-1)).toEqual(frames[0]);
+            shown = frames.reduce((busiest, frame) => (frame.length > busiest.length ? frame : busiest));
+          }
+          expect(shown.length).toBeGreaterThan(frames[0].length);
+          expect(shown.length).toBeGreaterThan(20);
           // The background reaches the canvas in every mode.
           expect(frames[0].some(operations => /^main drawImage \[image/.test(operations))).toBe(true);
           // So does the vector layer, in every frame and by name (TST-17): a

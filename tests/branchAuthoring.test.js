@@ -7,12 +7,15 @@
  * transaction and are live-verified; what is unit-tested here is every
  * decision those gestures delegate to — which is where the rules actually
  * live, and where a wrong answer would corrupt the route.
+ *
+ * The last block characterises DEF-22 through the real insert handlers in the
+ * booted app.
  */
 
 import { describe, test, expect, beforeEach } from 'vitest';
 import {
   branchInsertIndex, canForkFrom, canRejoinBranch, branchEndInfo,
-  resolveRouteBranches,
+  resolveRouteBranches, BRANCH_PROBLEM,
 } from '../src/utils/routeBranches.js';
 import { buildRouteNumbering } from '../src/utils/waypointNaming.js';
 import { buildSceneOutlineSnapshot } from '../src/utils/sceneSemantics.js';
@@ -21,6 +24,8 @@ import { UIController } from '../src/controllers/UIController.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import { pointerMixin } from '../src/app/pointer.js';
 import { allowConsole } from './helpers/consoleGuard.js';
+import { bootApp } from './helpers/bootApp.js';
+import { loadSnapshot } from './helpers/projectSnapshot.js';
 
 const major = (id, extra = {}) => Object.assign(Waypoint.createMajor(0.5, 0.5), { id }, extra);
 const minor = (id, extra = {}) => Object.assign(Waypoint.createMinor(0.5, 0.5), { id }, extra);
@@ -344,6 +349,16 @@ describe('the drop hit-test skips what is being dragged', () => {
 
   test('without an exclusion the dragged waypoint can win the hit-test', () => {
     expect(findWaypointAt(50, 50)).not.toBeNull();
+    // Exactly on top of each other the two tie, and a tie goes to the earlier
+    // waypoint (`dist < closestDist`), so this fixture alone never showed the
+    // dragged one winning (TST-16).
+    expect(findWaypointAt(50, 50).id).toBe('target');
+    // As found live: the dragged waypoint sits under the cursor and the target
+    // just beside it, so the nearest is the dragged one…
+    app.waypoints[0].imgX = 0.53;
+    expect(findWaypointAt(50, 50).id).toBe('dragged');
+    // …until it is excluded.
+    expect(findWaypointAt(50, 50, app.waypoints[1]).id).toBe('target');
   });
 
   test('excluding the dragged waypoint finds the one underneath', () => {
@@ -385,5 +400,114 @@ describe('the authored structure resolves cleanly', () => {
     expect(structure.problems).toEqual([]);
     expect(structure.branches[0].rejoinAtId).toBe('z');
     expect(structure.branches[0].terminal).toBe(false);
+  });
+});
+
+/**
+ * DEF-22 — an inserted waypoint never joins a branch.
+ *
+ * Every insert path (the leg's "+" handle, the context menu's Insert before
+ * and after, a minor added after the selection) makes a waypoint with no
+ * `branchId`: the handlers in `wiringControllers.js` copy style through
+ * `Waypoint.copyPropertiesFrom`, which leaves branch membership out. Inside a
+ * branch run that splits it; after a branch's last waypoint it joins the
+ * trunk. These pin what the booted app does today. The decided rule (§20 Q7)
+ * changes both: an inserted waypoint joins the run of the waypoint it is
+ * inserted after, and at the fork itself the trunk, which today already holds.
+ */
+describe('DEF-22: an inserted waypoint never joins a branch', () => {
+  // The trunk runs a → f → z; branch B leaves f through b1 and b2 and rejoins at z.
+  const BRANCHED = {
+    coordVersion: 9,
+    waypoints: [
+      { id: 'a', imgX: 0.1, imgY: 0.5, isMajor: true },
+      { id: 'f', imgX: 0.3, imgY: 0.5, isMajor: true },
+      { id: 'b1', imgX: 0.4, imgY: 0.3, isMajor: true, branchId: 'B', branchFrom: 'f' },
+      { id: 'b2', imgX: 0.6, imgY: 0.3, isMajor: true, branchId: 'B', branchRejoin: 'z' },
+      { id: 'z', imgX: 0.8, imgY: 0.5, isMajor: true },
+    ],
+  };
+
+  const byId = (app, id) => app.waypoints.find(waypoint => waypoint.id === id);
+  const indexOf = (app, id) => app.waypoints.findIndex(waypoint => waypoint.id === id);
+
+  /** Insert through the bus, and read the route back with the new waypoint named `new`. */
+  async function insertInto(emit) {
+    const app = await bootApp();
+    await app.ready;
+    expect(await loadSnapshot(app, BRANCHED)).toBe(true);
+    const before = new Set(app.waypoints);
+    emit(app);
+    const added = app.waypoints.filter(waypoint => !before.has(waypoint));
+    expect(added).toHaveLength(1);
+    const [inserted] = added;
+    const name = waypoint => (waypoint === inserted ? 'new' : waypoint.id);
+    const structure = resolveRouteBranches(app.waypoints);
+    return {
+      branchId: inserted.branchId,
+      order: app.waypoints.map(name),
+      problems: structure.problems.map(problem => problem.code),
+      trunk: structure.trunk.waypoints.map(name),
+      runs: structure.branches.map(branch => [branch.id, branch.waypoints.map(name)]),
+    };
+  }
+
+  const afterTheFirst = {
+    "the leg's + handle": app => app.eventBus.emit('waypoint:insert-on-leg',
+      { waypointIndex: indexOf(app, 'b1'), imgX: 0.5, imgY: 0.3 }),
+    'Insert after': app => app.eventBus.emit('waypoint:insert-adjacent',
+      { waypoint: byId(app, 'b1'), where: 'after' }),
+    'Insert before the next': app => app.eventBus.emit('waypoint:insert-adjacent',
+      { waypoint: byId(app, 'b2'), where: 'before' }),
+    'a minor added after the selection': app => {
+      app.eventBus.emit('waypoint:selected', byId(app, 'b1'));
+      app.eventBus.emit('waypoint:add', { imgX: 0.5, imgY: 0.25, isMajor: false });
+    },
+  };
+
+  for (const [path, emit] of Object.entries(afterTheFirst)) {
+    test(`DEF-22: inserted after a branch's first waypoint by ${path}, it splits the run`, async () => {
+      expect(await insertInto(emit)).toEqual({
+        branchId: null,
+        order: ['a', 'f', 'b1', 'new', 'b2', 'z'],
+        problems: [BRANCH_PROBLEM.SPLIT_RUN, BRANCH_PROBLEM.NO_FORK_DECLARED],
+        trunk: ['a', 'f', 'new', 'z'],
+        runs: [['B', ['b1']], ['B', ['b2']]],
+      });
+    });
+  }
+
+  const afterTheLast = {
+    "the leg's + handle": app => app.eventBus.emit('waypoint:insert-on-leg',
+      { waypointIndex: indexOf(app, 'b2'), imgX: 0.7, imgY: 0.4 }),
+    'Insert after': app => app.eventBus.emit('waypoint:insert-adjacent',
+      { waypoint: byId(app, 'b2'), where: 'after' }),
+    'Insert before the rejoin': app => app.eventBus.emit('waypoint:insert-adjacent',
+      { waypoint: byId(app, 'z'), where: 'before' }),
+  };
+
+  for (const [path, emit] of Object.entries(afterTheLast)) {
+    test(`DEF-22: inserted after a branch's last waypoint by ${path}, it joins the trunk between the fork and the rejoin`, async () => {
+      expect(await insertInto(emit)).toEqual({
+        branchId: null,
+        order: ['a', 'f', 'b1', 'b2', 'new', 'z'],
+        problems: [],
+        trunk: ['a', 'f', 'new', 'z'],
+        runs: [['B', ['b1', 'b2']]],
+      });
+    });
+  }
+
+  test('at the fork itself an inserted waypoint joins the trunk, the side DEF-22 keeps', async () => {
+    const atTheFork = await insertInto(app => app.eventBus.emit('waypoint:insert-adjacent',
+      { waypoint: byId(app, 'f'), where: 'after' }));
+
+    expect(atTheFork).toEqual({
+      branchId: null,
+      order: ['a', 'f', 'new', 'b1', 'b2', 'z'],
+      problems: [],
+      trunk: ['a', 'f', 'new', 'z'],
+      runs: [['B', ['b1', 'b2']]],
+    });
   });
 });

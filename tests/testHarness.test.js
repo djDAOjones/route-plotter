@@ -74,6 +74,73 @@ describe('test harness fidelity', () => {
     expect(ctx.calls).toContainEqual(['canvas.width', 640]);
   });
 
+  test('a size given through the attributes resizes a canvas as through its properties, even the size it has', () => {
+    // A browser empties a canvas and resets its context on every write to
+    // its `width` or `height` attribute, even of the size it has, and the
+    // properties reflect the attributes. The recorder saw only the
+    // properties, so a size given through the attributes emptied a frame
+    // unseen (DEF-53).
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 640;
+    canvas.height = 360;
+
+    discardFrame();
+    ctx.globalAlpha = 0.5;
+    canvas.setAttribute('width', '640');
+    ctx.fillRect(0, 0, 1, 1);
+    canvas.setAttribute('height', '200');
+
+    expect(takeFrame({ canvas }, { state: true })).toEqual([
+      'main set:globalAlpha 0.5 @ 1 0 0 1 0 0 | saved 0',
+      'main canvas.width 640 @ 1 0 0 1 0 0 | saved 0 | globalAlpha=0.5',
+      'main fillRect 0 0 1 1 @ 1 0 0 1 0 0 | saved 0',
+      // Given after the last call, it is still in the frame it was given in.
+      'main canvas.height 200 @ 1 0 0 1 0 0 | saved 0',
+    ]);
+    expect([canvas.width, canvas.height]).toEqual([640, 200]);
+    expect(ctx.globalAlpha).toBe(1);
+    // The properties keep the attributes in step, as a browser's do.
+    canvas.width = 320;
+    expect(canvas.getAttribute('width')).toBe('320');
+    expect(takeFrame({ canvas })).toEqual(['main canvas.width 320']);
+  });
+
+  test('a size given by any route, or a reset, is recorded where it was made', () => {
+    const canvas = document.createElement('canvas');
+    const layer = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    layer.getContext('2d');
+    canvas.width = 640;
+
+    discardFrame();
+    canvas.removeAttribute('width');
+    canvas.toggleAttribute('height');
+    canvas.setAttributeNS(null, 'width', '320');
+    canvas.attributes.getNamedItem('width').value = '330';
+    Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 'width').set.call(canvas, 340);
+    canvas.setAttributeNS('https://example.com/elsewhere', 'elsewhere:width', '1');
+    ctx.reset();
+    layer.setAttribute('width', '10');
+    ctx.drawImage(layer, 0, 0);
+
+    expect(takeFrame({ canvas, renderingService: { vectorCanvas: layer } })).toEqual([
+      // With no valid attribute, the default size
+      'main canvas.width 300',
+      'main canvas.height 150',
+      'main canvas.width 320',
+      'main canvas.width 330',
+      'main canvas.width 340',
+      // An attribute of another namespace is not the canvas's size; `reset()`
+      // empties the canvas at the size it has.
+      'main reset',
+      // A layer emptied before it is drawn from, before the draw.
+      'vector canvas.width 10',
+      'main drawImage [canvas vector] 0 0',
+    ]);
+    expect([canvas.width, canvas.height]).toEqual([340, 150]);
+  });
+
   test('recorded arguments and gradients cannot be rewritten afterwards', () => {
     const ctx = document.createElement('canvas').getContext('2d');
     const dash = [2, 2];

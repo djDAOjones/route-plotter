@@ -8,7 +8,9 @@ Thumbs.db
 # Editor directories and files
 .vscode/
 .idea/
-.claude/
+.claude/*
+!.claude/settings.json
+!.claude/settings.intake.json
 CLAUDE.local.md
 *.swp
 *~

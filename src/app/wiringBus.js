@@ -49,6 +49,8 @@ function resolveBranchRejoinDrop(app, data) {
   if (!target) return false;
 
   // Put it back: this gesture aimed at a target, it did not move a point.
+  // The rejoin's handler rebuilds the route for where it is again, made or
+  // refused, once (DEF-06).
   const start = (data.dragGroup || []).find(item => item?.waypoint === waypoint);
   if (start) {
     waypoint.imgX = start.imgX;
@@ -111,9 +113,8 @@ export const wiringBusMixin = {
       // Save state for undo (after waypoint is added)
       this.saveUndoState();
       
-      if (this.waypoints.length >= 2) {
-        this.calculatePath(); // Only calculate if we have enough waypoints for a path
-      }
+      // Always: with fewer than two waypoints it clears what the last route fed (DEF-06).
+      this.calculatePath();
       this.updateWaypointList();
       this.autoSave();
       this.queueRender(); // Batched render
@@ -131,11 +132,8 @@ export const wiringBusMixin = {
       // Save state for undo (after waypoint is deleted)
       this.saveUndoState();
       
-      if (this.waypoints.length >= 2) {
-        this.calculatePath();
-      } else {
-        this.pathPoints = []; // Clear path if too few waypoints
-      }
+      // Always: with fewer than two waypoints it clears what the last route fed (DEF-06).
+      this.calculatePath();
       this.updateWaypointList();
       this.updateWaypointEditor();
       this.autoSave();
@@ -452,8 +450,10 @@ export const wiringBusMixin = {
       
       const preservedSpeed = this.animationEngine.state.speed;
       
-      // Recalculate duration using unified method (accounts for segment speeds)
-      this.updateAnimationDuration(preservedSpeed);
+      // Recalculate duration using unified method (accounts for segment speeds).
+      // With no route to rebuild, the reset base still waits for what
+      // concludes after it, a crowd on a network (CROWD-05).
+      if (this.updateAnimationDuration(preservedSpeed) === undefined) this.refreshSceneEnd?.();
       
       // Use event to avoid feedback loop
       this.eventBus.emit('ui:slider:update-speed', preservedSpeed);

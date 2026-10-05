@@ -163,6 +163,10 @@ function describeValue(value) {
   if (value === null || typeof value !== 'object') return value;
   if (value.__recorderId) return value.__recorderId;
   if (value instanceof HTMLCanvasElement) {
+    // A canvas drawn from is drawn as it is now: a size given to it through
+    // its attributes, not yet recorded, is recorded before this call
+    // (`trackCanvasSize`).
+    canvasContexts.get(value)?.settle();
     const id = contextIdFor(value);
     return id === null ? '[canvas]' : `[canvas #${id}]`;
   }
@@ -194,8 +198,18 @@ function recordCallOrder(enabled) {
   if (!enabled) orderedCalls.length = 0;
 }
 
-/** Drain the cross-canvas transcript. `contextIdFor` names the surfaces in it. */
+/**
+ * Drain the cross-canvas transcript. `contextIdFor` names the surfaces in it.
+ * A size given to any canvas through its attributes since its last call is
+ * recorded first (`trackCanvasSize`), so a reset at the end of a frame is in
+ * that frame.
+ */
 function takeOrderedCalls() {
+  for (const held of sizedCanvases) {
+    const canvas = held.deref();
+    if (canvas) canvasContexts.get(canvas)?.settle();
+    else sizedCanvases.delete(held);
+  }
   return orderedCalls.splice(0, orderedCalls.length);
 }
 
@@ -212,6 +226,17 @@ function createRecordingContext(canvas) {
   let transform = IDENTITY_TRANSFORM;
   let gradients = 0;
   const recorderId = ++recordingContexts;
+
+  // Records a size given to the canvas through its attributes and not yet
+  // recorded (`trackCanvasSize` supplies it). Whatever the context is asked
+  // calls it first, so such a size lands in the transcript, and resets the
+  // state, before anything else is done with this canvas. Calls made
+  // meanwhile on other canvases can come before it in the cross-canvas
+  // transcript; nothing they draw depends on it, as a draw from this canvas
+  // asks it first. Asking every canvas before each call would put such a
+  // size before every later call on any canvas, but took the golden draw logs
+  // to about five times their CPU time (DEF-53).
+  let settle = () => {};
 
   // Rebuilt only after the drawing state changes, not once per call.
   let drawingState = null;
@@ -243,10 +268,14 @@ function createRecordingContext(canvas) {
 
   const context = {
     canvas,
-    calls,
+    get calls() {
+      settle();
+      return calls;
+    },
     recorderId,
     /** Return the transcript so far and start a new one (per-frame goldens). */
     takeCalls() {
+      settle();
       return calls.splice(0, calls.length);
     }
   };
@@ -255,6 +284,7 @@ function createRecordingContext(canvas) {
     const result = CONTEXT_METHOD_RESULTS[name];
     const nextTransform = TRANSFORM_METHODS[name];
     context[name] = vi.fn((...args) => {
+      settle();
       // A browser rejects a malformed transform call before it does anything.
       const next = nextTransform ? nextTransform(transform, args) : null;
       record([name, ...args.map(describeValue)]);
@@ -267,8 +297,12 @@ function createRecordingContext(canvas) {
     Object.defineProperty(context, name, {
       configurable: true,
       enumerable: true,
-      get: () => style[name],
+      get: () => {
+        settle();
+        return style[name];
+      },
       set: (next) => {
+        settle();
         record([`set:${name}`, describeValue(next)]);
         style[name] = next;
         stateChanged();
@@ -277,10 +311,12 @@ function createRecordingContext(canvas) {
   }
 
   context.save = vi.fn(() => {
+    settle();
     record(['save']);
     stack.push({ style: { ...style }, lineDash: lineDash.slice(), transform });
   });
   context.restore = vi.fn(() => {
+    settle();
     record(['restore']);
     const previous = stack.pop();
     if (previous) {
@@ -291,15 +327,20 @@ function createRecordingContext(canvas) {
     }
   });
   context.setLineDash = vi.fn((dash = []) => {
+    settle();
     const next = Array.from(dash);
     record(['setLineDash', next.slice()]);
     lineDash = next;
     stateChanged();
   });
-  context.getLineDash = vi.fn(() => lineDash.slice());
+  context.getLineDash = vi.fn(() => {
+    settle();
+    return lineDash.slice();
+  });
 
   for (const name of ['createLinearGradient', 'createRadialGradient']) {
     context[name] = vi.fn((...args) => {
+      settle();
       const id = `[gradient ${++gradients}]`;
       record([name, ...args.map(describeValue)]);
       // A plain function, not a mock: the transcript is what tests read, and
@@ -307,7 +348,10 @@ function createRecordingContext(canvas) {
       // hundreds of gradients a frame (DEF-38).
       return {
         __recorderId: id,
-        addColorStop: (offset, color) => record([`${id}.addColorStop`, offset, color])
+        addColorStop: (offset, color) => {
+          settle();
+          record([`${id}.addColorStop`, offset, color]);
+        }
       };
     });
   }
@@ -323,25 +367,101 @@ function createRecordingContext(canvas) {
     stateChanged();
   };
 
+  // `reset()` empties the canvas and puts the state back as a resize does,
+  // keeping its size. Nothing in `src/` calls it; recorded, it cannot empty a
+  // frame unseen.
+  context.reset = vi.fn(() => {
+    settle();
+    record(['reset']);
+    context.resetForResize();
+  });
+
+  /** Record any size given through the canvas's attributes since it was last asked. */
+  context.settle = () => settle();
+  /** Gives `settle` its work: `trackCanvasSize` calls this once, with the canvas's observer. */
+  context.settleWith = (take) => {
+    settle = take;
+  };
+
   return context;
 }
 
 const canvasContexts = new WeakMap();
 
-/** Resizing a canvas resets its context, so the recorder must see the writes. */
+/**
+ * Every canvas given a recording context, held weakly so that a canvas
+ * nothing uses can still be collected, for `takeOrderedCalls` to settle.
+ */
+const sizedCanvases = new Set();
+
+/**
+ * The size a `width` or `height` content attribute gives a canvas, read as a
+ * browser reads it (a non-negative integer at its start, else the default).
+ */
+function sizeFromAttribute(name, text) {
+  const size = text === null ? Number.NaN : Number.parseInt(text, 10);
+  if (!Number.isInteger(size) || size < 0 || size > 2147483647) return name === 'width' ? 300 : 150;
+  return size === 0 ? 0 : size;
+}
+
+/**
+ * Resizing a canvas resets its context, so the recorder must see the writes.
+ *
+ * A canvas's size is its `width` and `height` content attributes, which the
+ * properties of those names reflect, and a browser empties the canvas and
+ * resets its context on every write to either, by whatever route and even of
+ * the size it already has (the HTML standard's canvas element). The
+ * properties are recorded here as they are written, and keep the attributes
+ * in step, as in a browser. A write to the attributes themselves
+ * (`setAttribute`, `removeAttribute`, `toggleAttribute`, an `Attr`'s value,
+ * the prototype's own setter, ...) bypassed all this, so a size could empty a
+ * frame unseen (DEF-53): a MutationObserver sees each, by any route, and it
+ * is recorded as the property write it amounts to, with the reset, before the
+ * canvas's next call, before it is drawn from, before its size is read, and
+ * before the transcript is taken.
+ */
 function trackCanvasSize(canvas, context) {
+  const sizes = {};
+  // Oldest first: a record's new value is the next record's old one, or,
+  // for the last, the attribute as it is now. An attribute of another
+  // namespace is not the canvas's size.
+  const noteAttributeWrites = (records) => {
+    const writes = records.filter(record => record.attributeNamespace === null);
+    writes.forEach(({ attributeName: name }, index) => {
+      const later = writes.slice(index + 1).find(write => write.attributeName === name);
+      sizes[name] = sizeFromAttribute(name, later ? later.oldValue : canvas.getAttributeNS(null, name));
+      context.record([`canvas.${name}`, sizes[name]]);
+      context.resetForResize();
+    });
+  };
+  const watcher = new MutationObserver(noteAttributeWrites);
+  context.settleWith(() => {
+    const records = watcher.takeRecords();
+    if (records.length > 0) noteAttributeWrites(records);
+  });
   for (const name of ['width', 'height']) {
-    let value = canvas[name];
+    // jsdom's own, which reads and writes the attribute
+    const reflected = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, name);
+    sizes[name] = canvas[name];
     Object.defineProperty(canvas, name, {
       configurable: true,
-      get: () => value,
+      get: () => {
+        context.settle();
+        return sizes[name];
+      },
       set: (next) => {
-        value = next;
+        context.settle();
+        sizes[name] = next;
         context.record([`canvas.${name}`, next]);
         context.resetForResize();
+        // The attribute in step, its observed write already recorded here.
+        reflected.set.call(canvas, next);
+        watcher.takeRecords();
       }
     });
   }
+  watcher.observe(canvas, { attributeFilter: ['width', 'height'], attributeOldValue: true });
+  sizedCanvases.add(new WeakRef(canvas));
 }
 
 // A test file may run in the node environment (TST-07's bundle check), where
