@@ -1236,3 +1236,61 @@ test.each([80, 650].flatMap(speed => ['made', 'cleared'].map(action => [speed, a
   }
   expect(travel, 'the path’s own travel').toBeCloseTo(app.animationEngine.pathDuration, 6);
 });
+
+test.each(['Preview', 'Edit'].flatMap(mode => ['made', 'cleared'].flatMap(action => PLAYBACK_RATES.map(rate => [mode, action, rate]))))('in %s, a rejoin %s while the route at 650 px/s plays at %s× is timed at 650 px/s, not at the rate played: live, in the path’s own travel, in recovery, the saved file and the HTML export, and recovery and the file reopen with it', async (mode, action, rate) => {
+  // A rejoin retimes the route by its own call, not the queued retime the
+  // rate cases above hold to the speed authored, and every rejoin test played
+  // at 1×: a rejoin that timed the route at its speed times the rate passed
+  // the whole gate, and at 0.5× saved and reopened 4,388 ms for a route that
+  // rebuilds at 2,944. At 2× and -2× the branch's own timeline, timed at the
+  // speed authored, hides the trunk timed wrong in the total, so the path's
+  // own travel is compared too (722 ms at 2×, -722 at -2×, for 1,444).
+  const project = branched();
+  project.animationState.speed = 650;
+  project.waypoints.find(each => each.id === 'end').imgX = 0.9;
+  Object.assign(project.waypoints.at(-1), { imgX: 0.25, imgY: 0.21, branchRejoin: action === 'made' ? null : 'end' });
+  const rejoin = action === 'made' ? 'end' : null;
+  const app = await derivedByPreview(project);
+  if (mode === 'Edit') {
+    app.eventBus.emit('motion:preview-mode-change', false);
+    await timingSettled();
+  }
+  // Loaded before the gesture, so the export follows it with no retime between
+  await withBackground(app);
+  app.animationEngine.play();
+  app.animationEngine.setPlaybackSpeed(rate);
+  const transport = () => ({ playing: app.animationEngine.isPlaying(), rate: app.animationEngine.state.playbackSpeed });
+
+  const { work } = await droppedOn(app, 'end', { atOnce: true });
+
+  expect(work).toEqual({ built: 1, timed: 1, toasts: 1 });
+  expect({ rejoin: app.getWaypointById('b').branchRejoin, ...transport() }).toEqual({ rejoin, playing: true, rate });
+  const live = app.animationEngine.state.duration;
+  const travel = app.animationEngine.pathDuration;
+  const recovery = recoveryOnLeaving();
+  const saved = await savedProject(app);
+  const embedded = await htmlExported(app);
+  expect(transport(), 'the transport').toEqual({ playing: true, rate });
+
+  // The route rebuilt at 650 px/s once the transport is paused, and so back at
+  // 1×, with no rate in the rebuild; its path's travel checked to differ from
+  // the path timed at 650 px/s times the rate
+  app.animationEngine.pause();
+  expect({ rate: app.animationEngine.state.playbackSpeed, speed: app.animationEngine.state.speed })
+    .toEqual({ rate: 1, speed: 650 });
+  const expected = rebuiltAt(app, 650);
+  const expectedTravel = app.animationEngine.pathDuration;
+  rebuiltAt(app, 650 * Math.abs(rate));
+  expect(app.animationEngine.pathDuration, 'the path timed at the rate played').not.toBeCloseTo(expectedTravel, 0);
+  expect(live, 'live').toBeCloseTo(expected, 6);
+  expect(travel, 'the path’s own travel').toBeCloseTo(expectedTravel, 6);
+  for (const [where, snapshot] of [['recovery', recovery], ['the saved file', saved], ['the HTML export', embedded]]) {
+    expect(snapshot.waypoints.find(each => each.id === 'b').branchRejoin ?? null, where).toBe(rejoin);
+    expect(snapshot.animationState, where).toMatchObject({ mode: 'constant-time', speed: 650 });
+    expect(snapshot.animationState, where).not.toHaveProperty('playbackSpeed');
+    expect(snapshot.animationState.duration, where).toBeCloseTo(expected, 6);
+  }
+  for (const [where, snapshot] of [['recovery', recovery], ['the saved file', saved]]) {
+    expect(await reopenedDuration(snapshot), `${where}, reopened`).toBeCloseTo(expected, 6);
+  }
+});
