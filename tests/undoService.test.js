@@ -289,7 +289,11 @@ describe('UndoService announces each change', () => {
 
     service.saveState({ value: 0 });
     service.saveState({ value: 1 });
+    service.saveState({ value: 2 });
+    // Two steps each way, so neither count can stop at one.
     service.undo();
+    service.undo();
+    service.redo();
     service.redo();
     service.reset({ value: 'base' });
     service.restoreSnapshot({ undoStack: [saved(0), saved(1)], redoStack: [saved(2)], lastState: saved(1) });
@@ -298,8 +302,11 @@ describe('UndoService announces each change', () => {
     expect(eventBus.emit.mock.calls).toEqual([
       change(false, false, 0, 0),
       change(true, false, 1, 0),
-      change(false, true, 0, 1),
-      change(true, false, 1, 0),
+      change(true, false, 2, 0),
+      change(true, true, 1, 1),
+      change(false, true, 0, 2),
+      change(true, true, 1, 1),
+      change(true, false, 2, 0),
       change(false, false, 0, 0),
       change(true, true, 1, 1),
       // After a clear there is no current state, so undoCount reads -1. Only

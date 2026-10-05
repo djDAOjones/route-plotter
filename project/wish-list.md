@@ -70,3 +70,5 @@
 - Pin the beacon timing the other control paths give: the ripple-wait toggle, a multi-selection's pulse cycle, ripple scale and wait, and a card's On-arrival Reset and Apply onward (Codex, DEF-42 review r2, advisory) — (from: DEF-42, 2026-10-05)
 - Ask the owner whether releases after v3.2.698 also need no save of their smoke-test exports to disk, the in-page export check being enough; until he says so, each release owes its save — (from: GATELESS-1, 2026-10-05)
 - The hint under "At journey end" refreshes after a route edit only when the timeline's length changes, so an edit that keeps the length leaves it stale until the next crowd edit — (from: DEF-77, 2026-10-05)
+- Assert a looping dot's `finishes` is strictly `false`, not merely falsy (Codex, TST-16 review r1, advisory: CA-UNDEFINED) — (from: TST-16, 2026-10-05)
+- A moving-cone golden for `MotionVisibilityService`, whose moving direction no test pins today (Codex, TST-16 review r1, advisory: C09-MOVING) — (from: TST-16, 2026-10-05)

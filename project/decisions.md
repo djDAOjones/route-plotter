@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — TST-16 — The round-2 audit's predicates are tight, and five fixes start from a pinned baseline
+
+**Decision:** TST-16 lands (PR #76): the round-2 audit's predicates are exact (problem lists, a looping crowd, the reveal trail's lit points, literal asset limits, byte-compared ZIP round trips, a placed degenerate hit, the dragged waypoint winning, undo and its announcements), and DEF-12, DEF-22, DEF-25, CON-04 and CON-09 are pinned as they stand, so each fix changes a baseline on purpose.
+
+**Rationale:** Codex review r1's two blocking findings are fixed in the tests only. F1: two 1×1 PNGs of equal length but different pixels now round-trip, each compared with its own source, so exporting the first image's bytes under every ID (IR-FIRST) fails the new test. F2: the announcement transcript runs three saves, two undos and two redos, so capping either count at one fails it. Both mutants applied in place and restored. Advisories: a strict-false check of a looping dot's `finishes` and a moving-cone golden are wish lines; DEF-72's wording goes to its item. Digest rule applied: house conventions → Testing and persistence. DEF-72 no longer waits on it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — REL-699 — v3.2.699 ships DEF-77
 
 **Decision:** v3.2.699 is live from deploy commit `1a42abe` (tag `v3.2.699`), released under GATELESS-1 because DEF-77's merge (`2ff2948`, PR #91) changed `src/` and `index.html`.

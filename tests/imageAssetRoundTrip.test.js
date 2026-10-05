@@ -8,6 +8,10 @@ import {
 
 const PIXEL_PAYLOAD = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 const PIXEL_DATA_URL = `data:image/png;base64,${PIXEL_PAYLOAD}`;
+// A second 1×1 PNG, mid-grey, of the same length: two images a mix-up could
+// swap without changing any size.
+const GREY_PAYLOAD = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNo+A8AAgIBgP3y/PQAAAAASUVORK5CYII=';
+const GREY_DATA_URL = `data:image/png;base64,${GREY_PAYLOAD}`;
 
 async function projectArchive(id) {
   const zip = new JSZip();
@@ -37,11 +41,11 @@ async function blobBytes(blob) {
   return new Uint8Array(buffer);
 }
 
-function pixelAsset(id) {
-  const { byteLength } = ImageAsset.inspectDataURL(PIXEL_DATA_URL);
+function pixelAsset(id, dataUrl = PIXEL_DATA_URL) {
+  const { byteLength } = ImageAsset.inspectDataURL(dataUrl);
   return new ImageAsset({
     id,
-    base64: PIXEL_DATA_URL,
+    base64: dataUrl,
     name: `${id}.png`,
     width: 1,
     height: 1,
@@ -111,6 +115,27 @@ describe('image asset archive round trips', () => {
     expect(reloaded.imageAssets.map(asset => asset.id)).toEqual(assets.map(asset => asset.id));
     expect(reloaded.imageAssets.every(asset => asset.base64 === PIXEL_DATA_URL)).toBe(true);
     expect(reloaded.projectData.waypoints).toEqual(projectData.waypoints);
+  });
+
+  test('each asset keeps its own bytes: two images of equal size do not trade places', async () => {
+    const assets = [pixelAsset('first'), pixelAsset('second', GREY_DATA_URL)];
+    expect(GREY_DATA_URL).not.toBe(PIXEL_DATA_URL);
+    expect(assets[1].size).toBe(assets[0].size);
+    const source = new ImageAssetService();
+    source.replaceAssets(assets);
+    const projectData = {
+      coordVersion: 9,
+      waypoints: assets.map(asset => ({ customImageAssetId: asset.id })),
+    };
+
+    const exported = await source.exportZip(projectData, null, 'distinct-bytes');
+    const reloaded = await new ImageAssetService().importZip(await blobBytes(exported));
+
+    const reloadedBytes = new Map(reloaded.imageAssets.map(asset => [asset.id, asset.base64]));
+    expect([...reloadedBytes.keys()]).toEqual(['first', 'second']);
+    for (const asset of assets) {
+      expect(reloadedBytes.get(asset.id)).toBe(asset.base64);
+    }
   });
 
   test('background image bytes round-trip through ZIP without re-encoding', async () => {
