@@ -2801,7 +2801,7 @@
       "format": "esm"
     },
     "src/services/CameraService.js": {
-      "bytes": 21651,
+      "bytes": 23405,
       "imports": [],
       "format": "esm"
     },
@@ -3316,7 +3316,7 @@
       "format": "esm"
     },
     "src/app/camera.js": {
-      "bytes": 11846,
+      "bytes": 12964,
       "imports": [
         {
           "path": "src/services/CameraService.js",
@@ -3875,13 +3875,13 @@
     }
   },
   "outputs": {
-    ".docs-build-xRhrql/app.js.map": {
+    ".docs-build-yRDrRL/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3392987
+      "bytes": 3396456
     },
-    ".docs-build-xRhrql/app.js": {
+    ".docs-build-yRDrRL/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4136,7 +4136,7 @@
           "bytesInOutput": 2252
         },
         "src/services/CameraService.js": {
-          "bytesInOutput": 5369
+          "bytesInOutput": 5670
         },
         "src/models/ImageAsset.js": {
           "bytesInOutput": 5003
@@ -4202,7 +4202,7 @@
           "bytesInOutput": 3804
         },
         "src/app/camera.js": {
-          "bytesInOutput": 4199
+          "bytesInOutput": 4342
         },
         "src/app/viewport.js": {
           "bytesInOutput": 4373
@@ -4247,7 +4247,7 @@
           "bytesInOutput": 22752
         }
       },
-      "bytes": 1083073
+      "bytes": 1083517
     }
   }
 }
