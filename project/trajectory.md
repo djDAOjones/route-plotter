@@ -21,6 +21,7 @@
 
 ## Phase 1 — Land the big run's open pull requests
 
+- DEF-64 — a branched route's legs are hovered and clicked along their own runs, trunk and each branch, a click selects the waypoint a leg leaves, and only a trunk leg offers the "+" (2026-10-05) — see decisions
 - TST-16 — the round-2 audit's predicates are tight: problem lists exact, ZIP round trips compare each image's own bytes, undo and redo announce counts past one, and DEF-12, DEF-22, DEF-25, CON-04 and CON-09 are pinned as they stand (2026-10-05) — see decisions
 - DEF-42 — a beacon style or pulse cycle chosen in the inspector retimes at once, and a branched route's timeline is composed afresh at every rebuild, so a pause or beacon edit there changes its total (2026-10-05) — see decisions
 - TST-13 — the key table, element ids and HTML number ranges are pinned against the code, and the source reader reports what it cannot read (2026-10-05) — see decisions

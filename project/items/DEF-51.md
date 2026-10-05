@@ -17,3 +17,4 @@ A failed load leaves the route caches and timing behind, branch paths too. Found
 ## Notes
 
 - 2026-10-05 — Recorded from the big run's handoff, which listed it with what it waits on.
+- 2026-10-05 — DEF-64's `tests/branchLegHit.test.js` checks what a failed load leaves (the stale five-entry trunk, the refused branch paths) so its guards stay exercised; this fix will fail those two checks, and they are reworked with it.
