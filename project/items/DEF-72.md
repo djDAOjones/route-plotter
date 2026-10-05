@@ -18,3 +18,4 @@
 
 - 2026-10-05 — Recorded from the big run's handoff, which listed it with what it waits on.
 - 2026-10-05 — Wording, from TST-16's review r1 (advisory): the head jumps on the next playback update, not the next frame (`AnimationEngine.js` 187–193).
+- 2026-10-05 — Closed: both shortcuts (`timelineToPath`, `pathToTimelineProgress`) now hold only when the timeline is the path (`isPlainTimeline`); the forward one, which stretched a trunk under a longer branch, is the same defect (the run's call). With no route, `pathDuration` is zeroed (`clearRouteTiming`). Tests: `tests/playerCore.test.js` (DEF-72 block), `tests/branchExportParity.test.js` (the trunk keeps its own time).
