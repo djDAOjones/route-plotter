@@ -270,7 +270,11 @@ describe('reorderWaypointBlocks', () => {
  *   written, Object.prototype only through a member that only reads it, and
  *   Object as a value not at all. Nor may one give any function a bind, call
  *   or apply of its own, or another prototype, nor change the properties of a
- *   mixin's method. A built-in reached any other way is taken as intact;
+ *   mixin's method. A built-in reached any other way is taken as intact. These
+ *   readers stop accidental breaks and the evasions tried, not every evasion:
+ *   a function changed in a way they cannot follow, such as
+ *   `Object.assign(f, src)` on an alias of it with a source that is not an
+ *   object literal, is not caught;
  * - `this` is the app in RoutePlotter's own methods and fields and in a
  *   composed mixin's methods, and an arrow keeps the `this` around it. In any
  *   other object's or class's method it is that object, and is passed over.
