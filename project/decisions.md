@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — GATELESS-1 — The owner orders DEF-77, then UI-03's first part, ahead of Phase 1's pull requests
+
+**Decision:** DEF-77 is next, then UI-03 part 1 (hints open on hover, unclear hints reworded, hints for every setting), ahead of Phase 1's eight pull requests; UI-03's "?" and DEF-14's fix become UI-04, after TST-04. His word on the release checks is recorded as relayed, not confirmed.
+
+**Rationale:** The Backlog status session relayed the owner's words verbatim at about 11:05. (1) "in-page checks are enough, confirm all four calls": the release exports' saves to disk would no longer be owed, and four calls stand (DEF-44 names its near-1× tail as a bounded leftover; three releases recorded in one PR; DEL-05 keeps `Tooltip.js`, `tooltips.js` and `tooltip.css` until UI-03 decides; v3.2.694's export check stands in for v3.2.693's). (2) "can we promote the crowd features i.e. parameters need explaining somehow, ideally in situ i.e. hover over text on question mark, as some hard to know e.g. crowd emitter release bias, and dont think "at journey end" parameters are working", picking "Next, after DEF-42 (Recommended)" and "Two parts (Recommended)". He confirmed (2) in his own chat: "yes, I confirm DEF-77 then UI-03 part 1 next". (1) was not in that reply; asked again, without blocking, so the wish-list's export-save line stands until he confirms. UI-04's ID, the split's wording and UI-04 as an open line behind TST-04 (his word given, not `[!]`) are this session's calls.
+
+**Supersedes:** 2026-10-05 — DEF-77 — The backlog takes the crowd "At journey end" defect, and in-place parameter help waits on the owner's word
+
+**Deferred:** UI-04
+
 ## 2026-10-05 — REL-698 — v3.2.698 ships DEF-42
 
 **Decision:** v3.2.698 is live from deploy commit `88d1f2f` (tag `v3.2.698`), released under GATELESS-1 because DEF-42's merge (`98600ca`, PR #62) changed `src/`.
