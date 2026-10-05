@@ -10,6 +10,8 @@
 ## Phase 1 — Land the big run's open pull requests
 
 - SPL-06 — `build.js` builds only when run as a script, and exports the checks a release applies and its publish and rollback steps (2026-10-05) — see decisions
+- DEF-44 — a still editor goes idle: a frame that draws no camera puts the camera where it would come to rest, bounded residuals named (2026-10-05) — see decisions
+- DEF-53 — a video export keeps the canvas size it began with; a size chosen meanwhile applies once it ends (2026-10-05) — see decisions
 - DEF-06 — what a route scheduled no longer outlives it, and a snapshot times the route at its authoring speed (2026-10-05) — see decisions
 
 ## The big run — defects outside the waves (released in v3.2.693, 2026-10-05)
