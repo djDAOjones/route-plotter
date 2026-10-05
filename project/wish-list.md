@@ -50,3 +50,5 @@
 - Editing overlays inherit their opacity and line dash from whatever drew before them (area edit handles, the hover and leg-hover rings, the plus handle, selection rings, the network guide and selected-node overlays). Harmless today, since every layer that sets either does so inside a save or clears it (the route clears its dash), but one that left either would restyle them. (canon provenance: 2026-09-28 DEF-47 review) — (from: INTAKE, 2026-10-01)
 
 - Retire the canon framework copies under pm_skills/ (prompts, integrations, templates, scaffold) on the owner's word; pm_skills/project stays pinned by the inventory — (from: INTAKE, 2026-10-02)
+- The brief's Direction and the rules file's Always still name the big run's delegation of 2026-09-28, which GATELESS-1 replaced on 2026-10-05; refresh both at the owner's next signing — (from: GATELESS-1, 2026-10-05)
+- The profile's Conventions name `PM: summary` for memory-only commits, but `node tools/check.mjs --commit` fails a title whose ID the ledger lacks, so record-only pull requests carry a decision's ID instead; reconcile the two — (from: GATELESS-1, 2026-10-05)
