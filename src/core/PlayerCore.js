@@ -42,6 +42,17 @@ const SCALE_BEACON_EARLY_ONSET_MS = 250;
 /** Key the trunk run is stored under while composing a branched timeline. */
 const TRUNK_LEG_KEY = '__trunk__';
 
+/**
+ * True when timeline time is path time: no wait, no speed change, and a
+ * timeline exactly as long as the path, so no handle, intro, tail or longer
+ * branch sits around it. Only then is timeline progress path progress.
+ */
+function isPlainTimeline(tl, live) {
+  return (tl.pauses.length === 0 || tl.totalPauseTime === 0)
+    && !tl.hasVariableSpeed
+    && live.durationMs === tl.pathDuration;
+}
+
 export const PlayerCore = {
   /**
    * Build segment timing markers for variable-speed playback.
@@ -389,10 +400,11 @@ export const PlayerCore = {
     };
     const { durationMs, startHandleMs, introMs, totalTailMs, endHandleMs } = live;
 
-    // Fast path: plain linear timeline
-    if ((tl.pauses.length === 0 || tl.totalPauseTime === 0) &&
-        !tl.hasVariableSpeed && totalTailMs === 0 &&
-        startHandleMs === 0 && endHandleMs === 0 && introMs === 0) {
+    // Fast path: the timeline is the path itself. Every handle, intro and
+    // tail being zero is not enough: a branch that outlives the trunk makes
+    // the timeline longer than the path, and the trunk's head must still
+    // arrive when the composed timeline says it does (DEF-72).
+    if (isPlainTimeline(tl, live)) {
       const progress = durationMs > 0 ? timelineMs / durationMs : 0;
       return { ...none, pathProgress: Math.max(0, Math.min(1, progress)), adjustedMs: timelineMs, complete: progress >= 1 };
     }
@@ -460,10 +472,9 @@ export const PlayerCore = {
    */
   pathToTimelineProgress(pathProgress, tl, live) {
     const { durationMs, startHandleMs, introMs } = live;
-    if ((tl.pauses.length === 0 || tl.totalPauseTime === 0) && !tl.hasVariableSpeed &&
-        startHandleMs === 0 && introMs === 0) {
-      return pathProgress;
-    }
+    // The same test as timelineToPath's fast path, so that a comet tail or a
+    // longer branch keeps the two a true inverse pair (DEF-72).
+    if (isPlainTimeline(tl, live)) return pathProgress;
     if (tl.pathDuration <= 0) return pathProgress;
 
     const pathTime = this.pathProgressToTime(pathProgress, tl.segments, tl.pathDuration, tl.hasVariableSpeed);
