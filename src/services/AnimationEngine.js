@@ -53,6 +53,10 @@ export class AnimationEngine {
     this.segmentMarkers = [];
     this.hasVariableSpeed = false;  // Quick check to skip segment calculations when all speeds are 1.0
 
+    // What the playback duration is made of (CROWD-05): the base timeline and
+    // whatever runs past it (`sceneEnd`), or null when nothing was composed.
+    this.sceneEndParts = null;
+
     // Per-beacon clock schedules derived from the same timeline data
     // (built in setPauseMarkers; read by BeaconRenderer for closed-form phases)
     this.beaconSchedules = [];
@@ -346,6 +350,9 @@ export class AnimationEngine {
   getLiveTiming() {
     return {
       durationMs: this.state.duration,
+      // A route with no path clock plays over the base timeline, not over
+      // what the scene waits for after it (CROWD-05).
+      baseDurationMs: this.state.baseDuration,
       startHandleMs: this.startHandleTime,
       introMs: this.introTime,
       totalTailMs: this.totalTailTime,
@@ -474,7 +481,14 @@ export class AnimationEngine {
    * Resets playback speed to 1x (JKL speeds are temporary review aids)
    */
   reset() {
+    // A playback reset rewinds the transport; the timeline it plays is the
+    // project's (CROWD-05). Both durations are kept: only a rebuild, an
+    // opened project or clearing the project sets them, and a base reset to
+    // the default would move every release measured against it.
+    const { duration, baseDuration } = this.state;
     this.state.reset();
+    this.state.duration = duration;
+    this.state.baseDuration = baseDuration;
     this.lastFrameTime = null;
     this.nextPauseIndex = 0; // Reset to check all pause markers again
     this._resetPlaybackSpeed();
@@ -543,6 +557,14 @@ export class AnimationEngine {
       this.pauseMarkers.map(m => `wp${m.waypointIndex}@path${(m.pathProgress*100).toFixed(0)}%/${m.timelineStartMs.toFixed(0)}-${m.timelineEndMs.toFixed(0)}ms=${m.duration}ms`).join(', ') || 'none');
   }
   
+  /**
+   * End any wait at a waypoint, as the transport does when it leaves one:
+   * the route it belonged to is gone (DEF-06).
+   */
+  clearWaypointWait() {
+    this._applyWaitState({ waitingIndex: -1 });
+  }
+
   /**
    * Clear all pause markers and reset pause time tracking
    */
@@ -880,13 +902,24 @@ export class AnimationEngine {
   }
   
   /**
-   * Set animation duration
-   * @param {number} duration - Duration in milliseconds
+   * Set animation duration.
+   *
+   * Two durations since CROWD-05: `duration`, the playback length transport,
+   * scrub, export and the player run to, and `baseDuration`, the timeline as
+   * composed before anything that runs past the route's own end, which every
+   * fraction of the timeline still measures against. A caller passing one
+   * value extends nothing. Both, and what made up the end, are in place
+   * before `durationChange` is emitted, so a listener reads the new ones.
+   * @param {number} duration - Playback duration in milliseconds
+   * @param {number} [baseDuration=duration] - Base timeline in milliseconds
+   * @param {Object|null} [parts=null] - What sets the end (`sceneEnd`)
    */
-  setDuration(duration) {
+  setDuration(duration, baseDuration = duration, parts = null) {
     const currentProgress = this.state.progress;
     console.debug('⏱️  [AnimationEngine.setDuration()] duration:', duration, 'ms (', (duration/1000).toFixed(1), 's), progress:', currentProgress);
     this.state.duration = duration;
+    this.state.baseDuration = baseDuration;
+    this.sceneEndParts = parts;
     this.state.setProgress(currentProgress); // Maintain progress
     this.emit('durationChange', duration);
     this.requestUpdate();

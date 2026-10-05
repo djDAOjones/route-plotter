@@ -496,8 +496,7 @@ export const sceneOutlineMixin = {
       waypoint.segmentSpeed = speed;
     }
     this._majorWaypointsCache = null;
-    if (this.waypoints.length >= 2) this.calculatePath();
-    else this.pathPoints = [];
+    this.calculatePath();
     this.updateAnimationDuration();
     this.saveUndoState();
     this.updateWaypointList();
@@ -571,6 +570,8 @@ export const sceneOutlineMixin = {
     layer.name = name;
     layer.visible = visible;
     layer.setGuideType(command.guideType);
+    // A hidden crowd, or one on another guide, ends elsewhere (CROWD-05).
+    this.scheduleSceneEnd?.();
     if (changedGuide && command.guideType === 'route'
         && this.networkEditService.layer === layer) {
       if (this.networkEditService.active) this.networkEditService.exit();
@@ -639,6 +640,7 @@ export const sceneOutlineMixin = {
     };
     if (Object.entries(updates).every(([key, value]) => emitter[key] === value)) return;
     emitter.update(updates);
+    this.scheduleSceneEnd?.(); // Its pace, releases or lifecycle move the end (CROWD-05)
     this.saveUndoState();
     this.autoSave();
     this.updateLayersStrip();

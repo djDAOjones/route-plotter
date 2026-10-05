@@ -34,7 +34,8 @@ export class AreaHighlightRenderer {
     if (!waypoints || waypoints.length === 0) return;
 
     const currentPathProgress = animationEngine?.getPathProgress() || 0;
-    const pathDuration = animationEngine?.pathDuration || animationEngine?.state?.duration || 1;
+    const pathDuration = animationEngine?.pathDuration
+      || (animationEngine?.state?.baseDuration ?? animationEngine?.state?.duration) || 1;
     const isAnimating = previewMode && animationEngine;
 
     for (let i = 0; i < waypoints.length; i++) {
