@@ -28,6 +28,16 @@
 
 **Deferred:** none
 
+## 2026-10-05 — UI-03 — Hints open on hover, say what they mean, and cover every setting
+
+**Decision:** UI-03 part 1 lands: a mouse resting 500 ms on a hint's text opens it, it stays while the pointer is on the text, its control or the hint, and Escape dismisses it in place, in a scene-outline field too; a hint sits clear of the control it describes; thirteen unclear hints are reworded and 60 settings gain one, because the owner asked for parameters explained in place. The owner's ahead-of-Phase-1 group closes; Phase 1 resumes with TST-16 (PR #76), readiest first by PLAN-1.
+
+**Rationale:** Digest rules applied: wcag-2.2-aaa 2.1.3 (keyboard, click, tap and the description unchanged) and the criteria's content on hover or focus (dismissible, hoverable, persistent); nielsen 2, 4 and 10 (the panel's own words, Wait not "pauses", Border not "outline"); carbon component first (the 300 ms leave grace is Carbon's tooltip delay). Release bias now says left is Earlier, checked against `dotOnsetFraction`. Hints created after load are wired as they appear, and an outline error keeps the field's hint in its description. 135 parameter controls counted (inputs, selects and colour groups that set the project or its export; actions, dialogs, the timeline slider and inline renames excluded); 75 had a hint. The session's calls, for the owner to confirm: that definition; the 500 ms open delay; a click on a hint's text keeps a hover-opened hint and a click on the hint closes it; Escape closes a hint and still reaches the field's own handler; resting on another hint replaces an open one; focus loss leaves a hover hint open; the three "reference short edge" hints stay (UI-STANDARDS prescribes them). DEL-05's three tooltip files are not needed (its item notes what goes with them). Screen readers, touch hardware and forced colours were not checked on real devices (REV-05). Recall, local: last four shipped UI-03, DEF-77, DEF-42, TST-13 (trajectory); a decision: the owner's order of DEF-77 then UI-03 (GATELESS-1); deferred: UI-04 (backlog Next) and the wish-list's UI-03 and DEF-77 lines; next: TST-16, Phase 1.
+
+**Supersedes:** none
+
+**Deferred:** UI-04
+
 ## 2026-10-05 — REL-699 — v3.2.699 ships DEF-77
 
 **Decision:** v3.2.699 is live from deploy commit `1a42abe` (tag `v3.2.699`), released under GATELESS-1 because DEF-77's merge (`2ff2948`, PR #91) changed `src/` and `index.html`.

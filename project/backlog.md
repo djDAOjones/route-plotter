@@ -14,9 +14,7 @@
 
 ## Current
 
-### Ahead of Phase 1's pull requests — the owner's order of 2026-10-05
-
-- [ ] UI-03 — In-place parameter help, part 1: hints on hover, in plain words, for every setting — since 2026-10-05
+### Ahead of Phase 1's pull requests — the owner's order of 2026-10-05 — CLOSED 2026-10-05
 
 ### Phase 1 — Land the big run's open pull requests
 

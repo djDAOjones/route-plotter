@@ -49,6 +49,25 @@ const LIFECYCLE_ENDLESS_HINT = 'No dot’s journey ends on this network. '
   + 'Set a node’s Type to Exit to see this setting act.';
 const BUSYNESS_GRAPH = Object.freeze({ width: 300, height: 140, padX: 18, padY: 16 });
 const SVG_NS = 'http://www.w3.org/2000/svg';
+/**
+ * Hints on a busyness handle's fields, by `data-busyness-field` (UI-03). Each
+ * sits on its label's text, as the inspector's others do (ParamTooltip).
+ */
+const BUSYNESS_HINTS = Object.freeze({
+  time: 'Where this handle sits in the window: 0% at its start, 100% at its end. '
+    + 'The first and last handles stay put',
+  value: 'How busy the release is at this handle: higher sets more dots off around it, 0% none',
+  transition: 'How busyness changes from this handle to the next: Gradual slides there evenly; '
+    + 'Sudden holds this level, then jumps',
+});
+
+/** A busyness field's label text, carrying its hint. */
+function busynessLabelText(text, hint) {
+  const span = document.createElement('span');
+  span.textContent = text;
+  span.setAttribute('data-tip', hint);
+  return span;
+}
 
 export function formatCrowdReleaseTiming(percent) {
   const rounded = Math.round(percent);
@@ -1009,7 +1028,7 @@ export const crowdsMixin = {
 
       if (index < handles.length - 1) {
         const label = document.createElement('label');
-        label.textContent = 'Change';
+        label.appendChild(busynessLabelText('Change', BUSYNESS_HINTS.transition));
         const select = document.createElement('select');
         select.dataset.busynessIndex = String(index);
         select.dataset.busynessField = 'transition';
@@ -1051,7 +1070,7 @@ export const crowdsMixin = {
   /** @private */
   _crowdBusynessNumberControl(labelText, index, field, value, { readOnly = false } = {}) {
     const label = document.createElement('label');
-    label.textContent = labelText;
+    label.appendChild(busynessLabelText(labelText, BUSYNESS_HINTS[field]));
     const input = document.createElement('input');
     input.type = 'number';
     input.min = '0';

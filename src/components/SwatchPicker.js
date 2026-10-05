@@ -15,6 +15,7 @@
  *        data-target-input="#dot-color" 
  *        data-mode="okabe-ito" 
  *        data-label="Marker colour" 
+ *        data-label-tip="Colour of this waypoint's marker" 
  *        data-allow-custom="false">
  *   </div>
  * 
@@ -103,6 +104,7 @@ function createPicker(container) {
   const targetSel = container.getAttribute('data-target-input');
   const mode = container.getAttribute('data-mode') || 'okabe-ito';
   const label = container.getAttribute('data-label') || 'Colour';
+  const labelTip = container.getAttribute('data-label-tip');
   const allowCustom = (container.getAttribute('data-allow-custom') || 'false') === 'true';
 
   if (!targetSel) return;
@@ -118,7 +120,16 @@ function createPicker(container) {
 
   const legend = document.createElement('legend');
   legend.className = 'swatch-legend';
-  legend.textContent = label;
+  if (labelTip) {
+    // The picker's hint sits on its legend's text, as a control's sits on its
+    // label's (ParamTooltip), and describes the whole group of swatches.
+    const legendText = document.createElement('span');
+    legendText.setAttribute('data-tip', labelTip);
+    legendText.textContent = label;
+    legend.appendChild(legendText);
+  } else {
+    legend.textContent = label;
+  }
 
   const grid = document.createElement('div');
   grid.className = 'swatch-grid' + (mode === 'neutral-ink' ? ' swatch-grid-neutral' : '');
@@ -204,6 +215,7 @@ function createPicker(container) {
     customLabel.className = 'swatch-custom-label';
     const customLabelText = document.createElement('span');
     customLabelText.textContent = 'Custom colour';
+    customLabelText.setAttribute('data-tip', 'Any colour, for when none of the colours above suits');
 
     custom = document.createElement('input');
     custom.type = 'color';
