@@ -122,6 +122,30 @@ function openDayBranchingAtTheStart() {
   return project;
 }
 
+/**
+ * A route drawn for its branches' shapes, on the site walk's map (which has
+ * no crowd to bind to its waypoints). Each waypoint is a major, a copy of the
+ * site walk's first given its own id and place, and the links it is given.
+ */
+function routeOfShapes(waypoints) {
+  const project = example('parm-aerial-walk');
+  const template = project.waypoints.find(each => each.id === 'ex-parm-1');
+  project.waypoints = waypoints.map(([id, imgX, imgY, links = {}]) => ({
+    ...structuredClone(template), id, name: id, label: id, imgX, imgY, ...links,
+  }));
+  return project;
+}
+
+// A trunk of three along the foot of the map, and the branches arching above it.
+const T1 = ['t1', 0.1, 0.8];
+const T2 = ['t2', 0.5, 0.8];
+const T3 = ['t3', 0.9, 0.8];
+const A1 = ['a1', 0.3, 0.45, { branchId: 'branch-a', branchFrom: 't1', branchRejoin: 't2' }];
+const B1 = ['b1', 0.7, 0.45, { branchId: 'branch-b', branchFrom: 't2', branchRejoin: 't3' }];
+const TERMINAL_B1 = ['b1', 0.65, 0.5, { branchId: 'branch-b', branchFrom: 't2' }];
+const TERMINAL_B2 = ['b2', 0.85, 0.3, { branchId: 'branch-b' }];
+const NESTED_C1 = ['c1', 0.5, 0.15, { branchId: 'branch-c', branchFrom: 'a1', branchRejoin: 'b1' }];
+
 /** Each fixture and the native size of the map it is seen against. */
 const FIXTURES = {
   // Trunk: 1, 2, 2a and 2b (minors), 3. A branch leaves 2 for b1 and rejoins at 3.
@@ -136,6 +160,16 @@ const FIXTURES = {
   'open day, branching at the start': () => ({ project: openDayBranchingAtTheStart(), image: [2914, 2061] }),
   // Unbranched: 1, 1a (minor), 2, 3.
   'site walk': () => ({ project: example('parm-aerial-walk'), image: [3371, 2651] }),
+  // Trunk t1, t2, t3. Branch a leaves t1 for a1 and rejoins at t2; branch b leaves t2 for b1 and rejoins at t3.
+  'two branches': () => ({ project: routeOfShapes([T1, A1, T2, B1, T3]), image: [3371, 2651] }),
+  // The same branch a; branch b leaves t2 for b1, then b2, where it ends.
+  'a terminal branch': () => ({
+    project: routeOfShapes([T1, A1, T2, TERMINAL_B1, TERMINAL_B2, T3]), image: [3371, 2651],
+  }),
+  // Branches a and b as in the first; branch c leaves a1, on branch a, for c1 and rejoins at b1, on branch b.
+  'a nested branch': () => ({ project: routeOfShapes([T1, A1, NESTED_C1, T2, B1, T3]), image: [3371, 2651] }),
+  // Branches a and b as in the first, both stored ahead of the trunk.
+  'branches stored first': () => ({ project: routeOfShapes([A1, B1, T1, T2, T3]), image: [3371, 2651] }),
 };
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -150,6 +184,7 @@ async function open(name) {
   const fixture = FIXTURES[name]();
   const app = await bootApp();
   await app.ready;
+  document.getElementById('splash-close').click();
   expect(await loadSnapshot(app, fixture.project)).toBe(true);
 
   const [width, height] = fixture.image;
@@ -320,6 +355,22 @@ function structureOf(app) {
       `${branch.waypoints.map(each => each.id).join(' ')} > ${branch.rejoinAtId}`),
     problems: structure.problems.map(problem => problem.code),
   };
+}
+
+/**
+ * Open a project that fails late, the way the leftovers test does: the
+ * commit throws at its last step, once the project has switched, and the
+ * route is put back. The caller declares the failure's console error.
+ */
+async function failLate(app, project) {
+  vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
+    projectData: project, imageAssets: [], backgroundBase64: null,
+  });
+  vi.spyOn(app, 'pruneImageAssets').mockImplementationOnce(() => {
+    throw new Error('the commit failed after the project switched');
+  });
+  expect(await app.loadProject(new File([''], 'refused.zip'))).toBe(false);
+  app._setPreviewMode(false);
 }
 
 // ========== THE ROWS ==========
@@ -525,6 +576,74 @@ describe('DEF-64: where trunk and branch legs meet, the hit names the leg pointe
   });
 });
 
+describe('DEF-64: every run of a branched route is hit, whatever its shape', () => {
+  // Each leg of each run as [the waypoint it leaves, the next on its run, the run].
+  const TRUNK = [['t1', 't2', null], ['t2', 't3', null]];
+  const BRANCH_A = [['t1', 'a1', 'branch-a'], ['a1', 't2', 'branch-a']];
+  const BRANCH_B = [['t2', 'b1', 'branch-b'], ['b1', 't3', 'branch-b']];
+
+  test.each([
+    ['two branches', 'two branches', [
+      'branch-a: t1 > a1 > t2',
+      'branch-b: t2 > b1 > t3',
+    ], [...TRUNK, ...BRANCH_A, ...BRANCH_B]],
+    ['a terminal second branch, which ends at its own last waypoint', 'a terminal branch', [
+      'branch-a: t1 > a1 > t2',
+      'branch-b: t2 > b1 b2 > null',
+    ], [...TRUNK, ...BRANCH_A, ['t2', 'b1', 'branch-b'], ['b1', 'b2', 'branch-b']]],
+    ['a third branch, leaving the first and rejoining the second', 'a nested branch', [
+      'branch-a: t1 > a1 > t2',
+      'branch-c: a1 > c1 > b1',
+      'branch-b: t2 > b1 > t3',
+    ], [...TRUNK, ...BRANCH_A, ['a1', 'c1', 'branch-c'], ['c1', 'b1', 'branch-c'], ...BRANCH_B]],
+    ['both branches stored ahead of the trunk', 'branches stored first', [
+      'branch-a: t1 > a1 > t2',
+      'branch-b: t2 > b1 > t3',
+    ], [...TRUNK, ...BRANCH_A, ...BRANCH_B]],
+  ])('%s: each leg is hit, hovered, drawn and clicked along its own run', async (_, fixture, branches, legs) => {
+    const app = await open(fixture);
+    const structure = structureOf(app);
+    expect(structure.problems).toEqual([]);
+    expect(structure.branches).toEqual(branches);
+    expect(app.branchPaths.map(each => each.id)).toEqual(branches.map(each => each.split(':')[0]));
+    const flashes = noteFlashes(app);
+    const route = ids(app);
+
+    for (const [fromId, toId, branchId] of legs) {
+      const leg = legOf(app, fromId, branchId);
+      expect(leg.to.id, `${fromId}'s leg on ${branchId ?? 'the trunk'}`).toBe(toId);
+      const canInsert = branchId === null;
+      const at = quarterOf(app, leg);
+      const named = {
+        waypoint: wp(app, fromId),
+        waypointIndex: route.indexOf(fromId),
+        next: wp(app, toId),
+        branchId,
+        canInsert,
+      };
+
+      expect(hitAt(app, at), `the leg from ${fromId} to ${toId}`).toEqual({
+        ...named, onPlus: false, midImg: { x: leg.mid.x, y: leg.mid.y },
+      });
+      // Only a trunk leg's midpoint is its "+"
+      expect(hitAt(app, onScreen(app, leg.mid)), `the middle of the leg from ${fromId} to ${toId}`)
+        .toMatchObject({ ...named, onPlus: canInsert });
+
+      const { next: _next, ...hovered } = named;
+      expect(await hoverAt(app, at), `hovering the leg from ${fromId} to ${toId}`)
+        .toMatchObject({ type: 'leg', ...hovered });
+      expectDrawn(app, leg, canInsert ? 'idle' : null);
+
+      await clickAt(app, at);
+      expect(app.selectedWaypoint, `clicking the leg from ${fromId} to ${toId}`).toBe(wp(app, fromId));
+      expect(flashes.at(-1)).toBe('leg');
+      expect(ids(app)).toEqual(route);
+    }
+    expect(flashes).toHaveLength(legs.length);
+    expect(structureOf(app)).toEqual(structure);
+  });
+});
+
 describe('DEF-64: only the route\'s own legs are hit', () => {
   // This passes on `main` too, where no branch's path was hit at all.
   test('a branched project that fails to load leaves none of its legs to hit, and the route\'s own', async () => {
@@ -554,6 +673,66 @@ describe('DEF-64: only the route\'s own legs are hit', () => {
     expect(owners.filter(owner => !app.waypoints.includes(owner))).toEqual([]);
     expect(await hoverAt(app, onScreen(app, refused[Math.floor(refused.length / 4)]))).toBeNull();
     expect(hitAt(app, onScreen(app, legOf(app, 'ex-parm-1').mid))).toMatchObject({ waypoint: wp(app, 'ex-parm-1') });
+  });
+
+  test('a refused project with the route\'s own ids leaves no leg naming its waypoints', async () => {
+    // The open day example again, its branch's waypoint moved: every id is
+    // the route's, but every waypoint is the refused project's own object,
+    // and the branch path left behind (DEF-51) lies apart from the route.
+    // A waypoint is the route's when it is one of the route's objects; an
+    // id names it only within one project.
+    allowConsole(/Failed to load project/);
+    const app = await open('open day');
+    const route = [...app.waypoints];
+    const refused = example('uon-open-day');
+    Object.assign(refused.waypoints.find(each => each.id === 'ex-uon-b1'), { imgX: 0.2, imgY: 0.2 });
+    await failLate(app, refused);
+    expect(app.waypoints).toHaveLength(route.length);
+    route.forEach((each, index) => expect(app.waypoints[index]).toBe(each));
+
+    // What the failed load leaves: the refused branch, its waypoints the route's ids but not the route's
+    const leftover = app.branchPaths.find(each => each.id === BRANCH);
+    expect(leftover.waypoints.map(each => each.id)).toEqual(['ex-uon-2', 'ex-uon-b1', 'ex-uon-3']);
+    expect(leftover.waypoints.filter(each => app.waypoints.includes(each))).toHaveLength(0);
+
+    // Along the whole of it, nothing but the route's own waypoints is named,
+    // and away from the route, nothing is hovered.
+    const owners = leftover.pathPoints.filter((_, index) => index % 4 === 0)
+      .map(point => hitAt(app, onScreen(app, point))?.waypoint)
+      .filter(Boolean);
+    expect(owners.filter(owner => !app.waypoints.includes(owner))).toHaveLength(0);
+    expect(await hoverAt(app, onScreen(app, leftover.pathPoints[Math.floor(leftover.pathPoints.length / 4)])))
+      .toBeNull();
+    expect(hitAt(app, onScreen(app, legOf(app, 'ex-uon-2b').mid))).toMatchObject({
+      waypoint: wp(app, 'ex-uon-2b'), next: wp(app, 'ex-uon-3'), branchId: null,
+    });
+  });
+
+  test('after a waypoint moves, a load that fails late leaves trunk progress for another route, and no leg is named', async () => {
+    // A move rebuilds the path and empties the trunk's progress cache. The
+    // load that fails then puts back the route and that empty cache, but not
+    // the trunk it switched to (DEF-51), so the trunk's progress is computed
+    // for the refused project's five trunk waypoints, not the route's four.
+    // Progress that does not pair with the run's waypoints cannot say which
+    // leg a point is on.
+    allowConsole(/Failed to load project/);
+    const app = await open('site walk');
+    const route = ids(app);
+    const first = wp(app, 'ex-parm-1');
+    app.eventBus.emit('waypoint:position-changed', { waypoint: first, imgX: first.imgX + 0.02, imgY: first.imgY - 0.02 });
+    await failLate(app, example('uon-open-day'));
+    expect(ids(app)).toEqual(route);
+    expect(app.getWaypointProgressValues()).toHaveLength(5);
+
+    // Three quarters of the way along the route's own path
+    const point = onScreen(app, app.pathPoints[Math.round(0.75 * (app.pathPoints.length - 1))]);
+    expect(hitAt(app, point)).toBeNull();
+    expect(await hoverAt(app, point)).toBeNull();
+
+    // With the path rebuilt for the route it has, the same point is on its leg
+    app.calculatePath();
+    expect(app.getWaypointProgressValues()).toHaveLength(4);
+    expect(hitAt(app, point)).toMatchObject({ waypoint: wp(app, 'ex-parm-2'), next: wp(app, 'ex-parm-3'), branchId: null });
   });
 });
 
