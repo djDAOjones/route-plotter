@@ -2947,7 +2947,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 43953,
+      "bytes": 44361,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3060,7 +3060,7 @@
       "format": "esm"
     },
     "src/app/pathTiming.js": {
-      "bytes": 30745,
+      "bytes": 31034,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -3875,13 +3875,13 @@
     }
   },
   "outputs": {
-    ".docs-build-I10eIj/app.js.map": {
+    ".docs-build-Evdqe3/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3396456
+      "bytes": 3397218
     },
-    ".docs-build-I10eIj/app.js": {
+    ".docs-build-Evdqe3/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4172,7 +4172,7 @@
           "bytesInOutput": 4585
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 18168
+          "bytesInOutput": 18233
         },
         "src/app/wiringBus.js": {
           "bytesInOutput": 6119
@@ -4184,7 +4184,7 @@
           "bytesInOutput": 1721
         },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 8644
+          "bytesInOutput": 8669
         },
         "src/app/persistence.js": {
           "bytesInOutput": 28862
@@ -4247,7 +4247,7 @@
           "bytesInOutput": 22752
         }
       },
-      "bytes": 1083517
+      "bytes": 1083607
     }
   }
 }
