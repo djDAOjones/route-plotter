@@ -34,9 +34,11 @@
  *   decoded). What the scan cannot read fails rather than passes: a use of
  *   the event it cannot follow (the global `event` among them), a `case` or
  *   an array member that is not a literal, a literal or a key inside a
- *   larger expression, a function followed by a name its file also writes,
- *   binds again or uses other than by calling it or passing it on, a name
- *   spelled with an escape, `eval`, a listener added through an alias, a key
+ *   larger expression, a function followed by a name that holds more than a
+ *   function, or that its file also writes (a member of it included), binds
+ *   again or uses other than by calling it or passing it on, a handler that
+ *   is not the whole of its argument, a name spelled with an escape, `eval`
+ *   or `Function` however reached, a listener added through an alias, a key
  *   event type named outside a listener call (a word of any string), a type
  *   or options it cannot read, an `onkey…` handler or accesskey named in code.
  *   Neither page has a key handler in its markup or its inline scripts, nor
@@ -62,9 +64,10 @@
  * Each place observes what it lists, in the one state it sets up: the route,
  * the selection, the transport, a field, a menu, the focus, and whether a key
  * was taken. A handler edit that changes nothing it observes there passes;
- * so does a name the source builds at run time (`'key' + 'down'`), or a
- * method another file assigns or overrides where a handler calls it through
- * `this`, neither of which this scanner follows.
+ * so does a name the source builds at run time (`'key' + 'down'`), code run
+ * from a string other than through `eval` or `Function`, or a method another
+ * file assigns or overrides where a handler calls it through `this`, none of
+ * which this scanner follows.
  *
  * Keys go to `document.body`: the canvas takes no focus, so once a user has
  * clicked it, that is where their keys land. What changed is read back as the
@@ -2302,6 +2305,83 @@ describe('every key listener the app adds (TST-13)', () => {
       [KEY_LISTENER.playerPage]: REVIEWED_READS[KEY_LISTENER.playerPage],
       [KEY_LISTENER.playerTimeline]: REVIEWED_READS[KEY_LISTENER.playerTimeline]
     });
+  });
+
+  test("the reader takes a function only whole, a bound method only where nothing writes it, and eval however reached (round 5's review)", () => {
+    const scan = source => keyListenersIn([{ file: 'fixture.js', lexed: lex(source) }]);
+    const unanalysed = source => scan(source).listeners[0].reads.unanalysed;
+    const calling = helper => `document.addEventListener('keydown', e => { if (${helper}(e)) return; e.preventDefault(); });`;
+    // Finding 1: a value that starts with a function but is more than it, the
+    // `&&` handing back the arrow, was read as the function.
+    const partial = 'function (e) { return false; } && (e => e.altKey)';
+    expect(unanalysed(`const ignoresKey = ${partial};\n${calling('ignoresKey')}`)).toEqual([
+      `line 2: e is passed to ignoresKey, which the scan cannot follow (ignoresKey is declared as ${partial})`]);
+    expect(unanalysed(`class Pane {\n  constructor() {\n    this.helper = ${partial};\n    ${calling('this.helper')}\n  }\n}`))
+      .toEqual([`line 4: e is passed to this.helper, which the scan cannot follow (this.helper is assigned ${partial})`]);
+    // A handler written in place is read only where it is the whole argument.
+    expect(unanalysed(`document.addEventListener('keydown', ${partial});`))
+      .toEqual([`its handler, ${partial}: ${partial} is not a name the scan can look up`]);
+    // A function expression's own name binds nothing outside it: it is not the helper's declaration.
+    expect(unanalysed(`const decoy = function ignoresKey(e) { return false; };\n${calling('ignoresKey')}`)).toEqual([
+      'line 2: e is passed to ignoresKey, which the scan cannot follow ' +
+      '(line 1 uses ignoresKey other than by calling it or passing it on)']);
+
+    // Finding 2: `this.helper.bind = …` made the bound method another function.
+    const bound = first => unanalysed('class Pane {\n  constructor() {\n' +
+      `    ${first}\n    this.helper = this.helper.bind(this);\n    ${calling('this.helper')}\n  }\n` +
+      '  helper(e) { return false; }\n}');
+    expect(bound('this.ready = true;'), 'left alone, the bound method is the method').toEqual([]);
+    expect(bound('this.helper.bind = () => e => e.altKey;')).toEqual([
+      'line 5: e is passed to this.helper, which the scan cannot follow (line 3 uses bind other than by calling it; ' +
+      'line 3 uses this.helper other than by calling it or passing it on)']);
+    for (const write of ['this.helper.bind += 1;', 'delete this.helper.bind;', 'this.helper.extra++;',
+      'Object.assign(this.helper, { bind: () => e => e.altKey });',
+      "Object.defineProperty(this.helper, 'bind', { value: () => e => e.altKey });",
+      'Function.prototype.bind = () => e => e.altKey;']) {
+      expect(bound(write), write).toEqual([expect.stringMatching(/^line 5: e is passed to this\.helper, which the scan cannot follow \(line 3 /)]);
+    }
+    // A bare helper's members written are reported too; read, they are not.
+    const bare = line2 => unanalysed(`function ignoresKey(e) { return false; }\n${line2}\n${calling('ignoresKey')}`);
+    expect(bare('ignoresKey.extra = 1; Object.assign(ignoresKey, {});')).toEqual([
+      'line 3: e is passed to ignoresKey, which the scan cannot follow (line 2 uses ignoresKey other than by calling it or passing it on)']);
+    expect(bare('const extra = ignoresKey.extra;')).toEqual([]);
+
+    // Finding 3: eval, and Function, however reached.
+    expect(scan("globalThis.eval('pane.helper = e => e.altKey');\nwindow['eval']('x');\nnew Function('x')();\n" +
+      'globalThis.Function(`x`);').unread).toEqual([
+      'fixture.js:1 eval runs code the scan cannot read',
+      'fixture.js:3 Function runs code the scan cannot read',
+      'fixture.js:4 Function runs code the scan cannot read',
+      'fixture.js:2 eval runs code the scan cannot read'
+    ]);
+  });
+
+  const HEADER_LISTENER = "      header.addEventListener('keydown', (e) => {";
+  const PARTIAL = 'function (e) { return false; } && (e => e.altKey)';
+  test.each([
+    ['a helper declared as more than a function', 'src/controllers/SectionController.js', [
+      ['export class SectionController', `const ignoresKey = ${PARTIAL};\n\nexport class SectionController`],
+      [HEADER_LISTENER, `${HEADER_LISTENER}\n        if (ignoresKey(e)) return;`]
+    ], KEY_LISTENER.sectionHeader, /\(ignoresKey is declared as function \(e\)/],
+    ['a method assigned more than a function', 'src/controllers/SectionController.js', [
+      ['    this.eventBus = eventBus;', `    this.eventBus = eventBus;\n    this.ignoresKey = ${PARTIAL};`],
+      [HEADER_LISTENER, `${HEADER_LISTENER}\n        if (this.ignoresKey(e)) return;`]
+    ], KEY_LISTENER.sectionHeader, /\(this\.ignoresKey is assigned function \(e\)/],
+    ['the dispatcher bound once its bind is written', 'src/handlers/InteractionHandler.js', [
+      ['    this.handleKeyDown = this.handleKeyDown.bind(this);',
+        '    this.handleKeyDown.bind = () => e => e.altKey;\n    this.handleKeyDown = this.handleKeyDown.bind(this);']
+    ], KEY_LISTENER.dispatcher, /^its handler, this\.handleKeyDown: line \d+ uses bind other than by calling it/]
+  ])("round 5's review's mutant of the real source, %s, fails the inventory's own comparison", (_, file, edits, name, reason) => {
+    const reads = scannedReads(scanEdited(file, edits).listeners)[name];
+    expect(reads).not.toEqual(REVIEWED_READS[name]);
+    expect(reads).toEqual({ ...REVIEWED_READS[name], unanalysed: [expect.stringMatching(reason)] });
+  });
+
+  test("round 5's review's mutant of the real source, eval reached through globalThis, fails the inventory's own comparison", () => {
+    const scanned = scanEdited('src/controllers/SectionController.js', [['export class SectionController',
+      "globalThis.eval('pane.helper = e => e.altKey');\n\nexport class SectionController"]]);
+    expect(scanned.unread, 'NOT_REGISTRATIONS has nothing in SectionController.js')
+      .toEqual([expect.stringMatching(/^src\/controllers\/SectionController\.js:\d+ eval runs code the scan cannot read$/)]);
   });
 
   test('a key handler in a page, in any spacing or case, or in an inline script, is found', () => {

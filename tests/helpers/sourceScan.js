@@ -499,6 +499,17 @@ export function functionAt(lexed, at) {
   return { params, start: bodyStart, end };
 }
 
+/**
+ * The function an expression is, when it is the whole of the expression that
+ * runs from `at` to `end`; null otherwise. Round 5's review:
+ * `function (e) { … } && (e => e.altKey)` holds the arrow, not the function
+ * that starts it.
+ */
+function wholeFunctionAt(lexed, at, end) {
+  const fn = functionAt(lexed, at);
+  return fn && skipSpace(lexed.code, fn.end) === end ? fn : null;
+}
+
 /** A method's parameter list and body, from the offset of its name. */
 function methodAt(lexed, at) {
   const open = lexed.code.indexOf('(', at);
@@ -512,24 +523,63 @@ function methodAt(lexed, at) {
 const ASSIGNMENT = /^(?:=(?![=>])|(?:\*\*|<<|>>>?|&&|\|\||\?\?|[-+*/%&|^])=)/;
 /** Words a `(` follows when it is not a call's. */
 const NOT_CALLEES = new Set([...NOT_CALLS, ...WORDS_BEFORE_REGEX, 'function', 'class']);
+/** Calls that write to what they are given first. */
+const MUTATORS = new Set(['Object.assign', 'Object.defineProperty', 'Object.defineProperties', 'Object.setPrototypeOf',
+  'Reflect.set', 'Reflect.defineProperty', 'Reflect.deleteProperty', 'Reflect.setPrototypeOf']);
+/** The calls a `this.` method may be passed to: they leave it as it is. */
+const LISTENER_CALLS = /(?:^|\.)(?:add|remove)EventListener$/;
+
+/**
+ * Whether the member chain after a use, from `start` to `end` (`name.x`,
+ * `name[0].y`, `name.x(…).y`), is written: assigned, updated or deleted.
+ */
+function chainWritten(lexed, start, end) {
+  const { code, kind } = lexed;
+  let at = skipSpace(code, end);
+  while (at < code.length && kind[at] === 'c') {
+    if (code[at] === '(' || code[at] === '[') {
+      const close = closing(lexed, at);
+      if (close === -1) break;
+      at = skipSpace(code, close + 1);
+    } else if ((code[at] === '.' && code[at + 1] !== '.') || (code.startsWith('?.', at) && !/\d/.test(code[at + 2] ?? ''))) {
+      at = skipSpace(code, at + (code[at] === '?' ? 2 : 1));
+      const word = WORD_AT.exec(code.slice(at))?.[0];
+      if (word) at = skipSpace(code, at + word.length);
+    } else break;
+  }
+  const before = tokenBefore(lexed, start);
+  return ASSIGNMENT.test(code.slice(at, at + 4)) || /^(?:\+\+|--)/.test(code.slice(at, at + 2)) ||
+    /(?:\+\+|--)$/.test(code.slice(Math.max(0, before - 1), before + 1)) ||
+    /(?:^|[^\w$])delete$/.test(code.slice(Math.max(0, before - 7), before + 1));
+}
 
 /**
  * Whether a use of a followed name, from `start` (the name, or the `this`
- * before it) to `end`, only reads what the name holds: it calls it
- * (`name(…)`, `name?.(…)`), reads a member of it (`name.bind(…)`), or is the
- * whole of an argument (`f(a, name)`) or, for `this.name`, of a condition
- * (`if (this.name)`). A write, a parameter or another binding of the name is
- * none of these.
+ * before it) to `end`, only reads what the name holds. A bare name may be
+ * called (`name(…)`, `name?.(…)`), have a member read (`name.bind(…)`, not
+ * `name.x = …`, `name.x++` or `delete name.x`), or be the whole of an
+ * argument (`f(a, name)`), but not the first of a call that writes to it
+ * (`Object.assign`, `Object.defineProperty` …). `this.name` may be called,
+ * bound (`this.name.bind(…)`, its only member read: round 5's review found
+ * `this.name.bind = …` let the bound method be something else), passed whole
+ * to add or remove a listener, or be the whole condition of an `if` or
+ * `while`. A write, a parameter or another binding of the name is none of
+ * these.
  */
 function onlyRead(lexed, start, end, member) {
   const { code, kind } = lexed;
   const after = skipSpace(code, end);
   const before = tokenBefore(lexed, start);
-  if (kind[after] === 'c' && (code[after] === '(' || code[after] === '.' ||
-    (code.startsWith('?.', after) && !/\d/.test(code[after + 2] ?? '')))) {
-    // A call or a member; not the name a generator or a class declares.
+  if (kind[after] === 'c' &&
+    (code[after] === '(' || (code.startsWith('?.', after) && code[skipSpace(code, after + 2)] === '('))) {
+    // A call; not the name a generator or a class declares.
     return member || (code[before] !== '*' &&
       !/(?:^|[^\w$])(?:function|class)$/.test(code.slice(Math.max(0, before - 8), before + 1)));
+  }
+  if (kind[after] === 'c' && (code[after] === '[' || (code[after] === '.' && code[after + 1] !== '.') ||
+    (code.startsWith('?.', after) && !/\d/.test(code[after + 2] ?? '')))) {
+    // A member of it.
+    return member ? /^\??\.\s*bind\s*\(/.test(code.slice(after, after + 16)) : !chainWritten(lexed, start, end);
   }
   if (before < 0 || kind[before] !== 'c' || !'(,'.includes(code[before]) ||
     kind[after] !== 'c' || !'),'.includes(code[after])) {
@@ -548,12 +598,17 @@ function onlyRead(lexed, start, end, member) {
   if (open < 0 || code[open] !== '(') return false;
   const next = skipSpace(code, closing(lexed, open) + 1);
   if (ASSIGNMENT.test(code.slice(next, next + 4))) return false; // `(name) = …`
-  if (member) return true;
-  // A call's brackets, not a parameter list: a name or a bracket before them, no arrow or body after.
   const callee = tokenBefore(lexed, open);
   const word = /[\w$]+$/.exec(code.slice(Math.max(0, callee - 30), callee + 1))?.[0];
+  const chain = /([A-Za-z_$][\w$]*(?:\s*\??\.\s*[A-Za-z_$][\w$]*)*)\s*$/.exec(code.slice(Math.max(0, open - 100), open))
+    ?.[1].replace(/\s+/g, '').replace(/\?\./g, '.');
+  if (member) {
+    return LISTENER_CALLS.test(chain ?? '') ||
+      (code[before] === '(' && code[after] === ')' && (word === 'if' || word === 'while'));
+  }
+  // A call's brackets, not a parameter list: a name or a bracket before them, no arrow or body after.
   return callee >= 0 && kind[callee] === 'c' && /[\w$)\]]/.test(code[callee]) && !NOT_CALLEES.has(word) &&
-    !code.startsWith('=>', next) && code[next] !== '{';
+    !code.startsWith('=>', next) && code[next] !== '{' && !(code[before] === '(' && MUTATORS.has(chain));
 }
 
 /**
@@ -561,11 +616,12 @@ function onlyRead(lexed, start, end, member) {
  * something other than what the scan read (round 4's review: a helper
  * reassigned after its declaration was read as declared). For a bare name,
  * every use but its declarations (`declared`) and those `onlyRead` allows, so
- * a write, a parameter or another declaration of the name is one; for
- * `this.name`, every use but its `this.name =` assignments and its methods
- * (`declared`) and `this.name` as `onlyRead` allows, so a write of another
- * kind, the name on another object or in a string is one. A name spelled with
- * an escape is one either way.
+ * a write, to it or to a member of it, a parameter or another declaration of
+ * the name is one; for `this.name`, every use but its `this.name =`
+ * assignments and its methods (`declared`) and `this.name` as `onlyRead`
+ * allows, so a write of another kind, a member other than `bind` called, the
+ * name on another object or in a string is one. A name spelled with an escape
+ * is one either way.
  */
 function usesBeyond(lexed, name, member, declared) {
   const { code, kind } = lexed;
@@ -600,16 +656,34 @@ function usesBeyond(lexed, name, member, declared) {
 }
 
 /**
+ * Every write to a property named `bind`, and every string naming it, in a
+ * file: what `this.name = this.name.bind(this)` relies on, beyond the
+ * method's own members (`onlyRead`), as `Function.prototype.bind = …` would.
+ */
+function bindWrites(lexed) {
+  const found = [];
+  for (const match of lexed.code.matchAll(/(?<![\w$])bind(?![\w$])/g)) {
+    const at = match.index;
+    if (lexed.kind[at] !== 'c' || lexed.code[skipSpace(lexed.code, at + 4)] === '(') continue;
+    found.push(`line ${lineAt(lexed.source, at)} uses bind other than by calling it`);
+  }
+  for (const { value, from } of stringsIn(lexed)) {
+    if (value === 'bind') found.push(`line ${lineAt(lexed.source, from)} names bind in a string`);
+  }
+  return found;
+}
+
+/**
  * The functions a callee or a handler names in its file: `name` (a function
  * declaration, or a `const`/`let`/`var` holding a function) or `this.name`
  * (each function assigned to it, a method bound to it, and the method
  * itself). Returns the functions, or the reason they cannot be found or
- * trusted: any other use of the name in its file that could make it hold
- * something else (`usesBeyond`). A method another file assigns or overrides
- * is beyond it.
+ * trusted: a value that is more than a function (round 5's review), or any
+ * other use of the name in its file that could make it hold something else
+ * (`usesBeyond`). A method another file assigns or overrides is beyond it.
  */
 export function functionsNamed(lexed, reference) {
-  const { code } = lexed;
+  const { code, kind } = lexed;
   const member = /^this\.([A-Za-z_$][\w$]*)$/.exec(reference);
   const bare = /^[A-Za-z_$][\w$]*$/.test(reference) ? reference : null;
   const name = member?.[1] ?? bare;
@@ -621,20 +695,28 @@ export function functionsNamed(lexed, reference) {
   const declared = new Set();
   const each = (pattern, take) => {
     for (const match of code.matchAll(pattern)) {
-      if (lexed.kind[match.index] === 'c') take(match, match.index + match[0].lastIndexOf(name));
+      if (kind[match.index] === 'c') take(match, match.index + match[0].lastIndexOf(name));
     }
   };
+  /** The value assigned from `from`: its text, and the function it is when it is one and nothing more. */
+  const valueFrom = from => {
+    const end = expressionEnd(lexed, skipSpace(code, from));
+    return { value: code.slice(from, end).replace(/\s+/g, ' ').trim(), fn: wholeFunctionAt(lexed, from, end) };
+  };
   if (member) {
+    let bound = false;
     each(new RegExp(`this\\.${escaped}\\s*=(?!=)`, 'g'), (match, at) => {
       declared.add(at);
-      const from = match.index + match[0].length;
-      const value = code.slice(from, expressionEnd(lexed, skipSpace(code, from))).replace(/\s+/g, ' ').trim();
+      const { value, fn } = valueFrom(match.index + match[0].length);
       if (value === 'null') return;
-      if (value === `this.${name}.bind(this)`) return;
-      const fn = functionAt(lexed, from);
+      if (value === `this.${name}.bind(this)`) {
+        bound = true;
+        return;
+      }
       if (fn) found.push(fn);
       else unfound.push(`this.${name} is assigned ${value}`);
     });
+    if (bound) unfound.push(...bindWrites(lexed));
     // The method as well, whether or not a function is assigned over it: a
     // listener added before the assignment is the method.
     each(new RegExp(`^[ \\t]*(?:async[ \\t]+)?${escaped}[ \\t]*\\(`, 'gm'), (match, at) => {
@@ -645,15 +727,21 @@ export function functionsNamed(lexed, reference) {
     });
   } else {
     each(new RegExp(`\\bfunction\\s+${escaped}\\s*\\(`, 'g'), (match, at) => {
+      // A declaration starts a statement; a function expression's own name
+      // binds nothing outside it, so it is left to `usesBeyond` to report.
+      let before = tokenBefore(lexed, match.index);
+      if (/(?:^|[^\w$])async$/.test(code.slice(Math.max(0, before - 5), before + 1))) before = tokenBefore(lexed, before - 4);
+      if (before >= 0 && !(kind[before] === 'c' && ';{}'.includes(code[before])) &&
+        !/(?:^|[^\w$])(?:export|default)$/.test(code.slice(Math.max(0, before - 6), before + 1))) return;
       declared.add(at);
       const fn = functionAt(lexed, match.index);
       if (fn) found.push(fn);
     });
     each(new RegExp(`\\b(?:const|let|var)\\s+${escaped}\\s*=(?!=)`, 'g'), (match, at) => {
       declared.add(at);
-      const fn = functionAt(lexed, match.index + match[0].length);
+      const { value, fn } = valueFrom(match.index + match[0].length);
       if (fn) found.push(fn);
-      else unfound.push(`${name} holds something other than a function`);
+      else unfound.push(`${name} is declared as ${value}`);
     });
   }
   unfound.push(...usesBeyond(lexed, name, Boolean(member), declared));
@@ -996,9 +1084,10 @@ function listenerFlags(options) {
  * not a call, every call whose type or options are not literals, every key
  * event type named outside an `add` or `removeEventListener` call (a word of
  * any string or template, escapes decoded), every name spelled with an
- * escape, `eval`, and every `onkey…` handler or accesskey named in code, a
- * string or a template — each a way to listen the scan cannot read, so a
- * check that `unread` is empty fails closed.
+ * escape, `eval` and `Function` however reached, and every `onkey…` handler
+ * or accesskey named in code, a string or a template — each a way to listen
+ * the scan cannot read, so a check that `unread` is empty fails closed. A
+ * handler written in place is read only where it is the whole argument.
  */
 export function keyListenersIn(files) {
   const found = [];
@@ -1023,10 +1112,11 @@ export function keyListenersIn(files) {
           unread.push(`${file}:${call.line} ${method}(${call.args[0]}, …, ${call.args.slice(2).join(', ')})`);
           continue;
         }
+        // A handler written in place is read when it is the whole argument.
         const [from, to] = call.spans[1] ?? [0, 0];
-        const inline = call.spans[1] ? functionAt(lexed, from) : null;
+        const inline = call.spans[1] ? wholeFunctionAt(lexed, from, to) : null;
         let reads;
-        if (inline && inline.end <= to) {
+        if (inline) {
           reads = eventReads(lexed, inline);
         } else {
           const { functions, unfound } = functionsNamed(lexed, call.args[1] ?? '');
@@ -1052,13 +1142,21 @@ export function keyListenersIn(files) {
     }
     // Round 4's review: the event, the functions it is passed to and the
     // names above are found by their spelling, so a name spelled with an
-    // escape is reported; as is `eval`, which can write a function the scan
-    // follows from a string.
+    // escape is reported; as are `eval` and `Function`, which run code from a
+    // string that can add a listener or write a function the scan follows,
+    // however they are reached (round 5's: `globalThis.eval`, `top['eval']`).
     for (const { text, from } of escapedNames(lexed)) {
       unread.push(`${file}:${lineAt(lexed.source, from)} ${text} is a name spelled with an escape`);
     }
-    for (const match of lexed.code.matchAll(/(?<![\w$.])eval(?![\w$])/g)) {
-      if (lexed.kind[match.index] === 'c') unread.push(`${file}:${lineAt(lexed.source, match.index)} eval runs code the scan cannot read`);
+    for (const match of lexed.code.matchAll(/(?<![\w$])(?:eval|Function)(?![\w$])/g)) {
+      if (lexed.kind[match.index] === 'c') {
+        unread.push(`${file}:${lineAt(lexed.source, match.index)} ${match[0]} runs code the scan cannot read`);
+      }
+    }
+    for (const { value, from } of stringsIn(lexed)) {
+      if (value === 'eval' || value === 'Function') {
+        unread.push(`${file}:${lineAt(lexed.source, from)} ${value} runs code the scan cannot read`);
+      }
     }
     // A key handler no listener call shows (`el.onkeydown = …`, an accesskey
     // set), named in code or in a string or template, escapes decoded.
