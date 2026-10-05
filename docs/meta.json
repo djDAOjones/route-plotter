@@ -254,9 +254,20 @@
       ],
       "format": "esm"
     },
-    "src/utils/segmentHitTest.js": {
-      "bytes": 3497,
+    "src/utils/routeBranches.js": {
+      "bytes": 15124,
       "imports": [],
+      "format": "esm"
+    },
+    "src/utils/segmentHitTest.js": {
+      "bytes": 5121,
+      "imports": [
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "./routeBranches.js"
+        }
+      ],
       "format": "esm"
     },
     "src/services/AreaHighlightRenderer.js": {
@@ -313,7 +324,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 113494,
+      "bytes": 114428,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2613,11 +2624,6 @@
       "imports": [],
       "format": "esm"
     },
-    "src/utils/routeBranches.js": {
-      "bytes": 15124,
-      "imports": [],
-      "format": "esm"
-    },
     "src/controllers/UIController.js": {
       "bytes": 103196,
       "imports": [
@@ -3219,7 +3225,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 54769,
+      "bytes": 55158,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3416,7 +3422,7 @@
       "format": "esm"
     },
     "src/app/pointer.js": {
-      "bytes": 10596,
+      "bytes": 12647,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3881,13 +3887,13 @@
     }
   },
   "outputs": {
-    ".docs-build-yrodA0/app.js.map": {
+    ".docs-build-lK4Ytz/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3444459
+      "bytes": 3451290
     },
-    ".docs-build-yrodA0/app.js": {
+    ".docs-build-lK4Ytz/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3964,8 +3970,11 @@
         "src/services/AnimationEngine.js": {
           "bytesInOutput": 12921
         },
+        "src/utils/routeBranches.js": {
+          "bytesInOutput": 4418
+        },
         "src/utils/segmentHitTest.js": {
-          "bytesInOutput": 565
+          "bytesInOutput": 836
         },
         "src/services/AreaHighlightRenderer.js": {
           "bytesInOutput": 3833
@@ -3983,7 +3992,7 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 28763
+          "bytesInOutput": 29114
         },
         "src/utils/crowdArrival.js": {
           "bytesInOutput": 946
@@ -4096,9 +4105,6 @@
         "src/utils/waypointNaming.js": {
           "bytesInOutput": 1370
         },
-        "src/utils/routeBranches.js": {
-          "bytesInOutput": 4418
-        },
         "src/controllers/UIController.js": {
           "bytesInOutput": 40300
         },
@@ -4199,7 +4205,7 @@
           "bytesInOutput": 5561
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 22160
+          "bytesInOutput": 22229
         },
         "src/app/undoRedo.js": {
           "bytesInOutput": 8199
@@ -4220,7 +4226,7 @@
           "bytesInOutput": 19111
         },
         "src/app/pointer.js": {
-          "bytesInOutput": 1422
+          "bytesInOutput": 1871
         },
         "src/app/crowds.js": {
           "bytesInOutput": 22872
@@ -4253,7 +4259,7 @@
           "bytesInOutput": 22752
         }
       },
-      "bytes": 1094819
+      "bytes": 1095959
     }
   }
 }
