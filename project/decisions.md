@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — REL-700 — v3.2.700 ships UI-03
+
+**Decision:** v3.2.700 is live from deploy commit `d07ca85` (tag `v3.2.700`), released under GATELESS-1 because UI-03's merge (`68b19ba`, PR #94) changed `src/`, `styles/` and `index.html`.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full, from `route-plotter/`. (1) A clean `main` equal to `origin/main` at `68b19ba`; Pages `main` `/docs`, built at `68b19ba`, tagged `rollback-v3.2.699-68b19ba`; `git fsck --connectivity-only` reported only dangling trees, and no OneDrive conflict copies. Pages' build of `68b19ba` sat queued for an hour (this account runs one Actions job at a time, and branch pushes took the runner); it was cancelled and a build of the same commit requested, which ran at once. The first release run hit its time limit two minutes into the gate, before any push; the second ran from the start. (2) `npm run check` green (101 files, 2,011 tests, 2 todo); `npm run push:dry-run` clean. (3) `npm run push` committed `d07ca85`. (4) Verify, the Pages build and deploy green on `d07ca85`. (5) The `github-pages` deployment at `d07ca85`; all 22 published files SHA-256-identical to `docs/`; the live site ready ("Route Plotter v3.2.700"); the Open day route played (frames driven by hand: 3,002 ms, then to its end at 11,594 ms, no frame left queued) and exported, at 1280×800, as MP4 (1920×1080, 13.6 s, `ftypisom`) and as HTML (its CSP, the project and the live `player.js` embedded byte for byte), captured in the page. The smoke script's own first `player.js` fetch timed out in the pane (`ERR_TIMED_OUT`) and its retry returned 200. UI-03's hints were checked in Chromium on a build of `dde7948` before the merge. Its build ends in 0, so its exports are also owed a save to disk under the owner's tenth-release check (this PR's GATELESS-1 entry; a wish line).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — CROWD-05 — The animation never ends before anything that ends; its end hold follows TST-04 as CROWD-06
 
 **Decision:** CROWD-05 becomes scene-wide: the procedural duration is the latest end of every animation that concludes, measured so that nothing timed as a fraction of the timeline moves. CROWD-06 adds one project-wide "Hold at end" control (Pacing, 0–10 s, default 2 s) after TST-04, and retires "Wait here for this crowd". The owner set the rule and the control's purpose, and delegated the rest.
