@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — REL-694 — v3.2.694 ships DEF-06
+
+**Decision:** v3.2.694 is live from deploy commit `f482ea1` (tag `v3.2.694`), released under GATELESS-1 because DEF-06's merge (`32d9220`, PR #61) changed `src/`; it ends the DEF-08 symptom v3.2.693 shipped (REL-693).
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full, from `route-plotter/`. (1) A clean `main` equal to `origin/main` at `32d9220`; Pages `main` `/docs`, built at `32d9220`; that live SHA had no tag, so an annotated tag `rollback-v3.2.693-32d9220` was pushed at it (its `docs/` tree is v3.2.693's). (2) `npm run check` green (94 files, 1,674 tests, 2 todo); `npm run push:dry-run` clean. (3) `npm run push` committed `f482ea1` "chore: deploy v3.2.694", six files changed, `docs/` holding 22. (4) Verify, the Pages build and deploy green on `f482ea1`. (5) The `github-pages` deployment at `f482ea1`; all 22 published files SHA-256-identical to `docs/`; the live site ready ("Route Plotter v3.2.694", no console errors); the Open day route played (the hidden pane's loop driven by hand: three seconds of frames, 3,002 ms) and exported as MP4 (1920×1080, 14.4 s at this window's size, `ftyp`) and as HTML (its CSP and the live `player.js` embedded byte for byte), captured in the page. (6) No rollback. (7) Annotated tag `v3.2.694` at `f482ea1`, pushed. DEF-06's own Chromium check ran on a throwaway build of its branch before the merge (decision DEF-06). Owed: saving the live exports, as for v3.2.693 (the wish-list line now covers both). The plan's DEF-06 marker reads "released in v3.2.694". The owner, mid-run on 2026-10-05: "dont forget to use codex in this dev run as a programming partner"; the run uses Codex read-only for every review and PLAN-N, and for consults such as the one that traced DEF-76.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — DEF-06 — A route's derived state goes with it, and a snapshot times the route at its authoring speed
 
 **Decision:** DEF-06 lands (PR #61). Clear All, deleting down to one waypoint, Undo, Redo and opening a one-waypoint project clear the route's path, branches, structure, pauses, beacons and waits, and resolve crowd anchors afresh; a route that comes back gets its timing back. Recovery, Save Project and the HTML export hold the route timed at its authoring speed, never times the playback rate, which is never saved. A constant-time duration a project opened with is kept until a rebuild replaces it.
