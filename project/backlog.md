@@ -16,6 +16,10 @@
 
 ### Ahead of Phase 1's pull requests — the owner's order of 2026-10-05 — CLOSED 2026-10-05
 
+### After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05
+
+- [ ] CROWD-05 — The animation runs until everything that finishes has finished — since 2026-10-05
+
 ### Phase 1 — Land the big run's open pull requests
 
 - [~] TST-16 — Tighten the round-2 predicates · Characterisation P1 — since 2026-10-01
@@ -33,10 +37,6 @@
 - [!] REV-05 — Accessibility assurance · Accessibility assurance — since 2026-10-01 — blocked: owner evidence — NVDA/VoiceOver + forced-colours + reduced-motion emulation
 
 ## Next
-
-**Filed from use — waits on the owner's word**
-
-- [!] CROWD-05 — The animation runs until everything that finishes has finished — since 2026-10-05 — blocked: owner's word — to start it
 
 **After TST-04 — the owner's order of 2026-10-05**
 

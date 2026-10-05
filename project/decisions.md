@@ -28,9 +28,9 @@
 - The 2 s default, mirroring the export's start buffer.
 - The split, so TST-04's PR need not absorb a new control and CROWD-06 lands beside DEF-20.
 - No hold in part 1, so lengths and end-frame goldens change once.
-- CROWD-05's place ahead of Phase 1. The run keeps CROWD-05 `[!]` until the owner places it, because the grant admits no new feature work without his word in the run's chat.
+- CROWD-05's place ahead of Phase 1. The owner then told the run, in its chat: "this chat take control, read the backlog chat for info, then you proceed as you see fit". Under that, the run places CROWD-05 next after TST-16 (already in review), ahead of Phase 1's other pull requests, as DEF-77 went: the run's call, for him to confirm.
 
-**Supersedes:** none
+**Supersedes:** 2026-10-05 — CROWD-05 — The animation running until every crowd dot finishes is filed, waiting on the owner's word
 
 **Deferred:** CROWD-06
 
