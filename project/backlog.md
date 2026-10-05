@@ -21,7 +21,6 @@
 ### Phase 1 — Land the big run's open pull requests
 
 - [~] TST-14 — Shell and ContextMenu safety tests · Characterisation P1 — since 2026-10-01
-- [~] TST-08 — Mixin composition guards · Characterisation P1 — since 2026-10-01
 - [~] TST-05 — Event transcript golden · Characterisation P1 — since 2026-10-01
 - [~] DEF-45 — Announcements overwrite each other · Accessibility P3 — since 2026-10-01
 - [~] TST-04 — Sidebar control and readout goldens · Characterisation P1 — since 2026-10-01

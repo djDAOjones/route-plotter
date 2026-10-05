@@ -261,7 +261,15 @@ describe('reorderWaypointBlocks', () => {
  *   name. RoutePlotter is reached nowhere else but `new RoutePlotter()`, and no
  *   module under src/ changes a composed mixin: one may be called, read by
  *   property or copied from, and nothing more, or the app would hold what these
- *   tests never see;
+ *   tests never see. Every module's code is read for that, whatever its text
+ *   holds, so a dynamic import is found however it is spelt. A mixin exported
+ *   under a second name or from another module, and Object.prototype's members
+ *   that change or hand on their object (`__defineGetter__`, `valueOf`, …), are
+ *   refused on it. No module may change the built-in Object either: it is
+ *   reached only as `Object.<one of its own members>`, read or called and never
+ *   written, Object.prototype only through a member that only reads it, and
+ *   Object as a value not at all. A built-in reached any other way is taken as
+ *   intact;
  * - `this` is the app in RoutePlotter's own methods and fields and in a
  *   composed mixin's methods, and an arrow keeps the `this` around it. In any
  *   other object's or class's method it is that object, and is passed over.
@@ -269,25 +277,40 @@ describe('reorderWaypointBlocks', () => {
  *   level what it is depends on how the code runs, and in a static member of
  *   RoutePlotter it is the class. `super` in the app's methods is refused too;
  * - `app` is the app where it is a function's own parameter, as src/app/'s
- *   helpers take it; `app` declared or assigned any other way is refused;
+ *   helpers take it; `app` declared or assigned any other way is refused, and
+ *   so is `arguments` in a function that takes it;
+ * - main.js publishes the app as `window.app`. In the files read for the app
+ *   (main.js, src/app/ and any composed mixin's module) that alias is refused
+ *   wherever it is reached but the statement that publishes it, however the
+ *   global object is named (`window`, `globalThis`, `self`, …) or the key spelt,
+ *   and so is the global object as a value, but handed to a service the app
+ *   holds. Past those files, and past a service, nothing reads the app: there
+ *   `window.app` is not checked;
  * - the app is reached by name: `this.name` or `app.name`, parenthesised or
  *   optional or not. A call is `.name(`, `.name?.(` or a tagged template; a
  *   write is an assignment to `.name` with any operator, `++`, `--`, `delete`,
  *   or a destructuring or for-in/of target. `this.service.method(` calls a
  *   service the app holds, not the app. Handed whole to a helper, the app is
- *   followed when the helper takes it as its own `app` parameter; bound as the
- *   receiver of its own method (`this.name.bind(this)`) it is that method. A
- *   computed reach (`this[…]`) or a bulk write (`Object.assign(this, …)`) is
- *   returned for the checks below to refuse; any other use of the app as a
- *   value (an alias, a destructuring read, a hand-off to anything else,
- *   `this.constructor`) is refused by the reader;
+ *   followed when the helper takes it as its own `app` parameter and the
+ *   helper's name is never assigned again; bound as the receiver of its own
+ *   method (`this.name.bind(this)`) it is that method. A computed reach
+ *   (`this[…]`) or a bulk write (`Object.assign(this, …)`) is returned for the
+ *   checks below to refuse; any other use of the app as a value (an alias, a
+ *   destructuring read, a hand-off to anything else, `this.constructor`, and
+ *   Object.prototype's members that change or hand it on) is refused by the
+ *   reader;
+ * - a call is certified by a function the app stores only when the write that
+ *   stores it is on the app: through `this`, or through the `app` parameter of
+ *   a helper some call read hands the app. A `.bind(…)` stores a function only
+ *   when it binds one written there or a method the app has;
  * - a class member is read by the key JavaScript gives it (quoted, escaped,
  *   numeric, or a constant computed key), and of two members with one key the
  *   later is what the prototype holds. A computed key that is not a constant,
  *   an `extends` clause, and source the parser cannot read are refused.
  *
  * A refusal names its file and line, so these tests fail rather than pass on a
- * shorter list. The last describe pins the readers on fixtures.
+ * shorter list. The last describe pins the readers on fixtures, among them
+ * each probe review round 2 found passing every guard (Q01–Q19), now refused.
  */
 
 const repoRoot = join(import.meta.dirname, '..');
@@ -356,11 +379,13 @@ const sourceModules = once(() => {
  * What main.js composes, each mixin with the object its module exports under
  * that name. These tests import each mixin's module on its own, so a module
  * that changed a composed mixin would change the app and not them: no module
- * under src/ may.
+ * under src/ may. Nor may one change the built-in Object, whose assign does
+ * the composing.
  */
 const composition = once(async () => {
   const mixins = composedMixins(mainModule());
   unchangedMixins(sourceModules(), MAIN, mixins);
+  untouchedObject(sourceModules());
   return Promise.all(mixins.map(async mixin => {
     const module = await import(join(repoRoot, moduleFile(MAIN, mixin.specifier)));
     return { ...mixin, object: module[mixin.exported] };
@@ -858,12 +883,231 @@ describe('the TST-08 source reader', () => {
     expect(calls.map(({ name, guards }) => `${name}:${guards.join(',')}`))
       .toEqual(['guarded:backgroundImage', 'unguarded:', 'afterReady:ready']);
   });
+
+  /*
+   * Review round 2 (of 8558e26) found thirteen probes on the real src/ that passed every guard. Each is kept
+   * here as a fixture, numbered as the review numbers it (Q01–Q19; Q18 is its control, refused all along), in a
+   * small src/ held in memory: main.js composes aMixin from src/app/a.js and publishes the app as window.app,
+   * and each fixture adds its probe. readProbe() reads that src/ as the four composition tests read the real
+   * one, and throws where they would refuse it; `unresolved` lists the calls on the app the call test would.
+   */
+  const readProbe = ({
+    imports = '', inClass = '', beforeCompose = '', afterPublish = '', beforeMixin = '', inMethod = '', mixin, files = {},
+  } = {}) => {
+    const sources = {
+      'src/main.js': [
+        "import { aMixin } from './app/a.js';", imports,
+        'class RoutePlotter {', inClass, '  render() {}', '}',
+        beforeCompose,
+        'Object.assign(RoutePlotter.prototype, aMixin);',
+        "document.addEventListener('DOMContentLoaded', () => {", '  window.app = new RoutePlotter();', afterPublish, '});',
+      ].join('\n'),
+      'src/app/a.js': mixin ?? [beforeMixin, 'export const aMixin = {', '  play() {},', '  update() {', inMethod, '  },', '};'].join('\n'),
+      ...files,
+    };
+    const read = new Map(Object.entries(sources).map(([file, source]) => [file, parseModule(source, file)]));
+    const mixins = composedMixins(read.get('src/main.js'));
+    unchangedMixins(read, 'src/main.js', mixins);
+    untouchedObject(read);
+    const appModules = new Map([...read].filter(([file]) => file === 'src/main.js' || file.startsWith('src/app/')));
+    const scanned = [...appModules.values()].map(module => ({
+      file: module.file,
+      ...appReferences(module, appContext(module, {
+        modules: appModules,
+        className: module.file === 'src/main.js' ? 'RoutePlotter' : null,
+        mixins: mixins.filter(each => moduleFile('src/main.js', each.specifier) === module.file).map(each => each.exported),
+      })),
+    }));
+    // Each mixin as importing it would give it: a function under each key its object literal writes.
+    const objects = mixins.map(each => {
+      const [literal] = mixinLiterals(read.get(moduleFile('src/main.js', each.specifier)), [each.exported]);
+      return { ...each, object: Object.fromEntries(literal.properties.map(property => [keyName(property.key, property.computed), () => {}])) };
+    });
+    const reach = appCallables(classMembers(read.get('src/main.js'), 'RoutePlotter'), objects, scanned);
+    const unresolved = scanned.flatMap(({ calls }) => calls.filter(({ name }) => !reach.get(name)?.callable))
+      .map(({ receiver, name }) => `${receiver}.${name}(`);
+    return { reach, unresolved };
+  };
+
+  test('review round 2: the probe fixture reads clean as it stands, so each refusal below is its probe\'s', () => {
+    expect(readProbe().unresolved).toEqual([]);
+  });
+
+  test('review round 2 (F1): a dynamic import is found in the parsed code however it is spelt, in a module that imports no mixin (Q17, Q18)', () => {
+    const poisoning = load => readProbe({
+      imports: "import { poisonMixin } from './utils/poison.js';",
+      beforeCompose: 'await poisonMixin();',
+      files: {
+        'src/utils/poison.js': `export function poisonMixin() {\n  return ${load}\n    .then(({ aMixin: mix }) => { mix.play = null; });\n}\n`,
+      },
+    });
+    for (const load of [
+      "import /* gap */ ('../app/a.js')", // Q17: passed every guard
+      "import('../app/a.js')", // Q18: its control
+      "import\n  ('../app/a.js')",
+      'import(`../app/a.js`)',
+    ]) {
+      expect(() => poisoning(load), load).toThrow(/src\/utils\/poison\.js:2: a module is imported dynamically here/);
+    }
+    // Only code is read as an import: the same words in a comment or a string are not one.
+    expect(() => poisoning("/* import('../app/a.js') */ Promise.resolve({ aMixin: {} })")).not.toThrow();
+    expect(() => poisoning("Promise.resolve({ aMixin: {}, text: \"import('../app/a.js')\" })")).not.toThrow();
+  });
+
+  test('review round 2 (F2): a composed mixin exported under a second name, or from a module that is not its own, is refused (Q07)', () => {
+    // Q07: passed every guard.
+    expect(() => readProbe({
+      beforeMixin: 'export { aMixin as forwarded };',
+      imports: "import { forwarded } from './app/a.js';",
+      beforeCompose: 'forwarded.play = null;',
+    })).toThrow(/src\/app\/a\.js:1: aMixin, a composed mixin, is exported here as forwarded, a second name/);
+    expect(() => readProbe({ beforeMixin: 'export { aMixin as default };' }))
+      .toThrow(/src\/app\/a\.js:1: aMixin, a composed mixin, is exported here as default/);
+    expect(() => readProbe({ files: { 'src/app/b.js': "import { aMixin } from './a.js';\nexport { aMixin };" } }))
+      .toThrow(/src\/app\/b\.js:2: aMixin, a composed mixin, is exported here as aMixin/);
+    // Its own module exporting it under its own name is the export composed.
+    expect(() => readProbe({ mixin: 'const aMixin = {\n  play() {},\n};\nexport { aMixin };' })).not.toThrow();
+  });
+
+  test('review round 2 (F3): a helper is read as the app\'s only where it is: not past arguments, a name assigned again, or an app parameter no call hands the app (Q02, Q03, Q09)', () => {
+    // Q02: the app written through the arguments of a helper that takes it, directly or from an arrow inside.
+    expect(() => readProbe({ beforeMixin: 'function poison(app) { arguments[0].render = null; }', inMethod: 'poison(this);' }))
+      .toThrow(/src\/app\/a\.js:1: arguments in a function that takes the app as app holds the app past that name/);
+    expect(() => readProbe({
+      beforeMixin: 'function poison(app) { [0].forEach(() => { arguments[0].render = null; }); }',
+      inMethod: 'poison(this);',
+    })).toThrow(/src\/app\/a\.js:1: arguments in a function that takes the app/);
+    // A function that does not take the app may count its arguments.
+    expect(() => readProbe({ beforeMixin: 'function count() { return arguments.length; }' })).not.toThrow();
+
+    // Q03: the helper's name assigned another function before the app is handed to it, where it is called or
+    // where it is declared.
+    expect(() => readProbe({ beforeMixin: 'function poison(app) {}\npoison = host => { host.render = null; };', inMethod: 'poison(this);' }))
+      .toThrow(/src\/app\/a\.js:6: the app is handed to poison, whose name poison is assigned again at src\/app\/a\.js:2/);
+    expect(() => readProbe({
+      beforeMixin: "import { reset } from './helpers.js';",
+      inMethod: 'reset(this);',
+      files: { 'src/app/helpers.js': 'export function reset(app) {}\nreset = host => { host.render = null; };' },
+    })).toThrow(/the app is handed to reset, whose name reset is assigned again at src\/app\/helpers\.js:2/);
+
+    // Q09: a function stored through the app parameter of a helper handed something else certifies no call.
+    const preparing = 'function prepareOther(app) { app.ghost = () => {}; }\nprepareOther({});';
+    const other = readProbe({ beforeMixin: preparing, inMethod: 'this.ghost();' });
+    expect(other.unresolved).toEqual(['this.ghost(']);
+    expect(other.reach.get('ghost').what).toMatch(/src\/app\/a\.js:1 writes the app parameter of a function no call read hands the app/);
+    // Handed the app too, it stores the function on the app.
+    expect(readProbe({ beforeMixin: preparing, inMethod: 'prepareOther(this);\nthis.ghost();' }).unresolved).toEqual([]);
+  });
+
+  test('review round 2 (F4): a .bind(…) certifies a call only when it is Function.prototype.bind of a function (Q01)', () => {
+    // Q01: an object's own method named bind returns anything.
+    const custom = readProbe({
+      inMethod: 'const source = { bind() { return null; } };\nthis.brokenCallback = source.bind();\nthis.brokenCallback();',
+    });
+    expect(custom.unresolved).toEqual(['this.brokenCallback(']);
+    // The bound copy of a function written there, or of a method the app has, is a function; of a name the app
+    // lacks it is not.
+    expect(readProbe({
+      inMethod: 'this.boundPlay = this.play.bind(this);\nthis.boundPlay();\nthis.boundArrow = (() => {}).bind(null);\nthis.boundArrow();',
+    }).unresolved).toEqual([]);
+    expect(readProbe({ inMethod: 'this.boundGhost = this.ghost.bind(this);\nthis.boundGhost();' }).unresolved)
+      .toEqual(['this.boundGhost(']);
+  });
+
+  test('review round 2 (F5): Object.prototype\'s members that change or hand on their object are refused on the app and on a composed mixin (Q05, Q06, Q14, Q15)', () => {
+    // Q05 and Q15: an own getter hides the class's render; valueOf() hands on the app, which the write then hides.
+    expect(() => readProbe({ inMethod: "this.__defineGetter__('render', () => null);" }))
+      .toThrow(/src\/app\/a\.js:5: this\.__defineGetter__ is Object\.prototype's __defineGetter__, which changes the app/);
+    expect(() => readProbe({ inMethod: 'this.valueOf().render = null;' }))
+      .toThrow(/src\/app\/a\.js:5: this\.valueOf is Object\.prototype's valueOf/);
+    // Q14: a getter gives the app what keeps the excused dead listener dead.
+    expect(() => readProbe({
+      inMethod: [
+        "this.eventBus.on('waypoint:add-at-center', () => {",
+        "  this.__defineGetter__('backgroundImage', () => ({ width: 10, height: 10 }));",
+        '  if (!this.backgroundImage) return;',
+        '  this.generatePathData();',
+        '});',
+      ].join('\n'),
+    })).toThrow(/src\/app\/a\.js:6: this\.__defineGetter__ is Object\.prototype's __defineGetter__/);
+    expect(() => readProbe({ beforeMixin: "function poison(app) { app.__defineSetter__('render', () => {}); }", inMethod: 'poison(this);' }))
+      .toThrow(/src\/app\/a\.js:1: app\.__defineSetter__ is Object\.prototype's __defineSetter__/);
+    // Q06: a getter on the mixin is what Object.assign copies.
+    expect(() => readProbe({ beforeCompose: "aMixin.__defineGetter__('play', () => null);" }))
+      .toThrow(/src\/main\.js:7: aMixin, a composed mixin, is reached here through Object\.prototype's __defineGetter__/);
+    // The members that only read their object stay open to both.
+    expect(readProbe({ inMethod: "this.hasOwnProperty('play');\nthis.toString();" }).unresolved).toEqual([]);
+    expect(() => readProbe({ beforeCompose: "aMixin.hasOwnProperty('play');" })).not.toThrow();
+  });
+
+  test('review round 2 (F6): the built-in Object, whose assign composes the app, is refused wherever src/ could change it (Q04)', () => {
+    // Q04: passed every guard, and the composition then copied nothing.
+    expect(() => readProbe({ beforeCompose: 'Object.assign = () => {};' }))
+      .toThrow(/src\/main\.js:7: Object\.assign is written here, so Object\.assign\(RoutePlotter\.prototype, …\) may not be the built-in/);
+    expect(() => readProbe({ files: { 'src/utils/patch.js': 'Object.assign = () => {};' } }))
+      .toThrow(/src\/utils\/patch\.js:1: Object\.assign is written here/);
+    expect(() => readProbe({ beforeCompose: 'delete Object.assign;' })).toThrow(/src\/main\.js:7: Object\.assign is written here/);
+    expect(() => readProbe({ beforeCompose: "Object.defineProperty(Object, 'assign', { value() {} });" }))
+      .toThrow(/src\/main\.js:7: the global Object is used here as a value \(handed to Object\.defineProperty\)/);
+    expect(() => readProbe({ beforeCompose: 'const { assign } = Object;' }))
+      .toThrow(/src\/main\.js:7: the global Object is used here as a value/);
+    expect(() => readProbe({ beforeCompose: 'globalThis.Object.assign = () => {};' }))
+      .toThrow(/src\/main\.js:7: the global Object is reached here through another object/);
+    expect(() => readProbe({ beforeCompose: "Object.__defineGetter__('assign', () => () => {});" }))
+      .toThrow(/src\/main\.js:7: Object\.__defineGetter__ is not one of the built-in Object's own members/);
+    expect(() => readProbe({ beforeCompose: "Object.prototype.__defineSetter__('play', () => {});" }))
+      .toThrow(/src\/main\.js:7: Object\.prototype is used here other than read through a member that only reads it/);
+    // Its own members read or called, and Object.prototype read through one that only reads, or compared, change nothing.
+    expect(() => readProbe({
+      beforeCompose: "const own = [Object.keys({}), Object.freeze({}), Object.prototype.hasOwnProperty.call({}, 'a'), " +
+        'Object.getPrototypeOf({}) === Object.prototype, {} instanceof Object];',
+    })).not.toThrow();
+  });
+
+  test('review round 2 (F7): in the files read for the app, window.app is refused but where main.js publishes it; past them it is not read (Q16, Q19)', () => {
+    // Q16 and Q19: passed every guard, in main.js's own DOM-ready callback.
+    expect(() => readProbe({ afterPublish: '  window.app.constructor.prototype.play = null;' }))
+      .toThrow(/src\/main\.js:11: window\.app is the app main\.js publishes, which the reader does not follow/);
+    expect(() => readProbe({ afterPublish: '  window.app.render = null;' }))
+      .toThrow(/src\/main\.js:11: window\.app is the app main\.js publishes/);
+    // However the global object is named or the alias spelt, and in a mixin too.
+    expect(() => readProbe({ afterPublish: "  globalThis['app'].render = null;" })).toThrow(/src\/main\.js:11: globalThis\.app is the app/);
+    expect(() => readProbe({ inMethod: 'self.app.play();' })).toThrow(/src\/app\/a\.js:5: self\.app is the app/);
+    expect(() => readProbe({ inMethod: 'window[name].render = null;' })).toThrow(/src\/app\/a\.js:5: window\[…\] may reach the app/);
+    expect(() => readProbe({ afterPublish: '  const w = window;\n  w.app.render = null;' }))
+      .toThrow(/src\/main\.js:11: window is used here as a value \(the value of a declaration\)/);
+    // The publication itself, the global object's other members, and the global object handed to a service the
+    // app holds (main.js hands window to its storage service), as any service call, are read and pass.
+    expect(() => readProbe({
+      inClass: '  constructor() { this.storageService.attachLifecycle(window); }',
+      inMethod: "window.addEventListener('resize', () => this.play());\nconst ratio = window.devicePixelRatio;",
+    })).not.toThrow();
+    // Past main.js and src/app/, the reader reads no reach of the app: there window.app is not checked, the stated
+    // exclusion. This pins where that exclusion begins.
+    expect(() => readProbe({ files: { 'src/ui/panel.js': 'export const poke = () => { window.app.render = null; };' } }))
+      .not.toThrow();
+  });
 });
 
 // ----- The TST-08 reader -----
 
 const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
 const PATTERNS = new Set(['ObjectPattern', 'ArrayPattern', 'AssignmentPattern', 'RestElement']);
+
+/** The members every object inherits from Object.prototype that only read it, and so change nothing and return it to no one. */
+const READ_ONLY_INHERITED = new Set(['hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toString', 'toLocaleString']);
+
+/**
+ * The rest of Object.prototype's members: `constructor` and `__proto__` reach
+ * past the object, `valueOf()` returns it, `__lookupGetter__` and
+ * `__lookupSetter__` hand on its accessors, and `__defineGetter__` and
+ * `__defineSetter__` change it with no write the reader would see. Review
+ * round 2 (F5): on the app or a composed mixin, each is refused.
+ */
+const REFLECTIVE = new Set(Object.getOwnPropertyNames(Object.prototype).filter(name => !READ_ONLY_INHERITED.has(name)));
+
+/** The names a browser module reaches its global object by, through which the app main.js publishes is `window.app`. */
+const GLOBAL_OBJECTS = new Set(['window', 'globalThis', 'self', 'top', 'parent', 'frames']);
 
 /** A reader's refusal: where, what it met, and what to do instead of loosening the guard. */
 function unreadable(file, line, what) {
@@ -1260,13 +1504,17 @@ function composedMixins(module) {
 
 /**
  * Refuse a composed mixin that a module in `modules` changes: a property of it
- * written or deleted, the binding assigned, or the mixin used as a value other
- * than called, read by property name, copied from by Object.assign, exported
- * where it is written, or composed; and refuse its module imported as a
- * namespace, dynamically or re-exported, through which the reader could not
- * follow it. Object.assign copies what a mixin holds when main.js loads; these
- * tests import each mixin's module on its own, so a change made in another
- * module would reach the app and never them.
+ * written or deleted, the binding assigned, a member Object.prototype gives it
+ * that changes it or hands it on (`valueOf`, `__defineGetter__`, …; see
+ * REFLECTIVE), or the mixin used as a value other than called, read by property
+ * name, copied from by Object.assign, exported under its own name where it is
+ * written, or composed; and refuse its module imported as a namespace,
+ * dynamically or re-exported, and the mixin exported under another name or
+ * from another module, through which the reader could not follow it. Every
+ * module's code is walked, whatever it holds: a dynamic import is found in the
+ * parsed code, however it is spelt. Object.assign copies what a mixin holds
+ * when main.js loads; these tests import each mixin's module on its own, so a
+ * change made in another module would reach the app and never them.
  */
 function unchangedMixins(modules, mainFile, mixins) {
   const composed = new Set(mixins.map(mixin => `${moduleFile(mainFile, mixin.specifier)} ${mixin.exported}`));
@@ -1277,6 +1525,8 @@ function unchangedMixins(modules, mainFile, mixins) {
       throw unreadable(module.file, module.lineOf(node), what);
     };
     const names = new Set();
+    // `local exported` for each composed mixin this module writes: the one export of it the reader follows.
+    const ownExports = new Set();
     for (const statement of module.program.body) {
       const from = statement.source ? moduleFile(module.file, statement.source.value) : null;
       if (statement.type === 'ImportDeclaration') {
@@ -1296,9 +1546,13 @@ function unchangedMixins(modules, mainFile, mixins) {
     for (const mixin of mixins) {
       if (moduleFile(mainFile, mixin.specifier) !== module.file) continue;
       const definition = exportDefinition(module, mixin.exported);
-      if (definition?.id?.type === 'Identifier') names.add(definition.id.name);
+      if (definition?.id?.type === 'Identifier') {
+        names.add(definition.id.name);
+        ownExports.add(`${definition.id.name} ${mixin.exported}`);
+      }
     }
-    if (names.size === 0 && !module.source.includes('import(')) continue;
+    // Review round 2 (F1): no module is skipped on how its text is spelt. `import /* … */ (` is a dynamic
+    // import as much as `import(` is, and only the parsed code tells them apart from a comment or a string.
     walk(module.program, (node, path, keys) => {
       if (node.type === 'ImportExpression') {
         const specifier = node.source.type === 'Literal' ? node.source.value : null;
@@ -1318,16 +1572,77 @@ function unchangedMixins(modules, mainFile, mixins) {
         && parent.callee.type === 'MemberExpression' && !parent.callee.computed
         && parent.callee.object.type === 'Identifier' && parent.callee.object.name === 'Object'
         && parent.callee.property.name === 'assign';
+      // Review round 2: a mixin exported under another name (F2) is a second name for it that the reader does
+      // not follow, and Object.prototype's reflective members (F5) change it, or hand it on, without a write.
+      const exportedAs = parent.type === 'ExportSpecifier' ? keyName(parent.exported) : undefined;
+      const reflective = member && !parent.computed && REFLECTIVE.has(parent.property.name);
       const unchanged = role === 'reference' && ((parent === call && key === 'arguments') || copiedFrom
         || (parent.type === 'CallExpression' && key === 'callee')
-        || parent.type === 'ExportSpecifier'
-        || (member && !parent.computed && !writeOf(path.slice(0, -1), keys.slice(0, -1))));
+        || (exportedAs !== undefined && ownExports.has(`${node.name} ${exportedAs}`))
+        || (member && !parent.computed && !reflective && !writeOf(path.slice(0, -1), keys.slice(0, -1))));
       if (unchanged) return;
-      const how = role === 'target' ? 'is assigned'
-        : !member ? 'is used as a value'
-          : parent.computed ? 'is reached by a computed name' : 'has a property written or deleted';
-      refuse(node, `${node.name}, a composed mixin, ${how} here. Object.assign copies what a mixin holds when ` +
+      const how = role === 'target' ? 'is assigned here'
+        : exportedAs !== undefined ? `is exported here as ${exportedAs}, a second name the reader does not follow`
+          : !member ? 'is used as a value here'
+            : parent.computed ? 'is reached by a computed name here'
+              : reflective ? `is reached here through Object.prototype's ${parent.property.name}, which can change ` +
+                'it, or hand it on, without a write' : 'has a property written or deleted here';
+      refuse(node, `${node.name}, a composed mixin, ${how}. Object.assign copies what a mixin holds when ` +
         'main.js loads, so a mixin is changed only where it is written');
+    });
+  }
+}
+
+/**
+ * Refuse a module in `modules` that could change the built-in Object, whose
+ * assign composes the app (review round 2, F6: findComposition rules out a
+ * module-level Object in main.js, which does not make `Object.assign` the
+ * built-in). The global Object may be reached only as `Object.<name>` for one
+ * of its own members, read or called and never written, nor anything under it
+ * (`Object.assign = …`, `delete Object.assign`, `Object.prototype.x = …`);
+ * Object.prototype only through a member that only reads it, or compared; and
+ * Object itself only so, or compared, never as a value (an alias,
+ * `Object.defineProperty(Object, …)`) or through another object
+ * (`globalThis.Object`). A built-in reached any other way, as through a global
+ * object a service is handed, is taken as intact.
+ */
+function untouchedObject(modules) {
+  const own = new Set(Object.getOwnPropertyNames(Object));
+  const compares = node => node?.type === 'BinaryExpression' && ['===', '!==', '==', '!=', 'instanceof'].includes(node.operator);
+  for (const module of modules.values()) {
+    const refuse = (node, what) => {
+      throw unreadable(module.file, module.lineOf(node), `${what}, so Object.assign(RoutePlotter.prototype, …) may ` +
+        'not be the built-in that copies each mixin');
+    };
+    walk(module.program, (node, path, keys) => {
+      if (node.type === 'MemberExpression' && keyName(node.property, node.computed) === 'Object') {
+        refuse(node, 'the global Object is reached here through another object');
+      }
+      if (node.type !== 'Identifier' || node.name !== 'Object') return;
+      const { role } = identifierRole(path, keys);
+      if (role === 'name' || role === 'binding' || scopeOf(path, 'Object')) return;
+      if (role === 'target') refuse(node, 'the global Object is assigned here');
+      const parent = path.at(-2);
+      if (parent.type !== 'MemberExpression' || keys.at(-1) !== 'object') {
+        if (compares(parent)) return;
+        refuse(node, `the global Object is used here as a value (${valueUse(module, parent)})`);
+      }
+      const name = keyName(parent.property, parent.computed);
+      if (name === undefined) refuse(node, 'the global Object is reached here by a computed name');
+      if (!own.has(name)) refuse(node, `Object.${name} is not one of the built-in Object's own members`);
+      let top = path.length - 2;
+      while (path[top - 1].type === 'MemberExpression' && keys[top] === 'object') top -= 1;
+      if (writeOf(path.slice(0, top + 1), keys.slice(0, top + 1))) {
+        refuse(node, `Object.${name}${top < path.length - 2 ? '…' : ''} is written here`);
+      }
+      if (name !== 'prototype') return;
+      const holder = path.at(-3);
+      const readOnly = holder.type === 'MemberExpression' && keys.at(-2) === 'object' && !holder.computed
+        && READ_ONLY_INHERITED.has(holder.property.name);
+      if (!readOnly && !compares(holder)) {
+        refuse(node, 'Object.prototype is used here other than read through a member that only reads it, or compared, ' +
+          'so what every object inherits could change');
+      }
     });
   }
 }
@@ -1359,7 +1674,7 @@ function classMembers(module, className) {
     if (name === undefined) throw unreadable(file, lineOf(member.key), `a computed member name in class ${className} that is not a constant`);
     const kind = member.type === 'PropertyDefinition' ? 'field' : { constructor: 'method' }[member.kind] ?? member.kind;
     const entry = { name, kind, line: lineOf(member.key) };
-    if (kind === 'field') entry.storesFunction = isFunctionValue(member.value);
+    if (kind === 'field') Object.assign(entry, { storesFunction: isFunctionValue(member.value), ...bindsMember(member.value) });
     if (member.key.type === 'PrivateIdentifier') members.privates.push(entry);
     else if (member.static) members.statics.push(entry);
     else if (kind === 'field') members.fields.push(entry);
@@ -1377,12 +1692,38 @@ function classMembers(module, className) {
   return members;
 }
 
-/** Whether an expression always gives a function: a function or arrow written there, or a `.bind(…)` of one. */
+/**
+ * Whether an expression gives a function: a function or arrow written there,
+ * or a `.bind(…)` that bindsOf() reads, of one of those or of the app's own
+ * member, which appCallables() then holds to be a function itself.
+ */
 function isFunctionValue(node) {
   if (node?.type === 'FunctionExpression' || node?.type === 'ArrowFunctionExpression') return true;
-  const { callee } = node?.type === 'CallExpression' && !node.optional ? node : {};
-  return callee?.type === 'MemberExpression' && !callee.computed && !callee.optional && callee.property.name === 'bind';
+  return bindsOf(node) !== undefined;
 }
+
+/**
+ * What a plain `.bind(…)` call binds, when the reader can tell it is
+ * Function.prototype.bind: `true` for a function or arrow written there, or the
+ * name of the app's own member it is called on (`this.name.bind(…)`,
+ * `app.name.bind(…)`), which must itself be a function the app has. Undefined
+ * for any other call. Review round 2 (F4): any other object may have a method
+ * named bind (`source.bind()`) that returns anything.
+ */
+function bindsOf(node) {
+  if (node?.type !== 'CallExpression' || node.optional) return undefined;
+  const { callee } = node;
+  if (callee.type !== 'MemberExpression' || callee.computed || callee.optional || callee.property.name !== 'bind') return undefined;
+  const target = callee.object;
+  if (target.type === 'FunctionExpression' || target.type === 'ArrowFunctionExpression') return true;
+  const onApp = target.type === 'MemberExpression' && !target.computed && !target.optional
+    && target.property.type === 'Identifier'
+    && (target.object.type === 'ThisExpression' || (target.object.type === 'Identifier' && target.object.name === 'app'));
+  return onApp ? target.property.name : undefined;
+}
+
+/** A write's or field's `binds`, when what it stores is the bound copy of one of the app's own members. */
+const bindsMember = node => (typeof bindsOf(node) === 'string' ? { binds: bindsOf(node) } : {});
 
 /**
  * The object literals a module writes its composed mixins (`exportedNames`)
@@ -1464,13 +1805,15 @@ function thisVerdict(path, keys, { appClass, mixinObjects }) {
 /**
  * How the member expression at the end of `path` is written, if it is: an
  * assignment (`operator` its own; `storesFunction` when it is `=` of a
- * function), `++`/`--`, `delete`, or a destructuring or for-in/of target.
+ * function, and `binds` when that is the bound copy of the app's member of that
+ * name), `++`/`--`, `delete`, or a destructuring or for-in/of target.
  */
 function writeOf(path, keys) {
   const holder = path.at(-2);
   const key = keys.at(-1);
   if (holder.type === 'AssignmentExpression' && key === 'left') {
-    return { operator: holder.operator, storesFunction: holder.operator === '=' && isFunctionValue(holder.right) };
+    const stores = holder.operator === '=' && isFunctionValue(holder.right);
+    return { operator: holder.operator, storesFunction: stores, ...(stores ? bindsMember(holder.right) : {}) };
   }
   if (holder.type === 'UpdateExpression') return { operator: holder.operator, storesFunction: false };
   if (holder.type === 'UnaryExpression' && holder.operator === 'delete') return { operator: 'delete', storesFunction: false };
@@ -1530,8 +1873,9 @@ function guardsOf(path) {
 /**
  * The helper a call hands the app to: a function declared at the top level of,
  * or imported from, a module the reader reads, which takes the app as its own
- * `app` parameter, so the reader reads what it does with it. The name is
- * looked up from the call (`path` ends inside it), so a function or block that
+ * `app` parameter, so the reader reads what it does with it, and whose name is
+ * never assigned again, so the call reaches that function. The name is looked
+ * up from the call (`path` ends inside it), so a function or block that
  * declares the same name around the call is not mistaken for the helper.
  * Anything else is refused, with the line of the call.
  */
@@ -1551,8 +1895,35 @@ function helperTaking(modules, module, path, callee, index) {
     refuse(`whose parameter there (${found.module.file}:${found.module.lineOf(found.node)}) is not its own app, ` +
       'so what it does with the app is not read');
   }
+  // Review round 2 (F3): the declaration read is the helper only while its name, where it is called and where it
+  // is declared, is never assigned another function.
+  for (const [where, name] of [[module, callee.name], [found.module, found.node.id?.name]]) {
+    const write = name && moduleLevelWrites(where).get(name);
+    if (write) {
+      refuse(`whose name ${name} is assigned again at ${where.file}:${where.lineOf(write)}, so the call may not ` +
+        'reach the function read');
+    }
+  }
   return found;
 }
+
+const reassigned = new WeakMap();
+
+/** The module-level names a module assigns (`=`, any operator, `++`, a destructuring or for-in/of target), each with the first place. */
+function moduleLevelWrites(module) {
+  if (!reassigned.has(module)) {
+    const writes = new Map();
+    walk(module.program, (node, path, keys) => {
+      if (node.type !== 'Identifier' || writes.has(node.name) || identifierRole(path, keys).role !== 'target') return;
+      if (scopeOf(path, node.name) === module.program) writes.set(node.name, node);
+    });
+    reassigned.set(module, writes);
+  }
+  return reassigned.get(module);
+}
+
+/** Whether a function takes the app as its own `app` parameter. */
+const takesApp = fn => fn.params.some(parameter => parameter.type === 'Identifier' && parameter.name === 'app');
 
 /** How an expression uses the app as a value, in a few words, for a refusal. */
 function valueUse(module, parent) {
@@ -1565,19 +1936,66 @@ function valueUse(module, parent) {
 /**
  * The calls and writes a module makes on the app by name, read in the context
  * appContext() gives: `calls` ({ receiver, name, line, optional, guards }),
- * `writes` ({ receiver, name, line, operator, storesFunction }), `dynamic`
- * reaches it cannot name ({ line, shape }), for the checks to refuse, and
- * `handoffs` of the app to a helper ({ receiver, helper, file, line }). Any
- * other use of the app is refused here, with its file and line.
+ * `writes` ({ receiver, name, line, operator, storesFunction, binds?, and for
+ * `app` the function that takes it, `taker` }), `dynamic` reaches it cannot
+ * name ({ line, shape }), for the checks to refuse, `handoffs` of the app to a
+ * helper ({ receiver, helper, file, line }), and the `helpers` (their function
+ * nodes) the app is handed to. Any other use of the app is refused here, with
+ * its file and line: among them Object.prototype's reflective members on it,
+ * `arguments` where a function takes it as `app`, and `window.app`.
  */
 function appReferences(module, context) {
   const { file, program, lineOf } = module;
-  const found = { calls: [], writes: [], dynamic: [], handoffs: [] };
+  const found = { calls: [], writes: [], dynamic: [], handoffs: [], helpers: [] };
   walk(program, (node, path, keys) => {
     const refuse = what => {
       throw unreadable(file, lineOf(node), what);
     };
     let receiver;
+    let taker;
+    if (node.type === 'Identifier' && node.name === 'arguments') {
+      // Review round 2 (F3): a function that takes the app as `app` holds it in `arguments` too, past that name.
+      // An arrow has no arguments of its own: it reaches those of the function around it.
+      if (identifierRole(path, keys).role === 'name') return;
+      const own = path.findLast(ancestor => FUNCTIONS.has(ancestor.type) && ancestor.type !== 'ArrowFunctionExpression');
+      if (own && takesApp(own)) {
+        refuse('arguments in a function that takes the app as app holds the app past that name, which the reader ' +
+          'does not follow');
+      }
+      return;
+    }
+    if (node.type === 'Identifier' && GLOBAL_OBJECTS.has(node.name)) {
+      // Review round 2 (F7): main.js publishes the app as window.app. In the files read for the app, that alias is
+      // refused wherever it is reached but the one statement that publishes it, and so is the global object as a
+      // value, but handed to a service the app holds, like any service call: past either, the app is not followed.
+      const { role } = identifierRole(path, keys);
+      if (role === 'name' || role === 'binding' || scopeOf(path, node.name)) return;
+      const parent = path.at(-2);
+      const key = keys.at(-1);
+      if (role === 'reference' && parent.type === 'MemberExpression' && key === 'object') {
+        const name = keyName(parent.property, parent.computed);
+        if (name === undefined) {
+          refuse(`${node.name}[…] may reach the app main.js publishes as window.app, which the reader does not follow`);
+        }
+        if (name !== 'app') return;
+        const publish = path.at(-3);
+        const published = context.appClass && publish.type === 'AssignmentExpression' && keys.at(-2) === 'left'
+          && publish.operator === '=' && publish.right.type === 'NewExpression'
+          && publish.right.callee.type === 'Identifier' && publish.right.callee.name === context.appClass.id.name;
+        if (published) return;
+        refuse(`${node.name}.app is the app main.js publishes, which the reader does not follow: reach the app as ` +
+          'this, or as the app parameter of a helper it is handed to');
+      }
+      // A service call, `this.service.method(window)` or `app.service.method(window)`.
+      const holder = parent.callee?.object;
+      const service = role === 'reference' && parent.type === 'CallExpression' && key === 'arguments'
+        && parent.callee.type === 'MemberExpression' && !parent.callee.computed
+        && holder.type === 'MemberExpression' && !holder.computed
+        && (holder.object.type === 'ThisExpression' || (holder.object.type === 'Identifier' && holder.object.name === 'app'));
+      if (service) return;
+      refuse(`${node.name} is ${role === 'target' ? 'assigned here' : `used here as a value (${valueUse(module, parent)})`}, ` +
+        'through which the app main.js publishes as window.app could be reached unread');
+    }
     if (node.type === 'ThisExpression' || node.type === 'Super') {
       const verdict = thisVerdict(path, keys, context);
       if (verdict === 'other') return;
@@ -1594,9 +2012,8 @@ function appReferences(module, context) {
       if (role === 'name' || (role === 'binding' && FUNCTIONS.has(owner.type) && direct)) return;
       if (role === 'binding') refuse('app is declared here other than as a function\'s own parameter, the one way the reader reads app as the app');
       if (role === 'target') refuse('app is assigned here, so the reader cannot tell what it holds');
-      const taken = path.some(ancestor => FUNCTIONS.has(ancestor.type)
-        && ancestor.params.some(parameter => parameter.type === 'Identifier' && parameter.name === 'app'));
-      if (!taken) refuse('app is used here, but no function around it takes app as a parameter');
+      taker = path.findLast(ancestor => FUNCTIONS.has(ancestor.type) && takesApp(ancestor));
+      if (!taker) refuse('app is used here, but no function around it takes app as a parameter');
       receiver = 'app';
     } else {
       return;
@@ -1616,6 +2033,10 @@ function appReferences(module, context) {
       if (name === 'constructor' || name === '__proto__') {
         refuse(`${receiver}.${name} reaches the app's class or prototype, which the reader cannot follow`);
       }
+      if (REFLECTIVE.has(name)) {
+        refuse(`${receiver}.${name} is Object.prototype's ${name}, which changes the app, or hands it on, with no ` +
+          'call or write by name the reader could check');
+      }
       const holder = path.at(-3);
       const holderKey = keys.at(-2);
       if ((holder.type === 'CallExpression' && holderKey === 'callee') || (holder.type === 'TaggedTemplateExpression' && holderKey === 'tag')) {
@@ -1624,7 +2045,7 @@ function appReferences(module, context) {
         refuse(`new ${receiver}.${name}(…) constructs through the app, which the reader does not check`);
       } else {
         const write = writeOf(path.slice(0, -1), keys.slice(0, -1));
-        if (write) found.writes.push({ receiver, name, line, ...write });
+        if (write) found.writes.push({ receiver, name, line, ...write, ...(taker ? { taker } : {}) });
       }
       return;
     }
@@ -1634,6 +2055,7 @@ function appReferences(module, context) {
       if (callee.type === 'Identifier') {
         const helper = helperTaking(context.modules, module, path, callee, index);
         found.handoffs.push({ receiver, helper: callee.name, file: helper.module.file, line });
+        found.helpers.push(helper.node);
         return;
       }
       const method = callee.type === 'MemberExpression' && !callee.computed ? callee.property.name : undefined;
@@ -1656,19 +2078,19 @@ function appReferences(module, context) {
 
 /**
  * What each name a call on the app could use holds once main.js has loaded:
- * Object.prototype's functions; the class's members, as `effective` gives
- * them; each mixin's values over them, in the order main.js composes them;
- * and, under a name no member has, what the app stores on itself, a function
- * only when every write of that name (and any class field of it) gives one.
- * Each entry says whether a call runs it (`callable`), and what it is.
+ * Object.prototype's functions that only read it (the rest are refused on the
+ * app); the class's members, as `effective` gives them; each mixin's values
+ * over them, in the order main.js composes them; and, under a name no member
+ * has, what the app stores on itself, a function only when every write of that
+ * name (and any class field of it) gives one. A bound copy gives one only when
+ * what it binds is a function the app has; a write through `app` counts only in
+ * a helper that `scans` record the app handed to, since a function that merely
+ * names its parameter app may be handed anything. Each entry says whether a
+ * call runs it (`callable`), and what it is.
  */
 function appCallables({ effective, fields }, mixins, scans) {
   const reach = new Map();
-  for (const name of Object.getOwnPropertyNames(Object.prototype)) {
-    if (name !== 'constructor' && typeof Object.prototype[name] === 'function') {
-      reach.set(name, { callable: true, what: `Object.prototype.${name}` });
-    }
-  }
+  for (const name of READ_ONLY_INHERITED) reach.set(name, { callable: true, what: `Object.prototype.${name}` });
   for (const [name, member] of effective) {
     // The constructor is not callable without `new`, so a call to it is not counted as reaching one.
     reach.set(name, {
@@ -1683,24 +2105,31 @@ function appCallables({ effective, fields }, mixins, scans) {
   }
   const members = new Set([...effective.keys(), ...mixins.flatMap(mixin => Object.keys(mixin.object ?? {}))]);
   const stored = new Map();
-  const store = (name, isFunction, where) => {
+  // Review round 2 (F3, F4): a write is evidence of a function only on the app, and a bound copy only of a function.
+  const handed = new Set(scans.flatMap(scan => scan.helpers ?? []));
+  const store = ({ name, storesFunction, binds, receiver, taker }, where) => {
     const entry = stored.get(name) ?? { always: true, not: [] };
-    if (!isFunction) {
+    const why = receiver === 'app' && !handed.has(taker)
+      ? `${where} writes the app parameter of a function no call read hands the app`
+      : !storesFunction ? `${where} stores something other than a function`
+        : binds !== undefined && reach.get(binds)?.callable !== true ? `${where} binds ${binds}, which is no method the app has`
+          : null;
+    if (why) {
       entry.always = false;
-      entry.not.push(where);
+      entry.not.push(why);
     }
     stored.set(name, entry);
   };
-  for (const field of fields) store(field.name, field.storesFunction, `${MAIN}:${field.line}`);
+  for (const field of fields) store(field, `${MAIN}:${field.line}`);
   for (const { file, writes } of scans) {
-    for (const write of writes) store(write.name, write.storesFunction, `${file}:${write.line}`);
+    for (const write of writes) store(write, `${file}:${write.line}`);
   }
   for (const [name, { always, not }] of stored) {
     // A write that hides a member is the instance-property check's to refuse.
     if (members.has(name)) continue;
     reach.set(name, always
       ? { callable: true, what: `the function the app stores as ${name}` }
-      : { callable: false, what: `${name}, which the app stores on itself as something other than a function at ${not.join(', ')}` });
+      : { callable: false, what: `${name}, which the app is not shown to hold as a function (${not.join('; ')})` });
   }
   return reach;
 }

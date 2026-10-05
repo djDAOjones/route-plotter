@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — TST-08 — The mixin composition is guarded from main.js itself
+
+**Decision:** TST-08 lands (PR #73): `tests/mixins.test.js` parses `src/` and holds the composition to one `Object.assign` of the listed mixins, no change to a mixin, no name hidden, and every call on the app by name resolving; a shape it cannot follow is refused with its line.
+
+**Rationale:** Codex review r2 found 13 probes passing all 30 guards; all 13 are refused now and pinned as in-memory fixtures (38 tests), and real `src/` passes. The text prefilter is gone; a mixin exported under another name, `arguments`, a reassigned helper, `.bind` on anything but a function, reflective members (`valueOf`, `__defineGetter__`, `constructor`) and writes to `Object` are refused. `window.app` is refused inside `main.js` and `src/app/` bar the one line that publishes it; outside them it stays unchecked, pinned as an exclusion (the run's call). Digest rule applied: house conventions → Testing and persistence.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — REL-703 — v3.2.703 ships CROWD-05
 
 **Decision:** v3.2.703 is live from deploy commit `56c2367` (tag `v3.2.703`), released under GATELESS-1 because CROWD-05's merge (`5e9e660`, PR #98) changed `src/` and `index.html`.
