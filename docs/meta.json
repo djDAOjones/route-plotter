@@ -223,7 +223,7 @@
       "format": "esm"
     },
     "src/core/PlayerCore.js": {
-      "bytes": 26275,
+      "bytes": 26811,
       "imports": [
         {
           "path": "src/services/BeaconRenderer.js",
@@ -3066,7 +3066,7 @@
       "format": "esm"
     },
     "src/app/pathTiming.js": {
-      "bytes": 31034,
+      "bytes": 31268,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -3881,13 +3881,13 @@
     }
   },
   "outputs": {
-    ".docs-build-KmphBl/app.js.map": {
+    ".docs-build-yrodA0/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3443626
+      "bytes": 3444459
     },
-    ".docs-build-KmphBl/app.js": {
+    ".docs-build-yrodA0/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3959,7 +3959,7 @@
           "bytesInOutput": 10487
         },
         "src/core/PlayerCore.js": {
-          "bytesInOutput": 7294
+          "bytesInOutput": 7261
         },
         "src/services/AnimationEngine.js": {
           "bytesInOutput": 12921
@@ -4190,7 +4190,7 @@
           "bytesInOutput": 1721
         },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 8669
+          "bytesInOutput": 8723
         },
         "src/app/persistence.js": {
           "bytesInOutput": 28862
@@ -4253,7 +4253,7 @@
           "bytesInOutput": 22752
         }
       },
-      "bytes": 1094798
+      "bytes": 1094819
     }
   }
 }
