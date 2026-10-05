@@ -118,7 +118,7 @@ describe('image asset archive round trips', () => {
   });
 
   test('each asset keeps its own bytes: two images of equal size do not trade places', async () => {
-    const assets = [pixelAsset('first'), pixelAsset('second', GREY_DATA_URL)];
+    const assets = [pixelAsset('z-first'), pixelAsset('a-second', GREY_DATA_URL)];
     expect(GREY_DATA_URL).not.toBe(PIXEL_DATA_URL);
     expect(assets[1].size).toBe(assets[0].size);
     const source = new ImageAssetService();
@@ -132,7 +132,7 @@ describe('image asset archive round trips', () => {
     const reloaded = await new ImageAssetService().importZip(await blobBytes(exported));
 
     const reloadedBytes = new Map(reloaded.imageAssets.map(asset => [asset.id, asset.base64]));
-    expect([...reloadedBytes.keys()]).toEqual(['first', 'second']);
+    expect([...reloadedBytes.keys()]).toEqual(['z-first', 'a-second']);
     for (const asset of assets) {
       expect(reloadedBytes.get(asset.id)).toBe(asset.base64);
     }
