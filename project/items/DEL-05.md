@@ -24,3 +24,4 @@ With a before/after browser check of the Tooltip system and the CSS. **P1**
 [gated: TST-04, TST-13 impl] — With a before/after browser check of the
 Tooltip system and the CSS. **P1**
 ```
+- 2026-10-05 — `src/components/Tooltip.js`, `src/config/tooltips.js` and `styles/tooltip.css` stay until UI-03 decides whether to reuse them: the session's call, from the Backlog status session's request, for the owner to confirm.

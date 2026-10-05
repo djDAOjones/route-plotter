@@ -28,6 +28,46 @@
 
 **Deferred:** none
 
+## 2026-10-05 — DEF-77 — The backlog takes the crowd "At journey end" defect, and in-place parameter help waits on the owner's word
+
+**Decision:** DEF-77 ("At journey end" has no visible effect) joins the found defects, runnable now, and UI-03 (in-place parameter help) waits after Phase 1 as a `[!]` line until the owner's word, because the owner asked the Backlog status session, on 2026-10-05, to hand both to this run for filing ("Hand to running chat (Recommended)").
+
+**Rationale:** the owner's words reached this run through that session's message and write-up, so they are quoted as relayed, not heard. On DEF-77's timing fix he said "your choice but no backwards compatibility needed", and that session chose both new-crowd defaults under which dots finish and a hint when none do: its choice under his delegation, recorded in the item's notes, not his words. On Respawn he said "Make Respawn vary". He placed UI-03 "After Phase 1 (Recommended)". The session's calls, for the owner to confirm: UI-03 is new feature work, which GATELESS-1 excludes ("no new feature work"), so it waits on his word rather than entering the run's queue; DEL-05 leaves the inert hover tooltip files in place until UI-03 decides; that session's six unverified triage candidates are wish lines. The owner's crowd explainer doc carries a known-issues note to update once DEF-77 ships.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — REL-697 — v3.2.697 ships SPL-06
+
+**Decision:** v3.2.697 is live from deploy commit `f0ec967` (tag `v3.2.697`), released under GATELESS-1 because SPL-06's merge (`c986fbf`, PR #75) changed the build.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full, from `route-plotter/`. (1) A clean `main` equal to `origin/main` at `c986fbf`; Pages `main` `/docs`, built at `c986fbf`, tagged `rollback-v3.2.696-c986fbf`. (2) `npm run check` green (97 files, 1,808 tests, 2 todo); `npm run push:dry-run` clean, so the new `build.js` built and checked the release itself. (3) `npm run push` committed `f0ec967`. (4) Verify, the Pages build and deploy green on `f0ec967`. (5) The `github-pages` deployment at `f0ec967`; all 22 published files SHA-256-identical to `docs/`; the live site ready ("Route Plotter v3.2.697"; every resource of its load answered 200, and the pane's one console error is the 404 of the session's own `version.json` probe on v3.2.694); the Open day route played (frames driven by hand: 3,002 ms, then to its end, after which no frame stayed queued) and exported, at a 1280×800 viewport, as MP4 (1920×1080, 13.6 s, `ftypisom`) and as HTML (its CSP, the project and the live `player.js` embedded byte for byte), captured in the page. The saves to disk stay owed (GATELESS-1, the owner's answers after chat 2).
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — REL-696 — v3.2.696 ships DEF-44
+
+**Decision:** v3.2.696 is live from deploy commit `183691f` (tag `v3.2.696`), released under GATELESS-1 because DEF-44's merge (`1ca1ee2`, PR #71) changed what ships.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full, from `route-plotter/`. (1) A clean `main` equal to `origin/main` at `1ca1ee2`; Pages `main` `/docs`, built at `1ca1ee2`, tagged `rollback-v3.2.695-1ca1ee2`. (2) `npm run check` green (96 files, 1,751 tests, 2 todo); `npm run push:dry-run` clean. (3) `npm run push` committed `183691f`. (4) Verify, the Pages build and deploy green on `183691f`. (5) The `github-pages` deployment at `183691f`; all 22 published files SHA-256-identical to `docs/`; the live site ready ("Route Plotter v3.2.696"; its console was not checked, a gap this record names); the Open day route played (frames driven by hand: 3,002 ms) and exported, at a 1280×800 viewport, as MP4 (1920×1080, 13.6 s, `ftypisom`) and as HTML (its CSP, the project and the live `player.js` embedded byte for byte), captured in the page; once the route had played to its end, no frame stayed queued. The saves to disk stay owed (GATELESS-1, the owner's answers after chat 2).
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — REL-695 — v3.2.695 ships DEF-53
+
+**Decision:** v3.2.695 is live from deploy commit `045257f` (tag `v3.2.695`), released under GATELESS-1 because DEF-53's merge (`9e9a46c`, PR #64) changed what ships.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full, from `route-plotter/`. (1) A clean `main` equal to `origin/main` at `9e9a46c`; Pages `main` `/docs`, built at `9e9a46c`, tagged `rollback-v3.2.694-9e9a46c`. (2) `npm run check` green (95 files, 1,720 tests, 2 todo); `npm run push:dry-run` clean. (3) `npm run push` committed `045257f`. (4) Verify, the Pages build and deploy green on `045257f`. (5) The `github-pages` deployment at `045257f`; all 22 published files SHA-256-identical to `docs/`; the live site ready ("Route Plotter v3.2.695"); the Open day route played (frames driven by hand: 3,002 ms) and exported, at a 1280×800 viewport, as MP4 (1920×1080, 13.6 s, `ftypisom`) and as HTML (its CSP, the project and the live `player.js` embedded byte for byte), captured in the page; the one console error was a 404 for the session's own probe of `version.json`, which is not published. The saves to disk stay owed (GATELESS-1, the owner's answers after chat 2).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — SPL-06 — build.js builds only when run as a script, and exports the checks a release applies
 
 **Decision:** SPL-06 lands (PR #75): `build.js` builds only when it is run as a script, so tests can import it, and it exports the checks a release applies (the image manifest, the index.html stamp and its check, the Pages inventory, the command line) and the publish and failed-build rollback steps, which act only on the paths they are given; every mode the repository uses runs as before, because TST-11 needs a `build.js` it can load.
