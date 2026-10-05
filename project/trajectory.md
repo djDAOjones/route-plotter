@@ -22,6 +22,7 @@
 ## Phase 1 — Land the big run's open pull requests
 
 - TST-08 — the mixin composition is guarded from the parsed source: `main.js` composes exactly the listed mixins and reaches the prototype nowhere else, nothing changes a mixin, and every call on the app by name reaches a function it has; what the reader cannot follow is refused with its line (2026-10-05) — see decisions
+- TST-14 — the restart script's safety checks can fail on a Mac as in CI, its stand-in tools answer only what they model, and the context menu has its first tests, acting on the waypoint right-clicked at the pointer (2026-10-05) — see decisions
 - DEF-64 — a branched route's legs are hovered and clicked along their own runs, trunk and each branch, a click selects the waypoint a leg leaves, and only a trunk leg offers the "+" (2026-10-05) — see decisions
 - TST-16 — the round-2 audit's predicates are tight: problem lists exact, ZIP round trips compare each image's own bytes, undo and redo announce counts past one, and DEF-12, DEF-22, DEF-25, CON-04 and CON-09 are pinned as they stand (2026-10-05) — see decisions
 - DEF-42 — a beacon style or pulse cycle chosen in the inspector retimes at once, and a branched route's timeline is composed afresh at every rebuild, so a pause or beacon edit there changes its total (2026-10-05) — see decisions
