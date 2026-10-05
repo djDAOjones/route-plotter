@@ -63,3 +63,4 @@
 - Path weights count the way back as an option, so a two-way path shows 34/33/33 while arriving dots split 50/50 (a candidate, unverified) — (from: DEF-77, 2026-10-05)
 - No tool inserts a junction node into an existing path (a candidate, unverified) — (from: DEF-77, 2026-10-05)
 - Re-roll pattern can be reverted only by Undo, because the seed is read-only (a candidate, unverified) — (from: DEF-77, 2026-10-05)
+- Update the owner's crowd explainer doc (its "At journey end" known-issues note and workaround) once DEF-77 ships — (from: DEF-77, 2026-10-05)
