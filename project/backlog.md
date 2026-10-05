@@ -20,7 +20,6 @@
 
 ### Phase 1 — Land the big run's open pull requests
 
-- [~] TST-08 — Mixin composition guards · Characterisation P1 — since 2026-10-01
 - [~] DEF-45 — Announcements overwrite each other · Accessibility P3 — since 2026-10-01
 - [~] TST-04 — Sidebar control and readout goldens · Characterisation P1 — since 2026-10-01
 - [~] DEF-28 — A failed recovery restore is silent · Live defect P2 — since 2026-10-01

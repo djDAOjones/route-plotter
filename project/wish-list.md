@@ -83,3 +83,4 @@
 - Context-menu Insert before/after and Rename on a multi-selection: today's tests use one selected waypoint, so a mutant acting on the primary instead of the right-clicked waypoint survives (TST-14 round 3, advisory) — (from: TST-14, 2026-10-05)
 - Check in Chromium: after a session restore the transport stands at the end while the path is at its start (seen in TST-05's jsdom transcript, unverified in a browser) — (from: TST-05, 2026-10-05)
 - Check in Chromium: two focus traps, first-run Help then Save, hand focus back and forth (seen in TST-05's jsdom transcript, unverified in a browser) — (from: TST-05, 2026-10-05)
+- Mixin guards: a built-in reached another way (a global handed to a service, `Function.prototype.bind` itself), a function changed through `Object.assign(f, src)` with a non-literal source on an alias, and `window.app` outside `main.js` and `src/app/` stay unchecked (TST-08 round 3) — (from: TST-08, 2026-10-05)
