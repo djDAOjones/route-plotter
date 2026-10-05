@@ -97,25 +97,33 @@ test.each([
 
   choose('editor-beacon-style', to);
 
+  expect(app.getWaypointById('ex-uon-2').beaconStyle).toBe(to);
+  if (to === 'none') expect(scheduleOf(app, 'ex-uon-2')).toBeUndefined();
+  else expect(scheduleOf(app, 'ex-uon-2')?.style).toBe(to);
   expect(timeline(app)).toEqual(await reopened(app));
-  if (to !== 'none') expect(scheduleOf(app, 'ex-uon-2')?.style).toBe(to);
 });
 
 test('a ripple made larger in the inspector pauses as long as it now lasts, at once', async () => {
   const app = await opened(openDay({ 'ex-uon-2': { beaconStyle: 'ripple', rippleMaxScale: 1000, rippleWait: false } }));
   select(app, 'ex-uon-2');
+  const before = timeline(app);
 
   choose('ripple-max-scale', 3000, 'input');
 
+  expect(app.getWaypointById('ex-uon-2').rippleMaxScale).toBe(3000);
+  expect(timeline(app)).not.toEqual(before);
   expect(timeline(app)).toEqual(await reopened(app));
 });
 
 test('a pulse given a slower cycle in the inspector pauses for its whole cycle, at once', async () => {
   const app = await opened(openDay({ 'ex-uon-2': { beaconStyle: 'pulse', pulseCycleSpeed: 2 } }));
   select(app, 'ex-uon-2');
+  const before = timeline(app);
 
   choose('pulse-cycle-speed', 8, 'input');
 
+  expect(app.getWaypointById('ex-uon-2').pulseCycleSpeed).toBe(8);
+  expect(timeline(app)).not.toEqual(before);
   expect(timeline(app)).toEqual(await reopened(app));
 });
 
@@ -194,30 +202,30 @@ test('a beacon edit undone, and redone, times the beacon as the project then has
 });
 
 test('a beacon edit in a constant-time project, undone and redone, times the beacon as the project then has it', async () => {
-  const app = await opened(openDay({ 'ex-uon-2': { beaconStyle: 'pop' } }, { mode: 'constant-time' }));
-  /** The timeline now, which must be what a rebuild of the project as it now is gives. */
-  const rebuilt = () => {
-    const now = timeline(app);
-    app.invalidateAnimationTiming();
-    expect(now).toEqual(timeline(app));
-    return now;
+  /** The timeline a constant-time project with this beacon has once rebuilt, in an app of its own. */
+  const rebuiltWith = async beaconStyle => {
+    const other = await opened(openDay({ 'ex-uon-2': { beaconStyle } }, { mode: 'constant-time' }));
+    other.invalidateAnimationTiming();
+    return timeline(other);
   };
+  const [asPop, asGrow] = [await rebuiltWith('pop'), await rebuiltWith('grow')];
+  expect(asGrow).not.toEqual(asPop);
+  expect(asGrow.legs?.length).toBeGreaterThan(0);
+  const app = await opened(openDay({ 'ex-uon-2': { beaconStyle: 'pop' } }, { mode: 'constant-time' }));
   select(app, 'ex-uon-2');
+
+  // Edit, Undo and Redo in a row: nothing rebuilds the app between them.
   choose('editor-beacon-style', 'grow');
   expect(app.getWaypointById('ex-uon-2').beaconStyle).toBe('grow');
-  expect(scheduleOf(app, 'ex-uon-2')?.style).toBe('grow');
-  const edited = rebuilt();
-  expect(edited.legs?.length).toBeGreaterThan(0);
+  expect(timeline(app)).toEqual(asGrow);
 
   app.undo();
   await timingSettled();
   expect(app.getWaypointById('ex-uon-2').beaconStyle).toBe('pop');
-  expect(scheduleOf(app, 'ex-uon-2')?.style).toBe('pop');
-  expect(rebuilt()).not.toEqual(edited);
+  expect(timeline(app)).toEqual(asPop);
 
   app.redo();
   await timingSettled();
   expect(app.getWaypointById('ex-uon-2').beaconStyle).toBe('grow');
-  expect(scheduleOf(app, 'ex-uon-2')?.style).toBe('grow');
-  expect(rebuilt()).toEqual(edited);
+  expect(timeline(app)).toEqual(asGrow);
 });
