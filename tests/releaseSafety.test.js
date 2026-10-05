@@ -65,13 +65,21 @@ describe('deployment helper safety', () => {
       buildSource.lastIndexOf('  } catch (error) {'),
       buildSource.lastIndexOf("    console.error('Build failed:', error);")
     );
-    const rollbackIndex = failureBlock.indexOf('fs.writeFileSync(VERSION_FILE, originalVersionContents)');
-    const cleanupIndex = failureBlock.indexOf('fs.rmSync(distDir, { recursive: true, force: true })');
+    // SPL-06 moved the rollback into rollBackFailedBuild; the failure path
+    // hands it the real version file and its pre-build bytes.
+    expect(failureBlock).toContain(
+      'rollBackFailedBuild(distDir, { isCheckBuild, versionFile: VERSION_FILE, originalVersionContents })'
+    );
+    const rollbackStart = buildSource.indexOf('export function rollBackFailedBuild(');
+    expect(rollbackStart).toBeGreaterThan(-1);
+    const rollbackBlock = buildSource.slice(rollbackStart, buildSource.indexOf('\n}\n', rollbackStart));
+    const rollbackIndex = rollbackBlock.indexOf('fs.writeFileSync(versionFile, originalVersionContents)');
+    const cleanupIndex = rollbackBlock.indexOf('fs.rmSync(distDir, { recursive: true, force: true })');
 
     expect(rollbackIndex).toBeGreaterThan(-1);
     expect(cleanupIndex).toBeGreaterThan(rollbackIndex);
-    expect(failureBlock).toContain('catch (cleanupError)');
-    expect(failureBlock).toContain('temporary output could not be removed');
+    expect(rollbackBlock).toContain('catch (cleanupError)');
+    expect(rollbackBlock).toContain('temporary output could not be removed');
   });
 
   test('built stylesheet references are cache-busted with the release version', () => {
