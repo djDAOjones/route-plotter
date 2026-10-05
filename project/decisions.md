@@ -24,6 +24,10 @@
 
 **Rationale:** the owner's words reached this run through that session's message and write-up, so they are quoted as relayed, not heard. On DEF-77's timing fix he said "your choice but no backwards compatibility needed", and that session chose both new-crowd defaults under which dots finish and a hint when none do: its choice under his delegation, recorded in the item's notes, not his words. On Respawn he said "Make Respawn vary". He placed UI-03 "After Phase 1 (Recommended)". The session's calls, for the owner to confirm: UI-03 is new feature work, which GATELESS-1 excludes ("no new feature work"), so it waits on his word rather than entering the run's queue; DEL-05 leaves the inert hover tooltip files in place until UI-03 decides; that session's six unverified triage candidates are wish lines. The owner's crowd explainer doc carries a known-issues note to update once DEF-77 ships.
 
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — REL-697 — v3.2.697 ships SPL-06
 
 **Decision:** v3.2.697 is live from deploy commit `f0ec967` (tag `v3.2.697`), released under GATELESS-1 because SPL-06's merge (`c986fbf`, PR #75) changed the build.
