@@ -107,6 +107,16 @@ export const INTERACTION = {
   DRAG_THRESHOLD: 3,              // Minimum pixels to consider a drag
   DOUBLE_CLICK_TIME: 300,         // Maximum ms between clicks for double-click
   LONG_PRESS_TIME: 500,           // Time for long press detection
+  // Parameter hints (ParamTooltip). A mouse resting this long on a hint's
+  // text opens it. Carbon's tooltip opens after 100 ms, but hint text sits
+  // in a dense panel and an open hint covers the row below it, so a pointer
+  // only passing over must not open one; 500 ms stays well inside the 1 s a
+  // response can take before it breaks the user's flow (Nielsen).
+  HINT_HOVER_OPEN_DELAY_MS: 500,
+  // Grace before a hint opened by hover closes once the pointer has left
+  // both its text and the hint, so the pointer can cross the gap between
+  // them (WCAG 1.4.13 Hoverable). Carbon's tooltip leave delay.
+  HINT_HOVER_CLOSE_DELAY_MS: 300,
   ZOOM_SENSITIVITY: 0.001,
   PAN_SENSITIVITY: 1
 };
