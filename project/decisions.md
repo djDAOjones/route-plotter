@@ -18,6 +18,26 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — REL-703 — v3.2.703 ships CROWD-05
+
+**Decision:** v3.2.703 is live from deploy commit `56c2367` (tag `v3.2.703`), released under GATELESS-1 because CROWD-05's merge (`5e9e660`, PR #98) changed `src/` and `index.html`.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full: clean `main` at `5e9e660`, Pages built there, tagged `rollback-v3.2.702-5e9e660`; fsck and the conflict-copy check clean; gate green; dry run clean; `npm run push` committed `56c2367`; Verify, the Pages build and deploy green (duplicate queued runs cancelled); all 22 files SHA-256-identical. Live, at 1280×800 after cleared storage: Open day played 3,002 ms, then ran to its end at 27,283 ms with no frame queued; the readout "Ends at 27.0 s — route 11.6 s, crowds finish +15.4 s"; MP4 1920×1080 29.3 s `ftypisom`; HTML with its CSP, the project and the live `player.js`; no failed resource. CROWD-05 changes export, so its save to disk is owed (a wish line).
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — REL-702 — v3.2.702 ships DEF-64; v3.2.701's exports saved and opened from disk
+
+**Decision:** v3.2.702 is live from deploy commit `aa53419` (tag `v3.2.702`), released under GATELESS-1 because DEF-64's merge (`8b969cc`, PR #77) changed `src/`; v3.2.701's export check is done, and v3.2.700's is superseded by it.
+
+**Rationale:** Releasing, in full: Pages' builds of `8b969cc` were cancelled twice in the queue (this account runs one job at a time) and a third request built; tagged `rollback-v3.2.701-8b969cc`; gate green; `npm run push` committed `aa53419`; all checks green; 22 files identical. Live smoke: 3,002 ms of 11,594, its end with no frame queued, MP4 1920×1080 13.6 s `ftypisom`, HTML embedded; two earlier runs read a stale session's 12,262 ms after the pane's example fetch timed out. Export save, through the owner's Chrome with his "please go ahead": `route-animation-2026-10-05T21-25-47.mp4` (5,090,666 bytes; `isom`, 1920×1080, 13.133 s) and `route-animation (1).html` (2,028,978 bytes; project, CSP and the live `player.js` byte for byte), opened from disk in Chrome: it loads the map, labels and controls with no console error, and the owner, watching it play: "it looks good to me". v3.2.700 is no longer live, so its save is superseded by 701's: the run's call, for the owner to confirm.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — GATELESS-1 — The owner confirms chat 10's three calls and orders an overhaul of the examples
 
 **Decision:** The owner confirms three of the run's calls (DEF-72 includes the branched-route slowdown; with a comet trail Preview stays longer than Edit by the trail; the Duration breakdown shows only when something runs past the route) and asks for a major overhaul of the built-in examples (EX-01, waiting on his direction).
