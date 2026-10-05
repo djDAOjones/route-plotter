@@ -9,6 +9,7 @@
 
 ## Phase 1 — Land the big run's open pull requests
 
+- DEF-42 — a beacon style or pulse cycle chosen in the inspector retimes at once, and a branched route's timeline is composed afresh at every rebuild, so a pause or beacon edit there changes its total (2026-10-05) — see decisions
 - TST-13 — the key table, element ids and HTML number ranges are pinned against the code, and the source reader reports what it cannot read (2026-10-05) — see decisions
 - SPL-06 — `build.js` builds only when run as a script, and exports the checks a release applies and its publish and rollback steps (2026-10-05) — see decisions
 - DEF-44 — a still editor goes idle: a frame that draws no camera puts the camera where it would come to rest, bounded residuals named (2026-10-05) — see decisions

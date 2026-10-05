@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-42 — A beacon edit in the inspector retimes at once, and a branched route's timeline is composed afresh
+
+**Decision:** DEF-42 lands (PR #62): a beacon style or pulse cycle chosen in the inspector rebuilds timing at once, as the motion settings do, and every rebuild composes a branched route's timeline afresh, because the editor went on timing a beacon by its old style, and a pause or beacon edit on a branched route kept the old total.
+
+**Rationale:** the round PLAN-1 named is finished. A constant-time edit, Undo and Redo, run without a rebuild between them, checks the model and the whole timeline (branch legs included) at each step against the timeline each style gives once rebuilt in an app of its own; with DEF-06 merged in, Undo retimes, and the case kills M1 (`retimeRoute` ignores `_timingDerived`), M2 (a rebuild never sets it) and Codex's round-2 mutant (a rebuild clears it). Its two other findings are fixed in the tests too: the style, ripple-scale and pulse-cycle cases assert the model, no schedule for none and a changed timeline before reopening, which kills its three mutants (scale not assigned, none ignored, a cycle set only on branch waypoints). Chromium, the Open day route's second major changed from ripple to grow and read 1.5 s later: live v3.2.697 kept ripple's schedule, and its rebuild kept the old total (11,594 ms); a build of the branch timed grow at once and fell to 11,356 ms, equal to a rebuild. Coalescing continuous-input rebuilds is a wish line. Digest rule applied: house conventions → Testing and persistence. DEF-57 and DEF-76 no longer wait on it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — TST-13 — The key table, element ids and HTML number ranges are pinned against the code
 
 **Decision:** TST-13 lands (PR #69): Help as it renders, each key listener's keys read from its source and pressed on its target, each element-id lookup against its page, and each range and number field's markup, code and handler are pinned, because DEL-05, DEF-13, DEF-15, DEF-32 and three found defects need that harness first.

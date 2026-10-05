@@ -16,7 +16,6 @@
 
 ### Phase 1 — Land the big run's open pull requests
 
-- [~] DEF-42 — A beacon-style change keeps the old schedule · Live defect P3 — since 2026-10-01
 - [~] TST-16 — Tighten the round-2 predicates · Characterisation P1 — since 2026-10-01
 - [~] DEF-64 — Branch legs miss hover and click · Live defect — since 2026-10-05
 - [~] TST-14 — Shell and ContextMenu safety tests · Characterisation P1 — since 2026-10-01
@@ -69,7 +68,7 @@
 - [ ] DEF-54 — Outside drop moves rows — since 2026-10-05 — blocked: TST-04
 - [ ] DEF-55 — List drop sends branch last — since 2026-10-05 — blocked: TST-04
 - [ ] DEF-56 — Constant-time open unscheduled — since 2026-10-05
-- [ ] DEF-57 — Branch majors lack clock — since 2026-10-05 — blocked: DEF-42
+- [ ] DEF-57 — Branch majors lack clock — since 2026-10-05
 - [ ] DEF-58 — Export edits change scene — since 2026-10-05
 - [ ] DEF-60 — Refused rejoin half-restored — since 2026-10-05
 - [ ] DEF-62 — Space at end stalls — since 2026-10-05
@@ -85,7 +84,7 @@
 - [ ] DEF-73 — Leg card misnames waypoint — since 2026-10-05 — blocked: DEF-64
 - [ ] DEF-74 — Redo restores no selection — since 2026-10-05 — blocked: TST-05
 - [ ] DEF-75 — Index check misses references — since 2026-10-05
-- [ ] DEF-76 — Leg-speed edit stales timing — since 2026-10-05 — blocked: DEF-42
+- [ ] DEF-76 — Leg-speed edit stales timing — since 2026-10-05
 - [ ] DEF-77 — "At journey end" has no visible effect — since 2026-10-05
 
 ## Icebox
