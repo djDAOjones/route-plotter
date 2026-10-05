@@ -34,7 +34,7 @@
 - TST-16, #76, r1: image bytes and history counts.
 - DEF-64, #77, r1: a check that is not equivalent, plus topology and ownership gaps; a Chromium check is owed.
 - TST-14, #74, r2: five gaps; the menu acts on the primary item, not the right-clicked one.
-- TST-08, #73, r2: seven blocking, text guards where the syntax tree was wanted. Its head already parses the syntax tree, so some may be answered; its item file reconciles them.
+- TST-08, #73, r2: seven blocking, all still open on its head, which already parsed the syntax tree when reviewed; its item file lists them.
 - TST-05, #72, r3: a lookup getter and payload summaries.
 - DEF-45, #70, r3: a bounded announcement queue, uncommitted at the reboot; it conflicts with `main`.
 - TST-04, #57, r8: an early-cached `addEventListener` bypasses the credit.
