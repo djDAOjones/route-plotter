@@ -18,7 +18,9 @@
  * lines, or with a comment inside it, is still a call, and one inside a
  * comment or a string is not; nor does a computed name, `doc['getElementById']`,
  * hide a call, and any other mention of the method (an alias, a string naming
- * it) fails as one the scan cannot read. Its fixtures below pin that. Every
+ * it) fails as one the scan cannot read. The method's name is matched as
+ * JavaScript reads it, so one spelled with escapes, in a string or in code,
+ * is the call it spells. Its fixtures below pin that. Every
  * call is accounted for: a literal id, checked against its page, or one of
  * the eleven ids built at run time, each listed with what it looks up and
  * whether the running-app flow reaches it.
@@ -391,6 +393,21 @@ describe('element ids (TST-13)', () => {
         { file: 'fixture.js', line: 1, args: ["'bracketed'"], id: 'bracketed' },
         { file: 'fixture.js', line: 2, args: null, id: null }
       ]);
+  });
+
+  test("a method name spelled with escapes is the call it spells (round 4's review)", () => {
+    const scan = source => callsOf(lex(source), 'getElementById').calls
+      .map(({ line, args }) => [line, args.length === 1 ? literalValue(args[0]) ?? args[0] : args]);
+    // `document['getElement\u{42}yId']('missing')` was neither a call nor a mention.
+    expect(scan("document['getElement\\u0042yId']('missing')")).toEqual([[1, 'missing']]);
+    expect(scan("document[`getElement\\x42yId`]('hex');\ndocument.getElement\\u{42}yId('in-code')"))
+      .toEqual([[1, 'hex'], [2, 'in-code']]);
+    // Named with escapes anywhere else, it is a mention, which no list accepts.
+    const named = "const method = 'getElement\\u0042yId'; document[method]('hidden')";
+    expect(callsOf(lex(named), 'getElementById')).toEqual({ calls: [], others: [named.indexOf("'getElement")] });
+    // An id spelled with an escape is not a literal the checks read: it counts as one built at run time.
+    expect(lookupCallsIn([{ file: 'fixture.js', lexed: lex("document.getElementById('play\\u002dbtn')") }]))
+      .toEqual([{ file: 'fixture.js', line: 1, args: ["'play\\u002dbtn'"], id: null }]);
   });
 
   test('which ids each file of src/ looks up, and how often, is the reviewed list', () => {

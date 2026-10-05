@@ -3,15 +3,16 @@
  * what it covered (TST-13).
  *
  * Every printable US character — the 95 printable ASCII characters, capital
- * letters included — and the 297 named keys of the UI Events `key` list (W3C,
- * "UI Events KeyboardEvent key Values"), with the function keys from F1 to
- * F24: 392 keys. `tests/keyTable.test.js` pins that count and content. A
- * handler that compares `event.key` with literals can only react to a key
- * outside this domain through a literal, which the source checks there hold
- * to it.
+ * letters included — and 297 named keys from the UI Events `key` list (W3C,
+ * "UI Events KeyboardEvent key Values"): the listed named keys, F1–F24 and
+ * Soft1–Soft4. The list allows more (F25, Soft8, an application's own names),
+ * so this is a chosen selection, not every named key: 392 keys.
+ * `tests/keyTable.test.js` pins that count and content. A handler that
+ * compares `event.key` with literals can only react to a key outside this
+ * domain through a literal, which the source checks there hold to it.
  */
 
-/** The named keys, by the list's sections. */
+/** The listed named keys, F1–F24 and Soft1–Soft4, by the list's sections. */
 export const NAMED_KEYS = [
   'Unidentified',
   // Modifier keys
@@ -76,5 +77,5 @@ export const PRINTABLE_KEYS = [
   ...'`~!@#$%^&*()-_=+[{]}\\|;:\'",<.>/? '
 ];
 
-/** Every printable US character, and every named key. */
+/** Every printable US character, and the listed named keys, F1–F24 and Soft1–Soft4. */
 export const CANDIDATE_KEYS = [...PRINTABLE_KEYS, ...NAMED_KEYS];

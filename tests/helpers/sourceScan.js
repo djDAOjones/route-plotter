@@ -10,6 +10,13 @@
  * decides whether `/` starts a regular expression from the character before
  * it, which is the usual rule and holds for this code base; `tests/elementIds`
  * pins it on small fixtures.
+ *
+ * A name is compared as JavaScript reads it, not as it is spelled (round 4's
+ * review): a string's escapes are decoded before its value is compared
+ * (`'key\x64own'` names keydown), a method name spelled with an escape in code
+ * (`getElement\u{42}yId`) is the call it spells, and the key listener scan,
+ * which finds the event and its helpers by their spelling, reports every name
+ * spelled with one rather than reading past it.
  */
 
 import { readdirSync, readFileSync } from 'node:fs';
@@ -94,7 +101,8 @@ export function lex(source) {
     if (char === '\'' || char === '"') {
       let index = at + 1;
       while (index < source.length && source[index] !== char && source[index] !== '\n') {
-        index += source[index] === '\\' ? 2 : 1;
+        // An escape is two characters; a line continuation written \r\n is three.
+        index += source[index] !== '\\' ? 1 : source.startsWith('\r\n', index + 1) ? 3 : 2;
       }
       mark(at, index + 1, 's');
       at = index + 1;
@@ -232,9 +240,44 @@ function receiverEnding(code, end) {
     .replace(/\?\./g, '.') ?? '';
 }
 
-/** Every string literal in the code (quoted, or a template with no `${`), as its value and span. */
-function stringsIn(lexed) {
+/** One escape: a code point, a code unit, a byte in hex or octal, a line continuation, or a character. */
+const ESCAPE = /\\(?:u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([0-3][0-7]{0,2}|[4-7][0-7]?)|(\r\n|[\n\r\u{2028}\u{2029}])|([^]))/gu;
+const SINGLE_ESCAPES = { b: '\b', f: '\f', n: '\n', r: '\r', t: '\t', v: '\v' };
+
+/**
+ * A string's text, or a name's, with its escapes decoded as JavaScript reads
+ * them: `key\x64own` and `key\u{64}own` are `keydown`.
+ */
+function unescaped(text) {
+  return text.replace(ESCAPE, (escape, point, unit, hex, octal, newline, other) => {
+    if (point !== undefined) return parseInt(point, 16) <= 0x10ffff ? String.fromCodePoint(parseInt(point, 16)) : escape;
+    if (unit !== undefined || hex !== undefined) return String.fromCharCode(parseInt(unit ?? hex, 16));
+    if (octal !== undefined) return String.fromCharCode(parseInt(octal, 8));
+    if (newline !== undefined) return '';
+    return SINGLE_ESCAPES[other] ?? other;
+  });
+}
+
+/** A name in code: its characters, and escapes standing for them. */
+const NAME_WITH_ESCAPES = /(?:[\w$]|\\u(?:[0-9a-fA-F]{4}|\{[0-9a-fA-F]+\}))+/g;
+
+/**
+ * Every name in the code spelled with an escape (`addEvent\u{4c}istener`,
+ * `\u{65}` for `e`): its text, the name it spells, and its span.
+ */
+function escapedNames(lexed) {
   const found = [];
+  for (const match of lexed.code.matchAll(NAME_WITH_ESCAPES)) {
+    if (match[0].includes('\\') && lexed.kind[match.index] === 'c') {
+      found.push({ text: match[0], name: unescaped(match[0]), from: match.index, to: match.index + match[0].length });
+    }
+  }
+  return found;
+}
+
+/** Each run of string or template text in the code, its delimiters included, with its span. */
+function textRuns(lexed) {
+  const runs = [];
   const { kind, source } = lexed;
   let at = 0;
   while (at < source.length) {
@@ -244,13 +287,21 @@ function stringsIn(lexed) {
     }
     let end = at;
     while (end < source.length && kind[end] === kind[at]) end += 1;
-    const quote = source[at];
-    if ('\'"`'.includes(quote) && end - at >= 2 && source[end - 1] === quote) {
-      found.push({ value: source.slice(at + 1, end - 1), from: at, to: end });
-    }
+    runs.push({ text: source.slice(at, end), from: at, to: end });
     at = end;
   }
-  return found;
+  return runs;
+}
+
+/**
+ * Every string literal in the code (quoted, or a template with no `${`): its
+ * value as JavaScript reads it, escapes decoded; its text as written, `raw`;
+ * and its span.
+ */
+function stringsIn(lexed) {
+  return textRuns(lexed)
+    .filter(({ text }) => text.length >= 2 && '\'"`'.includes(text[0]) && text.at(-1) === text[0])
+    .map(({ text, from, to }) => ({ value: unescaped(text.slice(1, -1)), raw: text.slice(1, -1), from, to }));
 }
 
 /**
@@ -258,7 +309,9 @@ function stringsIn(lexed) {
  * and each mention that is not a call. A call is `name(…)`, `name?.(…)`, or a
  * computed member, `obj['name'](…)`; a string naming `name` anywhere else,
  * and any other mention (an alias, `.bind`, a feature test), is in `others`,
- * so a scan that checks `others` is empty cannot be dodged by spelling.
+ * so a scan that checks `others` is empty cannot be dodged by spelling. The
+ * name is matched as JavaScript reads it, escapes and all (round 4's review):
+ * `obj['getElement\u{42}yId'](…)` and `obj.getElement\u{42}yId(…)` are calls.
  *
  * @returns {{ calls: Array<{index: number, line: number, args: string[], spans: number[][],
  *   receiver: string}>, others: number[] }}
@@ -298,6 +351,12 @@ export function callsOf(lexed, name) {
     const open = lexed.code[bracket] === '[' && lexed.code[after] === ']' ? openAfter(after + 1) : -1;
     if (open === -1) others.push(from);
     else callAt(from, open, receiverEnding(lexed.code, bracket));
+  }
+  for (const { name: spelled, from, to } of escapedNames(lexed)) {
+    if (spelled !== name) continue;
+    const open = openAfter(to);
+    if (open === -1) others.push(from);
+    else callAt(from, open, receiverEnding(lexed.code, from));
   }
   calls.sort((a, b) => a.index - b.index);
   others.sort((a, b) => a - b);
@@ -449,11 +508,105 @@ function methodAt(lexed, at) {
   return { params: lexed.code.slice(open + 1, close), start: body, end: closing(lexed, body) + 1 };
 }
 
+/** An assignment operator, plain or compound, at the start of a text. */
+const ASSIGNMENT = /^(?:=(?![=>])|(?:\*\*|<<|>>>?|&&|\|\||\?\?|[-+*/%&|^])=)/;
+/** Words a `(` follows when it is not a call's. */
+const NOT_CALLEES = new Set([...NOT_CALLS, ...WORDS_BEFORE_REGEX, 'function', 'class']);
+
+/**
+ * Whether a use of a followed name, from `start` (the name, or the `this`
+ * before it) to `end`, only reads what the name holds: it calls it
+ * (`name(…)`, `name?.(…)`), reads a member of it (`name.bind(…)`), or is the
+ * whole of an argument (`f(a, name)`) or, for `this.name`, of a condition
+ * (`if (this.name)`). A write, a parameter or another binding of the name is
+ * none of these.
+ */
+function onlyRead(lexed, start, end, member) {
+  const { code, kind } = lexed;
+  const after = skipSpace(code, end);
+  const before = tokenBefore(lexed, start);
+  if (kind[after] === 'c' && (code[after] === '(' || code[after] === '.' ||
+    (code.startsWith('?.', after) && !/\d/.test(code[after + 2] ?? '')))) {
+    // A call or a member; not the name a generator or a class declares.
+    return member || (code[before] !== '*' &&
+      !/(?:^|[^\w$])(?:function|class)$/.test(code.slice(Math.max(0, before - 8), before + 1)));
+  }
+  if (before < 0 || kind[before] !== 'c' || !'(,'.includes(code[before]) ||
+    kind[after] !== 'c' || !'),'.includes(code[after])) {
+    return false;
+  }
+  // The whole of an argument: the `(` it is inside, past the arguments before it.
+  let open = before;
+  for (let depth = 0; open >= 0; open -= 1) {
+    if (kind[open] !== 'c') continue;
+    if (')]}'.includes(code[open])) depth += 1;
+    else if ('([{'.includes(code[open])) {
+      if (depth === 0) break;
+      depth -= 1;
+    }
+  }
+  if (open < 0 || code[open] !== '(') return false;
+  const next = skipSpace(code, closing(lexed, open) + 1);
+  if (ASSIGNMENT.test(code.slice(next, next + 4))) return false; // `(name) = …`
+  if (member) return true;
+  // A call's brackets, not a parameter list: a name or a bracket before them, no arrow or body after.
+  const callee = tokenBefore(lexed, open);
+  const word = /[\w$]+$/.exec(code.slice(Math.max(0, callee - 30), callee + 1))?.[0];
+  return callee >= 0 && kind[callee] === 'c' && /[\w$)\]]/.test(code[callee]) && !NOT_CALLEES.has(word) &&
+    !code.startsWith('=>', next) && code[next] !== '{';
+}
+
+/**
+ * The uses of a followed name in its file that could leave it holding
+ * something other than what the scan read (round 4's review: a helper
+ * reassigned after its declaration was read as declared). For a bare name,
+ * every use but its declarations (`declared`) and those `onlyRead` allows, so
+ * a write, a parameter or another declaration of the name is one; for
+ * `this.name`, every use but its `this.name =` assignments and its methods
+ * (`declared`) and `this.name` as `onlyRead` allows, so a write of another
+ * kind, the name on another object or in a string is one. A name spelled with
+ * an escape is one either way.
+ */
+function usesBeyond(lexed, name, member, declared) {
+  const { code, kind } = lexed;
+  const reference = member ? `this.${name}` : name;
+  const found = new Set();
+  const where = at => `line ${lineAt(lexed.source, at)}`;
+  for (const match of code.matchAll(new RegExp(`(?<![\\w$])${name.replace(/[$]/g, '\\$')}(?![\\w$])`, 'g'))) {
+    const at = match.index;
+    if (kind[at] !== 'c' || declared.has(at)) continue;
+    const dot = tokenBefore(lexed, at);
+    const property = dot >= 0 && kind[dot] === 'c' && code[dot] === '.' && code[dot - 1] !== '.';
+    let read;
+    if (!member) {
+      // Another object's property is another name.
+      read = property || onlyRead(lexed, at, at + name.length, false);
+    } else {
+      const receiver = property ? tokenBefore(lexed, code[dot - 1] === '?' ? dot - 1 : dot) : -1;
+      read = receiver >= 3 && code.slice(receiver - 3, receiver + 1) === 'this' &&
+        !/[\w$.]/.test(code[receiver - 4] ?? '') && onlyRead(lexed, receiver - 3, at + name.length, true);
+    }
+    if (!read) found.add(`${where(at)} uses ${reference} other than by calling it or passing it on`);
+  }
+  for (const { name: spelled, from } of escapedNames(lexed)) {
+    if (spelled === name) found.add(`${where(from)} spells ${name} with an escape`);
+  }
+  if (member) {
+    for (const { value, from } of stringsIn(lexed)) {
+      if (value === name) found.add(`${where(from)} names ${name} in a string`);
+    }
+  }
+  return [...found];
+}
+
 /**
  * The functions a callee or a handler names in its file: `name` (a function
- * declaration, or a `const`/`let`/`var` holding a function) or `this.name` (a
- * function assigned to it, a method bound to it, or the method itself).
- * Returns the functions, or the reason they cannot be found.
+ * declaration, or a `const`/`let`/`var` holding a function) or `this.name`
+ * (each function assigned to it, a method bound to it, and the method
+ * itself). Returns the functions, or the reason they cannot be found or
+ * trusted: any other use of the name in its file that could make it hold
+ * something else (`usesBeyond`). A method another file assigns or overrides
+ * is beyond it.
  */
 export function functionsNamed(lexed, reference) {
   const { code } = lexed;
@@ -464,41 +617,46 @@ export function functionsNamed(lexed, reference) {
   const escaped = name.replace(/[$]/g, '\\$');
   const found = [];
   const unfound = [];
+  // Where each declaration, `this.name =` or method the scan reads spells the name.
+  const declared = new Set();
   const each = (pattern, take) => {
     for (const match of code.matchAll(pattern)) {
-      if (lexed.kind[match.index] === 'c') take(match);
+      if (lexed.kind[match.index] === 'c') take(match, match.index + match[0].lastIndexOf(name));
     }
   };
-  const methods = () => {
-    each(new RegExp(`^[ \\t]*(?:async[ \\t]+)?${escaped}[ \\t]*\\(`, 'gm'), match => {
-      const method = methodAt(lexed, match.index + match[0].lastIndexOf(name));
-      if (method) found.push(method);
-    });
-  };
   if (member) {
-    let assigned = 0;
-    each(new RegExp(`this\\.${escaped}\\s*=(?!=)`, 'g'), match => {
-      assigned += 1;
-      const at = match.index + match[0].length;
-      const value = code.slice(at, expressionEnd(lexed, skipSpace(code, at))).replace(/\s+/g, ' ').trim();
+    each(new RegExp(`this\\.${escaped}\\s*=(?!=)`, 'g'), (match, at) => {
+      declared.add(at);
+      const from = match.index + match[0].length;
+      const value = code.slice(from, expressionEnd(lexed, skipSpace(code, from))).replace(/\s+/g, ' ').trim();
       if (value === 'null') return;
       if (value === `this.${name}.bind(this)`) return;
-      const fn = functionAt(lexed, at);
+      const fn = functionAt(lexed, from);
       if (fn) found.push(fn);
       else unfound.push(`this.${name} is assigned ${value}`);
     });
-    if (found.length === 0) methods();
+    // The method as well, whether or not a function is assigned over it: a
+    // listener added before the assignment is the method.
+    each(new RegExp(`^[ \\t]*(?:async[ \\t]+)?${escaped}[ \\t]*\\(`, 'gm'), (match, at) => {
+      const method = methodAt(lexed, at);
+      if (!method) return;
+      declared.add(at);
+      found.push(method);
+    });
   } else {
-    each(new RegExp(`\\bfunction\\s+${escaped}\\s*\\(`, 'g'), match => {
+    each(new RegExp(`\\bfunction\\s+${escaped}\\s*\\(`, 'g'), (match, at) => {
+      declared.add(at);
       const fn = functionAt(lexed, match.index);
       if (fn) found.push(fn);
     });
-    each(new RegExp(`\\b(?:const|let|var)\\s+${escaped}\\s*=(?!=)`, 'g'), match => {
+    each(new RegExp(`\\b(?:const|let|var)\\s+${escaped}\\s*=(?!=)`, 'g'), (match, at) => {
+      declared.add(at);
       const fn = functionAt(lexed, match.index + match[0].length);
       if (fn) found.push(fn);
       else unfound.push(`${name} holds something other than a function`);
     });
   }
+  unfound.push(...usesBeyond(lexed, name, Boolean(member), declared));
   if (found.length === 0 && unfound.length === 0) unfound.push(`no function ${reference} in this file`);
   return { functions: found, unfound: unfound.join('; ') || null };
 }
@@ -649,12 +807,13 @@ function comparedWith(lexed, fn, at, after) {
  * first), the other properties it reads (`reads`), and every use of the
  * event it cannot account for (`unanalysed`). It follows the event into the
  * functions of the same file it is passed to, at whichever argument it is
- * passed as, and into a variable that holds the key. A comparison counts only
- * where every `case` of a `switch`, and every member of an `[…].includes`, is
- * a literal, and neither the literal nor the key is part of a larger
- * expression; the rest, the global `event` and `arguments` included, it
- * reports rather than ignores, so a check that `unanalysed` is empty fails
- * closed.
+ * passed as, where nothing else in the file uses their names
+ * (`functionsNamed`), and into a variable that holds the key. A comparison
+ * counts only where every `case` of a `switch`, and every member of an
+ * `[…].includes`, is a literal, and neither the literal nor the key is part
+ * of a larger expression; the rest, the global `event`, `arguments` and a
+ * name spelled with an escape included, it reports rather than ignores, so a
+ * check that `unanalysed` is empty fails closed.
  *
  * @param {Object} lexed - The handler's file, lexed
  * @param {{params: string, start: number, end: number}} fn - The handler
@@ -689,18 +848,25 @@ export function eventReads(lexed, fn, index = 0, seen = new Set()) {
 
   // The event under another name: the global `event`, bare or as a property
   // of the window through any of its names (`window.event`, `top['event']`),
-  // so any property named `event`; and a function's `arguments`.
+  // so any property named `event`, and any string naming it, escapes decoded
+  // (`Reflect.get(top, 'event')`); and a function's `arguments`.
   const globals = event === 'event' ? [] : wordsIn(lexed, 'event', fn.start, fn.end);
-  const eventProperty = /\??\.\s*event(?![\w$])|\[\s*(['"`])event\1\s*\]/g;
-  for (const match of code.slice(fn.start, fn.end).matchAll(eventProperty)) {
-    globals.push(fn.start + match.index);
+  for (const match of code.slice(fn.start, fn.end).matchAll(/\??\.\s*event(?![\w$])/g)) {
+    if (lexed.kind[fn.start + match.index] === 'c') globals.push(fn.start + match.index);
+  }
+  for (const { value, from, to } of stringsIn(lexed)) {
+    if (value === 'event' && from >= fn.start && to <= fn.end) globals.push(from);
   }
   for (const at of globals.sort((a, b) => a - b)) {
-    if (lexed.kind[at] !== 'c') continue;
     result.unanalysed.push(`${where(at)}: the global event, or a property named event, is read`);
   }
   for (const at of wordsIn(lexed, 'arguments', fn.start, fn.end)) {
     result.unanalysed.push(`${where(at)}: arguments is read`);
+  }
+  // Round 4's review: every use found below is found by its spelling, so a
+  // name spelled with an escape (`\u{65}.altKey`) would be read past.
+  for (const { text, from } of escapedNames(lexed)) {
+    if (from >= fn.start && from < fn.end) result.unanalysed.push(`${where(from)}: ${text} is a name spelled with an escape`);
   }
 
   /** A variable holding the key: every use must be a comparison too. */
@@ -797,6 +963,10 @@ export function eventReads(lexed, fn, index = 0, seen = new Set()) {
 
 const KEY_EVENT_TYPES = ['keydown', 'keyup', 'keypress'];
 const LISTENER_FLAGS = ['capture', 'once', 'passive'];
+/** A key event type as a word of a text. */
+const KEY_EVENT_WORDS = /(?<![\w$])key(?:down|up|press)(?![\w$])/g;
+/** A key handler set as a property or an attribute, or an accesskey, in any case. */
+const KEY_HANDLER_NAMES = /(?<![\w$])(?:onkey(?:down|up|press)|accesskey)(?![\w$])/gi;
 
 /**
  * The flags a listener's options set, from their text: none, `true` for
@@ -823,10 +993,12 @@ function listenerFlags(options) {
  * listens on the way down; `once`, `passive`), and its number when a file adds
  * more than one of a kind; with what its handler reads of the event
  * (`eventReads`). Also `unread`: every mention of `addEventListener` that is
- * not a call, every call whose type or options are not literals, and every
- * key event type named outside an `add` or `removeEventListener` call — each
- * a way to listen the scan cannot read, so a check that `unread` is empty
- * fails closed.
+ * not a call, every call whose type or options are not literals, every key
+ * event type named outside an `add` or `removeEventListener` call (a word of
+ * any string or template, escapes decoded), every name spelled with an
+ * escape, `eval`, and every `onkey…` handler or accesskey named in code, a
+ * string or a template — each a way to listen the scan cannot read, so a
+ * check that `unread` is empty fails closed.
  */
 export function keyListenersIn(files) {
   const found = [];
@@ -870,11 +1042,36 @@ export function keyListenersIn(files) {
           line: call.line, handler: call.args[1], reads });
       }
     }
-    for (const { value, from } of stringsIn(lexed)) {
-      if (KEY_EVENT_TYPES.includes(value) && !typeStrings.has(from)) {
-        unread.push(`${file}:${lineAt(lexed.source, from)} names '${value}' outside a listener call`);
+    // A key event type named anywhere else: a word of any string or template,
+    // escapes decoded, so code in a string that adds a listener is one.
+    for (const { text, from } of textRuns(lexed)) {
+      if (typeStrings.has(from)) continue;
+      for (const [type] of unescaped(text).matchAll(KEY_EVENT_WORDS)) {
+        unread.push(`${file}:${lineAt(lexed.source, from)} names '${type}' outside a listener call`);
       }
     }
+    // Round 4's review: the event, the functions it is passed to and the
+    // names above are found by their spelling, so a name spelled with an
+    // escape is reported; as is `eval`, which can write a function the scan
+    // follows from a string.
+    for (const { text, from } of escapedNames(lexed)) {
+      unread.push(`${file}:${lineAt(lexed.source, from)} ${text} is a name spelled with an escape`);
+    }
+    for (const match of lexed.code.matchAll(/(?<![\w$.])eval(?![\w$])/g)) {
+      if (lexed.kind[match.index] === 'c') unread.push(`${file}:${lineAt(lexed.source, match.index)} eval runs code the scan cannot read`);
+    }
+    // A key handler no listener call shows (`el.onkeydown = …`, an accesskey
+    // set), named in code or in a string or template, escapes decoded.
+    const handlers = new Set();
+    for (const match of lexed.code.matchAll(KEY_HANDLER_NAMES)) {
+      if (lexed.kind[match.index] === 'c') handlers.add(`${file}:${lineAt(lexed.source, match.index)} names ${match[0]}`);
+    }
+    for (const { text, from } of textRuns(lexed)) {
+      for (const [named] of unescaped(text).matchAll(KEY_HANDLER_NAMES)) {
+        handlers.add(`${file}:${lineAt(lexed.source, from)} names ${named}`);
+      }
+    }
+    unread.push(...[...handlers].map(handler => `${handler}, a key handler no listener call shows`));
   }
   const count = {};
   for (const { name } of found) count[name] = (count[name] ?? 0) + 1;

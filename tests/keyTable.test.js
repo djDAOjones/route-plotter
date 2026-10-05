@@ -30,12 +30,17 @@
  *   the source, with what its handler reads of the event: the keys it
  *   compares and every other property it reads, followed into the functions
  *   of its file the event is passed to, at whichever argument it is passed
- *   as. What the scan cannot read fails rather than passes: a use of the
- *   event it cannot follow (the global `event` among them), a `case` or an
- *   array member that is not a literal, a literal or a key inside a larger
- *   expression, a listener added through an alias, a type or options it
- *   cannot read. Neither page has a key handler in its markup or its inline
- *   scripts, nor an accesskey. Each listener has one place that presses every
+ *   as, names compared as JavaScript reads them (a string's escapes
+ *   decoded). What the scan cannot read fails rather than passes: a use of
+ *   the event it cannot follow (the global `event` among them), a `case` or
+ *   an array member that is not a literal, a literal or a key inside a
+ *   larger expression, a function followed by a name its file also writes,
+ *   binds again or uses other than by calling it or passing it on, a name
+ *   spelled with an escape, `eval`, a listener added through an alias, a key
+ *   event type named outside a listener call (a word of any string), a type
+ *   or options it cannot read, an `onkey…` handler or accesskey named in code.
+ *   Neither page has a key handler in its markup or its inline scripts, nor
+ *   an accesskey. Each listener has one place that presses every
  *   key its handler compares, on its target, and records what each did, then
  *   presses every other key of the domain there and finds it does nothing
  *   that place observes; each keydown is pressed once, and again as a held
@@ -43,8 +48,8 @@
  *   suite.
  *
  * The keys probed are a bounded domain (`tests/helpers/keyDomain.js`): the 95
- * printable ASCII characters, capitals included, and the 297 named keys of
- * the UI Events key list, F1 to F24 included: 392 keys. The dispatcher's
+ * printable ASCII characters, capitals included, and 297 named keys, the
+ * listed named keys, F1–F24 and Soft1–Soft4: 392 keys. The dispatcher's
  * sweep presses each under all sixteen combinations of Shift, Ctrl, Alt and
  * Meta, once and held down; the other listeners' sweeps press each without
  * modifiers (the modifiers a handler reads are pinned from its source, and
@@ -57,8 +62,9 @@
  * Each place observes what it lists, in the one state it sets up: the route,
  * the selection, the transport, a field, a menu, the focus, and whether a key
  * was taken. A handler edit that changes nothing it observes there passes;
- * so does a name the source builds at run time (`'key' + 'down'`), which no
- * reading of the source can follow.
+ * so does a name the source builds at run time (`'key' + 'down'`), or a
+ * method another file assigns or overrides where a handler calls it through
+ * `this`, neither of which this scanner follows.
  *
  * Keys go to `document.body`: the canvas takes no focus, so once a user has
  * clicked it, that is where their keys land. What changed is read back as the
@@ -1013,7 +1019,7 @@ describe('what the page shortcuts react to (TST-13)', () => {
       .toEqual(Object.keys(KEYBOARD).sort());
   });
 
-  test('the key domain: the 95 printable ASCII characters, capitals included, and 297 named keys, none twice', () => {
+  test('the key domain: the 95 printable ASCII characters, capitals included, and the 297 listed named keys, none twice', () => {
     // Round 3's review: the domain had no capitals, which arrive with no
     // modifier under Caps Lock, and the count claimed for it was not its own.
     const printable = Array.from({ length: 0x7f - 0x20 }, (_, index) => String.fromCharCode(0x20 + index));
@@ -1980,6 +1986,16 @@ const scannedReads = listeners =>
 const REVIEWED_READS = Object.fromEntries(Object.entries(KEY_LISTENERS)
   .map(([name, entry]) => [name, readShape(entry)]));
 
+/** A file of `src/` with a review's edits made in memory, read as the inventory reads `src/`. */
+function scanEdited(file, edits) {
+  let text = readFileSync(join(repoRoot, file), 'utf8');
+  for (const [anchor, replacement] of edits) {
+    expect(text.split(anchor), `the anchor in ${file}; if the source moved, move it`).toHaveLength(2);
+    text = text.replace(anchor, () => replacement);
+  }
+  return keyListenersIn([{ file, lexed: lex(text) }]);
+}
+
 /**
  * The pages the app runs in: the editor's `index.html`, and the exported
  * player's page as the HTML export writes it, built without the constructor
@@ -2157,14 +2173,7 @@ describe('every key listener the app adds (TST-13)', () => {
 
   test("round 3's review's mutants of the real source fail the inventory's own comparison", () => {
     // Each edit made in memory to the real file, read as the inventory reads it.
-    const edited = (file, edits) => {
-      let text = readFileSync(join(repoRoot, file), 'utf8');
-      for (const [anchor, replacement] of edits) {
-        expect(text.split(anchor), `the anchor in ${file}; if the source moved, move it`).toHaveLength(2);
-        text = text.replace(anchor, replacement);
-      }
-      return scannedReads(keyListenersIn([{ file, lexed: lex(text) }]).listeners);
-    };
+    const edited = (file, edits) => scannedReads(scanEdited(file, edits).listeners);
     // N2: a player shortcut added as a named case.
     const player = edited('src/player/playerEntry.js', [
       ['const TIMELINE_RESOLUTION = 10000;', "const EXTRA_PLAY_KEY = 'Q';\nconst TIMELINE_RESOLUTION = 10000;"],
@@ -2184,6 +2193,115 @@ describe('every key listener the app adds (TST-13)', () => {
     ])[KEY_LISTENER.sectionHeader];
     expect(header).not.toEqual(REVIEWED_READS[KEY_LISTENER.sectionHeader]);
     expect(header).toEqual({ ...REVIEWED_READS[KEY_LISTENER.sectionHeader], reads: ['preventDefault', 'repeat'] });
+  });
+
+  test("the reader follows a function only where its file does nothing else with the name (round 4's review, F1)", () => {
+    const scan = source => keyListenersIn([{ file: 'fixture.js', lexed: lex(source) }]);
+    // The helper the handler passes its event to on line 1, another use of its name on line 2, the listener on line 3.
+    const helper = 'function ignoresKey(e) { return false; }';
+    const unanalysed = line2 => {
+      const { listeners: [listener], unread } = scan(`${helper}\n${line2}\n` +
+        "document.addEventListener('keydown', e => { if (ignoresKey(e)) return; e.preventDefault(); });");
+      expect(unread).toEqual([]);
+      return listener.reads.unanalysed;
+    };
+    const beyond = ['line 3: e is passed to ignoresKey, which the scan cannot follow ' +
+      '(line 2 uses ignoresKey other than by calling it or passing it on)'];
+    // P1: the helper reassigned after its declaration was read as declared.
+    for (const write of ['ignoresKey = e => e.altKey;', 'ignoresKey ||= e => e.altKey;', '(ignoresKey) = e => e.altKey;',
+      '[ignoresKey] = [e => e.altKey];', '({ ignoresKey } = { ignoresKey: e => e.altKey });',
+      'for (ignoresKey of [e => e.altKey]);']) {
+      expect(unanalysed(write), write).toEqual(beyond);
+    }
+    // So is a parameter, a catch clause or a declaration that binds the name again.
+    for (const binding of ['function wire(ignoresKey) {}', 'try {} catch (ignoresKey) {}',
+      '{ const { ignoresKey } = helpers; }']) {
+      expect(unanalysed(binding), binding).toEqual(beyond);
+    }
+    // Called, read as a member or passed on, it holds what was declared, and is read.
+    expect(unanalysed('const late = ignoresKey.bind(null); setTimeout(ignoresKey, 0); ignoresKey(null);')).toEqual([]);
+    // Written from a string by `eval`, it is not named in code: the file is reported.
+    expect(scan(`${helper}\neval('ignoresKey = e => e.altKey');`).unread)
+      .toEqual(['fixture.js:2 eval runs code the scan cannot read']);
+
+    // A method followed through `this`: each `this.onKey =` is read, and the method with it.
+    const pane = later => scan('class Pane {\n' +
+      "  constructor() { this.onKey = this.onKey.bind(this); document.addEventListener('keyup', this.onKey); }\n" +
+      `  onKey(event) { return event.key === 'g'; }\n  later() { ${later} }\n}`).listeners[0].reads;
+    expect(pane('if (this.onKey) this.onKey(null);').unanalysed).toEqual([]);
+    const assigned = pane('this.onKey = e => e.altKey;');
+    expect([[...assigned.keys], [...assigned.reads], assigned.unanalysed]).toEqual([['g'], ['altKey'], []]);
+    // Written another way, on another object, or named in a string, it is reported.
+    for (const [write, use] of [
+      ['this.onKey ||= e => e.altKey;', 'uses this.onKey other than by calling it or passing it on'],
+      ['[this.onKey] = [e => e.altKey];', 'uses this.onKey other than by calling it or passing it on'],
+      ['other.onKey = e => e.altKey;', 'uses this.onKey other than by calling it or passing it on'],
+      ["Reflect.set(this, 'onKey', e => e.altKey);", 'names onKey in a string']
+    ]) {
+      expect(pane(write).unanalysed, write).toEqual([`its handler, this.onKey: line 4 ${use}`]);
+    }
+  });
+
+  test("a name spelled with escapes is read as JavaScript reads it, or reported (round 4's review, F2)", () => {
+    const scan = source => keyListenersIn([{ file: 'fixture.js', lexed: lex(source) }]);
+    const listed = ({ listeners, unread }) => ({
+      listeners: listeners.map(({ name, reads }) => [name, [...reads.keys], [...reads.reads].sort(), reads.unanalysed]),
+      unread
+    });
+    // P3's listener: its method name and event type, static literals, escaped. The
+    // method name is read as the call it spells; an escaped type is one the scan cannot read.
+    expect(listed(scan("document['addEvent\\u004cistener']('key\\u0064own', e => { if (e.key === 'Ω') e.preventDefault(); });")))
+      .toEqual({ listeners: [], unread: ["fixture.js:1 addEventListener('key\\u0064own', …)"] });
+    expect(listed(scan("document['addEvent\\x4cistener']('keydown', e => e.key === 'q');")))
+      .toEqual({ listeners: [['fixture.js: document keydown', ['q'], [], []]], unread: [] });
+    // Escaped in code, the method name is still the call; and, as every name spelled so, reported.
+    expect(listed(scan("document.addEvent\\u{4c}istener('keyup', e => e.key === 'r');"))).toEqual({
+      listeners: [['fixture.js: document keyup', ['r'], [], []]],
+      unread: ['fixture.js:1 addEvent\\u{4c}istener is a name spelled with an escape']
+    });
+    // An event type named outside a call: escaped, or a word of code in a string.
+    expect(scan("const type = 'key\\u0064own';\nsetTimeout(\"document.addEventListener('keyup', f)\");").unread)
+      .toEqual(["fixture.js:1 names 'keydown' outside a listener call", "fixture.js:2 names 'keyup' outside a listener call"]);
+    // The event's own name, escaped, is reported in the handler and in its file.
+    expect(listed(scan("document.addEventListener('keydown', e => { if (\\u0065.altKey) return; e.preventDefault(); });")))
+      .toEqual({
+        listeners: [['fixture.js: document keydown', [], ['preventDefault'],
+          ['line 1: \\u0065 is a name spelled with an escape']]],
+        unread: ['fixture.js:1 \\u0065 is a name spelled with an escape']
+      });
+    // The global event named in a string, escaped or not.
+    expect(listed(scan("document.addEventListener('keydown', e => top['\\u0065vent'].altKey || Reflect.get(top, 'event'));"))
+      .listeners[0][3]).toEqual(Array(2).fill('line 1: the global event, or a property named event, is read'));
+    // A key handler set as a property or an attribute, in code or in a string, escaped or not.
+    expect(scan("el.onkeydown = f;\nel['on\\u006beyup'] = f;\nel.setAttribute(`ACCESSKEY`, 'p');").unread).toEqual([
+      'fixture.js:1 names onkeydown, a key handler no listener call shows',
+      'fixture.js:2 names onkeyup, a key handler no listener call shows',
+      'fixture.js:3 names ACCESSKEY, a key handler no listener call shows'
+    ]);
+  });
+
+  test("round 4's review's mutants of the real source fail the inventory's own comparison", () => {
+    // P1: the section header passes its event to a helper its file declares
+    // and then reassigns to read Alt.
+    const header = scannedReads(scanEdited('src/controllers/SectionController.js', [
+      ['export class SectionController',
+        'function ignoresKey(e) { return false; }\nignoresKey = e => e.altKey;\n\nexport class SectionController'],
+      ["      header.addEventListener('keydown', (e) => {",
+        "      header.addEventListener('keydown', (e) => {\n        if (ignoresKey(e)) return;"]
+    ]).listeners)[KEY_LISTENER.sectionHeader];
+    expect(header).not.toEqual(REVIEWED_READS[KEY_LISTENER.sectionHeader]);
+    expect(header).toEqual({ ...REVIEWED_READS[KEY_LISTENER.sectionHeader], unanalysed: [expect.stringMatching(
+      /^line \d+: e is passed to ignoresKey, which the scan cannot follow \(line \d+ uses ignoresKey other than by calling it or passing it on\)$/)] });
+    // P3: a player listener added through escaped literals.
+    const player = scanEdited('src/player/playerEntry.js', [['const TIMELINE_RESOLUTION = 10000;',
+      "document['addEvent\\u004cistener']('key\\u0064own', e => {\n  if (e.key === 'Ω') e.preventDefault();\n});\n" +
+      'const TIMELINE_RESOLUTION = 10000;']]);
+    expect(player.unread, 'NOT_REGISTRATIONS has nothing in playerEntry.js')
+      .toEqual([expect.stringMatching(/^src\/player\/playerEntry\.js:\d+ addEventListener\('key\\u0064own', …\)$/)]);
+    expect(scannedReads(player.listeners)).toEqual({
+      [KEY_LISTENER.playerPage]: REVIEWED_READS[KEY_LISTENER.playerPage],
+      [KEY_LISTENER.playerTimeline]: REVIEWED_READS[KEY_LISTENER.playerTimeline]
+    });
   });
 
   test('a key handler in a page, in any spacing or case, or in an inline script, is found', () => {

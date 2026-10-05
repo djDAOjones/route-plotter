@@ -11,8 +11,10 @@
  * modules:
  *
  * - every field's `type`, `min`, `max`, `value` and `step` is a reviewed
- *   contract, so a change to the markup alone fails, whether or not the code
- *   has a number of its own for that attribute;
+ *   contract, each number as HTML reads it (an attribute that is not a valid
+ *   floating-point number, `max="0x1e00"` say, fails as written), so a
+ *   change to the markup alone fails, whether or not the code has a number
+ *   of its own for that attribute;
  * - every range and number field is paired with its code, or says why not;
  * - each bound the code defines means the same as the field's `min`/`max`;
  * - each default the code defines is where the field's `value` puts the thumb;
@@ -67,10 +69,33 @@ const shell = new DOMParser().parseFromString(readFileSync(join(repoRoot, 'index
 const FIELDS = new Map([...shell.querySelectorAll('input[type="range"], input[type="number"]')]
   .map(input => [input.id, input]));
 
+/**
+ * HTML's valid floating-point number: an optional `-`, digits with an
+ * optional fraction or a fraction alone, and an optional exponent. A field's
+ * `min`, `max`, `value` and `step` must be written so (a `step` above zero)
+ * for HTML to read the number written. Number() reads more: round 4's review
+ * found `max="0x1e00"` read by it as 7680, a maximum HTML does not read there.
+ */
+const HTML_NUMBER = /^-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?$/;
+
+/** A field's attribute as HTML reads it: null when absent, its number, or its text when HTML does not read it as one. */
+function numberAttribute(input, name) {
+  const text = input?.getAttribute(name);
+  if (text === null || text === undefined) return null;
+  const number = Number(text);
+  return HTML_NUMBER.test(text) && Number.isFinite(number) && (name !== 'step' || number > 0) ? number : text;
+}
+
+/** A field's attribute as a number for the checks below: NaN where HTML reads none (the contract names it as written). */
 const attribute = (id, name) => {
-  const text = FIELDS.get(id)?.getAttribute(name);
-  return text === null || text === undefined ? null : Number(text);
+  const read = numberAttribute(FIELDS.get(id), name);
+  return typeof read === 'string' ? NaN : read;
 };
+
+/** Each range and number field in a page, by id: its type, `min`, `max`, `value` and `step`, as HTML reads them. */
+const markupOf = page => Object.fromEntries([...page.querySelectorAll('input[type="range"], input[type="number"]')]
+  .map(input => [input.id, [input.getAttribute('type'),
+    ...['min', 'max', 'value', 'step'].map(name => numberAttribute(input, name))]]));
 
 /**
  * What each field's markup says, reviewed: its type, `min`, `max`, `value`
@@ -508,8 +533,7 @@ function misfits(writes) {
   for (const { id, value } of writes) {
     const min = attribute(id, 'min');
     const max = attribute(id, 'max');
-    const stepText = FIELDS.get(id).getAttribute('step');
-    const step = stepText === 'any' ? null : Number(stepText ?? 1);
+    const step = /^any$/i.test(FIELDS.get(id).getAttribute('step') ?? '') ? null : attribute(id, 'step') ?? 1;
     const steps = step === null ? 0 : (value - (min ?? 0)) / step;
     const onStep = step === null || Math.abs(steps - Math.round(steps)) < 1e-6;
     if (!Number.isFinite(value) || value < min || value > max || !onStep) found.add(`${id} ${rounded(value)}`);
@@ -865,12 +889,30 @@ function drawAndSelectAnEdge(app) {
 describe('index.html ranges against the code (TST-13)', () => {
 
   test("every field's type, min, max, value and step are the reviewed contract", () => {
-    const found = Object.fromEntries([...FIELDS].map(([id, input]) => [id, [
-      input.getAttribute('type'), attribute(id, 'min'), attribute(id, 'max'), attribute(id, 'value'),
-      attribute(id, 'step')
-    ]]));
-    expect(found, 'the markup of every range and number field (FIELD_CONTRACT is the reviewed copy)')
-      .toEqual(FIELD_CONTRACT);
+    expect(markupOf(shell), 'the markup of every range and number field, as HTML reads it (FIELD_CONTRACT is the ' +
+      'reviewed copy)').toEqual(FIELD_CONTRACT);
+  });
+
+  test("a number written in a form HTML does not read fails the contract as written (round 4's review)", () => {
+    // P5: the export width's maximum in hex, which Number() reads as 7680.
+    const html = readFileSync(join(repoRoot, 'index.html'), 'utf8');
+    const anchor = 'id="export-res-x" min="100" max="7680"';
+    expect(html.split(anchor), 'the anchor in index.html; if the markup moved, move it').toHaveLength(2);
+    const hex = markupOf(new DOMParser().parseFromString(
+      html.replace(anchor, 'id="export-res-x" min="100" max="0x1e00"'), 'text/html'));
+    expect(hex).not.toEqual(FIELD_CONTRACT);
+    expect(hex).toEqual({ ...FIELD_CONTRACT, 'export-res-x': ['number', 100, '0x1e00', 1920, 1] });
+    // Spellings HTML reads as the number, and ones Number() reads that HTML does not.
+    const read = (name, text) => {
+      const input = document.createElement('input');
+      input.setAttribute(name, text);
+      return numberAttribute(input, name);
+    };
+    expect(['7680', '7.68e3', '7680.0', '76.8E+2', '.5', '-50'].map(text => read('max', text)))
+      .toEqual([7680, 7680, 7680, 7680, 0.5, -50]);
+    const malformed = ['0x1e00', '0b1', '0o17', ' 7680', '7680 ', '+7680', '7680.', '7_680', '', 'Infinity', '1e999'];
+    expect(malformed.map(text => read('max', text))).toEqual(malformed);
+    expect(['0', '-1', 'any'].map(text => read('step', text))).toEqual(['0', '-1', 'any']);
   });
 
   test('every range and number field in index.html is paired with its code, or says why not', () => {
