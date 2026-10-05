@@ -3187,7 +3187,7 @@
       "format": "esm"
     },
     "src/app/exporting.js": {
-      "bytes": 16992,
+      "bytes": 17228,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3332,7 +3332,7 @@
       "format": "esm"
     },
     "src/app/viewport.js": {
-      "bytes": 17355,
+      "bytes": 17665,
       "imports": [
         {
           "path": "src/utils/renderReference.js",
@@ -3875,13 +3875,13 @@
     }
   },
   "outputs": {
-    ".docs-build-TZodPo/app.js.map": {
+    ".docs-build-xRhrql/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3392411
+      "bytes": 3392987
     },
-    ".docs-build-TZodPo/app.js": {
+    ".docs-build-xRhrql/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4205,7 +4205,7 @@
           "bytesInOutput": 4199
         },
         "src/app/viewport.js": {
-          "bytesInOutput": 4344
+          "bytesInOutput": 4373
         },
         "src/utils/waypointCardActions.js": {
           "bytesInOutput": 4621
@@ -4247,7 +4247,7 @@
           "bytesInOutput": 22752
         }
       },
-      "bytes": 1083044
+      "bytes": 1083073
     }
   }
 }
