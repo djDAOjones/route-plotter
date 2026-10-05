@@ -82,6 +82,24 @@ export function lastArrivalMs(schedules = [], durationMs = 0) {
 }
 
 /**
+ * How many dots reach their journey's end before the timeline ends,
+ * whatever the crowd does there (DEF-77). Unlike `lastArrivalMs` this counts
+ * repeating and respawning dots too: the question is whether "At journey
+ * end" has any dot to act on, not whether the crowd can be waited for.
+ *
+ * @param {Array<DotSchedule>} schedules
+ * @param {number} durationMs Current total timeline duration
+ * @returns {number}
+ */
+export function dotsReachingJourneyEnd(schedules = [], durationMs = 0) {
+  let count = 0;
+  for (const dot of schedules) {
+    if (dot.onsetFraction * durationMs + dot.journeyMs <= durationMs) count += 1;
+  }
+  return count;
+}
+
+/**
  * The wait a waypoint needs so the head does not leave before the crowd has
  * finished — solved, not iterated.
  *

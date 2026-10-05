@@ -18,6 +18,11 @@ import {
 } from '../src/app/crowds.js';
 import { Scene } from '../src/models/Scene.js';
 import { EventBus } from '../src/core/EventBus.js';
+import { SwarmEngine } from '../src/services/SwarmEngine.js';
+import { PathCalculator } from '../src/services/PathCalculator.js';
+import { dotsReachingJourneyEnd } from '../src/utils/crowdArrival.js';
+import { ANIMATION } from '../src/config/constants.js';
+import { bootApp } from './helpers/bootApp.js';
 
 function makeApp({ hasRoute = true } = {}) {
   document.body.innerHTML = `
@@ -497,5 +502,178 @@ describe('rename', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
 
     expect(layer.name).toBe('Crowd 1');
+  });
+});
+
+describe('a new crowd reaches its journey end (DEF-77)', () => {
+  // The canvas the finding was probed on: a 16:9 image filling a 16:9
+  // canvas, the route head at the default 200 px a second and the default
+  // 1.5 s wait at each major after the first, so the timeline, and with it
+  // whether a dot finishes, depends on the canvas width.
+  const calc = new PathCalculator();
+  const ROUTES = {
+    'two clicks': [{ x: 0.1, y: 0.5 }, { x: 0.9, y: 0.5 }],
+    'four majors': [{ x: 0.1, y: 0.5 }, { x: 0.35, y: 0.4 }, { x: 0.65, y: 0.6 }, { x: 0.9, y: 0.5 }],
+  };
+  const timelineMs = (route, pathPoints, width) => {
+    const height = width * 9 / 16;
+    const onScreen = pathPoints.map(point => ({ x: point.x * width, y: point.y * height }));
+    return (calc.calculatePathLength(onScreen) / ANIMATION.DEFAULT_SPEED) * 1000
+      + ANIMATION.DEFAULT_WAIT_TIME * (route.length - 1);
+  };
+
+  // A new crowd's seed is random; these stand in for it, so the run is repeatable.
+  const SEEDS = Array.from({ length: 40 }, (_, index) => (index * 2654435761) >>> 0);
+
+  test.each([
+    [720, 45], [960, 50], [1280, 50], [1920, 50],
+  ])('a default route crowd on a %i px canvas: at least %i of its 50 dots finish', (width, atLeast) => {
+    const app = makeApp();
+    app.addCrowd();
+    const layer = app.selectedCrowd;
+    expect(layer.guideType).toBe('route');
+    for (const seed of SEEDS) {
+      layer.emitters[0].update({ seed });
+      for (const [name, route] of Object.entries(ROUTES)) {
+        const pathPoints = calc.calculatePath(route);
+        const durationMs = timelineMs(route, pathPoints, width);
+        const schedules = new SwarmEngine().scheduleDots(layer, { durationMs, routePathPoints: pathPoints });
+        expect(schedules, name).toHaveLength(50);
+        expect(dotsReachingJourneyEnd(schedules, durationMs), `${name}, seed ${seed}`).toBeGreaterThanOrEqual(atLeast);
+      }
+    }
+  });
+
+  test('only a new crowd takes the new pace: a saved crowd opens with its own', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const [fresh] = app.selectedCrowd.emitters;
+    expect({ speed: fresh.speed, releaseDuration: fresh.releaseDuration })
+      .toEqual({ speed: 0.4, releaseDuration: 0.5 });
+
+    const saved = new Scene();
+    const layer = saved.addFlowLayer({ name: 'Crowd 1', guideType: 'route' });
+    layer.addEmitter({ seed: 9, speed: 0.15, releaseDuration: 1 });
+    // A crowd saved without them keeps the model's historical values too.
+    const bare = saved.addFlowLayer({ name: 'Crowd 2', guideType: 'route' }).toJSON();
+    bare.emitters = [{ seed: 10 }];
+    const json = saved.toJSON();
+    json.flowLayers[1] = bare;
+
+    const [opened, openedBare] = Scene.fromJSON(JSON.parse(JSON.stringify(json))).getFlowLayers();
+    expect(opened.emitters[0].speed).toBe(0.15);
+    expect(opened.emitters[0].releaseDuration).toBe(1);
+    expect(openedBare.emitters[0].speed).toBe(0.15);
+    expect(openedBare.emitters[0].releaseDuration).toBe(1);
+  });
+});
+
+describe('the "At journey end" hint (DEF-77)', () => {
+  /** The shipped editor, a two-click route and a new crowd on it. */
+  async function editorWithCrowd() {
+    const app = await bootApp();
+    await app.ready;
+    await new Promise(resolve => setTimeout(resolve, 80));
+    app.eventBus.emit('waypoint:add', { imgX: 0.1, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.9, imgY: 0.5, isMajor: true });
+    app.addCrowd();
+    return app;
+  }
+  const slide = (id, value) => {
+    const control = document.getElementById(id);
+    control.value = String(value);
+    control.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  test('describes the select, and says nothing while dots reach their journey end', async () => {
+    const app = await editorWithCrowd();
+    const select = document.getElementById('crowd-lifecycle');
+    const hint = document.getElementById('crowd-lifecycle-hint');
+    expect(app.selectedCrowd).toBeTruthy();
+    expect(select.getAttribute('aria-describedby').split(' ')).toContain('crowd-lifecycle-hint');
+    expect(hint.closest('label')).toBeNull(); // outside the label: not part of the select's name
+    expect(hint.classList.contains('section-hint')).toBe(true);
+    expect(hint.hidden).toBe(true);
+    expect(hint.textContent).toBe('');
+  });
+
+  test('shows when no dot finishes, and clears once Speed is raised', async () => {
+    const app = await editorWithCrowd();
+    const hint = document.getElementById('crowd-lifecycle-hint');
+
+    slide('crowd-speed', 1); // 0.01 img/s: the route takes 80 s, the timeline a few
+    const durationMs = app.animationEngine.state.duration;
+    const schedules = app.swarmEngine.scheduleDots(app.selectedCrowd, {
+      durationMs, routePathPoints: app.pathPoints,
+    });
+    expect(dotsReachingJourneyEnd(schedules, durationMs)).toBe(0);
+    expect(hint.hidden).toBe(false);
+    expect(hint.textContent).toBe(
+      'No dot reaches its journey end before the timeline ends. '
+      + 'Raise Speed or lower Window length to see this setting act.'
+    );
+
+    slide('crowd-speed', 40);
+    expect(hint.hidden).toBe(true);
+    expect(hint.textContent).toBe('');
+  });
+
+  test('follows the timeline, not the frame: computing it asks for no animation frame', async () => {
+    const app = await editorWithCrowd();
+    const hint = document.getElementById('crowd-lifecycle-hint');
+    slide('crowd-speed', 1);
+    expect(hint.hidden).toBe(false);
+
+    // Back at a new crowd's pace the dots finish again, read straight from
+    // the model without a frame.
+    const frames = vi.mocked(globalThis.requestAnimationFrame);
+    frames.mockClear();
+    app.selectedCrowd.emitters[0].update({ speed: 0.4 });
+    app._syncCrowdLifecycleHint();
+    expect(frames).not.toHaveBeenCalled();
+    expect(hint.hidden).toBe(true);
+
+    // A timeline change re-reads it: a long wait at the end lets slow dots finish.
+    app.selectedCrowd.emitters[0].update({ speed: 0.05 });
+    app._syncCrowdLifecycleHint();
+    expect(hint.hidden).toBe(false);
+    app.waypoints[1].pauseMode = 'timed';
+    app.waypoints[1].pauseTime = 60000;
+    app.invalidateAnimationTiming();
+    expect(hint.hidden).toBe(true);
+  });
+
+  test('on a closed loop with no Exit, names the node Type instead of Speed; an Exit clears it', async () => {
+    const app = await editorWithCrowd();
+    const hint = document.getElementById('crowd-lifecycle-hint');
+    const guide = document.getElementById('crowd-guide-type');
+    guide.value = 'graph';
+    guide.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Drawn with the pen and closed on its first node: three pass-through
+    // nodes, three two-way paths, every node on two of them.
+    const pen = app.networkEditService;
+    expect(pen.active).toBe(true);
+    const first = pen.placeNode({ x: 0.2, y: 0.3 });
+    pen.placeNode({ x: 0.8, y: 0.3 });
+    pen.placeNode({ x: 0.5, y: 0.8 });
+    pen.clickNode(first);
+    const { graph } = app.selectedCrowd;
+    expect(graph.getEdges()).toHaveLength(3);
+    expect(graph.getNodes().every(node => node.type === 'normal')).toBe(true);
+
+    expect(hint.hidden).toBe(false);
+    expect(hint.textContent).toBe(
+      'No dot’s journey ends on this network. Set a node’s Type to Exit to see this setting act.'
+    );
+    expect(hint.textContent).not.toMatch(/Speed|Window length/);
+
+    pen.selectNode(first);
+    const type = document.getElementById('network-node-type');
+    type.value = 'exit';
+    type.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(first.type).toBe('exit');
+    expect(hint.hidden).toBe(true);
+    expect(hint.textContent).toBe('');
   });
 });
