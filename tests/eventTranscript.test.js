@@ -44,12 +44,30 @@
  * stood. The project there is read from the saved-project snapshot and the
  * app's selection, not from the undo state.
  *
- * Among the runtime fields, the app's waypoint lookup (`getWaypointById`)
- * finds each of the route's waypoints by id as itself, or says which it
- * misses or holds wrongly; a row starts with it whole. A waypoint the app
- * hands out or keeps for a component (in an emit, an answer, a selection,
- * the hover or the armed branch) that is not the route's own object is
- * marked as a copy or as not in the route: a copy cannot be edited through.
+ * Among the runtime fields, the app's waypoint lookup finds each of the
+ * route's waypoints by id as itself, newly generated ids as well as bundled
+ * ones, both in its map (`waypointsById`) and through the method every
+ * caller uses (`getWaypointById`), or says which it misses or holds wrongly;
+ * a row starts with it whole, and it is asked again after each performed
+ * Undo and after the Redos, where a line names it only if it is not whole.
+ * The hover keeps its kind and waypoint and, on a leg, the owner's index,
+ * the run (trunk or branch) and a withheld "+". A waypoint the app hands out
+ * or keeps for a component (in an emit, an answer, a selection, the hover or
+ * the armed branch) that is not the route's own object is marked as a copy
+ * or as not in the route: a copy cannot be edited through.
+ *
+ * An emitted value or an answer is summarised: two levels deep, six items,
+ * eight keys and 60 characters of text. A line whose summary leaves anything
+ * out ends with a digest of the whole of it, every field at every depth, so
+ * a field the summary hides (a scene outline row's position, the seventh
+ * waypoint in a list) still changes the line; a digest says that something
+ * changed, not what. A class instance is named, not opened, in both (its
+ * state, as the transport's, is the model's). A function is shown as `fn`,
+ * which pins nothing it does; the one the app hands back, the area handle's
+ * `imageToScreen`, is called on a sample point and its answer kept. Numbers
+ * are written to four decimals, in a summary and in what a digest is taken
+ * of; the model, recovery and undo comparisons compare them exactly, and a
+ * change past the fourth decimal is shown exactly and said to be.
  *
  * What is not recorded: drawing (the renderer is a counter: the draw logs
  * are TST-02's); inspector and control state beyond those fields (TST-04's);
@@ -81,6 +99,7 @@
  * nothing and fails.
  */
 
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -481,6 +500,7 @@ class Recorder {
     this.app = app;
     this.phases = [];
     this.depth = 0;
+    this.nameDigestIds = idNamer();
   }
 
   begin(name, { timed = false } = {}) {
@@ -521,7 +541,7 @@ class Recorder {
 
   /** A callback for a request/response event, noting what it was answered. */
   reply() {
-    return answer => this.note(`answered ${summarise(answer)}`);
+    return answer => this.note(`answered ${describeValues([answer])}`);
   }
 }
 
@@ -635,11 +655,20 @@ function waypointName(app, waypoint) {
   return standing ? `${waypoint.id} (${standing})` : waypoint.id;
 }
 
-/** A compact, deterministic summary of an emitted value. */
-function summarise(value, depth = 0) {
+/**
+ * A compact, deterministic summary of an emitted value. What it leaves out
+ * (an object or array two levels down, items past the sixth, keys past the
+ * eighth, text past 60 characters) sets `elided.any`, so the line can carry
+ * a digest of the whole value (`describeValues`).
+ */
+function summarise(value, depth = 0, elided = null) {
+  const leaveOut = shown => {
+    if (elided) elided.any = true;
+    return shown;
+  };
   if (value === null || value === undefined || typeof value === 'boolean') return String(value);
   if (typeof value === 'number') return formatNumber(value);
-  if (typeof value === 'string') return formatText(value, 60);
+  if (typeof value === 'string') return value.length > 60 ? leaveOut(formatText(value, 60)) : formatText(value, 60);
   if (typeof value === 'function') return 'fn';
   if (value instanceof Waypoint) {
     const standing = routeStanding(recording?.app, value);
@@ -650,28 +679,80 @@ function summarise(value, depth = 0) {
     return `<${value.tagName.toLowerCase()}${value.id ? `#${value.id}` : ''}>`;
   }
   if (Array.isArray(value)) {
-    if (depth >= 2) return `[${value.length} items]`;
-    const shown = value.slice(0, 6).map(each => summarise(each, depth + 1));
-    if (value.length > 6) shown.push(`…+${value.length - 6}`);
+    if (depth >= 2) return leaveOut(`[${value.length} items]`);
+    const shown = value.slice(0, 6).map(each => summarise(each, depth + 1, elided));
+    if (value.length > 6) shown.push(leaveOut(`…+${value.length - 6}`));
     return `[${shown.join(', ')}]`;
   }
   const kind = value.constructor?.name;
   if (kind && kind !== 'Object') return typeof value.id === 'string' ? `${kind}(${value.id})` : kind;
-  if (depth >= 2) return '{…}';
+  if (depth >= 2) return leaveOut('{…}');
   const keys = Object.keys(value).sort(byText);
-  const shown = keys.slice(0, 8).map(key => `${key}: ${summarise(value[key], depth + 1)}`);
-  if (keys.length > 8) shown.push(`…+${keys.length - 8}`);
+  const shown = keys.slice(0, 8).map(key => `${key}: ${summarise(value[key], depth + 1, elided)}`);
+  if (keys.length > 8) shown.push(leaveOut(`…+${keys.length - 8}`));
   return `{${shown.join(', ')}}`;
 }
 
+/**
+ * The whole of a value, every field at every depth, keys sorted, numbers as
+ * the transcript writes them: what a digest is taken of. A waypoint, a file,
+ * an element, a function and an instance of any other class are written as
+ * `summarise` writes them: a waypoint's fields are the model's, and a class
+ * instance is named, not opened, wherever it appears.
+ */
+function canonical(value, ancestors = []) {
+  if (value === null || typeof value !== 'object') {
+    return typeof value === 'string' ? JSON.stringify(value) : summarise(value);
+  }
+  if (ancestors.includes(value)) return '(cycle)';
+  const inner = [...ancestors, value];
+  if (Array.isArray(value)) return `[${value.map(each => canonical(each, inner)).join(', ')}]`;
+  const kind = value.constructor?.name;
+  if (kind && kind !== 'Object') return summarise(value);
+  return `{${Object.keys(value).sort(byText).map(key => `${key}: ${canonical(value[key], inner)}`).join(', ')}}`;
+}
+
+/**
+ * Values as a line shows them, each summarised. Where a summary leaves
+ * anything out, the line ends with a digest of the values whole, so a change
+ * to a field it does not show still changes the line (`{…}` hides a scene
+ * outline row's position, for one). Generated ids are named in the digest, as
+ * in the text, by their order of appearance in the row's digests, so it
+ * turns on which waypoint a payload holds, not on the random part of its id.
+ */
+function describeValues(values) {
+  const elided = { any: false };
+  const text = values.map(each => summarise(each, 0, elided)).join(', ');
+  if (!elided.any) return text;
+  const named = (recording?.nameDigestIds ?? idNamer())(values.map(each => canonical(each)).join(', '));
+  return `${text}  (digest ${createHash('sha256').update(named).digest('hex').slice(0, 8)})`;
+}
+
 function describeArgs(args) {
-  return args.length === 0 ? '' : ` ${args.map(each => summarise(each)).join(', ')}`;
+  return args.length === 0 ? '' : ` ${describeValues(args)}`;
 }
 
 function formatLeaf(value) {
   if (typeof value === 'number') return formatNumber(value);
   if (typeof value === 'string') return formatText(value);
   return String(value);
+}
+
+/**
+ * A flattened leaf keeps the text it is shown by and, where that text rounds
+ * a number, the exact value after this mark: two values that round alike are
+ * still told apart (`diffLines`), and shown exactly when they are.
+ */
+const EXACT_MARK = '\u0000';
+
+function leafText(shown, exact) {
+  return shown === exact ? shown : `${shown}${EXACT_MARK}${exact}`;
+}
+
+/** A flattened leaf as shown, or, with `exact`, its exact value. */
+function shownLeaf(text, { exact = false } = {}) {
+  const [shown, exactText = shown] = String(text).split(EXACT_MARK);
+  return exact ? exactText : shown;
 }
 
 /**
@@ -687,7 +768,8 @@ function flatten(into, path, value) {
       into.set(`${path}#order`, value.map(each => each.id).join(' '));
       for (const each of value) flatten(into, `${path}[${each.id}]`, each);
     } else if (value.every(each => each === null || typeof each !== 'object')) {
-      into.set(path, `[${value.map(formatLeaf).join(', ')}]`);
+      into.set(path, leafText(`[${value.map(formatLeaf).join(', ')}]`,
+        `[${value.map(each => (typeof each === 'number' ? String(each) : formatLeaf(each))).join(', ')}]`));
     } else {
       value.forEach((each, index) => flatten(into, `${path}[${index}]`, each));
     }
@@ -699,7 +781,7 @@ function flatten(into, path, value) {
     for (const key of keys) flatten(into, path ? `${path}.${key}` : key, value[key]);
     return;
   }
-  into.set(path, formatLeaf(value));
+  into.set(path, leafText(formatLeaf(value), typeof value === 'number' ? String(value) : formatLeaf(value)));
 }
 
 const idsOf = list => (list ?? []).map(each => each?.id ?? String(each)).join(' ');
@@ -716,10 +798,12 @@ function contextMenuState() {
 const LOOKUP_WHOLE = 'each waypoint, by id, as itself';
 
 /**
- * The app's waypoint lookup (`waypointsById`, read by `getWaypointById`, and
- * so by the scene outline, undo's restore and every handler given an id)
- * against the route: whole, or each waypoint it misses or finds as another
- * object, and each id it holds that the route has not.
+ * The app's waypoint lookup against the route: whole, or each waypoint it
+ * misses or finds as another object, and each id it holds that the route has
+ * not. Both halves are asked of every waypoint, a newly generated id as much
+ * as a bundled one: the map (`waypointsById`) and the method every caller
+ * goes through (`getWaypointById`: the scene outline, undo's restore and each
+ * handler given an id), which a map in order does not vouch for.
  */
 function lookupState(app) {
   const lookup = app.waypointsById;
@@ -728,11 +812,31 @@ function lookupState(app) {
   for (const waypoint of app.waypoints) {
     if (!lookup.has(waypoint.id)) wrong.push(`${waypoint.id} missing`);
     else if (lookup.get(waypoint.id) !== waypoint) wrong.push(`${waypoint.id} found as another object`);
+    const answer = app.getWaypointById(waypoint.id);
+    if (answer !== waypoint) {
+      wrong.push(`getWaypointById(${waypoint.id}) answers ${answer ? 'another object' : String(answer)}`);
+    }
   }
   for (const id of lookup.keys()) {
     if (!app.waypoints.some(each => each.id === id)) wrong.push(`${id} held, not in the route`);
   }
   return wrong.length > 0 ? wrong.join('; ') : LOOKUP_WHOLE;
+}
+
+/**
+ * The hover the canvas keeps for its hover layers: its kind and waypoint and,
+ * on a leg, what the renderer finds the leg by (its owner's index in the
+ * route, the run it was hit on) and whether it withholds the "+".
+ */
+function hoverState(app) {
+  const hover = app.canvasHover;
+  if (!hover) return null;
+  let text = `${hover.type} ${waypointName(app, hover.waypoint) ?? ''}`.trim();
+  if (typeof hover.waypointIndex === 'number') text += ` at index ${hover.waypointIndex}`;
+  if (hover.branchId === null) text += ' on the trunk';
+  else if (hover.branchId !== undefined) text += ` on branch ${hover.branchId}`;
+  if (hover.canInsert === false) text += ', no insert';
+  return text;
 }
 
 /** What the app holds outside the saved project: transport, route, editor. */
@@ -774,9 +878,7 @@ function runtimeState(app) {
       branchPaths: (app.branchPaths ?? []).map(each => `${each.id}: ${each.pathPoints.length} points`),
     },
     lookup: lookupState(app),
-    hover: app.canvasHover
-      ? `${app.canvasHover.type} ${waypointName(app, app.canvasHover.waypoint) ?? ''}`.trim()
-      : null,
+    hover: hoverState(app),
     branchArmed: waypointName(app, app.interactionHandler?.branchArmed),
     crowd: app.selectedCrowd?.id ?? null,
     dirty: app._isDirty,
@@ -853,22 +955,26 @@ function diffLines(before, after, { fields = true } = {}) {
     const was = before.get(key);
     const is = after.get(key);
     if (before.has(key) && after.has(key)) {
-      if (was !== is) lines.push(`  ~ ${key}: ${was} -> ${is}`);
+      if (was === is) continue;
+      // Values that round alike are shown exactly, and said to be.
+      const exact = shownLeaf(was) === shownLeaf(is);
+      lines.push(`  ~ ${key}: ${shownLeaf(was, { exact })} -> ${shownLeaf(is, { exact })}` +
+        `${exact ? ' (past the fourth decimal)' : ''}`);
     } else if (after.has(key)) {
       const root = entityPrefixes(key).find(prefix => !knownBefore.has(prefix));
       if (!root) {
-        lines.push(`  + ${key} = ${is}`);
+        lines.push(`  + ${key} = ${shownLeaf(is)}`);
         continue;
       }
       if (!opened.has(root)) {
         opened.add(root);
         lines.push(`  + ${root}`);
       }
-      if (fields) lines.push(`      ${key.slice(root.length).replace(/^\./, '')} = ${is}`);
+      if (fields) lines.push(`      ${key.slice(root.length).replace(/^\./, '')} = ${shownLeaf(is)}`);
     } else {
       const root = entityPrefixes(key).find(prefix => !knownAfter.has(prefix));
       if (!root) {
-        lines.push(`  - ${key} = ${was}`);
+        lines.push(`  - ${key} = ${shownLeaf(was)}`);
       } else if (!opened.has(root)) {
         opened.add(root);
         lines.push(`  - ${root}`);
@@ -880,11 +986,14 @@ function diffLines(before, after, { fields = true } = {}) {
 
 const change = (was, is) => (was === is ? `${is} (unchanged)` : `${was} -> ${is}`);
 
-/** Generated ids become `wp#1`, `gn#1` …, numbered by first appearance. */
-function nameNewIds(text) {
+/**
+ * A namer for generated ids: each becomes `wp#1`, `gn#1` …, numbered by its
+ * first appearance in the texts given to that namer.
+ */
+function idNamer() {
   const names = new Map();
   const counts = new Map();
-  return text.replace(/(?<![A-Za-z0-9])(wp|gn|ge|em|fl)_\d{10,}_[a-z0-9]+/g, (id, kind) => {
+  return text => text.replace(/(?<![A-Za-z0-9])(wp|gn|ge|em|fl)_\d{10,}_[a-z0-9]+/g, (id, kind) => {
     if (!names.has(id)) {
       const next = (counts.get(kind) ?? 0) + 1;
       counts.set(kind, next);
@@ -893,6 +1002,9 @@ function nameNewIds(text) {
     return names.get(id);
   });
 }
+
+/** Generated ids become `wp#1`, `gn#1` …, numbered by first appearance. */
+const nameNewIds = text => idNamer()(text);
 
 function countsText(counts) {
   const parts = COUNT_ORDER.filter(name => counts.has(name)).map(name => `${name} ${counts.get(name)}`);
@@ -988,6 +1100,13 @@ async function undoAndRedo(app, saved) {
     if (gap[0] === '  (unchanged)') lines.push(`  ${label}: the same`);
     else lines.push(`  ${label}:`, ...gap.map(line => `  ${line}`));
   };
+  // A restore rebuilds every waypoint as a new object under its old id, so
+  // the lookup is asked again after each step; a line is added only where it
+  // is not whole.
+  const checkLookup = label => {
+    const state = lookupState(app);
+    if (state !== LOOKUP_WHOLE) lines.push(`  ${label}, the waypoint lookup: ${state}`);
+  };
   const stood = projectNow(app);
   let undone = 0;
   while (undone < saved) {
@@ -1004,6 +1123,7 @@ async function undoAndRedo(app, saved) {
     await settle();
     compare(`after ${name}, the entry under it against the project`, flattened(JSON.parse(under)),
       projectAsUndoEntry(app));
+    checkLookup(`after ${name}`);
     undone += 1;
   }
   for (let redone = 0; redone < undone; redone += 1) {
@@ -1011,8 +1131,9 @@ async function undoAndRedo(app, saved) {
     app.eventBus.emit('history:redo');
     await settle();
   }
-  compare(`after the Redo${undone === 1 ? '' : 's'}, the project as it stood against the project`, stood,
-    projectNow(app));
+  const redos = `the Redo${undone === 1 ? '' : 's'}`;
+  compare(`after ${redos}, the project as it stood against the project`, stood, projectNow(app));
+  checkLookup(`after ${redos}`);
   return lines;
 }
 
@@ -1070,7 +1191,7 @@ async function transcribe(row) {
   });
   const [first, last] = [states[0], states.at(-1)];
   for (const key of row.watch ?? []) {
-    if (first.model.get(key) === last.model.get(key)) lines.push(`kept ${key} = ${last.model.get(key)}`);
+    if (first.model.get(key) === last.model.get(key)) lines.push(`kept ${key} = ${shownLeaf(last.model.get(key))}`);
   }
   lines.push(...recovery, ...performed);
   return nameNewIds(lines.join('\n'));
@@ -1134,6 +1255,20 @@ function playAtDoubleSpeed(app) {
 
 const PLAYING_AT_2X = 'L pressed twice from the start: playing forward at 2x';
 
+/**
+ * Paused half way through the route: at half its own timeline, the base
+ * duration CROWD-05 keeps for what is timed as a fraction of it, reached
+ * through `ui:animation:seek` as the fraction of the playback duration that
+ * lands there. The playback duration also waits for what finishes after the
+ * route (a crowd), so half of it can lie past the route's end.
+ */
+function seekHalfWayThroughRoute(app) {
+  const { baseDuration, duration } = app.animationEngine.state;
+  emit(app, 'ui:animation:seek', baseDuration / 2 / duration);
+}
+
+const HALF_WAY = 'paused half way through the route (half its base timeline)';
+
 /** The J/K/L state DEF-15 is about: the live copy, and the copy nothing reads. */
 const JKL_STATE = ['runtime.jkl.live', 'runtime.jkl.unused', 'runtime.transport.playbackSpeed'];
 
@@ -1178,8 +1313,8 @@ const CONTROLLER_ROWS = [
     act: app => emit(app, 'ui:animation:pause'),
   },
   {
-    event: 'ui:animation:skip-start', fixture: 'open day', given: 'paused half way',
-    setup: app => emit(app, 'ui:animation:seek', 0.5),
+    event: 'ui:animation:skip-start', fixture: 'open day', given: HALF_WAY,
+    setup: app => seekHalfWayThroughRoute(app),
     act: app => emit(app, 'ui:animation:skip-start'),
   },
   {
@@ -1188,13 +1323,13 @@ const CONTROLLER_ROWS = [
   },
   { event: 'ui:animation:seek', fixture: 'open day', act: app => emit(app, 'ui:animation:seek', 0.5) },
   {
-    event: 'animation:speed-change', fixture: 'open day', given: 'paused half way',
-    setup: app => emit(app, 'ui:animation:seek', 0.5),
+    event: 'animation:speed-change', fixture: 'open day', given: HALF_WAY,
+    setup: app => seekHalfWayThroughRoute(app),
     act: app => emit(app, 'animation:speed-change', 400),
   },
   {
-    event: 'animation:jkl-reverse', fixture: 'open day', given: 'paused half way',
-    setup: app => emit(app, 'ui:animation:seek', 0.5),
+    event: 'animation:jkl-reverse', fixture: 'open day', given: HALF_WAY,
+    setup: app => seekHalfWayThroughRoute(app),
     act: app => emit(app, 'animation:jkl-reverse'),
   },
   {
@@ -1211,8 +1346,8 @@ const CONTROLLER_ROWS = [
     act: app => emit(app, 'animation:jkl-forward'),
   },
   {
-    event: 'ui:animation:toggle', fixture: 'open day', given: 'paused half way',
-    setup: app => emit(app, 'ui:animation:seek', 0.5),
+    event: 'ui:animation:toggle', fixture: 'open day', given: HALF_WAY,
+    setup: app => seekHalfWayThroughRoute(app),
     act: app => emit(app, 'ui:animation:toggle'),
   },
   {
@@ -1538,12 +1673,21 @@ const CONTROLLER_ROWS = [
   },
   {
     event: 'area:check-handle', fixture: 'authored extras', given: 'ex-uon-2 (a rectangle area) selected',
-    how: 'the centre handle of its area',
+    how: 'the centre handle of its area; the imageToScreen it answers with is then called, detached, as'
+      + ' AreaEditService calls it, on the area\'s centre',
     setup: app => select(app, 'ex-uon-2'),
     act: (app, { reply }) => {
       const area = wp(app, 'ex-uon-2').areaHighlight;
       const point = screenAt(app, area.centerX, area.centerY);
-      emit(app, 'area:check-handle', { screenX: point.x, screenY: point.y }, reply());
+      const answered = reply();
+      emit(app, 'area:check-handle', { screenX: point.x, screenY: point.y }, answer => {
+        answered(answer);
+        // `fn` in the answer pins nothing the function does.
+        const { imageToScreen } = answer ?? {};
+        if (typeof imageToScreen !== 'function') return;
+        const sample = imageToScreen(area.centerX, area.centerY);
+        recording?.note(`its imageToScreen of the centre answers ${summarise(sample)}`);
+      });
     },
   },
   {
@@ -1976,8 +2120,11 @@ function transcriptHeader(golden) {
     '# entries the row saved, one at a time, and redoes them: before each Undo its',
     '# entry is compared with the project, after it the entry under it, and after',
     '# the Redos the project as it stood. A waypoint handed out that is not the',
-    '# route\'s own object is marked "a copy" or "not in the route". Written by',
-    '# tests/eventTranscript.test.js (TST-05); regenerate with',
+    '# route\'s own object is marked "a copy" or "not in the route". A summary that',
+    '# leaves anything out ({…}, [n items], …+n, cut text) ends with a digest of',
+    '# the whole value. Numbers are written to four decimals; the model, recovery',
+    '# and undo comparisons compare them exactly.',
+    '# Written by tests/eventTranscript.test.js (TST-05); regenerate with',
     '# UPDATE_EVENT_GOLDENS=1 and read the diff.',
   ].join('\n');
 }

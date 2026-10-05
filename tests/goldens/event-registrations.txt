@@ -3,14 +3,14 @@
 # among that module's listeners for the event. Written by
 # tests/eventTranscript.test.js (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1.
 #
-# 194 listeners on 135 events, from 11 modules:
+# 197 listeners on 136 events, from 11 modules:
 #   AreaDrawingService.js 5
 #   AreaEditService.js 8
 #   InteractionHandler.js 5
 #   SceneOutlineController.js 5
 #   SectionController.js 14
 #   UIController.js 10
-#   crowds.js 7
+#   crowds.js 10
 #   network.js 19
 #   sceneOutline.js 24
 #   wiringBus.js 19
@@ -18,6 +18,8 @@
 
 animation:complete
   wiringBus.js#1
+animation:durationChange
+  crowds.js#1
 animation:jkl-forward
   wiringControllers.js#1
 animation:jkl-reverse
@@ -147,6 +149,7 @@ motion:reveal-trail-change
 motion:waypoint-visibility-change
   wiringControllers.js#1
 network:changed
+  crowds.js#1
   network.js#1
   sceneOutline.js#1
 network:click
@@ -223,6 +226,7 @@ scene-outline:update
 scene:flow-layers
   network.js#1
 scene:semantic-changed
+  crowds.js#1
   sceneOutline.js#1
 section:flash
   SectionController.js#1

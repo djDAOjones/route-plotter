@@ -10,8 +10,11 @@
 # entries the row saved, one at a time, and redoes them: before each Undo its
 # entry is compared with the project, after it the entry under it, and after
 # the Redos the project as it stood. A waypoint handed out that is not the
-# route's own object is marked "a copy" or "not in the route". Written by
-# tests/eventTranscript.test.js (TST-05); regenerate with
+# route's own object is marked "a copy" or "not in the route". A summary that
+# leaves anything out ({…}, [n items], …+n, cut text) ends with a digest of
+# the whole value. Numbers are written to four decimals; the model, recovery
+# and undo comparisons compare them exactly.
+# Written by tests/eventTranscript.test.js (TST-05); regenerate with
 # UPDATE_EVENT_GOLDENS=1 and read the diff.
 
 ## background:upload
@@ -32,11 +35,10 @@ at once: autosave 1, render 1, queued render 2, path 2
     ~ runtime.dirty: false -> true
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 14240.7577  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 28037.671
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -103,7 +105,7 @@ later: render 1
   +0 ms animation:update AnimationState  (no listener)
   model:
     ~ runtime.transport.pathProgress: 0 -> 0.0038
-    ~ runtime.transport.progress: 0 -> 0.0013
+    ~ runtime.transport.progress: 0 -> 0.0006
     ~ runtime.transport.timeMs: 0 -> 16.6768
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
@@ -117,7 +119,7 @@ at once: retime 1
     animation:reset undefined
       said "Animation reset"
       · retime
-      animation:durationChange 13336.2163  (no listener)
+      animation:durationChange 27692.672
       ui:slider:update-speed 150
     animation:play undefined
       said "Playing animation"
@@ -126,7 +128,7 @@ at once: retime 1
     ~ runtime.transport.paused: true -> false
     ~ runtime.transport.playing: false -> true
     ~ runtime.transport.progress: 1 -> 0
-    ~ runtime.transport.timeMs: 13336.2163 -> 0
+    ~ runtime.transport.timeMs: 27692.672 -> 0
     ~ runtime.ui.pauseButton: "none" -> "inline-block"
     ~ runtime.ui.playButton: "inline-block" -> "none"
   selection: none (unchanged)
@@ -136,7 +138,7 @@ later: render 1
   +0 ms animation:update AnimationState  (no listener)
   model:
     ~ runtime.transport.pathProgress: 0 -> 0.0038
-    ~ runtime.transport.progress: 0 -> 0.0013
+    ~ runtime.transport.progress: 0 -> 0.0006
     ~ runtime.transport.timeMs: 0 -> 16.6768
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
@@ -155,8 +157,7 @@ at once: nothing counted
     ~ runtime.ui.playButton: "none" -> "inline-block"
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: render 1
-  +0 ms · render
+later: nothing counted
   +0 ms animation:update AnimationState  (no listener)
   model:
     (unchanged)
@@ -166,23 +167,22 @@ recovery: as the project stands
 
 ## ui:animation:skip-start
 fixture: open day
-given: paused half way
+given: paused half way through the route (half its base timeline)
 at once: retime 1
   ui:animation:skip-start
     animation:reset undefined
       said "Animation reset"
       · retime
-      animation:durationChange 13336.2163  (no listener)
+      animation:durationChange 27692.672
       ui:slider:update-speed 150
   model:
     ~ runtime.transport.pathProgress: 0.5 -> 0
     ~ runtime.transport.paused: true -> false
-    ~ runtime.transport.progress: 0.5 -> 0
+    ~ runtime.transport.progress: 0.2408 -> 0
     ~ runtime.transport.timeMs: 6668.1082 -> 0
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: render 1
-  +0 ms · render
+later: nothing counted
   +0 ms animation:update AnimationState  (no listener)
   model:
     (unchanged)
@@ -195,11 +195,11 @@ fixture: open day
 given: paused at the start, as loaded
 at once: nothing counted
   ui:animation:skip-end
-    animation:seek 13336.2163  (no listener)
+    animation:seek 27692.672  (no listener)
   model:
     ~ runtime.transport.pathProgress: 0 -> 1
     ~ runtime.transport.progress: 0 -> 1
-    ~ runtime.transport.timeMs: 0 -> 13336.2163
+    ~ runtime.transport.timeMs: 0 -> 27692.672
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
 later: nothing counted
@@ -213,11 +213,11 @@ recovery: as the project stands
 fixture: open day
 at once: nothing counted
   ui:animation:seek 0.5
-    animation:seek 6668.1082  (no listener)
+    animation:seek 13846.336  (no listener)
   model:
-    ~ runtime.transport.pathProgress: 0 -> 0.5
+    ~ runtime.transport.pathProgress: 0 -> 1
     ~ runtime.transport.progress: 0 -> 0.5
-    ~ runtime.transport.timeMs: 0 -> 6668.1082
+    ~ runtime.transport.timeMs: 0 -> 13846.336
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
 later: nothing counted
@@ -229,12 +229,12 @@ recovery: as the project stands
 
 ## animation:speed-change
 fixture: open day
-given: paused half way
+given: paused half way through the route (half its base timeline)
 at once: autosave 1, retime 1
   animation:speed-change 400
     animation:speedChange 400  (no listener)
     · retime
-    animation:durationChange 10626.0811  (no listener)
+    animation:durationChange 26659.0059
     animation:seek 5313.0406  (no listener)
     animation:seek 5313.0406  (no listener)
     · autosave
@@ -242,6 +242,7 @@ at once: autosave 1, retime 1
     ~ animationState.duration: 13336.2163 -> 10626.0811
     ~ animationState.speed: 150 -> 400
     ~ runtime.dirty: false -> true
+    ~ runtime.transport.progress: 0.2408 -> 0.1993
     ~ runtime.transport.timeMs: 6668.1082 -> 5313.0406
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
@@ -255,7 +256,7 @@ recovery: as the project stands
 
 ## animation:jkl-reverse
 fixture: open day
-given: paused half way
+given: paused half way through the route (half its base timeline)
 at once: nothing counted
   animation:jkl-reverse
     animation:playbackSpeedChange -1
@@ -275,7 +276,7 @@ later: render 1
   +0 ms animation:update AnimationState  (no listener)
   model:
     ~ runtime.transport.pathProgress: 0.5 -> 0.4962
-    ~ runtime.transport.progress: 0.5 -> 0.4987
+    ~ runtime.transport.progress: 0.2408 -> 0.2402
     ~ runtime.transport.timeMs: 6668.1082 -> 6651.4314
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
@@ -302,7 +303,7 @@ later: render 1
   +0 ms animation:update AnimationState  (no listener)
   model:
     ~ runtime.transport.pathProgress: 0 -> 0.0038
-    ~ runtime.transport.progress: 0 -> 0.0013
+    ~ runtime.transport.progress: 0 -> 0.0006
     ~ runtime.transport.timeMs: 0 -> 16.6768
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
@@ -329,7 +330,7 @@ later: render 1
   +0 ms animation:update AnimationState  (no listener)
   model:
     ~ runtime.transport.pathProgress: 0 -> 0.0154
-    ~ runtime.transport.progress: 0 -> 0.005
+    ~ runtime.transport.progress: 0 -> 0.0024
     ~ runtime.transport.timeMs: 0 -> 66.707
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
@@ -338,7 +339,7 @@ recovery: as the project stands
 
 ## ui:animation:toggle
 fixture: open day
-given: paused half way
+given: paused half way through the route (half its base timeline)
 at once: nothing counted
   ui:animation:toggle
     animation:playbackSpeedChange 1
@@ -357,7 +358,7 @@ later: render 1
   +0 ms animation:update AnimationState  (no listener)
   model:
     ~ runtime.transport.pathProgress: 0.5 -> 0.5038
-    ~ runtime.transport.progress: 0.5 -> 0.5013
+    ~ runtime.transport.progress: 0.2408 -> 0.2414
     ~ runtime.transport.timeMs: 6668.1082 -> 6684.7849
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
@@ -379,8 +380,7 @@ at once: nothing counted
     ~ runtime.ui.playButton: "none" -> "inline-block"
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: render 1
-  +0 ms · render
+later: nothing counted
   +0 ms animation:update AnimationState  (no listener)
   model:
     (unchanged)
@@ -403,11 +403,10 @@ at once: autosave 1, render 1, queued render 1, path 1
     ~ waypoints[ex-uon-3].imgX: 0.78 -> 0.7863
   selection: [ex-uon-3] ex-uon-3 (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: autosave written 1, render 2, retime 1, undo saved 1
+later: autosave written 1, render 1, retime 1, undo saved 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13369.7251  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 27844.2745
   +51 ms animation:update AnimationState  (no listener)
   +400 ms · undo saved
       ~ selectedWaypointId: null -> "ex-uon-3"
@@ -445,11 +444,10 @@ at once: autosave 1, render 1, queued render 1, path 1
     ~ waypoints[ex-uon-3].imgY: 0.42 -> 0.38
   selection: [ex-uon-3] ex-uon-3 (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: autosave written 1, render 2, retime 1, undo saved 1
+later: autosave written 1, render 1, retime 1, undo saved 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 14203.6662  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 30935.9614
   +51 ms animation:update AnimationState  (no listener)
   +400 ms · undo saved
       ~ selectedWaypointId: null -> "ex-uon-3"
@@ -486,11 +484,10 @@ at once: autosave 1, render 1, queued render 1, path 1
     ~ waypoints[ex-uon-3].imgY: 0.42 -> 0.4
   selection: [ex-uon-1 ex-uon-3] ex-uon-3 (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: autosave written 1, render 2, retime 1, undo saved 1
+later: autosave written 1, render 1, retime 1, undo saved 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13348.9913  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 27210.3897
   +51 ms animation:update AnimationState  (no listener)
   +400 ms · undo saved
       ~ selectedWaypointId: null -> "ex-uon-3"
@@ -528,11 +525,10 @@ at once: autosave 1, render 1, queued render 1, path 1
     ~ waypoints[ex-uon-3].imgX: 0.78 -> 1
   selection: [ex-uon-3] ex-uon-3 (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: autosave written 1, render 2, retime 1, undo saved 1
+later: autosave written 1, render 1, retime 1, undo saved 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 14613.076  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 33254.1889
   +51 ms animation:update AnimationState  (no listener)
   +400 ms · undo saved
       ~ selectedWaypointId: null -> "ex-uon-3"
@@ -566,18 +562,19 @@ at once: autosave 1, render 1, queued render 1, path 1
     ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 691 points"]
     ~ runtime.route.pathPoints: 402 -> 747
     ~ waypoints[ex-uon-3].imgX: 0.78 -> 1.5344
+    ~ waypoints[ex-uon-3].imgY: 0.42 -> 0.42000000000000004 (past the fourth decimal)
   selection: [ex-uon-3] ex-uon-3 (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: autosave written 1, render 2, retime 1, undo saved 1
+later: autosave written 1, render 1, retime 1, undo saved 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13448.3816  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 45878.6365
   +51 ms animation:update AnimationState  (no listener)
   +400 ms · undo saved
       ~ selectedWaypointId: null -> "ex-uon-3"
       ~ selectedWaypointIds: [] -> ["ex-uon-3"]
       ~ waypoints[ex-uon-3].imgX: 0.78 -> 1.5344
+      ~ waypoints[ex-uon-3].imgY: 0.42 -> 0.42000000000000004 (past the fourth decimal)
   +400 ms undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
   +1000 ms · autosave written
   model:
@@ -606,10 +603,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
       · queued render
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
       · autosave
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}  (digest d830ce05)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -676,11 +673,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         shapeFrequency = 5
   selection: [ex-uon-3] ex-uon-3 -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 18750.609  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 29757.7624
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -710,10 +706,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
       · queued render
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(wp#1), wp(ex-uon-b1), …+1]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(wp#1), wp(ex-uon-b1), …+1]  (digest 66023bd8)
       · autosave
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}  (digest 70ec9df7)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -780,11 +776,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         shapeFrequency = 5
   selection: [ex-uon-2] ex-uon-2 (unchanged)
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13338.9065  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 27693.6981
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -812,10 +807,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
       · queued render
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
       · autosave
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}  (digest 61446e60)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -882,11 +877,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         shapeFrequency = 5
   selection: [ex-uon-3] ex-uon-3 -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 18920.2669  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 29822.4712
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -904,7 +898,7 @@ undo, performed on the entry it saved, then redone:
 
 ## waypoint:add, the first waypoint of an empty route
 fixture: empty route
-at once: autosave 1, queued render 1, undo saved 1
+at once: autosave 1, queued render 2, path 1, undo saved 1
   waypoint:add {imgX: 0.3, imgY: 0.4, isMajor: true, shiftKey: false}
     waypoint:added wp(wp#1)
       · undo saved
@@ -914,12 +908,15 @@ at once: autosave 1, queued render 1, undo saved 1
           + waypoints#order = wp#1
           + waypoints[wp#1]
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
+      · path
+      · queued render
       waypoint:list-updated [wp(wp#1)]
       · autosave
       · queued render
-  scene-outline:update {crowds: [], focusKey: null, majorCount: 1, minorCount: 0, route: [{…}], selectionKey: null}
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 1, minorCount: 0, route: [{…}], selectionKey: null}  (digest d8898839)
   model:
     ~ runtime.dirty: false -> true
+    ~ runtime.route.trunk: "" -> "wp#1"
     ~ runtime.ui.sections: "waypoints false selection false crowd false" -> "waypoints true selection false crowd false"
     ~ runtime.ui.undoDisabled: true -> false
     - waypoints = []
@@ -986,6 +983,8 @@ at once: autosave 1, queued render 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1
   +0 ms · render
+  +50 ms animation:durationChange 0
+  +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
     (unchanged)
@@ -1011,10 +1010,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
       · queued render
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · autosave
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: null}  (digest adc36bc5)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.branchPaths: ["ex-uon-branch: 353 points"] -> ["ex-uon-branch: 117 points", "ex-uon-branch: 117 points"]
@@ -1084,11 +1083,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         shapeFrequency = 5
   selection: none -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 17117.1452  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 29134.747
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -1108,7 +1106,7 @@ fixture: open day
 at once: nothing counted
   route:branch-arm {waypoint: wp(ex-uon-1)}
     said "Branching from Main entrance. Click where the branch should go."
-    ui:toast {message: "Branch from Main entrance — click where …(68 chars)"}
+    ui:toast {message: "Branch from Main entrance — click where …(68 chars)"}  (digest a51ed99b)
       toast "Branch from Main entrance — click where it should go (Esc to cancel)"
   model:
     ~ runtime.branchArmed: null -> "ex-uon-1"
@@ -1169,8 +1167,8 @@ at once: autosave 2, queued render 4, path 2, retime 1, undo saved 2
     · path
     · queued render
     · retime
-    animation:durationChange 13336.2163  (no listener)
-    waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]
+    animation:durationChange 27692.672
+    waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]  (digest d6157b5d)
     waypoint:added wp(wp#1)
       · undo saved
           ~ selectedWaypointId: null -> "wp#1"
@@ -1178,13 +1176,13 @@ at once: autosave 2, queued render 4, path 2, retime 1, undo saved 2
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 2}
       · path
       · queued render
-      waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]
+      waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]  (digest d6157b5d)
       · autosave
       · queued render
     · autosave
     · queued render
     said "Branch added from Main entrance."
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}  (digest 74c55eda)
   model:
     ~ runtime.branchArmed: "ex-uon-1" -> null
     ~ runtime.dirty: false -> true
@@ -1254,11 +1252,10 @@ at once: autosave 2, queued render 4, path 2, retime 1, undo saved 2
         shapeFrequency = 5
   selection: none -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 3, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13336.2163  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 27692.672
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -1284,14 +1281,14 @@ at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
     · path
     · queued render
     · retime
-    animation:durationChange 13336.2163  (no listener)
+    animation:durationChange 27692.672
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · autosave
     · queued render
     said "Branch now ends here"
     ui:toast {message: "Branch now ends here"}
       toast "Branch now ends here"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 9d17540a)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 117 points"]
@@ -1300,12 +1297,8 @@ at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
     - waypoints[ex-uon-b1].branchRejoin = "ex-uon-3"
   selection: none (unchanged)
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1
   +0 ms · render
-  +50 ms · retime
-  +50 ms animation:durationChange 13336.2163  (no listener)
-  +51 ms · render
-  +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
     (unchanged)
@@ -1324,7 +1317,7 @@ at once: queued render 1
     ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest ce481334)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-2] ex-uon-2
@@ -1344,7 +1337,7 @@ at once: queued render 1
     ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest e64775c2)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-1 ex-uon-3] ex-uon-3
@@ -1366,7 +1359,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest e64775c2)
   model:
     (unchanged)
   selection: [ex-uon-1] ex-uon-1 -> [ex-uon-1 ex-uon-3] ex-uon-3
@@ -1389,7 +1382,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2a"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2a"}  (digest 5dd138a9)
   model:
     (unchanged)
   selection: [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-3] ex-uon-3 -> [ex-uon-1 ex-uon-2 ex-uon-2a] ex-uon-2a
@@ -1412,7 +1405,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest e64775c2)
   model:
     (unchanged)
   selection: [ex-uon-1 ex-uon-2a ex-uon-3] ex-uon-3 -> [ex-uon-2a ex-uon-3] ex-uon-3
@@ -1435,7 +1428,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-1"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-1"}  (digest e82e6b4a)
   model:
     (unchanged)
   selection: [ex-uon-1 ex-uon-3] ex-uon-3 -> [ex-uon-1] ex-uon-1
@@ -1457,7 +1450,7 @@ at once: queued render 1
     waypoint:deselected
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 9d17540a)
   model:
     ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
   selection: [ex-uon-1] ex-uon-1 -> none
@@ -1477,7 +1470,7 @@ at once: queued render 1
   waypoint:deselected
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 9d17540a)
   model:
     ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
   selection: [ex-uon-2] ex-uon-2 -> none
@@ -1501,7 +1494,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
           - waypoints[ex-uon-1]
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
-      ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}
+      ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}  (digest 795495d6)
         toast "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
       said "A crowd node lost the waypoint it followed and is back at its own position."
       · queued render
@@ -1509,7 +1502,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · autosave
       · queued render
     said "Waypoint deleted"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest b09796e1)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 302
@@ -1519,11 +1512,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
     - waypoints[ex-uon-1]
   selection: [ex-uon-1] ex-uon-1 -> none
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 9008.8918  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 26042.1976
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -1552,7 +1544,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
           - waypoints[ex-uon-1]
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
-      ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}
+      ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}  (digest 795495d6)
         toast "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
       said "A crowd node lost the waypoint it followed and is back at its own position."
       · queued render
@@ -1560,7 +1552,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · autosave
       · queued render
     said "Waypoint deleted"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest b09796e1)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 302
@@ -1570,11 +1562,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
     - waypoints[ex-uon-1]
   selection: [ex-uon-1 ex-uon-2a ex-uon-3] ex-uon-1 -> [ex-uon-2a ex-uon-3] ex-uon-3
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 9008.8918  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 26042.1976
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -1605,7 +1596,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · autosave
       · queued render
     said "Waypoint deleted"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest b21b8680)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 373
@@ -1615,11 +1606,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
     - waypoints[ex-uon-2a]
   selection: [ex-uon-2a] ex-uon-2a -> none
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13221.8933  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 27649.0683
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -1645,7 +1635,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
           - waypoints[ex-uon-2a]
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
-      ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}
+      ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}  (digest 795495d6)
         toast "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
       said "A crowd node lost the waypoint it followed and is back at its own position."
       · queued render
@@ -1656,7 +1646,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     said "2 waypoints deleted"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}  (digest cdb04161)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 225
@@ -1668,11 +1658,10 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
     - waypoints[ex-uon-2a]
   selection: [ex-uon-1 ex-uon-2a] ex-uon-2a -> none
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 9008.8918  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 26042.1976
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -1689,13 +1678,16 @@ undo, performed on the entry it saved, then redone:
 
 ## waypoints:clear-all
 fixture: open day
-at once: render 1, retime 1
+at once: render 1, queued render 1, path 1, retime 1
   waypoints:clear-all
+    · path
+    · queued render
     animation:reset undefined
       said "Animation reset"
       · retime
+      animation:durationChange 13336.2163
       ui:slider:update-speed 150
-    animation:durationChange 0  (no listener)
+    animation:durationChange 0
     animation:pause undefined
       said "Animation paused"
     waypoint:list-updated []
@@ -1706,7 +1698,12 @@ at once: render 1, retime 1
   scene-outline:update {crowds: [], focusKey: null, majorCount: 0, minorCount: 0, route: [], selectionKey: null}
   model:
     ~ animationState.duration: 13336.2163 -> 0
+    ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> []
+    ~ runtime.route.branches: ["ex-uon-branch: ex-uon-2 to ex-uon-3: ex-uon-b1"] -> []
     ~ runtime.route.pathPoints: 402 -> 0
+    ~ runtime.route.trunk: "ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-3" -> ""
+    ~ runtime.timeline.beacons: 2 -> 0
+    ~ runtime.timeline.pauses: 2 -> 0
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints false selection false crowd false"
     + scene.flowLayers = []
     - scene.flowLayers#order = ex-uon-crowd
@@ -1745,11 +1742,11 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
         · path
         · queued render
-        waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]
+        waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
         · autosave
         · queued render
     said "Waypoint added at center"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}  (digest e15724f6)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 539
@@ -1816,11 +1813,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         shapeFrequency = 5
   selection: none -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 19614.8499  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 30087.3905
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -1842,7 +1838,7 @@ act: ex-uon-2 renamed in the list, then reported on the bus
 at once: autosave 1
   waypoint:name-changed {name: "Trent", waypoint: wp(ex-uon-2)}
     · autosave
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 9fa0573a)
   model:
     ~ runtime.dirty: false -> true
     ~ waypoints[ex-uon-2].name: "Trent Building" -> "Trent"
@@ -1871,7 +1867,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest ce481334)
   model:
     ~ runtime.ui.contextMenu: "closed" -> "Waypoint actions: Rename | Convert to minor waypoint | Insert waypoint before | Insert waypoint after | Delete waypoint"
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
@@ -1928,7 +1924,7 @@ at once: autosave 1, queued render 3, path 1, retime 1, undo saved 1
     · path
     · queued render
     · retime
-    animation:durationChange 13336.2163  (no listener)
+    animation:durationChange 27692.672
     waypoint:selected wp(ex-uon-2a)
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
@@ -1936,7 +1932,7 @@ at once: autosave 1, queued render 3, path 1, retime 1, undo saved 1
     · autosave
     · queued render
     said "Converted to major waypoint"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2a"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2a"}  (digest a6da564b)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
@@ -1944,11 +1940,10 @@ at once: autosave 1, queued render 3, path 1, retime 1, undo saved 1
     ~ waypoints[ex-uon-2a].isMajor: false -> true
   selection: none -> [ex-uon-2a] ex-uon-2a
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13336.2163  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 27692.672
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -1975,15 +1970,15 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
       · queued render
-      waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]
+      waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]  (digest d6157b5d)
       · autosave
       · queued render
     waypoint:selected wp(wp#1)
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
-      waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]
+      waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]  (digest d6157b5d)
       · queued render
     said "Waypoint inserted after"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:wp#1"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:wp#1"}  (digest c5b757f4)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -2051,11 +2046,10 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
         shapeFrequency = 5
   selection: none -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 14834.9207  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 28264.2892
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -2084,15 +2078,15 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
       · queued render
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · autosave
       · queued render
     waypoint:selected wp(wp#1)
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · queued render
     said "Waypoint inserted after"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}  (digest 94e54f9e)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.branchPaths: ["ex-uon-branch: 353 points"] -> ["ex-uon-branch: 117 points", "ex-uon-branch: 117 points"]
@@ -2163,11 +2157,10 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
         shapeFrequency = 5
   selection: none -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 17117.1452  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 29134.747
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -2196,15 +2189,15 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
       · queued render
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-b2), …+2]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-b2), …+2]  (digest 73c14719)
       · autosave
       · queued render
     waypoint:selected wp(wp#1)
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-b2), …+2]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-b2), …+2]  (digest 73c14719)
       · queued render
     said "Waypoint inserted after"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}  (digest a6931763)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -2272,11 +2265,10 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
         shapeFrequency = 5
   selection: none -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 15583.5784  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 28549.8329
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -2302,7 +2294,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest ce481334)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-2] ex-uon-2
@@ -2405,11 +2397,10 @@ at once: render 1, queued render 1, path 1
     ~ timingReference.width: 1173.3333 -> 782.2222
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: render 2, retime 1
+later: render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 12634.8425  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 27425.1627
   +51 ms animation:update AnimationState  (no listener)
   model:
     ~ animationState.duration: 13336.2163 -> 12634.8425
@@ -2434,11 +2425,10 @@ at once: render 1, queued render 1, path 1
     ~ timingReference.width: 1173.3333 -> 1280
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: render 2, retime 1
+later: render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 12153.6119  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 27241.6177
   +51 ms animation:update AnimationState  (no listener)
   model:
     ~ animationState.duration: 13336.2163 -> 12153.6119
@@ -2464,11 +2454,10 @@ at once: render 1, queued render 1, path 1
     ~ timingReference.width: 1173.3333 -> 933.1587
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-later: render 2, retime 1
+later: render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13336.2163  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 27692.672
   +51 ms animation:update AnimationState  (no listener)
   model:
     (unchanged)
@@ -2537,7 +2526,7 @@ fixture: open day
 at once: queued render 1, retime 1
   motion:preview-mode-change true
     · retime
-    animation:durationChange 13336.2163  (no listener)
+    animation:durationChange 27692.672
     · queued render
   model:
     ~ runtime.previewMode: false -> true
@@ -2557,7 +2546,7 @@ given: Preview mode
 at once: autosave 1, queued render 1, retime 1
   motion:path-visibility-change "instantaneous"
     · retime
-    animation:durationChange 13336.2163  (no listener)
+    animation:durationChange 27692.672
     · autosave
     · queued render
   model:
@@ -2580,7 +2569,7 @@ given: Preview mode
 at once: autosave 1, queued render 1, retime 1
   motion:path-trail-change 0.25
     · retime
-    animation:durationChange 13336.2163  (no listener)
+    animation:durationChange 27692.672
     · autosave
     · queued render
   model:
@@ -2623,7 +2612,7 @@ given: Preview mode
 at once: autosave 1, queued render 1, retime 1
   motion:background-visibility-change "spotlight-reveal"
     · retime
-    animation:durationChange 14336.2163  (no listener)
+    animation:durationChange 28074.0796
     · autosave
     · queued render
   model:
@@ -2773,7 +2762,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
     waypoint:list-updated [wp(ex-parm-2), wp(ex-parm-1), wp(ex-parm-1a), wp(ex-parm-3)]
     · autosave
     · queued render
-  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}  (digest 1b8f8dfa)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 368 -> 577
@@ -2782,11 +2771,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
     ~ waypoints#order: ex-parm-1 ex-parm-1a ex-parm-2 ex-parm-3 -> ex-parm-2 ex-parm-1 ex-parm-1a ex-parm-3
   selection: none (unchanged)
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 10247.7011  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 10247.7011
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -2911,10 +2899,11 @@ recovery: as the project stands
 ## area:check-handle
 fixture: authored extras
 given: ex-uon-2 (a rectangle area) selected
-act: the centre handle of its area
+act: the centre handle of its area; the imageToScreen it answers with is then called, detached, as AreaEditService calls it, on the area's centre
 at once: nothing counted
   area:check-handle {screenX: 276.3914, screenY: 491.7}, fn
     answered {imageToScreen: fn, type: "center", waypoint: wp(ex-uon-2)}
+    its imageToScreen of the centre answers {x: 276.3914, y: 491.7}
   model:
     (unchanged)
   selection: [ex-uon-2] ex-uon-2 (unchanged)
@@ -2955,7 +2944,7 @@ at once: queued render 1
     · queued render
     answered "leg-plus"
   model:
-    ~ runtime.hover: null -> "leg-plus ex-parm-1"
+    ~ runtime.hover: null -> "leg-plus ex-parm-1 at index 0 on the trunk"
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
 later: render 1
@@ -2989,7 +2978,7 @@ fixture: PARM walk
 act: the midpoint of the first leg
 at once: nothing counted
   segment:check-at-position {x: 385.2974, y: 435.4434}, fn
-    answered {midImg: {x: 0.2601, y: 0.6598}, onPlus: true, waypoint: wp(ex-parm-1), waypointIndex: 0}
+    answered {branchId: null, canInsert: true, midImg: {x: 0.2601, y: 0.6598}, next: wp(ex-parm-1a), onPlus: true, waypoint: wp(ex-parm-1), waypointIndex: 0}
   model:
     (unchanged)
   selection: none (unchanged)
@@ -3006,7 +2995,7 @@ fixture: open day
 act: the midpoint of the first leg
 at once: nothing counted
   segment:check-at-position {x: 383.02, y: 360.6263}, fn
-    answered null
+    answered {branchId: null, canInsert: true, midImg: {x: 0.2818, y: 0.5464}, next: wp(ex-uon-2), onPlus: true, waypoint: wp(ex-uon-1), waypointIndex: 0}
   model:
     (unchanged)
   selection: none (unchanged)
@@ -3027,7 +3016,7 @@ at once: queued render 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     section:flash {section: "leg"}
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest ce481334)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-2] ex-uon-2
@@ -3061,7 +3050,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       waypoint:list-updated [wp(ex-parm-1), wp(wp#1), wp(ex-parm-1a), wp(ex-parm-2), wp(ex-parm-3)]
       · queued render
     said "Minor waypoint added to leg"
-  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:wp#1"}
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:wp#1"}  (digest 1c8b0424)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 368 -> 402
@@ -3129,11 +3118,10 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
         shapeFrequency = 5
   selection: none -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 10827.6803  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 10827.6803
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -3162,15 +3150,15 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
       · path
       · queued render
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · autosave
       · queued render
     waypoint:selected wp(wp#1)
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
-      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]
+      waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · queued render
     said "Minor waypoint added to leg"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}  (digest e8f19f8a)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.branchPaths: ["ex-uon-branch: 353 points"] -> ["ex-uon-branch: 117 points", "ex-uon-branch: 117 points"]
@@ -3241,11 +3229,10 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
         shapeFrequency = 5
   selection: none -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 15617.1452  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 28562.6356
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -3301,7 +3288,7 @@ at once: queued render 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     said "Selection cleared"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 9d17540a)
   model:
     ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
   selection: [ex-uon-2] ex-uon-2 -> none
@@ -3329,11 +3316,11 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
         · path
         · queued render
-        waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]
+        waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
         · autosave
         · queued render
     said "Waypoint duplicated"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}  (digest 773884e5)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 578
@@ -3400,11 +3387,10 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         shapeFrequency = 5
   selection: [ex-uon-2] ex-uon-2 -> [wp#1] wp#1
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 20100.9696  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 30272.8002
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -3429,7 +3415,7 @@ at once: queued render 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     said "All waypoints selected"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-1"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-1"}  (digest e82e6b4a)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3] ex-uon-1
@@ -3452,7 +3438,7 @@ at once: queued render 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     said "All waypoints selected"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest e64775c2)
   model:
     (unchanged)
   selection: [ex-uon-3] ex-uon-3 -> [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3] ex-uon-3
@@ -3576,7 +3562,7 @@ at once: autosave 1, render 1, queued render 1, path 1
     · render
     · autosave
     said "Undo"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 9d17540a)
   model:
     ~ runtime.route.branchPaths: ["ex-uon-branch: 330 points"] -> ["ex-uon-branch: 318 points"]
     ~ runtime.ui.redoDisabled: true -> false
@@ -3588,7 +3574,7 @@ at once: autosave 1, render 1, queued render 1, path 1
 later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13336.2163  (no listener)
+  +50 ms animation:durationChange 27692.672
   +1000 ms · autosave written
   model:
     ~ animationState.duration: 13472.2206 -> 13336.2163
@@ -3610,7 +3596,7 @@ at once: autosave 1, render 1, queued render 1, path 1
     · render
     · autosave
     said "Redo"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest 6b826206)
   model:
     ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 330 points"]
     ~ runtime.ui.redoDisabled: false -> true
@@ -3622,7 +3608,7 @@ at once: autosave 1, render 1, queued render 1, path 1
 later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13472.2206  (no listener)
+  +50 ms animation:durationChange 28302.9681
   +1000 ms · autosave written
   model:
     ~ animationState.duration: 13336.2163 -> 13472.2206

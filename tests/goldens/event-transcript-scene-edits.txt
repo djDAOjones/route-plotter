@@ -10,8 +10,11 @@
 # entries the row saved, one at a time, and redoes them: before each Undo its
 # entry is compared with the project, after it the entry under it, and after
 # the Redos the project as it stood. A waypoint handed out that is not the
-# route's own object is marked "a copy" or "not in the route". Written by
-# tests/eventTranscript.test.js (TST-05); regenerate with
+# route's own object is marked "a copy" or "not in the route". A summary that
+# leaves anything out ({…}, [n items], …+n, cut text) ends with a digest of
+# the whole value. Numbers are written to four decimals; the model, recovery
+# and undo comparisons compare them exactly.
+# Written by tests/eventTranscript.test.js (TST-05); regenerate with
 # UPDATE_EVENT_GOLDENS=1 and read the diff.
 
 ## scene-outline:command update-waypoint
@@ -22,7 +25,7 @@ at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
     · path
     · queued render
     · retime
-    animation:durationChange 13386.1287  (no listener)
+    animation:durationChange 28697.4064
     · undo saved
         ~ waypoints[ex-uon-2].imgX: 0.4 -> 0.45
     undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
@@ -30,7 +33,7 @@ at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
     · autosave
     · queued render
     said "Major waypoint updated."
-  scene-outline:update {crowds: [{…}], focusKey: "waypoint:ex-uon-2:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: "waypoint:ex-uon-2:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 1e43d387)
   model:
     ~ animationState.duration: 13336.2163 -> 13386.1287
     ~ runtime.dirty: false -> true
@@ -39,11 +42,10 @@ at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
     ~ waypoints[ex-uon-2].imgX: 0.4 -> 0.45
   selection: none (unchanged)
   history: stack 1, redo 0 -> stack 2, redo 0
-later: autosave written 1, render 2, retime 1
+later: autosave written 1, render 1, retime 1
   +0 ms · render
   +50 ms · retime
-  +50 ms animation:durationChange 13386.1287  (no listener)
-  +51 ms · render
+  +50 ms animation:durationChange 28697.4064
   +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
@@ -67,7 +69,7 @@ at once: autosave 1, queued render 1, undo saved 1
     · autosave
     · queued render
     said "Open day visitors updated."
-  scene-outline:update {crowds: [{…}], focusKey: "crowd:ex-uon-crowd:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: "crowd:ex-uon-crowd:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 3e14e7e3)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.ui.undoDisabled: true -> false
@@ -91,14 +93,14 @@ undo, performed on the entry it saved, then redone:
 fixture: open day
 act: the crowd's dots raised from 60 to 80 in the outline
 at once: autosave 1, queued render 1, undo saved 1
-  scene-outline:command {action: "update-emitter", dotColor: "#56B4E9", dotCount: "80", dotSize: 0.45, emitterId: "ex-uon-emitter", intensityRamp: "0", layerId: "ex-uon-crowd", lifecycleMode: "disappear", …+7}
+  scene-outline:command {action: "update-emitter", dotColor: "#56B4E9", dotCount: "80", dotSize: 0.45, emitterId: "ex-uon-emitter", intensityRamp: "0", layerId: "ex-uon-crowd", lifecycleMode: "disappear", …+7}  (digest 96305922)
     · undo saved
         ~ scene.flowLayers[ex-uon-crowd].emitters[ex-uon-emitter].dotCount: 60 -> 80
     undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
     · autosave
     · queued render
     said "Primary emitter updated."
-  scene-outline:update {crowds: [{…}], focusKey: "emitter:ex-uon-crowd:ex-uon-emitter:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: "emitter:ex-uon-crowd:ex-uon-emitter:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 5b45e27e)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.ui.undoDisabled: true -> false
@@ -107,6 +109,8 @@ at once: autosave 1, queued render 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1
   +0 ms · render
+  +50 ms animation:durationChange 27207.5672
+  +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
     (unchanged)
@@ -140,7 +144,7 @@ at once: autosave 1, queued render 2, undo saved 1
     ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
     · queued render
     said "Polygon created with three vertices."
-  scene-outline:update {crowds: [{…}], focusKey: "vertex:ex-uon-3:0:select", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "vertex:ex-uon-3:0"}
+  scene-outline:update {crowds: [{…}], focusKey: "vertex:ex-uon-3:0:select", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "vertex:ex-uon-3:0"}  (digest 581f8efd)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
@@ -185,7 +189,7 @@ at once: autosave 1, queued render 1, undo saved 1
     crowd:selected FlowLayer(fl#1)
     · queued render
     said "Crowd 1 added — dots follow the route"
-  scene-outline:update {crowds: [{…}, {…}], focusKey: "crowd:fl#1:select", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "crowd:fl#1"}
+  scene-outline:update {crowds: [{…}, {…}], focusKey: "crowd:fl#1:select", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "crowd:fl#1"}  (digest 87049a05)
   model:
     ~ runtime.crowd: null -> "fl#1"
     ~ runtime.dirty: false -> true
@@ -207,10 +211,10 @@ at once: autosave 1, queued render 1, undo saved 1
         emitters[em#1].intensityRamp = 0
         emitters[em#1].lifecycleMode = "respawn"
         emitters[em#1].onsetVariance = 0.2
-        emitters[em#1].releaseDuration = 1
+        emitters[em#1].releaseDuration = 0.5
         emitters[em#1].releaseStart = 0
         emitters[em#1].seed = 834248658
-        emitters[em#1].speed = 0.15
+        emitters[em#1].speed = 0.4
         emitters[em#1].speedVariance = 0.2
         emitters[em#1].wobble = 0
         graph.edges = []
@@ -248,7 +252,7 @@ at once: autosave 1, queued render 1, undo saved 1
     scene:semantic-changed {kind: "crowd-deleted", layerId: "ex-uon-crowd"}
     ui:toast {message: "Deleted Visitors — press Ctrl+Z to undo"}
       toast "Deleted Visitors — press Ctrl+Z to undo"
-  scene-outline:update {crowds: [], focusKey: "crowds:add", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [], focusKey: "crowds:add", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 2d50841e)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.ui.undoDisabled: true -> false
@@ -259,6 +263,8 @@ at once: autosave 1, queued render 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1
   +0 ms · render
+  +50 ms animation:durationChange 13336.2163
+  +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
     (unchanged)
@@ -280,7 +286,7 @@ at once: autosave 1, queued render 1, undo saved 1
     undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
     · autosave
     · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 1012b9f2)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.ui.undoDisabled: true -> false
@@ -314,7 +320,9 @@ at once: autosave 1, queued render 1
   history: stack 1, redo 0 (unchanged)
 later: autosave written 1, render 1, undo saved 1
   +0 ms · render
-  +75 ms scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}
+  +50 ms animation:durationChange 22041.1375
+  +51 ms animation:update AnimationState  (no listener)
+  +75 ms scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 1cee3b64)
   +400 ms · undo saved
       ~ scene.flowLayers[ex-uon-crowd].emitters[ex-uon-emitter].speed: 0.06 -> 0.08
   +400 ms undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}

@@ -22,7 +22,6 @@
 
 - [~] TST-14 — Shell and ContextMenu safety tests · Characterisation P1 — since 2026-10-01
 - [~] TST-08 — Mixin composition guards · Characterisation P1 — since 2026-10-01
-- [~] TST-05 — Event transcript golden · Characterisation P1 — since 2026-10-01
 - [~] DEF-45 — Announcements overwrite each other · Accessibility P3 — since 2026-10-01
 - [~] TST-04 — Sidebar control and readout goldens · Characterisation P1 — since 2026-10-01
 - [~] DEF-28 — A failed recovery restore is silent · Live defect P2 — since 2026-10-01
@@ -55,9 +54,9 @@
 - [ ] DEF-13 — A focused button swallows every shortcut · Accessibility P1 — since 2026-10-01
 - [ ] DEF-32 — Activating a list row loses focus · Accessibility P1 — since 2026-10-01
 - [ ] DEF-14 — A hint click stops a label toggling · Accessibility P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01 — blocked: TST-05
+- [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01
 - [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01 — blocked: TST-04
-- [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01 — blocked: TST-05
+- [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01
 
 **W4 — remove clearly dead code (§20 Q8; mutate every branch of anything moved, and account for every survivor)**
 
@@ -80,15 +79,15 @@
 - [ ] DEF-60 — Refused rejoin half-restored — since 2026-10-05
 - [ ] DEF-62 — Space at end stalls — since 2026-10-05
 - [ ] DEF-63 — Shortcuts take modifier chords — since 2026-10-05
-- [ ] DEF-65 — Branch place: two undos — since 2026-10-05 — blocked: TST-05
-- [ ] DEF-66 — Export settings skip autosave — since 2026-10-05 — blocked: TST-05
+- [ ] DEF-65 — Branch place: two undos — since 2026-10-05
+- [ ] DEF-66 — Export settings skip autosave — since 2026-10-05
 - [ ] DEF-67 — Open announces "paused" — since 2026-10-05 — blocked: DEF-45, DEF-28
 - [ ] DEF-68 — Paused camera controls sleep — since 2026-10-05
 - [ ] DEF-69 — Zoom warning unattached — since 2026-10-05
 - [ ] DEF-70 — Menu item drops focus — since 2026-10-05 — blocked: TST-14
 - [ ] DEF-71 — Unknown build flag releases — since 2026-10-05
 - [ ] DEF-73 — Leg card misnames waypoint — since 2026-10-05
-- [ ] DEF-74 — Redo restores no selection — since 2026-10-05 — blocked: TST-05
+- [ ] DEF-74 — Redo restores no selection — since 2026-10-05
 - [ ] DEF-75 — Index check misses references — since 2026-10-05
 - [ ] DEF-76 — Leg-speed edit stales timing — since 2026-10-05
 - [ ] DEF-78 — Comet tail retimes crowds — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
