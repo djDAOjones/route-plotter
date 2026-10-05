@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — TST-13 — The key table, element ids and HTML number ranges are pinned against the code
+
+**Decision:** TST-13 lands (PR #69): Help as it renders, each key listener's keys read from its source and pressed on its target, each element-id lookup against its page, and each range and number field's markup, code and handler are pinned, because DEL-05, DEF-13, DEF-15, DEF-32 and three found defects need that harness first.
+
+**Rationale:** the round Codex's fourth review asked for is finished in the tests only. The source reader trusts a followed helper only where its file otherwise just calls it, reads a member of it or passes it whole, and reports any other use unread (F1); it decodes escaped strings before comparing names and reports escaped method names, event types, event identifiers and `getElementById` (F2); number attributes are read with HTML's number syntax (F3). P1, P3 and P5, applied in place, each fail the suite by assertion, and the reader's inventory of `src/` is unchanged (21 listeners, 314 id calls). The key domain is the listed named keys, F1–F24 and Soft1–Soft4 (A1). The plan row names the scanner's limit: a name built at run time, or a method another file assigns or overrides. Digest rule applied: house conventions → Testing and persistence. DEF-13, DEF-32, DEF-62, DEF-63 and DEF-69 no longer wait on it; DEF-15 waits on TST-05, and DEL-05 on TST-04.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — SPL-06 — build.js builds only when run as a script, and exports the checks a release applies
 
 **Decision:** SPL-06 lands (PR #75): `build.js` builds only when it is run as a script, so tests can import it, and it exports the checks a release applies (the image manifest, the index.html stamp and its check, the Pages inventory, the command line) and the publish and failed-build rollback steps, which act only on the paths they are given; every mode the repository uses runs as before, because TST-11 needs a `build.js` it can load.
