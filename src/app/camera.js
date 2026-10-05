@@ -237,6 +237,7 @@ export const cameraMixin = {
   /**
    * Calculate camera state for current animation frame
    * Uses CameraService to interpolate zoom based on per-waypoint settings
+   * A frame that draws no camera settles it instead (DEF-44).
    * 
    * @private
    * @param {number} canvasWidth - Canvas width
@@ -247,6 +248,12 @@ export const cameraMixin = {
     // Only apply camera in preview mode, and only when the export "Camera movement" toggle is on.
     // includeCamera=false → identity transform in preview and export (flat, fixed view).
     if (!this.previewMode || !this.exportSettings.includeCamera) {
+      // Nothing advances the camera here, and the render loop stays awake
+      // while it is short of its target: in Edit mode, after the camera had
+      // moved in Preview, about 60 frames a second (DEF-44). A move still
+      // easing ends on its target at once, unseen in this flat view, and
+      // Preview resumes from there.
+      this.cameraService.settle();
       return { zoom: 1, centerX: canvasWidth / 2, centerY: canvasHeight / 2, enabled: false };
     }
     
@@ -280,7 +287,7 @@ export const cameraMixin = {
       CameraService.toMajorKeyframes(this.waypoints, this.getWaypointProgressValues());
 
     // Calculate camera state using CameraService
-    return this.cameraService.calculateCameraState({
+    const cameraState = this.cameraService.calculateCameraState({
       progress,
       waypoints: cameraWaypoints,
       waypointProgressValues: cameraProgressValues,
@@ -289,5 +296,16 @@ export const cameraMixin = {
       canvasHeight,
       animationDuration: this.animationEngine.state.duration
     });
+
+    // The author's viewport zoom takes the camera's place, as `hasZoom` does
+    // in `RenderingService.render` (DEF-61), so this camera is not drawn
+    // either, and easing it out of sight kept the loop awake (DEF-44). It
+    // has still followed the head, and is put where it comes to rest, at its
+    // target zoom on the centre for that zoom, so it is in place when the
+    // zoom is undone: that draws one frame and wakes no loop.
+    const hasZoom = this.viewport && this.viewport.zoom > 1;
+    if (!hasZoom) return cameraState;
+    this.cameraService.settle();
+    return { zoom: 1, centerX: canvasWidth / 2, centerY: canvasHeight / 2, enabled: false };
   }
 };
