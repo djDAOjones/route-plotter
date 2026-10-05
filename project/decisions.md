@@ -24,28 +24,26 @@
 
 **Items:** DEF-06, DEF-53, DEF-44, SPL-06, TST-13, DEF-42, TST-16, DEF-64, TST-14, TST-08, TST-05, DEF-45, TST-04, DEF-28
 
-**Rationale:** the review (plan step 2) is of the open pull requests against GATELESS-1's order. Each one's last review asked for the following. Five reviews thought lost in the 2026-10-01 reboot had finished, and their reports survive in the old Mac's Codex logs.
+**Rationale:** the review (plan step 2) is of the open pull requests against GATELESS-1's order. Each one's last review asked for the following. Five reviews thought lost in the 2026-10-01 reboot had finished. Each item's file now holds its round to finish: the reviewed commit and the open findings, checked against the current head and brought into the record from the run's Codex logs.
 - DEF-06, #61, r16: one coverage gap; an accepted-rejoin rate mutant passes every test but saves the wrong timing.
 - DEF-53, #64, r11: one test gap; a deferred resize passes the tests but corrupts later frames when queued callbacks run.
 - DEF-44, #71, r3: the idle claim's hole; an ordinary zoom-out renews eight invisible player frames.
 - SPL-06, #75, r2: two test-assurance gaps; no build regression across 18 comparisons.
 - TST-13, #69, r4: three surviving mutants (reassigned helper reads, escaped listener names, malformed numeric markup).
-- DEF-42, #62: it waits on DEF-06, then merges `main` and resumes.
+- DEF-42, #62: it waits on DEF-06, which changes the code it conflicts on; once DEF-06 lands, it merges `main` and resumes.
 - TST-16, #76, r1: image bytes and history counts.
 - DEF-64, #77, r1: a check that is not equivalent, plus topology and ownership gaps; a Chromium check is owed.
 - TST-14, #74, r2: five gaps; the menu acts on the primary item, not the right-clicked one.
-- TST-08, #73, r2: seven blocking; the guards read text, not the syntax tree.
+- TST-08, #73, r2: seven blocking, text guards where the syntax tree was wanted. Its head already parses the syntax tree, so some may be answered; its item file reconciles them.
 - TST-05, #72, r3: a lookup getter and payload summaries.
 - DEF-45, #70, r3: a bounded announcement queue, uncommitted at the reboot; it conflicts with `main`.
 - TST-04, #57, r8: an early-cached `addEventListener` bypasses the credit.
 - DEF-28, #54, r11: three behaviour defects and surviving mutants; it conflicts with `main`, and a Chromium check is owed.
-Readiest means fewest open findings first, with dependencies kept (DEF-42 after DEF-06) and conflicts and size last.
+Readiest means fewest open findings first, with dependencies kept (DEF-42 after DEF-06, whose landing settles its conflict) and the other conflicts (#54, #70) and size last.
 
 Each pull request merges current `main`, moves its `pm_skills/` record edits into `project/` and finishes its round from its review's report; earlier partial diffs and transcripts are reference only. Then GATELESS-1 conditions 4 to 7 apply. One that cannot be made sound in one round is closed with a note and re-planned as a small fresh item.
 
-Findings answered: 14 pull requests unmerged, and DEF-53 and DEF-64 had no backlog line; both are now Phase 1 items with files. Deferred, each a line per rule 5:
-- the found defects DEF-50, 51, 54–58, 60, 62, 63 and 65–76, each with an item file;
-- W5's TST-03, TST-09 and TST-11, W4 and the defects after their W5 test, which stay in Next in GATELESS-1's order.
+Findings answered: 14 pull requests unmerged; DEF-53 and DEF-64 had no backlog line, and both are now Phase 1 items with files; Next listed W4 before the defects that wait on their W5 test, against GATELESS-1's order, and now lists them first. None is deferred. Outside this phase and already lines in Next, in GATELESS-1's order: W5's TST-03, TST-09 and TST-11; the defects after their W5 test; W4; and the found defects DEF-50, 51, 54–58, 60, 62, 63 and 65–76, each with an item file and recorded under GATELESS-1's order to reconcile the backlog.
 
 The session's calls, for the owner to confirm:
 - this order;
@@ -57,7 +55,8 @@ Codex reviews this plan before it executes.
 
 **Supersedes:** none
 
-**Deferred:** DEF-50, DEF-51, DEF-54, DEF-55, DEF-56, DEF-57, DEF-58, DEF-60, DEF-62, DEF-63, DEF-65, DEF-66, DEF-67, DEF-68, DEF-69, DEF-70, DEF-71, DEF-72, DEF-73, DEF-74, DEF-75, DEF-76
+**Deferred:** none
+
 ## 2026-10-05 — REL-693 — v3.2.693 ships everything merged since v3.2.692
 
 **Decision:** v3.2.693 is live from deploy commit `1cc8d29` (tag `v3.2.693`), GATELESS-1's first release: it ships `main` at `73bf572`, the 40 commits merged since v3.2.692 (2026-09-24), most of them defect fixes, ahead of anything else landing, because the owner's prompt of 2026-10-05 says "Release main as it stands, before landing anything else."

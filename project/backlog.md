@@ -44,15 +44,6 @@
 - [ ] TST-03 — Visibility mode matrix · Characterisation P1 — since 2026-10-01
 - [ ] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01 — blocked: SPL-06
 
-**W4 — remove clearly dead code (§20 Q8; mutate every branch of anything moved, and account for every survivor)**
-
-- [ ] DEL-02 — Render dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-03 — Engine, geometry and bus dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-04 — Wiring dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-05 — UI, config and CSS dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04, TST-13
-- [ ] DEL-06 — Services dead API · Dead code P2 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-01 — Unused barrels · Dead code P2 — since 2026-10-01 — blocked: TST-04
-
 **Defects after their W5 test (§13 ground rule 8)**
 
 - [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01 — blocked: TST-04
@@ -62,6 +53,15 @@
 - [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01 — blocked: TST-05, TST-13
 - [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01 — blocked: TST-04
 - [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01 — blocked: TST-05
+
+**W4 — remove clearly dead code (§20 Q8; mutate every branch of anything moved, and account for every survivor)**
+
+- [ ] DEL-02 — Render dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
+- [ ] DEL-03 — Engine, geometry and bus dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
+- [ ] DEL-04 — Wiring dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
+- [ ] DEL-05 — UI, config and CSS dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04, TST-13
+- [ ] DEL-06 — Services dead API · Dead code P2 — since 2026-10-01 — blocked: TST-04
+- [ ] DEL-01 — Unused barrels · Dead code P2 — since 2026-10-01 — blocked: TST-04
 
 **Found defects**
 
