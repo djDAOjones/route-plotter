@@ -177,8 +177,8 @@ const LOOKED_UP = {
   'src/app/crowds.js': words(`
     add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-graph crowd-busyness-graph
     crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
-    crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-pattern-hint
-    crowd-reroll-btn layers-strip
+    crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-lifecycle-hint
+    crowd-pattern-hint crowd-reroll-btn layers-strip
   `),
   'src/app/editorPanel.js': words('waypoint-scope'),
   'src/app/exporting.js': words('export-dropdown-btn'),

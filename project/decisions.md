@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-77 — "At journey end" acts where it is seen
+
+**Decision:** DEF-77 lands (PR #91): a new crowd gets Speed 0.40 and Window length 50%, so its dots finish; a network with no Exit ends journeys at its one-connection nodes; each Respawn journey after the first draws its own variation from the seed and its index; and the panel says under "At journey end" when no dot finishes, and what to change. The owner reported the setting had no visible effect.
+
+**Rationale:** the item's criteria, each pinned by a test; all but two failed on `main` (the pen-network test and the `lifecycleMode` load case pass there as guards). On a pen-drawn three-node network, Disappear leaves no dot late and Collect parks dots on the end nodes (17 dots were late before). A default crowd finishes on 720–1920 px canvases (the old defaults finished 0–21 of 50), and saved crowds keep their values. Respawn equals Repeat journey during the first journey, then differs, while Repeat journey replays exactly one period later; at 0% Pace and Walking variation, Respawn still equals Repeat journey, as the Pace variation hint promises. The hint is described text on the select (`aria-describedby`), worked out from the model when a crowd, the timeline or the network changes, never per frame. On a network where no journey can end, it names the node's Type instead. The authorable-load case now passes `lifecycleMode`. Five mutants (no exit fallback, the hint forced off, the loop hint forced off, no journey index, Respawn at the dot's own pace) each fail a test. Codex's review (def77-r1) found three defects, fixed in a second commit: the hint rebuilt every dot's journey on any edit (475 ms for 500 dots on a closed loop, now 0.01 ms, and appearance edits skip it); a walk that ran out of hops counted as an arrival (a schedule now says whether the journey ends); and Respawn's variation froze after 2,048 journeys (now it never stops). Nine more mutants each fail a test. The session's calls, for the owner to confirm: both remedies the item allowed (the new defaults and the hint), the defaults set for new crowds only, a respawned node not counted as an exit until a dot has walked from it, Respawn's pace draws repeating every 64 journeys while its sway never repeats, an Entry with no path counting as an end, and the hint skipping dots whose entry reaches no end and recomputing only on edits that can change it. Saved exit-less networks and every Respawn crowd look different after the first journey; that is the fix. Digest rules applied: house conventions → Testing and persistence; WCAG 2.2 AAA and Nielsen → status visible.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — GATELESS-1 — The owner confirms the in-page export checks and four session calls
 
 **Decision:** for v3.2.693–698 the in-page export checks are enough, so their owed saves to disk are retired, and the four calls the order entry lists are the owner's, because he answered "yes" in his own chat; later releases are not covered.

@@ -7,6 +7,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Ahead of Phase 1's pull requests — the owner's order of 2026-10-05
+
+- DEF-77 — "At journey end" acts where it is seen: a new crowd's dots finish, a network with no Exit ends journeys at its ends, Respawn varies each journey, and the panel says when no dot finishes and why (2026-10-05) — see decisions
+
 ## Phase 1 — Land the big run's open pull requests
 
 - DEF-42 — a beacon style or pulse cycle chosen in the inspector retimes at once, and a branched route's timeline is composed afresh at every rebuild, so a pause or beacon edit there changes its total (2026-10-05) — see decisions
