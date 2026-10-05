@@ -156,3 +156,44 @@ describe('PlayerCore.timelineToPath windows', () => {
     expect(r.pathProgress).toBeCloseTo(target, 9);
   });
 });
+
+describe('DEF-72 — the timeline shortcut holds only when the timeline is the path', () => {
+  // No wait and one speed: the case the shortcut was written for.
+  const wps = makeWaypoints();
+  const { segments, hasVariableSpeed, pathDuration } =
+    PlayerCore.buildSegments(LENGTHS, PROGRESS, wps, BASE_SPEED);
+  const tl = { segments, hasVariableSpeed, pathDuration, totalPauseTime: 0, pauses: [] };
+  const bare = { startHandleMs: 0, introMs: 0, totalTailMs: 0, endHandleMs: 0 };
+
+  test('the plain timeline still maps time to path one for one', () => {
+    const live = { ...bare, durationMs: pathDuration };
+    expect(hasVariableSpeed).toBe(false);
+    expect(PlayerCore.timelineToPath(pathDuration / 4, tl, live).pathProgress).toBe(0.25);
+    expect(PlayerCore.pathToTimelineProgress(0.25, tl, live)).toBe(0.25);
+  });
+
+  test('under a comet tail, seeking to half the path lands where the head is at half the path', () => {
+    // The tail the review found: 10 s of path and 2.5 s of tail. The
+    // shortcut returned 0.5, which is 6,250 ms, where the head is at 0.625.
+    const totalTailMs = pathDuration / 4;
+    const live = { ...bare, totalTailMs, durationMs: pathDuration + totalTailMs };
+    const timelineProgress = PlayerCore.pathToTimelineProgress(0.5, tl, live);
+    expect(timelineProgress).toBeCloseTo(0.4, 12);
+    const back = PlayerCore.timelineToPath(timelineProgress * live.durationMs, tl, live);
+    expect(back.pathProgress).toBeCloseTo(0.5, 12);
+  });
+
+  test('a timeline longer than the path, with no tail or handle, leaves the path its own time', () => {
+    // A branch that outlives the trunk (ROUTE-01d) makes the timeline longer
+    // than the trunk's path with every handle, intro and tail at zero. The
+    // shortcut stretched the trunk over the whole timeline.
+    const live = { ...bare, durationMs: pathDuration * 2 };
+    const half = PlayerCore.timelineToPath(pathDuration / 2, tl, live);
+    expect(half.pathProgress).toBeCloseTo(0.5, 12);
+    const atEnd = PlayerCore.timelineToPath(pathDuration, tl, live);
+    expect(atEnd.pathProgress).toBe(1);
+    expect(atEnd.complete).toBe(false);
+    expect(PlayerCore.timelineToPath(pathDuration * 2, tl, live).complete).toBe(true);
+    expect(PlayerCore.pathToTimelineProgress(0.5, tl, live)).toBeCloseTo(0.25, 12);
+  });
+});

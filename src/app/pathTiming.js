@@ -102,7 +102,7 @@ export function clearRouteSchedules(app) {
 
 /**
  * With no route to travel, what the last route fed may not outlive it: its
- * path and trunk, and what it scheduled. The duration is left: once timing
+ * path and trunk, its travel time, and what it scheduled. The duration is left: once timing
  * has been rebuilt for this project's route (`_timingDerived`), a route that
  * returns is rebuilt too, in either timing mode; a constant-time duration
  * the project was opened with, and no rebuild has replaced, is the author's,
@@ -113,6 +113,9 @@ function clearRouteTiming(app) {
   app.pathPoints = [];
   app._trunkWaypoints = null;
   clearRouteSchedules(app);
+  // Nor its travel time: with no path, the duration plays through evenly,
+  // which the timeline mapping gives only for a path of no length (DEF-72).
+  if (app.animationEngine) app.animationEngine.pathDuration = 0;
   app.queueRender?.();
 }
 

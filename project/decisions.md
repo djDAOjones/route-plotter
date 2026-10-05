@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-72 — The timeline shortcut holds only when the timeline is the path
+
+**Decision:** DEF-72 lands: `PlayerCore` maps timeline to path one for one only when the timeline is exactly as long as the path, with no wait and one speed, in both directions, so a seek under a comet tail lands where the head is and a trunk keeps its own time when a branch outlives it; it goes ahead of CROWD-05, which makes timelines outlast the path.
+
+**Rationale:** TST-16 found the inverse shortcut ignored a comet tail: `seekToPathProgress(0.5)` landed at 6,250 ms of 12,500, where the head is at 0.625. The forward shortcut had the same flaw: a branch outliving the trunk (ROUTE-01d) with no wait and one speed spread the trunk over the longer timeline; a probe had the head at 0.53 at the trunk's end (3,715 ms of 7,059), so each branch left its fork before the head arrived. One cause (the shortcut took the timeline for the path), so one fix: the run's call to count it as DEF-72, for the owner to confirm. With no route left, the departed path's travel time is zeroed as its schedules are (DEF-06), so the duration still plays through evenly. Three new tests fail on the old source. Placement: CROWD-05 lengthens the timeline past the path, which both shortcuts would stretch; the run's call. Digest rule applied: house conventions → Testing and persistence.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — TST-16 — The round-2 audit's predicates are tight, and five fixes start from a pinned baseline
 
 **Decision:** TST-16 lands (PR #76): the round-2 audit's predicates are exact (problem lists, a looping crowd, the reveal trail's lit points, literal asset limits, byte-compared ZIP round trips, a placed degenerate hit, the dragged waypoint winning, undo and its announcements), and DEF-12, DEF-22, DEF-25, CON-04 and CON-09 are pinned as they stand, so each fix changes a baseline on purpose.

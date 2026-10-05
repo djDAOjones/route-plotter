@@ -173,6 +173,24 @@ describe('a branch that outlives the trunk extends the timeline', () => {
       .toBeGreaterThanOrEqual(timeline.totalDurationMs);
   });
 
+  test('the trunk’s head keeps the trunk’s own time when a branch outlives it (DEF-72)', () => {
+    const app = makeApp(buildBranchedRoute({ long: true }));
+    const timeline = app.getBranchTimeline();
+    const engine = app.animationEngine;
+    const trunkEndMs = timeline.legs.__trunk__.endMs;
+    const durationMs = engine.state.duration;
+
+    // No wait and one speed: the case the timeline shortcut took. It spread
+    // the trunk over the branch's longer timeline, so the head was at 0.53
+    // when the composed timeline had the trunk finished, and every branch
+    // left its fork before the head got there.
+    expect(engine.getTimeline().pauses).toHaveLength(0);
+    expect(durationMs).toBeGreaterThan(trunkEndMs * 1.5);
+    expect(engine.timelineToPathProgress(trunkEndMs / durationMs)).toBeCloseTo(1, 9);
+    expect(engine.timelineToPathProgress(trunkEndMs / 2 / durationMs)).toBeCloseTo(0.5, 9);
+    expect(engine.pathToTimelineProgress(0.5) * durationMs).toBeCloseTo(trunkEndMs / 2, 6);
+  });
+
   test('a short branch leaves the trunk’s own duration alone', () => {
     const linear = makeApp(buildBranchedRoute().filter(waypoint => !waypoint.branchId));
     const branched = makeApp(buildBranchedRoute({ long: false }));

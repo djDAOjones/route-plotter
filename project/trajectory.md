@@ -7,6 +7,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05
+
+- DEF-72 — the timeline shortcut is taken only when the timeline is the path: a seek under a comet tail lands where the head is, and a trunk keeps its own time when a branch outlives it (2026-10-05) — see decisions
+
 ## Ahead of Phase 1's pull requests — the owner's order of 2026-10-05
 
 - RECALL — 8/8 (2026-10-05) — scores: 2,2,2,2 — local — see decisions

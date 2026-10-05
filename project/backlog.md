@@ -86,7 +86,6 @@
 - [ ] DEF-69 — Zoom warning unattached — since 2026-10-05
 - [ ] DEF-70 — Menu item drops focus — since 2026-10-05 — blocked: TST-14
 - [ ] DEF-71 — Unknown build flag releases — since 2026-10-05
-- [ ] DEF-72 — Timeline shortcut ignores tail — since 2026-10-05
 - [ ] DEF-73 — Leg card misnames waypoint — since 2026-10-05 — blocked: DEF-64
 - [ ] DEF-74 — Redo restores no selection — since 2026-10-05 — blocked: TST-05
 - [ ] DEF-75 — Index check misses references — since 2026-10-05
