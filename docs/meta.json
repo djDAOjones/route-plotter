@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 17015,
+      "bytes": 17667,
       "imports": [],
       "format": "esm"
     },
@@ -2770,7 +2770,7 @@
       "format": "esm"
     },
     "src/components/SwatchPicker.js": {
-      "bytes": 11993,
+      "bytes": 12583,
       "imports": [],
       "format": "esm"
     },
@@ -2791,8 +2791,14 @@
       "format": "esm"
     },
     "src/components/ParamTooltip.js": {
-      "bytes": 11074,
-      "imports": [],
+      "bytes": 20910,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
       "format": "esm"
     },
     "src/components/Dropdown.js": {
@@ -3426,7 +3432,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 45083,
+      "bytes": 45969,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3472,7 +3478,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 25219,
+      "bytes": 25570,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3509,7 +3515,7 @@
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
-      "bytes": 47818,
+      "bytes": 54861,
       "imports": [
         {
           "path": "src/utils/sceneSemantics.js",
@@ -3875,13 +3881,13 @@
     }
   },
   "outputs": {
-    ".docs-build-qqXsgR/app.js.map": {
+    ".docs-build-KmphBl/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3418708
+      "bytes": 3443626
     },
-    ".docs-build-qqXsgR/app.js": {
+    ".docs-build-KmphBl/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3890,7 +3896,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 4009
+          "bytesInOutput": 4068
         },
         "src/utils/imageCoordinates.js": {
           "bytesInOutput": 141
@@ -4121,7 +4127,7 @@
           "bytesInOutput": 4525
         },
         "src/components/SwatchPicker.js": {
-          "bytesInOutput": 5340
+          "bytesInOutput": 5567
         },
         "src/config/tooltips.js": {
           "bytesInOutput": 2158
@@ -4130,7 +4136,7 @@
           "bytesInOutput": 2154
         },
         "src/components/ParamTooltip.js": {
-          "bytesInOutput": 2404
+          "bytesInOutput": 4199
         },
         "src/components/Dropdown.js": {
           "bytesInOutput": 2252
@@ -4217,16 +4223,16 @@
           "bytesInOutput": 1422
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 22377
+          "bytesInOutput": 22872
         },
         "src/app/network.js": {
-          "bytesInOutput": 11824
+          "bytesInOutput": 12029
         },
         "src/utils/sceneSemantics.js": {
           "bytesInOutput": 4300
         },
         "src/controllers/SceneOutlineController.js": {
-          "bytesInOutput": 27426
+          "bytesInOutput": 32631
         },
         "src/app/sceneOutline.js": {
           "bytesInOutput": 26762
@@ -4247,7 +4253,7 @@
           "bytesInOutput": 22752
         }
       },
-      "bytes": 1086812
+      "bytes": 1094798
     }
   }
 }

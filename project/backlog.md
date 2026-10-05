@@ -16,6 +16,10 @@
 
 ### Ahead of Phase 1's pull requests — the owner's order of 2026-10-05 — CLOSED 2026-10-05
 
+### After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05
+
+- [ ] CROWD-05 — The animation runs until everything that finishes has finished — since 2026-10-05
+
 ### Phase 1 — Land the big run's open pull requests
 
 - [~] DEF-64 — Branch legs miss hover and click · Live defect — since 2026-10-05
@@ -36,6 +40,7 @@
 **After TST-04 — the owner's order of 2026-10-05**
 
 - [ ] UI-04 — A hint trigger of its own (UI-03's second part) — since 2026-10-05 — blocked: TST-04 — (from: GATELESS-1, 2026-10-05)
+- [ ] CROWD-06 — Hold at end: the animation carries on after everything has finished — since 2026-10-05 — blocked: TST-04 — (from: CROWD-05, 2026-10-05)
 
 **W5 — deepen the characterisation**
 
