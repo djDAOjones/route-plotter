@@ -1,0 +1,4960 @@
+{
+  "schemaVersion": "canon-1",
+  "tool": "PM-Skills-lab lab/tools/migrate-canon.mjs",
+  "runner": "lab/tools/migrate-canon.mjs@155f145",
+  "from": "canon 4.7.0",
+  "date": "2026-10-01",
+  "sourceCommit": "75ba7aec1f5bbbeb1f218f4df1914ade54fd7ac7",
+  "prefix": "",
+  "files": [
+    {
+      "path": ".codeiumignore",
+      "sha256": "4bb3aee04898ec4ca157231560646ac60ca97565159615e046fbe76386e3768f",
+      "bytes": 558
+    },
+    {
+      "path": ".devin/workflows/bugfix.md",
+      "sha256": "0f00945c461e5b4285ab03fd7bf6ebf6fe2d61163e428bce7a1195a07f9270fc",
+      "bytes": 4213
+    },
+    {
+      "path": ".devin/workflows/feature.md",
+      "sha256": "181c1cdf6ba8d7f3a873d72e8ca09df8c226dc82a08e664e638fe8e2ca314707",
+      "bytes": 4039
+    },
+    {
+      "path": ".editorconfig",
+      "sha256": "9376a3f1c485a9c9fe3d3beecf7f2e5ed198c7ef6915a111a96176073417d47d",
+      "bytes": 520
+    },
+    {
+      "path": ".github/SECURITY.md",
+      "sha256": "ee5ee35c8b0a4c71e44c59ffda7c7661b43bf80b13905df238715aed03af4ab2",
+      "bytes": 975
+    },
+    {
+      "path": ".github/SUPPORT.md",
+      "sha256": "1719bdebf97db53818a00b96b6411b6871a6e265d73bc5cdced3a7e2f98d4b8c",
+      "bytes": 913
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "2afe0b93b0257f52fbfa8cc7b5e05cc1d3c56e057139e50174c2f98d1ba86d8d",
+      "bytes": 697
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "d209160246aa2fe2b7f69965d7eab6782dbf7284d9b9c8193eef532305a9533c",
+      "bytes": 908
+    },
+    {
+      "path": ".nvmrc",
+      "sha256": "68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53",
+      "bytes": 3
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "b773332b73df55c8e5fcd8cc37bf3df7daaeeb8963a262d22589124ae1999815",
+      "bytes": 10408
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "f8f250c6c3ceaa34b1271ad1648e4736a92c9f3b9290941efee65106816a85bc",
+      "bytes": 675
+    },
+    {
+      "path": "DEV-INFRASTRUCTURE.md",
+      "sha256": "f4a0097f8e935b6287e087c5908286ba90bf9d975e65934f72706c8ca8033d7b",
+      "bytes": 21545
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "9d86e3fba7e394967d93b77777e4a1b42b6d69c928c374a52daaf2f1a53dbcc2",
+      "bytes": 1065
+    },
+    {
+      "path": "README.md",
+      "sha256": "945c05d626787c29f455df4e5856cd58488d95047f024f1d3a72edd6350eec68",
+      "bytes": 18553
+    },
+    {
+      "path": "Route Plotter v3.code-workspace",
+      "sha256": "69e7b37e2ebdaf8fc313bf6cb74882fed65895e5f853736e65759bafb333bc6b",
+      "bytes": 60
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "7b9b9e828264028d6dad55415e324589b2f4ee349716400c3f72364f9a2b0e40",
+      "bytes": 4058
+    },
+    {
+      "path": "UI-STANDARDS.md",
+      "sha256": "39fcfa71c8e9af0b52100e345430ec89b45989c9a4ff2588fe444121a7ac93fa",
+      "bytes": 12316
+    },
+    {
+      "path": "_Joe/design docs/Colour.html",
+      "sha256": "f177d03b3afc5263c82500b700ac7dca51e9240f221ef5c98d878fcc441e388a",
+      "bytes": 7549
+    },
+    {
+      "path": "_Joe/design docs/UI Audit - Carbon + Nielsen.md",
+      "sha256": "ca268216f799d99ec90ee336b82e6d8b907c5d892e8a9be30d73d4b2a7ab6439",
+      "bytes": 18153
+    },
+    {
+      "path": "_Joe/design docs/UI from ChatGPT",
+      "sha256": "376c990b6d3be697cf043d7660fce8c8483528eabca2917ce14c4b4396743901",
+      "bytes": 9685
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/automatic_version_display_with_server.md",
+      "sha256": "8dab74f13836c24a2d3c888229cc50a4d8ee063c0ca6147850bfd41a12d24076",
+      "bytes": 6842
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/route_plotter_v3_styling_pack spec/route_plotter_v3_components_uon_carbon.css",
+      "sha256": "4bb3bbfaa1ab25d79fd6c392d003b9bdb3b308e882cc0a2f90d707a84a10f895",
+      "bytes": 8601
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/route_plotter_v3_styling_pack spec/route_plotter_v3_tokens_uon_carbon.css",
+      "sha256": "d6aa25c697a90abeb64330f2a1aa3183e126fc1584a7528dadfb93fa3b975f4e",
+      "bytes": 6988
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/route_plotter_v3_styling_pack spec/route_plotter_v3_uon_integrated_design_system.md",
+      "sha256": "9bae6d009ac98dab879b8298677c546eccd7b20be34447491932452372462732",
+      "bytes": 7318
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/route_plotter_v3_swatch_picker spec/route_plotter_v3_map_ink_tokens_optional.css",
+      "sha256": "89fc0d758cb14508178879fb2f6bfaca0e33b23e7307deb51ec3eced457a0574",
+      "bytes": 213
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/route_plotter_v3_swatch_picker spec/route_plotter_v3_swatch_picker.css",
+      "sha256": "86b7599b383a2c67ed8c334079e0f7e85988cbb2795e273dee04927a000db44e",
+      "bytes": 2310
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/route_plotter_v3_swatch_picker spec/route_plotter_v3_swatch_picker.js",
+      "sha256": "99149e21ec0eda73a2be8478463933bbdc350205685302b446a247b849901a2a",
+      "bytes": 6408
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/route_plotter_v3_swatch_picker spec/route_plotter_v3_swatch_picker_spec.md",
+      "sha256": "25990952963cce5d622101d2202ab2724d1e134ebd0c95b145f2883e7a198ba5",
+      "bytes": 4921
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/route_plotter_v3_swatch_picker spec/swatch_picker_demo.html",
+      "sha256": "47cb925ce0a5773eaf82faf3fe628451f6bc5e5231404080aa5137c7645c94ce",
+      "bytes": 1527
+    },
+    {
+      "path": "_Joe/design docs/saved/Archive/route_plotter_v3_wcag_aaa_intent_consolidated.md",
+      "sha256": "cddde29b4dcf6a59edc48256be4a31fc7ea520cabc8cbefe48c6bc99425cbcf0",
+      "bytes": 6320
+    },
+    {
+      "path": "_Joe/design docs/saved/UoN Colours from UoN ER.html",
+      "sha256": "02e67cba887e22c58c97c65d1553f8db7034c56a2d66cef882dce64be32e6660",
+      "bytes": 6731
+    },
+    {
+      "path": "_Joe/design docs/saved/WAVE Report of Route Plotter v3.1.506.html",
+      "sha256": "583cf920cf20e075b741adb3505f6a7c4e863c0d2f4022ae192fda4595eb7cc5",
+      "bytes": 89194
+    },
+    {
+      "path": "_Joe/design docs/saved/route_plotter_v3_1_400_ux_wcag_aaa_review.md",
+      "sha256": "d16631a56ea35d51d9bb51bac7efc9e0b1781a4e0ac63a81ea503d7f822eb857",
+      "bytes": 8848
+    },
+    {
+      "path": "_Joe/design docs/saved/ui_list.md",
+      "sha256": "ea595d2744058b7bc4932e82ffe9bcd22191bf28769e8233015c5c1d12461492",
+      "bytes": 27082
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.35.38 1440x900.png",
+      "sha256": "692d26b671c452c740506ded36413b6bec85d8265493a2496f8fe59af9bce63c",
+      "bytes": 989261
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.35.43 1440x900 Keyboard shortcuts expanded but not brililant visual cue they are below or expanded.png",
+      "sha256": "24c68efc25d00e6d5a9e0fc693c14c857150ca1080c66d898c879cfad74f71de",
+      "bytes": 986811
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.35.53 scrolled down to show shortcuts.png",
+      "sha256": "3c4633e2e810ab07837fc5a1fd8a8e1c0df65341ab087bbb0d44b0f9d8da9b56",
+      "bytes": 966115
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.36.00 scrolled to end of shortcuts.png",
+      "sha256": "beae4fd4b9fb54ad0e0e571d92afa66ab3d8938de8e607e0084628a4043cc839",
+      "bytes": 935824
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.39.51 waypoints initially placed.png",
+      "sha256": "907a6da17452ecd933f9eae857252932c01e6f1129f9b045a6b33cbb2e7530c4",
+      "bytes": 2357615
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.40.46 mid play.png",
+      "sha256": "c2221b68c0448cd5a9e1b192397b307bc29191e5766eee21f2f02781a971e648",
+      "bytes": 2360082
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.41.10 all left sidebar expanded using full page image capture plugin.png",
+      "sha256": "e60885b21e3ac533bef3ce904d7b582bb58a3316aef9f3335f6199d62d7c22b8",
+      "bytes": 2150430
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.41.10 all left sidebar expanded.png",
+      "sha256": "cc50c248140f6df38f923f1c19616d8193874b101b4a1819be5b0c3a568eb3c6",
+      "bytes": 2383689
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.42.40 export drop down clicked.png",
+      "sha256": "915650cad04e6395034dfb238ce5a11bcd84c7c763ba63f126433db52c6d1ef7",
+      "bytes": 2405671
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.42.43 examples drop down clicked.png",
+      "sha256": "da9cb218ecf78bdf62388b6699601619cf01e8e385ddb830eaa59982e39676df",
+      "bytes": 2413584
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.43.05 edit switch toggled - warning message causes new line on title.png",
+      "sha256": "2f3a4b8ae2fbac97320d20c1ecd72fa98596ae5f2329f0049bf40b3371d8cfe4",
+      "bytes": 2390123
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.45.20 2560 x 1440.png",
+      "sha256": "31ea08b70591664ac04a526b78b571471786b5889ae7a96995f7d9172123eb82",
+      "bytes": 4163317
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.45.26 2560 x 1440.png",
+      "sha256": "79cefadf1d80c3e8f6a0322c31e8a4be187875fb27339ad34047b5976c138a8a",
+      "bytes": 3839064
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.45.33 2560 x 1440.png",
+      "sha256": "a669551ac47b68bd5ec8c2db0f1c0b6a9f8750c0d583f30423e63b648d9737c4",
+      "bytes": 6545437
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 09.45.49 2560 x 1440.png",
+      "sha256": "161247557e29c1f034a75c0a599bc2172475bb9c7e175ab735b1fa73cafbb76c",
+      "bytes": 6616326
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 10.01.31 768x1024.png",
+      "sha256": "0327b2bbcf5aba8347cd1c283a84450638e9aaca7ab1fc491a27ad255b64f18d",
+      "bytes": 1519353
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 10.01.46 960x540.png",
+      "sha256": "d4463aee4ffdbf8db7e28c039ec6d30db07696e9433bc25d4c44b23d998ccf0d",
+      "bytes": 983716
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 10.02.00 360x800.png",
+      "sha256": "ffc20b89ea239a22b329a455dce04bc6e508e03224dda7b54b544a30a732dbe8",
+      "bytes": 842740
+    },
+    {
+      "path": "_Joe/design docs/screenshots/Screenshot 2026-02-08 at 10.16.15 waypoint selected.png",
+      "sha256": "e5be1360e76109f0a539fd9a69fb1f2c1ababde9efd0c527c3ed89a08b03bfbf",
+      "bytes": 2387753
+    },
+    {
+      "path": "_Joe/dev helper scripts/push_github.js",
+      "sha256": "50683b7f0d105844fef358cdedf0b909f049cce0bca8cd8b396e08753953c529",
+      "bytes": 5598
+    },
+    {
+      "path": "_Joe/dev helper scripts/restart_localhost.sh",
+      "sha256": "9a5e5fcd5a276dff83f7ddd14b59691f5ad2dfecff63b42a361a623a1b08304b",
+      "bytes": 1554
+    },
+    {
+      "path": "_Joe/dev notes/needs consolidating and deleting/Future Features.md",
+      "sha256": "a705d0f73b99671b31078101c70099ca1ad9bc2e568e548cef0ebcdebe4954ca",
+      "bytes": 8753
+    },
+    {
+      "path": "_Joe/dev notes/needs consolidating and deleting/Unit Tests.md",
+      "sha256": "128d98abddf70ae0c27d860322e3921fbcac237aeab181fb39f76ec5b7904bf9",
+      "bytes": 4788
+    },
+    {
+      "path": "_Joe/dev notes/needs consolidating and deleting/dev guide.md",
+      "sha256": "e0a0f4bf5a6ad65402a45d683e22654510cad97d538f40bb5cfd685fac03923e",
+      "bytes": 21126
+    },
+    {
+      "path": "_Joe/dev notes/needs consolidating and deleting/example feature.md",
+      "sha256": "e78c64e802bf8018186691b33a1b489283be194f11f10b658fdff41f1575d57f",
+      "bytes": 605
+    },
+    {
+      "path": "_Joe/dev notes/opus chat on re-architecting event bus.md",
+      "sha256": "a76d5b00957b3be9720f3836d071e15d46437be5446d45df180ba524de50d11f",
+      "bytes": 13578
+    },
+    {
+      "path": "_Joe/dev notes/task list.md",
+      "sha256": "bcdbf4d32d221c3268946ac178e2106a87d7ff161c904d71f730299948007ff3",
+      "bytes": 1431
+    },
+    {
+      "path": "_Joe/useful prompt fragments.txt",
+      "sha256": "6114db28b3b8994bc94b00f04eca6518601d6be378dc3d15ec8ccfd8657fafc9",
+      "bytes": 1219
+    },
+    {
+      "path": "build.js",
+      "sha256": "71125e7d6b600d83911c5565e947e454f68f47ad3f7e5d8e3ab7f792c002f96b",
+      "bytes": 27564
+    },
+    {
+      "path": "docs/LICENSE.txt",
+      "sha256": "9d86e3fba7e394967d93b77777e4a1b42b6d69c928c374a52daaf2f1a53dbcc2",
+      "bytes": 1065
+    },
+    {
+      "path": "docs/THIRD_PARTY_NOTICES.txt",
+      "sha256": "7b9b9e828264028d6dad55415e324589b2f4ee349716400c3f72364f9a2b0e40",
+      "bytes": 4058
+    },
+    {
+      "path": "docs/app.js",
+      "sha256": "ac7ba39187b891ed2a756832a3abdb8d841c5f9ac9e5462ab59645f73684c72c",
+      "bytes": 1077988
+    },
+    {
+      "path": "docs/app.js.map",
+      "sha256": "9ac5ca2763cf0e1976e07b91af465eec99425914ca6477b7680e18fafe19e12b",
+      "bytes": 3345627
+    },
+    {
+      "path": "docs/examples/nervous-system-flow.zip",
+      "sha256": "58d19f3778ae4f989a39793cd2b47ceb114c77b333bd5e0e118a781acbd21efb",
+      "bytes": 140522
+    },
+    {
+      "path": "docs/examples/parm-aerial-walk.zip",
+      "sha256": "c3c3a1ef9629e7df41619a7786bf83d84ecda0ef3de54ff46471b5efc2c7febf",
+      "bytes": 1820865
+    },
+    {
+      "path": "docs/examples/uon-open-day.zip",
+      "sha256": "8c0f409a2cc613ee271350f06e2243245e243baa7ce9c7e8cb96dc81e5e78797",
+      "bytes": 1191653
+    },
+    {
+      "path": "docs/images/Court.png",
+      "sha256": "ff7a7436c6cf42afa9d8ee4a5d69d2c94de60f84fc920e58ec22d3fff1693bb5",
+      "bytes": 2089415
+    },
+    {
+      "path": "docs/images/Garlic.jpg",
+      "sha256": "87031c28a3eb6788e9fddcf91393c6f0f80114da22a819a5f3bcaefe90dd5cc6",
+      "bytes": 241244
+    },
+    {
+      "path": "docs/images/Nervous_System.jpg",
+      "sha256": "25792a838d1a5ebb9d9457375d611198e7e0e6b383c0cf8cc88d1bcd11f1be05",
+      "bytes": 142588
+    },
+    {
+      "path": "docs/images/PARM_Aerial.jpg",
+      "sha256": "380a6ead0f0a8c179eeee798a835605e8416f1055354b26b6a17c3be22e996af",
+      "bytes": 1830143
+    },
+    {
+      "path": "docs/images/Rocketry.jpg",
+      "sha256": "07e7cd19facb06dc9071929e21ec0130c266467fd9127e15634e2e9e71b05ec8",
+      "bytes": 52205
+    },
+    {
+      "path": "docs/images/UoN_map.png",
+      "sha256": "2951edd4fd35392948b337224e2820cc6ca64916ebded1f6beb7c789e85d0bea",
+      "bytes": 1190187
+    },
+    {
+      "path": "docs/index.html",
+      "sha256": "96f5c0e15acb628b522f6f7278436fd7b031ffd31906938d0bf208fe8fd5da01",
+      "bytes": 83576
+    },
+    {
+      "path": "docs/meta.json",
+      "sha256": "adf67aa2e8ccdccca6c4ce5a527fd1feb40de1281ccaab27fd319417f0ca4437",
+      "bytes": 125702
+    },
+    {
+      "path": "docs/player.js",
+      "sha256": "a81dc665c600b86003f46bbfe22ff7637b76ce7dafa9226be27ef2250f403387",
+      "bytes": 424042
+    },
+    {
+      "path": "docs/styles/context-menu.css",
+      "sha256": "7fbb0ccdba8eda80b755f6361fdec039e3165b29db1c6a03b71efacd3eda8643",
+      "bytes": 1596
+    },
+    {
+      "path": "docs/styles/dropdown.css",
+      "sha256": "c23c5fa6f13a5c0f037b603e66935a66d5076435bec98ba7a2d9793f0629653e",
+      "bytes": 5184
+    },
+    {
+      "path": "docs/styles/main.css",
+      "sha256": "2424d8a97aacb2227c877b5bef283bc654930e6a19763338df528a4a72b74487",
+      "bytes": 88875
+    },
+    {
+      "path": "docs/styles/swatch-picker.css",
+      "sha256": "1cbb9eea7fc6a2fb8a5d75de89a1536dad49d960afe0c28ecdad2a56f6f333af",
+      "bytes": 5594
+    },
+    {
+      "path": "docs/styles/tokens.css",
+      "sha256": "a467b010abf727a4fca20ddf250abc55f3d3723eec81aab859e66181e4f9c00d",
+      "bytes": 14604
+    },
+    {
+      "path": "docs/styles/tooltip.css",
+      "sha256": "bcda6438715ba2219a588c3c44744736f7fc65f7e1719c1480ca9d140c5cfa2b",
+      "bytes": 1834
+    },
+    {
+      "path": "images/Court.png",
+      "sha256": "ff7a7436c6cf42afa9d8ee4a5d69d2c94de60f84fc920e58ec22d3fff1693bb5",
+      "bytes": 2089415
+    },
+    {
+      "path": "images/Garlic.jpg",
+      "sha256": "87031c28a3eb6788e9fddcf91393c6f0f80114da22a819a5f3bcaefe90dd5cc6",
+      "bytes": 241244
+    },
+    {
+      "path": "images/Nervous_System.jpg",
+      "sha256": "25792a838d1a5ebb9d9457375d611198e7e0e6b383c0cf8cc88d1bcd11f1be05",
+      "bytes": 142588
+    },
+    {
+      "path": "images/PARM_Aerial.jpg",
+      "sha256": "380a6ead0f0a8c179eeee798a835605e8416f1055354b26b6a17c3be22e996af",
+      "bytes": 1830143
+    },
+    {
+      "path": "images/Rocketry.jpg",
+      "sha256": "07e7cd19facb06dc9071929e21ec0130c266467fd9127e15634e2e9e71b05ec8",
+      "bytes": 52205
+    },
+    {
+      "path": "images/UoN_map.png",
+      "sha256": "2951edd4fd35392948b337224e2820cc6ca64916ebded1f6beb7c789e85d0bea",
+      "bytes": 1190187
+    },
+    {
+      "path": "index.html",
+      "sha256": "d4e489a6d33ccda9fab8806071f712ad91469321b0e24b41c83596f19c2b26f4",
+      "bytes": 83361
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "f9c86b115b515bb2456636011d213564d9c65f75c6379bfb400ae91209f57855",
+      "bytes": 78267
+    },
+    {
+      "path": "package.json",
+      "sha256": "7596c10392a718a0b4421d163cb81a49ec9cf3aada2c1928f5c37b3bad413804",
+      "bytes": 1165
+    },
+    {
+      "path": "pm_skills/CHANGELOG-1x.md",
+      "sha256": "bf7b22fb3a2a2a3cabe56bcc89204d54b40b21485a883eb3805584b4a3f79b52",
+      "bytes": 10206
+    },
+    {
+      "path": "pm_skills/CHANGELOG-2x.md",
+      "sha256": "397523b8e15a91eab7c8c46d1ea9bf25d44e8d84254db90bb6e35f3c260c0f07",
+      "bytes": 50164
+    },
+    {
+      "path": "pm_skills/CHANGELOG-3x.md",
+      "sha256": "8684f8838911854260530b21ca9ba636f3d56de4eed63182d1f15029336e0351",
+      "bytes": 62472
+    },
+    {
+      "path": "pm_skills/CHANGELOG.md",
+      "sha256": "1dd073c372bc169741e98e6986f1b6541ca333352dbd1796d4ecee093c936412",
+      "bytes": 18639
+    },
+    {
+      "path": "pm_skills/GUIDE.md",
+      "sha256": "e3eeb5171684a6750e3e618f17ccc048c6453da7deda2f8b99ba950e957306b3",
+      "bytes": 28479
+    },
+    {
+      "path": "pm_skills/MANIFEST.md",
+      "sha256": "0b1595ff1737cd396abe4dee14a8a5e1b6d6890946983efeef3635495037360c",
+      "bytes": 3586
+    },
+    {
+      "path": "pm_skills/VERSION",
+      "sha256": "ef3193df6d68bc7ef70fda62056eba15f0ef668fc9c21b487ae7fd56a562bfd6",
+      "bytes": 6
+    },
+    {
+      "path": "pm_skills/init.md",
+      "sha256": "f78e9adc9d94ba9a48563b44cc67dd243a13881c2870be72d09966ab0e819235",
+      "bytes": 36671
+    },
+    {
+      "path": "pm_skills/integrations/adopt.md",
+      "sha256": "3998831c7be7a6a557f5f2ba196d5f53533856dc64360d8bc6199a6e62444360",
+      "bytes": 7880
+    },
+    {
+      "path": "pm_skills/integrations/bugfix.md",
+      "sha256": "8af0ae6137cf46d6288c27f600d3fb08a4472ac88729873cf74b8def911ca932",
+      "bytes": 3342
+    },
+    {
+      "path": "pm_skills/integrations/dispatch.md",
+      "sha256": "ba112cc5733fabe2e88ab3df71d5735052c271f4c18da3e3283d8cecb90c41e2",
+      "bytes": 6255
+    },
+    {
+      "path": "pm_skills/integrations/init-mvp.md",
+      "sha256": "7a36883cc92402890385dcdb147949ab351aff0f581a028979ad3a1ecc264c62",
+      "bytes": 13621
+    },
+    {
+      "path": "pm_skills/integrations/next.md",
+      "sha256": "a46a2005c19a5d3568c4621f48fd0be21aa2206234b31f38290adb948b8235a9",
+      "bytes": 4410
+    },
+    {
+      "path": "pm_skills/integrations/task.md",
+      "sha256": "349fcf8d19cb516b36f6536af8cca06acb5836c852f56a9731489abcff0d4321",
+      "bytes": 14302
+    },
+    {
+      "path": "pm_skills/memory-policy.md",
+      "sha256": "98d9f2cd234287058a1348581494bd427ad83ef46cb4578eecfa1a01848343b8",
+      "bytes": 11328
+    },
+    {
+      "path": "pm_skills/project/architecture.md",
+      "sha256": "08258f7386c354b57f62aa9037b89db84561271f2897fd47297cbbcd3730f9d1",
+      "bytes": 8237
+    },
+    {
+      "path": "pm_skills/project/archive/INDEX.md",
+      "sha256": "e3072ccaf873d9f63fad9b7e6cc58dbb71c65d1f09110d4ea9db8dbe80b67c04",
+      "bytes": 3331
+    },
+    {
+      "path": "pm_skills/project/archive/decision-log-2026-04.md",
+      "sha256": "0fcef03683ecd79232067a0657aeffd741acecb51a48b78cafeb6c10f1ff3d3d",
+      "bytes": 1470
+    },
+    {
+      "path": "pm_skills/project/archive/decision-log-2026-06.md",
+      "sha256": "89464f9c573473715d2c31ef7fe1139bdd08611cd61eeb6841cd5d7150c8fe5e",
+      "bytes": 32569
+    },
+    {
+      "path": "pm_skills/project/archive/decision-log-2026-08-17-to-2026-08-26.md",
+      "sha256": "22d60ac3b9cb0ac5d167c2cf90499d903e94fe18029b2ee85d2c086caefada70",
+      "bytes": 97330
+    },
+    {
+      "path": "pm_skills/project/archive/decision-log-2026-08-27-to-2026-08-27.md",
+      "sha256": "6da9609d50aa79d40d8c62738b701b32906b20972e8f64741d7810d6206d0d61",
+      "bytes": 23376
+    },
+    {
+      "path": "pm_skills/project/archive/decision-log-2026-08-27-to-2026-09-22.md",
+      "sha256": "bd39a41ed4e72678e8c441004e67ea750dcf256630bb470bcd72ac452f92aef5",
+      "bytes": 35723
+    },
+    {
+      "path": "pm_skills/project/archive/trajectory/trajectory-0001-2026-04-16-to-2026-06-17.md",
+      "sha256": "d2c68c7dba530cec8507e307cde4df3e1453e9a2ea5a40121060dea63a3b163a",
+      "bytes": 7821
+    },
+    {
+      "path": "pm_skills/project/archive/trajectory/trajectory-0002-2026-08-17-to-2026-08-19.md",
+      "sha256": "3ab478264e4430ae4a91c9ad69f4c260121ae0b5391f85c971a1f4e8c67031ef",
+      "bytes": 7361
+    },
+    {
+      "path": "pm_skills/project/archive/trajectory/trajectory-0003-2026-08-26-to-2026-08-27.md",
+      "sha256": "ca2cd72ef3a82d774324ff22d064ed4a4ec930b1984a598d60addf834a5a587c",
+      "bytes": 11235
+    },
+    {
+      "path": "pm_skills/project/archive/trajectory/trajectory-0004-2026-08-27-to-2026-09-22.md",
+      "sha256": "64b18a5472a6a7e056eb1e891e2a137e8a7c3c837b206b78d773de78d79816b3",
+      "bytes": 4383
+    },
+    {
+      "path": "pm_skills/project/backlog.md",
+      "sha256": "c8e7faa623428fee8d3e00d2e86e0f82e732d79956796cf54a1840e9abaf207a",
+      "bytes": 8301
+    },
+    {
+      "path": "pm_skills/project/brief.md",
+      "sha256": "5dd2fc834e147c5c0d299e7248bf8f138377b91a79249c808a25452edc7c0777",
+      "bytes": 3535
+    },
+    {
+      "path": "pm_skills/project/conventions.md",
+      "sha256": "b95ba8e572e70b2941bdb54fa4d143e6c26306f30ac0ccdff0883b6ba70207a5",
+      "bytes": 3332
+    },
+    {
+      "path": "pm_skills/project/decision-log.md",
+      "sha256": "ac4f3297401b7590f278335277650b885e2011994956fdfbc1b0ace078228ec2",
+      "bytes": 46264
+    },
+    {
+      "path": "pm_skills/project/doc-deltas.md",
+      "sha256": "1c1dd03c649269cf20a0008e07ac4f3c9394c238479be7f524105896f84dd5c2",
+      "bytes": 1487
+    },
+    {
+      "path": "pm_skills/project/file-map.md",
+      "sha256": "c299dd05d06e3dabccfd45b4b442b91fed721c55a801f680a219840de312cf27",
+      "bytes": 65239
+    },
+    {
+      "path": "pm_skills/project/tickets/REV-03.md",
+      "sha256": "cbf3c676391d17f1d0beecc677b29770d0c0b08a743c4bd34f8519325709abbe",
+      "bytes": 4569
+    },
+    {
+      "path": "pm_skills/project/trajectory.md",
+      "sha256": "701b7dc9fb67348bb81f3141545eb6213afcdcdddf8899da8da8c32f0732d5ce",
+      "bytes": 13829
+    },
+    {
+      "path": "pm_skills/project/wish-list.md",
+      "sha256": "f56774e466a7284ac273fb5ccae0730f0844b916583377c0251eb1f21f902db1",
+      "bytes": 10680
+    },
+    {
+      "path": "pm_skills/prompts/backlog-authoring.md",
+      "sha256": "7e5a0c394d23689f255aa159b66b5231deba0331f5a1abb69d3379238de4d224",
+      "bytes": 2957
+    },
+    {
+      "path": "pm_skills/prompts/bug-scoping.md",
+      "sha256": "f95d2bbe827a5c694697aa4b970204a75664fcaf271fc4f57f289166afb9e6b6",
+      "bytes": 1863
+    },
+    {
+      "path": "pm_skills/prompts/deploy.md",
+      "sha256": "dcbab7d3ee6d618e2cb899590a424677c7187aa858896aa3765a315673817aa9",
+      "bytes": 4663
+    },
+    {
+      "path": "pm_skills/prompts/design-options.md",
+      "sha256": "d4bfeaa3e981d46a253df18d7c1e6d188045fee9244c27902ca05dc2937b61d5",
+      "bytes": 1404
+    },
+    {
+      "path": "pm_skills/prompts/end-of-task.md",
+      "sha256": "9465cccd5e9bd4e2594d15abdbe629dc2d5476d44cb13f5948f2403431cd560e",
+      "bytes": 14340
+    },
+    {
+      "path": "pm_skills/prompts/implementation-plan.md",
+      "sha256": "7504eb8af998677fd3447c62316afd4a98a4392c5f9a7816fc7a4e43aae10a45",
+      "bytes": 1947
+    },
+    {
+      "path": "pm_skills/prompts/memory-maintenance.md",
+      "sha256": "27ae36908fd03ee07942b75564877d456ecf7b3ae51b88928972266ca0a7ce1d",
+      "bytes": 36154
+    },
+    {
+      "path": "pm_skills/prompts/quick-task.md",
+      "sha256": "504e4c37a9e68e3d193ffadd5963ee08b345922fcb0f149d01f9ef23423cb453",
+      "bytes": 1376
+    },
+    {
+      "path": "pm_skills/prompts/release.md",
+      "sha256": "2974778163dd1232e1af2fd45beba31683c66cd10b920426644b6c4256ff8f74",
+      "bytes": 4937
+    },
+    {
+      "path": "pm_skills/prompts/review.md",
+      "sha256": "53d9a8494b07423b7f205c3e1ad5238a179dc9d5a960bdc57872655961153b7d",
+      "bytes": 6037
+    },
+    {
+      "path": "pm_skills/prompts/scoping.md",
+      "sha256": "47c1c925a1c81773e11338c0e9860815ac5eda3ae08561c6b6894dcc3afdb78d",
+      "bytes": 3086
+    },
+    {
+      "path": "pm_skills/prompts/session-start.md",
+      "sha256": "74a05b1e4987d63418cbc31e4f7308c3e8cc8d1576cf2bbef06330fb97c62541",
+      "bytes": 13052
+    },
+    {
+      "path": "pm_skills/prompts/upgrade.md",
+      "sha256": "c5c61acc70d29ab451bb0a3a08dfb0743652cbaf14e7777ab3fd39ed9b40a77b",
+      "bytes": 14416
+    },
+    {
+      "path": "pm_skills/prompts/validation.md",
+      "sha256": "7f95d584206aa9dd3cdfa477739010574b4214d44fc1c1f4c3020dd9e36ae370",
+      "bytes": 2365
+    },
+    {
+      "path": "pm_skills/scaffold/.editorconfig",
+      "sha256": "601e88f170cad0356e8970e0e8092c4cf5a437101692da0e2db5b311cf9c1eca",
+      "bytes": 731
+    },
+    {
+      "path": "pm_skills/scaffold/.gitignore",
+      "sha256": "003f838e357fb6241f527cbf14ce8031540a3aa0e90a6c81195dd7f64336b02c",
+      "bytes": 465
+    },
+    {
+      "path": "pm_skills/scaffold/.markdownlint.json",
+      "sha256": "ac0932cc157d82bc58d93684f4aea7f7f958b17a2dd4064fc54e20fb5b8ea7ac",
+      "bytes": 1155
+    },
+    {
+      "path": "pm_skills/scaffold/check-links.mjs",
+      "sha256": "6c614c5bfd7df15a4a382f09a0706b0197f259b2366a119cb2e957d6ed4fb42d",
+      "bytes": 5018
+    },
+    {
+      "path": "pm_skills/scaffold/gen-file-map.mjs",
+      "sha256": "d69308984a5e45d595daca87153efd553045d47f2c57a73a13aca3a7ab699745",
+      "bytes": 10577
+    },
+    {
+      "path": "pm_skills/templates/AGENTS.md",
+      "sha256": "1339cfb113efbe8f916695915f5b784a23f439bd02325395d041f84a1cf31607",
+      "bytes": 22330
+    },
+    {
+      "path": "pm_skills/templates/DEV-INFRASTRUCTURE.md",
+      "sha256": "4f45263cfa9696008e69809ae713c188613c0504b1539a06eb7b7078ea39ca1d",
+      "bytes": 16695
+    },
+    {
+      "path": "pm_skills/templates/PROCESS.md",
+      "sha256": "b05fba81a0d40ed7d4d7f39de2b434b3aa132caf93cce82acad9ed4be27811c9",
+      "bytes": 3032
+    },
+    {
+      "path": "pm_skills/templates/UI-STANDARDS.md",
+      "sha256": "d93ef83bea287db9156d956a4e11a51b9abf9a4f95cad4213b47d32a93834fef",
+      "bytes": 9375
+    },
+    {
+      "path": "public-assets.json",
+      "sha256": "f7abeb92b4964b3e3f3faa0e4a74a7b90276ded218ed8171a23105f38cc42696",
+      "bytes": 1778
+    },
+    {
+      "path": "push.js",
+      "sha256": "6cd023275280dd2bdebacca6bd9b1eaa44dca8cce4230d2329fff3cc62205ab3",
+      "bytes": 7497
+    },
+    {
+      "path": "reviews/README.md",
+      "sha256": "44d735f7611241911237862e1eb5d0b1cf511b7e1d4bd27d2085a2fd67e5405e",
+      "bytes": 5204
+    },
+    {
+      "path": "reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md",
+      "sha256": "8541c6978366417fd6da8bebfe67862d3150c1722eb642559c2a9c4117811a6c",
+      "bytes": 481859
+    },
+    {
+      "path": "reviews/read-only-comprehensive-repository-review-prompt.md",
+      "sha256": "f2207ca6fa995cf1dc2f37e232448d6eac3811d4d63549ce2c1e40f3acf7e33f",
+      "bytes": 42178
+    },
+    {
+      "path": "reviews/route-plotter-continuation-prompt-2026-08-27.md",
+      "sha256": "e04568c2ba5beb7fd1beae38cb1649cbc151fc70f04db535a1a915e3cf4d853f",
+      "bytes": 6464
+    },
+    {
+      "path": "reviews/route-plotter-continuation-prompt-2026-09-22.md",
+      "sha256": "743fdc7b85f30787986240ccbbf21053caef9331063b73167e59123a16fd2b8e",
+      "bytes": 11911
+    },
+    {
+      "path": "reviews/route-plotter-continuation-prompt-2026-09-23.md",
+      "sha256": "7c2480608ed78d303833c562e319941a15c3b3d8a1bfd8e2af962626bcec49e7",
+      "bytes": 13645
+    },
+    {
+      "path": "reviews/route-plotter-continuation-prompt-2026-09-24.md",
+      "sha256": "5fa6d7d13d9cb57e544e3b9a2d8ed9d9e67745d84aed6bd58ad1842e843cde45",
+      "bytes": 15790
+    },
+    {
+      "path": "reviews/route-plotter-continuation-prompt-2026-09-25.md",
+      "sha256": "a654d26645725984e541414f0c71a58500e096c03e5c4e9131d1429db1dbfdf8",
+      "bytes": 22796
+    },
+    {
+      "path": "reviews/route-plotter-continuation-prompt-2026-09-28.md",
+      "sha256": "c8ea3a70f79b4ee8afc69e6f227835603f125f120888a64d53bce93ec884ef12",
+      "bytes": 22172
+    },
+    {
+      "path": "reviews/route-plotter-continuation-prompt-big-run-2026-09-28.md",
+      "sha256": "816389177b090c8bdd0f16f49fce6ba15aa4242140d61de03c3ab576f8646480",
+      "bytes": 50544
+    },
+    {
+      "path": "reviews/route-plotter-continuation-prompt-open-calls-2026-09-28.md",
+      "sha256": "ca552d927093cfe1b5bf6d6bbc8877c3437135e4ec626cbc75ef925020659688",
+      "bytes": 24736
+    },
+    {
+      "path": "reviews/route-plotter-continuation-prompt-w2-2026-09-23.md",
+      "sha256": "b621198496db45207f0fad6675e942fe77f48f7b7a0db48bca47a2ac519e7544",
+      "bytes": 20326
+    },
+    {
+      "path": "reviews/route-plotter-review-finding-crosswalk-2026-08-26.md",
+      "sha256": "3f4dc7b761642dce3488e233588dd5fac6a4708b2a335de7e417cdace54c0b50",
+      "bytes": 6867
+    },
+    {
+      "path": "reviews/route-plotter-review-headlines-for-novices-2026-08-26.md",
+      "sha256": "2f37f42fabe63b85842ec937098bee91e28dd887737054b16e90f62075ee78c2",
+      "bytes": 3329
+    },
+    {
+      "path": "reviews/route-plotter-review-remediation-continuation-prompt-2026-08-26.md",
+      "sha256": "b152829952c79c13c821ebaf55b73990cb592b8c10de918ef8c0acddee10ffd4",
+      "bytes": 14541
+    },
+    {
+      "path": "reviews/route-plotter-v3-comprehensive-repository-review-2026-08-26.md",
+      "sha256": "4201d9b62aae40fdc2e6e831e958a05a0ddc7c72f82bddbad1a829e83a0367b1",
+      "bytes": 86473
+    },
+    {
+      "path": "scripts/README.md",
+      "sha256": "5f7c0054164f7f9ab22a1295a1fabfd19318adf258a36761320dcfe78c79bd08",
+      "bytes": 2493
+    },
+    {
+      "path": "scripts/build-examples.mjs",
+      "sha256": "609e32d620b9cb14e09e2d660decbd6a662fea9ce9f684e6a946380536473386",
+      "bytes": 3813
+    },
+    {
+      "path": "scripts/build.sh",
+      "sha256": "9ac1eff6edec062f34714921bec031a584d1f2f5902ddc882d23f37cceead75c",
+      "bytes": 1452
+    },
+    {
+      "path": "scripts/perf-harness.js",
+      "sha256": "423f8ad9153e9c1a4d453a9e3d04a7ed304abfa9d79d22247c4b7f085c497618",
+      "bytes": 7869
+    },
+    {
+      "path": "scripts/restart.sh",
+      "sha256": "9fcc2e111d1e461a2948cce9860527b5ced3844ea3da4143f0ac2abe1f1d3bd4",
+      "bytes": 10508
+    },
+    {
+      "path": "specs/dot-crowd-navigator/AGENTS-spec.md",
+      "sha256": "eaeceda809b31208de8e22dd694f0e7fa240c8ced7fc27928cda5c145c9459fb",
+      "bytes": 11223
+    },
+    {
+      "path": "specs/dot-crowd-navigator/README.md",
+      "sha256": "1a7da2e10e46adb99434057c756c3fda98dc5914d30a285b453d8935f15c7e21",
+      "bytes": 1571
+    },
+    {
+      "path": "specs/dot-crowd-navigator/app-overview.md",
+      "sha256": "bd6bf7e6077b24e497c2bab146ee1b1e01bbfb01b8fbde4655f6895e62ed80fc",
+      "bytes": 8972
+    },
+    {
+      "path": "specs/dot-crowd-navigator/project-memory/architecture.md",
+      "sha256": "4b489d8d74d48c50a2ef5a3de16b29eeeae17bee8b0fa83e089e020390cc572d",
+      "bytes": 10369
+    },
+    {
+      "path": "specs/dot-crowd-navigator/project-memory/backlog.md",
+      "sha256": "060e51860812b181a09f90d51c7c5fe607e90a068afb5ee21b9142177362563b",
+      "bytes": 4187
+    },
+    {
+      "path": "specs/dot-crowd-navigator/project-memory/brief.md",
+      "sha256": "ea5a5b2da84845adbc04f64123d4edbd87424ae4be9467d5c9d5ac1f2c319c17",
+      "bytes": 3317
+    },
+    {
+      "path": "specs/dot-crowd-navigator/project-memory/conventions.md",
+      "sha256": "1e40d1265c8bdbf4e0438b4de6bead0772d18752e76734da842e1f811ad1d043",
+      "bytes": 2812
+    },
+    {
+      "path": "specs/dot-crowd-navigator/project-memory/decision-log.md",
+      "sha256": "2a5b5859bb6a49f601507dc7a2cef9881060cbcc3d1fb65a79e74d0a4352bab9",
+      "bytes": 7683
+    },
+    {
+      "path": "specs/dot-crowd-navigator/project-memory/file-map.md",
+      "sha256": "2274c8bcaf20d5730f44879ea931accccb24cc1d407269649efeef4e15bb2dc3",
+      "bytes": 5777
+    },
+    {
+      "path": "specs/dot-crowd-navigator/recovered-src/GraphInteractionHandler.js",
+      "sha256": "5c3d22277b037193c9110ab2a834bec07e751102db6367a21ccce07d3a4ed42d",
+      "bytes": 15872
+    },
+    {
+      "path": "specs/dot-crowd-navigator/recovered-src/GraphRenderer.js",
+      "sha256": "a5f0bdae635c39c288ac7f342200aff453f2cac826307e0e9755554224d8959d",
+      "bytes": 6115
+    },
+    {
+      "path": "specs/dot-crowd-navigator/recovered-src/index.html",
+      "sha256": "190d9139682deaa017948290a1768da7f34b95b1d4437ff9f47a337fa6fd05c1",
+      "bytes": 14927
+    },
+    {
+      "path": "specs/dot-crowd-navigator/recovered-src/main.js",
+      "sha256": "e1f0aaefe02efad49f30db279ac279b7819037b07f6cbc04b56ffd468f3d92c2",
+      "bytes": 26481
+    },
+    {
+      "path": "specs/dot-crowd-navigator/tests-salvage/SimulationState.test.js",
+      "sha256": "26c6b98bd2759246dd444b6d590b30edff8d6381222278005b797fc675cabe95",
+      "bytes": 3410
+    },
+    {
+      "path": "specs/dot-crowd-navigator/tests-salvage/SwarmEngine.test.js",
+      "sha256": "5e2173517b150522ab244faeb833a2df85f987297727dfef6394619953eac693",
+      "bytes": 4586
+    },
+    {
+      "path": "src/app/backgroundLoading.js",
+      "sha256": "18ae919bb6ce0bf507e271701b8085e78eed2420e94a4d4d5e20cf63fcfca77c",
+      "bytes": 3585
+    },
+    {
+      "path": "src/app/camera.js",
+      "sha256": "73e3638490245914738cae7da79e81890c5ac7d4967a046dc4c273addcc235fb",
+      "bytes": 11846
+    },
+    {
+      "path": "src/app/crowds.js",
+      "sha256": "4ff580e80a5cce51a49b20b4a4196e0090d2d562afcbeadbd62f0952830daaf0",
+      "bytes": 41136
+    },
+    {
+      "path": "src/app/editorPanel.js",
+      "sha256": "5c149f7844580a193e1773973b0cf719ee63ceee413f16891132c57ff571a7d5",
+      "bytes": 35424
+    },
+    {
+      "path": "src/app/exporting.js",
+      "sha256": "811301b878d97a8481913caba7bac0adbba4a8eec65dc5cbd3978bb4898b45d6",
+      "bytes": 16908
+    },
+    {
+      "path": "src/app/network.js",
+      "sha256": "21f825f77ae23337ff003899dfdf430fff76eeb9008d78e7cfa17b9fb72606c3",
+      "bytes": 25219
+    },
+    {
+      "path": "src/app/operationGeneration.js",
+      "sha256": "091839b11baf8103dbc91cd713591e05fc62d0aab4f6ea79da655bccbc8f6237",
+      "bytes": 1374
+    },
+    {
+      "path": "src/app/pathTiming.js",
+      "sha256": "405fd0b7cdbac5d0d32c1033b2b32e7ae53328e290a81e11e6268dfd918b40fe",
+      "bytes": 28214
+    },
+    {
+      "path": "src/app/persistence.js",
+      "sha256": "adf3fd255c62e5f0d080be5a13fb3838b490b0203f3f6f2314a86d8fcbc549f4",
+      "bytes": 54069
+    },
+    {
+      "path": "src/app/playback.js",
+      "sha256": "5660add432825088ce985f799f6e5073978f88943bdf67c4ef67e5f4260a5565",
+      "bytes": 10760
+    },
+    {
+      "path": "src/app/pointer.js",
+      "sha256": "60dfe84a77304f5597561f8a1a0ca425d6cb7586094da28cf8ce75944841bf6a",
+      "bytes": 10596
+    },
+    {
+      "path": "src/app/privacy.js",
+      "sha256": "bed54311a55c4cb2efcef94e482741c68311fd9eadad108c10dab34bc8fb2743",
+      "bytes": 13897
+    },
+    {
+      "path": "src/app/projectReset.js",
+      "sha256": "7b24b831415d1006db766e16f88a53c39326d8ceea747df79a9e7f78b4449598",
+      "bytes": 3304
+    },
+    {
+      "path": "src/app/sceneOutline.js",
+      "sha256": "5bbce8ea3aac5039e668216c55f763328fd871b62fd37229a95ca8237445ccb2",
+      "bytes": 45532
+    },
+    {
+      "path": "src/app/startup.js",
+      "sha256": "480b1bbdd3e2f40d9b424bd70035f607d198318d44986ae337ae89791be121c9",
+      "bytes": 479
+    },
+    {
+      "path": "src/app/undoRedo.js",
+      "sha256": "9ff5dcea06efa35e30c7b5b54c6da0f8c81569946227c1811ebaabb7c5c2020c",
+      "bytes": 18544
+    },
+    {
+      "path": "src/app/viewport.js",
+      "sha256": "4f479e428e5200fc3ced89aa3421656c468025543d12be6f8a0b736d1472e57a",
+      "bytes": 17355
+    },
+    {
+      "path": "src/app/wiringBus.js",
+      "sha256": "d10292786e0db3ea98925f70bd96447c5c407d98e0b40fc1a7fe19f839c75034",
+      "bytes": 18919
+    },
+    {
+      "path": "src/app/wiringControllers.js",
+      "sha256": "3366a2e795a309182f42a7cf5bfa5aecc040b00c2a0f772bf11106de48fe606f",
+      "bytes": 54424
+    },
+    {
+      "path": "src/app/wiringDom.js",
+      "sha256": "b0c3a80beb4be45b16a3eb543469857ed6d5696ff33c444bf9476460d9559406",
+      "bytes": 43953
+    },
+    {
+      "path": "src/assets/README.md",
+      "sha256": "fae3dc4a4342780411c4ff65c89fb39310a88a1a7aa90ddf048e56a3f66e4db0",
+      "bytes": 571
+    },
+    {
+      "path": "src/assets/drone-head.png",
+      "sha256": "0997defb71bc94209f90d4d39de1a1668e240a04fbc36570445ac8bd744293b6",
+      "bytes": 183623
+    },
+    {
+      "path": "src/components/ContextMenu.js",
+      "sha256": "8fe35fae5a70f3b06977fa57caa45476acf36f6d91fafb6e2f3f77857c0831b3",
+      "bytes": 5769
+    },
+    {
+      "path": "src/components/Dropdown.js",
+      "sha256": "c99ed059c5540cb328d86ea431b2091eb4effa3d5f6d3c6284b2f6673771b025",
+      "bytes": 5568
+    },
+    {
+      "path": "src/components/ParamTooltip.js",
+      "sha256": "0f228345b32eed62db58c2f90d431e339fcb9ae68539bd0c6d82907e6a17b66a",
+      "bytes": 11074
+    },
+    {
+      "path": "src/components/SwatchPicker.js",
+      "sha256": "23da92e80bd0e5f46345225340464abb8242fbcbccfeb5e87cb9ece822fc13d8",
+      "bytes": 11993
+    },
+    {
+      "path": "src/components/Tooltip.js",
+      "sha256": "6d0617deeaf7313d0ef3406495c2b715ed0d137e666dff9c02bf4e88ca7fb17b",
+      "bytes": 7210
+    },
+    {
+      "path": "src/config/constants.js",
+      "sha256": "290f1ccd12371452b4af048377c121423bbdb217c3b91cfb5bcd0c96340c74c0",
+      "bytes": 17015
+    },
+    {
+      "path": "src/config/helpContent.js",
+      "sha256": "a694be91e01123a304a6b5c9d4cca375b78f4d4dfe47c7aa313ec984455aef88",
+      "bytes": 5279
+    },
+    {
+      "path": "src/config/keybindings.js",
+      "sha256": "91aea56375e4d8e6577cc0516062924e5d9801c34296650d1903c4b96d08e738",
+      "bytes": 14448
+    },
+    {
+      "path": "src/config/tooltips.js",
+      "sha256": "b1f9f6eec20ba561e77cce4a0875dbba5a54754bedb1a3abda69d8289b9f98d3",
+      "bytes": 2788
+    },
+    {
+      "path": "src/controllers/SceneOutlineController.js",
+      "sha256": "fc6665ef7be9dcd005f2ee9921716a7c44942f43cea365635071c78606b03c14",
+      "bytes": 47818
+    },
+    {
+      "path": "src/controllers/SectionController.js",
+      "sha256": "33365101c8d51cbd42fdebada2df0320d56feed9a6ea5f4ea47effa2b12876cf",
+      "bytes": 17946
+    },
+    {
+      "path": "src/controllers/UIController.js",
+      "sha256": "3474fc5fd710960f5cb8a1068eef40930a9235c48f65e76c31f2d8c7ae2b3402",
+      "bytes": 103196
+    },
+    {
+      "path": "src/core/EventBus.js",
+      "sha256": "66bb8c7493e9d7c328fe490d83c230366bc9b7210ded808b8bf716c7b83c507f",
+      "bytes": 6515
+    },
+    {
+      "path": "src/core/PlayerCore.js",
+      "sha256": "7b780e1c200556fbe419d817ceed467ba17eec8e9513960bbc022f3d6bd8b99d",
+      "bytes": 26275
+    },
+    {
+      "path": "src/examples/index.js",
+      "sha256": "9a3c54238ec7c42fe89c5af6081de7a71afcabca7fe5f52f717c52c7c79fdabb",
+      "bytes": 9299
+    },
+    {
+      "path": "src/handlers/InteractionHandler.js",
+      "sha256": "d697cf08e7d56db5cc60851de78e0539215044e3d3f4e9fe50b7e50193e390d2",
+      "bytes": 41105
+    },
+    {
+      "path": "src/main.js",
+      "sha256": "818137c4f73f4576cffe1ff52b93b2dbf765218c269b799840c661433c0a3685",
+      "bytes": 47830
+    },
+    {
+      "path": "src/models/AnimationState.js",
+      "sha256": "66a3b0bfd8d26492185406ecc1125ca94cfd678f529a692ca60f93853d4b8fc8",
+      "bytes": 6251
+    },
+    {
+      "path": "src/models/Emitter.js",
+      "sha256": "3664623de3b0572a20c92dca5c83cfdb43c4329f0fa7e11a21363dd8308f62b4",
+      "bytes": 12677
+    },
+    {
+      "path": "src/models/FlowLayer.js",
+      "sha256": "894033adc07236049f17476b1e59928d6034fb988d281da92951fa3452cc936f",
+      "bytes": 10009
+    },
+    {
+      "path": "src/models/GraphEdge.js",
+      "sha256": "852ff86e715095f802457ed50e40f1249f69625311eedde93131a49b1c67a08b",
+      "bytes": 4586
+    },
+    {
+      "path": "src/models/GraphModel.js",
+      "sha256": "0af56980d1040ef88e24de9ad13929ba171fda5b21e2c21d62e7e6e79db968ea",
+      "bytes": 5157
+    },
+    {
+      "path": "src/models/GraphNode.js",
+      "sha256": "0f37bf753802fcbddaecef8da95ea28b61a7e58dbb735817a76333a8be04afb7",
+      "bytes": 4970
+    },
+    {
+      "path": "src/models/ImageAsset.js",
+      "sha256": "4f6f5537d936dd18a05ba8e820b1fb70152e1af7b42fa42b6ece36f43276934b",
+      "bytes": 10826
+    },
+    {
+      "path": "src/models/Scene.js",
+      "sha256": "bdac3d4e94576691844964bc1c7e4c83364e44e69f6248c1d119d5c29ec96393",
+      "bytes": 6181
+    },
+    {
+      "path": "src/models/Waypoint.js",
+      "sha256": "344a04acdac2c3fed4a76a647be138bfe9dd729ccedcabdab6dff366231dd61f",
+      "bytes": 20403
+    },
+    {
+      "path": "src/models/index.js",
+      "sha256": "f05c16c9e46236c7e77990647cc82231cf94850c7f968e6747314e3ae33d5e1d",
+      "bytes": 438
+    },
+    {
+      "path": "src/player/PlayerApp.js",
+      "sha256": "832e2c349ff095fbd9f03aeb16366d3af9dfc313a6a542f7c214f832d7ac8f40",
+      "bytes": 19290
+    },
+    {
+      "path": "src/player/playerAccessibility.js",
+      "sha256": "667aa0fe418edeeb0e37bc7333e68356129b3c1385fc2a91af84c542931c55a3",
+      "bytes": 8404
+    },
+    {
+      "path": "src/player/playerEntry.js",
+      "sha256": "90d90d6e48cb8d0feebb10e8845fd96d5a412e2e21c3e0eafe17c5bda66cdcb8",
+      "bytes": 11833
+    },
+    {
+      "path": "src/services/AnimationEngine.js",
+      "sha256": "96d7e17d92694678000808f55fb29317a6d15c5ab2bdbe5e87febcaeec0d4c32",
+      "bytes": 38423
+    },
+    {
+      "path": "src/services/AreaDrawingService.js",
+      "sha256": "58964ea5ee62ca0cbea363b133def8f8aa24912b6ad9a5a34bf1c0f1129b91ff",
+      "bytes": 13009
+    },
+    {
+      "path": "src/services/AreaEditService.js",
+      "sha256": "5b3a4bfe05248c363616744c9549f530973c60ad7eaf6e404715ce3ab3bb08f3",
+      "bytes": 11979
+    },
+    {
+      "path": "src/services/AreaHighlightRenderer.js",
+      "sha256": "8f706b32933cddf0811292a4cbf8382b3d5c89aa33e68315cd4d9eca76b20843",
+      "bytes": 13078
+    },
+    {
+      "path": "src/services/BeaconRenderer.js",
+      "sha256": "4b225bdd4491febdba039b4b2643df8f54ce970abd82ee996fdb49fa46139038",
+      "bytes": 44813
+    },
+    {
+      "path": "src/services/CameraService.js",
+      "sha256": "5c642c8b9705817725a815118d9df58fba501a32e187a42346e5e68d84ba2e17",
+      "bytes": 21651
+    },
+    {
+      "path": "src/services/CoordinateTransform.js",
+      "sha256": "543510c6df7ed5f0b297a4404f98d82802f9bb97dd098fe155fbcb2af3c52fb5",
+      "bytes": 11226
+    },
+    {
+      "path": "src/services/DiagnosticsService.js",
+      "sha256": "e3b3b6e378e90527eeb046f8eb4baac1fcb868593e347fe8d82c8bd6c2a8b456",
+      "bytes": 5184
+    },
+    {
+      "path": "src/services/DotRenderer.js",
+      "sha256": "1856b6856e4f6b39c2e97eb772b3cf9743c25087da1f181d13ac3a98888d32bd",
+      "bytes": 1907
+    },
+    {
+      "path": "src/services/HTMLExportService.js",
+      "sha256": "e2679f60c144b591742fa3a2a3100cb2f721a6054c1958e98e70f257d42ce4fd",
+      "bytes": 14122
+    },
+    {
+      "path": "src/services/ImageAssetService.js",
+      "sha256": "6c3c9f22209db2731578fcfe0d96d8622d82a0ead9ccb324fe1989ae08eca0a7",
+      "bytes": 32686
+    },
+    {
+      "path": "src/services/MotionVisibilityService.js",
+      "sha256": "dd64aaf58a31d3537cfeebe5f16a0d0e78937bfcd02359904fc3a43bb1cf3f05",
+      "bytes": 66120
+    },
+    {
+      "path": "src/services/NetworkEditService.js",
+      "sha256": "43855aa4561bbe589824dbb9dd6a707ea1f47b8655ddc9e2fff32de524334e48",
+      "bytes": 40434
+    },
+    {
+      "path": "src/services/PathCalculator.js",
+      "sha256": "069ed5cffb21d34b87f40f4a7b109ebd77ae02741f9d57653b9990d9f0627e6a",
+      "bytes": 21786
+    },
+    {
+      "path": "src/services/RenderingService.js",
+      "sha256": "c460b23515133594e38265b2ad4d9e663da566e0880730196997149b1deee869",
+      "bytes": 113494
+    },
+    {
+      "path": "src/services/StorageService.js",
+      "sha256": "1d9a3c289400554bd3bd944e14a77694e507bbc8fd201d3a0bd10681f96be07f",
+      "bytes": 10048
+    },
+    {
+      "path": "src/services/SwarmEngine.js",
+      "sha256": "fb85778e1d7a13a14656ec3ac14d18b1ff2194a1515a05387e944b12700ad25b",
+      "bytes": 23656
+    },
+    {
+      "path": "src/services/TextLabelService.js",
+      "sha256": "977d73b00104230c7bd6d09adcae5978fe3a442374ee8709632b4d589e44078b",
+      "bytes": 15096
+    },
+    {
+      "path": "src/services/UndoService.js",
+      "sha256": "c9c2ff89d68c304475ccef08de93f3ae9d590e97eff0cf6dce6d7c4b1a0ae8da",
+      "bytes": 7051
+    },
+    {
+      "path": "src/services/VideoExporter.js",
+      "sha256": "9c9a792e381d5a9bc57a352d6cc28765d9a48066370b3f6577c1efe7916800f7",
+      "bytes": 37961
+    },
+    {
+      "path": "src/services/index.js",
+      "sha256": "76b850d36e59bd2adaabbd8d8897d5d801953203f1d043e948efdb3e0861fa6a",
+      "bytes": 480
+    },
+    {
+      "path": "src/utils/CatmullRom.js",
+      "sha256": "edec0c33d9fecacc9cfe14b7f57af03effcc4eb42d0cf8b830cdcb8b85c94f6f",
+      "bytes": 2459
+    },
+    {
+      "path": "src/utils/Easing.js",
+      "sha256": "9d2071e09cd757e52c66c751326509823cc4939522b82fbdca195f93d1d58460",
+      "bytes": 1205
+    },
+    {
+      "path": "src/utils/assetReferences.js",
+      "sha256": "b2bd4bfd3cd5bae82f073216b11a81dacb4e7fab02a7d054fa59728752f3ccfd",
+      "bytes": 6641
+    },
+    {
+      "path": "src/utils/branchTiming.js",
+      "sha256": "d16fcc62ebca7fd2e3280b2fe2f45ea790e8c06c8d8af861e6755bf92e610a63",
+      "bytes": 7087
+    },
+    {
+      "path": "src/utils/busynessEnvelope.js",
+      "sha256": "2bf3b2f4989cbc4f576574e6e0cce76ce1aecbdea8026d7b416996e7b8574b6d",
+      "bytes": 6548
+    },
+    {
+      "path": "src/utils/crowdArrival.js",
+      "sha256": "eb1b8b712ff429dac5f3119f85aaefef6d96da0f48d36e88f6f67329d382c47e",
+      "bytes": 5529
+    },
+    {
+      "path": "src/utils/entityId.js",
+      "sha256": "da8f558f1e2ad90fa6f91ada282fd36ba86e2f6a43e3ac2300ad475ba2d1ba30",
+      "bytes": 2262
+    },
+    {
+      "path": "src/utils/focusTrap.js",
+      "sha256": "0bd1d8d799e4c1a5494ea5310f5d40aec6916c275ac0a3cb4003bc147d77eda6",
+      "bytes": 6020
+    },
+    {
+      "path": "src/utils/graphRouting.js",
+      "sha256": "392a6573cb7b599f7465a7b94614f51bde1e4a6a0182e23e4b7600c0d52041e1",
+      "bytes": 3255
+    },
+    {
+      "path": "src/utils/imageCoordinates.js",
+      "sha256": "be9e8ad38431ace3bf095dc327014a87a1dfcc619ddb8316b591f1019274198f",
+      "bytes": 910
+    },
+    {
+      "path": "src/utils/index.js",
+      "sha256": "9d780022ca75e71de0faadae1ae681b7337f0c443d5364a4451aa4af59ea158c",
+      "bytes": 132
+    },
+    {
+      "path": "src/utils/mixedControlState.js",
+      "sha256": "4c58ed0cb51a7fa3d0dc4acfd823496bf1b3b8220615d0fd5dd8a8550cb3ec1e",
+      "bytes": 3517
+    },
+    {
+      "path": "src/utils/networkBudget.js",
+      "sha256": "c93ee4f92dd091356619088af202c4b8a076bc9b07b361d81550bd202834d99f",
+      "bytes": 2026
+    },
+    {
+      "path": "src/utils/pathHeadPresets.js",
+      "sha256": "9831ece9f1280e8ac5f09bded195925dda3e9473f0f7c14d586dd360a5be1d7d",
+      "bytes": 2175
+    },
+    {
+      "path": "src/utils/pathWidthScale.js",
+      "sha256": "1c538a00b0cc0f1f497d0289aa8c5d905bc09d8ec7de1a9c10bb3121d10cf914",
+      "bytes": 1241
+    },
+    {
+      "path": "src/utils/renderReference.js",
+      "sha256": "5aabe8c32abe39f3b8669b6f57b934ec909062423867adff5890832e9e874522",
+      "bytes": 1544
+    },
+    {
+      "path": "src/utils/routeAnchors.js",
+      "sha256": "baccd5b046d740c84795f1e0b07b7206a7a16c43f3e268b3d5566ff37bc51e44",
+      "bytes": 6508
+    },
+    {
+      "path": "src/utils/routeBranches.js",
+      "sha256": "8f80161c219d6b35c009082e94fd7265db7dd5a63514b063593b70348a94bba2",
+      "bytes": 15124
+    },
+    {
+      "path": "src/utils/routeTrace.js",
+      "sha256": "8ed64d205aa84a3e8c1de2e9e0448bd91ca41185705ebf446c7092a91b02c2e5",
+      "bytes": 7929
+    },
+    {
+      "path": "src/utils/safeColor.js",
+      "sha256": "3fb316ed10828a6daa86f50133882af102c5f8b5f7409f42296ab4a55e14249d",
+      "bytes": 1271
+    },
+    {
+      "path": "src/utils/sceneSemantics.js",
+      "sha256": "a41e3421109c0c2aae8e6a501f31b815d3465336daeabb0781336a987c74cde5",
+      "bytes": 9888
+    },
+    {
+      "path": "src/utils/segmentHitTest.js",
+      "sha256": "11f85d96b164fcf1d96e37b854c33ac65bf2c546aca89cd80bc0c8403af101f4",
+      "bytes": 3497
+    },
+    {
+      "path": "src/utils/sliderScales.js",
+      "sha256": "dbaa131b035f449fc04651f8eec33378741213716889c4af091a128f4f0c610a",
+      "bytes": 5030
+    },
+    {
+      "path": "src/utils/snapToAngle.js",
+      "sha256": "d7309fa2e7d81ee278474be6e9f703dfd7bbf1c553a22c1bfe87d0b8f79313d3",
+      "bytes": 1046
+    },
+    {
+      "path": "src/utils/uiReadouts.js",
+      "sha256": "1d176f548eec8d1001d9fee0b096cbe7ba4c7229cab088034a27757f5817468a",
+      "bytes": 1316
+    },
+    {
+      "path": "src/utils/waypointCardActions.js",
+      "sha256": "87c49ff23f7b8f077e767c14e933ec024461a2b9cefda104243d693bf3fa65b3",
+      "bytes": 8817
+    },
+    {
+      "path": "src/utils/waypointNaming.js",
+      "sha256": "aa56a4576bd2cf81fec14ea3df45ae572ef9ab468a732e5632da3c881c53b672",
+      "bytes": 5942
+    },
+    {
+      "path": "styles/context-menu.css",
+      "sha256": "7fbb0ccdba8eda80b755f6361fdec039e3165b29db1c6a03b71efacd3eda8643",
+      "bytes": 1596
+    },
+    {
+      "path": "styles/dropdown.css",
+      "sha256": "c23c5fa6f13a5c0f037b603e66935a66d5076435bec98ba7a2d9793f0629653e",
+      "bytes": 5184
+    },
+    {
+      "path": "styles/main.css",
+      "sha256": "2424d8a97aacb2227c877b5bef283bc654930e6a19763338df528a4a72b74487",
+      "bytes": 88875
+    },
+    {
+      "path": "styles/swatch-picker.css",
+      "sha256": "1cbb9eea7fc6a2fb8a5d75de89a1536dad49d960afe0c28ecdad2a56f6f333af",
+      "bytes": 5594
+    },
+    {
+      "path": "styles/tokens.css",
+      "sha256": "a467b010abf727a4fca20ddf250abc55f3d3723eec81aab859e66181e4f9c00d",
+      "bytes": 14604
+    },
+    {
+      "path": "styles/tooltip.css",
+      "sha256": "bcda6438715ba2219a588c3c44744736f7fc65f7e1719c1480ca9d140c5cfa2b",
+      "bytes": 1834
+    },
+    {
+      "path": "tests/Emitter.test.js",
+      "sha256": "46de86e4b5c6adfa9a6b45cf930a7ae4929bf0eaaab06c83c3acfc3072cb980a",
+      "bytes": 7437
+    },
+    {
+      "path": "tests/FlowLayer.test.js",
+      "sha256": "cf82683815e84b02c35413904d589c769ee06643dda483fbcd895005f891e983",
+      "bytes": 4481
+    },
+    {
+      "path": "tests/GraphEdge.test.js",
+      "sha256": "81ebfd4e7306837df4f41f399209ad2cd07612a0059b301e3850666b5be0ac9a",
+      "bytes": 7927
+    },
+    {
+      "path": "tests/GraphModel.test.js",
+      "sha256": "3d8b810fc223c2e208aeb18603b67bd4838163a83bd1f37705130518cfd17a0e",
+      "bytes": 9944
+    },
+    {
+      "path": "tests/GraphNode.test.js",
+      "sha256": "fc54d08e91863572dab43ea5d4cace11d1dd60b7a9b83d9551a6254d465e279d",
+      "bytes": 4510
+    },
+    {
+      "path": "tests/Scene.test.js",
+      "sha256": "72adf610760f4616f9c7357a3558460da3c3f36da8793a333d4acb5ae2445a3d",
+      "bytes": 4059
+    },
+    {
+      "path": "tests/accessibilityAudit.test.js",
+      "sha256": "7136bef8cda330ba98052b518ed3ed39b94a8e5bec0d74f4292d0ff7b3b4e85f",
+      "bytes": 9757
+    },
+    {
+      "path": "tests/areaDrawTarget.test.js",
+      "sha256": "ab9973720a1ec4a93735bfa14d292b504313e466029cc9f9c685cd8988bb2404",
+      "bytes": 32514
+    },
+    {
+      "path": "tests/areaEdit.test.js",
+      "sha256": "4c6cd7581ecf9bd9df6a1ff76333fc6daa36e358db58dbf9107d6faea38875e5",
+      "bytes": 12701
+    },
+    {
+      "path": "tests/assetAdmission.test.js",
+      "sha256": "f388086f46ee633e10501fde6f57bdcaf82d2ca213aca5d0098c1146f1ed0d9e",
+      "bytes": 9597
+    },
+    {
+      "path": "tests/assetPruning.test.js",
+      "sha256": "ef8e2ac91c56014d194a118c2e04da4a862012cedc222179e02d743a13729a1e",
+      "bytes": 13829
+    },
+    {
+      "path": "tests/authorableLoadable.test.js",
+      "sha256": "83adf70d86bf46b5ea5e142b4043f15c2d417e8ed2dd420d81134a244f7e607e",
+      "bytes": 39334
+    },
+    {
+      "path": "tests/axeAudit.test.js",
+      "sha256": "661fd4aac504780f48d1e3691838ad655d91983cd5ef141ef0950a23855e4084",
+      "bytes": 4510
+    },
+    {
+      "path": "tests/backgroundModeOverlay.test.js",
+      "sha256": "2523e5d55586207e70bb74a9e2af385a16dd0fefe0fd6ae3bfe35e2ab0e3f855",
+      "bytes": 2723
+    },
+    {
+      "path": "tests/bootApp.test.js",
+      "sha256": "2feb15d4b559e8985321c30b4ec5d97b301c03b7b78d8c309d6bc1eb0d5894de",
+      "bytes": 4317
+    },
+    {
+      "path": "tests/branchAuthoring.test.js",
+      "sha256": "c19d381dbd0ef8381a43676a73e816479875e7491e3a6280457611fcbb8cb14b",
+      "bytes": 13938
+    },
+    {
+      "path": "tests/branchExportParity.test.js",
+      "sha256": "fcd7a2949c2a06961b222f3287b89e3c09da94dcd564d631df5b997970ba5350",
+      "bytes": 10015
+    },
+    {
+      "path": "tests/branchHandle.test.js",
+      "sha256": "6ba32f0e4bfbdbc6a483e8efc088edbc465635808359b54c7cd4419a50c708f0",
+      "bytes": 8598
+    },
+    {
+      "path": "tests/branchTiming.test.js",
+      "sha256": "e52d21193c762f49cee0743c3a59686e4f2400db92a2bf850a36a6cac5829b8d",
+      "bytes": 12199
+    },
+    {
+      "path": "tests/busynessEnvelope.test.js",
+      "sha256": "73d5e4e775c04d050bcc3a506bd74aa4502ab4e044871580bdb1bc636a983613",
+      "bytes": 3370
+    },
+    {
+      "path": "tests/consoleGuard.test.js",
+      "sha256": "ec1e5bb200b6f9bbfc0f54c3a8e48e55de8193484a4217562ef3e5d814d5c350",
+      "bytes": 1660
+    },
+    {
+      "path": "tests/crowdArrival.test.js",
+      "sha256": "9922aace5db5c59257b0b8ad323694c7604eee5140619f7647a2ab08ea56ce33",
+      "bytes": 10082
+    },
+    {
+      "path": "tests/crowds.test.js",
+      "sha256": "2aae69b69f65e6ccf31578dc056439d8c95dcb601baffe48b702b49b7e7faac6",
+      "bytes": 20042
+    },
+    {
+      "path": "tests/diagnostics.test.js",
+      "sha256": "89b14a1a5b886e96fbae342bc617516f9103b48fc6c3f7466995c3ffdf463337",
+      "bytes": 7259
+    },
+    {
+      "path": "tests/eventBusErrors.test.js",
+      "sha256": "5875b645401d2157b31c449eee4df3d395fa5e84ef55c0aec39e43a57ca22251",
+      "bytes": 3990
+    },
+    {
+      "path": "tests/example.test.js",
+      "sha256": "db6247e757938f101c338bc1853a39dca01fbd529aae87260a6fe97fd8b166ed",
+      "bytes": 12785
+    },
+    {
+      "path": "tests/exampleProjects.test.js",
+      "sha256": "e6a2f2736f680bd406f2a8cd71270f755b040d0c1eeb853ffc589deecb68e196",
+      "bytes": 9065
+    },
+    {
+      "path": "tests/exportMinimisation.test.js",
+      "sha256": "66e0dca296ecaaef0df5e9cd118fee26e45c30eb2b59199035d014ae112500f3",
+      "bytes": 6548
+    },
+    {
+      "path": "tests/fixtures/authoredExtras.js",
+      "sha256": "9a91eadb390cc6e28a426bb34ac29c9dced749e041175c810661cd3b00022f7e",
+      "bytes": 4452
+    },
+    {
+      "path": "tests/goldenDrawLogs.test.js",
+      "sha256": "b13844b16df90f7f99a151de66f9b40c4483cc5bfa2237c17f32334da8c899e5",
+      "bytes": 95296
+    },
+    {
+      "path": "tests/goldenFrames.test.js",
+      "sha256": "0d4e73e0c3fd212c2f376e1a07868bf7b43d4048dd40a553e252a8eb1a1fad97",
+      "bytes": 8000
+    },
+    {
+      "path": "tests/goldens/draw-log-authored-extras-edit.txt",
+      "sha256": "7ca2c9accf8bffbec8fb6d8fba11a5799ac41caddd90785770b041ca47c1f807",
+      "bytes": 121320
+    },
+    {
+      "path": "tests/goldens/draw-log-authored-extras-export.txt",
+      "sha256": "042c4b17c616808cff16ef15f68d7ad769341f238ac0ba56a21ea058ac97513a",
+      "bytes": 232663
+    },
+    {
+      "path": "tests/goldens/draw-log-authored-extras-preview.txt",
+      "sha256": "d466161dee45b4a7638e33cabed2af76b8e0c7b73724711d02c82530d2ba0026",
+      "bytes": 234719
+    },
+    {
+      "path": "tests/goldens/draw-log-nervous-system-flow-export.txt",
+      "sha256": "43a9f9f1aef3593348311894693da13638e3fc347f3ff4d0dd77bcdf3cd29f72",
+      "bytes": 16172
+    },
+    {
+      "path": "tests/goldens/draw-log-nervous-system-flow-preview.txt",
+      "sha256": "c7797338a1fe02986f23e6cb56674baa5bf10292fd1d3c77ec12f6a9b2c6d4d0",
+      "bytes": 15309
+    },
+    {
+      "path": "tests/goldens/draw-log-parm-aerial-walk-edit.txt",
+      "sha256": "3a272df66a89d47a0edf7d7a493718e33f4ce021a0444bd345457c2b48d26bfa",
+      "bytes": 87861
+    },
+    {
+      "path": "tests/goldens/draw-log-parm-aerial-walk-export.txt",
+      "sha256": "179034eb04a81dc7bf48d6e0beba39c54a5655cb16dbdaf000c9acb70767a561",
+      "bytes": 89010
+    },
+    {
+      "path": "tests/goldens/draw-log-parm-aerial-walk-preview.txt",
+      "sha256": "12d17a6d04d337b7a7e7a2c4333967007f2e8243264f62844b3cee289c36cf03",
+      "bytes": 86595
+    },
+    {
+      "path": "tests/goldens/draw-log-uon-open-day-edit.txt",
+      "sha256": "aad42b82477f9a3438f59b89ba72bc149aa471a7fc589364e4d5c71bacb87733",
+      "bytes": 184093
+    },
+    {
+      "path": "tests/goldens/draw-log-uon-open-day-export.txt",
+      "sha256": "3d6349651de42601210039b36c37fd40453785c8324eb889da63090ca7b8ec03",
+      "bytes": 186322
+    },
+    {
+      "path": "tests/goldens/draw-log-uon-open-day-preview.txt",
+      "sha256": "fcd725b9684231e001c7b30f024a463ec41fe74edf03c2b790dc7b3ab4e57755",
+      "bytes": 181549
+    },
+    {
+      "path": "tests/goldens/project-snapshot-authored-extras.json",
+      "sha256": "867e38ee4d0a075ef36d1ad3a7bd21e305cba33578edf29511b6d6186b1b3d97",
+      "bytes": 15849
+    },
+    {
+      "path": "tests/goldens/project-snapshot-nervous-system-flow.json",
+      "sha256": "f35c425d48954e649d2a37a1e4dde9cd42f35bedf5c9b11a583ce957ddc870c1",
+      "bytes": 8536
+    },
+    {
+      "path": "tests/goldens/project-snapshot-parm-aerial-walk.json",
+      "sha256": "a8321ddcb4837048233336e4661e3a761de253161a409e76a3a05229bc027d23",
+      "bytes": 8050
+    },
+    {
+      "path": "tests/goldens/project-snapshot-uon-open-day.json",
+      "sha256": "1667bf7971290457e904cfab4bf9f2bdb72c0df0843b3b89876108b35eb32e79",
+      "bytes": 14804
+    },
+    {
+      "path": "tests/governance.test.js",
+      "sha256": "c324e0be3ec32cd15e06eefae3023d4b21412dbaeb187583a73d8fc0ed2fdd58",
+      "bytes": 5118
+    },
+    {
+      "path": "tests/graphRouting.test.js",
+      "sha256": "9ab85b13898b4ccb170f7e9c633a0a3c3fb36de9dc36b482b837571f4d27779c",
+      "bytes": 3901
+    },
+    {
+      "path": "tests/headDirectionBranchWait.test.js",
+      "sha256": "89c4c76161117c69272496bac9fce10c80b0fa5bbcfa67f6716e4b264b9aea97",
+      "bytes": 3303
+    },
+    {
+      "path": "tests/helpTellsTheTruth.test.js",
+      "sha256": "ee725c815d6221cd9c32fd7f9715e8755c8bd049269a916aa2605a2a0f684c89",
+      "bytes": 3022
+    },
+    {
+      "path": "tests/helpers/bootApp.js",
+      "sha256": "890acab9218cee90b12b58a566caaa4f1338612c1fcc562808f0c4c0d35177e5",
+      "bytes": 5737
+    },
+    {
+      "path": "tests/helpers/consoleGuard.js",
+      "sha256": "80443256b424dca153ed5def45c5825a5c6592d3177787f1241e4703dd769860",
+      "bytes": 3511
+    },
+    {
+      "path": "tests/helpers/drawLog.js",
+      "sha256": "36bf2c2f9bb63f0c9ce56ae44d48212760cedb6c5df3a17fe253b8ef6f9c5a71",
+      "bytes": 10831
+    },
+    {
+      "path": "tests/helpers/minCountReporter.js",
+      "sha256": "3ff5763a6876bef1d0da64873ae081491f846e4d2c0fbd6a49810f94562e9779",
+      "bytes": 2225
+    },
+    {
+      "path": "tests/helpers/projectSnapshot.js",
+      "sha256": "41744257c991ac5cf71825cc78b8023e5f8119f25f07e9196c0b1bf0a603065d",
+      "bytes": 2961
+    },
+    {
+      "path": "tests/helpers/traceProject.js",
+      "sha256": "f70334bb7c0fdc82e526fdd62f03b9dcfc798754942c57fa8c2cc8f12774c39e",
+      "bytes": 5343
+    },
+    {
+      "path": "tests/htmlExportCache.test.js",
+      "sha256": "3cfb9c4be3bf576ae7659d9b1bc0be789d81c9a7dd030a2d92bba0273ec33ec0",
+      "bytes": 6678
+    },
+    {
+      "path": "tests/imageAssetRoundTrip.test.js",
+      "sha256": "c361ab11531cbe6b9d4df712d7af4e49ddd66fbfdc0802d0f36d88edf7e07170",
+      "bytes": 4641
+    },
+    {
+      "path": "tests/interactionPointer.test.js",
+      "sha256": "9cfaba79c62d371882443503d6952ed34cfd7c0f4a80ef2a3e1b3ab05723d7d4",
+      "bytes": 23188
+    },
+    {
+      "path": "tests/labelAutoPosition.test.js",
+      "sha256": "764eb04a1fe8fadafda8c7d2eafbee68435e0c4066fc9e348cc033b097c0bfcf",
+      "bytes": 6198
+    },
+    {
+      "path": "tests/mixedControlState.test.js",
+      "sha256": "cb4ff2bde3df97c954cab4a0d91d2cbbbe231d38a24a70aeb2f355d09255b046",
+      "bytes": 2552
+    },
+    {
+      "path": "tests/mixins.test.js",
+      "sha256": "00aa6482ee5581f2ede7eced628bb66a489034e4a9f6cd6409fc0c48efd08bd5",
+      "bytes": 9025
+    },
+    {
+      "path": "tests/modelBoundary.test.js",
+      "sha256": "db1fd9c1c9528bb28b92fbbf8cd78da0aed762183e481c40c69f2ebe0dd4c2fd",
+      "bytes": 785
+    },
+    {
+      "path": "tests/multiSelect.test.js",
+      "sha256": "578b5b316e909532e16d88b578a482a7cb998ead5865f9619c4a4587aab57d14",
+      "bytes": 28087
+    },
+    {
+      "path": "tests/networkBudget.test.js",
+      "sha256": "603b69003443bb497ff342333b38b08f70f70a680b9574dd050f7b0218c6f20f",
+      "bytes": 40928
+    },
+    {
+      "path": "tests/networkEdit.test.js",
+      "sha256": "c052e6f44cc211f3ab60329f3b46c55240611a438b92d03a0e5afec17cde122f",
+      "bytes": 50043
+    },
+    {
+      "path": "tests/operationGeneration.test.js",
+      "sha256": "d12517c2e6e310c565d40063cb45aeec547777c24dc83063ba008cc9b10fe642",
+      "bytes": 4946
+    },
+    {
+      "path": "tests/paramTooltip.test.js",
+      "sha256": "130916a9268d6998e9f7191fb53ccdcfd1dcb70cd43659e61d289f483a725ac7",
+      "bytes": 9250
+    },
+    {
+      "path": "tests/pathHeadPresets.test.js",
+      "sha256": "54c8ca0c37366821fc4fade7815dc5b0f82bd5c515a6511d553a433bd93d3dd1",
+      "bytes": 3000
+    },
+    {
+      "path": "tests/perfHarness.test.js",
+      "sha256": "ce086dee86984be5f92e6c5552f7b360fbadf58b44cd673706eba1087e0c216e",
+      "bytes": 5337
+    },
+    {
+      "path": "tests/performanceScheduling.test.js",
+      "sha256": "d2701510b7bceb76a983a03a7c70088654df6a48231447c78af40d33dbe623df",
+      "bytes": 5712
+    },
+    {
+      "path": "tests/playerAccessibility.test.js",
+      "sha256": "478c99075e51a911e3ed852d0de9d0fce8f243901048f6abf6f5c9fbc5d1b54c",
+      "bytes": 6553
+    },
+    {
+      "path": "tests/playerApp.test.js",
+      "sha256": "8f4e99594e624e3576de9ab000406dee6eef948f0f8e38ab8c1fc570607801e8",
+      "bytes": 14285
+    },
+    {
+      "path": "tests/playerBundleClosure.test.js",
+      "sha256": "b18759793ad77879a0ef44786688299bca4db1ed735be3832822e261961c8bd0",
+      "bytes": 2282
+    },
+    {
+      "path": "tests/playerCore.test.js",
+      "sha256": "151ace6385920ac539e9ca44e4ff99750b7265ff43d9a051a7f42c68ac266a2d",
+      "bytes": 7490
+    },
+    {
+      "path": "tests/playerEntryAccessibility.test.js",
+      "sha256": "79d62410e0bc5c41f7116dc0e8c0a952821b9e06e117311891734b7f39e937b9",
+      "bytes": 11806
+    },
+    {
+      "path": "tests/playerHostContract.test.js",
+      "sha256": "acf4278990219cd563892a543ccf14831094320110e1e9e2ade3f6dcccd7e878",
+      "bytes": 5369
+    },
+    {
+      "path": "tests/previewTipStorage.test.js",
+      "sha256": "ec4465f086d7d3ca1a1f1ab6d01980e171569c6019bf0632dda0d117affa7670",
+      "bytes": 6465
+    },
+    {
+      "path": "tests/privacy.test.js",
+      "sha256": "0b81572b7506bb02c0dadca2870374353a8e66befda4540e22c2f9ce0f1a566e",
+      "bytes": 17228
+    },
+    {
+      "path": "tests/projectLimits.test.js",
+      "sha256": "0f4310a4a1db36425926ce61a34c6aa8222fb6c2ab8c4422a5f547eed70ccc92",
+      "bytes": 14199
+    },
+    {
+      "path": "tests/projectReset.test.js",
+      "sha256": "7573ab1d486577726129402530e15bbb32ad8a18d7994d55041cdd6f8063e9ce",
+      "bytes": 5820
+    },
+    {
+      "path": "tests/projectRollback.test.js",
+      "sha256": "736d8cf7d1e3315e5f960f13e739f7c2f64c0d60dab4b6bdcc3b28892263651b",
+      "bytes": 6168
+    },
+    {
+      "path": "tests/projectSnapshotShape.test.js",
+      "sha256": "cefca195906a56459e84fd75b15a54af8c21f18a149ab88ffeaff16d48233043",
+      "bytes": 7684
+    },
+    {
+      "path": "tests/publicationBoundary.test.js",
+      "sha256": "177a8ac5d1b6f5234edcae5cd7df1a0800b8e057094f0c8a9612c5fe6314258b",
+      "bytes": 6481
+    },
+    {
+      "path": "tests/releaseSafety.test.js",
+      "sha256": "8b8e68dc368cda889ba40297b8bfc291aa653864e971ca302d2ea120ee43b75f",
+      "bytes": 8329
+    },
+    {
+      "path": "tests/renderReference.test.js",
+      "sha256": "93550d147f8b075b6ee7385639281f22a12bd2833adbc8238e036bb7751b8564",
+      "bytes": 5665
+    },
+    {
+      "path": "tests/restartSafety.test.sh",
+      "sha256": "38a5291daba2b450656a9da1a7b804ae96f146d310a8499d525a08de2a868b90",
+      "bytes": 2437
+    },
+    {
+      "path": "tests/revealTrail.test.js",
+      "sha256": "d05d84e21d59f8c4546d2f4cdc481b213673f86b547d4957fc49935175f68181",
+      "bytes": 4710
+    },
+    {
+      "path": "tests/reviewAccessibility.test.js",
+      "sha256": "3659f1ea90a1e809b708943443d454b04ab8d361c7cf6fa85441c550e3878dde",
+      "bytes": 30836
+    },
+    {
+      "path": "tests/reviewPersistence.test.js",
+      "sha256": "ef9b98153387baae892907ee3fe496e59b2ec5639a33352e77f11ee65a239f1d",
+      "bytes": 46678
+    },
+    {
+      "path": "tests/reviewTimeline.test.js",
+      "sha256": "b5ba7a1a8079d50bc7ce50f3f4b3ef633c04f0c3e17ba4de04a928ca59173ae3",
+      "bytes": 11643
+    },
+    {
+      "path": "tests/routeAnchors.test.js",
+      "sha256": "422c0336bfc027783ee86e5d4cea500434475abefd9f313edead803e19bde9aa",
+      "bytes": 14911
+    },
+    {
+      "path": "tests/routeBranches.test.js",
+      "sha256": "b27b3e7bedf98024f8827c783da737780f28d1ee15f6c51020a5849e030cd1ae",
+      "bytes": 14813
+    },
+    {
+      "path": "tests/routeTrace.test.js",
+      "sha256": "99dadef4164ee5b11ed1396df3256b2428d67a1aa3ebf1887da0874269b4fbcb",
+      "bytes": 15260
+    },
+    {
+      "path": "tests/safeColor.test.js",
+      "sha256": "a4c4653a4ee84d458a9ecff9c9b6df77927ad5a2e3b2d394c58206006d4aed85",
+      "bytes": 1435
+    },
+    {
+      "path": "tests/sceneOutline.test.js",
+      "sha256": "9a11a3e3bf99c9ae4b10e86aae3412f5e94221a0ea48e9a2c0b6f0834e756d2c",
+      "bytes": 49179
+    },
+    {
+      "path": "tests/sceneOutlineApp.test.js",
+      "sha256": "57d40147ee928cb7d144ae3c46e6189e42c403e800e02714a7dcefe38bf1e163",
+      "bytes": 43843
+    },
+    {
+      "path": "tests/scenePersistence.test.js",
+      "sha256": "0d522de21e0e71e6ba19698fcd89588fd8cb8db0d1cc056ddcef49d8ec1f1e39",
+      "bytes": 8447
+    },
+    {
+      "path": "tests/segmentHitTest.test.js",
+      "sha256": "3ea64f322cc68492e96904cc05cc9001a703b2ecb81f90cb7c25c76770e1e98f",
+      "bytes": 3736
+    },
+    {
+      "path": "tests/setup.js",
+      "sha256": "cec7797851358c0eebbab2368c4d2311556e3d29a30d4b315df31e63b58d0636",
+      "bytes": 14121
+    },
+    {
+      "path": "tests/shortHexGlow.test.js",
+      "sha256": "70eb2ed13fa06c21df309000e2105d9b4decf20cc0f76286dc06bc3af82fe91b",
+      "bytes": 7351
+    },
+    {
+      "path": "tests/sliderScales.test.js",
+      "sha256": "d0f066769eb31e5c9db892e14d5c98101aa8866554379389b42714174d262994",
+      "bytes": 5534
+    },
+    {
+      "path": "tests/startup.test.js",
+      "sha256": "c42516a813178947efa3157a36407c404da67e26853641cca364ba4e66f7aa9b",
+      "bytes": 2009
+    },
+    {
+      "path": "tests/swarmEngine.test.js",
+      "sha256": "49ae9be76b513e667f4e82eed90251abb2a562b6d6b578d268753344da7da1c3",
+      "bytes": 22528
+    },
+    {
+      "path": "tests/swatchPicker.test.js",
+      "sha256": "39e163af84ec4d3fad812ad85ae13c55bb13c7123c4d6481540e6f405fcb9058",
+      "bytes": 4105
+    },
+    {
+      "path": "tests/testHarness.test.js",
+      "sha256": "7a3dec2be04b7cb45ecf9ed770b86a30a46662fbfef0138a8b305a91dc653861",
+      "bytes": 8745
+    },
+    {
+      "path": "tests/traceStorage.test.js",
+      "sha256": "8ee3800768102a9ed625959bfbbf76d5fd27a9344a8233588dc9e4e266788f6a",
+      "bytes": 18398
+    },
+    {
+      "path": "tests/traceStorageLimits.test.js",
+      "sha256": "0b29cd076e539127fbef57cb1c07c92b70943d002bb0913164f1d6a4dfcddda5",
+      "bytes": 3613
+    },
+    {
+      "path": "tests/undoService.test.js",
+      "sha256": "08c26204ba77475cfdeb13d8c5d209c38d350071299d4e86b5d19b3f80eb08b7",
+      "bytes": 4874
+    },
+    {
+      "path": "tests/units.test.js",
+      "sha256": "7d73f395432a9c2f47e770d16961b0ed9cece13433848e61b5ace06d698ba5f0",
+      "bytes": 25049
+    },
+    {
+      "path": "tests/vectorLayers.test.js",
+      "sha256": "e54f3e9dd09dcb0d557c58dc353ab0a66a99c3baabadb6125f818a15857d7517",
+      "bytes": 5255
+    },
+    {
+      "path": "tests/videoExportConcurrency.test.js",
+      "sha256": "d654fb9d2e91fabb39fceabc0046addab8fe06b6f8e5631debaf9bffa94c7f5b",
+      "bytes": 56537
+    },
+    {
+      "path": "tests/videoExporter.test.js",
+      "sha256": "c702dc1f082aed78e5f66c540e122e848dce0c4300321e52c2dd6766333517dc",
+      "bytes": 21535
+    },
+    {
+      "path": "tests/waypointCardActions.test.js",
+      "sha256": "84ee9b56b63ec58ac95f853c1c54ac01b37ca813db876784bcb9322a533f7950",
+      "bytes": 12465
+    },
+    {
+      "path": "tests/waypointList.test.js",
+      "sha256": "492b58dccfdefe1b91ee6530aed543560654856b43fff55947aa4a8fe5933677",
+      "bytes": 10516
+    },
+    {
+      "path": "tests/waypointNaming.test.js",
+      "sha256": "2e561400eabb81acbf44e8726c523f194152904bd3687f9c5c1a3d96a96c6d23",
+      "bytes": 4370
+    },
+    {
+      "path": "tests/wiringBus.test.js",
+      "sha256": "8071967aeedaea474bd03ac2abcb745bce3b2798dfc4e7bcaf2d448faf68a929",
+      "bytes": 5621
+    },
+    {
+      "path": "version.json",
+      "sha256": "75e57bb3d7fce611ee9665a6c94c25c1dfd5b22f474002b60ddca8d72f6f5018",
+      "bytes": 64
+    },
+    {
+      "path": "vitest.config.js",
+      "sha256": "6be632d5c51b5c8ca395b896087641ac14180c00e5ab827de45c07c9a44998f4",
+      "bytes": 2075
+    }
+  ],
+  "local": [],
+  "rulesHome": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "UI-STANDARDS.md",
+    "DEV-INFRASTRUCTURE.md",
+    "pm_skills/project/brief.md",
+    "pm_skills/project/conventions.md",
+    "pm_skills/project/architecture.md"
+  ],
+  "census": {
+    "file": "project/migration/census.md",
+    "sources": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      "UI-STANDARDS.md",
+      "DEV-INFRASTRUCTURE.md",
+      "pm_skills/project/brief.md",
+      "pm_skills/project/conventions.md",
+      "pm_skills/project/architecture.md"
+    ],
+    "rows": [
+      {
+        "source": "AGENTS.md:1",
+        "text": "heading: AI Agent Rules — Route Plotter"
+      },
+      {
+        "source": "AGENTS.md:3",
+        "text": "heading: Product identity"
+      },
+      {
+        "source": "AGENTS.md:5",
+        "text": "Route Plotter is a single-purpose animated route editor for maps and images. Its canonical …"
+      },
+      {
+        "source": "AGENTS.md:10",
+        "text": "heading: Who you are working with"
+      },
+      {
+        "source": "AGENTS.md:12",
+        "text": "The maintainer is a novice coder who owns macro structure, UX direction, and conceptual …"
+      },
+      {
+        "source": "AGENTS.md:17",
+        "text": "heading: Durable context architecture"
+      },
+      {
+        "source": "AGENTS.md:19",
+        "text": "This file is the shared agent contract. Codex loads it directly; Claude Code loads …"
+      },
+      {
+        "source": "AGENTS.md:22",
+        "text": "README.md and the permanent project references describe the current product and engineering contracts."
+      },
+      {
+        "source": "AGENTS.md:24",
+        "text": "pm_skills/project/ is the version-controlled, evolving project memory: current intent, architecture, conventions, queue, decisions, and …"
+      },
+      {
+        "source": "AGENTS.md:26",
+        "text": "Local Codex memories and Claude auto memory are recall aids only. They are generated, …"
+      },
+      {
+        "source": "AGENTS.md:30",
+        "text": "Do not create a second repository memory tree or duplicate existing project facts in …"
+      },
+      {
+        "source": "AGENTS.md:33",
+        "text": "heading: Before every task"
+      },
+      {
+        "source": "AGENTS.md:35",
+        "text": "Load only the tier the task needs so startup context stays useful."
+      },
+      {
+        "source": "AGENTS.md:37",
+        "text": "heading: Hot whole-file"
+      },
+      {
+        "source": "AGENTS.md:39",
+        "text": "README.md"
+      },
+      {
+        "source": "AGENTS.md:40",
+        "text": "pm_skills/project/brief.md"
+      },
+      {
+        "source": "AGENTS.md:41",
+        "text": "pm_skills/project/architecture.md"
+      },
+      {
+        "source": "AGENTS.md:42",
+        "text": "pm_skills/project/conventions.md"
+      },
+      {
+        "source": "AGENTS.md:44",
+        "text": "heading: Hot sectional"
+      },
+      {
+        "source": "AGENTS.md:46",
+        "text": "pm_skills/project/file-map.md: read the index and only the sections for directories the task touches; use …"
+      },
+      {
+        "source": "AGENTS.md:48",
+        "text": "pm_skills/project/backlog.md: read the Active section only."
+      },
+      {
+        "source": "AGENTS.md:49",
+        "text": "pm_skills/project/decision-log.md: scan the latest 10 headings and read only relevant entries. Search older entries …"
+      },
+      {
+        "source": "AGENTS.md:52",
+        "text": "heading: Conditional"
+      },
+      {
+        "source": "AGENTS.md:54",
+        "text": "Read _Joe/dev notes/needs consolidating and deleting/dev guide.md for code changes, debugging, persistence work, or …"
+      },
+      {
+        "source": "AGENTS.md:56",
+        "text": "Read UI-STANDARDS.md for UI, controls, layout, text, states, accessibility, or user-facing behaviour."
+      },
+      {
+        "source": "AGENTS.md:58",
+        "text": "Read DEV-INFRASTRUCTURE.md for build, dev-server, versioning, scripts, configuration, or deployment work. At task close, …"
+      },
+      {
+        "source": "AGENTS.md:62",
+        "text": "heading: Warm and cold"
+      },
+      {
+        "source": "AGENTS.md:64",
+        "text": "pm_skills/project/trajectory.md is warm: read on demand when reconstructing shipped work, releasing, or maintaining memory."
+      },
+      {
+        "source": "AGENTS.md:66",
+        "text": "pm_skills/project/wish-list.md, pm_skills/project/doc-deltas.md, pm_skills/project/archive/, and pm_skills/project/tickets/ are cold. Read them only in their named workflow; …"
+      },
+      {
+        "source": "AGENTS.md:70",
+        "text": "Memory budgets live only in pm_skills/memory-policy.md. Read that file for task close or memory …"
+      },
+      {
+        "source": "AGENTS.md:72",
+        "text": "Report a budget overrun and propose the prune; never prune without the owner. The …"
+      },
+      {
+        "source": "AGENTS.md:76",
+        "text": "heading: Workflow"
+      },
+      {
+        "source": "AGENTS.md:78",
+        "text": "For non-trivial work, follow pm_skills/integrations/task.md; its default mode is checkpoint. Use full for [sign-off] …"
+      },
+      {
+        "source": "AGENTS.md:85",
+        "text": "Search the full source tree before proposing changes. Check src/config/constants.js for tuneable values and …"
+      },
+      {
+        "source": "AGENTS.md:88",
+        "text": "Close completed work through pm_skills/prompts/end-of-task.md. Update only the documents whose owned facts changed. Do …"
+      },
+      {
+        "source": "AGENTS.md:90",
+        "text": "If another session may be writing, follow the claim and single-memory-writer procedure in pm_skills/prompts/session-start.md …"
+      },
+      {
+        "source": "AGENTS.md:94",
+        "text": "heading: Commit, push and release"
+      },
+      {
+        "source": "AGENTS.md:96",
+        "text": "main is the live site (DEV-INFRASTRUCTURE.md → Deployment), so:"
+      },
+      {
+        "source": "AGENTS.md:98",
+        "text": "Work on a short-lived branch from main, one concern per branch, and open a …"
+      },
+      {
+        "source": "AGENTS.md:101",
+        "text": "Never commit to or push main except in two owner-authorised cases: merging a pull …"
+      },
+      {
+        "source": "AGENTS.md:107",
+        "text": "These rules hold in every workflow and mode. The commit-and-push close in pm_skills/integrations/task.md step …"
+      },
+      {
+        "source": "AGENTS.md:110",
+        "text": "Only npm run push commits docs/ and version.json. Never commit the copies that npm …"
+      },
+      {
+        "source": "AGENTS.md:113",
+        "text": "heading: Hard rules and invariants"
+      },
+      {
+        "source": "AGENTS.md:115",
+        "text": "Waypoints store normalised image coordinates in imgX and imgY: 0–1 spans the image, and …"
+      },
+      {
+        "source": "AGENTS.md:122",
+        "text": "Components (the controllers, InteractionHandler and the modal tools) get no app instance and reach …"
+      },
+      {
+        "source": "AGENTS.md:129",
+        "text": "InteractionHandler owns one Pointer Events transaction for mouse, touch, and pen authoring. Do not …"
+      },
+      {
+        "source": "AGENTS.md:132",
+        "text": "Put all imports at the top of a file."
+      },
+      {
+        "source": "AGENTS.md:133",
+        "text": "Treat docs/ as generated build output. Never hand-edit it."
+      },
+      {
+        "source": "AGENTS.md:134",
+        "text": "The only runtime dependencies are jszip and mediabunny. Do not add a package without …"
+      },
+      {
+        "source": "AGENTS.md:136",
+        "text": "Keep the Okabe-Ito map palette separate from UoN UI tokens. UI follows the project's …"
+      },
+      {
+        "source": "AGENTS.md:138",
+        "text": "Programmatic speed-slider updates use ui:slider:update-speed, never direct .value assignment."
+      },
+      {
+        "source": "AGENTS.md:140",
+        "text": "Stable paused editor and player views queue no animation frame. Active playback and visible …"
+      },
+      {
+        "source": "AGENTS.md:143",
+        "text": "Runtime recovery must remain one documented, ownership-safe command that verifies readiness, not merely process …"
+      },
+      {
+        "source": "AGENTS.md:145",
+        "text": "Do not invent synonyms for existing EventBus events. Search the emit and on call …"
+      },
+      {
+        "source": "AGENTS.md:149",
+        "text": "heading: Minimal change and documentation discipline"
+      },
+      {
+        "source": "AGENTS.md:151",
+        "text": "Do not reorganise code or edit comments outside the requested surface."
+      },
+      {
+        "source": "AGENTS.md:152",
+        "text": "Match existing style: 2-space indentation, single quotes, and semicolons."
+      },
+      {
+        "source": "AGENTS.md:153",
+        "text": "Add an abstraction only when it reduces real duplication, isolates fragile logic, or has …"
+      },
+      {
+        "source": "AGENTS.md:155",
+        "text": "Explain why in comments; do not restate what the code says. Follow pm_skills/project/conventions.md for …"
+      },
+      {
+        "source": "AGENTS.md:157",
+        "text": "When an out-of-scope idea arises, add one unjudged line to pm_skills/project/wish-list.md and continue. Triage, …"
+      },
+      {
+        "source": "AGENTS.md:160",
+        "text": "heading: Testing and persistence"
+      },
+      {
+        "source": "AGENTS.md:162",
+        "text": "Run the non-mutating canonical gate, npm run check, after changes. Never delete, skip, or …"
+      },
+      {
+        "source": "AGENTS.md:166",
+        "text": "Add a focused test for new model methods, utilities, and regressions. Name any browser/device …"
+      },
+      {
+        "source": "AGENTS.md:168",
+        "text": "A persisted property needs a default, toJSON() and fromJSON() handling, inclusion in the canonical …"
+      },
+      {
+        "source": "AGENTS.md:172",
+        "text": "heading: Files agents must not hand-edit"
+      },
+      {
+        "source": "AGENTS.md:174",
+        "text": "docs/ — generated build output"
+      },
+      {
+        "source": "AGENTS.md:175",
+        "text": "_Joe/ — maintainer-owned notes and evidence"
+      },
+      {
+        "source": "AGENTS.md:176",
+        "text": "version.json — build-managed version state"
+      },
+      {
+        "source": "AGENTS.md:177",
+        "text": "node_modules/ — package-manager state"
+      },
+      {
+        "source": "AGENTS.md:179",
+        "text": "heading: Document ownership"
+      },
+      {
+        "source": "AGENTS.md:181",
+        "text": "AGENTS.md: shared standing instructions and hard invariants."
+      },
+      {
+        "source": "AGENTS.md:182",
+        "text": "CLAUDE.md: minimal Claude-specific adapter only."
+      },
+      {
+        "source": "AGENTS.md:183",
+        "text": "README.md: product overview, current architecture, glossary, and gotchas."
+      },
+      {
+        "source": "AGENTS.md:184",
+        "text": "UI-STANDARDS.md: UI, accessibility, and usability rules."
+      },
+      {
+        "source": "AGENTS.md:185",
+        "text": "DEV-INFRASTRUCTURE.md: build, runtime, scripts, versioning, and deployment."
+      },
+      {
+        "source": "AGENTS.md:186",
+        "text": "pm_skills/project/: evolving shared brief, architecture, queue, decisions, and file roles."
+      },
+      {
+        "source": "AGENTS.md:188",
+        "text": "Local/auto memory: temporary tool-specific recall, never the shared source of truth."
+      },
+      {
+        "source": "AGENTS.md:191",
+        "text": "When a fact changes, update its owner and link to it elsewhere rather than …"
+      },
+      {
+        "source": "AGENTS.md:194",
+        "text": "heading: Framework section aliases"
+      },
+      {
+        "source": "AGENTS.md:196",
+        "text": "The vendored pm_skills/ workflows name AGENTS.md sections by their template titles. Here is where …"
+      },
+      {
+        "source": "AGENTS.md:199",
+        "text": "Read tiers → Before every task."
+      },
+      {
+        "source": "AGENTS.md:200",
+        "text": "Files to never edit → Files agents must not hand-edit."
+      },
+      {
+        "source": "AGENTS.md:201",
+        "text": "Protected infrastructure → none, by owner decision (2026-09-22); main is guarded by Commit, push …"
+      },
+      {
+        "source": "AGENTS.md:203",
+        "text": "One-command quality gate → npm run check, described in DEV-INFRASTRUCTURE.md → Quality gate."
+      },
+      {
+        "source": "AGENTS.md:205",
+        "text": "Capturing deferred ideas → Minimal change and documentation discipline, the wish-list.md rule."
+      },
+      {
+        "source": "AGENTS.md:207",
+        "text": "Traceable version identity → DEV-INFRASTRUCTURE.md → Framework section aliases."
+      },
+      {
+        "source": "AGENTS.md:209",
+        "text": "Security baseline → DEV-INFRASTRUCTURE.md → Framework section aliases."
+      },
+      {
+        "source": "AGENTS.md:211",
+        "text": "Self-explaining runtime → DEV-INFRASTRUCTURE.md → Framework section aliases, Maintainer diagnostics."
+      },
+      {
+        "source": "CLAUDE.md:1",
+        "text": "heading: Claude Code project entry point"
+      },
+      {
+        "source": "CLAUDE.md:3",
+        "text": "@AGENTS.md"
+      },
+      {
+        "source": "CLAUDE.md:5",
+        "text": "heading: Claude Code-specific guidance"
+      },
+      {
+        "source": "CLAUDE.md:7",
+        "text": "The imported AGENTS.md is the shared project contract. Keep this adapter small and do …"
+      },
+      {
+        "source": "CLAUDE.md:9",
+        "text": "Treat paths under pm_skills/ as repository workflows to read and follow; they do not …"
+      },
+      {
+        "source": "CLAUDE.md:11",
+        "text": "Auto memory is optional, machine-local recall. Do not use it as the source of …"
+      },
+      {
+        "source": "CLAUDE.md:14",
+        "text": "Use /context when you need to verify which memory files loaded in a Claude …"
+      },
+      {
+        "source": "UI-STANDARDS.md:1",
+        "text": "heading: UI Standards"
+      },
+      {
+        "source": "UI-STANDARDS.md:3",
+        "text": "This file contains the full UI, usability, and accessibility rules for the project. AGENTS.md …"
+      },
+      {
+        "source": "UI-STANDARDS.md:8",
+        "text": "---"
+      },
+      {
+        "source": "UI-STANDARDS.md:10",
+        "text": "heading: Design system"
+      },
+      {
+        "source": "UI-STANDARDS.md:12",
+        "text": "IBM Carbon Design System is the reference standard for this project. Carbon is not …"
+      },
+      {
+        "source": "UI-STANDARDS.md:18",
+        "text": "heading: Carbon-first UI discipline"
+      },
+      {
+        "source": "UI-STANDARDS.md:20",
+        "text": "Prefer Carbon components, patterns, tokens, spacing, and interaction conventions wherever a suitable Carbon solution …"
+      },
+      {
+        "source": "UI-STANDARDS.md:23",
+        "text": "Use Carbon's productive UI style for the working interface, not expressive or marketing styling."
+      },
+      {
+        "source": "UI-STANDARDS.md:25",
+        "text": "Use semantic design tokens for colour, spacing, typography, layer, border, and state. Do not …"
+      },
+      {
+        "source": "UI-STANDARDS.md:28",
+        "text": "Keep layouts modular, consistent, and task-focused. Reuse an existing Carbon pattern before creating a …"
+      },
+      {
+        "source": "UI-STANDARDS.md:30",
+        "text": "Where Carbon defaults meet AA but not this project's stricter AAA target, adapt them. …"
+      },
+      {
+        "source": "UI-STANDARDS.md:33",
+        "text": "heading: Token systems"
+      },
+      {
+        "source": "UI-STANDARDS.md:35",
+        "text": "Two token systems run side by side:"
+      },
+      {
+        "source": "UI-STANDARDS.md:39",
+        "text": "Okabe-Ito palette | Map data colours (markers, paths, beacons, area highlights) | styles/tokens.css as …"
+      },
+      {
+        "source": "UI-STANDARDS.md:40",
+        "text": "UoN semantic tokens | UI chrome (surfaces, text, borders, interactive states) | styles/tokens.css as …"
+      },
+      {
+        "source": "UI-STANDARDS.md:42",
+        "text": "Carbon conventions (spacing scale, typography scale, layout grid, layer tokens, border tokens, interaction state …"
+      },
+      {
+        "source": "UI-STANDARDS.md:46",
+        "text": "Do not collapse one system into the other. Map data colours must always use …"
+      },
+      {
+        "source": "UI-STANDARDS.md:50",
+        "text": "---"
+      },
+      {
+        "source": "UI-STANDARDS.md:52",
+        "text": "heading: Usability heuristics"
+      },
+      {
+        "source": "UI-STANDARDS.md:54",
+        "text": "Nielsen's heuristics are hard rules, not aspirations."
+      },
+      {
+        "source": "UI-STANDARDS.md:56",
+        "text": "heading: Content and form (Carbon rules)"
+      },
+      {
+        "source": "UI-STANDARDS.md:58",
+        "text": "Sentence case for all UI text."
+      },
+      {
+        "source": "UI-STANDARDS.md:59",
+        "text": "Every input must have a visible label. No colons after labels."
+      },
+      {
+        "source": "UI-STANDARDS.md:60",
+        "text": "Visible label text must match the accessible name."
+      },
+      {
+        "source": "UI-STANDARDS.md:61",
+        "text": "Labels: concise, 1–3 words where practical."
+      },
+      {
+        "source": "UI-STANDARDS.md:62",
+        "text": "Helper text only when it prevents error, clarifies format, or explains consequence."
+      },
+      {
+        "source": "UI-STANDARDS.md:64",
+        "text": "Prefer native HTML form controls before custom ARIA widgets."
+      },
+      {
+        "source": "UI-STANDARDS.md:65",
+        "text": "Use user language, not implementation terms."
+      },
+      {
+        "source": "UI-STANDARDS.md:67",
+        "text": "heading: System status"
+      },
+      {
+        "source": "UI-STANDARDS.md:69",
+        "text": "Every async action must show status: loading, progress, success, or error. The UI must …"
+      },
+      {
+        "source": "UI-STANDARDS.md:71",
+        "text": "Important status changes must be announced programmatically, not only shown visually."
+      },
+      {
+        "source": "UI-STANDARDS.md:73",
+        "text": "Auto-save, export, import, and recovery states must be visible."
+      },
+      {
+        "source": "UI-STANDARDS.md:75",
+        "text": "heading: Empty and no-data states"
+      },
+      {
+        "source": "UI-STANDARDS.md:77",
+        "text": "Every panel must have an intentional empty state explaining what belongs here and what …"
+      },
+      {
+        "source": "UI-STANDARDS.md:79",
+        "text": "Distinguish \"nothing yet,\" \"filtered out,\" \"failed to load,\" and \"not available.\" No blank panels …"
+      },
+      {
+        "source": "UI-STANDARDS.md:81",
+        "text": "Loading states must preserve layout stability — no content jumps."
+      },
+      {
+        "source": "UI-STANDARDS.md:83",
+        "text": "heading: User control and freedom"
+      },
+      {
+        "source": "UI-STANDARDS.md:85",
+        "text": "Provide cancel, undo, or back-out routes for non-trivial actions."
+      },
+      {
+        "source": "UI-STANDARDS.md:86",
+        "text": "Destructive actions require confirmation or reliable undo."
+      },
+      {
+        "source": "UI-STANDARDS.md:87",
+        "text": "Do not trap users in modes, overlays, or incomplete flows."
+      },
+      {
+        "source": "UI-STANDARDS.md:89",
+        "text": "heading: Consistency"
+      },
+      {
+        "source": "UI-STANDARDS.md:91",
+        "text": "Same words, icons, patterns, and spacing for the same concepts throughout. Do not create …"
+      },
+      {
+        "source": "UI-STANDARDS.md:93",
+        "text": "Follow existing Carbon conventions and established design tokens."
+      },
+      {
+        "source": "UI-STANDARDS.md:95",
+        "text": "heading: Error prevention and recovery"
+      },
+      {
+        "source": "UI-STANDARDS.md:97",
+        "text": "Constrain invalid input, validate early, disable impossible actions."
+      },
+      {
+        "source": "UI-STANDARDS.md:98",
+        "text": "Prefer safe defaults. No silent propagation of invalid states."
+      },
+      {
+        "source": "UI-STANDARDS.md:99",
+        "text": "Error messages must say what happened and what to do next."
+      },
+      {
+        "source": "UI-STANDARDS.md:100",
+        "text": "Errors must be specific, human-readable, and linked to the relevant control. No vague \"Something …"
+      },
+      {
+        "source": "UI-STANDARDS.md:103",
+        "text": "heading: Recognition over recall"
+      },
+      {
+        "source": "UI-STANDARDS.md:105",
+        "text": "Keep key controls visible. Show current selection, mode, and state explicitly. Surface context near …"
+      },
+      {
+        "source": "UI-STANDARDS.md:107",
+        "text": "Slider readouts show the value the renderer or timeline consumes, never an internal slider …"
+      },
+      {
+        "source": "UI-STANDARDS.md:111",
+        "text": "Map-bound size controls use reference px readouts and say in contextual help that exports …"
+      },
+      {
+        "source": "UI-STANDARDS.md:116",
+        "text": "Palette controls identify the exact current colour in text. A custom or imported value …"
+      },
+      {
+        "source": "UI-STANDARDS.md:119",
+        "text": "Multi-edit controls compare the entities they will actually write. When those values disagree, selects …"
+      },
+      {
+        "source": "UI-STANDARDS.md:126",
+        "text": "heading: Flexibility and efficiency"
+      },
+      {
+        "source": "UI-STANDARDS.md:128",
+        "text": "Support novice and repeat use. Expose shortcuts for common actions."
+      },
+      {
+        "source": "UI-STANDARDS.md:129",
+        "text": "Provide click, tap, and keyboard alternatives — avoid drag-only interactions."
+      },
+      {
+        "source": "UI-STANDARDS.md:132",
+        "text": "heading: Minimalist design"
+      },
+      {
+        "source": "UI-STANDARDS.md:134",
+        "text": "Keep interfaces lean and task-relevant. No decorative chrome, redundant copy, or competing calls to …"
+      },
+      {
+        "source": "UI-STANDARDS.md:136",
+        "text": "Complex inspector cards keep 2–4 conceptual controls for the shortest complete task visible in …"
+      },
+      {
+        "source": "UI-STANDARDS.md:140",
+        "text": "Repeated waypoint-card actions use one compact final row. Reset applies route/default values to the …"
+      },
+      {
+        "source": "UI-STANDARDS.md:146",
+        "text": "Seeded variation controls expose the exact persisted seed and make Re-roll a discrete, undoable …"
+      },
+      {
+        "source": "UI-STANDARDS.md:152",
+        "text": "heading: Motion discipline"
+      },
+      {
+        "source": "UI-STANDARDS.md:154",
+        "text": "Motion must be subtle, purposeful, and easy to ignore."
+      },
+      {
+        "source": "UI-STANDARDS.md:155",
+        "text": "Respect prefers-reduced-motion. No motion as the only carrier of meaning. No content flashing more …"
+      },
+      {
+        "source": "UI-STANDARDS.md:158",
+        "text": "heading: Help and contextual guidance"
+      },
+      {
+        "source": "UI-STANDARDS.md:160",
+        "text": "Provide contextual help (tooltips, helper text, inline guidance) for non-obvious controls and workflows."
+      },
+      {
+        "source": "UI-STANDARDS.md:162",
+        "text": "Help content must be task-focused, concrete, and brief."
+      },
+      {
+        "source": "UI-STANDARDS.md:163",
+        "text": "A hint label is not a control. Help attached to a label describes the …"
+      },
+      {
+        "source": "UI-STANDARDS.md:169",
+        "text": "Help revealed by pointer must also be reachable by keyboard. Reveal it on the …"
+      },
+      {
+        "source": "UI-STANDARDS.md:173",
+        "text": "---"
+      },
+      {
+        "source": "UI-STANDARDS.md:175",
+        "text": "heading: Accessibility — WCAG 2.2 AAA by default"
+      },
+      {
+        "source": "UI-STANDARDS.md:177",
+        "text": "Target WCAG 2.2 AAA for all applicable UI. Document exceptions explicitly. Where a criterion …"
+      },
+      {
+        "source": "UI-STANDARDS.md:181",
+        "text": "heading: Perceivable"
+      },
+      {
+        "source": "UI-STANDARDS.md:183",
+        "text": "Text contrast: 7:1 (large text may use 4.5:1 where WCAG permits)."
+      },
+      {
+        "source": "UI-STANDARDS.md:185",
+        "text": "Do not rely on colour alone for state, status, or meaning."
+      },
+      {
+        "source": "UI-STANDARDS.md:186",
+        "text": "Link text must make sense on its own — no \"click here.\""
+      },
+      {
+        "source": "UI-STANDARDS.md:187",
+        "text": "Use headings and landmarks for substantial content. Provide text alternatives for meaningful non-text content."
+      },
+      {
+        "source": "UI-STANDARDS.md:190",
+        "text": "heading: Operable"
+      },
+      {
+        "source": "UI-STANDARDS.md:192",
+        "text": "All functionality must be keyboard operable without traps."
+      },
+      {
+        "source": "UI-STANDARDS.md:193",
+        "text": "Focus order must be logical. Focus indicators must be visible and not obscured by …"
+      },
+      {
+        "source": "UI-STANDARDS.md:195",
+        "text": "Pointer targets: ≥ 44 × 44 CSS px unless a WCAG exception applies."
+      },
+      {
+        "source": "UI-STANDARDS.md:197",
+        "text": "Do not require path-based gestures or fine motor precision when a simpler alternative exists."
+      },
+      {
+        "source": "UI-STANDARDS.md:199",
+        "text": "Provide pause/stop/hide for moving or auto-updating content."
+      },
+      {
+        "source": "UI-STANDARDS.md:200",
+        "text": "Warn before timeouts that could cause data loss."
+      },
+      {
+        "source": "UI-STANDARDS.md:202",
+        "text": "heading: Understandable"
+      },
+      {
+        "source": "UI-STANDARDS.md:204",
+        "text": "Predictable behaviour. No unexpected context changes on focus or input."
+      },
+      {
+        "source": "UI-STANDARDS.md:206",
+        "text": "Form instructions and validation near the relevant control."
+      },
+      {
+        "source": "UI-STANDARDS.md:207",
+        "text": "Visible labels and accessible names must match for speech input."
+      },
+      {
+        "source": "UI-STANDARDS.md:209",
+        "text": "heading: Forced colours"
+      },
+      {
+        "source": "UI-STANDARDS.md:211",
+        "text": "Forced-colours modes (Windows High Contrast and its kin) repaint color, background-color, border-color and outline-color, …"
+      },
+      {
+        "source": "UI-STANDARDS.md:218",
+        "text": "Use only the CSS system colour keywords (Canvas, CanvasText, Highlight, ButtonText, …) inside those …"
+      },
+      {
+        "source": "UI-STANDARDS.md:221",
+        "text": "Documented exception — the map canvas. Forced colours does not repaint canvas content, and …"
+      },
+      {
+        "source": "UI-STANDARDS.md:228",
+        "text": "Colour swatches are the one control that opts out with forced-color-adjust: none: the chip …"
+      },
+      {
+        "source": "UI-STANDARDS.md:233",
+        "text": "heading: Robust"
+      },
+      {
+        "source": "UI-STANDARDS.md:235",
+        "text": "Semantic HTML before ARIA. No ARIA is better than bad ARIA."
+      },
+      {
+        "source": "UI-STANDARDS.md:236",
+        "text": "Dynamic updates (loading, validation, errors) exposed programmatically. Custom widgets must expose role, name, value, …"
+      },
+      {
+        "source": "UI-STANDARDS.md:240",
+        "text": "---"
+      },
+      {
+        "source": "UI-STANDARDS.md:242",
+        "text": "heading: Design review gate"
+      },
+      {
+        "source": "UI-STANDARDS.md:244",
+        "text": "Before sign-off on any UI-affecting change, verify:"
+      },
+      {
+        "source": "UI-STANDARDS.md:246",
+        "text": "Which Carbon component or pattern this change follows."
+      },
+      {
+        "source": "UI-STANDARDS.md:247",
+        "text": "Why a custom pattern was necessary if Carbon was not used."
+      },
+      {
+        "source": "UI-STANDARDS.md:248",
+        "text": "Which Nielsen heuristics were most at risk."
+      },
+      {
+        "source": "UI-STANDARDS.md:249",
+        "text": "Text contrast meets 7:1 for normal text and 4.5:1 for large text where permitted."
+      },
+      {
+        "source": "UI-STANDARDS.md:251",
+        "text": "Focus order, focus visibility, and focus non-obscuration still work."
+      },
+      {
+        "source": "UI-STANDARDS.md:252",
+        "text": "All pointer targets meet 44 × 44 CSS px unless a documented WCAG exception …"
+      },
+      {
+        "source": "UI-STANDARDS.md:254",
+        "text": "Visible labels match accessible names."
+      },
+      {
+        "source": "UI-STANDARDS.md:255",
+        "text": "Link text is self-describing without surrounding context."
+      },
+      {
+        "source": "UI-STANDARDS.md:256",
+        "text": "Empty, loading, success, validation, and error states were all considered and are not visual-only."
+      },
+      {
+        "source": "UI-STANDARDS.md:258",
+        "text": "Keyboard, pointer, and assistive-technology routes all still work."
+      },
+      {
+        "source": "UI-STANDARDS.md:259",
+        "text": "Motion can be reduced or disabled where non-essential."
+      },
+      {
+        "source": "UI-STANDARDS.md:260",
+        "text": "Critical submissions or destructive actions support validation, confirmation, undo, or reversal as appropriate."
+      },
+      {
+        "source": "UI-STANDARDS.md:262",
+        "text": "Any exception to the AAA-by-default rule is documented explicitly."
+      },
+      {
+        "source": "UI-STANDARDS.md:264",
+        "text": "heading: Framework section aliases"
+      },
+      {
+        "source": "UI-STANDARDS.md:266",
+        "text": "Diagnostics affordance (a pm_skills/ template title) → the header's Report a bug button and …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:1",
+        "text": "heading: Dev Infrastructure"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:3",
+        "text": "This file defines the permanent rules for how Route Plotter is built, run, tested, …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:8",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:10",
+        "text": "heading: Package management"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:12",
+        "text": "Package manager: npm"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:14",
+        "text": "package.json lives in the project root."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:15",
+        "text": "Runtime dependencies: jszip (project archives) and mediabunny (MP4/WebM mux layer). Do not add runtime …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:18",
+        "text": "Dev dependencies (devDependencies in package.json: the build, test and accessibility-audit tools) are established. New …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:21",
+        "text": "Supported Node versions are declared in package.json; .nvmrc pins Node 24 for maintainers and …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:24",
+        "text": "Run npm ci after cloning. Do not commit node_modules/."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:26",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:28",
+        "text": "heading: Canonical scripts"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:32",
+        "text": "dev | node build.js --watch --serve | Dev server with watch | Day-to-day development …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:33",
+        "text": "start | node build.js --watch --serve | Same as dev | — |"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:34",
+        "text": "build | NODE_ENV=production node build.js | Production build (minified, sourcemap) | Before deploy |"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:35",
+        "text": "build:deploy | npm run build | Alias of build — outputs straight to docs/ …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:36",
+        "text": "build:check | NODE_ENV=production node build.js --check | Validate a temporary production build without changing …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:37",
+        "text": "check | npm test && npm run test:shell && npm run build:check | Canonical …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:38",
+        "text": "test | vitest run --pool=threads --no-file-parallelism | Run tests once | After every change …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:39",
+        "text": "test:shell | bash tests/restartSafety.test.sh | Project-scoped dev-server PID/cleanup contract | After restart-script changes / …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:40",
+        "text": "test:watch | vitest watch --pool=threads --no-file-parallelism | Tests in watch mode | During development …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:41",
+        "text": "push:dry-run | node push.js --dry-run | Show deployment commands without changing files or Git …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:42",
+        "text": "push | node push.js | From a clean source commit: check, build, stage generated …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:43",
+        "text": "serve | python3 -m http.server 3000 | Static server of the whole repository, no …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:44",
+        "text": "serve:dist | cd docs && python3 -m http.server 3000 | Static server of the …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:46",
+        "text": "Do not add scripts without updating this table."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:48",
+        "text": "› Why the threads pool? Vitest's default forks pool times out › starting its …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:54",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:56",
+        "text": "heading: Quality gate"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:58",
+        "text": "The one-command gate is npm run check: the Vitest suite, the restart-script shell contract, …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:62",
+        "text": "The suite fails a run in which fewer than 72 test files or 1,000 …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:66",
+        "text": "build:check builds production output into a temporary directory, validates it (file inventory, local references, …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:69",
+        "text": "CI runs the same command on every push and pull request (the Verify workflow, …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:72",
+        "text": "There is no linter, formatter check, type checker or Markdown link checker, so report …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:75",
+        "text": "npm run dev, npm run build and ./scripts/restart.sh rewrite docs/ and version.json, so none …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:78",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:80",
+        "text": "heading: Dev server"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:82",
+        "text": "URL: http://localhost:3000"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:83",
+        "text": "Start: npm run dev"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:84",
+        "text": "Serves: Build output from docs/ (esbuild rebuilds JS on change; CSS and HTML are …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:86",
+        "text": "No hot-module replacement. After any change, hard-refresh (Cmd+Shift+R)."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:89",
+        "text": "If port 3000 is already in use, restart.sh stops it only when the process …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:93",
+        "text": "fenced block: lsof -nP -iTCP:3000 -sTCP:LISTEN"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:98",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:100",
+        "text": "heading: Runtime lifecycle"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:102",
+        "text": "Route Plotter is a client-only static app — no backend, database, or persistent server …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:107",
+        "text": "Command surface (full table in Canonical scripts above):"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:111",
+        "text": "Boot | npm run dev | Build, watch src/, serve docs/ at the dev …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:112",
+        "text": "Reboot | ./scripts/restart.sh (or Ctrl-C, then npm run dev) | Stop this checkout's recorded …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:113",
+        "text": "Build | npm run build (or ./scripts/build.sh) | One-off production build into docs/ (no …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:114",
+        "text": "Test | npm test | Run the vitest suite once. |"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:116",
+        "text": "Dev URL / port: http://localhost:3000 (see Dev server above)."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:117",
+        "text": "Components & startup order: a single foreground process — esbuild (watch + rebuild) and …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:120",
+        "text": "Process ownership: runs in the foreground; restart.sh records its wrapper PID in ignored .route-plotter-dev.pid …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:126",
+        "text": "Env / secrets: none. No .env, no API keys — the app runs entirely …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:128",
+        "text": "Generated output: docs/ and the version.json build field, both produced by build.js. Never hand-edit …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:134",
+        "text": "Health / readiness: the app is ready — not merely launched — when http://localhost:3000 …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:140",
+        "text": "Close-out boot check (pm_skills/prompts/end-of-task.md step 2): run npm run check. Its build:check proves the …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:149",
+        "text": "Recovery playbook — server wedged or port stuck. One command stops any running dev …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:152",
+        "text": "fenced block: ./scripts/restart.sh # stop dev server, reboot, wait for HTTP 200"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:156",
+        "text": "Manual equivalent for a server you launched in the current terminal:"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:158",
+        "text": "fenced block: Ctrl-C # stop that foreground server tree"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:164",
+        "text": "If the wrapper reports a foreign port holder, inspect the PID with the commands …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:167",
+        "text": "Exposure: local only by default (localhost). There is no public tunnel or LAN mode; …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:171",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:173",
+        "text": "heading: Build system"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:175",
+        "text": "Bundler: esbuild (via custom build.js)"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:176",
+        "text": "Entry points: src/main.js → docs/app.js (the app) and src/player/playerEntry.js → docs/player.js (the exported-HTML player …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:181",
+        "text": "Output directory: docs/ (also serves as GitHub Pages root)"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:182",
+        "text": "Format: ESM"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:183",
+        "text": "Source maps: the app bundle in dev and production; the player bundle in dev …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:185",
+        "text": "Minification: Production builds only"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:186",
+        "text": "Static files: an explicit allowlist in build.js copies index.html, the six shipped stylesheets, and …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:192",
+        "text": "The output directory is read-only — never hand-edit files in it. They are overwritten …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:195",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:197",
+        "text": "heading: Version management"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:199",
+        "text": "Format: major.minor.build (e.g. 3.1.530)"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:203",
+        "text": "major.minor | package.json version field | Manually, for features or breaking changes |"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:204",
+        "text": "build | version.json build field | Automatically, once per dev session start or npm …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:206",
+        "text": "The combined version is injected at build time via esbuild define as APP_VERSION. It …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:211",
+        "text": "Edit JS in src/ | No — only on next dev restart or build …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:212",
+        "text": "Edit CSS/HTML | No (static copy, not a JS rebuild) |"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:213",
+        "text": "Restart dev server | Yes (once per session) |"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:214",
+        "text": "npm run build | Yes |"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:215",
+        "text": "npm run build:check | No |"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:217",
+        "text": "Do not edit version.json manually — the build script manages it. Bump major.minor in …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:221",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:223",
+        "text": "heading: Deployment"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:225",
+        "text": "Target: GitHub Pages served from /docs on the selected branch. The live site selects …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:233",
+        "text": "Pipeline: first commit all source changes, then run npm run push. The helper refuses …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:238",
+        "text": "Custom message: npm run push -- \"custom msg\""
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:239",
+        "text": "Dry run: npm run push:dry-run"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:240",
+        "text": "Working setup (GOV-01; owner's answers to the abstraction plan's §20 Q1 and Q2, 2026-09-22): …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:251",
+        "text": "A merge does not release source changes. Every push to main rebuilds Pages, but …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:256",
+        "text": "Releasing (when the owner calls it). Where pm_skills/prompts/deploy.md differs, these steps win: it builds …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:260",
+        "text": "In a Working-setup clone, on a clean main that matches origin/main, confirm the Pages …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:265",
+        "text": "npm run check, then npm run push:dry-run. Do not build, bump the version or …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:268",
+        "text": "npm run push, and note the deploy commit's SHA."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:269",
+        "text": "Pages starts building on that push, so Verify on the deploy commit confirms the …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:271",
+        "text": "Confirm the github-pages deployment reached that SHA, and compare the published files by SHA-256 …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:275",
+        "text": "If any check in steps 4–5 fails, roll back (below) and check the restored …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:277",
+        "text": "Tag the deploy commit v‹major›.‹minor›.‹build›, from package.json and the version.json that the push committed …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:280",
+        "text": "Record the release in project memory through a PM: pull request."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:281",
+        "text": "Changing the Pages source does not trigger a build. Switching it through the API …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:285",
+        "text": "Rollback: point Pages at a branch holding the last good tag (v3.2.689 is 587f90a), …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:288",
+        "text": "Main is protected (REL-02): a repository ruleset blocks force-pushes and deletion of main, with …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:291",
+        "text": "OneDrive: the owner's checkout lives in OneDrive, which can evict tracked files and .git …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:295",
+        "text": "Live URL: ‹https://djdaojones.github.io/route-plotter/› (Pages enabled 2026-08-19, Phase 5; the frozen v2 line stays at …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:297",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:299",
+        "text": "heading: Utility scripts"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:301",
+        "text": "push.js — argv-safe, current-branch GitHub Pages helper with a clean-tree gate and generated-file allowlist."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:303",
+        "text": "build.js — esbuild bundler with version management, explicit static allowlist, checked staging/publish, non-mutating check …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:306",
+        "text": "heading: Maintainer shell scripts (scripts/)"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:308",
+        "text": "Thin, run-from-anywhere wrappers around the npm scripts above. Run them as ./scripts/‹name›.sh (or bash …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:312",
+        "text": "scripts/restart.sh — clean restart/boot: stops only the process tree recorded for this checkout (graceful …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:319",
+        "text": "scripts/build.sh — one-shot npm run build into docs/; --test also runs the suite; --help …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:322",
+        "text": "heading: Performance harness (scripts/perf-harness.js)"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:324",
+        "text": "Re-runs the PERF-01 cost curve on demand. It has no pass/fail threshold and is …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:330",
+        "text": "npm run dev, open ‹http://localhost:3000›, and open a project."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:331",
+        "text": "Paste the whole file into the browser console."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:332",
+        "text": "await routePlotterBenchmark()."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:334",
+        "text": "It backs up the project, measures on synthetic ones, restores the backup and disables …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:339",
+        "text": "medianMs is the typical cost of one render(); p95Ms is the slow tail, which …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:343",
+        "text": "Baseline (2026-08-28, production Chromium, 1280x720): waypoint count is the only dimension that costs frame …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:351",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:353",
+        "text": "heading: Configuration strategy"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:355",
+        "text": "Constants: src/config/constants.js — all tuneable values (animation, rendering, interaction, path, motion, text labels, video …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:359",
+        "text": "Design tokens: styles/tokens.css — CSS custom properties for colours, spacing, and theming (UoN palette …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:361",
+        "text": "Keybindings: src/config/keybindings.js — see README.md → Keybindings for what it does and does not …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:363",
+        "text": "Help content: src/config/helpContent.js — welcome modal and inline help HTML generators."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:365",
+        "text": "Tooltips: src/config/tooltips.js — tooltip definitions."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:367",
+        "text": "Do not scatter configuration across service files. If a value might need tuning, it …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:370",
+        "text": "heading: Imported-project safety budgets"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:372",
+        "text": "Untrusted project and image ceilings live beside the boundary they protect: PROJECT_MODEL_LIMITS in src/app/persistence.js, …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:379",
+        "text": "Autosave's contents, 4 MiB cap and failure behaviour are in README.md → Auto-save; a …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:382",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:384",
+        "text": "heading: Editor config"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:386",
+        "text": "The project root contains .editorconfig:"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:388",
+        "text": "UTF-8 encoding, LF line endings"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:389",
+        "text": "2-space indentation for all files"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:390",
+        "text": "Trailing whitespace trimmed (except in markdown)"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:391",
+        "text": "Single quotes in JavaScript"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:392",
+        "text": "120 char max line length for JS/HTML/CSS, 80 for markdown"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:394",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:396",
+        "text": "heading: Files agents must not hand-edit"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:398",
+        "text": "docs/ — build output, overwritten on every build."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:399",
+        "text": "_Joe/ — personal dev notes, design docs, helper scripts."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:400",
+        "text": "version.json — managed by the build script."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:401",
+        "text": "node_modules/ — managed by npm."
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:403",
+        "text": "---"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:405",
+        "text": "heading: Framework section aliases"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:407",
+        "text": "The vendored pm_skills/ workflows name DEV-INFRASTRUCTURE.md sections by their template titles. These have no …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:410",
+        "text": "Security baseline → no runtime secrets are required (Runtime lifecycle → Env / secrets); …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:415",
+        "text": "Maintainer diagnostics → src/services/DiagnosticsService.js builds a redacted environment snapshot, and src/app/privacy.js previews it before …"
+      },
+      {
+        "source": "DEV-INFRASTRUCTURE.md:420",
+        "text": "Traceable version identity → Version management. The identity is major.minor.build, which diagnostics report as …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:1",
+        "text": "heading: Project Brief"
+      },
+      {
+        "source": "pm_skills/project/brief.md:3",
+        "text": "heading: What are we building?"
+      },
+      {
+        "source": "pm_skills/project/brief.md:5",
+        "text": "Route Plotter v3 — an animated route editor for maps and images. Users drop …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:9",
+        "text": "v3 extends the single narrative route into a layered scene over one master timeline: …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:17",
+        "text": "heading: Who is it for?"
+      },
+      {
+        "source": "pm_skills/project/brief.md:19",
+        "text": "University educators, students, and presentation makers who need animated map or image overlays showing …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:24",
+        "text": "heading: Platform and deployment"
+      },
+      {
+        "source": "pm_skills/project/brief.md:26",
+        "text": "Web app. Single-page, client-side only. No server. Repo: djDAOjones/route-plotter (fresh-history v3 line, founded 2026-08-17). …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:33",
+        "text": "heading: Core features (v1)"
+      },
+      {
+        "source": "pm_skills/project/brief.md:35",
+        "text": "Drag-and-drop background images with waypoint placement (major + minor)"
+      },
+      {
+        "source": "pm_skills/project/brief.md:36",
+        "text": "Catmull-Rom spline path with per-segment speed control"
+      },
+      {
+        "source": "pm_skills/project/brief.md:37",
+        "text": "Per-waypoint markers, beacons, text labels, area highlights, camera zoom"
+      },
+      {
+        "source": "pm_skills/project/brief.md:38",
+        "text": "Multiple visibility modes (path, waypoint, background)"
+      },
+      {
+        "source": "pm_skills/project/brief.md:39",
+        "text": "Video export (MP4/WebM via WebCodecs) and self-contained HTML export"
+      },
+      {
+        "source": "pm_skills/project/brief.md:40",
+        "text": "Auto-save to localStorage, project save/load as ZIP"
+      },
+      {
+        "source": "pm_skills/project/brief.md:42",
+        "text": "heading: Constraints"
+      },
+      {
+        "source": "pm_skills/project/brief.md:44",
+        "text": "Pure JavaScript, no frameworks. Two bundled runtime dependencies: mediabunny (video mux) and jszip (project …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:46",
+        "text": "Canvas 2D rendering."
+      },
+      {
+        "source": "pm_skills/project/brief.md:47",
+        "text": "Deterministic timeline (v3 mandate): the scene is a pure function of (timelineMs, projectState, seed) …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:51",
+        "text": "npm + esbuild for bundling (target es2022; lockfile committed), Vitest for testing."
+      },
+      {
+        "source": "pm_skills/project/brief.md:53",
+        "text": "WCAG 2.2 AAA is the product target; the semantic authoring model now ships, while …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:56",
+        "text": "IBM Carbon Design System for UI patterns (implemented, not installed)."
+      },
+      {
+        "source": "pm_skills/project/brief.md:57",
+        "text": "Okabe-Ito colour-blind safe palette for map data."
+      },
+      {
+        "source": "pm_skills/project/brief.md:58",
+        "text": "UoN semantic design tokens for UI chrome."
+      },
+      {
+        "source": "pm_skills/project/brief.md:60",
+        "text": "heading: Out of scope (for now)"
+      },
+      {
+        "source": "pm_skills/project/brief.md:62",
+        "text": "Server-side storage or user accounts"
+      },
+      {
+        "source": "pm_skills/project/brief.md:63",
+        "text": "Multi-user collaboration"
+      },
+      {
+        "source": "pm_skills/project/brief.md:64",
+        "text": "GIS integration or georeferencing"
+      },
+      {
+        "source": "pm_skills/project/brief.md:65",
+        "text": "Mobile-native apps"
+      },
+      {
+        "source": "pm_skills/project/brief.md:67",
+        "text": "heading: Decided foundations"
+      },
+      {
+        "source": "pm_skills/project/brief.md:69",
+        "text": "Split hero routes animate simultaneous branches on one master timeline; reconvergence waits for the …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:71",
+        "text": "Projects own a shipped reference render size: map-bound graphics scale from its short edge …"
+      },
+      {
+        "source": "pm_skills/project/brief.md:75",
+        "text": "Public/share/support boundaries retain original project image bytes only in explicit saves/exports, use previewable redacted …"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:1",
+        "text": "heading: Conventions"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:3",
+        "text": "heading: Code style"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:5",
+        "text": "2-space indentation"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:6",
+        "text": "Single quotes"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:7",
+        "text": "Semicolons"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:8",
+        "text": "LF line endings"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:9",
+        "text": "120 char max line length (JS/HTML/CSS), 80 for markdown"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:10",
+        "text": "Declared in .editorconfig: editors apply indentation and line endings, but no tool enforces the …"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:13",
+        "text": "heading: Naming"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:15",
+        "text": "Files: PascalCase for classes/components (Waypoint.js, RenderingService.js), camelCase for utils (focusTrap.js)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:17",
+        "text": "Variables/functions: camelCase"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:18",
+        "text": "Constants: UPPER_SNAKE_CASE (grouped objects in constants.js)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:19",
+        "text": "CSS custom properties: kebab-case (--map-series-1, --surface-primary)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:21",
+        "text": "Events: colon-separated namespaces (waypoint:style-changed)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:23",
+        "text": "heading: Commit messages"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:25",
+        "text": "Format: ‹ITEM-ID›: summary, naming the backlog item the commit closes or advances (the shape …"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:28",
+        "text": "Memory-only commits: PM: summary"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:29",
+        "text": "Deploy commits (written by npm run push): chore: deploy vX.Y.Z"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:30",
+        "text": "Body: one what/why line, then this repository's verify line: Verify: ‹F› test files · …"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:34",
+        "text": "Examples:"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:36",
+        "text": "REL-02: protect main against force-push and deletion"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:37",
+        "text": "PM: record four owner calls on the remaining queue"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:38",
+        "text": "chore: deploy v3.2.690"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:40",
+        "text": "heading: Documentation"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:42",
+        "text": "Permanent rules are in AGENTS.md § Minimal change and documentation discipline. This section captures …"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:45",
+        "text": "Always document: event chains across files, coordinate transform logic, animation timing calculations, serialisation format …"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:49",
+        "text": "Skip JSDoc for: trivial getters, obvious one-liners, simple event emissions."
+      },
+      {
+        "source": "pm_skills/project/conventions.md:51",
+        "text": "Fragile areas requiring comments: slider feedback loops, animation duration after reset, coordinate space conversions, …"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:55",
+        "text": "heading: Testing"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:57",
+        "text": "Test runner: Vitest with jsdom; test roles are in file-map.md → tests"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:58",
+        "text": "Browser and device checks that automation cannot cover are named per task (AGENTS.md § …"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:60",
+        "text": "After every change: npm run check (tests, shell contract and build:check). It is non-mutating; …"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:64",
+        "text": "heading: Patterns to follow"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:66",
+        "text": "The communication rule in architecture.md → Communication patterns"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:67",
+        "text": "queueRender() for deferred rendering (never call render() directly)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:69",
+        "text": "autoSave() at end of state-mutating event handlers"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:70",
+        "text": "Waypoint factory methods (createMajor(), createMinor()) for creation"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:72",
+        "text": "waypointsById Map for O(1) lookups"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:73",
+        "text": "Batch mode (beginBatch/endBatch) for multi-waypoint operations"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:75",
+        "text": "heading: Patterns to avoid"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:77",
+        "text": "Anything that rule forbids (see its list of current exceptions)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:78",
+        "text": "Storing pixel coordinates on Waypoint (use normalised image coordinates)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:79",
+        "text": "Setting slider .value directly (use ui:slider:update-speed event)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:80",
+        "text": "Mid-file imports (esbuild requires all imports at top)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:81",
+        "text": "Per-frame object allocations in render loop"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:82",
+        "text": "Installing Carbon packages (implement to Carbon spec instead)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:83",
+        "text": "Collapsing Okabe-Ito and UoN token systems"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:85",
+        "text": "heading: Tooling"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:87",
+        "text": "Bundler: esbuild (via custom build.js)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:88",
+        "text": "Test runner: Vitest"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:89",
+        "text": "Formatter: .editorconfig (mechanical)"
+      },
+      {
+        "source": "pm_skills/project/conventions.md:90",
+        "text": "Linter: none"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:1",
+        "text": "heading: Architecture"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:3",
+        "text": "heading: Tech stack"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:7",
+        "text": "Vanilla JavaScript (ES modules) | No framework overhead, full Canvas API control |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:8",
+        "text": "Canvas 2D | Direct pixel manipulation for path rendering and animation |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:9",
+        "text": "esbuild | Fast bundling, simple config, ESM output |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:10",
+        "text": "Vitest + jsdom | Unit testing with DOM simulation |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:11",
+        "text": "axe-core | Automated accessibility audit in the test suite |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:12",
+        "text": "mediabunny | MP4/WebM mux layer |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:13",
+        "text": "jszip | Project ZIP import/export |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:14",
+        "text": "CSS custom properties | Design tokens for theming (UoN + Okabe-Ito) |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:16",
+        "text": "heading: Project structure"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:18",
+        "text": "file-map.md is the maintained index of file roles. src/main.js is the entry point and …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:22",
+        "text": "(The former workers/ layer was deleted 2026-06-18 — it never initialised under the old …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:26",
+        "text": "heading: v3 direction (founded 2026-08-17)"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:28",
+        "text": "Layered scene over one master timeline: the Waypoint chain remains the \"hero route\" layer; …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:56",
+        "text": "REV-02 adds an equivalent non-canvas authoring path without changing that ownership: src/utils/sceneSemantics.js projects the …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:64",
+        "text": "heading: Key modules"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:68",
+        "text": "RoutePlotter | src/main.js + src/app/ | Sole orchestrator: owns all services, handles app-level intents …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:69",
+        "text": "Waypoint | src/models/Waypoint.js | Data model for waypoints (position, style, camera, area, etc.) |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:70",
+        "text": "AnimationEngine | src/services/AnimationEngine.js | Demand-driven preview scheduler, transport, timing, segment speed and pause markers …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:71",
+        "text": "PathCalculator | src/services/PathCalculator.js | Catmull-Rom spline, reparameterisation, curvature |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:72",
+        "text": "RenderingService | src/services/RenderingService.js | Canvas drawing plus project-reference scaling for path, markers, labels, effects …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:73",
+        "text": "UIController | src/controllers/UIController.js | Sidebar controls, waypoint list, slider sync |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:74",
+        "text": "SceneOutlineController | src/controllers/SceneOutlineController.js | Lazy native semantic outline, authoring forms, focus and draft state …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:75",
+        "text": "InteractionHandler | src/handlers/InteractionHandler.js | Captured mouse/touch/pen transactions, keyboard and drag-and-drop input |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:76",
+        "text": "CoordinateTransform | src/services/CoordinateTransform.js | Image ↔ canvas coordinate conversion |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:77",
+        "text": "VideoExporter | src/services/VideoExporter.js | MP4/WebM export via WebCodecs |"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:79",
+        "text": "heading: Communication patterns"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:81",
+        "text": "The rule (the owner's answer to the abstraction plan's §20 Q15, 2026-09-22; stated as …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:84",
+        "text": "Components → app: through the EventBus. UIController, SectionController, SceneOutlineController, InteractionHandler and the modal tools …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:91",
+        "text": "App → components: named public methods. RoutePlotter and its mixins call components directly, for …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:94",
+        "text": "Modal tools: provisional edits, committed by event. While active, the tools change the model …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:97",
+        "text": "Durable model changes belong to the app."
+      },
+      {
+        "source": "pm_skills/project/architecture.md:99",
+        "text": "Current exceptions, and what removes them:"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:101",
+        "text": "UIController writes the model itself: pause, segment speed and area-highlight settings from the inspector, …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:104",
+        "text": "NetworkEditService edits at once, outside an active edit session, while the scene outline or …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:108",
+        "text": "AreaEditService calls an app-supplied coordinate callback (imageToScreen), which InteractionHandler carries in the area:edit-start payload. …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:111",
+        "text": "Private cross-module calls: UIController → VideoExporter._testWebCodecsConfig (DEP-04), HTMLExportService → ImageAsset._hasExpectedSignature (DEP-05), and editorPanel → …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:116",
+        "text": "Kept on purpose, to be revisited in SPL-05: renderState carries the editor tools into …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:120",
+        "text": "Canvas authoring uses one primary-pointer transaction owned by InteractionHandler: hit-test and immutable geometry snapshot …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:127",
+        "text": "heading: Dependency policy"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:129",
+        "text": "Two bundled runtime dependencies: mediabunny and jszip (jszip bundled 2026-08-17, replacing a runtime CDN …"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:132",
+        "text": "Dev dependencies are those in package.json (DEV-INFRASTRUCTURE.md → Package management)."
+      },
+      {
+        "source": "pm_skills/project/architecture.md:135",
+        "text": "heading: Dev workflow"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:137",
+        "text": "Install: npm ci (Node 24 is pinned in .nvmrc)"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:138",
+        "text": "Dev: npm run dev → http://localhost:3000"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:139",
+        "text": "Build: npm run build → output in docs/"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:140",
+        "text": "Check: npm run check (Vitest + restart-script safety contract + non-mutating production build)"
+      },
+      {
+        "source": "pm_skills/project/architecture.md:142",
+        "text": "Deploy: DEV-INFRASTRUCTURE.md → Deployment (pull requests; the owner calls each release)"
+      }
+    ]
+  },
+  "record": {
+    "open": [
+      {
+        "id": "REV-03",
+        "mark": "~",
+        "title": "Unified pointer transactions",
+        "flags": [
+          "verify: physical Android Chrome"
+        ],
+        "detail": true
+      },
+      {
+        "id": "REV-05",
+        "mark": "~",
+        "title": "Accessibility assurance",
+        "flags": [
+          "verify: NVDA/VoiceOver + forced-colours + reduced-motion emulation"
+        ],
+        "detail": false
+      },
+      {
+        "id": "TST-04",
+        "mark": " ",
+        "title": "Sidebar control and readout goldens",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "TST-13",
+        "mark": " ",
+        "title": "Key table, element IDs, HTML ranges",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "TST-05",
+        "mark": " ",
+        "title": "Event transcript golden",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "TST-09",
+        "mark": " ",
+        "title": "Camera, dots, curvature, minor-end and time domains",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "TST-03",
+        "mark": " ",
+        "title": "Visibility mode matrix",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "TST-08",
+        "mark": " ",
+        "title": "Mixin composition guards",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "SPL-06",
+        "mark": " ",
+        "title": "`build.js` entry guard and exported functions",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "TST-11",
+        "mark": " ",
+        "title": "Behavioural tests for source-text assertions",
+        "flags": [
+          "gated: SPL-06 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "TST-14",
+        "mark": " ",
+        "title": "Shell and ContextMenu safety tests",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "TST-16",
+        "mark": " ",
+        "title": "Tighten the round-2 predicates",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEL-02",
+        "mark": " ",
+        "title": "Render dead code",
+        "flags": [
+          "gated: TST-04 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEL-03",
+        "mark": " ",
+        "title": "Engine, geometry and bus dead code",
+        "flags": [
+          "gated: TST-04 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEL-04",
+        "mark": " ",
+        "title": "Wiring dead code",
+        "flags": [
+          "gated: TST-04 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEL-05",
+        "mark": " ",
+        "title": "UI, config and CSS dead code",
+        "flags": [
+          "gated: TST-04, TST-13 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEL-06",
+        "mark": " ",
+        "title": "Services dead API",
+        "flags": [
+          "gated: TST-04 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEL-01",
+        "mark": " ",
+        "title": "Unused barrels",
+        "flags": [
+          "gated: TST-04 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-28",
+        "mark": " ",
+        "title": "A failed recovery restore is silent",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-44",
+        "mark": " ",
+        "title": "A paused editor never idles",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-42",
+        "mark": " ",
+        "title": "A beacon-style change keeps the old schedule",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-45",
+        "mark": " ",
+        "title": "Announcements overwrite each other",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-06",
+        "mark": " ",
+        "title": "Clear All leaves stale route state",
+        "flags": [
+          "ready"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-20",
+        "mark": " ",
+        "title": "Controls out of sync after Open and Clear All",
+        "flags": [
+          "gated: TST-04 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-13",
+        "mark": " ",
+        "title": "A focused button swallows every shortcut",
+        "flags": [
+          "gated: TST-13 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-32",
+        "mark": " ",
+        "title": "Activating a list row loses focus",
+        "flags": [
+          "gated: TST-13 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-14",
+        "mark": " ",
+        "title": "A hint click stops a label toggling",
+        "flags": [
+          "gated: TST-04 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-15",
+        "mark": " ",
+        "title": "L resumes at the old J/K/L speed",
+        "flags": [
+          "gated: TST-05, TST-13 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-19",
+        "mark": " ",
+        "title": "Camera-zoom edits skip undo",
+        "flags": [
+          "gated: TST-04 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "DEF-22",
+        "mark": " ",
+        "title": "An inserted waypoint splits a branch run",
+        "flags": [
+          "gated: TST-05 impl"
+        ],
+        "detail": false
+      },
+      {
+        "id": "REV-07",
+        "mark": " ",
+        "title": "CI maturity",
+        "flags": [
+          "deferred"
+        ],
+        "detail": false
+      },
+      {
+        "id": "ICE-01",
+        "mark": " ",
+        "title": "Swatch-picker popover",
+        "flags": [
+          "deferred"
+        ],
+        "detail": false
+      },
+      {
+        "id": "ICE-02",
+        "mark": " ",
+        "title": "Import-time palette conversion",
+        "flags": [
+          "deferred"
+        ],
+        "detail": false
+      }
+    ],
+    "wishes": [
+      "Per-leg spline tension under Leg → More if ever wanted — per-waypoint segmentTension was retired unread; PathCalculator would need to consume it. — (from: 2026-08-18 Phase 3.5)",
+      "Crowd editing extras still outside the roadmap: multi-emitter authoring (cards edit `emitters[0]` only) and strip drag-reorder via `Scene.moveFlowLayer`. Seed re-roll and release/intensity shaping moved to CROWD-02/CROWD-03 on 2026-08-26. — (from: 2026-08-18 Phase 4 layers strip)",
+      "Network extras after REV-03: click-on-edge splits it with a node, node labels/rename, arrow-key nudge and a network context menu. Edge-weight visualisation moved to CROWD-01 on 2026-08-26. — (from: 2026-08-18 Phase 4 network edit)",
+      "Mode banners are near-duplicates (area draw + network edit both inline-style their own) — extract a shared ModeBanner component. — (from: 2026-08-18 Phase 4 network edit)",
+      "`pm_skills/scaffold/gen-file-map.mjs` silently drops wrapped role descriptions — it keeps only the first line of a multi-line entry, so re-running it flattened six `reviews/` roles to \"(role needed)\". — (from: 2026-08-27 UI-02)",
+      "`npm run dev` leaves `docs/player.js.map` behind: the watch build emits a player sourcemap the production build's 17-file inventory does not, so the generated tree drifts from what is published. — (from: 2026-08-27 ROUTE-01b)",
+      "Marquee / rubber-band selection on canvas — drag over empty space currently does nothing in edit mode; a selection rectangle is the natural next gesture. — (from: 2026-08-18 Phase 4 multi-select)",
+      "jsdom 30 needs Node >= 24.15.0 and this checkout runs 24.5.0; no manifest change is required (engines already allows it, .nvmrc is just `24`) — only the installed Node. Owner's toolchain call. — (from: 2026-08-28 DEPS-01)",
+      "`npm run serve` serves the unbuilt source shell at `/` (only `/docs/` runs the app) and `start` duplicates `dev`: fix or remove both (plan SEG-026). — (from: 2026-09-22 DOC-02)",
+      "`restart.sh` proves only that the server answers, while AGENTS' recovery rule asks it to verify readiness, which DEV-INFRASTRUCTURE defines as no console errors and a rendered version stamp. — (from: 2026-09-22 DOC-02)",
+      "CI could fail a pull request that changes `docs/` or `version.json`, which only `npm run push` may commit; today the release steps rely on checking the diff by eye. — (from: 2026-09-22 GOV-01)",
+      "`bootApp`'s teardown is incomplete, four ways. (1) It returns before `app.ready` resolves and never awaits it, so a pending startup from one test can install bus listeners during the next; tests that touch the UI must await `ready` themselves today (2026-09-23 TST-06, Codex review). (2) `backgroundModeOverlay.test.js`'s `bootPlainRoute` never awaits `app.ready`, so startup's console output can race the worker's teardown: once, under load, 11 `EnvironmentTeardownError`s failed `npm run check`, and the rerun passed; awaiting each app's `ready` in `bootApp`'s teardown would cover every file (2026-09-26 DEF-33 review). (3) It leaves each app's `document` keydown listener attached, so in a file that boots several apps an earlier one claims a key (`preventDefault`) before the current app sees it; DEF-21's test calls `app.interactionHandler.handleKeyDown` directly to get round it (2026-09-23 DEF-21). (4) `goldenDrawLogs.test.js` grows its heap through the whole file (a peak of about 1.8 GB, of the test worker's 4.3 GB), because booted apps are never let go, probably through that keydown listener; DEF-38's first draft ran the gate's worker out of heap until `takeFrame` dropped the frames it takes (2026-09-28 DEF-38). — (from: four lines merged 2026-09-28)",
+      "`PathCalculator` samples a point per 0.002 of path length with no overall cap, so a crafted project at the 2,000-waypoint and coordinate limits can ask for tens of millions of samples; the DEF-03 range stops one stray coordinate, not a whole route. — (from: 2026-09-23 DEF-03, Codex review)",
+      "Model-only autosave recovery shallow-copies `styles` and clears only the image fields it knows, so an extra field a crafted project file puts on `styles.pathHead` (a data URL, a filename) survives into the recovery point; export filtering (DEF-23) does not reach it. — (from: 2026-09-23 DEF-23, Codex review)",
+      "⌘S delivered for real to a booted app under jsdom opens the save dialog and overflows the stack; unexplained, and not seen in a browser. DEF-21's test records the bus events with a no-op `eventBus.emit` spy instead. — (from: 2026-09-23 DEF-21)",
+      "The exported player's on-screen path is untested: `PlayerApp.resize` returns early on a canvas with no parent, so no test sees its backing size, `pixelScale` or `setTransform`, and forcing `pixelScale: 1` in the player passed every test (Codex). — (from: 2026-09-24 DEF-34)",
+      "`goldenDrawLogs`' first-frame camera exemption still accepts a player-only translation that does not depend on Graphics scale; settling the editor's camera before comparing, or asserting the expected eased transform, would remove it. — (from: 2026-09-24 DEF-34)",
+      "The draw goldens never draw a path-only export: `enterMode('export')` skips the step in `exportVideo` that hides the background, although `authoredExtras` asks for one (Codex). — (from: 2026-09-24 TST-17)",
+      "In a parallel run (`npx vitest run` without the gate's `--no-file-parallelism`) a frame that the setup's `setTimeout`-backed `requestAnimationFrame` booked can fire after its file's environment is torn down, so `AnimationEngine._scheduleFrame` throws `requestAnimationFrame is not defined` as an uncaught exception; vitest then reports `Errors  N errors` and exits 1 with every test passed (7 errors, attributed to `backgroundModeOverlay.test.js`, on `a69ab80`; the serial gate has not shown it). — (from: 2026-09-25 PM prompt)",
+      "Two handlers in `wiringControllers.js` place a waypoint next to one that may be off the image, then pull it onto the image whatever the background zoom: inserting before the first or after the last (`waypoint:insert-adjacent`, which continues the route by 8% and clamps to 0–1) and duplicating (`waypoint:duplicate`, which caps each coordinate at 1, so a copy of (1.5, −0.3) lands at (1, −0.28)); DEF-03's rule would let the new point follow when zoomed out. — (from: 2026-09-25 DEF-35)",
+      "`bootApp`'s \"bundled example background loads\" waits `vi.waitFor`'s default 1 s, and timed out once (1.75 s) on a loaded machine during a mutation run; a longer wait would stop it flaking. — (from: 2026-09-25 DEF-35, part B)",
+      "The `authored-extras` fixture's `motionSettings.pathTrail` is 640, far outside the slider's 0.04–4, because load checks only that it is finite (`persistence.js:370-373`); its preview timeline runs about 14 minutes, so the goldens' later instants miss every beacon window. — (from: 2026-09-26 DEF-08 review)",
+      "A waypoint's hit radius is a fixed 15 px (`INTERACTION.WAYPOINT_HIT_RADIUS`) while a beacon can draw its marker at up to 4×, so a click 22 px from the centre of a 4× marker adds a waypoint instead of selecting it (now while paused too, with DEF-08). — (from: 2026-09-26 DEF-08 review)",
+      "`AreaDrawingService`'s header names an event that does not exist (`canvas:click-intercepted`) and credits `AreaHighlightRenderer` with the preview, which `RenderingService` draws. — (from: 2026-09-26 DEF-17 review)",
+      "Two unused constants: `AREA_HIGHLIGHT.DRAW_VERTEX_HIT_RADIUS` (\"snap radius for closing polygon\"; closing uses `DRAW_CLOSE_THRESHOLD`, in image units) and `INTERACTION.DOUBLE_CLICK_TIME`, which README's constants table still advertises (\"double-click 300 ms\"). — (from: 2026-09-26 DEF-17 review)",
+      "The playback `action` names in `keybindings.js` are help text only, not the events the app emits (`InteractionHandler` emits `ui:animation:toggle`, `animation:jkl-*`, `ui:animation:skip-*`); K's is `animation:pause`, the engine's own state event, so a dispatcher built on them would announce a pause without pausing. — (from: 2026-09-26 DEF-33 review)",
+      "Skip to end announces nothing, from the button, `.`, `>` or End: `ui:animation:skip-end` seeks directly, and the \"Skipped to end\" announcement in `playback.js` is never called. — (from: 2026-09-26 DEF-33 review)",
+      "The perf harness silences autosave, but Clear All after a benchmark clears storage directly (`projectReset.js:75`) and so deletes the restored recovery point, and a reload comes back empty; also suppressing `clearAutoSave` for the page's life was verified to fix it. — (from: 2026-09-26 DEF-30 review)",
+      "`EventBus.emitAsync` neither awaits an async `once` callback nor passes on its rejection, because the wrapper returns nothing; it does both for an `on` listener. No caller today. — (from: 2026-09-26 DEF-30 review)",
+      "Load accepts a Graphics scale up to 16 but the renderer clamps it to 0.25–4, so a hand-edited 16 reads \"16×\" while drawing at 4×, and a value below 0.25 draws at 0.25× but reads \"0.0×\". — (from: 2026-09-26 DEF-37 review)",
+      "The test recorder keeps no clip region, so its state view can see neither a clip left in force after a throw nor any clip at all; nothing in `src/` clips today. — (from: 2026-09-28 DEF-38 review)",
+      "Editing overlays inherit their opacity and line dash from whatever drew before them (area edit handles, the hover and leg-hover rings, the plus handle, selection rings, the network guide and selected-node overlays). Harmless today, since every layer that sets either does so inside a save or clears it (the route clears its dash), but one that left either would restyle them. — (from: 2026-09-28 DEF-47 review)"
+    ],
+    "deltas": [],
+    "decisions": [
+      {
+        "head": "2026-09-28 — the big run, amended: Joe answers what it would have parked",
+        "sha256": "830b99b1d39cfe4eff19e479fe4389eeced76fb5020584677fffa654865844b1"
+      },
+      {
+        "head": "2026-09-28 — memory maintenance: the era before the programme goes cold",
+        "sha256": "d0aa42a72484e96a4ca68e7028a81394fc55301755c246dda3d51b0889867181"
+      },
+      {
+        "head": "2026-09-28 — the big run: Joe answers the open calls, and delegates merges and planned fixes",
+        "sha256": "0dac8e0aba95d0da9f7eb285756099392b5e8cc3f21b18bb696c9f66dab955e4"
+      },
+      {
+        "head": "2026-09-28 — the post-W2 follow-ups: what a frame leaves behind no longer decides the next",
+        "sha256": "176bb11c2aa058fe7187ad29cbca77b84c7dff46453ff01027490db3fba834e5"
+      },
+      {
+        "head": "2026-09-28 — W3's pilot: the slider scales move, and nothing guards the readouts",
+        "sha256": "ddf061a2ca35949e267f20bd694ffd7340311acfab94de2c77b98c630b98f16b"
+      },
+      {
+        "head": "2026-09-28 — the post-W2 queue: the defects W1 left, and what their reviews found",
+        "sha256": "55302f74ab62cda882743616f00349a90c40ae4e1ff76cb2cf2e47a04afe01f8"
+      },
+      {
+        "head": "2026-09-24 — W2 closes: projects that would not reopen now do",
+        "sha256": "bfb485779ce7b1a984b67ac2e16cdb91cc8226a50b6cad75fe5040db0676016f"
+      },
+      {
+        "head": "2026-09-24 — v3.2.692: W2's fixes go live",
+        "sha256": "51a215c1279edf504aee75497420516b7f7f440bc4622c6dac7e965afc4ff146"
+      },
+      {
+        "head": "2026-09-23 — the backlog's Next lane also carries runnable unwaved defects",
+        "sha256": "f6312bd5f863eedd79a636b394a94ac0779c0734e9142494a9cb73902358eacf"
+      },
+      {
+        "head": "2026-09-23 — W1 closes: the safety net is built",
+        "sha256": "60066e623e8a0429cc1a8fce9a5b139d70ed205b75f9d1d7b61fafe4e5411415"
+      },
+      {
+        "head": "2026-09-22 — v3.2.691: the debug overlay leaves the live site",
+        "sha256": "4178a9775d07c7b83b53e8d9ff1ea730489ace7dd35c26942c6b9b7bac48d157"
+      },
+      {
+        "head": "2026-09-22 — W0 closes: no accidental release, and docs that match the code",
+        "sha256": "8037456b12bfa6cd1097c839b432fe4bc2e592e956685c63d68f3f3b33629418"
+      },
+      {
+        "head": "2026-09-22 — adopt the codebase abstraction plan, on every recommended default",
+        "sha256": "ba2eea8684ec9824ef88c382dffdfc1b0979cddc86760b9ec949a23eba7c15a7"
+      },
+      {
+        "head": "2026-08-28 — a branch run must not read the trunk's wait index",
+        "sha256": "65cb03dbed4bad70f2d3a58db26d055dece078e6dcfd67ce040aec7c97afa503"
+      },
+      {
+        "head": "2026-08-27 — owner sets the prune bar, and holds the merge",
+        "sha256": "d2b800c1d60cda3b951ced4c5cd75e48bac224b1ef10eb3131db451facaa0577"
+      },
+      {
+        "head": "2026-08-27 — the accessibility audit, and what it is honest to claim",
+        "sha256": "a641689e5587d4b74b767d7631a90d4319eadd792c165b39073d7603c9b9715f"
+      },
+      {
+        "head": "2026-08-27 — the exported player inherits branches rather than reimplementing them",
+        "sha256": "a338f5b071f15058c6a5359e2925ab50d04c1e6db0a278b31e925acf974baeb0"
+      },
+      {
+        "head": "2026-08-27 — a branch borrows the trunk's transport, never its own",
+        "sha256": "8990b6e579bb2691ea7e9869fc0de21b96e1a153fb670e0f9e37917e5accd474"
+      },
+      {
+        "head": "2026-04-16 — Path casing as a global style toggle",
+        "sha256": "2ccc5adce9180dd44bea1f15341ea21c61af4ed429fdd85dccbf941681a33fb2"
+      },
+      {
+        "head": "2026-04-16 — Adopted PM-Skills framework for AI guidance",
+        "sha256": "ceb32b3018b360633db0d1e19c1411fb1b976942370f1e0df4bd2b8239147a16"
+      },
+      {
+        "head": "2026-06-18 — Segment-speed refinement: major-leg keyframing + Web Worker removal",
+        "sha256": "50d2098d8f7b0b803e8c8163fa7702f9687409524e896fde84c0cb579e3c200c"
+      },
+      {
+        "head": "2026-06-17 — Path glow (Option B layered underlay) + HTML-export casing parity",
+        "sha256": "688428ff56acd7fb49f0ee2b2df65ee2ea788b090b3acdcd8aa0c685a6828d8c"
+      },
+      {
+        "head": "2026-06-17 — Console spam gated to console.debug (AnimationEngine)",
+        "sha256": "7f9eaa1001b1a4d6e806ee15cf9411802e99e81c9356595ced0cb2be0426adb5"
+      },
+      {
+        "head": "2026-06-17 — Undo granularity verified (no change); Edit/Preview header reflow fixed",
+        "sha256": "7ed3345788ffd3594d922e11d042a5e609c3229b01d34138665a86b2d0aca599"
+      },
+      {
+        "head": "2026-06-17 — Sidebar calmness: waypoint list + swatch picker (UI polish)",
+        "sha256": "1c0b22e366b8314fe7388167806cd3cf8b298ed316185e529a8927d30754daa1"
+      },
+      {
+        "head": "2026-06-17 — Export \"Include in export\" group + reduced-motion beacons (glow)",
+        "sha256": "1f139f961ef56a435c749aed314d1b256f22dc674dcac7c3a15cd0eafeba971e"
+      },
+      {
+        "head": "2026-06-17 — restart.sh stops the whole dev tree, not just the port (orphan fix)",
+        "sha256": "2d161cbea370fc023029f2cfd35563b17438d9bfc2fa46460c6074b33ab0d31c"
+      },
+      {
+        "head": "2026-06-17 — Maintainer run/build scripts (scripts/)",
+        "sha256": "5921cae01a0ff9c71b7168a59ed9fd8ac6f73012cb4ba6707737a33096719d19"
+      },
+      {
+        "head": "2026-06-16 — Dev server survives OneDrive watch churn (build.js)",
+        "sha256": "11a25ec2f1e3845f86541ea5fa2ab3271757b8e66612e851e393c9e6fc867cb2"
+      },
+      {
+        "head": "2026-06-16 — Interactive control colour + contrast (UoN blue, 3:1 borders)",
+        "sha256": "552f8e72ac3d4201bedc534dd0c7096eaa75bc8643c90a0d1e3eb8f8e30fc256"
+      },
+      {
+        "head": "2026-06-16 — Camera zoom: keyframe over major waypoints only (bug fix)",
+        "sha256": "df6489225e5766c7e2db910b473e7afb71d9355c58721c859631677e87a170b2"
+      },
+      {
+        "head": "2026-06-16 — Export toggles: without-camera / without-text",
+        "sha256": "3e428d581ac06054016dc3a649ac3ccbcb9cf0b602703c7cdf0fa59a8bb1abc9"
+      },
+      {
+        "head": "2026-06-16 — Roadmap: six incoming requests triaged + batched",
+        "sha256": "22c7c9ccb67186a40043791652e81f99f0593cb013a199aac4c3576fabd4eb24"
+      },
+      {
+        "head": "2026-06-16 — Pruned project memory",
+        "sha256": "c22183926a79d4bb741cdfccd74995d5a2dc8b810790f4d4567b1cd3bcc820f0"
+      },
+      {
+        "head": "2026-06-16 — Fixed broken deploy path (`build:deploy` / `push.js`)",
+        "sha256": "0f955e28dfaebe5c7a7791a4cfccc284b47a1f5faade575b8001a1f94b421c2c"
+      },
+      {
+        "head": "2026-06-16 — `npm test` uses the threads pool (OneDrive workspace fix)",
+        "sha256": "fe1fb27e5c655dd35d2f5cc6ca8a018ef96ade16a15a9d23fde744165bad8735"
+      },
+      {
+        "head": "2026-06-14 — Code review phase 2: cleanups + coverage (branch code-review-phase2)",
+        "sha256": "23009908d7ef486ccc6ba5837e751b34b1b87da84fbc77a3212d01fed31926a4"
+      },
+      {
+        "head": "2026-06-14 — Code review: restored test suite, fixed latent bugs",
+        "sha256": "5a43f28c5e83bbb7b13c348464280fc8ff90f2f52ca8ef705ff6e18a805a25e3"
+      },
+      {
+        "head": "2026-06-14 — Upgraded pm-skills framework (pre-1.0.0 → 2.3.0)",
+        "sha256": "4dd81b8f3ebab2ed995998106e4388e861018908edf05b22742cf5eaf12aab2d"
+      },
+      {
+        "head": "2026-08-26 — one checked-in contract briefs Codex and Claude Code",
+        "sha256": "97ac4b4beeeea35df2aac05c92aeb66cbd03d9b8b206d9057dab6b6ec060e8e7"
+      },
+      {
+        "head": "2026-08-26 — HEAD-01 bundles one reviewed preset across both runtimes",
+        "sha256": "dd74db79fb06f8e6606b4567b321384ebcd13ec907a5c9d51178e56bcbb6070d"
+      },
+      {
+        "head": "2026-08-26 — MAINT-01 removes only the pre-verified dead paths",
+        "sha256": "88e6a8886ee62b2c7c218b9ad773867a182c0f0262138d10d7356c86b75db763"
+      },
+      {
+        "head": "2026-08-26 — SCALE-01 separates authored appearance from output resolution",
+        "sha256": "c30bbc86a562ca26b4d0f47d5fb6692ccc76b433e06ab360021e2aca6f4115a8"
+      },
+      {
+        "head": "2026-08-26 — REV-06 makes preview scheduling demand-driven",
+        "sha256": "b17c4142caa2b229c725f46f8dbc0357ade1923324389f814667e65a107faee5"
+      },
+      {
+        "head": "2026-08-26 — CROWD-02 compiles authored busyness into deterministic release time",
+        "sha256": "74a1f4b6891b9a8502912ec87ddcce1bdb2b1c46b15742abb06eaae6e18f9566"
+      },
+      {
+        "head": "2026-08-26 — CROWD-03 exposes one reproducible pattern, not runtime randomness",
+        "sha256": "206be66613b2e7a3af8b86315f5bb3011ccb01869d6b6d09b22b9ed0f36efdfe"
+      },
+      {
+        "head": "2026-08-26 — UI-05 makes card-scale propagation explicit and reversible",
+        "sha256": "f529b2d7726c1f195a35d451be7eb8651f79d1ca13a61d6af3b78cd113d72945"
+      },
+      {
+        "head": "2026-08-26 — UI-04 makes every multi-edit field honest about disagreement",
+        "sha256": "11dcba04e8a58ac97e091621408bcb8513d938c98239f6e6a9d8ed23f5a177fa"
+      },
+      {
+        "head": "2026-08-26 — UI-03 exposes latent appearance and camera choices without a migration",
+        "sha256": "1ad9d67f9b49300c2b385a59310cc254763c06205df6d1e77cf7083c8b0b6282"
+      },
+      {
+        "head": "2026-08-26 — UX-02 exposes authored values instead of slider coordinates",
+        "sha256": "9b2dd4b10c02e123ffe3a858ca027b3e2e409d4199cc7e05d91cce5f320258c5"
+      },
+      {
+        "head": "2026-08-26 — UI-01 makes progressive disclosure a card contract",
+        "sha256": "8570008e864a687ba09c1272c020600a9a2e0acc7909cb7d49971aa7d1484e8d"
+      },
+      {
+        "head": "2026-08-26 — REV-03 uses one restoring pointer transaction",
+        "sha256": "3bd735002b151486e1dad6b7bd9934d1e8131ad1d7c136036425469d408c5d65"
+      },
+      {
+        "head": "2026-08-26 — REV-02 makes the canonical scene operable without the canvas",
+        "sha256": "3fdd47a39cb59465bd51d1477a8b5e66d3bcd722b440765b55fbeb37887c6490"
+      },
+      {
+        "head": "2026-08-26 — SUPPORT-01 separates preview, sharing and support navigation",
+        "sha256": "3f20a30b352d687d326bbd4cf909e95c22415fb6432e86bc1772754aceca453c"
+      },
+      {
+        "head": "2026-08-26 — REV-10 uses minimum-loss transactional image admission",
+        "sha256": "b49b030b9962e37e525432d694ca7054b063a65b0871f83580a91a4e44055eb3"
+      },
+      {
+        "head": "2026-08-26 — Roadmap refactor: lifecycle queue after Phase 1 health work",
+        "sha256": "e4b16583e08be546d75666282b13927610f4847a2ee86c1fe7c719b9b78d006f"
+      },
+      {
+        "head": "2026-08-26 — Phase 0 signed off; decisions become implementation contracts",
+        "sha256": "53cb5beaa5bd483245a8cc0aa25d07878b5778de53d1ec12cf1ee317a6928483"
+      },
+      {
+        "head": "2026-08-26 — Roadmap refactor: health and decisions before new gestures",
+        "sha256": "a70a52dad1e5baa79bf3661e969f28b5feeae17536ddb129fc0b138b9bb095c8"
+      },
+      {
+        "head": "2026-08-26 — REV-01 closes the bounded review repairs; product-scale work stays explicit",
+        "sha256": "488228850f09db1f5676e34f8c7dbb31969e3f25157222608a5e261845a66d40"
+      },
+      {
+        "head": "2026-08-19 — Backlog triage: next milestone resequenced into waves; quarantine created",
+        "sha256": "37aad0d730a711b51d99a5d6d4c930b305c75a8ca9806fd93e3e67866af6f613"
+      },
+      {
+        "head": "2026-08-19 — Phase 5: HTML export runs the real stack; v3 goes live on GitHub Pages",
+        "sha256": "c94e3b4b71d6a3b26acef2082bb99998afb8526c7cb8ea30d2346d4ec6d310c2"
+      },
+      {
+        "head": "2026-08-18 — Phase 4 fifth slice: multi-select everywhere — the hidden bulk mode dissolves",
+        "sha256": "0d9292ba828f231cbda976da54cde9468c1c03e7937390a847ebaa81e5f862fd"
+      },
+      {
+        "head": "2026-08-18 — Phase 4 third slice: layers strip + Crowd scope — dots flowing in two clicks",
+        "sha256": "6a2afa3f148356bee4e077e91b0541b93d1e07bcd6d9487a000b09454140a79d"
+      },
+      {
+        "head": "2026-08-18 — Phase 4 second slice: canvas affordances — the map answers back",
+        "sha256": "e7b4e2ba6f9181b9c1ccbb9f326fe8cf529a2d95c541572e592d607c6d958e1b"
+      },
+      {
+        "head": "2026-08-18 — Phase 4 first slice: scope-split inspector — the sidebar says what it edits",
+        "sha256": "245c6ac4af437050a1af0900b65f590d26de6e75df10998d49eef2901c231047"
+      },
+      {
+        "head": "2026-08-18 — Phase 3.5 shipped: fifteen paper cuts, and the defects hiding under them",
+        "sha256": "35b26310b938ccf8f8e5e96425abac97076ed46c0d5cca3c95afe81aaf3ecd81"
+      },
+      {
+        "head": "2026-08-18 — Phase 3.5 kickoff: the review's open sub-decisions resolved",
+        "sha256": "7edebfbd7e09222c4dab1255866473f8858693ff0f0429fcaab987e0f2ba6c49"
+      },
+      {
+        "head": "2026-08-18 — Authoring-UI review: \"one inspector, explicit scopes\" adopted for Phase 4",
+        "sha256": "f32c40ecd5c773c7fd78d99a6f06f3d0dd8ce14de6d07d50268a5148553c9531"
+      },
+      {
+        "head": "2026-08-18 — Phase 3 swarm engine: deterministic SwarmEngine + batched DotRenderer",
+        "sha256": "a0b94bd4f8d9460d09f09a729438e68ddc219d5821c72528705faa4ba968a887"
+      },
+      {
+        "head": "2026-08-18 — Phase 2 scene model: Scene/FlowLayer/Emitter land, saves go to coordVersion 9",
+        "sha256": "528bdfa673d6c84bcf1664fc6ad6594df566d1d1a3cf85036a470b370f5e752e"
+      },
+      {
+        "head": "2026-08-17 — PlayerCore teardown: the scene is now a pure function of timeline time (Phase 1 complete)",
+        "sha256": "8ac7d013ee98cc471ab90b2f4d568e2342bad649f984b109ce35ccb10ac6fb17"
+      },
+      {
+        "head": "2026-08-17 — Export slowdown when browser inactive: fixed-frame-delta interim fix",
+        "sha256": "83a125d06f37a50b32ce0f5efb0070fe2d13611c636818825f26c1354ec1a63c"
+      },
+      {
+        "head": "2026-08-17 — Phase 1 enabling refactor: main.js mixin split + renderer layer registry",
+        "sha256": "dc5cb7d5b41e41359b4dbddab467697610c83d0ad269c186beabc08690216759"
+      },
+      {
+        "head": "2026-08-17 — Dot-crowd salvage: recovered fork state, GraphModel landed, coordVersion goes to 9",
+        "sha256": "f39b5815fb67a79a1db1a1230013fdfe8261aa0dcaa429d6404a62c89611c99f"
+      },
+      {
+        "head": "2026-08-17 — Route Plotter v3 founding: fresh repo, dot-crowd fold-in, deterministic-timeline mandate",
+        "sha256": "8b24d7baafe77f436a7219f4b2a16a76f5113e92980e318ef2fa892cb7b0321a"
+      },
+      {
+        "head": "2026-08-27 — examples are generated project saves, published under review",
+        "sha256": "6011eb9765880132c21f6f2c7ca4e6cc45fde5703be545e3d72fcad6aad029d5"
+      },
+      {
+        "head": "2026-08-27 — the branch handle is an offer, and it must survive a tap",
+        "sha256": "4d74a5b79f61396b4b500bf23499fed438894341023d7400d3f8335c3002a6be"
+      },
+      {
+        "head": "2026-08-27 — a closed client socket is not a port holder",
+        "sha256": "3644c0029db75cbb54f9241f555cdd14d60820ec9dd5d9e25d73823a0f591460"
+      },
+      {
+        "head": "2026-08-27 — the crowd wait is solved, not iterated, and then baked",
+        "sha256": "1e9adbb3ab878766e2e846ee89f26929aff38e98ad5074951c12efd347b1fbd9"
+      },
+      {
+        "head": "2026-08-27 — tracing the route makes a copy that still follows it",
+        "sha256": "3d67f2d9cc0291dc4145ae21a41c7926cd214b819c2650d3037adca379422bd7"
+      },
+      {
+        "head": "2026-08-27 — a bound crowd reads the route; the route never reads the crowd",
+        "sha256": "23a1baae3d0e2fe0f02ba20e7e51c771db931adcbb1f60d223f9bcbd8d7af38a"
+      },
+      {
+        "head": "2026-08-27 — two gestures author a branch, and both are owner-chosen",
+        "sha256": "f697b9fb5d9cb9fabc02296eefd9caa7fe815b9eaa73a0cb5bac8100550c168b"
+      },
+      {
+        "head": "2026-08-27 — branches are runs in the one waypoint array, not a second graph",
+        "sha256": "2cfb6b0c786eb3f9c05291e6f5ea1ee090a959300afb114680a68942524d76ff"
+      },
+      {
+        "head": "2026-08-27 — the route list shows minors, and one numbering serves both views",
+        "sha256": "3c103eb808cdbb50c7288705af975e275ec02db0dcdd61551dff661bb4e62304"
+      },
+      {
+        "head": "2026-08-27 — inline rename detaches its blur listener before touching the DOM",
+        "sha256": "6985e7c29192d6b38c182e4f68712f9b9004f9ad929b5e7716a29171490f4e86"
+      },
+      {
+        "head": "2026-08-27 — gate vocabulary splits blocking dependencies from evidence debt",
+        "sha256": "219b0e5297eb64a903dcef5ea61973889bf75b6d940f1425bb707235521e1b54"
+      },
+      {
+        "head": "2026-09-22 — memory prune: the Phase 5 build-out goes cold",
+        "sha256": "da08dd26a9d1cccb816de2b44297b85230bb01c3f33a303ada945c0e74f00b73"
+      },
+      {
+        "head": "2026-09-22 — main is protected against force-push and deletion (REL-02)",
+        "sha256": "93a1dfb685df1f20fe9a885e71c6955976ebc34dc91a9bb7b9be552d534ddc0f"
+      },
+      {
+        "head": "2026-09-22 — v3.2.690 released from main, verified by bytes not titles",
+        "sha256": "7e901bcf8298d8e934da83249a23f276d48946b04c12e672ea509a89556ff49b"
+      },
+      {
+        "head": "2026-09-22 — the merge hold never held: Pages served the branch from 08-26",
+        "sha256": "370df7da8b0536bd8077355daca85ddca9af8f8c5e98ec3501bb03a172005448"
+      },
+      {
+        "head": "2026-08-28 — a benchmark with no threshold, and the restore that wasn't",
+        "sha256": "f2a334789b9cd1d2c034172b75fb0ef9f3681d85bf2e9ab4c5878d15619e3f3b"
+      },
+      {
+        "head": "2026-08-28 — the ceiling is waypoints; crowds and image size are not it",
+        "sha256": "2b87f2d8c7b88b680de314db5c531350ba3f11f5d0e9f88ba2d5d1b0434bc155"
+      },
+      {
+        "head": "2026-08-28 — a label the author placed is never moved out from under them",
+        "sha256": "4e9e7b60723df15f5a3421038cd5e298fc8604fbfe35050307ea1f049369ef87"
+      },
+      {
+        "head": "2026-08-28 — the reveal fades on a trail, and the hard edge was invisible",
+        "sha256": "cbf1997ba234f7a6182517a62c8c1909d6ffce1e11e8ffb23c7b147f369b76b0"
+      },
+      {
+        "head": "2026-08-28 — four owner calls set the shape of the remaining work",
+        "sha256": "a42a1a7ef1787f84ee1dec258e09d1524d019380cb67001423836ba1e96b0b87"
+      },
+      {
+        "head": "2026-08-28 — three upgrades taken, one refused on the Node floor",
+        "sha256": "ea8e0787032019cf5c5432fffc305513745ca29f6a66c4011a3ce0bacbe2ac47"
+      },
+      {
+        "head": "2026-08-28 — forced colours removes every focus ring, so outline carries it",
+        "sha256": "813092bd69b483b08e714364e31a07c0049315d616ab0c74fd5ea043b251f7ee"
+      },
+      {
+        "head": "2026-08-27 — a hint is a description, not a button that does nothing",
+        "sha256": "09ffb8043c4af0ea4cc59fce545b1da59a3e2f4ca323445f601f4448b6db8f5f"
+      },
+      {
+        "head": "2026-08-27 — memory prune, and two owner deferrals",
+        "sha256": "e62b8ea51f7c40f9bb2db6a30160bf5b4ccba24a29d55d7cf8b7e4af49ade6e2"
+      },
+      {
+        "head": "2026-08-27 — the original review is fully dispositioned into the backlog",
+        "sha256": "e2b0a11b4543775a217189486b8af7b5c5e70dbf8846eb500a3266d0aabae756"
+      },
+      {
+        "head": "2026-08-27 — owner verdicts clear quarantine, and axe joins the gate",
+        "sha256": "6a51416f8c4116e7893f36b48cc860477070ad08ecd9ab71f6a7450011efe4c4"
+      }
+    ],
+    "trajectory": [
+      "DEF-48",
+      "DEF-49",
+      "DEF-40",
+      "DEF-41",
+      "DEF-61",
+      "DEF-52",
+      "DEF-59",
+      "DEF-46",
+      "DEF-43",
+      "DEF-27",
+      "REV-04",
+      "DEF-38",
+      "DEF-39",
+      "DEF-47",
+      "SPL-01",
+      "DEF-34",
+      "TST-17",
+      "DEF-36",
+      "DEF-35",
+      "DEF-08",
+      "DEF-17",
+      "DEF-33",
+      "DEF-30",
+      "DEF-37",
+      "DEF-29",
+      "DEF-02",
+      "DEF-03",
+      "DEF-31",
+      "DEF-23",
+      "DEF-26",
+      "DEF-21",
+      "ISO-02",
+      "TST-10",
+      "TST-07",
+      "TST-06",
+      "TST-02",
+      "DEF-01",
+      "TST-01",
+      "DOC-06",
+      "DEF-18",
+      "GOV-01",
+      "DOC-02",
+      "DOC-03",
+      "A11Y-02",
+      "A11Y-01",
+      "PM",
+      "REV-05"
+    ],
+    "tickets": {
+      "pm_skills/project/tickets/REV-03.md": "cbf3c676391d17f1d0beecc677b29770d0c0b08a743c4bd34f8519325709abbe"
+    },
+    "frozen": [
+      "pm_skills/CHANGELOG-1x.md",
+      "pm_skills/CHANGELOG-2x.md",
+      "pm_skills/CHANGELOG-3x.md",
+      "pm_skills/CHANGELOG.md",
+      "pm_skills/GUIDE.md",
+      "pm_skills/MANIFEST.md",
+      "pm_skills/VERSION",
+      "pm_skills/init.md",
+      "pm_skills/integrations/adopt.md",
+      "pm_skills/integrations/bugfix.md",
+      "pm_skills/integrations/dispatch.md",
+      "pm_skills/integrations/init-mvp.md",
+      "pm_skills/integrations/next.md",
+      "pm_skills/integrations/task.md",
+      "pm_skills/memory-policy.md",
+      "pm_skills/project/architecture.md",
+      "pm_skills/project/archive/INDEX.md",
+      "pm_skills/project/archive/decision-log-2026-04.md",
+      "pm_skills/project/archive/decision-log-2026-06.md",
+      "pm_skills/project/archive/decision-log-2026-08-17-to-2026-08-26.md",
+      "pm_skills/project/archive/decision-log-2026-08-27-to-2026-08-27.md",
+      "pm_skills/project/archive/decision-log-2026-08-27-to-2026-09-22.md",
+      "pm_skills/project/archive/trajectory/trajectory-0001-2026-04-16-to-2026-06-17.md",
+      "pm_skills/project/archive/trajectory/trajectory-0002-2026-08-17-to-2026-08-19.md",
+      "pm_skills/project/archive/trajectory/trajectory-0003-2026-08-26-to-2026-08-27.md",
+      "pm_skills/project/archive/trajectory/trajectory-0004-2026-08-27-to-2026-09-22.md",
+      "pm_skills/project/backlog.md",
+      "pm_skills/project/brief.md",
+      "pm_skills/project/conventions.md",
+      "pm_skills/project/decision-log.md",
+      "pm_skills/project/doc-deltas.md",
+      "pm_skills/project/file-map.md",
+      "pm_skills/project/tickets/REV-03.md",
+      "pm_skills/project/trajectory.md",
+      "pm_skills/project/wish-list.md",
+      "pm_skills/prompts/backlog-authoring.md",
+      "pm_skills/prompts/bug-scoping.md",
+      "pm_skills/prompts/deploy.md",
+      "pm_skills/prompts/design-options.md",
+      "pm_skills/prompts/end-of-task.md",
+      "pm_skills/prompts/implementation-plan.md",
+      "pm_skills/prompts/memory-maintenance.md",
+      "pm_skills/prompts/quick-task.md",
+      "pm_skills/prompts/release.md",
+      "pm_skills/prompts/review.md",
+      "pm_skills/prompts/scoping.md",
+      "pm_skills/prompts/session-start.md",
+      "pm_skills/prompts/upgrade.md",
+      "pm_skills/prompts/validation.md",
+      "pm_skills/scaffold/.editorconfig",
+      "pm_skills/scaffold/.gitignore",
+      "pm_skills/scaffold/.markdownlint.json",
+      "pm_skills/scaffold/check-links.mjs",
+      "pm_skills/scaffold/gen-file-map.mjs",
+      "pm_skills/templates/AGENTS.md",
+      "pm_skills/templates/DEV-INFRASTRUCTURE.md",
+      "pm_skills/templates/PROCESS.md",
+      "pm_skills/templates/UI-STANDARDS.md"
+    ]
+  }
+}

@@ -78,14 +78,6 @@ circle or cone stays on the head at any zoom, and the contrast tint covers the
 image's rectangle and no margin at any background zoom, moving with the camera.
 (2026-09-29)
 
-DEF-44 — A still editor goes idle: a frame that draws no camera (no
-waypoints, Edit mode, Camera movement off, the author's viewport zoom)
-puts the camera where it would come to rest, so a cold start, a restored
-session, Edit mode after Preview, a zoomed-in view and a video exported
-from Edit mode stop drawing frames that change nothing, and undoing the
-view's zoom draws the camera in place; brief bounded runs at 1× after a
-resize and as the player loads remain. (2026-10-01)
-
 ## Before the big run (2026-09-28)
 
 Outcome: Route Plotter is a Chromium-only app for now; REV-04 closes with its

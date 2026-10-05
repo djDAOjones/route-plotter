@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 352 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 351 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 118 file(s)
+- `tests` — 117 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -201,7 +201,7 @@
 ## src
 
 - `src/app/backgroundLoading.js` — Detached user/example background decoding with compressed-byte retention and latest-request commit guards
-- `src/app/camera.js` — camera keyframe UI, actual-major mixed-state sync, camera state evaluation and zoom-transition warnings; a frame that draws no camera (Edit mode, Camera movement off, the author's viewport zoom) settles it, so a still view sleeps (DEF-44)
+- `src/app/camera.js` — camera keyframe UI, actual-major mixed-state sync, camera state evaluation and zoom-transition warnings
 - `src/app/crowds.js` — Crowd layers mixin: layers strip and selection plus single-writer first-emitter controls, seeded variation, one-step Re-roll and the accessible busyness-envelope graph
 - `src/app/editorPanel.js` — Waypoint list/editor sync, actual write-target resolution, transient mixed-state overlays and card-action state/transactions
 - `src/app/exporting.js` — Video/HTML export flows, summary UI and exact pre-export transport/timing restoration
@@ -257,7 +257,7 @@
 - `src/services/AreaEditService.js` — Area highlight repositioning and vertex editing
 - `src/services/AreaHighlightRenderer.js` — Per-waypoint area geometry with project-reference-scaled border rendering
 - `src/services/BeaconRenderer.js` — Animated waypoint effects (ripple, glow, pop, grow, pulse); closed-form: each animator's `sync(localSec, win, options)` derives state from a timeline-local clock (schedules from PlayerCore via `engine.beaconSchedules`)
-- `src/services/CameraService.js` — Per-major-waypoint zoom with target-aware continuous interpolation and settling; `toMajorKeyframes()` drops minors (minors shape geometry, not zoom); `settle()` puts the camera on its target where no frame eases it: with no waypoints, and (from `camera.js`) any frame that draws no camera; that target is where it comes to rest, the target zoom on the centre at that zoom (DEF-44)
+- `src/services/CameraService.js` — Per-major-waypoint zoom with target-aware continuous interpolation and settling; `toMajorKeyframes()` drops minors (minors shape geometry, not zoom)
 - `src/services/CoordinateTransform.js` — Image ↔ canvas coordinate conversion
 - `src/services/DiagnosticsService.js` — Pure fixed-schema technical diagnostics with bounded allowlisted fields and URL/path/filename redaction
 - `src/services/DotRenderer.js` — Batched swarm-dot drawing: one canvas path per (colour, size) group, sizes via `scaleSizeClamped()` (Phase 3)
@@ -373,7 +373,6 @@
   refused run leaves autosave and the canvas as they were, and a run that
   fails part-way says autosave stays off until a reload
 - `tests/pathHeadPresets.test.js` — Drone preset metadata, native control, loader ownership and renderer-transform contracts
-- `tests/pausedIdle.test.js` — DEF-44: a still view queues no animation frame, with the booted app's frames run by hand on one clock, which `performance.now()` reads too, from zero: a cold start with no waypoints, a session restored in Preview with Camera movement on or off, Edit mode left while the camera eased (which still eases frame by frame in Preview, and is drawn where it was heading on return), Camera movement unticked mid-move, the author's viewport zoom while the camera eases (at Zoom in's first step and at 2.25×, and after a scrub beneath it; undone, the camera is drawn where it belongs at once), the camera's zoom changing at the canvas's edge beneath the view's zoom (3× to 16×, to 2.25×, back to 1×) or as the author leaves Preview (to 16×, back to 1×), drawn at rest there at once when shown again (and, the zoom undone, drawn by a scrub as a camera never hidden is), Skip to start in Edit mode, with and without every waypoint removed, every waypoint removed under a zoomed camera in Preview, and a video exported from Edit mode; `CameraService.settle` (a fractional zoom included) and the no-waypoint branch settle in one call, and a frame aims the camera where it comes to rest; and a drawn camera still eases: its zoom a frame at a time when the rate limit allows the whole step, and the exported player's camera after a pause
 - `tests/performanceScheduling.test.js` — Manual-rAF scheduler contract: idle sleep, transport wake/coalescing, camera keepalive and export suspension/restore
 - `tests/playerBundleClosure.test.js` — TST-07: esbuild's metafile proves the exported player bundle carries no editor-only module, and that the editor's does
 - `tests/playerHostContract.test.js` — TST-07: every member the adopted pathTiming mixin reaches for exists on a really-loaded PlayerApp, and (DEF-02) its `waypointsById` puts an anchored crowd node on its waypoint
