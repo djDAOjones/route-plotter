@@ -196,4 +196,13 @@ describe('DEF-72 — the timeline shortcut holds only when the timeline is the p
     expect(PlayerCore.timelineToPath(pathDuration * 2, tl, live).complete).toBe(true);
     expect(PlayerCore.pathToTimelineProgress(0.5, tl, live)).toBeCloseTo(0.25, 12);
   });
+
+  test('an end handle alone keeps the inverse true: half the path is 5/12 of a 12 s timeline', () => {
+    // 10 s of path and a 2 s end handle: the shortcut must not take the
+    // timeline for the path when only an end handle sits after it.
+    const endHandleMs = pathDuration / 5;
+    const live = { ...bare, endHandleMs, durationMs: pathDuration + endHandleMs };
+    expect(PlayerCore.pathToTimelineProgress(0.5, tl, live)).toBeCloseTo(5 / 12, 12);
+    expect(PlayerCore.timelineToPath(pathDuration / 2, tl, live).pathProgress).toBeCloseTo(0.5, 12);
+  });
 });
