@@ -49,6 +49,8 @@ function resolveBranchRejoinDrop(app, data) {
   if (!target) return false;
 
   // Put it back: this gesture aimed at a target, it did not move a point.
+  // The rejoin's handler rebuilds the route for where it is again, made or
+  // refused, once (DEF-06).
   const start = (data.dragGroup || []).find(item => item?.waypoint === waypoint);
   if (start) {
     waypoint.imgX = start.imgX;
@@ -60,6 +62,20 @@ function resolveBranchRejoinDrop(app, data) {
 }
 
 export const wiringBusMixin = {
+  /**
+   * After waypoints leave the model (a deletion, an undo or a redo): an area
+   * draw follows its waypoint, or ends when that has gone, and the author is
+   * told, since the polygon being drawn is lost (DEF-43). Told in a toast:
+   * the action goes on to announce its own outcome ("Waypoint deleted",
+   * "Undo"), which would replace this at once in the announcer's one region;
+   * the toasts' region is a live region of its own, and on screen.
+   */
+  followAreaDrawTarget() {
+    if (this.areaDrawingService?.followModel?.(this.waypoints)) {
+      this.eventBus.emit('ui:toast', { message: 'Area drawing cancelled: its waypoint was removed.' });
+    }
+  },
+
 
   
   /**
@@ -97,9 +113,8 @@ export const wiringBusMixin = {
       // Save state for undo (after waypoint is added)
       this.saveUndoState();
       
-      if (this.waypoints.length >= 2) {
-        this.calculatePath(); // Only calculate if we have enough waypoints for a path
-      }
+      // Always: with fewer than two waypoints it clears what the last route fed (DEF-06).
+      this.calculatePath();
       this.updateWaypointList();
       this.autoSave();
       this.queueRender(); // Batched render
@@ -112,15 +127,13 @@ export const wiringBusMixin = {
     this.eventBus.on('waypoint:deleted', (index) => {
       // Invalidate major waypoints cache
       this._majorWaypointsCache = null;
+      this.followAreaDrawTarget();
       
       // Save state for undo (after waypoint is deleted)
       this.saveUndoState();
       
-      if (this.waypoints.length >= 2) {
-        this.calculatePath();
-      } else {
-        this.pathPoints = []; // Clear path if too few waypoints
-      }
+      // Always: with fewer than two waypoints it clears what the last route fed (DEF-06).
+      this.calculatePath();
       this.updateWaypointList();
       this.updateWaypointEditor();
       this.autoSave();
@@ -437,8 +450,10 @@ export const wiringBusMixin = {
       
       const preservedSpeed = this.animationEngine.state.speed;
       
-      // Recalculate duration using unified method (accounts for segment speeds)
-      this.updateAnimationDuration(preservedSpeed);
+      // Recalculate duration using unified method (accounts for segment speeds).
+      // With no route to rebuild, the reset base still waits for what
+      // concludes after it, a crowd on a network (CROWD-05).
+      if (this.updateAnimationDuration(preservedSpeed) === undefined) this.refreshSceneEnd?.();
       
       // Use event to avoid feedback loop
       this.eventBus.emit('ui:slider:update-speed', preservedSpeed);

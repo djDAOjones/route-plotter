@@ -24,6 +24,11 @@ export class AnimationState {
     this.pathProgress = 0;                // Path progress 0 to 1 (position along path)
     this.currentTime = 0;                 // in milliseconds
     this.duration = ANIMATION.DEFAULT_DURATION;
+    // The base timeline (CROWD-05): the duration as composed before anything
+    // that runs past the route's own end, which `duration` waits for. What is
+    // timed as a fraction of the timeline (crowd releases, route anchors,
+    // label fades, the camera's transitions) measures against this.
+    this.baseDuration = ANIMATION.DEFAULT_DURATION;
     this.mode = 'constant-speed';         // or 'constant-time'
     this.speed = preservedSpeed;          // Preserve user's speed setting (px/s)
     this.playbackSpeed = preservedPlaybackSpeed;  // Preserve playback multiplier (1x, 2x, etc.)

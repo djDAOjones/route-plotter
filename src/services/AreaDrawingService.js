@@ -90,6 +90,9 @@ export class AreaDrawingService {
    * @param {Object} waypoint - Waypoint to attach the polygon to
    */
   startDrawing(waypoint) {
+    // Draw Area keeps focus through the canvas clicks, so Space or Enter asks
+    // again for the draw in progress: it goes on, its vertices kept (DEF-43).
+    if (this.isDrawing && this.targetWaypoint === waypoint) return;
     if (this.isDrawing) {
       this.cancelDrawing();
     }
@@ -179,6 +182,29 @@ export class AreaDrawingService {
     this.eventBus.emit('area:draw-completed', { waypoint });
   }
   
+  /**
+   * The model's waypoints have changed under a draw: a deletion, an undo or a
+   * redo. The draw follows its waypoint to the one with the same id (undo and
+   * redo restore copies), and ends when there is none, rather than closing
+   * onto a waypoint the project no longer has, where the polygon was lost
+   * without a word (DEF-43). An id names one waypoint only within a project:
+   * a load refuses duplicates, and opening a project ends a draw rather than
+   * following it into the new one.
+   * @param {Array<Object>} waypoints - The model's waypoints now
+   * @returns {boolean} Whether a draw ended because its waypoint has gone
+   */
+  followModel(waypoints) {
+    if (!this.isDrawing || !this.targetWaypoint) return false;
+    if (waypoints.includes(this.targetWaypoint)) return false;
+    const same = waypoints.find(waypoint => waypoint.id === this.targetWaypoint.id);
+    if (same) {
+      this.targetWaypoint = same;
+      return false;
+    }
+    this.cancelDrawing();
+    return true;
+  }
+
   /**
    * Cancel drawing without saving
    */

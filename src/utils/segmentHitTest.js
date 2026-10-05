@@ -4,11 +4,46 @@
  * The route path is a dense polyline (PathCalculator output, evenly
  * resampled). A "leg" here is the span between two consecutive waypoints
  * of any type — the same span the inspector's Leg card names ("Leg →
- * Waypoint 3"): waypoint i owns the leg from itself to waypoint i+1.
+ * Waypoint 3"): waypoint i owns the leg from itself to waypoint i+1. On a
+ * branched route, each run (the trunk, each branch) has its own polyline
+ * and its own legs (`routeRuns`, DEF-64).
  *
  * All inputs are in one coordinate space (callers pass canvas coords for
  * pointer work); no DOM, no app state — unit-tested in isolation.
  */
+
+import { trunkWaypoints } from './routeBranches.js';
+
+/**
+ * The runs a route's legs lie on: the trunk, then each branch (DEF-64).
+ *
+ * Each pairs its waypoints, in the order its own spline passes them, with
+ * that spline's polyline and their progress along it. A branch's waypoints
+ * are its fork, its own waypoints and its rejoin (`branchPathWaypoints`), so
+ * its first leg leaves the fork and its last reaches the rejoin. On a linear
+ * route the trunk's waypoints are the route's own array.
+ *
+ * @param {Object} route
+ * @param {Array<Object>} route.waypoints - The whole route, in array order
+ * @param {Array<{x: number, y: number}>} route.pathPoints - The trunk's polyline
+ * @param {Array<number>|null} route.progressValues - The trunk waypoints' progress
+ * @param {Array<Object>} [route.branchPaths] - Each branch's geometry, as `calculatePath` builds it
+ * @returns {Array<{branchId: string|null, waypoints: Array<Object>,
+ *            pathPoints: Array<{x: number, y: number}>, progressValues: Array<number>|null}>}
+ *          The trunk (branchId null) first
+ */
+export function routeRuns({ waypoints, pathPoints, progressValues, branchPaths }) {
+  const runs = [{ branchId: null, waypoints: trunkWaypoints(waypoints), pathPoints, progressValues }];
+  for (const branch of branchPaths || []) {
+    runs.push({
+      branchId: branch.id,
+      waypoints: branch.waypoints,
+      pathPoints: branch.pathPoints,
+      progressValues: branch.progressValues
+    });
+  }
+  return runs;
+}
 
 /**
  * Map waypoint progress values (0-1 along the path) to polyline point

@@ -6,14 +6,20 @@
  * arrives. That is a stronger claim than "the number looks right", because
  * adding the wait lengthens the timeline and pushes every dot's release out
  * with it — the trap a naive difference falls into.
+ *
+ * The last block characterises DEF-12 in the booted app: where route time is
+ * read as engine time, an anchored release, a branch's start and a fitted
+ * wait drift by a reveal intro or a comet tail.
  */
 
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import {
-  dotOnsetFraction, dotJourneyMs, lastArrivalMs, waitForCrowdMs,
+  dotOnsetFraction, dotJourneyMs, dotsReachingJourneyEnd, lastArrivalMs, waitForCrowdMs,
 } from '../src/utils/crowdArrival.js';
 import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import { Scene } from '../src/models/Scene.js';
+import { bootApp } from './helpers/bootApp.js';
+import { loadSnapshot } from './helpers/projectSnapshot.js';
 
 const flat = value => value;
 
@@ -187,7 +193,10 @@ describe('SwarmEngine.scheduleDots', () => {
       durationMs: 10000, routePathPoints: routePoints,
     });
 
-    expect(schedules.every(dot => dot.finishes)).toBe(false);
+    // No dot finishes. `every(...)` being false would also pass if only one
+    // dot looped, so the predicate is `some`, over a crowd that has its dots.
+    expect(schedules).toHaveLength(6);
+    expect(schedules.some(dot => dot.finishes)).toBe(false);
   });
 
   test('the schedule agrees with when dots actually appear', () => {
@@ -234,5 +243,281 @@ describe('SwarmEngine.scheduleDots', () => {
     // Two routes of different length, so the crowd must show two journey times.
     expect(schedules).toHaveLength(12);
     expect(journeys.size).toBeGreaterThan(1);
+  });
+});
+
+/**
+ * DEF-12 — route time read as engine time.
+ *
+ * The route's own timeline (`getRouteArrivalMap`, the composed branch
+ * timeline) starts when the head leaves its first waypoint. The engine's
+ * clock (`getTime()`) also runs through a reveal mode's 1 s intro first, and
+ * in Preview its duration adds a comet trail's tail. Three paths read one as
+ * the other: an anchored crowd's release (`releaseStartFraction` in
+ * `routeAnchors.js`, scaled by the engine's duration in `SwarmEngine`), a
+ * branch's start (`RenderingService.activeBranches`) and the wait
+ * `fitRouteWaitToCrowd` solves (`crowds.js`). Each test pins what the booted
+ * app does today, so the fix changes it on purpose, and says what it should
+ * become.
+ *
+ * The route: a straight line timed at exactly 10 s, with no pauses, so the
+ * head reaches a at 0 ms, b at 5,000 ms and c at 10,000 ms of route time.
+ */
+describe('DEF-12: route time read as engine time', () => {
+  const still = { pauseMode: 'none', pauseTime: 0 };
+  const LINE = [
+    { id: 'a', imgX: 0.1, imgY: 0.5, isMajor: true, ...still },
+    { id: 'b', imgX: 0.5, imgY: 0.5, isMajor: true, ...still },
+    { id: 'c', imgX: 0.9, imgY: 0.5, isMajor: true, ...still },
+  ];
+  const REVEAL_INTRO = { backgroundVisibility: 'spotlight-reveal' };
+  const COMET_TAIL = { pathVisibility: 'instantaneous', pathTrail: 0.2 };
+
+  /** A route-guided crowd of one emitter, serialised for a project. */
+  function crowd(emitter) {
+    const scene = new Scene();
+    scene.addFlowLayer({ name: 'Crowd', guideType: 'route' }).addEmitter({
+      seed: 5, onsetVariance: 0, lifecycleMode: 'disappear', ...emitter,
+    });
+    return scene.toJSON();
+  }
+
+  /** One dot, released the moment the head reaches b. */
+  const anchoredAtB = () => crowd({
+    dotCount: 1, speed: 0.25, releaseDuration: 0, releaseAnchor: { waypointId: 'b', at: 'arrival' },
+  });
+
+  /** The booted app with a project loaded, its route timed at exactly 10 s. */
+  async function appWith({ waypoints = LINE, scene = null, motionSettings = {} } = {}) {
+    const app = await bootApp();
+    await app.ready;
+    expect(await loadSnapshot(app, { coordVersion: 9, waypoints, motionSettings, ...(scene ? { scene } : {}) }))
+      .toBe(true);
+    // The speed control rounds to 5 px/s, so the speed is set exactly instead.
+    const lengthPx = app.pathCalculator.calculatePathLength(
+      app.pathPoints.map(point => app.imageToCanvas(point.x, point.y)));
+    app.animationEngine.state.speed = lengthPx / 10;
+    app.invalidateAnimationTiming();
+    expect(app.animationEngine.pathDuration).toBeCloseTo(10000, 6);
+    return app;
+  }
+
+  /** A frame drawn at `ms` on the engine's clock: the head's place, the crowd's dots, the branch's place. */
+  function frameAt(app, ms) {
+    const evaluate = vi.spyOn(app.swarmEngine, 'evaluate');
+    const branches = vi.spyOn(app.renderingService, 'activeBranches');
+    app.animationEngine.seekToTime(ms);
+    app.render();
+    const frame = {
+      head: app.animationEngine.getPathProgress(),
+      dots: evaluate.mock.results.at(-1)?.value.length ?? null,
+      branch: branches.mock.results.at(-1)?.value[0]?.engine.getPathProgress() ?? null,
+    };
+    evaluate.mockRestore();
+    branches.mockRestore();
+    return frame;
+  }
+
+  test('with neither an intro nor a tail, an anchored crowd leaves as the head reaches its waypoint', async () => {
+    const app = await appWith({ scene: anchoredAtB() });
+
+    const before = frameAt(app, 4999);
+    const after = frameAt(app, 5001);
+    expect(before.dots).toBe(0);
+    expect(before.head).toBeCloseTo(0.4999, 9);
+    expect(after.dots).toBe(1);
+    expect(after.head).toBeCloseTo(0.5001, 9);
+  });
+
+  test('DEF-12: under a reveal intro, an anchored crowd leaves 500 ms before the head reaches its waypoint', async () => {
+    const app = await appWith({ scene: anchoredAtB(), motionSettings: REVEAL_INTRO });
+    expect(app.animationEngine.introTime).toBe(1000);
+
+    // Released at b's 5,000 ms of route time, as a fraction of a 10 s route,
+    // scaled by the engine's 11 s: 5,500 ms, while the head is at 45%.
+    expect(frameAt(app, 5499).dots).toBe(0);
+    const released = frameAt(app, 5501);
+    expect(released.dots).toBe(1);
+    expect(released.head).toBeCloseTo(0.4501, 9);
+    // The head reaches b at 6,000 ms, which is when the fix releases it.
+    expect(frameAt(app, 5999).head).toBeCloseTo(0.4999, 9);
+    expect(frameAt(app, 6001).head).toBeCloseTo(0.5001, 9);
+  });
+
+  test('DEF-12: under a comet tail, an anchored crowd leaves 1,250 ms after the head passes its waypoint', async () => {
+    const app = await appWith({ scene: anchoredAtB(), motionSettings: COMET_TAIL });
+    expect(app.previewMode).toBe(true);
+    expect(app.animationEngine.totalTailTime).toBe(2500);
+
+    // The head passes b at 5,000 ms, which is when the fix releases it; the
+    // release waits for half of the engine's 12.5 s.
+    expect(frameAt(app, 4999).head).toBeCloseTo(0.4999, 9);
+    expect(frameAt(app, 5001).head).toBeCloseTo(0.5001, 9);
+    expect(frameAt(app, 6249).dots).toBe(0);
+    const released = frameAt(app, 6251);
+    expect(released.dots).toBe(1);
+    expect(released.head).toBeCloseTo(0.6251, 9);
+  });
+
+  test('DEF-12: under a reveal intro, a branch starts 1,000 ms before the head reaches its fork', async () => {
+    const app = await appWith({
+      waypoints: [
+        { id: 'a', imgX: 0.1, imgY: 0.5, isMajor: true, ...still },
+        { id: 'f', imgX: 0.5, imgY: 0.5, isMajor: true, ...still },
+        { id: 'x', imgX: 0.5, imgY: 0.1, isMajor: true, branchId: 'B', branchFrom: 'f', ...still },
+        { id: 'c', imgX: 0.9, imgY: 0.5, isMajor: true, ...still },
+      ],
+      motionSettings: REVEAL_INTRO,
+    });
+    expect(app.getBranchTimeline().legs.B.startMs).toBe(5000);
+
+    // The branch starts at its fork's 5,000 ms of route time, read on the
+    // engine's clock: it moves from 5,001 ms, with the head at 40%.
+    expect(frameAt(app, 5000).branch).toBe(0);
+    const started = frameAt(app, 5001);
+    expect(started.branch).toBeGreaterThan(0);
+    expect(started.head).toBeCloseTo(0.4001, 9);
+    // The head reaches the fork, f at 50%, at 6,000 ms, when the fix starts
+    // the branch; by then the branch is a fifth of the way along.
+    expect(frameAt(app, 5999).head).toBeCloseTo(0.4999, 9);
+    const atFork = frameAt(app, 6000);
+    expect(atFork.head).toBeCloseTo(0.5, 9);
+    expect(atFork.branch).toBeCloseTo(0.2, 9);
+  });
+
+  test('DEF-12: under a reveal intro, a fitted wait holds the head 1,000 ms after the crowd arrives', async () => {
+    /** The head's wait at c, measured on the engine's clock, minus the crowd's last arrival. */
+    async function lingerAfterFit(motionSettings) {
+      const app = await appWith({
+        scene: crowd({ dotCount: 4, speed: 0.1, releaseStart: 0.3, releaseDuration: 0.2 }),
+        motionSettings,
+      });
+      const [layer] = app.scene.getFlowLayers();
+      const c = app.waypoints[2];
+      expect(app.fitRouteWaitToCrowd(layer, c)).toBe(true);
+      expect(c.pauseMode).toBe('timed');
+
+      // The head reaches c after the intro and the 10 s route, then waits.
+      const reachesC = app.animationEngine.introTime + 10000;
+      expect(frameAt(app, reachesC - 1).head).toBeLessThan(1);
+      expect(frameAt(app, reachesC + 1).head).toBe(1);
+      const durationMs = app.animationEngine.state.duration;
+      expect(durationMs).toBeCloseTo(reachesC + c.pauseTime, 6);
+
+      // The crowd's last arrival, from the schedule that agrees with the dots
+      // drawn (above), given what the renderer gives `evaluate`.
+      const schedules = app.swarmEngine.scheduleDots(layer, {
+        durationMs, routePathPoints: app.pathPoints, routeAnchors: app.getRouteArrivalMap(),
+      });
+      return reachesC + c.pauseTime - lastArrivalMs(schedules, durationMs).ms;
+    }
+
+    // Without an intro the wait ends within its 1 ms rounding of the arrival.
+    const plain = await lingerAfterFit({});
+    expect(plain).toBeGreaterThanOrEqual(0);
+    expect(plain).toBeLessThan(1);
+    // The solve reads the head's arrival in route time, 1,000 ms early on the
+    // engine's clock, so the head waits that much longer; the fix makes it
+    // the same as without the intro.
+    const intro = await lingerAfterFit(REVEAL_INTRO);
+    expect(intro).toBeGreaterThanOrEqual(1000);
+    expect(intro).toBeLessThan(1001);
+  });
+});
+
+describe('a walk that runs out of hops reaches no journey end (DEF-77)', () => {
+  const DURATION = 60000;
+  /**
+   * The review's closed triangle: three pass-through nodes, three two-way
+   * paths, no Entry and no Exit. With `exitPath`, a path off on its own whose
+   * far end is an Exit; `entries` types the triangle's corners as Entries,
+   * so no dot sets off anywhere else.
+   */
+  function triangleLayer({ entries = false, exitPath = false, ...emitterOptions } = {}) {
+    const layer = new Scene().addFlowLayer({ name: 'Crowd', guideType: 'graph' });
+    const { graph } = layer;
+    const type = entries ? 'entry' : 'normal';
+    const corners = [[0.1, 0.1], [0.12, 0.1], [0.1, 0.12]]
+      .map(([x, y]) => graph.addNode({ x, y, type }));
+    corners.forEach((node, index) => graph.addEdge({
+      sourceId: node.id, targetId: corners[(index + 1) % 3].id, direction: 'two-way',
+    }));
+    if (exitPath) {
+      const start = graph.addNode({ x: 0.5, y: 0.5 });
+      const exit = graph.addNode({ x: 0.9, y: 0.5, type: 'exit' });
+      graph.addEdge({ sourceId: start.id, targetId: exit.id, direction: 'two-way' });
+    }
+    layer.addEmitter({
+      seed: 5, dotCount: 1, speed: 1, speedVariance: 0, onsetVariance: 0,
+      releaseStart: 0, releaseDuration: 0, lifecycleMode: 'disappear', ...emitterOptions,
+    });
+    return layer;
+  }
+
+  test('only a dot that ends is counted', () => {
+    const dot = { onsetFraction: 0, journeyMs: 1000, finishes: true };
+
+    expect(dotsReachingJourneyEnd([{ ...dot, ends: true }], 10000)).toBe(1);
+    expect(dotsReachingJourneyEnd([{ ...dot, ends: false }], 10000)).toBe(0);
+  });
+
+  test('the review\'s closed triangle: one dot, released at once, at Speed 1 does not end', () => {
+    // Its walk ran out of hops 46.6 s in, which was counted as reaching its
+    // end: the hint went, though Disappear still showed the dot.
+    const engine = new SwarmEngine();
+    const layer = triangleLayer();
+    const [dot] = engine.scheduleDots(layer, { durationMs: DURATION });
+
+    expect(dot.ends).toBe(false);
+    expect(dot.journeyMs).toBeLessThan(DURATION); // in time, had it been an end
+    expect(dotsReachingJourneyEnd([dot], DURATION)).toBe(0);
+    expect(engine.evaluate(DURATION, layer, { durationMs: DURATION })).toHaveLength(1);
+
+    // Read for the hint alone, the walk is not taken at all; the crowd wait
+    // still has the distance walked.
+    expect(engine.scheduleDots(layer, { durationMs: DURATION }, { endsOnly: true }))
+      .toEqual([{ ...dot, journeyMs: Infinity }]);
+  });
+
+  test('an Exit no Entry leads to ends no journey; set off beside it, dots do end', () => {
+    const engine = new SwarmEngine();
+    const context = { durationMs: DURATION };
+    const crowd = { dotCount: 60, speedVariance: 0.2, onsetVariance: 0.2, releaseDuration: 0.5 };
+
+    const stranded = triangleLayer({ entries: true, exitPath: true, ...crowd });
+    for (const options of [{}, { endsOnly: true }]) {
+      const schedules = engine.scheduleDots(stranded, context, options);
+      expect(schedules).toHaveLength(60);
+      expect(schedules.every(dot => !dot.ends)).toBe(true);
+      expect(dotsReachingJourneyEnd(schedules, DURATION)).toBe(0);
+    }
+
+    // Without Entries every node with a path is one, so some dots set off on
+    // the Exit's own path, and those are the ones counted.
+    const mixed = triangleLayer({ exitPath: true, ...crowd });
+    const schedules = engine.scheduleDots(mixed, context);
+    const ending = schedules.filter(dot => dot.ends);
+    expect(ending.length).toBeGreaterThan(0);
+    expect(ending.length).toBeLessThan(60);
+    expect(dotsReachingJourneyEnd(schedules, DURATION)).toBe(ending.length);
+    expect(dotsReachingJourneyEnd(engine.scheduleDots(mixed, context, { endsOnly: true }), DURATION))
+      .toBe(ending.length);
+  });
+
+  test('a network with a reachable end still counts its dots', () => {
+    const layer = new Scene().addFlowLayer({ name: 'Crowd', guideType: 'graph' });
+    const entry = layer.graph.addNode({ x: 0, y: 0, type: 'entry' });
+    const near = layer.graph.addNode({ x: 0.2, y: 0, type: 'exit' });
+    const far = layer.graph.addNode({ x: 1, y: 1, type: 'exit' });
+    layer.graph.addEdge({ sourceId: entry.id, targetId: near.id });
+    layer.graph.addEdge({ sourceId: entry.id, targetId: far.id });
+    layer.addEmitter({ seed: 3, dotCount: 12, speed: 0.25, lifecycleMode: 'respawn' });
+
+    const schedules = new SwarmEngine().scheduleDots(layer, { durationMs: 10000 });
+    const inTime = schedules.filter(dot => dot.onsetFraction * 10000 + dot.journeyMs <= 10000);
+
+    expect(schedules.every(dot => dot.ends)).toBe(true);
+    expect(inTime.length).toBeGreaterThan(0);
+    expect(dotsReachingJourneyEnd(schedules, 10000)).toBe(inTime.length);
   });
 });

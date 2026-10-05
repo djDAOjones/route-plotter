@@ -754,6 +754,11 @@ kbd{
   box-shadow:0 4px 12px rgba(0,0,0,0.3);
   pointer-events:none; /* click-through so outside-click dismiss works */
 }
+/* A hint opened by hover takes the pointer, so the pointer can move onto it
+   and read it without it closing (WCAG 1.4.13 Hoverable). */
+.param-tooltip.is-hover-open{
+  pointer-events:auto;
+}
 
 /* Ensure all right sidebar children respect container width */
 .sidebar-right *{
