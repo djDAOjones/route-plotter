@@ -20,9 +20,9 @@
 
 ## 2026-10-05 — CROWD-05 — The animation running until every crowd dot finishes is filed, waiting on the owner's word
 
-**Decision:** CROWD-05 joins the backlog as a `[!]` line, because the owner reported from use that a crowd going from Entry to Exit is cut off when the route ends and asked for it to be filed, not started; what a looping crowd does is his call.
+**Decision:** CROWD-05 joins the backlog as a `[!]` line, because the owner reported from use that a crowd going from Entry to Exit is cut off when the route ends and asked for it to be filed, not started; he agreed its shape in outline, and starting it waits on his word.
 
-**Rationale:** his words reached this run relayed verbatim by the Backlog status session; the item quotes them. The backlog rather than the wish-list, and the ID after CROWD-04 in the canon crowd family, are this session's calls. The shape that session proposed (a crowd tail after the route, releases anchored to the route-only duration, a control for looping crowds) is in the item's notes as its proposal. The wish line owing the crowd explainer's update is retired: that session updated the doc after DEF-77 shipped.
+**Rationale:** his words reached this run relayed verbatim by the Backlog status session; the item quotes them. The backlog rather than the wish-list, and the ID after CROWD-04 in the canon crowd family, are this session's calls. The shape that session proposed (a crowd tail after the route, releases anchored to the route-only duration, a control for looping crowds) is in the item's notes; to that session's summary of it he replied "agreed", read here as accepting the placement and the shape, the example control included, not as an order to start (this session's reading, for him to confirm). The wish line owing the crowd explainer's update is retired: that session updated the doc after DEF-77 shipped.
 
 **Supersedes:** none
 

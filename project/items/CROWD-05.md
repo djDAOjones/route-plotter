@@ -8,7 +8,7 @@ A crowd going from its Entry to its Exit is cut off when the route ends: its las
 
 - With a crowd whose dots disappear or collect, the timeline runs until its last dot has finished, in the editor, on scrub, in export and in the player.
 - A crowd's release timings do not move when the timeline grows for it.
-- What a looping crowd does after the route ends is the owner's choice, made before the work starts, and implemented as he chooses.
+- A crowd that never finishes (Respawn, Repeat journey) has an explicit control for what happens after the route ends, as the owner agreed in outline: for example "stop / run until crowds finish / run on for N seconds"; its exact options are confirmed with him before the work starts.
 - Every existing test stays green; none is deleted, skipped or weakened.
 
 ## Context and sources
@@ -21,3 +21,4 @@ A crowd going from its Entry to its Exit is cut off when the route ends: its las
 ## Notes
 
 - 2026-10-05 — Filed from the Backlog status session's message and write-up (the run's inbox, 2026-10-05). A shape that session proposed, not the owner's: a crowd tail after the route's own timeline, sized to the last Disappear or Collect finish, with release percentages anchored to the route-only duration; and an explicit control for looping crowds, for example "After the route ends: stop / until crowds finish / N seconds". Waits on the owner's word on the looping-crowd choice and on starting it.
+- 2026-10-05 — The owner replied "agreed" to that session's summary (relayed verbatim, about 16:50): file it in the backlog; a crowd tail after the route, its timing still measured against the route; an explicit control for crowds that never finish, the example above. That this accepts the placement and the shape, the example control included, is this run's reading, for him to confirm; it is not an order to start, and it places the item in no queue.

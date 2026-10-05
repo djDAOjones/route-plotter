@@ -36,7 +36,7 @@
 
 **Filed from use — waits on the owner's word**
 
-- [!] CROWD-05 — The animation runs until every crowd dot has finished — since 2026-10-05 — blocked: owner's word — what a looping crowd does after the route ends, and to start it
+- [!] CROWD-05 — The animation runs until every crowd dot has finished — since 2026-10-05 — blocked: owner's word — to start it
 
 **After TST-04 — the owner's order of 2026-10-05**
 
