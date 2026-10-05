@@ -1,8 +1,8 @@
-# DEF-79 — Player anchors crowds apart
+# DEF-79 — Render space moves crowd anchors
 
 ## Intent
 
-For a linear route, the HTML player resolves route anchors in its render space (`src/player/PlayerApp.js`), not the authored timing space, so a crowd bound to a route moment may release at a different instant in the player than in the editor. Pre-existing; noted while CROWD-05 measured the player's own scene end. A defect against play == export, under the owner's "fix defects along the way" (2026-09-28) and GATELESS-1.
+For a linear route, route anchors are resolved in the space being drawn, not the authored timing space: the HTML player resolves them in its render space (`src/player/PlayerApp.js`), and a video export in export space (`src/app/exporting.js`, after it enters export mode), while waits stay fixed. So a crowd bound to a route moment may release at a different instant in the player or a video export than in the editor (Codex's CROWD-05 review r1 measured 18,640 ms against the editor's anchors and 19,073 ms in export at 1920×1080). Pre-existing; noted while CROWD-05 measured the player's own scene end. A defect against play == export, under the owner's "fix defects along the way" (2026-09-28) and GATELESS-1.
 
 ## Acceptance criteria
 
@@ -17,3 +17,4 @@ For a linear route, the HTML player resolves route anchors in its render space (
 ## Notes
 
 - 2026-10-05 — Found by CROWD-05's work (the run's implementing session), by code reading; to verify before fixing.
+- 2026-10-05 — Widened from the player to video export too, by Codex's review r1 of CROWD-05; CROWD-05 measures each scene end in the space it renders in, so neither cuts a crowd off, but their lengths can differ from the editor's.

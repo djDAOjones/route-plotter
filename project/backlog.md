@@ -89,7 +89,8 @@
 - [ ] DEF-75 — Index check misses references — since 2026-10-05
 - [ ] DEF-76 — Leg-speed edit stales timing — since 2026-10-05
 - [ ] DEF-78 — Comet tail retimes crowds — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-- [ ] DEF-79 — Player anchors crowds apart — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
+- [ ] DEF-79 — Render space moves crowd anchors — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
+- [ ] DEF-80 — Player retimes constant-time projects — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 
 ## Icebox
 

@@ -481,7 +481,14 @@ export class AnimationEngine {
    * Resets playback speed to 1x (JKL speeds are temporary review aids)
    */
   reset() {
+    // A playback reset rewinds the transport; the timeline it plays is the
+    // project's (CROWD-05). Both durations are kept: only a rebuild, an
+    // opened project or clearing the project sets them, and a base reset to
+    // the default would move every release measured against it.
+    const { duration, baseDuration } = this.state;
     this.state.reset();
+    this.state.duration = duration;
+    this.state.baseDuration = baseDuration;
     this.lastFrameTime = null;
     this.nextPauseIndex = 0; // Reset to check all pause markers again
     this._resetPlaybackSpeed();

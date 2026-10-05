@@ -264,8 +264,9 @@ export class PlayerApp {
   }
 
   /**
-   * AnimationState.reset() clobbers both durations and the mode; put the
-   * authored ones back, with what made up the end (CROWD-05).
+   * AnimationState.reset() clobbers the mode (the engine's reset keeps both
+   * durations, CROWD-05); put the authored timeline back whole, with what
+   * made up the end.
    */
   _restoreAuthoredTimeline() {
     if (!this._authoredTimeline) return;

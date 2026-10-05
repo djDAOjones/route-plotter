@@ -200,7 +200,7 @@ function queueSceneEnd(app) {
  * @param {Object} app RoutePlotter or PlayerApp
  * @returns {number} The playback duration
  */
-function measureSceneEnd(app) {
+export function measureSceneEnd(app) {
   if (app._sceneEndTimeout) {
     clearTimeout(app._sceneEndTimeout);
     app._sceneEndTimeout = null;

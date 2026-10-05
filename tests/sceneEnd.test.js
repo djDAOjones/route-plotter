@@ -225,6 +225,8 @@ describe('beaconEndMs, read against the beacon classes', () => {
     ['pop', {}, 'hide-after', 1500],
     ['pop', {}, 'hide-before-and-after', 1250],
     ['pulse', { pulseCycleSpeed: 4 }, 'always-show', 8000],
+    // No cycle set: PulseBeacon's own default, which the end must use too.
+    ['pulse', {}, 'always-show', 8000],
     ['pulse', { pulseCycleSpeed: 4 }, 'hide-after', 9000],
     ['grow', {}, 'always-show', 2000],
   ])('a %s beacon (%o, %s) at the last waypoint ends %i ms after arrival, when it stops changing',

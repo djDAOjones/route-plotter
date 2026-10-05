@@ -15,6 +15,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { allowConsole } from './helpers/consoleGuard.js';
 import { clearProject } from '../src/app/projectReset.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { VideoExporter, createVideoFramePlan } from '../src/services/VideoExporter.js';
@@ -142,11 +143,17 @@ describe('a crowd that finishes after the route', () => {
 
       const before = dotsDrawnAt(app, F - FRAME_MS).dots;
       expect(before.some(dot => !atEnd(dot))).toBe(true);
-      for (const ms of [F, F + 1000]) {
-        const { dots } = dotsDrawnAt(app, ms);
-        expect(app.animationEngine.state.currentTime).toBe(F);
-        if (mode === 'disappear') expect(dots).toEqual([]);
-        else expect(dots.length > 0 && dots.every(atEnd)).toBe(true);
+      const finished = dots => (mode === 'disappear' ? dots.length === 0 : dots.length > 0 && dots.every(atEnd));
+      // At F as the renderer draws it; a seek past F stops there.
+      const atF = dotsDrawnAt(app, F);
+      expect(finished(atF.dots)).toBe(true);
+      expect(atF.durations).toEqual([B]);
+      dotsDrawnAt(app, F + 1000);
+      expect(app.animationEngine.state.currentTime).toBe(F);
+      // And after F, evaluated as the renderer evaluates, with no transport to stop it.
+      const context = { durationMs: B, routePathPoints: app.pathPoints, routeAnchors: app.getRouteArrivalMap() };
+      for (const ms of [F + 1e-6, F + 1000]) {
+        expect(finished(app.swarmEngine.evaluate(ms, app.selectedCrowd, context)), `${ms} ms`).toBe(true);
       }
       // The route itself ended at B and holds there.
       app.animationEngine.seekToTime(B);
@@ -211,6 +218,56 @@ describe('a crowd that finishes after the route', () => {
     expect(sampled[0].dots).toBeGreaterThan(0);
     expect(sampled[1]).toMatchObject({ ms: F, dots: 0 });
   });
+
+  /**
+   * Codex's review of CROWD-05 (r1, finding 1): a dot released at the route's
+   * final arrival. A linear route's arrivals are measured in pixels, so the
+   * export canvas moves that release; the end must be measured there too.
+   */
+  test.each(['complete', 'cancelled', 'failed'])(
+    'an export at another size measures the end where it draws it, and the editor\'s comes back (%s)',
+    async (outcome) => {
+      const { app, layer } = await editorWithCrowd('disappear');
+      const last = app.waypoints.at(-1);
+      layer.emitters[0].update({
+        dotCount: 1, speed: 0.05, speedVariance: 0, onsetVariance: 0, releaseDuration: 0,
+        releaseAnchor: { waypointId: last.id, at: 'arrival' },
+      });
+      app.eventBus.emit('crowd:param-changed');
+      app.exportSettings.resolutionX = 1920;
+      app.exportSettings.resolutionY = 1080;
+      app._setPreviewMode(true); // so leaving the export changes no mode that would rebuild the timing
+      app.invalidateAnimationTiming();
+      await settled();
+      const editor = durations(app);
+      expect(editor.F).toBeGreaterThan(editor.B);
+
+      vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+      vi.stubGlobal('alert', vi.fn());
+      if (outcome === 'failed') allowConsole(/Video export failed/);
+      const exported = {};
+      app.videoExporter = {
+        cancel() {},
+        async export({ frameRate, duration, startBuffer, renderFrame }) {
+          const samples = [...createVideoFramePlan({ frameRate, duration, startBuffer }).samples()];
+          const evaluate = vi.spyOn(app.swarmEngine, 'evaluate');
+          await renderFrame(samples.at(-1).progress);
+          exported.duration = duration;
+          exported.width = app.canvas.width;
+          exported.lastFrameDots = evaluate.mock.results.flatMap(result => result.value);
+          evaluate.mockRestore();
+          if (outcome === 'cancelled') throw new Error('Export cancelled');
+          if (outcome === 'failed') throw new Error('the encoder failed');
+          return new Blob(['video'], { type: 'video/mp4' });
+        },
+      };
+      await app.exportVideo();
+
+      expect(exported.width).toBe(1920);
+      expect(exported.duration).not.toBe(editor.F); // this scene ends elsewhere at 1920 × 1080
+      expect(exported.lastFrameDots).toEqual([]);
+      expect(durations(app)).toEqual(editor);
+    });
 
   test('the HTML player has the same B, F and parts, and ends its dots at F', async () => {
     const { app } = await editorWithCrowd('disappear');
@@ -384,6 +441,45 @@ describe('B and F across saving, reopening, undo and reset', () => {
     expect(durations(app)).toEqual({ B, F: B, parts: { routeMs: B, crowdsMs: 0, beaconsMs: 0 } });
   });
 
+  test('a playback Reset keeps B: a crowd on a network releases and ends as it did once the route is gone', async () => {
+    // Codex's review of CROWD-05 (r1, finding 2).
+    const scene = new Scene();
+    const layer = scene.addFlowLayer({ name: 'Crowd 1', guideType: 'graph' });
+    const entry = layer.graph.addNode({ x: 0.1, y: 0.2, type: 'entry' });
+    const exit = layer.graph.addNode({ x: 0.9, y: 0.8, type: 'exit' });
+    layer.graph.addEdge({ sourceId: entry.id, targetId: exit.id, direction: 'one-way' });
+    layer.addEmitter({ ...SLOW_CROWD, dotCount: 12, lifecycleMode: 'disappear' });
+    const app = await bootApp();
+    await app.ready;
+    expect(await loadSnapshot(app, {
+      coordVersion: 9,
+      waypoints: [
+        { id: 'one', imgX: 0.1, imgY: 0.5, isMajor: true, pauseMode: 'none', pauseTime: 0 },
+        { id: 'two', imgX: 0.9, imgY: 0.5, isMajor: true, pauseMode: 'none', pauseTime: 0 },
+      ],
+      scene: scene.toJSON(),
+      animationState: { mode: 'constant-speed', speed: 200, duration: 0 },
+    })).toBe(true);
+    await settled();
+    for (const waypoint of [...app.waypoints]) app.eventBus.emit('waypoint:delete', waypoint);
+    await settled();
+    const crowd = app.scene.getFlowLayers()[0];
+    const onsetOfFirst = () => {
+      const [first] = app.swarmEngine.scheduleDots(crowd, { durationMs: app.animationEngine.state.baseDuration });
+      return first.onsetFraction * app.animationEngine.state.baseDuration;
+    };
+    const before = { ...durations(app), onset: onsetOfFirst() };
+    expect(before.F).toBeGreaterThan(before.B);
+    expect(before.B).not.toBe(10000); // the route's, not the default
+
+    app.eventBus.emit('ui:animation:skip-start');
+    await settled();
+
+    expect({ ...durations(app), onset: onsetOfFirst() }).toEqual(before);
+    expect(dotsDrawnAt(app, before.onset).dots.length).toBeGreaterThan(0);
+    expect(dotsDrawnAt(app, before.onset - 1).dots).toHaveLength(0);
+  });
+
   test('clearing the project clears both durations and what made up the end, and nothing comes back', async () => {
     const { app } = await editorWithCrowd('disappear');
     app.scheduleSceneEnd(); // pending work a reset must cancel
@@ -424,7 +520,36 @@ describe('B and F across saving, reopening, undo and reset', () => {
 });
 
 describe('the route\'s own part is the base timeline, whatever composes it', () => {
-  test('waits and a longer branch included, the route ends at B exactly, and a crowd edit never moves it', async () => {
+  test('a branch that outlasts the whole trunk, waits included, ends the route', async () => {
+    // Codex's review of CROWD-05 (r1, finding 4): trunk 1 → 2 → 3, waiting
+    // at 2 and 3, and a terminal branch from 2 that runs far past them.
+    const app = await bootApp();
+    await app.ready;
+    const stop = (id, imgX, imgY, extra = {}) => ({
+      id, imgX, imgY, isMajor: true, pauseMode: 'timed', pauseTime: 1000, ...extra,
+    });
+    expect(await loadSnapshot(app, {
+      coordVersion: 9,
+      waypoints: [
+        stop('wp-1', 0.1, 0.1, { pauseMode: 'none', pauseTime: 0 }),
+        stop('wp-2', 0.2, 0.1),
+        stop('wp-b1', 0.9, 0.9, { branchId: 'br-1', branchFrom: 'wp-2', pauseMode: 'none', pauseTime: 0 }),
+        stop('wp-3', 0.3, 0.1),
+      ],
+      animationState: { mode: 'constant-speed', speed: 200, duration: 0 },
+    })).toBe(true);
+    await settled();
+    const engine = app.animationEngine;
+    const { B, F, parts } = durations(app);
+    const trunkTimeline = engine.pathDuration + engine.totalPauseTime;
+
+    expect(engine.totalPauseTime).toBeGreaterThan(0);
+    expect(app.getBranchTimeline().totalDurationMs).toBeGreaterThan(trunkTimeline + 500);
+    expect(B).toBe(app.getBranchTimeline().totalDurationMs);
+    expect({ F, parts }).toEqual({ F: B, parts: { routeMs: B, crowdsMs: 0, beaconsMs: 0 } });
+  });
+
+  test('waits included, the route ends at B exactly, and a crowd edit never moves it', async () => {
     // The open day branches and rejoins, waits at its majors, and carries a
     // crowd that finishes after the route.
     const example = buildExampleProjects().find(each => each.id === 'uon-open-day');
