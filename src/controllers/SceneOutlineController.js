@@ -11,6 +11,7 @@ import { IMAGE_COORDINATES } from '../config/constants.js';
 
 const OUTLINE_CANONICAL_VALUE = Symbol('outlineCanonicalValue');
 const OUTLINE_DRAFT_CONTEXT = Symbol('outlineDraftContext');
+const OUTLINE_ERROR_ID_PREFIX = 'scene-outline-error-';
 
 // Waypoints and polygon vertices may sit off the image (DEF-03), as far as a
 // project can store a point, so their position fields take that range; 0–100%
@@ -31,6 +32,66 @@ function bendPercentRange(value) {
   if (!Number.isFinite(number)) return { min: 0, max: 100 };
   return { min: Math.min(0, number), max: Math.max(100, number) };
 }
+
+/**
+ * Each field's hint (UI-03), in the outline's own words. ParamTooltip wires a
+ * label's `data-tip` as its field's description as the form is drawn, and
+ * shows it on hover, click and keyboard focus, as in the inspector.
+ */
+const FIELD_HINTS = Object.freeze({
+  // Waypoints and polygon vertices may sit off the image; nodes and bend
+  // points are placed on it (see IMAGE_POSITION_PERCENT above).
+  imageX: '0% is the image’s left edge, 100% its right edge; beyond them is off the image',
+  imageY: '0% is the image’s top edge, 100% its bottom edge; beyond them is off the image',
+  onImageX: '0% is the image’s left edge, 100% its right edge',
+  onImageY: '0% is the image’s top edge, 100% its bottom edge',
+  newWaypointX: 'Where the new waypoint goes: 0% is the image’s left edge, 100% its right edge; ' +
+    'beyond them is off the image',
+  newWaypointY: 'Where the new waypoint goes: 0% is the image’s top edge, 100% its bottom edge; ' +
+    'beyond them is off the image',
+  newVertexX: 'Where the new vertex goes, after the last one: 0% is the image’s left edge, 100% its right ' +
+    'edge; beyond them is off the image',
+  newVertexY: 'Where the new vertex goes, after the last one: 0% is the image’s top edge, 100% its bottom ' +
+    'edge; beyond them is off the image',
+  newNodeX: 'Where the new node goes: 0% is the image’s left edge, 100% its right edge',
+  newNodeY: 'Where the new node goes: 0% is the image’s top edge, 100% its bottom edge',
+  newBendX: 'Where the new bend point goes, after the last one: 0% is the image’s left edge, 100% its right edge',
+  newBendY: 'Where the new bend point goes, after the last one: 0% is the image’s top edge, 100% its bottom edge',
+  insertPosition: 'Where the new waypoint goes in the route order: at the start, or after the waypoint chosen',
+  waypointType: 'Major waypoints carry a wait and an outgoing leg speed; minor waypoints only shape the ' +
+    'route between them',
+  wait: 'How long the path head waits at this waypoint before moving on',
+  legSpeed: 'How fast the path head travels the leg after this waypoint: 2 takes half the time, ' +
+    '0.5 twice as long',
+  fadeIn: 'How long the polygon takes to fade in when it appears',
+  fadeOut: 'How long the polygon takes to fade out when it disappears',
+  crowdName: 'The crowd’s name in Layers and in this outline',
+  crowdVisibility: 'Hidden crowds are not drawn, in the editor or in exports; their settings are kept',
+  guide: 'What the dots travel along: the route, or a custom network of nodes and edges',
+  dots: 'How many dots this emitter releases in all',
+  releaseStart: 'When the first dots set off, as a percentage of the timeline',
+  releaseLength: 'How much of the timeline, as a percentage, the release is spread across',
+  releaseTiming: 'How unevenly dots set off: 0% evenly spaced, 100% at random',
+  // The bias bends set-offs towards the start below 0, the end above it
+  // (dotOnsetFraction in src/utils/crowdArrival.js).
+  releaseBias: 'Below 0 is earlier: more dots set off near the start of the release; above 0 is later, ' +
+    'near its end; 0 favours neither',
+  speed: 'How fast the dots travel: at 1, a dot crosses the image’s width in a second',
+  paceVariation: 'How much each dot’s pace differs: 0% moves every dot at the same speed',
+  dotSize: 'Dot size, scaled with the image like other elements',
+  walkingVariation: 'Sideways walking variation as dots travel: 0% follows the line exactly',
+  dotColour: 'A hex colour such as #56B4E9, or transparent to hide the dots',
+  journeyEnd: 'What a dot does when it reaches the end of its journey',
+  nodeType: 'Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just ' +
+    'route them onward',
+  nodeLabel: 'An optional name, shown after the node’s number in this outline',
+  sourceNode: 'The node the new edge starts from; a one-way edge carries dots only away from it',
+  destinationNode: 'The node the new edge leads to',
+  newEdgeDirection: 'Two-way edges carry dots both ways; one-way edges only from Source node to Destination node',
+  edgeDirection: 'Two-way edges carry dots both ways; one-way edges only from the first node in the edge’s ' +
+    'name to the second',
+  pathWeight: 'How strongly dots prefer this edge at a junction: weight 2 is chosen twice as often as weight 1',
+});
 
 function el(tag, { className = '', text = '', attrs = {}, data = {} } = {}) {
   const node = document.createElement(tag);
@@ -63,10 +124,10 @@ function button(label, action, data = {}, { danger = false, disabled = false, ke
 function labelledInput(name, label, value, {
   type = 'number', min = null, max = null, step = null, required = true,
   key = null, inputMode = 'decimal', readOnly = false,
-  canonicalValue = undefined, maxLength = null,
+  canonicalValue = undefined, maxLength = null, tip = null,
 } = {}) {
   const wrapper = el('label', { className: 'scene-outline-field' });
-  wrapper.appendChild(el('span', { text: label }));
+  wrapper.appendChild(el('span', { text: label, attrs: { 'data-tip': tip } }));
   const input = el('input', {
     attrs: {
       name, type, min, max, step, required, inputmode: inputMode,
@@ -84,9 +145,9 @@ function labelledInput(name, label, value, {
   return wrapper;
 }
 
-function labelledSelect(name, label, value, options, { key = null } = {}) {
+function labelledSelect(name, label, value, options, { key = null, tip = null } = {}) {
   const wrapper = el('label', { className: 'scene-outline-field' });
-  wrapper.appendChild(el('span', { text: label }));
+  wrapper.appendChild(el('span', { text: label, attrs: { 'data-tip': tip } }));
   const select = el('select', { attrs: { name }, data: { outlineKey: key } });
   for (const option of options) {
     const item = typeof option === 'string' ? { value: option, label: option } : option;
@@ -439,7 +500,11 @@ export class SceneOutlineController {
     for (const error of this.container.querySelectorAll('.scene-outline-error')) error.remove();
     for (const field of this.container.querySelectorAll('[aria-invalid="true"]')) {
       field.removeAttribute('aria-invalid');
-      field.removeAttribute('aria-describedby');
+      // Only the error's token goes: the field's hint keeps describing it.
+      const kept = (field.getAttribute('aria-describedby') || '').split(/\s+/)
+        .filter(id => id && !id.startsWith(OUTLINE_ERROR_ID_PREFIX));
+      if (kept.length) field.setAttribute('aria-describedby', kept.join(' '));
+      else field.removeAttribute('aria-describedby');
     }
   }
 
@@ -481,7 +546,7 @@ export class SceneOutlineController {
     if (!this._error) return;
     const formEl = this._formForKey(this._error.formKey);
     if (!formEl || formEl.querySelector('.scene-outline-error')) return;
-    const errorId = `scene-outline-error-${++this._errorSerial}`;
+    const errorId = `${OUTLINE_ERROR_ID_PREFIX}${++this._errorSerial}`;
     const error = el('p', {
       className: 'scene-outline-error',
       text: this._error.message,
@@ -489,7 +554,9 @@ export class SceneOutlineController {
     });
     for (const field of formEl.querySelectorAll('input, select, textarea')) {
       field.setAttribute('aria-invalid', 'true');
-      field.setAttribute('aria-describedby', errorId);
+      // Ahead of the field's hint, which it keeps: the error is announced first.
+      const others = (field.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+      field.setAttribute('aria-describedby', [errorId, ...others].join(' '));
     }
     formEl.appendChild(error);
   }
@@ -533,13 +600,17 @@ export class SceneOutlineController {
           value: waypoint.id,
           label: `After ${waypoint.name}`,
         })),
-      ], { key: 'route:add-after' }),
+      ], { key: 'route:add-after', tip: FIELD_HINTS.insertPosition }),
       labelledSelect('kind', 'Type', 'major', [
         { value: 'major', label: 'Major waypoint' },
         { value: 'minor', label: 'Minor waypoint', disabled: snapshot.route.length === 0 },
-      ], { key: 'route:add-kind' }),
-      labelledInput('x', 'Horizontal position (%)', 50, { ...IMAGE_POSITION_PERCENT, step: 'any', key: 'route:add-x' }),
-      labelledInput('y', 'Vertical position (%)', 50, { ...IMAGE_POSITION_PERCENT, step: 'any', key: 'route:add-y' }),
+      ], { key: 'route:add-kind', tip: FIELD_HINTS.waypointType }),
+      labelledInput('x', 'Horizontal position (%)', 50, {
+        ...IMAGE_POSITION_PERCENT, step: 'any', key: 'route:add-x', tip: FIELD_HINTS.newWaypointX,
+      }),
+      labelledInput('y', 'Vertical position (%)', 50, {
+        ...IMAGE_POSITION_PERCENT, step: 'any', key: 'route:add-y', tip: FIELD_HINTS.newWaypointY,
+      }),
     ], 'Add waypoint', 'route:add-submit'));
 
     if (snapshot.route.length === 0) {
@@ -576,18 +647,21 @@ export class SceneOutlineController {
     const fields = [
       labelledInput('x', 'Horizontal position (%)', waypoint.x, {
         ...IMAGE_POSITION_PERCENT, step: 'any', key: `${waypoint.key}:x`, canonicalValue: waypoint.xCanonical,
+        tip: FIELD_HINTS.imageX,
       }),
       labelledInput('y', 'Vertical position (%)', waypoint.y, {
         ...IMAGE_POSITION_PERCENT, step: 'any', key: `${waypoint.key}:y`, canonicalValue: waypoint.yCanonical,
+        tip: FIELD_HINTS.imageY,
       }),
     ];
     if (waypoint.isMajor) {
       fields.push(
         labelledInput('waitSeconds', 'Wait (seconds)', waypoint.pauseSeconds, {
           min: 0, max: 600, step: 'any', key: `${waypoint.key}:wait`, canonicalValue: waypoint.pauseMsCanonical,
+          tip: FIELD_HINTS.wait,
         }),
         labelledInput('segmentSpeed', 'Outgoing leg speed (×)', waypoint.segmentSpeed, {
-          min: 0.1, max: 10, step: 'any', key: `${waypoint.key}:speed`,
+          min: 0.1, max: 10, step: 'any', key: `${waypoint.key}:speed`, tip: FIELD_HINTS.legSpeed,
         })
       );
     } else {
@@ -649,9 +723,11 @@ export class SceneOutlineController {
     content.appendChild(form('update-polygon-timing', { waypointId: waypoint.id }, [
       labelledInput('fadeInSeconds', 'Fade in (seconds)', area.fadeInSeconds, {
         min: 0, max: 600, step: 'any', key: `${area.key}:fade-in`, canonicalValue: area.fadeInMsCanonical,
+        tip: FIELD_HINTS.fadeIn,
       }),
       labelledInput('fadeOutSeconds', 'Fade out (seconds)', area.fadeOutSeconds, {
         min: 0, max: 600, step: 'any', key: `${area.key}:fade-out`, canonicalValue: area.fadeOutMsCanonical,
+        tip: FIELD_HINTS.fadeOut,
       }),
     ], 'Apply polygon timing', `${area.key}:timing`));
 
@@ -675,9 +751,11 @@ export class SceneOutlineController {
       pointContent.appendChild(form('update-vertex', { waypointId: waypoint.id, index: point.index }, [
         labelledInput('x', 'Horizontal position (%)', point.x, {
           ...IMAGE_POSITION_PERCENT, step: 'any', key: `${point.key}:x`, canonicalValue: point.xCanonical,
+          tip: FIELD_HINTS.imageX,
         }),
         labelledInput('y', 'Vertical position (%)', point.y, {
           ...IMAGE_POSITION_PERCENT, step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
+          tip: FIELD_HINTS.imageY,
         }),
       ], 'Apply vertex', `${point.key}:apply`, vertexDraftContext));
       pointContent.appendChild(button('Delete vertex', 'delete-vertex', {
@@ -697,10 +775,10 @@ export class SceneOutlineController {
     content.appendChild(list);
     content.appendChild(form('add-vertex', { waypointId: waypoint.id }, [
       labelledInput('x', 'New vertex horizontal position (%)', waypoint.x, {
-        ...IMAGE_POSITION_PERCENT, step: 'any', key: `${area.key}:add-x`,
+        ...IMAGE_POSITION_PERCENT, step: 'any', key: `${area.key}:add-x`, tip: FIELD_HINTS.newVertexX,
       }),
       labelledInput('y', 'New vertex vertical position (%)', waypoint.y, {
-        ...IMAGE_POSITION_PERCENT, step: 'any', key: `${area.key}:add-y`,
+        ...IMAGE_POSITION_PERCENT, step: 'any', key: `${area.key}:add-y`, tip: FIELD_HINTS.newVertexY,
       }),
     ], 'Add vertex', `${area.key}:add`));
     details.appendChild(content);
@@ -756,16 +834,16 @@ export class SceneOutlineController {
     content.appendChild(form('update-crowd', { layerId: crowd.id }, [
       labelledInput('name', 'Crowd name', crowd.name, {
         type: 'text', required: false, inputMode: null, maxLength: 200,
-        key: `${crowd.key}:name`, canonicalValue: crowd.name,
+        key: `${crowd.key}:name`, canonicalValue: crowd.name, tip: FIELD_HINTS.crowdName,
       }),
       labelledSelect('visible', 'Visibility', crowd.visible ? 'shown' : 'hidden', [
         { value: 'shown', label: 'Shown' },
         { value: 'hidden', label: 'Hidden' },
-      ], { key: `${crowd.key}:visible` }),
+      ], { key: `${crowd.key}:visible`, tip: FIELD_HINTS.crowdVisibility }),
       labelledSelect('guideType', 'Guide', crowd.guideType, [
         { value: 'route', label: 'Route' },
         { value: 'graph', label: 'Custom network' },
-      ], { key: `${crowd.key}:guide` }),
+      ], { key: `${crowd.key}:guide`, tip: FIELD_HINTS.guide }),
     ], 'Apply crowd', `${crowd.key}:apply`));
 
     const emittersKey = sceneOutlineKey('emitters', crowd.id);
@@ -831,10 +909,11 @@ export class SceneOutlineController {
     } else {
       content.appendChild(form('update-emitter', { layerId: crowd.id, emitterId: emitter.id }, [
         labelledInput('dotCount', 'Dots', emitter.dotCount, {
-          min: 1, max: 5000, step: 1, inputMode: 'numeric', key: `${emitter.key}:count`,
+          min: 1, max: 5000, step: 1, inputMode: 'numeric', key: `${emitter.key}:count`, tip: FIELD_HINTS.dots,
         }),
         labelledInput('releaseStart', 'Release start (%)', emitter.releaseStart, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:start`, canonicalValue: emitter.releaseStartCanonical,
+          tip: FIELD_HINTS.releaseStart,
         }),
         labelledInput('releaseDuration', 'Release length (%)', emitter.releaseDuration, {
           min: 0,
@@ -842,15 +921,18 @@ export class SceneOutlineController {
           step: 'any',
           key: `${emitter.key}:duration`,
           canonicalValue: emitter.releaseDurationCanonical,
+          tip: FIELD_HINTS.releaseLength,
         }),
         labelledInput('onsetVariance', 'Release timing (%)', emitter.onsetVariance, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:onset`, canonicalValue: emitter.onsetVarianceCanonical,
+          tip: FIELD_HINTS.releaseTiming,
         }),
         labelledInput('intensityRamp', 'Release bias (%)', emitter.intensityRamp, {
           min: -100, max: 100, step: 'any', key: `${emitter.key}:ramp`, canonicalValue: emitter.intensityRampCanonical,
+          tip: FIELD_HINTS.releaseBias,
         }),
         labelledInput('speed', 'Speed (image units/second)', emitter.speed, {
-          min: 0.001, max: 1000, step: 'any', key: `${emitter.key}:speed`,
+          min: 0.001, max: 1000, step: 'any', key: `${emitter.key}:speed`, tip: FIELD_HINTS.speed,
         }),
         labelledInput('speedVariance', 'Pace variation (%)', emitter.speedVariance, {
           min: 0,
@@ -858,22 +940,24 @@ export class SceneOutlineController {
           step: 'any',
           key: `${emitter.key}:speed-variance`,
           canonicalValue: emitter.speedVarianceCanonical,
+          tip: FIELD_HINTS.paceVariation,
         }),
         labelledInput('dotSize', 'Dot size (×)', emitter.dotSize, {
-          min: 0.01, max: 100, step: 'any', key: `${emitter.key}:size`,
+          min: 0.01, max: 100, step: 'any', key: `${emitter.key}:size`, tip: FIELD_HINTS.dotSize,
         }),
         labelledInput('wobble', 'Walking variation (%)', emitter.wobble, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:wobble`, canonicalValue: emitter.wobbleCanonical,
+          tip: FIELD_HINTS.walkingVariation,
         }),
         labelledInput('dotColor', 'Dot colour (hex or transparent)', emitter.dotColor, {
-          type: 'text', inputMode: null, maxLength: 11, key: `${emitter.key}:color`,
+          type: 'text', inputMode: null, maxLength: 11, key: `${emitter.key}:color`, tip: FIELD_HINTS.dotColour,
         }),
         labelledSelect('lifecycleMode', 'At journey end', emitter.lifecycleMode, [
           { value: 'disappear', label: 'Disappear' },
           { value: 'respawn', label: 'Respawn' },
           { value: 'loop', label: 'Loop' },
           { value: 'collect', label: 'Collect' },
-        ], { key: `${emitter.key}:lifecycle` }),
+        ], { key: `${emitter.key}:lifecycle`, tip: FIELD_HINTS.journeyEnd }),
       ], 'Apply primary emitter', `${emitter.key}:apply`));
       content.appendChild(description(
         `Busyness over time has ${emitter.busynessEnvelope.length} handles. ` +
@@ -904,18 +988,19 @@ export class SceneOutlineController {
       : 'These retained paths are not rendered until the crowd guide is changed to Custom network.'));
     content.appendChild(form('add-node', { layerId: crowd.id }, [
       labelledInput('x', 'Node horizontal position (%)', 50, {
-        min: 0, max: 100, step: 'any', key: `${graph.key}:add-node-x`,
+        min: 0, max: 100, step: 'any', key: `${graph.key}:add-node-x`, tip: FIELD_HINTS.newNodeX,
       }),
       labelledInput('y', 'Node vertical position (%)', 50, {
-        min: 0, max: 100, step: 'any', key: `${graph.key}:add-node-y`,
+        min: 0, max: 100, step: 'any', key: `${graph.key}:add-node-y`, tip: FIELD_HINTS.newNodeY,
       }),
       labelledSelect('type', 'Node type', 'normal', [
         { value: 'normal', label: 'Pass-through' },
         { value: 'entry', label: 'Entry' },
         { value: 'exit', label: 'Exit' },
-      ], { key: `${graph.key}:add-node-type` }),
+      ], { key: `${graph.key}:add-node-type`, tip: FIELD_HINTS.nodeType }),
       labelledInput('label', 'Node label (optional)', '', {
         type: 'text', required: false, inputMode: null, maxLength: 200, key: `${graph.key}:add-node-label`,
+        tip: FIELD_HINTS.nodeLabel,
       }),
     ], 'Add node', `${graph.key}:add-node`));
 
@@ -925,13 +1010,19 @@ export class SceneOutlineController {
         label: `${node.name} — ${node.xLabel}%, ${node.yLabel}%`,
       }));
       content.appendChild(form('connect-nodes', { layerId: crowd.id }, [
-        labelledSelect('sourceId', 'Source node', graph.nodes[0].id, nodeOptions, { key: `${graph.key}:source` }),
-        labelledSelect('targetId', 'Destination node', graph.nodes[1].id, nodeOptions, { key: `${graph.key}:target` }),
+        labelledSelect('sourceId', 'Source node', graph.nodes[0].id, nodeOptions, {
+          key: `${graph.key}:source`, tip: FIELD_HINTS.sourceNode,
+        }),
+        labelledSelect('targetId', 'Destination node', graph.nodes[1].id, nodeOptions, {
+          key: `${graph.key}:target`, tip: FIELD_HINTS.destinationNode,
+        }),
         labelledSelect('direction', 'Direction', 'two-way', [
           { value: 'two-way', label: 'Two-way' },
           { value: 'one-way', label: 'One-way' },
-        ], { key: `${graph.key}:direction` }),
-        labelledInput('weight', 'Path weight', 1, { min: 0.01, step: 'any', key: `${graph.key}:weight` }),
+        ], { key: `${graph.key}:direction`, tip: FIELD_HINTS.newEdgeDirection }),
+        labelledInput('weight', 'Path weight', 1, {
+          min: 0.01, step: 'any', key: `${graph.key}:weight`, tip: FIELD_HINTS.pathWeight,
+        }),
       ], 'Connect nodes', `${graph.key}:connect`));
     } else {
       content.appendChild(description('Add at least two nodes before connecting a path.'));
@@ -996,18 +1087,20 @@ export class SceneOutlineController {
     content.appendChild(form('update-node', { layerId: crowd.id, nodeId: node.id }, [
       labelledInput('x', 'Horizontal position (%)', node.x, {
         min: 0, max: 100, step: 'any', key: `${node.key}:x`, canonicalValue: node.xCanonical,
+        tip: FIELD_HINTS.onImageX,
       }),
       labelledInput('y', 'Vertical position (%)', node.y, {
         min: 0, max: 100, step: 'any', key: `${node.key}:y`, canonicalValue: node.yCanonical,
+        tip: FIELD_HINTS.onImageY,
       }),
       labelledSelect('type', 'Type', node.type, [
         { value: 'normal', label: 'Pass-through' },
         { value: 'entry', label: 'Entry' },
         { value: 'exit', label: 'Exit' },
-      ], { key: `${node.key}:type` }),
+      ], { key: `${node.key}:type`, tip: FIELD_HINTS.nodeType }),
       labelledInput('label', 'Label (optional)', node.label, {
         type: 'text', required: false, inputMode: null, maxLength: 200,
-        key: `${node.key}:label`, canonicalValue: node.label,
+        key: `${node.key}:label`, canonicalValue: node.label, tip: FIELD_HINTS.nodeLabel,
       }),
     ], 'Apply node', `${node.key}:apply`));
     content.appendChild(button(
@@ -1037,9 +1130,10 @@ export class SceneOutlineController {
       labelledSelect('direction', 'Direction', edge.direction, [
         { value: 'two-way', label: 'Two-way' },
         { value: 'one-way', label: 'One-way' },
-      ], { key: `${edge.key}:direction` }),
+      ], { key: `${edge.key}:direction`, tip: FIELD_HINTS.edgeDirection }),
       labelledInput('weight', 'Path weight', edge.weight, {
         min: 0.01, step: 'any', key: `${edge.key}:weight`, canonicalValue: edge.weight,
+        tip: FIELD_HINTS.pathWeight,
       }),
     ], 'Apply edge', `${edge.key}:apply`));
     content.appendChild(button('Delete edge', 'delete-edge', {
@@ -1086,9 +1180,11 @@ export class SceneOutlineController {
       }, [
         labelledInput('x', 'Horizontal position (%)', point.x, {
           ...bendPercentRange(point.x), step: 'any', key: `${point.key}:x`, canonicalValue: point.xCanonical,
+          tip: FIELD_HINTS.onImageX,
         }),
         labelledInput('y', 'Vertical position (%)', point.y, {
           ...bendPercentRange(point.y), step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
+          tip: FIELD_HINTS.onImageY,
         }),
       ], 'Apply bend point', `${point.key}:apply`, controlDraftContext));
       pointContent.appendChild(button('Delete bend point', 'delete-control', {
@@ -1108,10 +1204,10 @@ export class SceneOutlineController {
         }));
       points.appendChild(form('add-control', { layerId: crowd.id, edgeId: edge.id }, [
         labelledInput('x', 'New bend horizontal position (%)', 50, {
-          min: 0, max: 100, step: 'any', key: `${edge.key}:add-control-x`,
+          min: 0, max: 100, step: 'any', key: `${edge.key}:add-control-x`, tip: FIELD_HINTS.newBendX,
         }),
         labelledInput('y', 'New bend vertical position (%)', 50, {
-          min: 0, max: 100, step: 'any', key: `${edge.key}:add-control-y`,
+          min: 0, max: 100, step: 'any', key: `${edge.key}:add-control-y`, tip: FIELD_HINTS.newBendY,
         }),
       ], 'Add bend point', `${edge.key}:add-control`));
     }

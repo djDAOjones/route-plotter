@@ -1912,7 +1912,7 @@ const LISTENER_ROWS = [
       const event = log.press(KEY_LISTENER.hint, 'Escape', document.body);
       // The page's own Escape takes the key too: it clears the selection.
       expect([shown, `Escape: ${taken(event)}; ${state()}`])
-        .toEqual(['showing "How long the animation pauses at this waypoint"', 'Escape: taken; hidden']);
+        .toEqual(['showing "How long the path head waits at this waypoint before moving on"', 'Escape: taken; hidden']);
     }
   },
 
