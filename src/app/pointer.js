@@ -8,6 +8,7 @@
  */
 import { INTERACTION } from '../config/constants.js';
 import {
+  routeRuns,
   waypointPointIndices,
   nearestOnPolyline,
   legIndexForPointIndex,
@@ -227,46 +228,83 @@ export const pointerMixin = {
   /**
    * Find the route leg at screen coordinates (Phase 4 canvas affordances).
    *
-   * A leg is the path span between consecutive waypoints; waypoint i owns
-   * the leg i → i+1, exactly as the inspector's Leg card names it. Also
-   * reports whether the position is on the leg's midpoint "+" insert
-   * handle. Edit mode only — legs are not clickable during preview.
+   * A leg is the path span between consecutive waypoints of one run; the
+   * waypoint it leaves owns it, exactly as the inspector's Leg card names
+   * it. A branched route's trunk and branches are each hit by their own
+   * geometry (DEF-64): the nearest line wins, and the trunk keeps a tie, as
+   * it is drawn over its branches. A branch's first leg leaves its fork, so
+   * the fork owns it too. Also reports whether the position is on the
+   * leg's midpoint "+" insert handle. Edit mode only — legs are not
+   * clickable during preview.
    *
    * @param {number} screenX - X in screen space (CSS pixels)
    * @param {number} screenY - Y in screen space (CSS pixels)
-   * @returns {{waypoint: Waypoint, waypointIndex: number, onPlus: boolean,
-   *            midImg: {x: number, y: number}}|null}
+   * @returns {{waypoint: Waypoint, waypointIndex: number, next: Waypoint,
+   *            branchId: string|null, canInsert: boolean, onPlus: boolean,
+   *            midImg: {x: number, y: number}}|null} The leg from `waypoint`
+   *          (at `waypointIndex` in the route's array) to `next`, on the
+   *          trunk (`branchId` null) or that branch
    */
   findSegmentAt(screenX, screenY) {
     if (this.previewMode) return null;
     if (!this.pathPoints || this.pathPoints.length < 2 || this.waypoints.length < 2) return null;
 
-    const progressValues = this.getWaypointProgressValues();
-    if (!progressValues || progressValues.length !== this.waypoints.length) return null;
-
     const click = this.screenToCanvas(screenX, screenY);
     // Hit radii are constant in screen space (same rule as findWaypointAt)
     const zoom = this.viewport?.zoom || 1;
 
-    const canvasPath = this.pathPoints.map(p => this.imageToCanvas(p.x, p.y));
-    const nearest = nearestOnPolyline(canvasPath, click.x, click.y);
-    if (!nearest) return null;
+    const runs = routeRuns({
+      waypoints: this.waypoints,
+      pathPoints: this.pathPoints,
+      progressValues: this.getWaypointProgressValues(),
+      branchPaths: this.branchPaths
+    });
+    // A branch's path can outlive its waypoints: a load that fails late puts
+    // the route back, not the paths built for the project it refused (DEF-51)
+    const inRoute = new Set(this.waypoints);
+    let closest = null;
+    for (const run of runs) {
+      // A run whose progress does not pair with its waypoints cannot say
+      // which leg a point is on, and one whose waypoints are not all the
+      // route's is not part of it
+      const { waypoints, pathPoints, progressValues } = run;
+      if (!pathPoints || pathPoints.length < 2 || waypoints.length < 2) continue;
+      if (!progressValues || progressValues.length !== waypoints.length) continue;
+      if (!waypoints.every(each => inRoute.has(each))) continue;
 
-    const wpIndices = waypointPointIndices(progressValues, canvasPath.length);
+      const canvasPath = pathPoints.map(p => this.imageToCanvas(p.x, p.y));
+      const nearest = nearestOnPolyline(canvasPath, click.x, click.y);
+      if (nearest && (!closest || nearest.dist < closest.nearest.dist)) closest = { run, canvasPath, nearest };
+    }
+    if (!closest) return null;
+
+    const { run, canvasPath, nearest } = closest;
+    const wpIndices = waypointPointIndices(run.progressValues, canvasPath.length);
     const legIndex = legIndexForPointIndex(nearest.index, wpIndices);
     const midIdx = legMidpointIndex(wpIndices, legIndex);
     const mid = canvasPath[midIdx];
     const midDist = Math.hypot(click.x - mid.x, click.y - mid.y);
 
+    // Only the trunk offers the "+". The leg insert gives its waypoint no
+    // branch, so on a branch leg it would land a trunk waypoint inside the
+    // branch's run and split it (DEF-22).
+    const canInsert = run.branchId === null;
     // The "+" handle is a fatter target than the line itself
-    const onPlus = midDist <= INTERACTION.LEG_PLUS_HIT_RADIUS / zoom;
+    const onPlus = canInsert && midDist <= INTERACTION.LEG_PLUS_HIT_RADIUS / zoom;
     if (!onPlus && nearest.dist > INTERACTION.SEGMENT_HIT_RADIUS / zoom) return null;
 
+    const waypoint = run.waypoints[legIndex];
     return {
-      waypoint: this.waypoints[legIndex],
-      waypointIndex: legIndex,
+      waypoint,
+      // The owner's index in the route's array, not its place in the run:
+      // `waypoint:insert-on-leg` inserts right after it, which for a trunk
+      // leg is the trunk's next place even where a branch's run follows
+      waypointIndex: this.waypoints.indexOf(waypoint),
+      next: run.waypoints[legIndex + 1],
+      branchId: run.branchId,
+      canInsert,
       onPlus,
-      midImg: { x: this.pathPoints[midIdx].x, y: this.pathPoints[midIdx].y }
+      midImg: { x: run.pathPoints[midIdx].x, y: run.pathPoints[midIdx].y }
     };
   }
 };

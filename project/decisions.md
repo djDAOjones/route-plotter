@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-64 — Branch legs are hit along their own runs
+
+**Decision:** DEF-64 lands (PR #77): each leg of a branched route is hovered and clicked along its own run, the trunk or its branch; a click selects the waypoint the leg leaves, and only a trunk leg offers the "+", so a canvas insert never splits a branch (DEF-22's menu and bus inserts still do).
+
+**Rationale:** Codex review r1 of `9d3563e` found two blocking gaps, both closed in the tests. F1: P10, called equivalent, is reachable: after a waypoint move, a late failed load leaves the refused route's five-entry trunk beside four waypoints; a regression now pins no owner there, and dropping the pairing guard fails it. F2: four branch shapes (two branches, a terminal one, a nested one, branches stored ahead of the trunk) and an identical-ID rollback kill N1–N4 and N6. Each mutant applied in place and restored. Two of these tests check what DEF-51 leaves after a failed load, so DEF-51's fix reworks them. The claim is narrowed to plain canvas clicks; DEF-05's note cites `RenderingService.js:1351`, seen once b1 is recoloured. Its record moved from `pm_skills/` to `project/` (GATELESS-1). Digest rule applied: house conventions → Testing and persistence. DEF-73 no longer waits on it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — REL-701 — v3.2.701 ships DEF-72
 
 **Decision:** v3.2.701 is live from deploy commit `d093ffd` (tag `v3.2.701`), released under GATELESS-1 because DEF-72's merge (`2cd89b6`, PR #96) changed `src/`.
