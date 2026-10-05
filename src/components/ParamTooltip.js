@@ -275,9 +275,10 @@ function positionTooltip(trigger) {
   let top = rect.bottom + gap;
   let left = rect.left;
 
-  // Flip above if not enough room below
+  // Flip above if not enough room below. A control far below its text can
+  // leave no room above either: then keep the hint on screen, even over them.
   if (top + tipRect.height > window.innerHeight - margin) {
-    top = rect.top - tipRect.height - gap;
+    top = Math.max(margin, rect.top - tipRect.height - gap);
   }
 
   // Clamp horizontal to viewport
@@ -381,11 +382,12 @@ function hideTooltip() {
 /**
  * Follow a mouse pointer across triggers and the open hint. Resting on a
  * trigger opens its hint after the delay; leaving first opens nothing. A
- * hover-opened hint stays while the pointer is on its trigger or on the hint,
- * and closes after a short grace once it is on neither, so the pointer can
- * cross the gap between them (WCAG 1.4.13 Hoverable). Only a change of trigger
- * arms a new open, so a hint dismissed with Escape stays closed while the
- * pointer rests where it was.
+ * hover-opened hint stays while the pointer is on its trigger, on the control
+ * the hint describes or on the hint, and closes after a short grace once it is
+ * on none of them. The hint sits clear of trigger and control both, so the
+ * pointer may cross the control on its way to the hint (WCAG 1.4.13
+ * Hoverable). Only a change of trigger arms a new open, so a hint dismissed
+ * with Escape stays closed while the pointer rests where it was.
  * @param {EventTarget|null} target - What the pointer is now over (null: off the page)
  */
 function followPointer(target) {
@@ -407,7 +409,9 @@ function followPointer(target) {
   }
 
   if (openedBy !== 'hover') return;
-  if (hoverTrigger === activeTrigger || pointerOnHint) {
+  const control = activeTrigger ? controlByTrigger.get(activeTrigger) : null;
+  const pointerOnControl = Boolean(element && control?.contains(element));
+  if (hoverTrigger === activeTrigger || pointerOnHint || pointerOnControl) {
     cancelHoverClose();
   } else if (closeTimer === null) {
     closeTimer = setTimeout(closeTooltip, INTERACTION.HINT_HOVER_CLOSE_DELAY_MS);

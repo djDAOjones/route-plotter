@@ -72,3 +72,6 @@
 - The hint under "At journey end" refreshes after a route edit only when the timeline's length changes, so an edit that keeps the length leaves it stale until the next crowd edit — (from: DEF-77, 2026-10-05)
 - The scene outline's crowd labels say "Release start" and "Release length" where the crowd card says "Window start" and "Window length": one concept, two names — (from: UI-03, 2026-10-05)
 - In forced-colours mode a parameter hint has no visible border — (from: UI-03, 2026-10-05)
+- The Zoom transition option "Quick — on arrival" zooms in the incoming leg's first 500 ms, not on arrival: its label misdescribes it, as its hint did (Codex, UI-03 review r2) — (from: UI-03, 2026-10-05)
+- A click on a hover-opened hint closes it, so the first click of a double-click meant to select its text dismisses it (Codex, UI-03 review r2, advisory) — (from: UI-03, 2026-10-05)
+- The test of Escape in a scene-outline field checks where focus lands, not that the form resets (Codex, UI-03 review r2) — (from: UI-03, 2026-10-05)

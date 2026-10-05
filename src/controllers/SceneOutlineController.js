@@ -84,9 +84,9 @@ const FIELD_HINTS = Object.freeze({
   walkingVariation: 'Sideways walking variation as dots travel: 0% follows the line exactly',
   dotColour: 'A hex colour such as #56B4E9, or transparent to hide the dots',
   journeyEnd: 'What a dot does when it reaches the end of its journey',
-  nodeType: 'Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on. ' +
-    'With no exit, journeys end at nodes with one connection; with no entry, dots set off from any node they ' +
-    'can leave',
+  nodeType: 'Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or ' +
+    'end them where no path leads out. With no exit, journeys end at nodes with one connection; with no ' +
+    'entry, dots set off from any node they can leave',
   nodeLabel: 'An optional name, shown after the node’s number in this outline',
   sourceNode: 'The node the new edge starts from; a one-way edge carries dots only away from it',
   destinationNode: 'The node the new edge leads to',

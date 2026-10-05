@@ -331,7 +331,7 @@ describe('a mouse resting on a hint opens it', () => {
 
   test('it closes once the pointer has left both its text and the hint', () => {
     hoverOpen();
-    pointTo(control);
+    pointTo(document.body);
     vi.advanceTimersByTime(CLOSE - 1);
     expect(showing()).toBe(true);
     vi.advanceTimersByTime(1);
@@ -340,9 +340,22 @@ describe('a mouse resting on a hint opens it', () => {
     // Left from the hint itself, too.
     hoverOpen();
     pointTo(tooltip());
-    pointTo(control);
+    pointTo(document.body);
     vi.advanceTimersByTime(CLOSE);
     expect(showing()).toBe(false);
+  });
+
+  test('it stays open while the pointer crosses the control it describes', () => {
+    // The hint sits clear of the control, so the way from its text to the
+    // hint can run across the control: however slowly, the hint waits.
+    hoverOpen();
+    pointTo(control);
+    vi.advanceTimersByTime(CLOSE * 4);
+    expect(showing()).toBe(true);
+
+    pointTo(tooltip());
+    vi.advanceTimersByTime(CLOSE * 4);
+    expect(showing()).toBe(true);
   });
 
   test('a scroll before the delay opens nothing: what was under the pointer has moved', () => {
@@ -482,6 +495,39 @@ describe('a mouse resting on a hint opens it', () => {
       frame.mockRestore();
     }
     expect(parseFloat(tooltip().style.top)).toBeGreaterThanOrEqual(152);
+  });
+
+  test('with no room below it sits above its text, and never above the window', () => {
+    const box = (top, bottom) => ({
+      top, bottom, left: 20, right: 220, width: 200, height: bottom - top, x: 20, y: top,
+    });
+    const rect = vi.spyOn(window.HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function tipBox() {
+        return this.id === 'param-tooltip' ? box(0, 100) : box(0, 0);
+      });
+    const frame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((run) => {
+      run(0);
+      return 0;
+    });
+    try {
+      // Room above: it flips to sit just above the text.
+      trigger.getBoundingClientRect = () => box(500, 516);
+      control.getBoundingClientRect = () => box(520, 700);
+      hoverOpen();
+      expect(parseFloat(tooltip().style.top)).toBe(500 - 100 - 6);
+      tooltip().dispatchEvent(clickEvent());
+
+      // A control far below its text leaves room on neither side: it stays
+      // on screen rather than above the top of the window.
+      pointTo(document.body);
+      trigger.getBoundingClientRect = () => box(40, 56);
+      control.getBoundingClientRect = () => box(60, window.innerHeight - 4);
+      hoverOpen();
+      expect(parseFloat(tooltip().style.top)).toBe(12);
+    } finally {
+      frame.mockRestore();
+      rect.mockRestore();
+    }
   });
 });
 
