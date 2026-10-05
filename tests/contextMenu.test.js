@@ -503,6 +503,14 @@ describe('the menu in the booted app', () => {
     for (const app of booted.splice(0)) app.interactionHandler.destroy();
   });
 
+  /**
+   * Where the canvas sits in the viewport. In the app it is below and beside
+   * other UI. jsdom lays nothing out and would put it at 0, 0, where canvas
+   * and viewport coordinates coincide, so a handler that mixed them up would
+   * still find the waypoint; here they differ.
+   */
+  const CANVAS_AT = Object.freeze({ left: 137, top: 83 });
+
   /** Booted, with its background in and the first-run splash, which traps focus, closed. */
   async function bootedApp() {
     const app = await bootApp();
@@ -510,18 +518,34 @@ describe('the menu in the booted app', () => {
     await app.ready;
     await vi.waitFor(() => expect(app.background.image).toBeTruthy());
     document.getElementById('splash-close').click();
+    const { left, top } = CANVAS_AT;
+    const canvas = app.canvas;
+    const spy = vi.spyOn(canvas, 'getBoundingClientRect').mockImplementation(() => ({
+      left, top, x: left, y: top,
+      width: canvas.width, height: canvas.height,
+      right: left + canvas.width, bottom: top + canvas.height
+    }));
+    cleanups.push(() => spy.mockRestore());
     return app;
   }
 
-  /** A right-click at an image position, delivered to the canvas as a browser delivers it. */
+  /**
+   * A right-click at an image position, delivered to the canvas as a browser
+   * delivers it: in viewport coordinates, so offset by where the canvas sits.
+   */
   function rightClick(app, imgX, imgY) {
     const { x, y } = app.imageToScreen(imgX, imgY);
+    const canvas = app.canvas.getBoundingClientRect();
     const event = new MouseEvent('contextmenu', {
-      bubbles: true, cancelable: true, button: 2, clientX: x, clientY: y
+      bubbles: true, cancelable: true, button: 2, clientX: canvas.left + x, clientY: canvas.top + y
     });
     app.canvas.dispatchEvent(event);
     return event;
   }
+
+  /** The menu's position: where the pointer was, in viewport coordinates, as the menu is fixed to the viewport. */
+  const openedAt = menu => [menu.menu.style.left, menu.menu.style.top];
+  const pointerOf = event => [`${event.clientX}px`, `${event.clientY}px`];
 
   /** The app's one menu, closed after the test like the others. */
   function appMenu(app) {
@@ -554,6 +578,7 @@ describe('the menu in the booted app', () => {
       .toEqual(['Delete waypoint']);
     expect(focusedLabel()).toBe('Rename');
     expect(app.selectedWaypoint).toBe(first);
+    expect(openedAt(menu)).toEqual(pointerOf(event));
   });
 
   test('while the menu is open the app\'s shortcuts wait, and Escape closes it without deselecting', async () => {
@@ -593,14 +618,34 @@ describe('the menu in the booted app', () => {
     expect(app.waypoints).toEqual([second]);
   });
 
+  test('in a multi-selection, Delete waypoint deletes the waypoint right-clicked, not the selection\'s primary', async () => {
+    const app = await appWithTwoWaypoints();
+    const [first, second] = app.waypoints;
+    app.eventBus.emit('waypoint:multi-selected', { waypoints: [first, second], primary: second });
+
+    rightClick(app, first.imgX, first.imgY);
+    const menu = appMenu(app);
+    // A right-click inside a multi-selection keeps it, primary and all, so
+    // the waypoint right-clicked is not the primary.
+    expect(menu.menu.getAttribute('aria-label')).toBe('Waypoint actions');
+    expect(app.selectedWaypoints).toEqual([first, second]);
+    expect(app.selectedWaypoint).toBe(second);
+
+    itemCalled(menu, 'Delete waypoint').click();
+
+    expect(menu.isOpen).toBe(false);
+    expect(app.waypoints).toEqual([second]);
+  });
+
   test('a right-click on the map offers to add a waypoint there, and a minor one only once a route exists', async () => {
     const app = await bootedApp();
 
     // Off the centre, with x and y apart, so a waypoint put anywhere but where
     // the right-click landed shows.
-    rightClick(app, 0.3, 0.7);
+    const opened = rightClick(app, 0.3, 0.7);
     const menu = appMenu(app);
     expect(menu.menu.getAttribute('aria-label')).toBe('Canvas actions');
+    expect(openedAt(menu)).toEqual(pointerOf(opened));
     expect(labelsOf(menu)).toEqual(['Add waypoint here', 'Add minor waypoint here']);
     const minor = itemCalled(menu, 'Add minor waypoint here');
     expect(minor.getAttribute('aria-disabled')).toBe('true');
@@ -676,6 +721,20 @@ describe('the menu in the booted app', () => {
     expect(convert.getAttribute('aria-disabled')).toBeNull();
     convert.click();
     expect(app.waypoints.map(waypoint => waypoint.isMajor)).toEqual([true, true, false, true]);
+
+    // A minor waypoint is offered the way back, and it converts the waypoint
+    // right-clicked even inside a multi-selection whose primary is another.
+    app.eventBus.emit('waypoint:multi-selected', { waypoints: [middle, second], primary: second });
+    rightClick(app, middle.imgX, middle.imgY);
+    expect(app.selectedWaypoint).toBe(second);
+    expect(labelsOf(menu)).toEqual([
+      'Convert to major waypoint', 'Insert waypoint before', 'Insert waypoint after', 'Delete waypoint'
+    ]);
+    const toMajor = itemCalled(menu, 'Convert to major waypoint');
+    expect(toMajor.getAttribute('aria-disabled')).toBeNull();
+    expect(toMajor.title).toBe('');
+    toMajor.click();
+    expect(app.waypoints.map(waypoint => waypoint.isMajor)).toEqual([true, true, true, true]);
 
     // Rename opens this waypoint's name for editing, in its row of the list,
     // a frame later.
