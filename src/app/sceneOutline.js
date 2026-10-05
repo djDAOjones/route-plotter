@@ -496,8 +496,7 @@ export const sceneOutlineMixin = {
       waypoint.segmentSpeed = speed;
     }
     this._majorWaypointsCache = null;
-    if (this.waypoints.length >= 2) this.calculatePath();
-    else this.pathPoints = [];
+    this.calculatePath();
     this.updateAnimationDuration();
     this.saveUndoState();
     this.updateWaypointList();

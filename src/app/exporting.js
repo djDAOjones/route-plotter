@@ -9,6 +9,7 @@
 import { VIDEO_EXPORT } from '../config/constants.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 import { getRetainedBackgroundDataURL } from './persistence.js';
+import { settleSavedTiming } from './pathTiming.js';
 
 /**
  * One video export at a time. A request while one runs (a double click on
@@ -341,6 +342,7 @@ export const exportingMixin = {
       // single save shape) — the exported PlayerApp rebuilds path, timeline,
       // camera, labels, areas and swarm layers from it with the app's own
       // modules. includeCamera/includeText travel inside exportSettings.
+      settleSavedTiming(this);
       const blob = await this.htmlExportService.exportHTML({
         projectData: this._buildProjectSnapshot(),
         backgroundDataURL,

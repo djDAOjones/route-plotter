@@ -18,7 +18,7 @@
     "push:dry-run": "node push.js --dry-run",
     "test": "vitest run --pool=threads --no-file-parallelism",
     "test:shell": "bash tests/restartSafety.test.sh",
-    "check": "npm test && npm run test:shell && npm run build:check",
+    "check": "npm test && npm run test:shell && npm run build:check && node tools/check.mjs",
     "test:watch": "vitest watch --pool=threads --no-file-parallelism",
     "serve": "python3 -m http.server 3000",
     "serve:dist": "cd docs && python3 -m http.server 3000"

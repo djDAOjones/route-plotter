@@ -544,6 +544,14 @@ export class AnimationEngine {
   }
   
   /**
+   * End any wait at a waypoint, as the transport does when it leaves one:
+   * the route it belonged to is gone (DEF-06).
+   */
+  clearWaypointWait() {
+    this._applyWaitState({ waitingIndex: -1 });
+  }
+
+  /**
    * Clear all pause markers and reset pause time tracking
    */
   clearPauseMarkers() {
