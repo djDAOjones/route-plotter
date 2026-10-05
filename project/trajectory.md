@@ -7,6 +7,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Phase 1 — Land the big run's open pull requests
+
+- DEF-06 — what a route scheduled no longer outlives it, and a snapshot times the route at its authoring speed (2026-10-05) — see decisions
+
 ## The big run — defects outside the waves (released in v3.2.693, 2026-10-05)
 
 - DEF-27 — the tint covers the image, and the instant spotlight and angle of view follow the camera (2026-10-01) — see decisions
