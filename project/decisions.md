@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-53 — A video export keeps the canvas size it began with
+
+**Decision:** DEF-53 lands (PR #64): a size chosen while a video export runs (by the size fields or a fixed-size preset) applies to the display, the background placed for it and the next export once the export ends, and never to the frames it is still writing, because the export's frames changed size mid-file.
+
+**Rationale:** the round Codex's eleventh review asked for (F1) is finished in the tests only. A new case holds the encoder while the queued animation-frame and timer callbacks run after each choice, for both export kinds and all three endings, and checks the geometry then. AC1 (the guard resizing on the next animation frame) and AC9 (alpha zeroed on a timer) now fail it on assertions, and W2 and X1, re-anchored to DEF-27's background rectangle, are still killed. Chromium, on a throwaway build of the branch and on live v3.2.694, the Open day route at 1280×800: a width typed mid-export resized live's running export canvas from 1920×1080 to 1306×1306; on the branch it stayed 1920×1080 to the end, and the new size applied once it ended. Digest rule applied: house conventions → Testing and persistence. DEF-58 no longer waits on it, and DEF-66 waits on TST-05 alone.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — GATELESS-1 — The owner's answers after chat 2: he authorises saving the release exports, the listed calls stand, chat 3 runs to 500k
 
 **Decision:** the owner answered chat 2's three closing questions on 2026-10-05: he authorises saving each release's smoke-test exports from the live site ("yes"), though the save is still owed; the session calls listed for him stand ("sounds good"); and the run's third chat runs to 500k tokens of context with every later chat on the profile's 200k ("next use 500k but I will probably end early, and after that use 200k"). Only condition 9's session allowance changes; every other condition of the grant stays in force.
