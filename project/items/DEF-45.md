@@ -22,3 +22,4 @@ Announcements overwrite each other · Accessibility P3
 - [ ] **DEF-45 Announcements overwrite each other** · Accessibility [ready]
 **P3**
 ```
+- 2026-10-05 — PLAN-1: round 3 was left uncommitted at the 2026-10-01 reboot: a bounded queue that withdraws a replaced project's recovery notices and merges identical must-hear messages; DEF-43's test waits for the load's announcements; a `wiringBus` comment. Redo it from the review, not from the old partial diff. PR #70 conflicts with `main`.

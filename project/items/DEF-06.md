@@ -24,3 +24,4 @@ Visible since DEF-08 (#37, unreleased): a route cut to one waypoint draws
 its last marker, paused, at a stale grow scale. Land it before the
 release. **P3**
 ```
+- 2026-10-05 — PLAN-1: lands first in Phase 1; v3.2.693 ships the symptom this fixes (REL-693). DEF-42 (PR #62) waits for it.

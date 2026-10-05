@@ -22,3 +22,4 @@ Gates DEF-15, DEF-22 and W6. **P1**
 - [ ] **TST-05 Event transcript golden** · Characterisation [ready] — Gates
 DEF-15, DEF-22 and W6. **P1**
 ```
+- 2026-10-05 — PLAN-1: TST-05 and DEF-64 both touch the wiring controllers' event-transcript golden (TST-05 adds it); whichever merges second moves its two lines.

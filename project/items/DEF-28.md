@@ -25,3 +25,4 @@ and Discard; the record moves to a second key autosave never writes. Clear
 All discards it too; if storage is full it stays, and the autosave failure
 report points to the notice. **P2**
 ```
+- 2026-10-05 — PLAN-1: once DEF-45 is in, mark this item's recovery announcements as RECOVERY_NOTICE-style (essential, about the project); a Chromium check is owed before the merge. PR #54 conflicts with `main`.

@@ -21,3 +21,4 @@ A paused editor never idles · Live defect P2
 ```text
 - [ ] **DEF-44 A paused editor never idles** · Live defect [ready] **P2**
 ```
+- 2026-10-05 — PLAN-1: the Edit-scrub one-step camera that DEF-44's review found is folded into DEF-68, which waits for this.
