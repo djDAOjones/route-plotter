@@ -17,6 +17,11 @@ export const viewportMixin = {
    * Called on export resolution change and window resize.
    */
   updateCanvasAspectRatio() {
+    // A video export draws on a canvas of its own size. A size or layout
+    // change meanwhile (the export size fields, a preset, Native, a resize)
+    // applies when the export ends, when `_exitExportMode` calls this again,
+    // not to its remaining frames (DEF-53).
+    if (this._isExportMode) return;
     const targetAspect = this.exportSettings.resolutionX / this.exportSettings.resolutionY;
     
     // Get available space in canvas-area

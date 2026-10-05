@@ -1097,13 +1097,15 @@
 
               <label for="crowd-lifecycle">
                 <span data-tip="What a dot does when it reaches the end of its journey">At journey end</span>
-                <select id="crowd-lifecycle">
+                <select id="crowd-lifecycle" aria-describedby="crowd-lifecycle-hint">
                   <option value="respawn">Respawn at entry</option>
                   <option value="loop">Repeat journey</option>
                   <option value="disappear">Disappear</option>
                   <option value="collect">Collect at exit</option>
                 </select>
               </label>
+              <!-- DEF-77: crowds.js fills this while no dot reaches its journey end -->
+              <p id="crowd-lifecycle-hint" class="section-hint" hidden></p>
             </div>
           </div>
 

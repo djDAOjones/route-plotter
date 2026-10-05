@@ -9,6 +9,7 @@
 import { VIDEO_EXPORT } from '../config/constants.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 import { getRetainedBackgroundDataURL } from './persistence.js';
+import { settleSavedTiming } from './pathTiming.js';
 
 /**
  * One video export at a time. A request while one runs (a double click on
@@ -276,12 +277,15 @@ export const exportingMixin = {
         putBack(() => window.removeEventListener('keydown', onEscapeKey, true));
         putBack(() => this.eventBus.off('video:export-paused', onExportPaused));
         putBack(() => this.eventBus.off('video:export-resumed', onExportResumed));
-        // Restore canvas to display resolution (must happen before render)
-        putBack(() => this._exitExportMode());
-        // Restore background if it was hidden for path-only export
+        // Restore background if it was hidden for path-only export: before the
+        // display size, which places the image on the canvas, and, with the
+        // image hidden, left the place it had at the size the export began
+        // with, stale after a size chosen during the export (DEF-53).
         putBack(() => {
           if (pathOnly) this.background.image = originalBackgroundImage;
         });
+        // Restore canvas to display resolution (must happen before render)
+        putBack(() => this._exitExportMode());
         // Restore the original timeline shape before feeding its timeline
         // progress back into the engine, then restore transport flags and speed.
         putBack(() => this._setPreviewMode(wasPreviewMode));
@@ -341,6 +345,7 @@ export const exportingMixin = {
       // single save shape) — the exported PlayerApp rebuilds path, timeline,
       // camera, labels, areas and swarm layers from it with the app's own
       // modules. includeCamera/includeText travel inside exportSettings.
+      settleSavedTiming(this);
       const blob = await this.htmlExportService.exportHTML({
         projectData: this._buildProjectSnapshot(),
         backgroundDataURL,

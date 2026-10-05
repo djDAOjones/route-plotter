@@ -10,8 +10,11 @@
  * (decision-log 2026-08-17).
  */
 
-import { SwarmEngine } from '../src/services/SwarmEngine.js';
+import { SwarmEngine, JOURNEY_PACE_CYCLE } from '../src/services/SwarmEngine.js';
+import { NetworkEditService } from '../src/services/NetworkEditService.js';
+import { PathCalculator } from '../src/services/PathCalculator.js';
 import { FlowLayer } from '../src/models/FlowLayer.js';
+import { EventBus } from '../src/core/EventBus.js';
 import { IMAGE_COORDINATES } from '../src/config/constants.js';
 
 const DURATION_MS = 10000;
@@ -60,6 +63,9 @@ function forkLayer(weightA, weightB, emitterOptions = {}) {
 function evaluate(layer, timelineMs, engine = new SwarmEngine()) {
   return engine.evaluate(timelineMs, layer, { durationMs: DURATION_MS });
 }
+
+/** Where each dot is, without the emitter id two separately built layers never share. */
+const where = dots => dots.map(({ dotIndex, x, y }) => ({ dotIndex, x, y }));
 
 describe('SwarmEngine.hash', () => {
   test('is deterministic and uniform in [0, 1)', () => {
@@ -320,6 +326,60 @@ describe('SwarmEngine.evaluate — lifecycle modes', () => {
   });
 });
 
+describe('SwarmEngine.evaluate — a pen-drawn network ends its journeys (DEF-77)', () => {
+  // Drawn with the real pen, so its nodes and paths take the types the pen
+  // gives them: pass-through nodes, two-way paths, no Entry and no Exit.
+  // The crowd keeps the model's defaults (50 dots across the whole timeline,
+  // 20% pace and release variation) at a fast pace.
+  const DURATION = 30000;
+  function penDrawnLayer(lifecycleMode) {
+    const layer = new FlowLayer({ guideType: 'graph' });
+    const pen = new NetworkEditService(new EventBus());
+    pen.enter(layer);
+    const a = pen.placeNode({ x: 0.1, y: 0.5 });
+    pen.placeNode({ x: 0.5, y: 0.4 });
+    const c = pen.placeNode({ x: 0.9, y: 0.5 });
+    pen.exit();
+    layer.addEmitter({ seed: 12345, speed: 0.6, lifecycleMode });
+    return { layer, ends: [a, c] };
+  }
+  const at = (layer, t) => new SwarmEngine().evaluate(t, layer, { durationMs: DURATION });
+
+  test('the pen types nothing as an exit (the fallback, not the pen, ends the journey)', () => {
+    const { layer } = penDrawnLayer('disappear');
+    expect(layer.graph.getNodes().map(node => node.type)).toEqual(['normal', 'normal', 'normal']);
+    expect(layer.graph.getEdges().map(edge => edge.direction)).toEqual(['two-way', 'two-way']);
+  });
+
+  test('Disappear leaves no dot late: only dots released in the last 2 s are still walking', () => {
+    // The longest walk, end to end, is about 0.82 of the image at no less than
+    // 0.48 a second (0.6 less 20%): under 1.8 s. Collect shows every released
+    // dot, so a dot it showed 2 s earlier has had time to finish.
+    const { layer: disappear } = penDrawnLayer('disappear');
+    const { layer: collect } = penDrawnLayer('collect');
+    for (const t of [12000, 18000, 28000]) {
+      const releasedEarlier = new Set(at(collect, t - 2000).map(dot => dot.dotIndex));
+      const walking = at(disappear, t);
+      expect(releasedEarlier.size, `released by ${t - 2000} ms`).toBeGreaterThan(5);
+      expect(walking.filter(dot => releasedEarlier.has(dot.dotIndex)), `late at ${t} ms`).toEqual([]);
+    }
+    expect(at(disappear, DURATION).length).toBeLessThan(at(collect, DURATION).length);
+  });
+
+  test('Collect parks every finished dot on an end node, and it stays there', () => {
+    const { layer, ends } = penDrawnLayer('collect');
+    const released = new Set(at(layer, 13000).map(dot => dot.dotIndex));
+    const parked = at(layer, 15000).filter(dot => released.has(dot.dotIndex));
+    expect(parked.length).toBeGreaterThan(10);
+    for (const dot of parked) {
+      const end = ends.find(node => Math.abs(node.x - dot.x) < 1e-9 && Math.abs(node.y - dot.y) < 1e-9);
+      expect(end, `dot ${dot.dotIndex} at (${dot.x}, ${dot.y})`).toBeDefined();
+    }
+    const later = at(layer, 29000).filter(dot => released.has(dot.dotIndex));
+    expect(later).toEqual(parked);
+  });
+});
+
 describe('SwarmEngine.evaluate — graph routing', () => {
   test('junction choices follow edge weights', () => {
     const { layer, exitA, exitB } = forkLayer(3, 1, { dotCount: 400, speed: 5 });
@@ -461,6 +521,258 @@ describe('SwarmEngine.evaluate — route guide', () => {
     expect(collected.x).toBeCloseTo(0.9, 2);
     expect(mk('respawn').length).toBe(1);
     expect(mk('loop').length).toBe(1);
+
+    // Where, not just how many (DEF-77: "Make Respawn vary"). A burst of 12
+    // dots at the default 20% Pace variation crosses the 0.8 route in about
+    // 2 s. Until the first journey ends the two modes agree exactly; after
+    // it, every respawned dot is somewhere its repeating twin is not.
+    const crowd = (mode, t) => {
+      const layer = new FlowLayer({ guideType: 'route' });
+      layer.addEmitter({ ...CALM, dotCount: 12, speed: 0.4, speedVariance: 0.2, lifecycleMode: mode });
+      return new SwarmEngine().evaluate(t, layer, context);
+    };
+    expect(where(crowd('respawn', 1000))).toEqual(where(crowd('loop', 1000)));
+    for (const t of [4000, 6500, 9000]) {
+      const respawned = crowd('respawn', t);
+      const repeated = crowd('loop', t);
+      expect(respawned.map(dot => dot.dotIndex)).toEqual(repeated.map(dot => dot.dotIndex));
+      respawned.forEach((dot, index) => {
+        expect(Math.abs(dot.x - repeated[index].x), `dot ${dot.dotIndex} at ${t} ms`).toBeGreaterThan(1e-4);
+      });
+    }
+
+    // Repeat journey stays an exact replay: one journey period apart (0.8 at
+    // 0.4 a second, no pace variation), every dot is where it was, sway and all.
+    const period = (0.8 / 0.4) * 1000;
+    const replay = t => {
+      const layer = new FlowLayer({ guideType: 'route' });
+      layer.addEmitter({ ...CALM, dotCount: 6, speed: 0.4, wobble: 0.6, lifecycleMode: 'loop' });
+      return new SwarmEngine().evaluate(t, layer, context);
+    };
+    for (const t of [700, 2300, 3100]) {
+      const first = replay(t);
+      const again = replay(t + period);
+      expect(again.length).toBe(first.length);
+      again.forEach((dot, index) => {
+        expect(dot.x).toBeCloseTo(first[index].x, 9);
+        expect(dot.y).toBeCloseTo(first[index].y, 9);
+      });
+    }
+  });
+
+  test('each respawned journey draws its own pace, not one shared by every journey after the first (DEF-77)', () => {
+    // Sampled every 5 ms: a dot re-enters where its x drops back to the start,
+    // so the gaps between re-entries are its respawned journeys' durations.
+    const durationMs = 30000;
+    const context = { durationMs, routePathPoints: routePath() };
+    const layer = new FlowLayer({ guideType: 'route' });
+    layer.addEmitter({ ...CALM, dotCount: 4, speed: 0.4, speedVariance: 0.5, lifecycleMode: 'respawn' });
+    const engine = new SwarmEngine();
+    const reentries = new Map();
+    const lastX = new Map();
+    for (let t = 0; t <= durationMs; t += 5) {
+      for (const dot of engine.evaluate(t, layer, context)) {
+        if (lastX.has(dot.dotIndex) && dot.x < lastX.get(dot.dotIndex) - 0.4) {
+          reentries.set(dot.dotIndex, [...(reentries.get(dot.dotIndex) || []), t]);
+        }
+        lastX.set(dot.dotIndex, dot.x);
+      }
+    }
+    expect(reentries.size).toBe(4);
+    for (const [dotIndex, times] of reentries) {
+      const journeys = times.slice(1).map((t, index) => t - times[index]);
+      expect(journeys.length, `dot ${dotIndex}`).toBeGreaterThanOrEqual(3);
+      expect(Math.max(...journeys) - Math.min(...journeys), `dot ${dotIndex}: ${journeys}`).toBeGreaterThan(50);
+    }
+  });
+
+  test('Respawn sways afresh each journey; with no variation to draw, every journey is alike (DEF-77)', () => {
+    const context = { durationMs: DURATION_MS, routePathPoints: routePath() };
+    const crowd = (mode, extra) => {
+      const layer = new FlowLayer({ guideType: 'route' });
+      layer.addEmitter({ ...CALM, dotCount: 6, speed: 0.4, lifecycleMode: mode, ...extra });
+      return new SwarmEngine().evaluate(5000, layer, context);
+    };
+    // Walking variation alone (0% Pace variation): same places along the
+    // route, different places across it.
+    const swayed = crowd('respawn', { wobble: 0.6 });
+    const replayed = crowd('loop', { wobble: 0.6 });
+    swayed.forEach((dot, index) => {
+      expect(dot.x).toBeCloseTo(replayed[index].x, 6);
+      expect(Math.abs(dot.y - replayed[index].y), `dot ${dot.dotIndex}`).toBeGreaterThan(1e-5);
+    });
+    // 0% Pace and 0% Walking variation promise dots that move as one.
+    expect(where(crowd('respawn', {}))).toEqual(where(crowd('loop', {})));
+  });
+});
+
+describe('SwarmEngine.evaluate — Respawn against Repeat journey on a network (DEF-77)', () => {
+  test('one entry, no junctions: Respawn varies after the first journey, Repeat journey replays it', () => {
+    // The traced-route shape: entry → mid → exit, one way.
+    const make = mode => {
+      const layer = new FlowLayer({ guideType: 'graph' });
+      const entry = layer.graph.addNode({ x: 0.1, y: 0.5, type: 'entry' });
+      const mid = layer.graph.addNode({ x: 0.5, y: 0.5 });
+      const exit = layer.graph.addNode({ x: 0.9, y: 0.5, type: 'exit' });
+      layer.graph.addEdge({ sourceId: entry.id, targetId: mid.id, direction: 'one-way' });
+      layer.graph.addEdge({ sourceId: mid.id, targetId: exit.id, direction: 'one-way' });
+      layer.addEmitter({ ...CALM, dotCount: 12, speed: 0.4, speedVariance: 0.2, lifecycleMode: mode });
+      return layer;
+    };
+    const respawn = make('respawn');
+    const loop = make('loop');
+    expect(where(evaluate(respawn, 1000))).toEqual(where(evaluate(loop, 1000)));
+    for (const t of [4000, 6500, 9000]) {
+      const respawned = evaluate(respawn, t);
+      const repeated = evaluate(loop, t);
+      respawned.forEach((dot, index) => {
+        expect(Math.abs(dot.x - repeated[index].x), `dot ${dot.dotIndex} at ${t} ms`).toBeGreaterThan(1e-4);
+      });
+    }
+  });
+});
+
+describe('SwarmEngine.evaluate — Respawn varies however long it runs (DEF-77)', () => {
+  // The review's case: a route a hundredth of the image long at Speed 1, so a
+  // dot respawns about 100 times a second, with 20% Pace and 50% Walking
+  // variation. Journey 2,049 on used to repeat journey 2,048's pace and sway.
+  const N = JOURNEY_PACE_CYCLE;
+  const SEED = 2024;
+  const PACE = 0.2;
+  const SWAY = 0.5;
+  const ROUTE = Array.from({ length: 101 }, (_, i) => ({ x: 0.5 + 0.01 * (i / 100), y: 0.3 }));
+  const LENGTH = new PathCalculator().calculatePathLength(ROUTE);
+  const context = { durationMs: 60000, routePathPoints: ROUTE };
+  const crowd = (extra = {}) => {
+    const layer = new FlowLayer({ guideType: 'route' });
+    layer.addEmitter({
+      ...CALM, seed: SEED, dotCount: 3, speed: 1, speedVariance: PACE, wobble: SWAY,
+      lifecycleMode: 'respawn', ...extra,
+    });
+    return layer;
+  };
+  const at = (layer, t, engine = new SwarmEngine()) => where(engine.evaluate(t, layer, context));
+
+  // The rule, restated from the hash: journey 0 keeps the dot's founding
+  // channels; journey k ≥ 1 sways by its own block of three channels below
+  // them, and takes its pace from block ((k − 1) mod N) + 1.
+  const block = k => -5 - 3 * (k - 1);
+  const pace = (dot, k) => 1 + PACE * (2 * SwarmEngine.hash(SEED, dot, k === 0 ? -2 : block(((k - 1) % N) + 1)) - 1);
+  const sway = (dot, k, travelled, wobble = SWAY) => {
+    const phase0 = SwarmEngine.hash(SEED, dot, k === 0 ? -3 : block(k) - 1);
+    const frequency = 4 + 8 * SwarmEngine.hash(SEED, dot, k === 0 ? -4 : block(k) - 2);
+    return Math.sin(2 * Math.PI * (travelled * frequency + phase0)) * wobble * 0.02;
+  };
+  const takes = (dot, k) => LENGTH / pace(dot, k); // seconds, at Speed 1
+  /** Journey by journey from release, with no cycle skipped: where the dot is. */
+  const reference = (dot, seconds, wobble = SWAY) => {
+    let start = 0;
+    for (let k = 0; ; k++) {
+      if (seconds < start + takes(dot, k)) {
+        const travelled = ((seconds - start) / takes(dot, k)) * LENGTH;
+        return { journey: k, start, x: ROUTE[0].x + travelled, y: 0.3 + sway(dot, k, travelled, wobble) };
+      }
+      start += takes(dot, k);
+    }
+  };
+
+  test('at any instant, however late, it is where summing its journeys one by one puts it', () => {
+    const layer = crowd();
+    for (const t of [300, 1234, 30000, 45678, 60000]) {
+      at(layer, t).forEach(dot => {
+        const expected = reference(dot.dotIndex, t / 1000);
+        const label = `dot ${dot.dotIndex} at ${t} ms, journey ${expected.journey}`;
+        expect(dot.x, label).toBeCloseTo(expected.x, 9);
+        expect(dot.y, label).toBeCloseTo(expected.y, 9);
+      });
+    }
+    // Past one cycle, and past the old bound of 2,048 journeys.
+    expect(reference(0, 1.234).journey).toBeGreaterThan(N);
+    expect(reference(0, 30).journey).toBeGreaterThan(2048);
+  });
+
+  test('thousands of journeys in, each still takes its own time and sways its own way', () => {
+    // Re-entries found from the engine alone, sampled every 0.1 ms.
+    const layer = crowd({ dotCount: 1 });
+    const engine = new SwarmEngine();
+    for (const from of [30000, 59900]) {
+      const reentries = [];
+      let last = null;
+      for (let t = from; t <= from + 60; t += 0.1) {
+        const [dot] = engine.evaluate(t, layer, context);
+        if (last && dot.x < last.x - LENGTH / 2) reentries.push(t);
+        last = dot;
+      }
+      expect(reentries.length, `from ${from} ms`).toBeGreaterThanOrEqual(5);
+      const journeys = reentries.slice(1).map((t, index) => t - reentries[index]);
+      expect(Math.max(...journeys) - Math.min(...journeys), `from ${from} ms: ${journeys}`).toBeGreaterThan(0.5);
+      // Halfway along, consecutive journeys sway to different sides of the route.
+      const halfway = reentries.slice(0, -1)
+        .map((t, index) => engine.evaluate((t + reentries[index + 1]) / 2, layer, context)[0].y);
+      expect(new Set(halfway.map(y => y.toFixed(6))).size, `from ${from} ms`).toBe(halfway.length);
+    }
+  });
+
+  test('its paces come round every N journeys; its sway never does', () => {
+    // One cycle's time: journeys 1 to N, which every later cycle repeats.
+    const cycleSeconds = dot => Array.from({ length: N }, (_, index) => takes(dot, index + 1))
+      .reduce((sum, seconds) => sum + seconds, 0);
+    const swaying = crowd();
+    const steady = crowd({ wobble: 0 });
+    for (const t of [700, 2500, 30000]) {
+      for (const dotIndex of [0, 1, 2]) {
+        const later = t + cycleSeconds(dotIndex) * 1000;
+        const [now, then] = [at(steady, t)[dotIndex], at(steady, later)[dotIndex]];
+        expect(then.x, `dot ${dotIndex} at ${t} ms`).toBeCloseTo(now.x, 9);
+        expect(then.y).toBeCloseTo(now.y, 12);
+        const [sway0, sway1] = [at(swaying, t)[dotIndex], at(swaying, later)[dotIndex]];
+        expect(sway1.x).toBeCloseTo(sway0.x, 9);
+        expect(Math.abs(sway1.y - sway0.y), `dot ${dotIndex} at ${t} ms`).toBeGreaterThan(1e-5);
+      }
+    }
+  });
+
+  test('seeking back and forth gives the same answer as a fresh engine', () => {
+    const layer = crowd();
+    const engine = new SwarmEngine();
+    for (const t of [60000, 1500, 30000, 29999, 45678, 300, 60000]) {
+      expect(engine.evaluate(t, layer, context), `${t} ms`).toEqual(new SwarmEngine().evaluate(t, layer, context));
+    }
+    expect(SwarmEngine.hash(SEED, 0, block(6000) - 2)).toBeLessThan(1); // a late journey's channel is a draw
+  });
+
+  test('Repeat journey is still the arithmetic it was before DEF-77, to the last bit', () => {
+    // Restated from the engine before DEF-77, on a winding route so the sway
+    // turns with it: a dot's distance wraps by the route's length, at its
+    // founding pace, swaying by its founding phase and frequency.
+    const route = Array.from({ length: 81 }, (_, i) => ({ x: 0.1 + 0.8 * (i / 80), y: 0.4 + 0.1 * Math.sin(i / 8) }));
+    const calc = new PathCalculator();
+    const length = calc.calculatePathLength(route);
+    const layer = new FlowLayer({ guideType: 'route' });
+    layer.addEmitter({
+      ...CALM, seed: SEED, dotCount: 5, speed: 0.7, speedVariance: 0.5, wobble: 0.8, lifecycleMode: 'loop',
+    });
+    const { seed, speed, speedVariance, wobble } = layer.emitters[0];
+    const before = (dotIndex, t) => {
+      const multiplier = Math.max(0.05, 1 + speedVariance * (2 * SwarmEngine.hash(seed, dotIndex, -2) - 1));
+      let distance = speed * multiplier * (t / 1000);
+      if (distance >= length) distance = distance % length;
+      const progress = distance / length;
+      const point = calc.getPointAtProgress(route, progress);
+      const ahead = calc.getPointAtProgress(route, Math.min(1, progress + 0.01));
+      const behind = calc.getPointAtProgress(route, Math.max(0, progress - 0.01));
+      const dx = ahead.x - behind.x;
+      const dy = ahead.y - behind.y;
+      const len = Math.hypot(dx, dy);
+      const frequency = 4 + 8 * SwarmEngine.hash(seed, dotIndex, -4);
+      const phase0 = SwarmEngine.hash(seed, dotIndex, -3);
+      const offset = Math.sin(2 * Math.PI * (distance * frequency + phase0)) * wobble * 0.02;
+      return { dotIndex, x: point.x + (-dy / len) * offset, y: point.y + (dx / len) * offset };
+    };
+    for (const t of [400, 3300, 17777, 60000]) {
+      const dots = new SwarmEngine().evaluate(t, layer, { durationMs: 60000, routePathPoints: route });
+      expect(where(dots), `${t} ms`).toEqual(dots.map(dot => before(dot.dotIndex, t)));
+    }
   });
 });
 

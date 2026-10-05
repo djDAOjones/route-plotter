@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { clearProject } from '../src/app/projectReset.js';
 import { undoRedoMixin } from '../src/app/undoRedo.js';
+import { pathTimingMixin } from '../src/app/pathTiming.js';
 import {
   beginAsyncProjectOperation,
   isAsyncProjectOperationCurrent,
@@ -89,6 +90,8 @@ function makeApp() {
     },
     updateImageTransform: vi.fn(),
     updateLayersStrip: vi.fn(),
+    queueRender: vi.fn(),
+    calculatePath() { return pathTimingMixin.calculatePath.call(this); },
     pause: vi.fn(),
     updateTimeDisplay: vi.fn(),
     updateWaypointList: vi.fn(),
@@ -136,6 +139,10 @@ describe('Clear All project reset', () => {
     expect(app.waypointsById.size).toBe(0);
     expect(app.scene.getFlowLayers()).toEqual([]);
     expect(app.pathPoints).toEqual([]);
+    // Nothing the route fed outlives it (DEF-06).
+    expect(app.branchPaths).toEqual([]);
+    expect(app.routeStructure.branches).toEqual([]);
+    expect(app.anchorReport).toEqual({ bound: 0, broken: [] });
     expect(app.renderReference).toEqual({ width: 1000, height: 600 });
     expect(app.selectedWaypoint).toBeNull();
     expect(app.selectedWaypoints).toEqual([]);

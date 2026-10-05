@@ -629,7 +629,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       // One dot, released at once, at a steady pace: at 1 s it is at the bend.
       layer.emitters[0].update({
         dotCount: 1, speed: 1, speedVariance: 0, releaseStart: 0, releaseDuration: 0,
-        onsetVariance: 0, wobble: 0, lifecycle: 'collect',
+        onsetVariance: 0, wobble: 0, lifecycleMode: 'collect',
       });
       app.invalidateAnimationTiming();
       const player = new PlayerApp(document.createElement('canvas'));

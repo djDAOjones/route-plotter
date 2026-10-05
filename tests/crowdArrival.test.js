@@ -14,7 +14,7 @@
 
 import { describe, test, expect, vi } from 'vitest';
 import {
-  dotOnsetFraction, dotJourneyMs, lastArrivalMs, waitForCrowdMs,
+  dotOnsetFraction, dotJourneyMs, dotsReachingJourneyEnd, lastArrivalMs, waitForCrowdMs,
 } from '../src/utils/crowdArrival.js';
 import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import { Scene } from '../src/models/Scene.js';
@@ -422,5 +422,102 @@ describe('DEF-12: route time read as engine time', () => {
     const intro = await lingerAfterFit(REVEAL_INTRO);
     expect(intro).toBeGreaterThanOrEqual(1000);
     expect(intro).toBeLessThan(1001);
+  });
+});
+
+describe('a walk that runs out of hops reaches no journey end (DEF-77)', () => {
+  const DURATION = 60000;
+  /**
+   * The review's closed triangle: three pass-through nodes, three two-way
+   * paths, no Entry and no Exit. With `exitPath`, a path off on its own whose
+   * far end is an Exit; `entries` types the triangle's corners as Entries,
+   * so no dot sets off anywhere else.
+   */
+  function triangleLayer({ entries = false, exitPath = false, ...emitterOptions } = {}) {
+    const layer = new Scene().addFlowLayer({ name: 'Crowd', guideType: 'graph' });
+    const { graph } = layer;
+    const type = entries ? 'entry' : 'normal';
+    const corners = [[0.1, 0.1], [0.12, 0.1], [0.1, 0.12]]
+      .map(([x, y]) => graph.addNode({ x, y, type }));
+    corners.forEach((node, index) => graph.addEdge({
+      sourceId: node.id, targetId: corners[(index + 1) % 3].id, direction: 'two-way',
+    }));
+    if (exitPath) {
+      const start = graph.addNode({ x: 0.5, y: 0.5 });
+      const exit = graph.addNode({ x: 0.9, y: 0.5, type: 'exit' });
+      graph.addEdge({ sourceId: start.id, targetId: exit.id, direction: 'two-way' });
+    }
+    layer.addEmitter({
+      seed: 5, dotCount: 1, speed: 1, speedVariance: 0, onsetVariance: 0,
+      releaseStart: 0, releaseDuration: 0, lifecycleMode: 'disappear', ...emitterOptions,
+    });
+    return layer;
+  }
+
+  test('only a dot that ends is counted', () => {
+    const dot = { onsetFraction: 0, journeyMs: 1000, finishes: true };
+
+    expect(dotsReachingJourneyEnd([{ ...dot, ends: true }], 10000)).toBe(1);
+    expect(dotsReachingJourneyEnd([{ ...dot, ends: false }], 10000)).toBe(0);
+  });
+
+  test('the review\'s closed triangle: one dot, released at once, at Speed 1 does not end', () => {
+    // Its walk ran out of hops 46.6 s in, which was counted as reaching its
+    // end: the hint went, though Disappear still showed the dot.
+    const engine = new SwarmEngine();
+    const layer = triangleLayer();
+    const [dot] = engine.scheduleDots(layer, { durationMs: DURATION });
+
+    expect(dot.ends).toBe(false);
+    expect(dot.journeyMs).toBeLessThan(DURATION); // in time, had it been an end
+    expect(dotsReachingJourneyEnd([dot], DURATION)).toBe(0);
+    expect(engine.evaluate(DURATION, layer, { durationMs: DURATION })).toHaveLength(1);
+
+    // Read for the hint alone, the walk is not taken at all; the crowd wait
+    // still has the distance walked.
+    expect(engine.scheduleDots(layer, { durationMs: DURATION }, { endsOnly: true }))
+      .toEqual([{ ...dot, journeyMs: Infinity }]);
+  });
+
+  test('an Exit no Entry leads to ends no journey; set off beside it, dots do end', () => {
+    const engine = new SwarmEngine();
+    const context = { durationMs: DURATION };
+    const crowd = { dotCount: 60, speedVariance: 0.2, onsetVariance: 0.2, releaseDuration: 0.5 };
+
+    const stranded = triangleLayer({ entries: true, exitPath: true, ...crowd });
+    for (const options of [{}, { endsOnly: true }]) {
+      const schedules = engine.scheduleDots(stranded, context, options);
+      expect(schedules).toHaveLength(60);
+      expect(schedules.every(dot => !dot.ends)).toBe(true);
+      expect(dotsReachingJourneyEnd(schedules, DURATION)).toBe(0);
+    }
+
+    // Without Entries every node with a path is one, so some dots set off on
+    // the Exit's own path, and those are the ones counted.
+    const mixed = triangleLayer({ exitPath: true, ...crowd });
+    const schedules = engine.scheduleDots(mixed, context);
+    const ending = schedules.filter(dot => dot.ends);
+    expect(ending.length).toBeGreaterThan(0);
+    expect(ending.length).toBeLessThan(60);
+    expect(dotsReachingJourneyEnd(schedules, DURATION)).toBe(ending.length);
+    expect(dotsReachingJourneyEnd(engine.scheduleDots(mixed, context, { endsOnly: true }), DURATION))
+      .toBe(ending.length);
+  });
+
+  test('a network with a reachable end still counts its dots', () => {
+    const layer = new Scene().addFlowLayer({ name: 'Crowd', guideType: 'graph' });
+    const entry = layer.graph.addNode({ x: 0, y: 0, type: 'entry' });
+    const near = layer.graph.addNode({ x: 0.2, y: 0, type: 'exit' });
+    const far = layer.graph.addNode({ x: 1, y: 1, type: 'exit' });
+    layer.graph.addEdge({ sourceId: entry.id, targetId: near.id });
+    layer.graph.addEdge({ sourceId: entry.id, targetId: far.id });
+    layer.addEmitter({ seed: 3, dotCount: 12, speed: 0.25, lifecycleMode: 'respawn' });
+
+    const schedules = new SwarmEngine().scheduleDots(layer, { durationMs: 10000 });
+    const inTime = schedules.filter(dot => dot.onsetFraction * 10000 + dot.journeyMs <= 10000);
+
+    expect(schedules.every(dot => dot.ends)).toBe(true);
+    expect(inTime.length).toBeGreaterThan(0);
+    expect(dotsReachingJourneyEnd(schedules, 10000)).toBe(inTime.length);
   });
 });

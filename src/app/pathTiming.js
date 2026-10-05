@@ -81,6 +81,80 @@ const splineInput = wp => ({
   shapeFrequency: wp.shapeFrequency,
 });
 
+/**
+ * What a route scheduled, which may not outlive it (DEF-06): in the engine
+ * its pauses, beacon schedules (by which a paused marker was still drawn),
+ * speed segments and any wait at one of its waypoints, and the renderer's
+ * beacons. Cleared when no route is left, and when a project replaces
+ * another. A module helper, as `routeOf` is, for the hosts that borrow
+ * `calculatePath` alone.
+ * @param {Object} app
+ */
+export function clearRouteSchedules(app) {
+  const engine = app.animationEngine;
+  if (engine) {
+    engine.clearPauseMarkers?.();
+    engine.clearSegmentMarkers?.();
+    engine.clearWaypointWait?.();
+  }
+  app.renderingService?.resetBeacons?.();
+}
+
+/**
+ * With no route to travel, what the last route fed may not outlive it: its
+ * path and trunk, and what it scheduled. The duration is left: once timing
+ * has been rebuilt for this project's route (`_timingDerived`), a route that
+ * returns is rebuilt too, in either timing mode; a constant-time duration
+ * the project was opened with, and no rebuild has replaced, is the author's,
+ * and kept.
+ * @param {Object} app
+ */
+function clearRouteTiming(app) {
+  app.pathPoints = [];
+  app._trunkWaypoints = null;
+  clearRouteSchedules(app);
+  app.queueRender?.();
+}
+
+/**
+ * The timing rebuild a route change queues (`calculatePath`, 50 ms after the
+ * last change): in constant-speed mode; and in constant-time mode once this
+ * project's timing has been rebuilt for its route (the duration is then that
+ * rebuild's, not the author's), rebuilt again for the route as it is now, so
+ * its schedules never outlive its geometry (DEF-06). Otherwise, in
+ * constant-time mode, the duration is the author's.
+ * @param {Object} app
+ */
+function retimeRoute(app) {
+  if (app.animationEngine.state.mode === 'constant-speed' || app._timingDerived) {
+    const currentSpeed = app.animationEngine.state.speed;
+    // Convert normalized path points to canvas coords for length calculation
+    const canvasPathPoints = app.pathPoints.map(p => app.imageToCanvas(p.x, p.y));
+    const totalLength = app.pathCalculator.calculatePathLength(canvasPathPoints);
+    console.debug('🛤️  [calculatePath] Updating path duration - speed:', currentSpeed, 'px/s, length:', totalLength.toFixed(1), 'px');
+
+    // Use unified duration update (accounts for segment speeds)
+    app.updateAnimationDuration(currentSpeed);
+  }
+}
+
+/**
+ * Before a snapshot a project reopens by (browser recovery, Save Project, an
+ * HTML export): run now a queued rebuild whose duration reopening would
+ * keep, that of a constant-time route whose timing is a rebuild's. A
+ * snapshot taken before it paired the route with the duration it had
+ * before, which reopening then kept as the author's (DEF-06). A
+ * constant-speed route's duration is rebuilt when it opens, so its rebuild
+ * stays queued, and a run of edits stays one rebuild.
+ * @param {Object} app
+ */
+export function settleSavedTiming(app) {
+  if (!app._durationUpdateTimeout || app.animationEngine?.state.mode === 'constant-speed') return;
+  clearTimeout(app._durationUpdateTimeout);
+  app._durationUpdateTimeout = null;
+  retimeRoute(app);
+}
+
 export const pathTimingMixin = {
   
   calculatePath() {
@@ -106,7 +180,7 @@ export const pathTimingMixin = {
     announceBrokenAnchors(this, this.anchorReport);
 
     if (this.waypoints.length < 2) {
-      this.pathPoints = [];
+      clearRouteTiming(this);
       return;
     }
 
@@ -115,7 +189,7 @@ export const pathTimingMixin = {
     // an unsplit project changes (ROUTE-01b).
     const trunkRoute = trunkWaypoints(this.waypoints);
     if (trunkRoute.length < 2) {
-      this.pathPoints = [];
+      clearRouteTiming(this);
       return;
     }
 
@@ -160,18 +234,8 @@ export const pathTimingMixin = {
     }
     
     this._durationUpdateTimeout = setTimeout(() => {
-      // Calculate duration based on animation mode
-      if (this.animationEngine.state.mode === 'constant-speed') {
-        const currentSpeed = this.animationEngine.state.speed;
-        // Convert normalized path points to canvas coords for length calculation
-        const canvasPathPoints = this.pathPoints.map(p => this.imageToCanvas(p.x, p.y));
-        const totalLength = this.pathCalculator.calculatePathLength(canvasPathPoints);
-        console.debug('🛤️  [calculatePath] Updating path duration - speed:', currentSpeed, 'px/s, length:', totalLength.toFixed(1), 'px');
-        
-        // Use unified duration update (accounts for segment speeds)
-        this.updateAnimationDuration(currentSpeed);
-      }
-      // For constant-time mode, duration is already set by the slider
+      this._durationUpdateTimeout = null;
+      retimeRoute(this);
     }, 50); // Wait 50ms for batch changes
   },
   
@@ -620,6 +684,11 @@ export const pathTimingMixin = {
     // handles, intro and tail still sit outside it exactly as before.
     // Optional call: a host that assembles only part of this mixin has no
     // branch data either, so linear behaviour is the correct degradation.
+    // Composed afresh: its runs' pauses come from each waypoint's pause and
+    // beacon, which a rebuild may be for, and the cache kept only per path
+    // and speed, so a pause or beacon edit on a branched route had kept the
+    // old total (DEF-42).
+    this.branchTimeline = null;
     const branchTimeline = this.getBranchTimeline?.();
     if (branchTimeline && branchTimeline.totalDurationMs > 0) {
       const branchTotal = branchTimeline.totalDurationMs
@@ -631,6 +700,8 @@ export const pathTimingMixin = {
 
     // Set the final total duration
     this.animationEngine.setDuration(totalDuration);
+    // This project's duration is now a rebuild's, whatever its mode (DEF-06).
+    this._timingDerived = true;
     
     // Log timeline breakdown
     console.debug(`📍 [AnimationEngine] Timeline: ${(startHandleTime/1000).toFixed(1)}s start + ${(this.animationEngine.introTime/1000).toFixed(1)}s intro + ${(pathDuration/1000).toFixed(1)}s path + ${(this.animationEngine.totalPauseTime/1000).toFixed(1)}s pauses + ${(this.animationEngine.totalTailTime/1000).toFixed(1)}s tail = ${(totalDuration/1000).toFixed(1)}s total`);
