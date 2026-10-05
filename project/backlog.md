@@ -16,7 +16,6 @@
 
 ### Phase 1 — Land the big run's open pull requests
 
-- [~] TST-13 — Key table, element IDs, HTML ranges · Characterisation P1 — since 2026-10-01
 - [~] DEF-42 — A beacon-style change keeps the old schedule · Live defect P3 — since 2026-10-01
 - [~] TST-16 — Tighten the round-2 predicates · Characterisation P1 — since 2026-10-01
 - [~] DEF-64 — Branch legs miss hover and click · Live defect — since 2026-10-05
@@ -47,10 +46,10 @@
 **Defects after their W5 test (§13 ground rule 8)**
 
 - [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEF-13 — A focused button swallows every shortcut · Accessibility P1 — since 2026-10-01 — blocked: TST-13
-- [ ] DEF-32 — Activating a list row loses focus · Accessibility P1 — since 2026-10-01 — blocked: TST-13
+- [ ] DEF-13 — A focused button swallows every shortcut · Accessibility P1 — since 2026-10-01
+- [ ] DEF-32 — Activating a list row loses focus · Accessibility P1 — since 2026-10-01
 - [ ] DEF-14 — A hint click stops a label toggling · Accessibility P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01 — blocked: TST-05, TST-13
+- [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01 — blocked: TST-05
 - [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01 — blocked: TST-04
 - [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01 — blocked: TST-05
 
@@ -59,7 +58,7 @@
 - [ ] DEL-02 — Render dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
 - [ ] DEL-03 — Engine, geometry and bus dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
 - [ ] DEL-04 — Wiring dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-05 — UI, config and CSS dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04, TST-13
+- [ ] DEL-05 — UI, config and CSS dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
 - [ ] DEL-06 — Services dead API · Dead code P2 — since 2026-10-01 — blocked: TST-04
 - [ ] DEL-01 — Unused barrels · Dead code P2 — since 2026-10-01 — blocked: TST-04
 
@@ -73,13 +72,13 @@
 - [ ] DEF-57 — Branch majors lack clock — since 2026-10-05 — blocked: DEF-42
 - [ ] DEF-58 — Export edits change scene — since 2026-10-05
 - [ ] DEF-60 — Refused rejoin half-restored — since 2026-10-05
-- [ ] DEF-62 — Space at end stalls — since 2026-10-05 — blocked: TST-13
-- [ ] DEF-63 — Shortcuts take modifier chords — since 2026-10-05 — blocked: TST-13
+- [ ] DEF-62 — Space at end stalls — since 2026-10-05
+- [ ] DEF-63 — Shortcuts take modifier chords — since 2026-10-05
 - [ ] DEF-65 — Branch place: two undos — since 2026-10-05 — blocked: TST-05
 - [ ] DEF-66 — Export settings skip autosave — since 2026-10-05 — blocked: TST-05
 - [ ] DEF-67 — Open announces "paused" — since 2026-10-05 — blocked: DEF-45, DEF-28
 - [ ] DEF-68 — Paused camera controls sleep — since 2026-10-05
-- [ ] DEF-69 — Zoom warning unattached — since 2026-10-05 — blocked: TST-13
+- [ ] DEF-69 — Zoom warning unattached — since 2026-10-05
 - [ ] DEF-70 — Menu item drops focus — since 2026-10-05 — blocked: TST-14
 - [ ] DEF-71 — Unknown build flag releases — since 2026-10-05
 - [ ] DEF-72 — Timeline shortcut ignores tail — since 2026-10-05 — blocked: TST-16
