@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — REL-698 — v3.2.698 ships DEF-42
+
+**Decision:** v3.2.698 is live from deploy commit `88d1f2f` (tag `v3.2.698`), released under GATELESS-1 because DEF-42's merge (`98600ca`, PR #62) changed `src/`.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full, from `route-plotter/`. (1) A clean `main` equal to `origin/main` at `98600ca`; Pages `main` `/docs`, built at `98600ca`, tagged `rollback-v3.2.697-98600ca`; `git fsck --connectivity-only` clean and no OneDrive conflict copies. (2) `npm run check` green (101 files, 1,956 tests, 2 todo); `npm run push:dry-run` clean. (3) `npm run push` committed `88d1f2f`. (4) Verify, the Pages build and deploy green on `88d1f2f`. (5) The `github-pages` deployment at `88d1f2f`; all 22 published files SHA-256-identical to `docs/`; the live site ready ("Route Plotter v3.2.698", every resource answered 200, no console error); the Open day route played (frames driven by hand: 3,002 ms, then to its end at 11,594 ms, after which no frame stayed queued) and exported, at 1280×800, as MP4 (1920×1080, 13.6 s, `ftypisom`) and as HTML (its CSP, the project and the live `player.js` embedded byte for byte), captured in the page. A first play, about 1 s after the example button in a pane that had restored a session, read duration 0; after a 4 s settle it played as above, so the smoke script now settles 4 s. Why the first read 0 is not established: settling is a reading, and Codex names a load and play race to probe (wish-list). The saves to disk stay owed (GATELESS-1).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — DEF-42 — A beacon edit in the inspector retimes at once, and a branched route's timeline is composed afresh
 
 **Decision:** DEF-42 lands (PR #62): a beacon style or pulse cycle chosen in the inspector rebuilds timing at once, as the motion settings do, and every rebuild composes a branched route's timeline afresh, because the editor went on timing a beacon by its old style, and a pause or beacon edit on a branched route kept the old total.
