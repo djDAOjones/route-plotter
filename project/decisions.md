@@ -18,6 +18,26 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — REL-701 — v3.2.701 ships DEF-72
+
+**Decision:** v3.2.701 is live from deploy commit `d093ffd` (tag `v3.2.701`), released under GATELESS-1 because DEF-72's merge (`2cd89b6`, PR #96) changed `src/`.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full, from `route-plotter/`. (1) A clean `main` equal to `origin/main` at `2cd89b6`; Pages `main` `/docs`, built at `2cd89b6`, tagged `rollback-v3.2.700-2cd89b6`; `git fsck --connectivity-only` reported only dangling trees, and no OneDrive conflict copies. (2) `npm run check` green (101 files, 2,055 tests, 2 todo); `npm run push:dry-run` clean. (3) `npm run push` committed `d093ffd`. (4) Verify, the Pages build and deploy green on `d093ffd`. (5) The `github-pages` deployment at `d093ffd`; all 22 published files SHA-256-identical to `docs/`; the live site ready ("Route Plotter v3.2.701", no console errors, no failed resource); the Open day route played (frames driven by hand: 3,002 ms, then to its end at 11,594 ms, no frame left queued) and exported, at 1280×800, as MP4 (1920×1080, 13.6 s, `ftypisom`) and as HTML (its CSP, the project and the live `player.js` embedded byte for byte), captured in the page. DEF-72 was checked in Chromium on a build of `a0805d4` against live v3.2.700 before the merge. DEF-72 changes `PlayerCore`, which `player.js` bundles, so its exports are owed a save to disk under the owner's export rule; Claude in Chrome was not connected (a wish line).
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — GATELESS-1 — The owner lets gateless chat 10 run to 500k, once
+
+**Decision:** Gateless chat 10 runs to 500k tokens of context, no new agents past about 460k; later chats keep the profile's 200k.
+
+**Rationale:** the owner, in the run's chat on 2026-10-05 at about 18:25: "please expand the limit of this chat to 500k as a one-off". The profile's Session line is unchanged; "later chats keep 200k" is the run's reading of "as a one-off", for him to confirm.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — DEF-72 — The timeline shortcut holds only when the timeline is the path
 
 **Decision:** DEF-72 lands: `PlayerCore` takes its timeline-to-path shortcut only when the timeline is exactly as long as the path, with no wait and one speed, in both directions, so a seek under a comet tail lands where the head is and a trunk keeps its own time when a branch outlives it; it goes ahead of CROWD-05, which makes timelines outlast the path.

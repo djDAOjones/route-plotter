@@ -76,4 +76,5 @@
 - Assert a looping dot's `finishes` is strictly `false`, not merely falsy (Codex, TST-16 review r1, advisory: CA-UNDEFINED) — (from: TST-16, 2026-10-05)
 - A moving-cone golden for `MotionVisibilityService`, whose moving direction no test pins today (Codex, TST-16 review r1, advisory: C09-MOVING) — (from: TST-16, 2026-10-05)
 - v3.2.700's full export check: the Open day example exported from the live site as MP4 and HTML, saved to disk and opened there (the HTML by file, the MP4 in a desktop player); owed under the owner's tenth-release check until the run saves it through his Chrome, with his word for each download — (from: GATELESS-1, 2026-10-05)
+- v3.2.701's full export check: DEF-72 changed `PlayerCore`, which `player.js` bundles, so the Open day example exported from the live site as MP4 and HTML is owed a save to disk and an open from there, through the owner's Chrome with his word for each download — (from: REL-701, 2026-10-05)
 - A "Hold at start", so Preview shows the 2 s start buffer that only video export adds today — (from: CROWD-05, 2026-10-05)
