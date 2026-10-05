@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-06 — A route's derived state goes with it, and a snapshot times the route at its authoring speed
+
+**Decision:** DEF-06 lands (PR #61). Clear All, deleting down to one waypoint, Undo, Redo and opening a one-waypoint project clear the route's path, branches, structure, pauses, beacons and waits, and resolve crowd anchors afresh; a route that comes back gets its timing back. Recovery, Save Project and the HTML export hold the route timed at its authoring speed, never times the playback rate, which is never saved. A constant-time duration a project opened with is kept until a rebuild replaces it.
+
+**Rationale:** sixteen Codex rounds under the 2026-09-28 bar. The last, R16-A, found that accepted rejoins had no protection at a playback rate other than 1×; twelve cases now hold them (Preview and Edit, made and cleared, 2×, −2× and 0.5×), and a rejoin timed at the speed times the rate fails all twelve on their numbers. Codex's check under GATELESS-1 passed on `7b642d1`. Chromium, on a throwaway build of the branch: load, play, delete to one waypoint, Undo, Redo, Clear All and a fresh load clear and restore the route's derived state, with no console errors. Digest rule applied: house conventions → Testing and persistence. The found defects DEF-51, DEF-56 and DEF-60 no longer wait on it, and DEF-57 waits on DEF-42 alone.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — PLAN-1 — Phase 1 lands the big run's open pull requests, readiest first
 
 **Decision:** Phase 1 lands the big run's 14 open pull requests one at a time, readiest first and DEF-06 first, since v3.2.693 ships the symptom it fixes; each finishes the round its last review asked for, then takes one Codex check under GATELESS-1. The run's 22 found defects wait in Next behind the item each names, whose harness their regression tests need.

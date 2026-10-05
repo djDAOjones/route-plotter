@@ -16,7 +16,6 @@
 
 ### Phase 1 — Land the big run's open pull requests
 
-- [~] DEF-06 — Clear All leaves stale route state · Live defect P3 — since 2026-10-01
 - [~] DEF-53 — Export size follows the canvas · Live defect — since 2026-10-05
 - [~] DEF-44 — A paused editor never idles · Live defect P2 — since 2026-10-01
 - [~] SPL-06 — `build.js` entry guard and exported functions · Refactor P2 — since 2026-10-01
@@ -66,13 +65,13 @@
 **Found defects**
 
 - [ ] DEF-50 — Autosave failure unseen — since 2026-10-05 — blocked: DEF-28, DEF-45
-- [ ] DEF-51 — Failed load leaves caches — since 2026-10-05 — blocked: DEF-06
+- [ ] DEF-51 — Failed load leaves caches — since 2026-10-05
 - [ ] DEF-54 — Outside drop moves rows — since 2026-10-05 — blocked: TST-04
 - [ ] DEF-55 — List drop sends branch last — since 2026-10-05 — blocked: TST-04
-- [ ] DEF-56 — Constant-time open unscheduled — since 2026-10-05 — blocked: DEF-06
-- [ ] DEF-57 — Branch majors lack clock — since 2026-10-05 — blocked: DEF-06, DEF-42
+- [ ] DEF-56 — Constant-time open unscheduled — since 2026-10-05
+- [ ] DEF-57 — Branch majors lack clock — since 2026-10-05 — blocked: DEF-42
 - [ ] DEF-58 — Export edits change scene — since 2026-10-05 — blocked: DEF-53
-- [ ] DEF-60 — Refused rejoin half-restored — since 2026-10-05 — blocked: DEF-06
+- [ ] DEF-60 — Refused rejoin half-restored — since 2026-10-05
 - [ ] DEF-62 — Space at end stalls — since 2026-10-05 — blocked: TST-13
 - [ ] DEF-63 — Shortcuts take modifier chords — since 2026-10-05 — blocked: TST-13
 - [ ] DEF-65 — Branch place: two undos — since 2026-10-05 — blocked: TST-05
