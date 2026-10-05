@@ -14,6 +14,12 @@
  * camera drawn again is drawn there at once. Where it is drawn, in Preview
  * and in the exported player, it still eases.
  *
+ * Not every still view goes idle at once: DEF-44's plan row names the bounded
+ * residuals found. One is pinned here, on `main` too: easing back to 1× from
+ * just above it, the camera can end with frames that draw the same flat view,
+ * as the renderer draws it flat within 0.001 of 1× while its centre eases on
+ * to within a pixel. It ends by itself; the last test holds it to ten frames.
+ *
  * Frames run only when a test runs them, so a loop that never sleeps shows as
  * a frame still queued after hundreds, not as a timeout. They run on one
  * clock, which `performance.now()` reads too (the camera's zoom rate limit
@@ -25,6 +31,7 @@ import { bootApp } from './helpers/bootApp.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { CameraService } from '../src/services/CameraService.js';
+import { RenderingService } from '../src/services/RenderingService.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
 
 /** Slower than the engine's 60 fps gate, so every frame updates. */
@@ -144,17 +151,20 @@ function untickCameraMovement(app) {
   checkbox.dispatchEvent(new Event('change'));
 }
 
+/** The canvas's bottom-right corner, in image coordinates. */
+const THE_CORNER = { x: 0.98, y: 0.98 };
+
 /**
  * A booted editor in Preview, at rest at the start, whose route runs from
- * (0.2, 0.3) with a 3× camera to the canvas's corner, (0.98, 0.98), with an
- * `endZoom` camera: zoomed in there, the view stops at the canvas's edge,
- * short of the head.
+ * (0.2, 0.3) with a 3× camera to `end`, by or on the canvas's edge, with an
+ * `endZoom` camera: zoomed in there, the view stops at the edge, short of the
+ * head.
  */
-async function routeToTheCorner(endZoom) {
+async function routeToTheEdge(end, endZoom) {
   const app = await bootApp();
   await app.ready;
   app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
-  app.eventBus.emit('waypoint:add', { imgX: 0.98, imgY: 0.98, isMajor: true });
+  app.eventBus.emit('waypoint:add', { imgX: end.x, imgY: end.y, isMajor: true });
   app.waypoints[0].camera.zoom = 3;
   app.waypoints[1].camera.zoom = endZoom;
   app.eventBus.emit('ui:animation:skip-start');
@@ -165,19 +175,50 @@ async function routeToTheCorner(endZoom) {
   return app;
 }
 
+/** The same route, to the canvas's corner, (0.98, 0.98). */
+function routeToTheCorner(endZoom) {
+  return routeToTheEdge(THE_CORNER, endZoom);
+}
+
 /**
- * The camera as it rests at the route's end, drawn: at `zoom`, and on the
- * head, held where the view at that zoom stays on the canvas; flat at 1×.
+ * The camera as it rests at the route's end, `end`, drawn: at `zoom`, and on
+ * the head, held where the view at that zoom stays on the canvas at each edge
+ * in `held`, the edges the head lies past; flat at 1×.
  */
-function restingAtTheCorner(app, zoom) {
+function restingAtTheEdge(app, zoom, end, held) {
   const width = app.displayWidth;
   const height = app.displayHeight;
   if (zoom === 1) return { zoom: 1, centerX: width / 2, centerY: height / 2, enabled: false };
-  const head = app.imageToCanvas(0.98, 0.98);
-  const edge = { x: width - width / (2 * zoom), y: height - height / (2 * zoom) };
-  expect(head.x, 'the head lies past where the view can follow it').toBeGreaterThan(edge.x);
-  expect(head.y, 'the head lies past where the view can follow it').toBeGreaterThan(edge.y);
-  return { zoom, centerX: edge.x, centerY: edge.y, enabled: true };
+  // The image fills the canvas, so the head is exactly where its waypoint is:
+  // on 0 for a waypoint on the image's left or top edge.
+  const head = app.imageToCanvas(end.x, end.y);
+  expect(head, 'the head, where its waypoint is').toEqual({ x: end.x * width, y: end.y * height });
+  const reach = {
+    left: width / (2 * zoom),
+    right: width - width / (2 * zoom),
+    top: height / (2 * zoom),
+    bottom: height - height / (2 * zoom),
+  };
+  const past = {
+    left: head.x < reach.left,
+    right: head.x > reach.right,
+    top: head.y < reach.top,
+    bottom: head.y > reach.bottom,
+  };
+  for (const edge of Object.keys(reach)) {
+    expect(past[edge], `the head lies past where the view can follow it, at the ${edge}`).toBe(held.includes(edge));
+  }
+  return {
+    zoom,
+    centerX: past.left ? reach.left : past.right ? reach.right : head.x,
+    centerY: past.top ? reach.top : past.bottom ? reach.bottom : head.y,
+    enabled: true,
+  };
+}
+
+/** The same, at the canvas's corner, where the head lies past the right and bottom edges. */
+function restingAtTheCorner(app, zoom) {
+  return restingAtTheEdge(app, zoom, THE_CORNER, ['right', 'bottom']);
 }
 
 /** A drawn camera equals the expected one, to floating-point rounding. */
@@ -312,15 +353,23 @@ describe('DEF-44: a still view queues no animation frame', () => {
   });
 
   test.each([
-    ['in from 3× to 16×', 16],
-    ['out from 3× to 2.25×', 2.25],
-  ])('undoing the view’s zoom after the camera zoomed %s beneath it, at the canvas’s edge, draws the camera at rest there at once', async (change, endZoom) => {
+    ['in from 3× to 16×', 'edge', 16, THE_CORNER, ['right', 'bottom']],
+    ['out from 3× to 2.25×', 'edge', 2.25, THE_CORNER, ['right', 'bottom']],
+    ['in from 3× to 16×', 'left edge', 16, { x: 0.02, y: 0.6 }, ['left']],
+    ['in from 3× to 16×', 'right edge', 16, { x: 0.98, y: 0.6 }, ['right']],
+    ['in from 3× to 16×', 'top edge', 16, { x: 0.6, y: 0.02 }, ['top']],
+    ['in from 3× to 16×', 'bottom edge', 16, { x: 0.6, y: 0.98 }, ['bottom']],
+    ['in from 3× to 16×', 'top-left corner, the head on 0', 16, { x: 0, y: 0 }, ['left', 'top']],
+  ])('undoing the view’s zoom after the camera zoomed %s beneath it, at the canvas’s %s, draws the camera at rest there at once', async (change, where, endZoom, end, held) => {
     // The camera hidden by the view's zoom is put where it comes to rest. It
     // was put at its target zoom on the centre its one frame had found at the
     // zoom its rate limit had reached, about 3×: undone, the 16× view was
     // drawn some 79 px short of the edge, and stayed there, as undoing the
-    // zoom draws one frame and wakes no loop.
-    const app = await routeToTheCorner(endZoom);
+    // zoom draws one frame and wakes no loop. The same holds at each of the
+    // four edges, and with the head exactly on 0: resting past an edge, the
+    // camera would be drawn held at it but never settle; resting on the
+    // canvas centre for a head on 0, it would be drawn away from the edge.
+    const app = await routeToTheEdge(end, endZoom);
     const drawn = watchCamera(app);
     app.eventBus.emit('canvas:zoom-in');
     expect(app.viewport.zoom).toBeCloseTo(1.5);
@@ -329,7 +378,7 @@ describe('DEF-44: a still view queues no animation frame', () => {
 
     app.eventBus.emit('canvas:zoom-reset');
     expect(app.viewport.zoom).toBe(1);
-    expectCamera(drawn().at(-1), restingAtTheCorner(app, endZoom), 'the zoom undone');
+    expectCamera(drawn().at(-1), restingAtTheEdge(app, endZoom, end, held), 'the zoom undone');
     const before = drawn().length;
     app.animationEngine.requestUpdate();
     expectIdle('the zoom undone');
@@ -650,6 +699,55 @@ describe('DEF-44: a camera that is drawn still eases', () => {
       }
       const ran = frames.runUntilIdle();
       expect(frames.pending.size, `the paused player: a frame is still queued after ${ran}`).toBe(0);
+    } finally {
+      player.animationEngine.stop();
+    }
+  });
+
+});
+
+describe('DEF-44: a residual, as on `main`, that ends by itself', () => {
+
+  test('an 8K player easing its camera back to 1× from the This Zoom slider’s first step ends with frames that draw the same flat view, then goes idle', async () => {
+    // Not repaired here, and on `main` too (the PR's third review): the
+    // renderer draws a camera within 0.001 of 1× flat
+    // (`RenderingService.cameraApplies`), while the camera eases its centre on
+    // to within a pixel of the canvas centre and keeps the loop awake. At 8K
+    // the zoom gets there first. Found: eight such frames; held to ten. A
+    // repair that settles the centre once it is drawn flat would end them, and
+    // this test and the plan row's residual with them.
+    const app = await bootApp();
+    await app.ready;
+    app.eventBus.emit('waypoint:add', { imgX: 0.96, imgY: 0.96, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.98, imgY: 0.98, isMajor: true });
+    app.waypoints[0].camera.zoom = CameraService.sliderToZoom(0.01);
+    app.waypoints[1].camera.zoom = 1;
+    app.eventBus.emit('ui:animation:skip-start');
+    frames.runUntilIdle();
+    const project = JSON.parse(JSON.stringify(app._buildProjectSnapshot()));
+    Object.assign(project.exportSettings, { resolutionX: 7680, resolutionY: 4320, includeCamera: true });
+    const player = new PlayerApp(document.createElement('canvas'));
+    try {
+      await player.load(project, app.background.image);
+      const drawn = watchCamera(player);
+      player.start();
+      frames.runUntilIdle();
+      expect(frames.pending.size, 'the player came to rest at the start').toBe(0);
+      expect(RenderingService.cameraApplies(drawn().at(-1)), 'the camera drawn at the start').toBe(true);
+
+      // Paused, a seek to the end, where the camera is 1×
+      const before = drawn().length;
+      player.animationEngine.seekToProgress(1);
+      const ran = frames.runUntilIdle();
+      expect(frames.pending.size, `the paused player: a frame is still queued after ${ran}`).toBe(0);
+      const eased = drawn().slice(before);
+      const flat = eased.slice(eased.findLastIndex(RenderingService.cameraApplies) + 1);
+      expect(flat.length, 'the camera eased back to 1× in view').toBeLessThan(eased.length);
+      // The first frame drawn flat shows the camera's last step to 1×; each
+      // after it draws that same view again.
+      const again = flat.length - 1;
+      expect(again, 'frames that draw the same flat view, the residual as found').toBeGreaterThan(0);
+      expect(again, 'they end by themselves, within ten').toBeLessThanOrEqual(10);
     } finally {
       player.animationEngine.stop();
     }

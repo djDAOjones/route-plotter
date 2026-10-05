@@ -17,7 +17,6 @@
 ### Phase 1 — Land the big run's open pull requests
 
 - [~] DEF-53 — Export size follows the canvas · Live defect — since 2026-10-05
-- [~] DEF-44 — A paused editor never idles · Live defect P2 — since 2026-10-01
 - [~] SPL-06 — `build.js` entry guard and exported functions · Refactor P2 — since 2026-10-01
 - [~] TST-13 — Key table, element IDs, HTML ranges · Characterisation P1 — since 2026-10-01
 - [~] DEF-42 — A beacon-style change keeps the old schedule · Live defect P3 — since 2026-10-01
@@ -77,8 +76,8 @@
 - [ ] DEF-65 — Branch place: two undos — since 2026-10-05 — blocked: TST-05
 - [ ] DEF-66 — Export settings skip autosave — since 2026-10-05 — blocked: TST-05, DEF-53
 - [ ] DEF-67 — Open announces "paused" — since 2026-10-05 — blocked: DEF-45, DEF-28
-- [ ] DEF-68 — Paused camera controls sleep — since 2026-10-05 — blocked: DEF-44
-- [ ] DEF-69 — Zoom warning unattached — since 2026-10-05 — blocked: TST-13, DEF-44
+- [ ] DEF-68 — Paused camera controls sleep — since 2026-10-05
+- [ ] DEF-69 — Zoom warning unattached — since 2026-10-05 — blocked: TST-13
 - [ ] DEF-70 — Menu item drops focus — since 2026-10-05 — blocked: TST-14
 - [ ] DEF-71 — Unknown build flag releases — since 2026-10-05 — blocked: SPL-06
 - [ ] DEF-72 — Timeline shortcut ignores tail — since 2026-10-05 — blocked: TST-16
