@@ -14,6 +14,12 @@
  * back before the background, so the image kept the place it had at the old
  * size; the background now comes back first.
  *
+ * The export is held after its first frame while sizes are chosen. Most
+ * tests let it go on at once; the last also holds it while the
+ * animation-frame callbacks and timers queued after each choice run, as they
+ * run between a real export's frames, so a size or a state put off to one of
+ * them is seen (Codex's eleventh review).
+ *
  * The frames are read from the calls the test recorder keeps, not from
  * pixels. A size choice that changes any call or its state fails the
  * comparison with the same export drawn with no size chosen; a fault both
@@ -22,9 +28,9 @@
  * mask drawn on before it is put on, every draw on that layer and on the mask
  * shown, and nothing emptying or erasing any of them once drawn, but the
  * reveal mask cutting the background to what it reveals. They do not see how
- * much the mask's gradients reveal (a mask drawn only with transparent
- * gradients passes), a draw that paints over the background, or a stroke's
- * own colour, width and shape.
+ * much the mask reveals (a mask drawn only with transparent gradients, or
+ * only outside its canvas, passes), a draw that paints over the background,
+ * or a stroke's own colour, width and shape.
  */
 
 import { afterEach, expect, test, vi } from 'vitest';
@@ -165,17 +171,24 @@ function transcriptOf(calls, names) {
 /**
  * An export's frames as the same app draws them with no size chosen during
  * it: each call on every canvas, as `transcriptOf` has it (worked out once
- * for each kind of export).
+ * for each kind of export). Given `turns`, the export begins once the app's
+ * own queued work has run (`settled`), and is held after its first frame
+ * while what the app queues runs that many times over
+ * (`queuedCallbacksRun`), as an export given that many sizes is below
+ * (worked out once for each kind and number).
  */
 const unchosen = new Map();
-async function framesWithNoSizeChosen(pathOnly) {
-  if (!unchosen.has(pathOnly)) {
+async function framesWithNoSizeChosen(pathOnly, turns = 0) {
+  const key = `${pathOnly} ${turns}`;
+  if (!unchosen.has(key)) {
     const { app } = await withBackground(pathOnly);
+    if (turns > 0) await settled();
     const run = await exporting(app);
+    for (let turn = 0; turn < turns; turn += 1) await queuedCallbacksRun();
     await run.completes();
-    unchosen.set(pathOnly, run.transcripts);
+    unchosen.set(key, run.transcripts);
   }
-  return unchosen.get(pathOnly);
+  return unchosen.get(key);
 }
 
 /**
@@ -194,7 +207,9 @@ async function framesWithNoSizeChosen(pathOnly) {
  * the frame's first draw that must survive, so that what the encoder captures
  * next would have lost it, and every draw after that one that takes away or
  * replaces what is beneath it; and whether the main canvas was emptied during
- * the frame (given a size, by any route, or reset).
+ * the frame (given a size, by any route, or reset). While it is held,
+ * `meanwhile` gives what any canvas was given since its last frame or the
+ * last look, as `between` has it, a clip kept with the others.
  */
 async function exporting(app) {
   const frames = [];
@@ -312,6 +327,12 @@ async function exporting(app) {
     transcripts,
     between,
     clipped,
+    meanwhile: () => {
+      const outside = takeOrderedCalls();
+      const names = roles();
+      clipped.push(...clipsIn(outside, names));
+      return outside.map(([surface, name]) => `${names[surface] ?? 'other'} ${name}`);
+    },
     completes: async () => { release(); await done; },
     fails: async () => { allowConsole(/Video export failed/); outcome = 'failed'; release(); await done; },
     'is cancelled with Escape': async () => {
@@ -366,11 +387,12 @@ function portraitDisplay() {
  * These are calls, not pixels. A fault that both this export and the one
  * with no size chosen share passes the comparison between them, and meets
  * only these checks, which do not judge what needs pixels or a path's
- * geometry: how much of the background the mask's gradients let show (a
- * mask drawn only with transparent gradients passes), whether a draw that
- * paints over the background before the path layer hides it, and whether a
- * stroke or fill on that layer shows in its own colour, width and shape (a
- * transparent colour or gradient, an empty or off-canvas path would not).
+ * geometry: how much of the background the mask lets show (a mask drawn
+ * only with transparent gradients, or only outside its canvas, passes),
+ * whether a draw that paints over the background before the path layer
+ * hides it, and whether a stroke or fill on that layer shows in its own
+ * colour, width and shape (a transparent colour or gradient, an empty or
+ * off-canvas path would not).
  */
 const frameOf = (width, height, pathOnly) => {
   const { x, y, w, h } = fitted(width, height);
@@ -535,5 +557,75 @@ test.each(KINDS.flatMap(([kind, pathOnly]) => SUCCESSIONS.flatMap(([label, choic
   // chosen. Booting the app to compare with may replace this one's page: last.
   expect(run.transcripts).toHaveLength(drawn);
   const unchanged = await framesWithNoSizeChosen(pathOnly);
+  run.transcripts.forEach((frame, index) => expect(frame, `frame ${index + 1}`).toEqual(unchanged[index]));
+});
+
+/**
+ * Lets what the app has queued run, three turns over, so that what one
+ * callback queues runs too: its animation-frame callbacks (timers in this
+ * harness, `tests/setup.js`) and its timers. A real export lets them run
+ * between its frames: its encoder yields to a timer after each one
+ * (`VideoExporter`). The tests above choose a size and let the export go on
+ * with no turn between, so a fix that resized the running export's canvas
+ * on the next animation frame instead, or zeroed its alpha on a timer,
+ * passed every one of them (Codex's eleventh review).
+ */
+async function queuedCallbacksRun() {
+  for (let turn = 0; turn < 3; turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+}
+
+/**
+ * Lets the app's own work from its setting up run before an export begins:
+ * the route's re-timing, 50 ms after a change (`calculatePath`), and what it
+ * queues. Left queued, it ran while the export was held or did not, as the
+ * clock had it, and two exports' frames could not be compared call for call.
+ */
+async function settled() {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  await queuedCallbacksRun();
+}
+
+/** The succession that makes every kind of size choice above: a preset, a width and a height typed, a preset again. */
+const EVERY_KIND_OF_CHOICE = SUCCESSIONS[0];
+
+test.each(KINDS.flatMap(([kind, pathOnly]) => ENDINGS.map(ending => [kind, EVERY_KIND_OF_CHOICE[0], ending, pathOnly, EVERY_KIND_OF_CHOICE[1]])))('an export %s given several sizes while it runs (%s), held while the animation-frame callbacks and timers queued after each run, which then %s, keeps the size it began at meanwhile, draws every frame at it, and leaves the display and the next export at the last size chosen', async (_, __, ending, pathOnly, choices) => {
+  const { app, image } = await withBackground(pathOnly);
+  await settled();
+  const run = await exporting(app);
+  const began = geometry(app);
+
+  for (const choose of choices) {
+    choose(app);
+    await queuedCallbacksRun();
+    // The encoder still held, what the choice queued has run: the display,
+    // its canvas and the image's place as the export began, and no canvas
+    // given anything since its first frame (no call, no size by any route,
+    // no reset)
+    expect(geometry(app)).toEqual(began);
+    expect(run.meanwhile()).toEqual([]);
+  }
+  await run[ending]();
+
+  // Every frame the running export drew (only the first, drawn before the
+  // sizes were chosen, if it failed or was cancelled) at the size it began
+  // at, no canvas given anything between them, and nothing clipped
+  const drawn = ending === 'completes' ? 3 : 1;
+  expect(run.frames).toEqual(Array(drawn).fill(frameOf(began.canvas[0], began.canvas[1], pathOnly)));
+  expect(run.between.slice(1)).toEqual(Array(drawn - 1).fill([]));
+  expect(run.clipped).toEqual([]);
+  // The display at the last size chosen, at the numbers worked out in the
+  // test, the fields showing it, and the next export drawn at it
+  expect(app._isExportMode).toBeFalsy();
+  expect(app.background.image).toBe(image);
+  expect(placement(app)).toEqual({ ...portraitDisplay(), settings: [1080, 1920, 175] });
+  expect([app.elements.exportResX.value, app.elements.exportResY.value]).toEqual(['1080', '1920']);
+  const next = await exporting(app);
+  await next.completes();
+  expect(next.frames).toEqual(Array(3).fill(frameOf(1080, 1920, pathOnly)));
+  // Call for call, as the same export draws those frames with no size
+  // chosen, begun as late and held while as many turns run. Booting the app
+  // to compare with may replace this one's page: last.
+  expect(run.transcripts).toHaveLength(drawn);
+  const unchanged = await framesWithNoSizeChosen(pathOnly, choices.length);
   run.transcripts.forEach((frame, index) => expect(frame, `frame ${index + 1}`).toEqual(unchanged[index]));
 });
