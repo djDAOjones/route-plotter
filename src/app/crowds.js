@@ -30,8 +30,46 @@ import { waitForCrowdMs } from '../utils/crowdArrival.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
+/**
+ * A new crowd's Speed (img/s) and Window length (DEF-77). At the model's own
+ * 0.15 img/s across the whole timeline, a default crowd's dots rarely reached
+ * their journey's end on a canvas narrower than about 1,333 px, so "At journey
+ * end" seemed to do nothing. At 0.40 released over the first half, every dot
+ * of a default crowd finishes on a canvas 960 px wide or more, and at least
+ * nine in ten on one 720 px wide. Only a new crowd takes these: a saved crowd
+ * keeps the values it was saved with.
+ */
+const NEW_CROWD_SPEED = 0.4;
+const NEW_CROWD_RELEASE_DURATION = 0.5;
+/**
+ * Shown under "At journey end" where nothing on the network can end a
+ * journey (DEF-77): no pace would help. Since the end waits for every journey
+ * that ends (CROWD-05), a slow crowd is no longer cut off, so this is the
+ * only case left.
+ */
+const LIFECYCLE_ENDLESS_HINT = 'No dot’s journey ends on this network. '
+  + 'Set a node’s Type to Exit to see this setting act.';
 const BUSYNESS_GRAPH = Object.freeze({ width: 300, height: 140, padX: 18, padY: 16 });
 const SVG_NS = 'http://www.w3.org/2000/svg';
+/**
+ * Hints on a busyness handle's fields, by `data-busyness-field` (UI-03). Each
+ * sits on its label's text, as the inspector's others do (ParamTooltip).
+ */
+const BUSYNESS_HINTS = Object.freeze({
+  time: 'Where this handle sits in the window: 0% at its start, 100% at its end. '
+    + 'The first and last handles stay put',
+  value: 'How busy the release is at this handle: higher sets more dots off around it, 0% none',
+  transition: 'How busyness changes from this handle to the next: Gradual slides there evenly; '
+    + 'Sudden holds this level, then jumps',
+});
+
+/** A busyness field's label text, carrying its hint. */
+function busynessLabelText(text, hint) {
+  const span = document.createElement('span');
+  span.textContent = text;
+  span.setAttribute('data-tip', hint);
+  return span;
+}
 
 export function formatCrowdReleaseTiming(percent) {
   const rounded = Math.round(percent);
@@ -144,12 +182,34 @@ export const crowdsMixin = {
     // Escape backs out of Crowd scope to Route scope
     this.eventBus.on('waypoint:deselect', leaveCrowdScope);
 
-    // Central crowd param pipeline (mirrors waypoint:path-property-changed)
-    this.eventBus.on('crowd:param-changed', () => {
+    // Central crowd param pipeline (mirrors waypoint:path-property-changed).
+    // An edit that moves no dot's release or journey (its colour, size, sway
+    // or what it does at the end) says `journeys: false`, and the "At journey
+    // end" hint keeps its answer rather than schedule every dot again (DEF-77).
+    // Every one, `journeys: false` too, may change where the scene ends
+    // (CROWD-05): the lifecycle decides whether a crowd finishes at all.
+    this.eventBus.on('crowd:param-changed', ({ journeys = true } = {}) => {
       this.saveUndoStateDebounced();
       this.autoSave();
       this.queueRender();
+      if (journeys) this._syncCrowdLifecycleHint();
+      this.scheduleSceneEnd?.();
     });
+
+    // Whether a journey can end turns on the network's shape, so the hint
+    // follows it: on each committed change, never per frame. A new timeline
+    // no longer changes it (CROWD-05), but a project opened, cleared or put
+    // back sets one, and the hint is refreshed with it. The scene's end
+    // follows a network change too, as it does a crowd's every other
+    // committed change: a seed, its busyness, visibility, a crowd added,
+    // deleted or traced.
+    this.eventBus.on('animation:durationChange', () => this._syncCrowdLifecycleHint());
+    this.eventBus.on('network:changed', ({ commit } = {}) => {
+      if (!commit) return;
+      this._syncCrowdLifecycleHint();
+      this.scheduleSceneEnd?.();
+    });
+    this.eventBus.on('scene:semantic-changed', () => this.scheduleSceneEnd?.());
 
     // Route changes update the Add-crowd description: a new crowd follows
     // an existing route or starts an empty custom network.
@@ -173,18 +233,18 @@ export const crowdsMixin = {
       if (!em) return;
       em.update({ dotColor: e.target.value });
       this.updateLayersStrip(); // Row swatch mirrors the dot colour
-      this.eventBus.emit('crowd:param-changed');
+      this.eventBus.emit('crowd:param-changed', { journeys: false });
     });
 
     this._wireCrowdSlider('crowd-dot-size', (raw) => {
       emitterOf()?.update({ dotSize: raw / 100 });
       return `${(raw / 100).toFixed(2)}×`;
-    });
+    }, { journeys: false });
 
     this._wireCrowdSlider('crowd-wobble', (raw) => {
       emitterOf()?.update({ wobble: raw / 100 });
       return `${Math.round(raw)}%`;
-    });
+    }, { journeys: false });
 
     this._wireCrowdSlider('crowd-count', (raw) => {
       emitterOf()?.update({ dotCount: raw });
@@ -225,7 +285,7 @@ export const crowdsMixin = {
       const em = emitterOf();
       if (!em) return;
       em.update({ lifecycleMode: e.target.value });
-      this.eventBus.emit('crowd:param-changed');
+      this.eventBus.emit('crowd:param-changed', { journeys: false });
     });
 
     document.getElementById('crowd-reroll-btn')?.addEventListener('click', () => {
@@ -254,9 +314,12 @@ export const crowdsMixin = {
    * being selected), value readout, param-changed pipeline.
    * @param {string} id - Element id; `${id}-value` is the readout span
    * @param {Function} apply - raw slider number → readout string (writes the model)
+   * @param {Object} [options]
+   * @param {boolean} [options.journeys=true] - False for a slider that moves
+   *   no dot's release or journey (crowd:param-changed)
    * @private
    */
-  _wireCrowdSlider(id, apply) {
+  _wireCrowdSlider(id, apply, { journeys = true } = {}) {
     const el = document.getElementById(id);
     const valueEl = document.getElementById(`${id}-value`);
     el?.addEventListener('input', (e) => {
@@ -264,7 +327,7 @@ export const crowdsMixin = {
       const text = apply(parseFloat(e.target.value));
       if (valueEl) valueEl.textContent = text;
       el.setAttribute('aria-valuetext', text);
-      this.eventBus.emit('crowd:param-changed');
+      this.eventBus.emit('crowd:param-changed', { journeys });
     });
   },
 
@@ -632,7 +695,11 @@ export const crowdsMixin = {
     const layer = this.scene.addFlowLayer({
       name: this._nextCrowdName(),
       guideType: hasRoute ? 'route' : 'graph',
-      emitters: [{ dotColor: NEW_CROWD_DOT_COLOR }],
+      emitters: [{
+        dotColor: NEW_CROWD_DOT_COLOR,
+        speed: NEW_CROWD_SPEED,
+        releaseDuration: NEW_CROWD_RELEASE_DURATION,
+      }],
     });
     this.saveUndoState();
     this.autoSave();
@@ -726,7 +793,10 @@ export const crowdsMixin = {
       return false;
     }
 
-    const durationMs = this.animationEngine.state.duration;
+    // The base timeline: releases measure against it, and the wait it solves
+    // for lengthens it (CROWD-05). The playback duration waits for the crowd
+    // anyway; this keeps the route itself waiting, until CROWD-06's hold.
+    const durationMs = this.animationEngine.state.baseDuration;
     const routeAnchors = this.getRouteArrivalMap?.();
     const arrivalMs = routeAnchors?.arrivalMsById?.[target.id];
     if (!Number.isFinite(arrivalMs) || !(durationMs > 0)) {
@@ -817,6 +887,7 @@ export const crowdsMixin = {
 
     set('crowd-guide-type', layer.guideType);
     this.updateGuideCard?.(); // Network mixin's Edit-network button + hint
+    this._syncCrowdLifecycleHint(); // Before the emitter guard: no dots, no hint
     if (!em) return;
 
     set('crowd-dot-color', em.dotColor);
@@ -858,6 +929,29 @@ export const crowdsMixin = {
 
     // Chip text follows crowd selection/name via the UIController's own
     // crowd listeners; nothing to do here beyond the controls.
+  },
+
+  /**
+   * Show the hint under "At journey end" only where no dot of the selected
+   * crowd can reach a journey end, when the setting has nothing to act on
+   * (DEF-77): no end lies on a path from an entry its dots are released at.
+   * The end waits for every journey that ends (CROWD-05), so a slow crowd is
+   * no longer cut off and its pace never shows it; nor does a crowd with no
+   * dots, nor a walk that only runs out of hops. Read from the network
+   * alone, without scheduling a dot, on each edit that can change it, never
+   * per frame. The select is described by the hint, so it is emptied as well
+   * as hidden: a description is read even from a hidden element.
+   * @private
+   */
+  _syncCrowdLifecycleHint() {
+    const hint = document.getElementById('crowd-lifecycle-hint');
+    if (!hint) return;
+    const layer = this.selectedCrowd;
+    // null: no network to release dots onto
+    const endless = layer?.emitters.length > 0 && this.swarmEngine?.hasJourneyEnd(layer) === false;
+    const message = endless ? LIFECYCLE_ENDLESS_HINT : '';
+    hint.hidden = !message;
+    hint.textContent = message;
   },
 
   /**
@@ -933,7 +1027,7 @@ export const crowdsMixin = {
 
       if (index < handles.length - 1) {
         const label = document.createElement('label');
-        label.textContent = 'Change';
+        label.appendChild(busynessLabelText('Change', BUSYNESS_HINTS.transition));
         const select = document.createElement('select');
         select.dataset.busynessIndex = String(index);
         select.dataset.busynessField = 'transition';
@@ -975,7 +1069,7 @@ export const crowdsMixin = {
   /** @private */
   _crowdBusynessNumberControl(labelText, index, field, value, { readOnly = false } = {}) {
     const label = document.createElement('label');
-    label.textContent = labelText;
+    label.appendChild(busynessLabelText(labelText, BUSYNESS_HINTS[field]));
     const input = document.createElement('input');
     input.type = 'number';
     input.min = '0';

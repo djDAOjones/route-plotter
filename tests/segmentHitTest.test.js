@@ -58,7 +58,10 @@ describe('nearestOnPolyline', () => {
     const degenerate = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 10, y: 0 }];
     const hit = nearestOnPolyline(degenerate, 5, 2);
     expect(hit.dist).toBeCloseTo(2);
-    expect(Number.isNaN(hit.index)).toBe(false);
+    // Finite, not merely "not NaN", which an undefined index passed (TST-16);
+    // and the right one: halfway along the second segment.
+    expect(Number.isFinite(hit.index)).toBe(true);
+    expect(hit.index).toBeCloseTo(1.5);
   });
 
   it('returns null for fewer than two points', () => {

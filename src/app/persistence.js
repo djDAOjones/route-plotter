@@ -34,6 +34,7 @@ import { formatBackgroundOverlay, setRangeReadout } from '../utils/uiReadouts.js
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
 import { buildExampleProjects } from '../examples/index.js';
+import { clearRouteSchedules, settleSavedTiming } from './pathTiming.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -621,6 +622,7 @@ function stripAssetReferences(modelSnapshot) {
  * image references that cannot be hydrated without those bytes.
  */
 function prepareAutosaveSnapshot(app) {
+  settleSavedTiming(app);
   const hasAssets = app.imageAssetService?.getAssetCount?.() > 0;
   const hasBackground = Boolean(app.background?.image);
   try {
@@ -714,6 +716,7 @@ function captureLiveState(app) {
     animationPauseState: app.animationEngine._currentPauseState
       ? { ...app.animationEngine._currentPauseState }
       : null,
+    sceneEndParts: app.animationEngine.sceneEndParts ?? null,
     nextPauseIndex: app.animationEngine.nextPauseIndex,
     jklDirection: app._jklDirection,
     jklSpeedMultiplier: app._jklSpeedMultiplier,
@@ -724,6 +727,7 @@ function captureLiveState(app) {
     backgroundCache: app._autosaveBackgroundCache,
     majorWaypointsCache: app._majorWaypointsCache,
     waypointProgressCache: app._waypointProgressCache,
+    timingDerived: app._timingDerived,
   };
 }
 
@@ -765,7 +769,9 @@ function restoreLiveState(app, previous) {
   app._autosaveBackgroundCache = previous.backgroundCache;
   app._majorWaypointsCache = previous.majorWaypointsCache;
   app._waypointProgressCache = previous.waypointProgressCache;
+  app._timingDerived = previous.timingDerived;
   if (app.animationEngine?.state) Object.assign(app.animationEngine.state, previous.animation);
+  if (app.animationEngine) app.animationEngine.sceneEndParts = previous.sceneEndParts;
   app._jklDirection = previous.jklDirection;
   app._jklSpeedMultiplier = previous.jklSpeedMultiplier;
   app.jklDirection = previous.controllerJklDirection;
@@ -811,6 +817,7 @@ function restoreLiveState(app, previous) {
     app.uiController?.setPlaybackSpeed?.(previous.animation.playbackSpeed ?? 1);
     app._updatePlayPauseUI?.();
     app.updateTimeDisplay?.(previous.animation.currentTime, previous.animation.duration);
+    app.updateDurationReadout?.();
   });
   runRollbackStep('the selection controls', () => {
     app.uiController?.setSelection?.(previous.selectedWaypoints || [], previous.selectedWaypoint);
@@ -914,8 +921,20 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
       : null;
 
     app.updateImageTransform?.(staged.background.image ?? null);
+    // The previous project's schedules and timeline (its intro, comet tail
+    // and path travel time), and whether its duration was a rebuild's, are
+    // not this one's: it opens with the timing it was saved with, and a
+    // constant-time duration stays the author's until timing is rebuilt for
+    // its route (DEF-06).
+    clearRouteSchedules(app);
+    app.animationEngine.clearIntroTime?.();
+    app.animationEngine.clearTailTime?.();
+    app.animationEngine.pathDuration = 0;
+    app._timingDerived = false;
     app.animationEngine.setMode?.(staged.animationState.mode);
     app.animationEngine.setSpeed?.(staged.animationState.speed);
+    // The saved duration is the base timeline (CROWD-05); what the scene
+    // waits for after it is measured once the path below is in place.
     app.animationEngine.setDuration?.(staged.animationState.duration);
     app.animationEngine.setPlaybackSpeed?.(1);
     app.animationEngine.pause?.();
@@ -925,7 +944,9 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     if (app.interactionHandler?.setSelection) app.interactionHandler.setSelection([], null);
     else app.interactionHandler?.setSelectedWaypoint?.(null);
 
-    if (staged.waypoints.length >= 2) app.calculatePath?.();
+    // Always: a project of fewer than two waypoints clears what the last
+    // route fed (DEF-06).
+    app.calculatePath?.();
     syncLoadedProjectUI(app, staged);
     app.updateWaypointList?.();
     app.render?.();
@@ -973,6 +994,7 @@ export const persistenceMixin = {
       // ZIP assets are archived separately; the canonical model builder owns
       // every other field so explicit save, recovery and HTML export cannot
       // drift on additive project metadata such as the render reference.
+      settleSavedTiming(this);
       const projectData = this._buildProjectSnapshot({ includeAssets: false });
       
       // Preserve the original validated PNG/JPEG/WebP bytes exactly. Export
@@ -1155,7 +1177,10 @@ export const persistenceMixin = {
       animationState: {
         mode: this.animationEngine.state.mode,
         speed: this.animationEngine.state.speed,
-        duration: this.animationEngine.state.duration
+        // The base timeline, not the playback duration (CROWD-05): what the
+        // scene waits for after it is recomputed on open, so a file opens as
+        // before and a save and reopen never adds to it.
+        duration: this.animationEngine.state.baseDuration ?? this.animationEngine.state.duration
         // Note: playbackSpeed intentionally NOT saved - resets to 1x on each session
       },
       background: {

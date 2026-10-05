@@ -118,6 +118,78 @@ describe('live plus undo/redo reachability', () => {
   });
 });
 
+/**
+ * DEF-25 — a project with no images still reads its whole history on every edit.
+ *
+ * `pruneUnreferencedImageAssets` (`undoRedo.js`) collects references from the
+ * live state and every retained undo and redo state, parsing each, before it
+ * asks the store what to sweep, even when the store holds no image at all,
+ * and even after a save that `UndoService` refused as a duplicate. On a long
+ * route that is most of each edit's cost. The planned fix returns early when
+ * there are no images; these tests pin today's work so it changes on purpose.
+ * The third pins what that early return would also drop (the plan's Codex
+ * qualification): a malformed retained state now throws on every edit, so the
+ * fix must keep that check another way, or drop it knowingly.
+ */
+describe('DEF-25: pruning with no image assets', () => {
+  /** An app with no image assets and three saved states. */
+  function appWithoutImages() {
+    const imageAssetService = new ImageAssetService();
+    const undoService = new UndoService({ emit: vi.fn() });
+    [0, 1, 2].forEach(value => undoService.saveState({ waypoints: [], value }));
+    const app = {
+      imageAssetService,
+      undoService,
+      _undoDebounceTimer: null,
+      _getUndoableState: () => ({ waypoints: [], value: 'live' }),
+    };
+    expect(imageAssetService.getAssetCount()).toBe(0);
+    return app;
+  }
+
+  /** What `JSON.parse` was handed while `action` ran. */
+  function parsedDuring(action) {
+    const parse = vi.spyOn(JSON, 'parse');
+    try {
+      action();
+      return parse.mock.calls.map(([text]) => text);
+    } finally {
+      parse.mockRestore();
+    }
+  }
+
+  test('DEF-25: a committed edit parses every retained state, with no image to keep', () => {
+    const app = appWithoutImages();
+
+    const parsed = parsedDuring(() => undoRedoMixin.saveUndoState.call(app));
+
+    expect(app.undoService.getRetainedSerializedStates()).toHaveLength(4);
+    expect(parsed).toEqual(app.undoService.getRetainedSerializedStates());
+  });
+
+  test('DEF-25: a duplicate save, which saves nothing, parses them all again', () => {
+    const app = appWithoutImages();
+    undoRedoMixin.saveUndoState.call(app);
+    const before = app.undoService.createSnapshot();
+
+    const parsed = parsedDuring(() => undoRedoMixin.saveUndoState.call(app));
+
+    expect(app.undoService.createSnapshot()).toEqual(before);
+    expect(parsed).toEqual(app.undoService.getRetainedSerializedStates());
+  });
+
+  test('DEF-25: so a malformed retained state throws on an edit, after the edit is saved', () => {
+    const app = appWithoutImages();
+    const history = app.undoService.createSnapshot();
+    app.undoService.restoreSnapshot({ ...history, undoStack: ['{"waypoints":', ...history.undoStack] });
+
+    expect(() => undoRedoMixin.saveUndoState.call(app)).toThrow(SyntaxError);
+    expect(app.undoService.getRetainedSerializedStates().at(-1))
+      .toBe(JSON.stringify({ waypoints: [], value: 'live' }));
+    expect(() => undoRedoMixin.pruneImageAssets.call(app)).toThrow(SyntaxError);
+  });
+});
+
 function makeAdmissionApp(assetIds, initialAssetId) {
   const imageAssetService = new ImageAssetService();
   for (const id of assetIds) imageAssetService.addAsset(makeAsset(id));
