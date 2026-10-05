@@ -18,6 +18,52 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — REL-700 — v3.2.700 ships UI-03
+
+**Decision:** v3.2.700 is live from deploy commit `d07ca85` (tag `v3.2.700`), released under GATELESS-1 because UI-03's merge (`68b19ba`, PR #94) changed `src/`, `styles/` and `index.html`.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full, from `route-plotter/`. (1) A clean `main` equal to `origin/main` at `68b19ba`; Pages `main` `/docs`, built at `68b19ba`, tagged `rollback-v3.2.699-68b19ba`; `git fsck --connectivity-only` reported only dangling trees, and no OneDrive conflict copies. Pages' build of `68b19ba` sat queued for an hour (this account runs one Actions job at a time, and branch pushes took the runner); it was cancelled and a build of the same commit requested, which ran at once. The first release run hit its time limit two minutes into the gate, before any push; the second ran from the start. (2) `npm run check` green (101 files, 2,011 tests, 2 todo); `npm run push:dry-run` clean. (3) `npm run push` committed `d07ca85`. (4) Verify, the Pages build and deploy green on `d07ca85`. (5) The `github-pages` deployment at `d07ca85`; all 22 published files SHA-256-identical to `docs/`; the live site ready ("Route Plotter v3.2.700"); the Open day route played (frames driven by hand: 3,002 ms, then to its end at 11,594 ms, no frame left queued) and exported, at 1280×800, as MP4 (1920×1080, 13.6 s, `ftypisom`) and as HTML (its CSP, the project and the live `player.js` embedded byte for byte), captured in the page. The smoke script's own first `player.js` fetch timed out in the pane (`ERR_TIMED_OUT`) and its retry returned 200. UI-03's hints were checked in Chromium on a build of `dde7948` before the merge. Its build ends in 0, so its exports are also owed a save to disk under the owner's tenth-release check (this PR's GATELESS-1 entry; a wish line).
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — CROWD-05 — The animation never ends before anything that ends; its end hold follows TST-04 as CROWD-06
+
+**Decision:** CROWD-05 becomes scene-wide: the procedural duration is the latest end of every animation that concludes, measured so that nothing timed as a fraction of the timeline moves. CROWD-06 adds one project-wide "Hold at end" control (Pacing, 0–10 s, default 2 s) after TST-04, and retires "Wait here for this crowd". The owner set the rule and the control's purpose, and delegated the rest.
+
+**Rationale:** the owner, relayed verbatim by the Backlog status session: "all animations that do conclude should be taken into account with the procedurally generated duration, so that animations never end before any animation that will end does end. the extra control is for both looping / ongoing situations, and also for generally adding some padding to the end. happy for you to push back. do whats best". The Backlog status session's calls under that delegation:
+- One project-wide control, not one per crowd.
+- Its place in Pacing under Duration.
+- The 2 s default, mirroring the export's start buffer.
+- The split, so TST-04's PR need not absorb a new control and CROWD-06 lands beside DEF-20.
+- No hold in part 1, so lengths and end-frame goldens change once.
+- CROWD-05's place ahead of Phase 1. The owner then told the run, in its chat: "this chat take control, read the backlog chat for info, then you proceed as you see fit". Under that, the run places CROWD-05 next after TST-16 (already in review), ahead of Phase 1's other pull requests, as DEF-77 went: the run's call, for him to confirm.
+
+**Supersedes:** 2026-10-05 — CROWD-05 — The animation running until every crowd dot finishes is filed, waiting on the owner's word
+
+**Deferred:** CROWD-06
+
+## 2026-10-05 — CROWD-05 — The animation running until every crowd dot finishes is filed, waiting on the owner's word
+
+**Decision:** CROWD-05 joins the backlog as a `[!]` line, because the owner reported from use that a crowd going from Entry to Exit is cut off when the route ends and asked for it to be filed, not started; he agreed its shape in outline, and starting it waits on his word.
+
+**Rationale:** his words reached this run relayed verbatim by the Backlog status session; the item quotes them. The backlog rather than the wish-list, and the ID after CROWD-04 in the canon crowd family, are this session's calls. The shape that session proposed (a crowd tail after the route, releases anchored to the route-only duration, a control for looping crowds) is in the item's notes; to that session's summary of it he replied "agreed", read here as accepting the placement and the shape, the example control included, not as an order to start (this session's reading, for him to confirm). The wish line owing the crowd explainer's update is retired: that session updated the doc after DEF-77 shipped.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — GATELESS-1 — The in-page export check suffices, with a save to disk after export changes and every tenth release
+
+**Decision:** a release's in-page export check is enough unless it changes the export code or `player.js`, or its build number ends in 0; then its exports are also saved to disk and opened there. v3.2.699's owed save is retired and v3.2.700's is owed, because the owner said "proceed on that basis" and asked for a check every tenth release.
+
+**Rationale:** asked whether releases after v3.2.698 still owe their saves, he asked for this session's recommendation: the in-page check captures the export's own bytes and checks the MP4's header, decode, size and length and the HTML's CSP, project and embedded player; a saved copy adds only opening from disk (the HTML as a file, the MP4 in a desktop player), which matters when export or player code changes. He answered "proceed on that basis. could we perhaps add an export check avery tenth release or something? is that practical?". Builds ending in 0 as his "every tenth release" he confirmed, "if viable" (it is: the build number rises by one each release). The browser pane cannot save a download; offered his hands or his own Chrome, he chose "you": the run saves through his Chrome (Claude in Chrome), asking his word for each download. This extends the same day's entry confirming the checks for v3.2.693–698.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — UI-03 — Hints open on hover, say what they mean, and cover every setting
 
 **Decision:** UI-03 part 1 lands: a mouse resting 500 ms on a hint's text opens it, it stays while the pointer is on the text, its control or the hint, and Escape dismisses it in place, in a scene-outline field too; a hint sits clear of the control it describes; thirteen unclear hints are reworded and 60 settings gain one, because the owner asked for parameters explained in place. The owner's ahead-of-Phase-1 group closes; Phase 1 resumes with TST-16 (PR #76), readiest first by PLAN-1.
