@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 352 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 351 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 118 file(s)
+- `tests` — 117 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -210,7 +210,7 @@
 - `src/app/pathTiming.js` — path recalc, easing, segment/leg timing, duration updates
 - `src/app/persistence.js` — Transactional bounded project/ZIP staging, commit and rollback; honest autosave recovery, save revisions and the shared coordVersion-9 snapshot including timing and visual references
 - `src/app/playback.js` — Single keyboard-command path, canonical transport/JKL, preview mode, demand-driven render keepalive and time display
-- `src/app/pointer.js` — canvas pointer fallbacks and hit-testing; and (DEF-64) a branched route's legs hit along their own runs, the trunk's and each branch's, each hit naming its leg (the waypoint it leaves, the next on its run, the run) and offering the "+" on trunk legs only, and no leg of a run whose waypoints are not the route's (a failed load's leftovers, DEF-51)
+- `src/app/pointer.js` — canvas pointer fallbacks and hit-testing
 - `src/app/privacy.js` — Explicit export disclosures plus fixed-schema diagnostics preview, public/private support hand-off, exact-address fallback and modal recovery
 - `src/app/projectReset.js` — Testable Clear All transaction: invalidate async work, clear bytes/model/UI, reset the visual reference, cancel writers and establish one empty baseline
 - `src/app/sceneOutline.js` — EventBus integration and sole mutation/undo/autosave owner for stable-ID semantic scene-outline commands, with shared plain crowd-field vocabulary
@@ -218,7 +218,7 @@
 - `src/app/undoRedo.js` — Undo/redo model, selection and inspector-scope restoration; reference-aware asset sweeping and rollback-safe interactive image admission with minimum history loss
 - `src/app/viewport.js` — Responsive canvas/panel bounds, first-authored-canvas visual-reference seeding, coordinate conversion, aspect handling and manual zoom
 - `src/app/wiringBus.js` — EventBus + AnimationEngine subscriptions, including card-action availability refresh and compatible already-saved image-edit signalling
-- `src/app/wiringControllers.js` — UIController/InteractionHandler event connections; and (DEF-64) the leg hover keeps its run and whether it offers the "+", so a fork's trunk leg and its branch's first leg are told apart
+- `src/app/wiringControllers.js` — UIController/InteractionHandler event connections
 - `src/app/wiringDom.js` — DOM control and delegated card-action wiring, transient mixed-state reset, and detached transactional custom marker/route-head image uploads
 - `src/assets/README.md` — Provenance and bundling boundary for reviewed first-party visual assets
 - `src/assets/drone-head.png` — Reviewed 512 px RGBA quadcopter route-head preset, inlined into both runtime bundles
@@ -266,7 +266,7 @@
 - `src/services/MotionVisibilityService.js` — Stateless timeline-derived path, waypoint and background visibility, including comet trails
 - `src/services/NetworkEditService.js` — Network edit mode (Phase 4): pen state machine (chaining, drags, bends, Esc ladder, mode keys), banner, node/edge selection events, and the guide/overlay canvas rendering (edge geometry via SwarmEngine's cache); and (DEF-59) the pen checks the six graph counts before it adds a node, link or bend, asking the app for the scene's crowds on the bus (`scene:flow-layers`)
 - `src/services/PathCalculator.js` — Catmull-Rom spline, corner-slowing reparameterisation, curvature; `legTimingLengths()` gives per-major-leg timing lengths (progress-span basis)
-- `src/services/RenderingService.js` — Canvas drawing and stable short-edge reference scaling for path, markers, labels, effects and overlays; static `VECTOR_LAYERS` drives draw order; and (DEF-64) the hovered leg's glow and "+" drawn along its own run, with no "+" on a leg that offers none; static `imageRect`, `cameraApplies` and `applyCamera` place the background image, its tint and the instant masks (DEF-27)
+- `src/services/RenderingService.js` — Canvas drawing and stable short-edge reference scaling for path, markers, labels, effects and overlays; static `VECTOR_LAYERS` drives draw order; static `imageRect`, `cameraApplies` and `applyCamera` place the background image, its tint and the instant masks (DEF-27)
 - `src/services/StorageService.js` — Honest bounded localStorage writes with debounce, change detection, deterministic flush/cancel and clear
 - `src/services/SwarmEngine.js` — Deterministic flow-layer dot evaluator: pure `evaluate(timelineMs, layer, context)`, seeded release-density inversion, weighted graph walks, four lifecycle modes and per-edge PathCalculator caches
 - `src/services/TextLabelService.js` — Text label layout, fade, auto-positioning
@@ -294,7 +294,7 @@
 - `src/utils/routeTrace.js` — Pure trace of the hero route into a crowd guide network (COMPOSE-03): a node per major, an edge per leg carrying its minors, branches from fork to rejoin, and derived ids fitted to the persisted limit (DEF-31)
 - `src/utils/safeColor.js` — Strict persisted hexadecimal-colour grammar with opt-in exact transparent sentinel
 - `src/utils/sceneSemantics.js` — Pure bounded DOM-free projection and collision-safe semantic keys for route/crowd/network/polygon models
-- `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers); and (DEF-64) `routeRuns`, the runs a route's legs lie on, the trunk then each branch, each with its own waypoints, polyline and progress
+- `src/utils/segmentHitTest.js` — Pure leg hit-test geometry: polyline nearest-point projection, waypoint→point-index mapping, leg ownership + midpoint (Phase 4 canvas affordances; used by pointer mixin and hover render layers)
 - `src/utils/sliderScales.js` — SPL-01: the pure slider scales (log2, bipolar log2 with its ±50 dead zone, the angle curve) and the readout format, moved out of MotionVisibilityService; imports nothing
 - `src/utils/snapToAngle.js` — Angle-snap geometry for shift-drag waypoint placement (moved out of main.js in the Phase 1 split)
 - `src/utils/uiReadouts.js` — Shared reference-pixel, effective-amplitude and background-overlay readout formatting with accessible range-value synchronisation
@@ -330,7 +330,6 @@
 - `tests/branchAuthoring.test.js` — ROUTE-01c contract: branch numbering,
 - `tests/branchExportParity.test.js` — ROUTE-01d contract: branch links in
 - `tests/branchHandle.test.js` — COMPOSE-04 contract: which waypoints are
-- `tests/branchLegHit.test.js` — DEF-64: by real pointer events on the booted app, a branched route's legs are hit along their own runs: a trunk leg is hovered (its glow, the "+" idle then lit), clicked (the waypoint it leaves selected, the Leg card flashed, nothing added) and inserted on (a minor on the trunk between the leg's ends, the branch as it was, also where the branch's run follows the leg's waypoint in the array or comes before it); a branch leg is hovered (its glow along the branch, also with the branch stored last in the array) and clicked (the fork selected for its first leg, the branch's waypoint for its last); a branch leg offers, shows and takes no "+" (DEF-22), each leg of a two-waypoint branch checked; near a fork or a rejoin the hit names the leg pointed at, and the hover follows the pointer between a fork's two legs; where the trunk and a branch start at one point the trunk is named; after a branched project fails to load late over an unbranched one, no leg of its leftover branch is hit and the route's own are; and an unbranched route's hit, hover, drawing and clicks are as before
 - `tests/branchTiming.test.js` — ROUTE-01b contract: run timing, master
 - `tests/busynessEnvelope.test.js` — Neutral, gradual, sudden, normalisation and strict-validation contracts for crowd release density
 - `tests/crowdArrival.test.js` — COMPOSE-02 contract: onset/journey maths,

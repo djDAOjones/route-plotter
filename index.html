@@ -133,6 +133,7 @@
                    data-target-input="#dot-color" 
                    data-mode="okabe-ito" 
                    data-label="Colour" 
+                   data-label-tip="Colour of this waypoint's marker and of its beacon" 
                    data-allow-custom="false">
               </div>
               
@@ -200,7 +201,7 @@
 
               <!-- Wait Time -->
               <label id="pause-time-control" for="waypoint-pause-time">
-                <span data-tip="How long the animation pauses at this waypoint">Wait Time</span>
+                <span data-tip="How long the path head waits at this waypoint before moving on">Wait Time</span>
                 <input type="range" id="waypoint-pause-time" min="0" max="1000" value="500" step="1">
                 <span id="waypoint-pause-time-value">1.5s</span>
               </label>
@@ -219,7 +220,7 @@
 
                   <!-- Current Waypoint Zoom -->
                   <div class="control-row control-row-inline">
-                    <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Smoothly transitions between waypoints">This Zoom</label>
+                    <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Zoom transition sets whether the camera reaches it gradually over the incoming leg or quickly at the leg's start">This Zoom</label>
                     <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0"
                            aria-describedby="camera-zoom-value" aria-valuetext="1.0x">
                     <span id="camera-zoom-value" class="slider-value">1.0x</span>
@@ -248,7 +249,7 @@
                 <summary>More</summary>
                 <div class="section-more-content">
                   <label for="camera-zoom-mode">
-                    <span data-tip="How the camera reaches this waypoint's zoom: gradually over the incoming leg or quickly on arrival">
+                    <span data-tip="How the camera reaches this waypoint's zoom: gradually over the incoming leg or quickly at the leg's start">
                       Zoom transition
                     </span>
                     <select id="camera-zoom-mode">
@@ -271,7 +272,7 @@
                     </label>
                     <label class="checkbox-label" for="ripple-wait">
                       <input type="checkbox" id="ripple-wait" checked>
-                      <span>Wait during ripple</span>
+                      <span data-tip="Sets Wait Time to how long the ripple lasts, so the path head waits until its last ring has finished">Wait during ripple</span>
                     </label>
                   </div>
 
@@ -350,6 +351,7 @@
                    data-target-input="#label-color"
                    data-mode="neutral-ink"
                    data-label="Text colour"
+                   data-label-tip="Colour of the label text"
                    data-allow-custom="true">
               </div>
 
@@ -358,6 +360,7 @@
                    data-target-input="#label-bg-color"
                    data-mode="neutral-ink"
                    data-label="Background colour"
+                   data-label-tip="Colour of the box behind the label text; Background opacity sets how solid it is"
                    data-allow-custom="true">
               </div>
 
@@ -377,14 +380,14 @@
               
               <!-- Position X Offset -->
               <label for="label-offset-x">
-                <span data-tip="Horizontal offset of label from the waypoint">Horizontal Position</span>
+                <span data-tip="How far the label sits left (negative) or right (positive) of the waypoint, as a percentage of the canvas width">Horizontal Position</span>
                 <input type="range" id="label-offset-x" min="-50" max="50" value="0" step="1">
                 <span id="label-offset-x-value">0%</span>
               </label>
               
               <!-- Position Y Offset -->
               <label for="label-offset-y">
-                <span data-tip="Vertical offset of label from the waypoint">Vertical Position</span>
+                <span data-tip="How far the label sits above (negative) or below (positive) the waypoint, as a percentage of the canvas height">Vertical Position</span>
                 <input type="range" id="label-offset-y" min="-50" max="50" value="-5" step="1">
                 <span id="label-offset-y-value">-5%</span>
               </label>
@@ -416,6 +419,7 @@
                    data-target-input="#segment-color"
                    data-mode="okabe-ito"
                    data-label="Colour"
+                   data-label-tip="Colour of the path line along this leg"
                    data-allow-custom="false">
               </div>
 
@@ -438,7 +442,7 @@
 
               <!-- Segment Speed -->
               <label id="segment-speed-control" for="waypoint-segment-speed">
-                <span data-tip="Speed multiplier for this path segment relative to base duration">Segment speed</span>
+                <span data-tip="How fast the path head travels this leg: 2.0x takes half the time, 0.5x twice as long">Segment speed</span>
                 <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1">
                 <span id="waypoint-segment-speed-value">1.0x</span>
               </label>
@@ -451,7 +455,7 @@
               <!-- Shape Parameters (shown for squiggle/randomised) -->
               <div id="shape-params-controls" style="display: none;">
                 <label for="shape-amplitude">
-                  <span data-tip="Peak sideways displacement as a percentage of the source-image coordinate scale">Amplitude</span>
+                  <span data-tip="How far the Squiggle or Randomised line swings to each side, as a percentage of the image size">Amplitude</span>
                   <input type="range" id="shape-amplitude" min="1" max="50" value="10" step="1" aria-describedby="shape-amplitude-value" aria-valuetext="2%">
                   <span id="shape-amplitude-value">2%</span>
                 </label>
@@ -546,12 +550,13 @@
                      data-target-input="#area-fill-color" 
                      data-mode="okabe-ito" 
                      data-label="Fill" 
+                     data-label-tip="Colour inside the area; None leaves it unfilled" 
                      data-allow-custom="false">
                 </div>
                 
                 <!-- Fill Opacity -->
                 <label for="area-fill-opacity">
-                  <span data-tip="Opacity of the area fill. Set to 0 for outline-only mode">Fill Opacity</span>
+                  <span data-tip="Opacity of the area fill. Set to 0% to show only the border">Fill Opacity</span>
                   <input type="range" id="area-fill-opacity" min="0" max="100" value="30" step="1">
                   <span id="area-fill-opacity-value">30%</span>
                 </label>
@@ -565,6 +570,7 @@
                      data-target-input="#area-border-color" 
                      data-mode="okabe-ito" 
                      data-label="Border" 
+                     data-label-tip="Colour of the area's border line" 
                      data-allow-custom="false">
                 </div>
                 
@@ -673,7 +679,7 @@
                   </select>
                 </label>
                 <label id="head-rotation-offset-control" for="head-rotation-offset">
-                  <span data-tip="Degrees added to the auto-rotation angle">Offset</span>
+                  <span data-tip="Turns the image by this many degrees on top of Rotation: clockwise above 0°, anticlockwise below">Offset</span>
                   <input type="range" id="head-rotation-offset" min="-180" max="180" value="0" step="5">
                   <span id="head-rotation-offset-value">0°</span>
                 </label>
@@ -699,7 +705,7 @@
             </div>
             <div id="section-pacing-content" class="section-content">
               <label id="speed-control-right" class="sidebar-control-row" for="animation-speed-right">
-                <span data-tip="Total animation playback time. Adjusts the base speed of all path segments">Duration</span>
+                <span data-tip="Total animation playback time. Changing it speeds up or slows down every leg alike">Duration</span>
                 <input type="range" id="animation-speed-right" min="1" max="4000" step="5">
                 <span id="animation-speed-value-right" class="slider-value">10s</span>
               </label>
@@ -808,7 +814,7 @@
                   <span id="aov-distance-value">10%</span>
                 </label>
                 <label for="aov-dropoff">
-                  <span data-tip="How quickly visibility fades at the cone edges">View Dropoff</span>
+                  <span data-tip="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head">View Dropoff</span>
                   <input type="range" id="aov-dropoff" min="0" max="1000" value="500" step="1">
                   <span id="aov-dropoff-value">25%</span>
                 </label>
@@ -990,6 +996,7 @@
                    data-target-input="#crowd-dot-color"
                    data-mode="okabe-ito"
                    data-label="Colour"
+                   data-label-tip="Colour of this crowd's dots"
                    data-allow-custom="false">
               </div>
 
@@ -1044,7 +1051,7 @@
                   </label>
 
                   <label class="crowd-variation-control" for="crowd-intensity-ramp">
-                    <span data-tip="Bias all set-offs toward the start or end before applying the busyness graph">Release bias</span>
+                    <span data-tip="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither">Release bias</span>
                     <input type="range" id="crowd-intensity-ramp" min="-100" max="100" value="0" step="1" aria-describedby="crowd-intensity-ramp-value" aria-valuetext="Even">
                     <span id="crowd-intensity-ramp-value">Even</span>
                   </label>
@@ -1097,13 +1104,15 @@
 
               <label for="crowd-lifecycle">
                 <span data-tip="What a dot does when it reaches the end of its journey">At journey end</span>
-                <select id="crowd-lifecycle">
+                <select id="crowd-lifecycle" aria-describedby="crowd-lifecycle-hint">
                   <option value="respawn">Respawn at entry</option>
                   <option value="loop">Repeat journey</option>
                   <option value="disappear">Disappear</option>
                   <option value="collect">Collect at exit</option>
                 </select>
               </label>
+              <!-- DEF-77: crowds.js fills this while no dot reaches its journey end -->
+              <p id="crowd-lifecycle-hint" class="section-hint" hidden></p>
             </div>
           </div>
 
@@ -1122,7 +1131,7 @@
             </div>
             <div id="section-node-content" class="section-content">
               <label for="network-node-type">
-                <span data-tip="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward">Type</span>
+                <span data-tip="Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or end them where no path leads out. With no exit, journeys end at nodes with one connection; with no entry, dots set off from any node they can leave">Type</span>
                 <select id="network-node-type">
                   <option value="normal">Pass-through</option>
                   <option value="entry">Entry</option>
