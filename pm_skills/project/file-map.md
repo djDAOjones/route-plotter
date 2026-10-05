@@ -1,7 +1,7 @@
 # File Map
 
 <!-- file-map-index -->
-<!-- 356 file(s) across 12 section(s); pm_skills/ is not mapped here.
+<!-- 351 file(s) across 12 section(s); pm_skills/ is not mapped here.
      Hand-maintained: do not run pm_skills/scaffold/gen-file-map.mjs. It keeps
      only the first line of each row, so it drops wrapped roles and blanks
      three reviews rows. Update the rows and these counts by hand. -->
@@ -16,7 +16,7 @@
 - `specs` — 15 file(s)
 - `src` — 100 file(s)
 - `styles` — 6 file(s)
-- `tests` — 122 file(s)
+- `tests` — 117 file(s)
 <!-- /file-map-index -->
 
 ## (root)
@@ -337,7 +337,6 @@
 - `tests/crowds.test.js` — Crowd creation/layers/selection plus seeded variation, busyness graph/control transactions, seed-only Re-roll and custom-network guidance contracts
 - `tests/diagnostics.test.js` — Fixed diagnostic schema, deterministic byte parity, hostile-field exclusion, redaction and no-network contracts
 - `tests/eventBusErrors.test.js` — ISO-02: a listener error is logged and the emit continues by default, counted either way, and routed to an optional handler whose throw ends that emit; and (DEF-30) a once-listener that throws still fires only once, removing only itself
-- `tests/eventTranscript.test.js` — TST-05 event transcript: the dispatch order of every listener on the booted app's bus, named by module and place, so a method split leaves it unchanged; and, one fresh app per row, a transcript of each of the 96 events `wiringControllers.js` and `wiringBus.js` subscribe to, plus the scene-edit commits the bus reaches (CON-03): the emits each caused, nested, with each counted step in its place (autosaves and their writes, path rebuilds, retimes, renders, undo entries with what an Undo takes back); what the app said and showed, and what the replaced decoder and exporter were handed; the project, selection and undo change after the act and again after ten seconds of timers, each timer step with its delay, with the app's waypoint lookup among the runtime fields and any handed-out waypoint that is not the route's own object marked; whether browser recovery, storage replayed through every write, removal and clear, holds the project as it stands; and each undo entry the row saved, undone and redone, against the project; DEF-15, DEF-16 and DEF-22 rows pin those defects as they stand; a subscribed event with no row, or a row whose event is gone, fails; goldens are written only when every test of the file has run to its end
 - `tests/example.test.js` — Unit tests (Waypoint, AnimationState, Path, EventBus, etc.); (DEF-30) `once` runs once when its callback emits the same event or two async emits hold it, and `off` with its callback removes it
 - `tests/exampleProjects.test.js` — DEMO-01 living-fixture contract: every
 - `tests/exportMinimisation.test.js` — DEF-23: a saved project and an HTML export carry only the images the project uses, and only the project file keeps their filenames
@@ -424,10 +423,6 @@
 - `tests/goldens/draw-log-uon-open-day-edit.txt` — TST-02 golden: the editor draw transcript for the Open day route fixture, its canvas set-up frame and five instants
 - `tests/goldens/draw-log-uon-open-day-export.txt` — TST-02 golden: the export-canvas draw transcript for the Open day route fixture, its canvas set-up frame and five instants
 - `tests/goldens/draw-log-uon-open-day-preview.txt` — TST-02 golden: the preview draw transcript for the Open day route fixture, its canvas set-up frame and five instants
-- `tests/goldens/event-registrations.txt` — TST-05 golden: every listener on the booted app's bus, per event, in the order added, by module and place
-- `tests/goldens/event-transcript-scene-edits.txt` — TST-05 golden: the scene-edit commits the bus reaches (the outline's commands, the guide network's commit, the crowd cards' change)
-- `tests/goldens/event-transcript-wiring-bus.txt` — TST-05 golden: the transcript of each event `wiringBus.js` subscribes to
-- `tests/goldens/event-transcript-wiring-controllers.txt` — TST-05 golden: the transcript of each event `wiringControllers.js` subscribes to, with the DEF-15, DEF-16 and DEF-22 rows
 - `tests/goldens/project-snapshot-authored-extras.json` — TST-06 golden: the saved shape of the authored-extras fixture, the one that exercises every field
 - `tests/goldens/project-snapshot-nervous-system-flow.json` — TST-06 golden: the saved shape of the Signal flow example (guide network, no hero route)
 - `tests/goldens/project-snapshot-parm-aerial-walk.json` — TST-06 golden: the saved shape of the Site walk example (plain labelled chain)
