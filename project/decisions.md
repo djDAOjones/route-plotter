@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — GATELESS-1 — The owner confirms chat 10's three calls and orders an overhaul of the examples
+
+**Decision:** The owner confirms three of the run's calls (DEF-72 includes the branched-route slowdown; with a comet trail Preview stays longer than Edit by the trail; the Duration breakdown shows only when something runs past the route) and asks for a major overhaul of the built-in examples (EX-01, waiting on his direction).
+
+**Rationale:** the owner, in the run's chat on 2026-10-05: "The examples need a major overhaul. proceed with your reccomendation for:" the three calls as listed to him, quoted from DEF-72's and CROWD-05's entries; and "proceed with disk export checks / sign in", the owed export saves, which wait on Claude in Chrome being connected.
+
+**Supersedes:** none
+
+**Deferred:** EX-01
+
 ## 2026-10-05 — CROWD-05 — The animation runs until everything that finishes has finished
 
 **Decision:** CROWD-05 lands: the playback duration is the latest of the route's own timeline (the base) and every end after it, crowd dots that finish and beacons that settle, while everything timed as a fraction keeps the base; Duration shows the full length and, when something past the route sets it, what does. Its group closes; Phase 1 goes on with TST-14 (DEF-64 landed first).
