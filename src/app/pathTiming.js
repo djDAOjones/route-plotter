@@ -13,6 +13,7 @@ import { CameraService } from '../services/CameraService.js';
 import { resolveRouteBranches, branchPathWaypoints, trunkWaypoints } from '../utils/routeBranches.js';
 import { composeRouteTimeline } from '../utils/branchTiming.js';
 import { resolveGraphAnchors } from '../utils/routeAnchors.js';
+import { computeSceneEnd, describeSceneEnd } from '../utils/sceneEnd.js';
 
 /**
  * The waypoints `pathPoints` was built from — `waypoints` itself on a linear
@@ -116,6 +117,9 @@ function clearRouteTiming(app) {
   // Nor its travel time: with no path, the duration plays through evenly,
   // which the timeline mapping gives only for a path of no length (DEF-72).
   if (app.animationEngine) app.animationEngine.pathDuration = 0;
+  // What the route held back is gone with it; a crowd on a network still
+  // counts (CROWD-05).
+  queueSceneEnd(app);
   app.queueRender?.();
 }
 
@@ -127,6 +131,7 @@ function clearRouteTiming(app) {
  * its schedules never outlive its geometry (DEF-06). Otherwise, in
  * constant-time mode, the duration is the author's.
  * @param {Object} app
+ * @returns {boolean} Whether the timing was rebuilt (and with it the scene's end)
  */
 function retimeRoute(app) {
   if (app.animationEngine.state.mode === 'constant-speed' || app._timingDerived) {
@@ -138,6 +143,103 @@ function retimeRoute(app) {
 
     // Use unified duration update (accounts for segment speeds)
     app.updateAnimationDuration(currentSpeed);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * The scene's end for base timeline `baseMs` (CROWD-05): the latest of the
+ * route's own timeline and every animation that concludes after it, the
+ * crowds and the beacons, measured against `baseMs`. A module helper, as
+ * `routeOf` is, for the hosts that borrow this mixin.
+ * @param {Object} app RoutePlotter or PlayerApp
+ * @param {number} baseMs
+ * @returns {{endMs: number, parts: import('../utils/sceneEnd.js').SceneEndParts}}
+ */
+function composeSceneEnd(app, baseMs) {
+  const engine = app.animationEngine;
+  return computeSceneEnd({
+    baseMs,
+    layers: app.scene?.getFlowLayers?.() || [],
+    swarmEngine: app.swarmEngine,
+    // What the renderer evaluates the dots with, so they end where it ends them.
+    swarmContext: {
+      routePathPoints: app.pathPoints,
+      routeAnchors: app.getRouteArrivalMap?.() || null,
+    },
+    beaconSchedules: engine.beaconSchedules,
+    waypoints: app.waypoints,
+    // Beacons are drawn under the motion settings in Preview only.
+    motionSettings: app.previewMode ? app.motionSettings : null,
+    beaconOffsetMs: (engine.startHandleTime || 0) + (engine.introTime || 0),
+  });
+}
+
+/**
+ * Queue a fresh scene end after an edit that can change what concludes
+ * after the route (CROWD-05): a crowd, its network, lifecycle or
+ * visibility, or a route that is gone. Debounced as `calculatePath`'s
+ * rebuild is, so a run of slider ticks is one computation.
+ * @param {Object} app RoutePlotter or PlayerApp
+ */
+function queueSceneEnd(app) {
+  if (app._sceneEndTimeout) clearTimeout(app._sceneEndTimeout);
+  app._sceneEndTimeout = setTimeout(() => {
+    app._sceneEndTimeout = null;
+    measureSceneEnd(app);
+  }, 50);
+}
+
+/**
+ * Measure the scene's end against the base timeline as it stands, without
+ * rebuilding the route's timing (CROWD-05). The base is never read back from
+ * the playback duration: only a rebuild, an opened project or a reset sets
+ * it. The head stays at the same instant, so an edit to a crowd never moves
+ * the route.
+ * @param {Object} app RoutePlotter or PlayerApp
+ * @returns {number} The playback duration
+ */
+function measureSceneEnd(app) {
+  if (app._sceneEndTimeout) {
+    clearTimeout(app._sceneEndTimeout);
+    app._sceneEndTimeout = null;
+  }
+  const engine = app.animationEngine;
+  const baseMs = engine.state.baseDuration;
+  const { endMs, parts } = composeSceneEnd(app, baseMs);
+  const previous = engine.sceneEndParts;
+  const unchanged = endMs === engine.state.duration && previous
+    && previous.routeMs === parts.routeMs && previous.crowdsMs === parts.crowdsMs
+    && previous.beaconsMs === parts.beaconsMs;
+  if (!unchanged) {
+    const timeMs = engine.state.currentTime;
+    engine.setDuration(endMs, baseMs, parts);
+    if (engine.state.currentTime !== timeMs) engine.seekToTime(timeMs);
+    writeDurationReadout(app);
+    app.updateTimeDisplay?.();
+  }
+  return engine.state.duration;
+}
+
+/**
+ * Write the Duration value, the playback duration, and under it what makes
+ * it up when something past the route sets the end (CROWD-05). The line is
+ * the slider's description, so it is emptied as well as hidden: a
+ * description is read even from a hidden element.
+ * @param {Object} app RoutePlotter or PlayerApp
+ */
+function writeDurationReadout(app) {
+  const engine = app.animationEngine;
+  const elements = app.elements || {};
+  const durationSec = Math.round(engine.state.duration / 100) / 10;
+  if (elements.animationSpeedValue) elements.animationSpeedValue.textContent = durationSec + 's';
+  if (elements.animationSpeedValueRight) elements.animationSpeedValueRight.textContent = durationSec + 's';
+  const breakdown = elements.durationBreakdown;
+  if (breakdown) {
+    const text = describeSceneEnd(engine.sceneEndParts, engine.state.duration);
+    breakdown.textContent = text;
+    breakdown.hidden = !text;
   }
 }
 
@@ -155,7 +257,9 @@ export function settleSavedTiming(app) {
   if (!app._durationUpdateTimeout || app.animationEngine?.state.mode === 'constant-speed') return;
   clearTimeout(app._durationUpdateTimeout);
   app._durationUpdateTimeout = null;
-  retimeRoute(app);
+  // The queued work measured the scene's end too, where it rebuilt nothing
+  // (CROWD-05); the snapshot holds the base either way.
+  if (!retimeRoute(app)) measureSceneEnd(app);
 }
 
 export const pathTimingMixin = {
@@ -238,8 +342,28 @@ export const pathTimingMixin = {
     
     this._durationUpdateTimeout = setTimeout(() => {
       this._durationUpdateTimeout = null;
-      retimeRoute(this);
+      // A constant-time duration the author set is kept, but what the scene
+      // waits for after it is still the scene's (CROWD-05).
+      if (!retimeRoute(this)) measureSceneEnd(this);
     }, 50); // Wait 50ms for batch changes
+  },
+
+  /** Queue a fresh scene end (`queueSceneEnd`, CROWD-05). */
+  scheduleSceneEnd() {
+    queueSceneEnd(this);
+  },
+
+  /**
+   * Measure the scene's end now (`measureSceneEnd`, CROWD-05).
+   * @returns {number} The playback duration
+   */
+  refreshSceneEnd() {
+    return measureSceneEnd(this);
+  },
+
+  /** Write the Duration value and its breakdown (`writeDurationReadout`, CROWD-05). */
+  updateDurationReadout() {
+    writeDurationReadout(this);
   },
   
   /**
@@ -701,8 +825,15 @@ export const pathTimingMixin = {
       totalDuration = Math.max(totalDuration, branchTotal);
     }
 
-    // Set the final total duration
-    this.animationEngine.setDuration(totalDuration);
+    // The base timeline is complete; the playback duration waits for every
+    // animation that concludes after it (CROWD-05). Both, and what made up
+    // the end, are set before anyone hears the duration changed.
+    if (this._sceneEndTimeout) {
+      clearTimeout(this._sceneEndTimeout);
+      this._sceneEndTimeout = null;
+    }
+    const sceneEnd = composeSceneEnd(this, totalDuration);
+    this.animationEngine.setDuration(sceneEnd.endMs, totalDuration, sceneEnd.parts);
     // This project's duration is now a rebuild's, whatever its mode (DEF-06).
     this._timingDerived = true;
     
@@ -715,15 +846,10 @@ export const pathTimingMixin = {
       this.animationEngine.seekToPathProgress(currentPathProgress);
     }
     
-    // Update UI with final duration (including pauses and tail time) - right sidebar only
+    // Update UI with final duration (including pauses, tail time and the
+    // scene's end) - right sidebar only
     const finalDuration = this.animationEngine.state.duration;
-    const durationSec = Math.round(finalDuration / 100) / 10;
-    if (this.elements.animationSpeedValue) {
-      this.elements.animationSpeedValue.textContent = durationSec + 's';
-    }
-    if (this.elements.animationSpeedValueRight) {
-      this.elements.animationSpeedValueRight.textContent = durationSec + 's';
-    }
+    writeDurationReadout(this);
     this.updateTimeDisplay();
     return finalDuration;
   },

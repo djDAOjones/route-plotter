@@ -53,6 +53,10 @@ export class AnimationEngine {
     this.segmentMarkers = [];
     this.hasVariableSpeed = false;  // Quick check to skip segment calculations when all speeds are 1.0
 
+    // What the playback duration is made of (CROWD-05): the base timeline and
+    // whatever runs past it (`sceneEnd`), or null when nothing was composed.
+    this.sceneEndParts = null;
+
     // Per-beacon clock schedules derived from the same timeline data
     // (built in setPauseMarkers; read by BeaconRenderer for closed-form phases)
     this.beaconSchedules = [];
@@ -346,6 +350,9 @@ export class AnimationEngine {
   getLiveTiming() {
     return {
       durationMs: this.state.duration,
+      // A route with no path clock plays over the base timeline, not over
+      // what the scene waits for after it (CROWD-05).
+      baseDurationMs: this.state.baseDuration,
       startHandleMs: this.startHandleTime,
       introMs: this.introTime,
       totalTailMs: this.totalTailTime,
@@ -888,13 +895,24 @@ export class AnimationEngine {
   }
   
   /**
-   * Set animation duration
-   * @param {number} duration - Duration in milliseconds
+   * Set animation duration.
+   *
+   * Two durations since CROWD-05: `duration`, the playback length transport,
+   * scrub, export and the player run to, and `baseDuration`, the timeline as
+   * composed before anything that runs past the route's own end, which every
+   * fraction of the timeline still measures against. A caller passing one
+   * value extends nothing. Both, and what made up the end, are in place
+   * before `durationChange` is emitted, so a listener reads the new ones.
+   * @param {number} duration - Playback duration in milliseconds
+   * @param {number} [baseDuration=duration] - Base timeline in milliseconds
+   * @param {Object|null} [parts=null] - What sets the end (`sceneEnd`)
    */
-  setDuration(duration) {
+  setDuration(duration, baseDuration = duration, parts = null) {
     const currentProgress = this.state.progress;
     console.debug('⏱️  [AnimationEngine.setDuration()] duration:', duration, 'ms (', (duration/1000).toFixed(1), 's), progress:', currentProgress);
     this.state.duration = duration;
+    this.state.baseDuration = baseDuration;
+    this.sceneEndParts = parts;
     this.state.setProgress(currentProgress); // Maintain progress
     this.emit('durationChange', duration);
     this.requestUpdate();

@@ -266,6 +266,8 @@ class RoutePlotter {
       // Right sidebar Duration control (synced with left sidebar)
       animationSpeedRight: document.getElementById('animation-speed-right'),
       animationSpeedValueRight: document.getElementById('animation-speed-value-right'),
+      // What makes up the Duration when the scene runs past the route (CROWD-05)
+      durationBreakdown: document.getElementById('pacing-duration-breakdown'),
       speedControl: document.getElementById('speed-control'),
       // durationControl: document.getElementById('duration-control'), // Removed from UI
       // Note: waypointEditor and waypointEditorPlaceholder removed - now using collapsible sections

@@ -989,6 +989,9 @@ export const wiringControllersMixin = {
      */
     this.eventBus.on('motion:waypoint-visibility-change', (mode) => {
       this.motionSettings.waypointVisibility = mode;
+      // Hiding a waypoint before or after the head changes when its beacon
+      // settles, and so where the scene ends (CROWD-05).
+      this.refreshSceneEnd?.();
       this.autoSave();
       if (this.previewMode) this.render();
     });

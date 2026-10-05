@@ -26,7 +26,7 @@ import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
 import { FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
 import { GraphModel } from '../models/GraphModel.js';
 import { stageProjectModel } from './persistence.js';
-import { dotsReachingJourneyEnd, waitForCrowdMs } from '../utils/crowdArrival.js';
+import { waitForCrowdMs } from '../utils/crowdArrival.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
@@ -41,10 +41,12 @@ const NEW_CROWD_DOT_COLOR = '#56B4E9';
  */
 const NEW_CROWD_SPEED = 0.4;
 const NEW_CROWD_RELEASE_DURATION = 0.5;
-/** Shown under "At journey end" while no dot of the crowd reaches it (DEF-77). */
-const LIFECYCLE_UNREACHED_HINT = 'No dot reaches its journey end before the timeline ends. '
-  + 'Raise Speed or lower Window length to see this setting act.';
-/** Instead, where nothing on the network can end a journey: no pace would help. */
+/**
+ * Shown under "At journey end" where nothing on the network can end a
+ * journey (DEF-77): no pace would help. Since the end waits for every journey
+ * that ends (CROWD-05), a slow crowd is no longer cut off, so this is the
+ * only case left.
+ */
 const LIFECYCLE_ENDLESS_HINT = 'No dot’s journey ends on this network. '
   + 'Set a node’s Type to Exit to see this setting act.';
 const BUSYNESS_GRAPH = Object.freeze({ width: 300, height: 140, padX: 18, padY: 16 });
@@ -184,20 +186,30 @@ export const crowdsMixin = {
     // An edit that moves no dot's release or journey (its colour, size, sway
     // or what it does at the end) says `journeys: false`, and the "At journey
     // end" hint keeps its answer rather than schedule every dot again (DEF-77).
+    // Every one, `journeys: false` too, may change where the scene ends
+    // (CROWD-05): the lifecycle decides whether a crowd finishes at all.
     this.eventBus.on('crowd:param-changed', ({ journeys = true } = {}) => {
       this.saveUndoStateDebounced();
       this.autoSave();
       this.queueRender();
       if (journeys) this._syncCrowdLifecycleHint();
+      this.scheduleSceneEnd?.();
     });
 
-    // Whether any dot reaches its journey end also turns on the timeline's
-    // length and the network's shape, so the hint follows both: on each
-    // change, never per frame.
+    // Whether a journey can end turns on the network's shape, so the hint
+    // follows it: on each committed change, never per frame. A new timeline
+    // no longer changes it (CROWD-05), but a project opened, cleared or put
+    // back sets one, and the hint is refreshed with it. The scene's end
+    // follows a network change too, as it does a crowd's every other
+    // committed change: a seed, its busyness, visibility, a crowd added,
+    // deleted or traced.
     this.eventBus.on('animation:durationChange', () => this._syncCrowdLifecycleHint());
     this.eventBus.on('network:changed', ({ commit } = {}) => {
-      if (commit) this._syncCrowdLifecycleHint();
+      if (!commit) return;
+      this._syncCrowdLifecycleHint();
+      this.scheduleSceneEnd?.();
     });
+    this.eventBus.on('scene:semantic-changed', () => this.scheduleSceneEnd?.());
 
     // Route changes update the Add-crowd description: a new crowd follows
     // an existing route or starts an empty custom network.
@@ -781,7 +793,10 @@ export const crowdsMixin = {
       return false;
     }
 
-    const durationMs = this.animationEngine.state.duration;
+    // The base timeline: releases measure against it, and the wait it solves
+    // for lengthens it (CROWD-05). The playback duration waits for the crowd
+    // anyway; this keeps the route itself waiting, until CROWD-06's hold.
+    const durationMs = this.animationEngine.state.baseDuration;
     const routeAnchors = this.getRouteArrivalMap?.();
     const arrivalMs = routeAnchors?.arrivalMsById?.[target.id];
     if (!Number.isFinite(arrivalMs) || !(durationMs > 0)) {
@@ -917,40 +932,24 @@ export const crowdsMixin = {
   },
 
   /**
-   * Show the hint under "At journey end" while no dot of the selected crowd
-   * reaches its journey end before the timeline ends, when the setting has
-   * nothing to act on (DEF-77). On a network nothing can end, read from the
-   * network alone without scheduling a dot, it names the node Type rather
-   * than a pace that would not help. Otherwise it reads the dots' schedule,
-   * the arithmetic the renderer evaluates with, without walking a dot that
-   * could only run out of hops; on each edit that can move a dot's release
-   * or journey, never per frame. The select is described by the hint, so it
-   * is emptied as well as hidden: a description is read even from a hidden
-   * element.
+   * Show the hint under "At journey end" only where no dot of the selected
+   * crowd can reach a journey end, when the setting has nothing to act on
+   * (DEF-77): no end lies on a path from an entry its dots are released at.
+   * The end waits for every journey that ends (CROWD-05), so a slow crowd is
+   * no longer cut off and its pace never shows it; nor does a crowd with no
+   * dots, nor a walk that only runs out of hops. Read from the network
+   * alone, without scheduling a dot, on each edit that can change it, never
+   * per frame. The select is described by the hint, so it is emptied as well
+   * as hidden: a description is read even from a hidden element.
    * @private
    */
   _syncCrowdLifecycleHint() {
     const hint = document.getElementById('crowd-lifecycle-hint');
     if (!hint) return;
     const layer = this.selectedCrowd;
-    const engine = this.swarmEngine;
-    const durationMs = this.animationEngine?.state?.duration;
-    let message = '';
-    if (layer?.emitters.length > 0 && engine && durationMs > 0) {
-      const ends = engine.hasJourneyEnd(layer); // null: no network to release dots onto
-      if (ends === false) {
-        message = LIFECYCLE_ENDLESS_HINT;
-      } else if (ends) {
-        const schedules = engine.scheduleDots(layer, {
-          durationMs,
-          routePathPoints: this.pathPoints,
-          routeAnchors: this.getRouteArrivalMap?.() || null,
-        }, { endsOnly: true });
-        if (schedules.length > 0 && dotsReachingJourneyEnd(schedules, durationMs) === 0) {
-          message = LIFECYCLE_UNREACHED_HINT;
-        }
-      }
-    }
+    // null: no network to release dots onto
+    const endless = layer?.emitters.length > 0 && this.swarmEngine?.hasJourneyEnd(layer) === false;
+    const message = endless ? LIFECYCLE_ENDLESS_HINT : '';
     hint.hidden = !message;
     hint.textContent = message;
   },
