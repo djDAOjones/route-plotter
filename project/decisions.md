@@ -18,6 +18,19 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — GATELESS-1 — The owner's answers after chat 2: the release exports are saved, the listed calls stand, chat 3 runs to 500k
+
+**Decision:** the owner answered chat 2's three closing questions on 2026-10-05: each release's smoke-test exports are saved from the live site ("yes"), the session calls listed for him stand ("sounds good"), and the run's third chat runs to 500k tokens of context with every later chat on the profile's 200k ("next use 500k but I will probably end early, and after that use 200k"), which changes the grant's condition 9.
+
+**Rationale:** the questions were chat 2's, asked at its close; the answers are the owner's, verbatim, carried by that chat's handoff.
+1. Saving: one MP4 (about 5 MB) and one HTML (about 2 MB) of the Open day route per release, from the live site; later releases save without asking again. v3.2.693 is no longer live, so its saved-file check is superseded by v3.2.694's. Chat 3 exported both from live v3.2.694 at a 1280×800 viewport: the MP4 is `ftypisom`, 1920×1080, 13.6 s, 4,366,674 bytes (REL-694's 14.4 s was at another window's size; durations follow the canvas's display width by design); the HTML is 2,026,423 bytes and embeds its CSP, the project and the live `player.js` (424,168 characters) byte for byte. The save to disk did not happen: the browser pane's own download left no file that could be found, and a local server to receive the bytes was refused by the session's permission classifier ("Expose Local Services"). The saved-file check stays owed, its wish line says so, and the owner is asked in chat.
+2. "Sounds good" confirms the session's calls listed for him: 500k for chat 2 alone (condition 9), v3.2.693 released before DEF-06 landed (REL-693), rollback tags named `rollback-v3.2.<previous>-<sha>`, release IDs `REL-<build>`, and PLAN-1's order with its short found-defect titles. Still open for him: the grant's three calls; PLAN-1's dropped " impl (gated)" and DEF-76 waiting behind DEF-42; "drop older" reaching format 9 (the brief).
+3. Session line: chat 3 runs to 500k, with no new agents past about 460k; the owner may end it early, so each item's state stays pushed and the handoff current.
+
+**Supersedes:** 2026-10-05 — GATELESS-1 — The run goes gateless: each merge lands and ships as it goes, with Codex reviewing
+
+**Deferred:** none
+
 ## 2026-10-05 — REL-694 — v3.2.694 ships DEF-06
 
 **Decision:** v3.2.694 is live from deploy commit `f482ea1` (tag `v3.2.694`), released under GATELESS-1 because DEF-06's merge (`32d9220`, PR #61) changed `src/`; it ends the DEF-08 symptom v3.2.693 shipped (REL-693).
