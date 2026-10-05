@@ -73,4 +73,4 @@
 - The Zoom transition option "Quick — on arrival" zooms in the incoming leg's first 500 ms, not on arrival: its label misdescribes it, as its hint did (Codex, UI-03 review r2) — (from: UI-03, 2026-10-05)
 - A click on a hover-opened hint closes it, so the first click of a double-click meant to select its text dismisses it (Codex, UI-03 review r2, advisory) — (from: UI-03, 2026-10-05)
 - The test of Escape in a scene-outline field checks where focus lands, not that the form resets (Codex, UI-03 review r2) — (from: UI-03, 2026-10-05)
-- v3.2.700's full export check: the Open day example exported from the live site as MP4 and HTML, saved to disk and opened there (the HTML by file, the MP4 in a desktop player); owed under the owner's tenth-release check until done by the route he picks — (from: GATELESS-1, 2026-10-05)
+- v3.2.700's full export check: the Open day example exported from the live site as MP4 and HTML, saved to disk and opened there (the HTML by file, the MP4 in a desktop player); owed under the owner's tenth-release check until the run saves it through his Chrome, with his word for each download — (from: GATELESS-1, 2026-10-05)
