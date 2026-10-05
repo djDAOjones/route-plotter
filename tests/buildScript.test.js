@@ -20,6 +20,7 @@
  * build.js did would land in the copy, where these tests look for it.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
   chmodSync,
   existsSync,
@@ -176,13 +177,14 @@ function loaded() {
 }
 
 /**
- * What the entry check does on Node 24.0 and 24.1: resolve the script path
- * and this module's path, to compare them. Nothing else may happen.
+ * What the entry check does on Node 24.0 and 24.1, imported in the copy at
+ * `root`: resolve the script path and this module's path, to compare them.
+ * Nothing else may happen.
  */
-function entryCheckPaths() {
-  const scriptPath = childArguments(copy)[0];
+function entryCheckPaths(root = copy) {
+  const scriptPath = childArguments(root)[0];
   return scriptPath
-    ? [`fs.realpathSync(${scriptPath})`, `fs.realpathSync(${realpathSync(buildScript)})`]
+    ? [`fs.realpathSync(${scriptPath})`, `fs.realpathSync(${realpathSync(join(root, 'build.js'))})`]
     : [];
 }
 
@@ -682,11 +684,34 @@ describe('a failed build', () => {
 describe('the checks a release applies', () => {
   // Pure as far as the host observes: no call into the APIs it watches, no
   // pending work or output, the arguments unchanged, and none of the process
-  // state it compares changed by the call. They are called in a process that
-  // has just imported build.js, so that each is called there for the first
-  // time: a change an earlier test's call left in the shared process would be
-  // the state a later call starts from, and so not seen again.
-  test('are pure: no file touched, nothing printed or started, arguments and process left as they were', async () => {
+  // state it compares changed by the call. Checked twice. First in the shared
+  // process, after the tests above have called each check, so that what one
+  // does only on a later call is seen. Then where each call is that check's
+  // first, in a process that has just imported build.js: in the shared one, a
+  // change an earlier call left is the state a later call starts from, and so
+  // is not seen again.
+  test('are pure: no file touched, nothing printed or started, and their arguments left as they were', async () => {
+    expect(hostFailure?.message).toBeUndefined();
+    const stamped = (await host.call('rewriteIndexHtml', [indexHtml, RELEASE])).value;
+    const inventory = (await host.call('expectedArtifactInventory', [manifest])).value;
+
+    for (const [name, args] of [
+      ['validatePublicAssetManifest', [manifest]],
+      ['rewriteIndexHtml', [indexHtml, RELEASE]],
+      ['checkGeneratedIndex', [stamped, RELEASE, approvedImages]],
+      ['expectedArtifactInventory', [manifest]],
+      ['checkArtifactInventory', [inventory, manifest]],
+      ['resolveBuildMode', [['node', 'build.js', '--check']]],
+      ['isEntryScript', [false, buildScript, buildScript]],
+    ]) {
+      const { error, calls, pending, output, argumentsChanged, changed } = await host.call(name, args);
+
+      expect({ name, error, calls, pending, output, argumentsChanged, changed })
+        .toEqual({ name, error: undefined, calls: [], pending: [], output: [], argumentsChanged: false, changed: [] });
+    }
+  });
+
+  test('are pure also when each is called first, in a fresh import, and leave the process as it was', async () => {
     expect(hostFailure?.message).toBeUndefined();
     const stamped = (await host.call('rewriteIndexHtml', [indexHtml, RELEASE])).value;
     const inventory = (await host.call('expectedArtifactInventory', [manifest])).value;
@@ -743,14 +768,22 @@ describe('what the host sees, shown with a build.js changed to do it', () => {
   test('a call at import to fs.realpathSync.native, a function fs.realpathSync carries, is seen (Y1)', async () => {
     const variant = await importChanged(text => `${text}\nfs.realpathSync.native('./version.json');\n`);
     try {
-      expect(variant.report.first.calls).toEqual(['fs.realpathSync.native(./version.json)']);
+      // After the entry check, which on Node 24.0 and 24.1 resolves its two paths.
+      const { importMetaMain, first } = variant.report;
+      expect(first.calls).toEqual([
+        ...(importMetaMain ? [] : entryCheckPaths(variantCopy)),
+        'fs.realpathSync.native(./version.json)',
+      ]);
     } finally {
       await variant.stop();
     }
   }, SPAWN_TIMEOUT);
 
   test('a file-creation mask changed at import is seen (Y3)', async () => {
-    const variant = await importChanged(text => `${text}\nprocess.umask(0o077);\n`);
+    // A mask other than the one inherited, whatever that is.
+    const variant = await importChanged(
+      text => `${text}\nprocess.umask(process.umask() === 0o077 ? 0o022 : 0o077);\n`
+    );
     try {
       expect(variant.report.first.changed).toEqual(['umask']);
     } finally {
@@ -759,8 +792,10 @@ describe('what the host sees, shown with a build.js changed to do it', () => {
   }, SPAWN_TIMEOUT);
 
   test('an export that sets an environment variable fails the call that does it (Y4)', async () => {
+    // A value made now, which no environment the process inherits can hold.
+    const value = JSON.stringify(`changed ${randomUUID()}`);
     const variant = await importChanged(
-      text => text.replace(RESOLVER, `${RESOLVER}  process.env.SPL06_PURE_PROBE = 'changed';\n`)
+      text => text.replace(RESOLVER, `${RESOLVER}  process.env.SPL06_PURE_PROBE = ${value};\n`)
     );
     try {
       expect(variant.report.first.changed, 'what the import changed').toEqual([]);
