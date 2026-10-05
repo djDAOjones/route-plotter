@@ -116,6 +116,10 @@ moved, and account for every survivor)
   [ready] **P3**
 - [ ] **DEF-45 Announcements overwrite each other** · Accessibility [ready]
   **P3**
+- [ ] **DEF-06 Clear All leaves stale route state** · Live defect [ready] —
+  Visible since DEF-08 (#37, unreleased): a route cut to one waypoint draws
+  its last marker, paused, at a stale grow scale. Land it before the
+  release. **P3**
 
 **Defects after their W5 test** (§13 ground rule 8)
 
