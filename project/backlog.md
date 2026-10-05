@@ -34,6 +34,10 @@
 
 ## Next
 
+**After Phase 1 — on the owner's word**
+
+- [!] UI-03 — In-place parameter help — since 2026-10-05 — blocked: owner word — new feature work
+
 **W5 — deepen the characterisation**
 
 - [ ] TST-09 — Camera, dots, curvature, minor-end and time domains — since 2026-10-01
@@ -83,6 +87,7 @@
 - [ ] DEF-74 — Redo restores no selection — since 2026-10-05 — blocked: TST-05
 - [ ] DEF-75 — Index check misses references — since 2026-10-05
 - [ ] DEF-76 — Leg-speed edit stales timing — since 2026-10-05 — blocked: DEF-42
+- [ ] DEF-77 — "At journey end" has no visible effect — since 2026-10-05
 
 ## Icebox
 

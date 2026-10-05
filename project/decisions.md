@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-77 — The backlog takes the crowd "At journey end" defect, and in-place parameter help waits on the owner's word
+
+**Decision:** DEF-77 ("At journey end" has no visible effect) joins the found defects, runnable now, and UI-03 (in-place parameter help) waits after Phase 1 as a `[!]` line until the owner's word, because the owner asked the Backlog status session, on 2026-10-05, to hand both to this run for filing ("Hand to running chat (Recommended)").
+
+**Rationale:** the owner's words reached this run through that session's message and write-up, so they are quoted as relayed, not heard. On DEF-77's timing fix he said "your choice but no backwards compatibility needed", and that session chose both new-crowd defaults under which dots finish and a hint when none do: its choice under his delegation, recorded in the item's notes, not his words. On Respawn he said "Make Respawn vary". He placed UI-03 "After Phase 1 (Recommended)". The session's calls, for the owner to confirm: UI-03 is new feature work, which GATELESS-1 excludes ("no new feature work"), so it waits on his word rather than entering the run's queue; DEL-05 leaves the inert hover tooltip files in place until UI-03 decides; that session's six unverified triage candidates are wish lines. The owner's crowd explainer doc carries a known-issues note to update once DEF-77 ships.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — SPL-06 — build.js builds only when run as a script, and exports the checks a release applies
 
 **Decision:** SPL-06 lands (PR #75): `build.js` builds only when it is run as a script, so tests can import it, and it exports the checks a release applies (the image manifest, the index.html stamp and its check, the Pages inventory, the command line) and the publish and failed-build rollback steps, which act only on the paths they are given; every mode the repository uses runs as before, because TST-11 needs a `build.js` it can load.
