@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — GATELESS-1 — The owner confirms the in-page export checks and four session calls
+
+**Decision:** each release's in-page export check is enough, so the saves to disk owed for v3.2.693–698 are retired, and the four calls the order entry lists are the owner's, because he answered "yes" in his own chat.
+
+**Rationale:** In the run's sixth chat he was asked whether he confirms the Backlog status session's draft, "in-page checks are enough; all four of chat 3's calls are confirmed", and answered "yes". The four calls: DEF-44 names its near-1× tail as a bounded leftover; three releases recorded in one PR; DEL-05 keeps `Tooltip.js`, `tooltips.js` and `tooltip.css` until UI-03 decides; v3.2.694's export check stands in for v3.2.693's. This settles point (1) of the order entry of the same day, which otherwise stands. The wish-list line that owed the saves is retired. That later releases also need no save is this session's reading, for him to confirm.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — GATELESS-1 — The owner orders DEF-77, then UI-03's first part, ahead of Phase 1's pull requests
 
 **Decision:** DEF-77 is next, then UI-03 part 1 (hints open on hover, unclear hints reworded, hints for every setting), ahead of Phase 1's eight pull requests; UI-03's "?" and DEF-14's fix become UI-04, after TST-04. His word on the release checks is recorded as relayed, not confirmed.
