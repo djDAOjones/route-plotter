@@ -192,3 +192,32 @@ test('a beacon edit undone, and redone, times the beacon as the project then has
   expect(app.getWaypointById('ex-uon-2').beaconStyle).toBe('grow');
   expect(timeline(app)).toEqual(edited);
 });
+
+test('a beacon edit in a constant-time project, undone and redone, times the beacon as the project then has it', async () => {
+  const app = await opened(openDay({ 'ex-uon-2': { beaconStyle: 'pop' } }, { mode: 'constant-time' }));
+  /** The timeline now, which must be what a rebuild of the project as it now is gives. */
+  const rebuilt = () => {
+    const now = timeline(app);
+    app.invalidateAnimationTiming();
+    expect(now).toEqual(timeline(app));
+    return now;
+  };
+  select(app, 'ex-uon-2');
+  choose('editor-beacon-style', 'grow');
+  expect(app.getWaypointById('ex-uon-2').beaconStyle).toBe('grow');
+  expect(scheduleOf(app, 'ex-uon-2')?.style).toBe('grow');
+  const edited = rebuilt();
+  expect(edited.legs?.length).toBeGreaterThan(0);
+
+  app.undo();
+  await timingSettled();
+  expect(app.getWaypointById('ex-uon-2').beaconStyle).toBe('pop');
+  expect(scheduleOf(app, 'ex-uon-2')?.style).toBe('pop');
+  expect(rebuilt()).not.toEqual(edited);
+
+  app.redo();
+  await timingSettled();
+  expect(app.getWaypointById('ex-uon-2').beaconStyle).toBe('grow');
+  expect(scheduleOf(app, 'ex-uon-2')?.style).toBe('grow');
+  expect(rebuilt()).toEqual(edited);
+});

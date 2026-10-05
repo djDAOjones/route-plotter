@@ -64,3 +64,4 @@
 - No tool inserts a junction node into an existing path (a candidate, unverified) — (from: DEF-77, 2026-10-05)
 - Re-roll pattern can be reverted only by Undo, because the seed is read-only (a candidate, unverified) — (from: DEF-77, 2026-10-05)
 - Update the owner's crowd explainer doc (its "At journey end" known-issues note and workaround) once DEF-77 ships — (from: DEF-77, 2026-10-05)
+- Coalesce continuous-input timing rebuilds (a slider dragged) to one per frame: every rebuild now composes a branched route's timeline afresh, about 31 ms per input at 2,000 waypoints (Codex, DEF-42 review r1) — (from: DEF-42, 2026-10-05)
