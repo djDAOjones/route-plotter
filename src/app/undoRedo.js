@@ -272,6 +272,8 @@ export const undoRedoMixin = {
     // Restore waypoints
     this.waypoints = state.waypoints.map(wpData => Waypoint.fromJSON(wpData));
     this.waypoints.forEach(wp => this._addWaypointToMap(wp));
+    // An area draw follows its waypoint to the restored copy, or ends (DEF-43).
+    this.followAreaDrawTarget?.();
 
     // Waypoint snapshots store only asset IDs. Rehydrate every referenced
     // custom marker without allowing a slow, superseded restore to overwrite a
@@ -383,12 +385,9 @@ export const undoRedoMixin = {
     // Invalidate caches
     this._majorWaypointsCache = null;
     
-    // Recalculate and render
-    if (this.waypoints.length >= 2) {
-      this.calculatePath();
-    } else {
-      this.pathPoints = [];
-    }
+    // Recalculate and render; with fewer than two waypoints this clears what
+    // the last route fed (DEF-06).
+    this.calculatePath();
     this.updateWaypointList();
     this.uiController?.updateWaypointEditor?.(
       this.selectedWaypoint,

@@ -17,6 +17,7 @@ import {
 import { boundEntryWaypointIds } from '../utils/routeAnchors.js';
 import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 import { loadBackgroundFile } from './backgroundLoading.js';
+import { refuseWhileExporting } from './exporting.js';
 
 /**
  * Reorder waypoints to a new major order, each major carrying its
@@ -428,6 +429,10 @@ export const wiringControllersMixin = {
       const next = current === targetId ? null : targetId;
       const verdict = canRejoinBranch(this.waypoints, info.branchId, next);
       if (!verdict.ok) {
+        // The drop put the branch's end back where it was: its route is
+        // rebuilt for it, or the drag's own path would time a route the
+        // project no longer has (DEF-06).
+        this.calculatePath();
         this.eventBus.emit('ui:toast', { message: verdict.reason });
         return;
       }
@@ -435,7 +440,9 @@ export const wiringControllersMixin = {
       waypoint.branchRejoin = next;
       this.saveUndoState(); // after the mutation, per the undo-stack contract
       this.calculatePath();
-      this.updateAnimationDuration();
+      // Timed now, and the rebuild the path queued with it dropped: a save
+      // would otherwise run it again (DEF-06).
+      this.invalidateAnimationTiming();
       this.updateWaypointList();
       this.autoSave();
       this.queueRender();
@@ -911,13 +918,20 @@ export const wiringControllersMixin = {
     /**
      * video:export-request - Start video export process
      * Uses frame-by-frame capture for consistent output
+     * @param {string|{format: string, resolution?: {width: number, height: number}}} request -
+     *   The format, or the format and the size to export at (the codec
+     *   dialog's reduced MP4). While an export runs it is refused whole, the
+     *   size included, which would resize the running export's canvas; the
+     *   export sets both once it is the app's, so a request made from what
+     *   setting them sets off is refused too (DEF-46).
      */
-    this.eventBus.on('video:export-request', (format) => {
+    this.eventBus.on('video:export-request', (request) => {
+      const { format, resolution } = request && typeof request === 'object' ? request : { format: request };
+      if (refuseWhileExporting(this)) return;
       if (!this.previewMode) {
         this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
       }
-      this.exportSettings.format = format || 'mp4';
-      this.exportVideo();
+      this.exportVideo({ format: format || 'mp4', resolution });
     });
     
     /**

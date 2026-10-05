@@ -38,10 +38,45 @@ DEF-41 — A crowd traced from a route that bends off the image bends there
 too: its bends keep the range a project can store, reload, and can be edited
 in the outline; a bend drawn by hand still stays on the image. (2026-09-28)
 
-DEF-42 — The editor times a beacon by the style the inspector shows: a new
-style or pulse cycle rebuilds timing at once, and on a branched route every
-timing rebuild composes the branches afresh, so a pause or beacon edit there
-changes the total too. (2026-09-29)
+DEF-61 — Under the author's viewport zoom, the map is drawn under the zoom
+alone, as the route already was, not the animation camera as well: the route
+no longer leaves the map in Preview, or in a video exported while zoomed in.
+
+DEF-52 — A route traced into a crowd is checked as the project it would
+make would be when it is saved and opened: a trace the loader or the file's
+metadata would refuse (a leg with more bends than a path can hold, a scene,
+project or file past its budgets) is refused, saying why, whether or not the
+project already failed that check, so a traced crowd reopens (its images all
+there). The archive's whole size, which its images dominate, stays Save
+Project's check (DEF-04).
+(2026-09-29)
+
+DEF-59 — The network editor's pen keeps a crowd within the six graph counts a
+project can store, as the outline does: a node, link or bend past a crowd's or
+the scene's counts is refused, in the outline's words. The project-wide
+budgets, which no editor checks yet, stay DEF-04's. (2026-09-29)
+
+DEF-46 — A video export is the app's from the moment it is asked for to the
+end of its clean-up: another asked for meanwhile, by a control, the bus, or
+a script called back by the export's own setting up or clean-up, is refused
+before it touches it, its size included, so it no longer spoils its frames,
+mode and buttons, and Export MP4 starts no codec probe meanwhile. Overlapping
+MP4 probes are superseded, not refused: a codec probe, or the dialog it
+opened, answers only for the export the author last asked for, so a stale
+one starts nothing, and an open dialog closes rather than holding Escape from
+the export. Once its transport is suspended, each part of an export's
+clean-up runs whether or not another fails, and its controls are freed
+whatever failed. (2026-09-28)
+
+DEF-43 — A polygon draw follows its waypoint through an undo or a redo, and
+ends, saying so in a toast, when its waypoint is deleted or undone away,
+rather than closing onto a waypoint the project no longer has; and Draw Area
+asked for again keeps the draw in progress. (2026-09-29)
+
+DEF-27 — The instant spotlight and angle of view follow the camera, so the
+circle or cone stays on the head at any zoom, and the contrast tint covers the
+image's rectangle and no margin at any background zoom, moving with the camera.
+(2026-09-29)
 
 ## Before the big run (2026-09-28)
 

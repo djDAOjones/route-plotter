@@ -628,14 +628,37 @@ export class ImageAssetService {
    * @returns {Promise<Blob>} ZIP file blob
    */
   async exportZip(projectData, backgroundBase64 = null, projectName = 'route-project') {
+    const { projectJSON, images, background } = this.prepareArchive(projectData, backgroundBase64);
+    const zip = new JSZip();
+    const assetsFolder = zip.folder('assets');
+    for (const { filename, base64Data } of images) assetsFolder.file(filename, base64Data, { base64: true });
+    if (background) zip.file(background.filename, background.base64Data, { base64: true });
+    zip.file('project.json', projectJSON);
+    
+    // Generate ZIP
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    if (blob.size > SIZE_LIMITS.ZIP_MAX) {
+      throw new Error('Project ZIP exceeds the 50 MB limit');
+    }
+    return blob;
+  }
+
+  /**
+   * What a ZIP of the project holds, prepared as `exportZip` writes it and
+   * checked against the same limits, before anything is written: its
+   * `project.json` (the project, the images it references and the
+   * background file it names), and those images and that background. An
+   * action about to change the project can prepare the project it would
+   * make, and refuse one that could not be saved (DEF-52).
+   * @param {Object} projectData - A project snapshot, built without assets
+   * @param {string|null} [backgroundBase64] - The background's data URL, if any
+   * @returns {{ projectJSON: string, images: Array<{filename: string, base64Data: string}>, background: {filename: string, base64Data: string}|null }}
+   */
+  prepareArchive(projectData, backgroundBase64 = null) {
     if (this.exceedsZipLimit() || this._assets.size > PROJECT_ARCHIVE_LIMITS.MAX_ASSETS) {
       throw new Error('Project images exceed the export limits');
     }
-    const zip = new JSZip();
     const archivedProjectData = { ...projectData };
-    
-    // Create assets folder
-    const assetsFolder = zip.folder('assets');
     
     // Add the image assets the project references. The store also keeps
     // images only undo history can reach, which undo needs and a shared file
@@ -645,6 +668,7 @@ export class ImageAssetService {
     if (Array.isArray(archivedProjectData.imageAssets)) {
       archivedProjectData.imageAssets = archivedProjectData.imageAssets.filter(asset => referenced.has(asset?.id));
     }
+    const images = [];
     const assetManifest = [];
     for (const [id, asset] of this._assets) {
       if (!referenced.has(id)) continue;
@@ -654,7 +678,7 @@ export class ImageAssetService {
       const extension = asset.mimeType === 'image/jpeg' ? 'jpg' : asset.mimeType.split('/')[1];
       const filename = `${id}.${extension}`;
       
-      assetsFolder.file(filename, base64Data, { base64: true });
+      images.push({ filename, base64Data });
       assetManifest.push({
         id: asset.id,
         filename,
@@ -666,7 +690,8 @@ export class ImageAssetService {
       });
     }
     
-    // Add background image if present
+    // The background image, if present
+    let background = null;
     if (backgroundBase64) {
       const backgroundMetadata = ImageAsset.inspectDataURL(backgroundBase64);
       if (!IMAGE_LIMITS.ALLOWED_MIME_TYPES.includes(backgroundMetadata.mimeType) ||
@@ -676,27 +701,19 @@ export class ImageAssetService {
       const bgExtension = backgroundMetadata.mimeType === 'image/jpeg'
         ? 'jpg'
         : backgroundMetadata.mimeType.split('/')[1];
-      const bgBase64Data = backgroundBase64.split(',')[1];
-      zip.file(`background.${bgExtension}`, bgBase64Data, { base64: true });
-      archivedProjectData.backgroundFile = `background.${bgExtension}`;
+      background = { filename: `background.${bgExtension}`, base64Data: backgroundBase64.split(',')[1] };
+      archivedProjectData.backgroundFile = background.filename;
     }
     
     // Add asset manifest
     archivedProjectData.assetManifest = assetManifest;
     
-    // Add project JSON
+    // The project JSON
     const projectJSON = JSON.stringify(archivedProjectData, null, 2);
     if (new TextEncoder().encode(projectJSON).length > PROJECT_ARCHIVE_LIMITS.MAX_PROJECT_JSON_BYTES) {
       throw new Error('Project metadata exceeds the 2 MB limit');
     }
-    zip.file('project.json', projectJSON);
-    
-    // Generate ZIP
-    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-    if (blob.size > SIZE_LIMITS.ZIP_MAX) {
-      throw new Error('Project ZIP exceeds the 50 MB limit');
-    }
-    return blob;
+    return { projectJSON, images, background };
   }
   
   /**

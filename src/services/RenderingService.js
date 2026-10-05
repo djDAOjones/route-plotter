@@ -460,6 +460,12 @@ export class RenderingService {
     // Apply zoom/pan transform for background
     const viewport = state.viewport;
     const hasZoom = viewport && viewport.zoom > 1;
+    // The author's viewport zoom takes the animation camera's place for the
+    // background, as it does for the vector layer below: applied on top of
+    // the viewport, the camera drew the map at their product and the route
+    // at the viewport's alone, off the map (DEF-61). Every background mode
+    // and the tint take this camera, so all are drawn under one transform.
+    const frameCamera = hasZoom ? null : state.cameraState;
     if (hasZoom) {
       ctx.save();
     }
@@ -490,7 +496,9 @@ export class RenderingService {
         if (headPosNorm && state.imageToCanvas) {
           const headPos = state.imageToCanvas(headPosNorm.x, headPosNorm.y);
           const currentTimeMs = state.animationEngine.getTime();
-          this.renderBackgroundWithSpotlight(ctx, state.background, cw, ch, headPos, motionSettings, currentTimeMs);
+          this.renderBackgroundWithSpotlight(
+            ctx, state.background, cw, ch, headPos, motionSettings, currentTimeMs, frameCamera
+          );
         }
       } else if (bgMode === BACKGROUND_VISIBILITY.SPOTLIGHT_REVEAL && hasPath && motionVisibilityService) {
         // Spotlight Reveal: path-based mask rebuilt each frame for bidirectional scrubbing
@@ -498,7 +506,7 @@ export class RenderingService {
         const progress = state.animationEngine.getPathProgress();
         const currentTimeMs = state.animationEngine.getTime();
         motionVisibilityService.buildSpotlightRevealMask(state.pathPoints, progress, cw, ch, motionSettings, state.imageToCanvas, currentTimeMs);
-        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, state.cameraState);
+        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, frameCamera);
       } else if (bgMode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW && hasPath && motionVisibilityService) {
         // Angle of View: instant cone mask at head position (resets each frame)
         // Path points are in normalized coords, transform to canvas coords for rendering
@@ -507,7 +515,9 @@ export class RenderingService {
         if (headPosNorm && direction !== null && state.imageToCanvas) {
           const headPos = state.imageToCanvas(headPosNorm.x, headPosNorm.y);
           const currentTimeMs = state.animationEngine.getTime();
-          this.renderBackgroundWithAOV(ctx, state.background, cw, ch, headPos, direction, motionSettings, currentTimeMs);
+          this.renderBackgroundWithAOV(
+            ctx, state.background, cw, ch, headPos, direction, motionSettings, currentTimeMs, frameCamera
+          );
         }
       } else if (bgMode === BACKGROUND_VISIBILITY.ANGLE_OF_VIEW_REVEAL && hasPath && motionVisibilityService) {
         // Angle of View Reveal: path-based mask rebuilt each frame for bidirectional scrubbing
@@ -518,15 +528,15 @@ export class RenderingService {
           state.pathPoints, progress, cw, ch, motionSettings,
           state.waypoints, state.waypointProgressValues, state.animationEngine, state.imageToCanvas, currentTimeMs
         );
-        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, state.cameraState);
+        this.renderBackgroundWithReveal(ctx, state.background, cw, ch, motionVisibilityService, frameCamera);
       } else {
         // Always Show (default): render background normally
         // Pass camera state for zoom/pan effect centered on path head
-        this.renderBackground(ctx, state.background, cw, ch, state.cameraState);
+        this.renderBackground(ctx, state.background, cw, ch, frameCamera);
       }
 
-      // 2) Contrast overlay (in zoomed space) - only affects image area
-      this.renderOverlay(ctx, state.background.overlay, cw, ch, state.background);
+      // 2) Contrast overlay (in zoomed space, under the image's camera) - only affects image area
+      this.renderOverlay(ctx, state.background.overlay, cw, ch, state.background, frameCamera);
     } finally {
       if (hasZoom) {
         ctx.restore();
@@ -796,17 +806,23 @@ export class RenderingService {
    * Render background with angle-of-view cone effect (non-persistent)
    * Creates a triangular cone pointing in the direction of travel
    * 
+   * Under the camera, the image and the cone are both drawn under it, as the
+   * route is, so the cone stays on the head (DEF-27).
+   *
    * @private
    * @param {CanvasRenderingContext2D} ctx - Canvas context
    * @param {Object} background - Background state object
    * @param {number} canvasWidth - Canvas width
    * @param {number} canvasHeight - Canvas height
-   * @param {{x: number, y: number}} headPos - Current head position (cone vertex)
+   * @param {{x: number, y: number}} headPos - Current head position (cone vertex), in canvas coordinates before
+   *   the camera, where the route's points are
    * @param {number} direction - Direction angle in radians
    * @param {Object} settings - Motion settings with aovAngle, aovDistance, aovDropoff
    * @param {number} currentTimeMs - Current animation time in milliseconds (for intro animation)
+   * @param {Object} cameraState - Optional camera state {zoom, centerX, centerY, enabled}
    */
-  renderBackgroundWithAOV(ctx, background, canvasWidth, canvasHeight, headPos, direction, settings, currentTimeMs = Infinity) {
+  renderBackgroundWithAOV(ctx, background, canvasWidth, canvasHeight, headPos, direction, settings,
+                          currentTimeMs = Infinity, cameraState = null) {
     if (!background.image) return;
     
     // Apply intro animation scale
@@ -829,17 +845,27 @@ export class RenderingService {
     // The dropoff percentage determines where the gradient starts (as fraction from tip)
     const dropoffFraction = aovDropoff / 100;
     const solidStop = 1 - dropoffFraction; // Where solid white ends
+    // Read before the save: a read that threw between it and the `try` would
+    // leave it open (DEF-38)
+    const underCamera = RenderingService.cameraApplies(cameraState);
     
     ctx.save();
 
-    // Restored whatever throws: `destination-in` left in force would cut
-    // every later frame to this cone (DEF-38, see `render`)
+    // Restored whatever throws: the camera and `destination-in` left in force
+    // would zoom every later frame again and cut it to this cone (DEF-38, see
+    // `render`)
     try {
-      // Draw background first
-      this.renderBackground(ctx, background, canvasWidth, canvasHeight);
+      // Draw background first, under the camera
+      this.renderBackground(ctx, background, canvasWidth, canvasHeight, cameraState);
 
       // Create cone mask using destination-in
       ctx.globalCompositeOperation = 'destination-in';
+
+      // The same camera for the cone, as `renderBackgroundWithReveal` does for
+      // its mask. The head stays in canvas coordinates: the camera takes it to
+      // where the zoomed route draws the head. `renderBackground` has put its
+      // own camera back by now, so this one is not applied twice.
+      if (underCamera) RenderingService.applyCamera(ctx, cameraState, canvasWidth, canvasHeight);
 
       // Calculate cone points
       const tipX = headPos.x;
@@ -881,16 +907,22 @@ export class RenderingService {
    * Render background with instant spotlight effect (non-persistent)
    * Creates a circular reveal at the current head position only
    * 
+   * Under the camera, the image and the circle are both drawn under it, as
+   * the route is, so the circle stays on the head (DEF-27).
+   *
    * @private
    * @param {CanvasRenderingContext2D} ctx - Canvas context
    * @param {Object} background - Background state object
    * @param {number} canvasWidth - Canvas width
    * @param {number} canvasHeight - Canvas height
-   * @param {{x: number, y: number}} headPos - Current head position
+   * @param {{x: number, y: number}} headPos - Current head position, in canvas coordinates before the camera,
+   *   where the route's points are
    * @param {Object} settings - Motion settings with revealSize and revealFeather
    * @param {number} currentTimeMs - Current animation time in milliseconds (for intro animation)
+   * @param {Object} cameraState - Optional camera state {zoom, centerX, centerY, enabled}
    */
-  renderBackgroundWithSpotlight(ctx, background, canvasWidth, canvasHeight, headPos, settings, currentTimeMs = Infinity) {
+  renderBackgroundWithSpotlight(ctx, background, canvasWidth, canvasHeight, headPos, settings,
+                                currentTimeMs = Infinity, cameraState = null) {
     if (!background.image) return;
     
     // Import intro scale calculation from MotionVisibilityService
@@ -905,17 +937,27 @@ export class RenderingService {
     // BUG-02: equal radii paint nothing, so a zero feather must still leave a
     // sub-pixel gap. Shared with the accumulating reveal so both edges agree.
     const innerRadius = MotionVisibilityService.spotlightInnerRadius(radius, feather);
+    // Read before the save: a read that threw between it and the `try` would
+    // leave it open (DEF-38)
+    const underCamera = RenderingService.cameraApplies(cameraState);
     
     ctx.save();
 
-    // Restored whatever throws: `destination-in` left in force would cut
-    // every later frame to this circle (DEF-38, see `render`)
+    // Restored whatever throws: the camera and `destination-in` left in force
+    // would zoom every later frame again and cut it to this circle (DEF-38,
+    // see `render`)
     try {
-      // Draw background first
-      this.renderBackground(ctx, background, canvasWidth, canvasHeight);
+      // Draw background first, under the camera
+      this.renderBackground(ctx, background, canvasWidth, canvasHeight, cameraState);
 
       // Create spotlight mask using destination-in with radial gradient
       ctx.globalCompositeOperation = 'destination-in';
+
+      // The same camera for the circle, as `renderBackgroundWithReveal` does
+      // for its mask. The head stays in canvas coordinates: the camera takes it
+      // to where the zoomed route draws the head. `renderBackground` has put
+      // its own camera back by now, so this one is not applied twice.
+      if (underCamera) RenderingService.applyCamera(ctx, cameraState, canvasWidth, canvasHeight);
 
       // Create radial gradient for feathered edge
       const gradient = ctx.createRadialGradient(
@@ -1051,6 +1093,65 @@ export class RenderingService {
   }
   
   /**
+   * The rectangle the background image is drawn into, in canvas coordinates
+   * before any camera. The tint fills the same one, so it covers the image and
+   * no margin at any background zoom (DEF-27). It is also the image bounds
+   * `CoordinateTransform` places the route in, in the 'fit' mode that
+   * `updateImageTransform` (`viewport.js`) always gives it in the editor and
+   * the player, so the image stays under its route.
+   *
+   * @param {Object} background - Background object with image and zoom
+   * @param {number} canvasWidth - Canvas width
+   * @param {number} canvasHeight - Canvas height
+   * @returns {{x: number, y: number, w: number, h: number}}
+   */
+  static imageRect(background, canvasWidth, canvasHeight) {
+    const img = background.image;
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
+
+    // Use "contain" mode: full image visible, letterboxed if needed
+    // scale = min() ensures the entire image fits within canvas
+    // Then apply background zoom on top (from export settings slider):
+    // zoom = 1.0 means 100% (no zoom), zoom = 2.0 means 200% (2x zoom)
+    const baseScale = Math.min(canvasWidth / iw, canvasHeight / ih) * (background.zoom || 1);
+    const w = iw * baseScale;
+    const h = ih * baseScale;
+    return { x: (canvasWidth - w) / 2, y: (canvasHeight - h) / 2, w, h };
+  }
+
+  /**
+   * Whether a frame's camera changes the picture: on, and zoomed away from 1×
+   * by more than float noise. The image, the tint and the instant masks all
+   * ask this, so the tint and a mask are under the camera exactly when the
+   * image is.
+   *
+   * @param {Object|null} cameraState - Camera state {zoom, centerX, centerY, enabled}
+   * @returns {boolean}
+   */
+  static cameraApplies(cameraState) {
+    return Boolean(cameraState && cameraState.enabled && Math.abs(cameraState.zoom - 1) > 0.001);
+  }
+
+  /**
+   * Put the camera on `ctx`: its centre (in canvas coordinates) moves to the
+   * middle of the canvas, zoomed about that point. It multiplies whatever
+   * transform is already there (the host's base transform, a viewport zoom),
+   * which must stay, so the caller owns the save and restore around it.
+   *
+   * @param {CanvasRenderingContext2D} ctx - Canvas context
+   * @param {Object} cameraState - Camera state {zoom, centerX, centerY, enabled}
+   * @param {number} canvasWidth - Canvas width
+   * @param {number} canvasHeight - Canvas height
+   */
+  static applyCamera(ctx, cameraState, canvasWidth, canvasHeight) {
+    const { zoom, centerX, centerY } = cameraState;
+    ctx.translate(canvasWidth / 2, canvasHeight / 2);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-centerX, -centerY);
+  }
+
+  /**
    * Render background image with "contain" mode (letterboxing)
    * Supports optional camera transform for zoom/pan effects
    * 
@@ -1064,8 +1165,6 @@ export class RenderingService {
     if (!background.image) return;
     
     const img = background.image;
-    const iw = img.naturalWidth || img.width;
-    const ih = img.naturalHeight || img.height;
     const cw = canvasWidth;
     const ch = canvasHeight;
     
@@ -1073,45 +1172,26 @@ export class RenderingService {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, cw, ch);
     
-    // Apply background zoom (from export settings slider)
-    // zoom = 1.0 means 100% (no zoom), zoom = 2.0 means 200% (2x zoom)
-    const bgZoom = background.zoom || 1;
-    
-    // Use "contain" mode: full image visible, letterboxed if needed
-    // scale = min() ensures the entire image fits within canvas
-    // Then apply background zoom on top
-    const baseScale = Math.min(cw / iw, ch / ih) * bgZoom;
-    const drawW = iw * baseScale;
-    const drawH = ih * baseScale;
-    const offsetX = (cw - drawW) / 2;
-    const offsetY = (ch - drawH) / 2;
+    // Contained, then scaled by the background zoom
+    const rect = RenderingService.imageRect(background, cw, ch);
     
     // Apply camera transform if zoom is not 1x (with small epsilon for float comparison)
-    if (cameraState && cameraState.enabled && Math.abs(cameraState.zoom - 1) > 0.001) {
+    if (RenderingService.cameraApplies(cameraState)) {
       ctx.save();
 
       // Restored whatever throws, or every later frame would zoom again on
       // top of this one (DEF-38, see `render`)
       try {
-        // Camera centers on centerX, centerY (in canvas coords)
-        // Transform: translate to center, scale, translate back offset by center point
-        const zoom = cameraState.zoom;
-        const cx = cameraState.centerX;
-        const cy = cameraState.centerY;
-
-        // Move origin to canvas center, scale, then offset so camera center is at canvas center
-        ctx.translate(cw / 2, ch / 2);
-        ctx.scale(zoom, zoom);
-        ctx.translate(-cx, -cy);
+        RenderingService.applyCamera(ctx, cameraState, cw, ch);
 
         // Draw full image centered with letterboxing
-        ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+        ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h);
       } finally {
         ctx.restore();
       }
     } else {
       // No camera transform - draw normally
-      ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+      ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h);
     }
   }
   
@@ -1119,43 +1199,41 @@ export class RenderingService {
    * Render overlay for contrast adjustment
    * Only affects the image area, not letterbox regions
    * 
+   * The tint fills the rectangle the image is drawn into, under the camera
+   * the image is drawn under, so it covers the image at any background zoom
+   * and moves with it. It used to fill the whole canvas, or with `fit: 'fit'`
+   * the image's rectangle before the background zoom, never under the
+   * camera: at 50% zoom it darkened the margin, above 100% it left bands of
+   * the image untinted, and it stayed put while the camera zoomed (DEF-27).
+   * `background.fit` is not read: the image is always drawn contained.
+   *
    * @param {CanvasRenderingContext2D} ctx - Canvas context
    * @param {number} overlayValue - Tint value (-100 to 100)
    * @param {number} canvasWidth - Canvas width
    * @param {number} canvasHeight - Canvas height
-   * @param {Object} background - Background object with image and fit mode
+   * @param {Object} background - Background object with image and zoom
+   * @param {Object} cameraState - Optional camera state {zoom, centerX, centerY, enabled}
    */
-  renderOverlay(ctx, overlayValue, canvasWidth, canvasHeight, background) {
+  renderOverlay(ctx, overlayValue, canvasWidth, canvasHeight, background, cameraState = null) {
     if (overlayValue === 0) return;
     if (!background?.image) return;
     
-    // Calculate image bounds based on fit mode
-    const img = background.image;
-    const iw = img.naturalWidth || img.width;
-    const ih = img.naturalHeight || img.height;
-    
-    let dx = 0, dy = 0, dw = canvasWidth, dh = canvasHeight;
-    
-    if (background.fit === 'fit') {
-      // Fit mode: image is letterboxed, calculate actual bounds
-      const scale = Math.min(canvasWidth / iw, canvasHeight / ih);
-      dw = Math.round(iw * scale);
-      dh = Math.round(ih * scale);
-      dx = Math.floor((canvasWidth - dw) / 2);
-      dy = Math.floor((canvasHeight - dh) / 2);
-    }
-    // Fill mode: image covers entire canvas, no change needed
+    // Both read before the save: a read that threw between it and the `try`
+    // would leave it open (DEF-38)
+    const rect = RenderingService.imageRect(background, canvasWidth, canvasHeight);
+    const underCamera = RenderingService.cameraApplies(cameraState);
     
     ctx.save();
     // Restored whatever throws, or every later frame would draw at this
-    // tint's alpha (DEF-38, see `render`)
+    // tint's alpha, and through its camera (DEF-38, see `render`)
     try {
+      if (underCamera) RenderingService.applyCamera(ctx, cameraState, canvasWidth, canvasHeight);
       ctx.globalAlpha = Math.min(
         Math.abs(overlayValue),
         MOTION.TINT_OPACITY_MAX
       ) / 100;
       ctx.fillStyle = overlayValue < 0 ? '#000' : '#fff';
-      ctx.fillRect(dx, dy, dw, dh);
+      ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
     } finally {
       ctx.restore();
     }
