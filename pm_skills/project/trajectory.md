@@ -17,17 +17,6 @@
      moves the oldest phases to archive/trajectory/trajectory-NNNN-<range>.md and
      adds a row to archive/INDEX.md. Archives are append-only; never rewrite. -->
 
-## W5 — deepen the characterisation (2026-09-29 →; merged, not yet released)
-
-Outcome: written when W5 closes.
-
-SPL-06 — `build.js` builds only when it is run as a script, so tests can
-load it: importing it runs nothing, and it exports the checks a release
-applies (the image manifest, the index.html stamp and its check, the Pages
-inventory, the command line) and the publish and failed-build rollback
-steps, which act only on the paths they are given. Every mode the
-repository uses runs as it did. (2026-10-01)
-
 ## The big run: defects outside the waves (2026-09-28 →; merged, not yet released)
 
 Outcome: written when the run's last such defect has merged.
