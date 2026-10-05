@@ -66,3 +66,4 @@
 - Update the owner's crowd explainer doc (its "At journey end" known-issues note and workaround) once DEF-77 ships — (from: DEF-77, 2026-10-05)
 - Coalesce continuous-input timing rebuilds (a slider dragged) to one per frame: every rebuild now composes a branched route's timeline afresh, about 31 ms per input at 2,000 waypoints (Codex, DEF-42 review r1) — (from: DEF-42, 2026-10-05)
 - Pin the beacon timing the other control paths give: the ripple-wait toggle, a multi-selection's pulse cycle, ripple scale and wait, and a card's On-arrival Reset and Apply onward (Codex, DEF-42 review r2, advisory) — (from: DEF-42, 2026-10-05)
+- Ask the owner whether releases after v3.2.698 also need no save of their smoke-test exports to disk, the in-page export check being enough; until he says so, each release owes its save — (from: GATELESS-1, 2026-10-05)

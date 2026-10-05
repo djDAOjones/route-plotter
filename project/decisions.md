@@ -20,11 +20,11 @@
 
 ## 2026-10-05 — GATELESS-1 — The owner confirms the in-page export checks and four session calls
 
-**Decision:** each release's in-page export check is enough, so the saves to disk owed for v3.2.693–698 are retired, and the four calls the order entry lists are the owner's, because he answered "yes" in his own chat.
+**Decision:** for v3.2.693–698 the in-page export checks are enough, so their owed saves to disk are retired, and the four calls the order entry lists are the owner's, because he answered "yes" in his own chat; later releases are not covered.
 
-**Rationale:** In the run's sixth chat he was asked whether he confirms the Backlog status session's draft, "in-page checks are enough; all four of chat 3's calls are confirmed", and answered "yes". The four calls: DEF-44 names its near-1× tail as a bounded leftover; three releases recorded in one PR; DEL-05 keeps `Tooltip.js`, `tooltips.js` and `tooltip.css` until UI-03 decides; v3.2.694's export check stands in for v3.2.693's. This settles point (1) of the order entry of the same day, which otherwise stands. The wish-list line that owed the saves is retired. That later releases also need no save is this session's reading, for him to confirm.
+**Rationale:** In the run's sixth chat he was asked whether he confirms the Backlog status session's draft, "in-page checks are enough; all four of chat 3's calls are confirmed", and answered "yes". The four calls: DEF-44 names its near-1× tail as a bounded leftover; three releases recorded in one PR; DEL-05 keeps `Tooltip.js`, `tooltips.js` and `tooltip.css` until UI-03 decides; v3.2.694's export check stands in for v3.2.693's. This settles point (1) of the order entry of the same day, which otherwise stands. The wish-list line that owed the saves is retired. That later releases also need no save is this session's reading, for him to confirm (a wish-list line); until then each release owes its save as before.
 
-**Supersedes:** none
+**Supersedes:** 2026-10-05 — GATELESS-1 — The owner orders DEF-77, then UI-03's first part, ahead of Phase 1's pull requests
 
 **Deferred:** none
 
