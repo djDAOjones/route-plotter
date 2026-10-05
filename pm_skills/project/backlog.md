@@ -72,6 +72,8 @@
   [ready] — Control→bus for every control, and model→control state per
   selection path. First, because nothing guards the readouts (§14.5), so W4
   waits on it. **P1**
+- [ ] **TST-13 Key table, element IDs, HTML ranges** · Characterisation
+  [ready] — Gates DEL-05, DEF-13, DEF-15 and DEF-32. **P1**
 - [ ] **TST-05 Event transcript golden** · Characterisation [ready] — Gates
   DEF-15, DEF-22 and W6. **P1**
 - [ ] **TST-09 Camera, dots, curvature, minor-end and time domains** ·
@@ -97,7 +99,7 @@ moved, and account for every survivor)
   [gated: TST-04 impl] **P1**
 - [ ] **DEL-04 Wiring dead code** · Dead code [gated: TST-04 impl] **P1**
 - [ ] **DEL-05 UI, config and CSS dead code** · Dead code
-  [gated: TST-04 impl] — With a before/after browser check of the
+  [gated: TST-04, TST-13 impl] — With a before/after browser check of the
   Tooltip system and the CSS. **P1**
 - [ ] **DEL-06 Services dead API** · Dead code [gated: TST-04 impl] **P2**
 - [ ] **DEL-01 Unused barrels** · Dead code [gated: TST-04 impl] **P2**
@@ -124,14 +126,13 @@ moved, and account for every survivor)
 - [ ] **DEF-20 Controls out of sync after Open and Clear All** · Live defect
   [gated: TST-04 impl] — One nudge can make the duration 646 s. **P1**
 - [ ] **DEF-13 A focused button swallows every shortcut** · Accessibility
-  [ready] — TST-13's key table pins its cells. **P1**
+  [gated: TST-13 impl] **P1**
 - [ ] **DEF-32 Activating a list row loses focus** · Accessibility
-  [ready] — TST-13 pins a focused row, not where focus goes once a row is
-  activated: the fix starts with that before/after regression. **P1**
+  [gated: TST-13 impl] **P1**
 - [ ] **DEF-14 A hint click stops a label toggling** · Accessibility
   [gated: TST-04 impl] **P1**
 - [ ] **DEF-15 L resumes at the old J/K/L speed** · Live defect
-  [gated: TST-05 impl] — TST-13 pins it as it stands. **P2**
+  [gated: TST-05, TST-13 impl] **P2**
 - [ ] **DEF-19 Camera-zoom edits skip undo** · Live defect
   [gated: TST-04 impl] **P2**
 - [ ] **DEF-22 An inserted waypoint splits a branch run** · Live defect
