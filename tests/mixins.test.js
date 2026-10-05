@@ -268,8 +268,9 @@ describe('reorderWaypointBlocks', () => {
  *   refused on it. No module may change the built-in Object either: it is
  *   reached only as `Object.<one of its own members>`, read or called and never
  *   written, Object.prototype only through a member that only reads it, and
- *   Object as a value not at all. A built-in reached any other way is taken as
- *   intact;
+ *   Object as a value not at all. Nor may one give any function a bind, call
+ *   or apply of its own, or another prototype, nor change the properties of a
+ *   mixin's method. A built-in reached any other way is taken as intact;
  * - `this` is the app in RoutePlotter's own methods and fields and in a
  *   composed mixin's methods, and an arrow keeps the `this` around it. In any
  *   other object's or class's method it is that object, and is passed over.
@@ -282,7 +283,8 @@ describe('reorderWaypointBlocks', () => {
  * - main.js publishes the app as `window.app`. In the files read for the app
  *   (main.js, src/app/ and any composed mixin's module) that alias is refused
  *   wherever it is reached but the statement that publishes it, however the
- *   global object is named (`window`, `globalThis`, `self`, …) or the key spelt,
+ *   global object is named or reached (`window`, `globalThis`, `self`, a chain
+ *   of them such as `window.window`, or any `.defaultView`) or the key spelt,
  *   and so is the global object as a value, but handed to a service the app
  *   holds. Past those files, and past a service, nothing reads the app: there
  *   `window.app` is not checked;
@@ -301,8 +303,10 @@ describe('reorderWaypointBlocks', () => {
  *   reader;
  * - a call is certified by a function the app stores only when the write that
  *   stores it is on the app: through `this`, or through the `app` parameter of
- *   a helper some call read hands the app. A `.bind(…)` stores a function only
- *   when it binds one written there or a method the app has;
+ *   a helper the app reaches along handoffs that start from the app's own
+ *   `this`. A `.bind(…)` stores a function only when it binds one written there
+ *   or one the app has, a method or a function it stores. A function the app
+ *   has whose own properties are changed is not the one read, and is refused;
  * - a class member is read by the key JavaScript gives it (quoted, escaped,
  *   numeric, or a constant computed key), and of two members with one key the
  *   later is what the prototype holds. A computed key that is not a constant,
@@ -310,7 +314,7 @@ describe('reorderWaypointBlocks', () => {
  *
  * A refusal names its file and line, so these tests fail rather than pass on a
  * shorter list. The last describe pins the readers on fixtures, among them
- * each probe review round 2 found passing every guard (Q01–Q19), now refused.
+ * each probe review rounds 2 and 3 found passing every guard, now refused.
  */
 
 const repoRoot = join(import.meta.dirname, '..');
@@ -380,12 +384,13 @@ const sourceModules = once(() => {
  * that name. These tests import each mixin's module on its own, so a module
  * that changed a composed mixin would change the app and not them: no module
  * under src/ may. Nor may one change the built-in Object, whose assign does
- * the composing.
+ * the composing, nor give a function its own bind, call or apply.
  */
 const composition = once(async () => {
   const mixins = composedMixins(mainModule());
   unchangedMixins(sourceModules(), MAIN, mixins);
   untouchedObject(sourceModules());
+  nativeCallMethods(sourceModules());
   return Promise.all(mixins.map(async mixin => {
     const module = await import(join(repoRoot, moduleFile(MAIN, mixin.specifier)));
     return { ...mixin, object: module[mixin.exported] };
@@ -502,6 +507,10 @@ describe('the composition main.js builds (TST-08)', () => {
       for (const { shape, line } of dynamic.filter(({ shape }) => !shape.startsWith('Object.'))) {
         drift.push(`${file}:${line}: ${shape} reaches the app by a computed name, which this check cannot follow`);
       }
+    }
+    // Review round 3 (F4): a function the app has, with its own properties changed, is refused, called or not.
+    for (const { altered, what } of reach.values()) {
+      if (altered) drift.push(`${altered.join(', ')}: ${what}`);
     }
     for (const { file, call, name, optional, occurrences } of unresolved.values()) {
       const lines = occurrences.map(({ line }) => line);
@@ -909,6 +918,7 @@ describe('the TST-08 source reader', () => {
     const mixins = composedMixins(read.get('src/main.js'));
     unchangedMixins(read, 'src/main.js', mixins);
     untouchedObject(read);
+    nativeCallMethods(read);
     const appModules = new Map([...read].filter(([file]) => file === 'src/main.js' || file.startsWith('src/app/')));
     const scanned = [...appModules.values()].map(module => ({
       file: module.file,
@@ -926,7 +936,8 @@ describe('the TST-08 source reader', () => {
     const reach = appCallables(classMembers(read.get('src/main.js'), 'RoutePlotter'), objects, scanned);
     const unresolved = scanned.flatMap(({ calls }) => calls.filter(({ name }) => !reach.get(name)?.callable))
       .map(({ receiver, name }) => `${receiver}.${name}(`);
-    return { reach, unresolved };
+    const altered = [...reach].filter(([, { altered: where }]) => where).map(([name]) => name);
+    return { reach, unresolved, altered };
   };
 
   test('review round 2: the probe fixture reads clean as it stands, so each refusal below is its probe\'s', () => {
@@ -1087,6 +1098,110 @@ describe('the TST-08 source reader', () => {
     expect(() => readProbe({ files: { 'src/ui/panel.js': 'export const poke = () => { window.app.render = null; };' } }))
       .not.toThrow();
   });
+
+  // Review round 3 (of fd5ac39) found three more probes that passed every guard, and one ordinary binding refused.
+  // Each is kept below with sibling variants tried alongside it.
+
+  test('review round 3 (F3): a helper\'s app parameter is the app only along handoffs that start from the app itself', () => {
+    // The probe: prepare is handed app by other, which is handed only {}; the constructor's call then throws.
+    const indirect = readProbe({
+      inClass: '  constructor() { this.ghost(); }',
+      beforeCompose: 'function prepare(app) { app.ghost = () => {}; }\nfunction other(app) { prepare(app); }\nother({});',
+    });
+    expect(indirect.unresolved).toEqual(['this.ghost(']);
+    expect(indirect.reach.get('ghost').what).toMatch(/src\/main\.js:7 writes the app parameter of a function no call read hands the app/);
+    // Siblings: a longer chain, a pair of helpers that hand the app to each other, and a chain across modules.
+    for (const [beforeMixin, files] of [
+      ['function prepare(app) { app.ghost = () => {}; }\nfunction middle(app) { prepare(app); }\n' +
+        'function outer(app) { middle(app); }\nouter({});', {}],
+      ['function a(app) { b(app); }\nfunction b(app) { app.ghost = () => {}; if (app.again) a(app); }\na({});', {}],
+      ["import { other } from './helpers.js';\nother({});", {
+        'src/app/helpers.js': 'export function prepare(app) { app.ghost = () => {}; }\nexport function other(app) { prepare(app); }',
+      }],
+    ]) {
+      expect(readProbe({ beforeMixin, inMethod: 'this.ghost();', files }).unresolved, beforeMixin).toEqual(['this.ghost(']);
+    }
+    // A chain that does start from the app stores the function on it.
+    expect(readProbe({
+      inClass: '  constructor() { other(this); this.ghost(); }',
+      beforeCompose: 'function prepare(app) { app.ghost = () => {}; }\nfunction other(app) { prepare(app); }',
+    }).unresolved).toEqual([]);
+  });
+
+  test('review round 3 (F4): no function may be given its own bind, call or apply, and a function the app has may not have its own properties changed', () => {
+    // The probe: play's own bind replaces Function.prototype.bind for it alone.
+    const probe = 'this.play.bind = () => null;\nthis.cb = this.play.bind(this);\nthis.cb();';
+    expect(() => readProbe({ inMethod: probe }))
+      .toThrow(/src\/app\/a\.js:5: a property named bind is written here, so a bound copy, or a call through call or apply, may not be Function\.prototype's/);
+    // Siblings, however the function is reached and the property given.
+    const bound = 'this.cb = this.play.bind(this);\nthis.cb();';
+    expect(() => readProbe({ inMethod: `Object.defineProperty(this.play, 'bind', { value: () => null });\n${bound}` }))
+      .toThrow(/src\/app\/a\.js:5: Object\.defineProperty defines bind here/);
+    expect(() => readProbe({ inMethod: `this.play.__defineGetter__('bind', () => () => null);\n${bound}` }))
+      .toThrow(/src\/app\/a\.js:5: __defineGetter__ defines bind here/);
+    expect(() => readProbe({ inMethod: `const f = this.play;\nf.bind = () => null;\n${bound}` }))
+      .toThrow(/src\/app\/a\.js:6: a property named bind is written here/);
+    expect(() => readProbe({ inMethod: 'this.play.call = (host) => { host.render = null; };\nthis.play.call(this);' }))
+      .toThrow(/src\/app\/a\.js:5: a property named call is written here/);
+    expect(() => readProbe({ inMethod: `Object.setPrototypeOf(this.play, {});\n${bound}` }))
+      .toThrow(/src\/app\/a\.js:5: Object\.setPrototypeOf gives a value another prototype here/);
+    expect(() => readProbe({ inMethod: `Object.assign(this.play, { bind: () => null });\n${bound}` }))
+      .toThrow(/src\/app\/a\.js:5: Object\.assign copies a property named bind here/);
+    expect(() => readProbe({ files: { 'src/utils/patch.js': 'export const patch = f => { f.apply = null; };' } }))
+      .toThrow(/src\/utils\/patch\.js:1: a property named apply is written here/);
+    // On the mixin, before Object.assign copies it, any property of its method changed is refused.
+    expect(() => readProbe({ beforeCompose: 'aMixin.play.bind = () => null;' }))
+      .toThrow(/src\/main\.js:7: aMixin, a composed mixin, has its play changed here \(its bind is written\)/);
+    expect(() => readProbe({ beforeCompose: "Object.defineProperty(aMixin.play, 'length', { value: 0 });" }))
+      .toThrow(/src\/main\.js:7: aMixin, a composed mixin, has its play changed here \(it is handed to Object\.defineProperty\)/);
+    // On the app, a function it has whose own properties are changed by what the reader cannot read is no longer
+    // the function read: refused, and no bound copy of it is certified.
+    const opaque = readProbe({ inMethod: `Object.assign(this.play, overrides);\n${bound}` });
+    expect(opaque.altered).toEqual(['play']);
+    expect(opaque.unresolved).toEqual(['this.cb(']);
+    expect(opaque.reach.get('play').what)
+      .toMatch(/play, a function the app has whose own properties are changed at src\/app\/a\.js:5 \(it is handed to Object\.assign\)/);
+    expect(readProbe({ inMethod: 'this.handler = () => {};\nthis.handler.label = \'x\';\nthis.handler();' }).unresolved)
+      .toEqual(['this.handler(']);
+    // A property of what the app holds that is no function changes no function.
+    expect(readProbe({ inMethod: "this.state.ready = true;\nObject.assign(this.state, { ready: false });\nthis.play();" }))
+      .toEqual({ reach: expect.any(Map), unresolved: [], altered: [] });
+  });
+
+  test('review round 3 (F7): the global object is read as itself however a member chain reaches it, in main.js and the mixins', () => {
+    // The probes: window.window aliased, and window.self, both in main.js after the app is published.
+    expect(() => readProbe({ afterPublish: '  const browser = window.window;\n  browser.app.render = null;' }))
+      .toThrow(/src\/main\.js:11: window\.window is used here as a value \(the value of a declaration\), through which the app/);
+    expect(() => readProbe({ afterPublish: '  window.self.app.render = null;' }))
+      .toThrow(/src\/main\.js:11: window\.self\.app is the app main\.js publishes, which the reader does not follow/);
+    // Siblings: a longer chain, a constant computed key, the document's view, and a destructuring alias.
+    expect(() => readProbe({ afterPublish: '  globalThis.window.top.app.render = null;' }))
+      .toThrow(/src\/main\.js:11: globalThis\.window\.top\.app is the app/);
+    expect(() => readProbe({ inMethod: "window['window'].app.render = null;" }))
+      .toThrow(/src\/app\/a\.js:5: window\['window'\]\.app is the app/);
+    expect(() => readProbe({ afterPublish: '  document.defaultView.app.render = null;' }))
+      .toThrow(/src\/main\.js:11: document\.defaultView\.app is the app/);
+    expect(() => readProbe({ afterPublish: '  const { self: browser } = window;\n  browser.app.render = null;' }))
+      .toThrow(/src\/main\.js:11: window is used here as a value/);
+    expect(() => readProbe({ inMethod: 'window.parent[name].render = null;' })).toThrow(/src\/app\/a\.js:5: window\.parent\[…\] may reach the app/);
+    // The global object's other members, reached through such a chain, are read as before.
+    expect(() => readProbe({ inMethod: 'const ratio = window.self.devicePixelRatio;\nwindow.top.addEventListener(\'resize\', () => {});' }))
+      .not.toThrow();
+  });
+
+  test('review round 3: a bound copy of a function the app stores is certified, as a bound copy of a method is', () => {
+    // Refused at fd5ac39, which looked the stored function up before it had been read.
+    expect(readProbe({ inMethod: 'this.callback = () => {};\nthis.bound = this.callback.bind(this);\nthis.bound();' }).unresolved)
+      .toEqual([]);
+    expect(readProbe({
+      inMethod: 'this.c = this.b.bind(this);\nthis.b = this.a.bind(this);\nthis.a = () => {};\nthis.c();',
+    }).unresolved).toEqual([]);
+    // Bound copies of nothing but each other are no functions, nor is a bound copy of a stored value that is not one.
+    expect(readProbe({ inMethod: 'this.x = this.y.bind(this);\nthis.y = this.x.bind(this);\nthis.x();' }).unresolved)
+      .toEqual(['this.x(']);
+    expect(readProbe({ inMethod: 'this.value = 1;\nthis.bound = this.value.bind(this);\nthis.bound();' }).unresolved)
+      .toEqual(['this.bound(']);
+  });
 });
 
 // ----- The TST-08 reader -----
@@ -1108,6 +1223,44 @@ const REFLECTIVE = new Set(Object.getOwnPropertyNames(Object.prototype).filter(n
 
 /** The names a browser module reaches its global object by, through which the app main.js publishes is `window.app`. */
 const GLOBAL_OBJECTS = new Set(['window', 'globalThis', 'self', 'top', 'parent', 'frames']);
+
+/** Object.prototype's members that define or replace what an object holds or inherits, by name or wholesale. */
+const DEFINERS = new Set(['__defineGetter__', '__defineSetter__', '__proto__']);
+
+/** The functions every function inherits that the reader relies on: `.bind(…)` for a bound copy, `.call`/`.apply` for a call. */
+const CALL_METHODS = new Set(['bind', 'call', 'apply']);
+
+/** The built-in that a call to `callee` is, when it changes its first argument's properties or prototype: `Object.assign`, … */
+function mutatorOf(callee) {
+  if (callee?.type !== 'MemberExpression' || callee.computed || callee.object.type !== 'Identifier') return undefined;
+  const mutators = {
+    Object: ['assign', 'defineProperty', 'defineProperties', 'setPrototypeOf'],
+    Reflect: ['set', 'defineProperty', 'deleteProperty', 'setPrototypeOf'],
+  }[callee.object.name];
+  return mutators?.includes(callee.property.name) ? `${callee.object.name}.${callee.property.name}` : undefined;
+}
+
+/**
+ * How the member expression at the end of `path` (a value read by name off
+ * the app or a mixin) has its own properties changed there, if it does: a
+ * property of it written (`this.play.bind = …`), Object.prototype's definers
+ * on it, or it handed to a built-in that changes its first argument. Undefined
+ * when it does not.
+ */
+function propertiesChanged(path, keys) {
+  const holder = path.at(-2);
+  const holderKey = keys.at(-1);
+  if (holder.type === 'MemberExpression' && holderKey === 'object') {
+    const property = keyName(holder.property, holder.computed);
+    if (writeOf(path.slice(0, -1), keys.slice(0, -1))) return `its ${property ?? '[…]'} is written`;
+    if (DEFINERS.has(property)) return `Object.prototype's ${property} is reached on it`;
+  }
+  if (holder.type === 'CallExpression' && holderKey === 'arguments' && holder.arguments[0] === path.at(-1)) {
+    const mutator = mutatorOf(holder.callee);
+    if (mutator) return `it is handed to ${mutator}`;
+  }
+  return undefined;
+}
 
 /** A reader's refusal: where, what it met, and what to do instead of loosening the guard. */
 function unreadable(file, line, what) {
@@ -1576,17 +1729,22 @@ function unchangedMixins(modules, mainFile, mixins) {
       // not follow, and Object.prototype's reflective members (F5) change it, or hand it on, without a write.
       const exportedAs = parent.type === 'ExportSpecifier' ? keyName(parent.exported) : undefined;
       const reflective = member && !parent.computed && REFLECTIVE.has(parent.property.name);
+      // Review round 3 (F4): a mixin's method with its own properties changed (`aMixin.play.bind = …`) is not the
+      // function written, though the mixin still holds it.
+      const methodChanged = member && !parent.computed && propertiesChanged(path.slice(0, -1), keys.slice(0, -1));
       const unchanged = role === 'reference' && ((parent === call && key === 'arguments') || copiedFrom
         || (parent.type === 'CallExpression' && key === 'callee')
         || (exportedAs !== undefined && ownExports.has(`${node.name} ${exportedAs}`))
-        || (member && !parent.computed && !reflective && !writeOf(path.slice(0, -1), keys.slice(0, -1))));
+        || (member && !parent.computed && !reflective && !methodChanged && !writeOf(path.slice(0, -1), keys.slice(0, -1))));
       if (unchanged) return;
       const how = role === 'target' ? 'is assigned here'
         : exportedAs !== undefined ? `is exported here as ${exportedAs}, a second name the reader does not follow`
           : !member ? 'is used as a value here'
             : parent.computed ? 'is reached by a computed name here'
               : reflective ? `is reached here through Object.prototype's ${parent.property.name}, which can change ` +
-                'it, or hand it on, without a write' : 'has a property written or deleted here';
+                'it, or hand it on, without a write'
+                : methodChanged ? `has its ${parent.property.name} changed here (${methodChanged}), so the function ` +
+                  'the app is given is not the one written' : 'has a property written or deleted here';
       refuse(node, `${node.name}, a composed mixin, ${how}. Object.assign copies what a mixin holds when ` +
         'main.js loads, so a mixin is changed only where it is written');
     });
@@ -1642,6 +1800,57 @@ function untouchedObject(modules) {
       if (!readOnly && !compares(holder)) {
         refuse(node, 'Object.prototype is used here other than read through a member that only reads it, or compared, ' +
           'so what every object inherits could change');
+      }
+    });
+  }
+}
+
+/**
+ * Refuse a module in `modules` that could give a function a bind, call or
+ * apply of its own, or another prototype to find them on (review round 3,
+ * F4): the reader takes `this.name.bind(…)` to be Function.prototype.bind,
+ * and `this.name.call(this)` to hand the app to the method alone. Whatever the
+ * value, it refuses a write to a property so named, or to `__proto__`
+ * (`f.bind = …`, any operator, delete, a destructuring target); its
+ * definition by Object.prototype's definers, Object.defineProperty or
+ * Reflect.defineProperty, Reflect.set or deleteProperty, under that name or
+ * one it cannot read; an object literal with such a key handed to
+ * Object.assign or Object.defineProperties; and any setPrototypeOf. A function
+ * changed any other way (an object read from elsewhere handed to
+ * Object.assign) is taken as intact.
+ */
+function nativeCallMethods(modules) {
+  const named = key => key === undefined || CALL_METHODS.has(key) || key === '__proto__';
+  for (const module of modules.values()) {
+    walk(module.program, (node, path, keys) => {
+      const refuse = what => {
+        throw unreadable(module.file, module.lineOf(node), `${what}, so a bound copy, or a call through call or ` +
+          'apply, may not be Function.prototype\'s');
+      };
+      if (node.type === 'MemberExpression') {
+        const key = keyName(node.property, node.computed);
+        if (key !== undefined && named(key) && writeOf(path, keys)) refuse(`a property named ${key} is written here`);
+        return;
+      }
+      if (node.type !== 'CallExpression') return;
+      const { callee } = node;
+      const method = callee.type === 'MemberExpression' ? keyName(callee.property, callee.computed) : undefined;
+      const mutator = mutatorOf(callee);
+      const keyAt = index => keyName(node.arguments[index] ?? { type: 'Missing' }, true);
+      if (['__defineGetter__', '__defineSetter__'].includes(method) && named(keyAt(0))) {
+        refuse(`${method} defines ${keyAt(0) ?? 'a property it names by a computed key'} here`);
+      }
+      if (['Object.defineProperty', 'Reflect.defineProperty', 'Reflect.set', 'Reflect.deleteProperty'].includes(mutator)
+        && named(keyAt(1))) {
+        refuse(`${mutator} defines ${keyAt(1) ?? 'a property it names by a computed key'} here`);
+      }
+      if (mutator?.endsWith('setPrototypeOf')) refuse(`${mutator} gives a value another prototype here`);
+      if (mutator === 'Object.assign' || mutator === 'Object.defineProperties') {
+        for (const source of node.arguments.slice(1)) {
+          const own = source.type === 'ObjectExpression'
+            && source.properties.find(property => property.type === 'Property' && named(keyName(property.key, property.computed)));
+          if (own) refuse(`${mutator} copies a property named ${keyName(own.key, own.computed) ?? 'by a computed key'} here`);
+        }
       }
     });
   }
@@ -1939,14 +2148,17 @@ function valueUse(module, parent) {
  * `writes` ({ receiver, name, line, operator, storesFunction, binds?, and for
  * `app` the function that takes it, `taker` }), `dynamic` reaches it cannot
  * name ({ line, shape }), for the checks to refuse, `handoffs` of the app to a
- * helper ({ receiver, helper, file, line }), and the `helpers` (their function
- * nodes) the app is handed to. Any other use of the app is refused here, with
- * its file and line: among them Object.prototype's reflective members on it,
- * `arguments` where a function takes it as `app`, and `window.app`.
+ * helper ({ receiver, helper, file, line }), the `helpers` the app is handed to
+ * ({ helper, from }: the helper's function, and the function whose `app` it is
+ * handed, or null for `this`), and the values the app holds that have their
+ * own properties changed (`altered`: { receiver, name, line, how }). Any other
+ * use of the app is refused here, with its file and line: among them
+ * Object.prototype's reflective members on it, `arguments` where a function
+ * takes it as `app`, and `window.app` however the global object is reached.
  */
 function appReferences(module, context) {
   const { file, program, lineOf } = module;
-  const found = { calls: [], writes: [], dynamic: [], handoffs: [], helpers: [] };
+  const found = { calls: [], writes: [], dynamic: [], handoffs: [], helpers: [], altered: [] };
   walk(program, (node, path, keys) => {
     const refuse = what => {
       throw unreadable(file, lineOf(node), what);
@@ -1964,26 +2176,34 @@ function appReferences(module, context) {
       }
       return;
     }
-    if (node.type === 'Identifier' && GLOBAL_OBJECTS.has(node.name)) {
+    const globalName = node.type === 'Identifier' && GLOBAL_OBJECTS.has(node.name) && !scopeOf(path, node.name)
+      && !['name', 'binding'].includes(identifierRole(path, keys).role);
+    if (globalName || (node.type === 'MemberExpression' && keyName(node.property, node.computed) === 'defaultView')) {
       // Review round 2 (F7): main.js publishes the app as window.app. In the files read for the app, that alias is
       // refused wherever it is reached but the one statement that publishes it, and so is the global object as a
       // value, but handed to a service the app holds, like any service call: past either, the app is not followed.
-      const { role } = identifierRole(path, keys);
-      if (role === 'name' || role === 'binding' || scopeOf(path, node.name)) return;
-      const parent = path.at(-2);
-      const key = keys.at(-1);
+      // Review round 3: the global object is whatever names it, however reached: `window.window`, `window.self.top`,
+      // `globalThis['window']` and any `….defaultView` are it too, and are read as it.
+      let at = path.length - 1;
+      while (path[at - 1].type === 'MemberExpression' && keys[at] === 'object'
+        && GLOBAL_OBJECTS.has(keyName(path[at - 1].property, path[at - 1].computed))) at -= 1;
+      const spelt = module.source.slice(path[at].start, path[at].end);
+      const role = at === path.length - 1 && node.type === 'Identifier' ? identifierRole(path, keys).role
+        : (writeOf(path.slice(0, at + 1), keys.slice(0, at + 1)) ? 'target' : 'reference');
+      const parent = path[at - 1];
+      const key = keys[at];
       if (role === 'reference' && parent.type === 'MemberExpression' && key === 'object') {
         const name = keyName(parent.property, parent.computed);
         if (name === undefined) {
-          refuse(`${node.name}[…] may reach the app main.js publishes as window.app, which the reader does not follow`);
+          refuse(`${spelt}[…] may reach the app main.js publishes as window.app, which the reader does not follow`);
         }
         if (name !== 'app') return;
-        const publish = path.at(-3);
-        const published = context.appClass && publish.type === 'AssignmentExpression' && keys.at(-2) === 'left'
+        const publish = path[at - 2];
+        const published = context.appClass && publish.type === 'AssignmentExpression' && keys[at - 1] === 'left'
           && publish.operator === '=' && publish.right.type === 'NewExpression'
           && publish.right.callee.type === 'Identifier' && publish.right.callee.name === context.appClass.id.name;
         if (published) return;
-        refuse(`${node.name}.app is the app main.js publishes, which the reader does not follow: reach the app as ` +
+        refuse(`${spelt}.app is the app main.js publishes, which the reader does not follow: reach the app as ` +
           'this, or as the app parameter of a helper it is handed to');
       }
       // A service call, `this.service.method(window)` or `app.service.method(window)`.
@@ -1993,7 +2213,7 @@ function appReferences(module, context) {
         && holder.type === 'MemberExpression' && !holder.computed
         && (holder.object.type === 'ThisExpression' || (holder.object.type === 'Identifier' && holder.object.name === 'app'));
       if (service) return;
-      refuse(`${node.name} is ${role === 'target' ? 'assigned here' : `used here as a value (${valueUse(module, parent)})`}, ` +
+      refuse(`${spelt} is ${role === 'target' ? 'assigned here' : `used here as a value (${valueUse(module, parent)})`}, ` +
         'through which the app main.js publishes as window.app could be reached unread');
     }
     if (node.type === 'ThisExpression' || node.type === 'Super') {
@@ -2037,6 +2257,10 @@ function appReferences(module, context) {
         refuse(`${receiver}.${name} is Object.prototype's ${name}, which changes the app, or hands it on, with no ` +
           'call or write by name the reader could check');
       }
+      // Review round 3 (F4): what the app holds under name, with its own properties changed, is not the value read;
+      // appCallables() holds a function so changed to be no longer the function the app has.
+      const changed = propertiesChanged(path.slice(0, -1), keys.slice(0, -1));
+      if (changed) found.altered.push({ receiver, name, line, how: changed });
       const holder = path.at(-3);
       const holderKey = keys.at(-2);
       if ((holder.type === 'CallExpression' && holderKey === 'callee') || (holder.type === 'TaggedTemplateExpression' && holderKey === 'tag')) {
@@ -2055,7 +2279,7 @@ function appReferences(module, context) {
       if (callee.type === 'Identifier') {
         const helper = helperTaking(context.modules, module, path, callee, index);
         found.handoffs.push({ receiver, helper: callee.name, file: helper.module.file, line });
-        found.helpers.push(helper.node);
+        found.helpers.push({ helper: helper.node, from: receiver === 'app' ? taker : null });
         return;
       }
       const method = callee.type === 'MemberExpression' && !callee.computed ? callee.property.name : undefined;
@@ -2083,10 +2307,13 @@ function appReferences(module, context) {
  * over them, in the order main.js composes them; and, under a name no member
  * has, what the app stores on itself, a function only when every write of that
  * name (and any class field of it) gives one. A bound copy gives one only when
- * what it binds is a function the app has; a write through `app` counts only in
- * a helper that `scans` record the app handed to, since a function that merely
- * names its parameter app may be handed anything. Each entry says whether a
- * call runs it (`callable`), and what it is.
+ * what it binds is a function the app has, a method or one it stores; a write
+ * through `app` counts only in a helper the app reaches, handed `this` by the
+ * app's own method or `app` by a helper so reached, since a function that
+ * merely names its parameter app may be handed anything. A function whose own
+ * properties are changed is no longer the one read, and is `altered`: called
+ * or not, the call check refuses it. Each entry says whether a call runs it
+ * (`callable`), and what it is.
  */
 function appCallables({ effective, fields }, mixins, scans) {
   const reach = new Map();
@@ -2104,32 +2331,65 @@ function appCallables({ effective, fields }, mixins, scans) {
     }
   }
   const members = new Set([...effective.keys(), ...mixins.flatMap(mixin => Object.keys(mixin.object ?? {}))]);
-  const stored = new Map();
-  // Review round 2 (F3, F4): a write is evidence of a function only on the app, and a bound copy only of a function.
-  const handed = new Set(scans.flatMap(scan => scan.helpers ?? []));
-  const store = ({ name, storesFunction, binds, receiver, taker }, where) => {
-    const entry = stored.get(name) ?? { always: true, not: [] };
-    const why = receiver === 'app' && !handed.has(taker)
-      ? `${where} writes the app parameter of a function no call read hands the app`
-      : !storesFunction ? `${where} stores something other than a function`
-        : binds !== undefined && reach.get(binds)?.callable !== true ? `${where} binds ${binds}, which is no method the app has`
-          : null;
-    if (why) {
-      entry.always = false;
-      entry.not.push(why);
+  // Review round 3 (F3): an `app` parameter is the app only in a helper the app reaches: handed `this` by the app's
+  // own method, or `app` by a helper already so reached. A chain that starts anywhere else (`other({})`, handing
+  // on its own parameter) reaches no app, however many helpers it passes through.
+  const handoffs = scans.flatMap(scan => scan.helpers ?? []);
+  const handed = new Set();
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const { helper, from } of handoffs) {
+      if (!handed.has(helper) && (from === null || handed.has(from))) {
+        handed.add(helper);
+        grew = true;
+      }
     }
-    stored.set(name, entry);
-  };
-  for (const field of fields) store(field, `${MAIN}:${field.line}`);
-  for (const { file, writes } of scans) {
-    for (const write of writes) store(write, `${file}:${write.line}`);
   }
-  for (const [name, { always, not }] of stored) {
+  // Review round 3 (F4): a value the app holds with its own properties changed, `this.play.bind = …`.
+  const altered = new Map();
+  for (const { file, altered: changes = [] } of scans) {
+    for (const { name, line, how } of changes) altered.set(name, [...(altered.get(name) ?? []), `${file}:${line} (${how})`]);
+  }
+  const writes = new Map();
+  for (const [write, where] of [
+    ...fields.map(field => [field, `${MAIN}:${field.line}`]),
+    ...scans.flatMap(({ file, writes: each }) => each.map(write => [write, `${file}:${write.line}`])),
+  ]) {
+    if (!members.has(write.name)) writes.set(write.name, [...(writes.get(write.name) ?? []), { write, where }]);
+  }
+  // Review round 2 (F3, F4) and 3: a write shows a function only on the app, and a bound copy only of a function the
+  // app has, a method or one it stores. A name stores one when every write of it shows one, found as a least
+  // fixed point, so a bound copy of a stored function counts and two bound copies of each other do not.
+  const stores = new Set();
+  const isFunction = bound => !altered.has(bound) && (reach.get(bound)?.callable === true || stores.has(bound));
+  const unshown = ({ write, where }) => (write.receiver === 'app' && !handed.has(write.taker)
+    ? `${where} writes the app parameter of a function no call read hands the app`
+    : !write.storesFunction ? `${where} stores something other than a function`
+      : write.binds !== undefined && !isFunction(write.binds)
+        ? `${where} binds ${write.binds}, which is not shown to be a function the app has` : null);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const [stored, list] of writes) {
+      if (!stores.has(stored) && list.every(each => !unshown(each))) {
+        stores.add(stored);
+        grew = true;
+      }
+    }
+  }
+  for (const [stored, list] of writes) {
     // A write that hides a member is the instance-property check's to refuse.
-    if (members.has(name)) continue;
-    reach.set(name, always
-      ? { callable: true, what: `the function the app stores as ${name}` }
-      : { callable: false, what: `${name}, which the app is not shown to hold as a function (${not.join('; ')})` });
+    reach.set(stored, stores.has(stored)
+      ? { callable: true, what: `the function the app stores as ${stored}` }
+      : { callable: false, what: `${stored}, which the app is not shown to hold as a function (${list.map(unshown).filter(Boolean).join('; ')})` });
+  }
+  for (const [changed, where] of altered) {
+    if (reach.get(changed)?.callable !== true) continue;
+    reach.set(changed, {
+      callable: false,
+      altered: where,
+      what: `${changed}, a function the app has whose own properties are changed at ${where.join(', ')}, so it is not ` +
+        'the function read, and its bind, call or apply may not be Function.prototype\'s',
+    });
   }
   return reach;
 }
