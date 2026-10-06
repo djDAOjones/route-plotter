@@ -13,7 +13,7 @@ ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-bt
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 22 inside, eec85b79)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 24 inside, a4b1415d)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 24 inside, fd671dbf)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, 107b52a2)

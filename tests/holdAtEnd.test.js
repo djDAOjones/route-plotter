@@ -13,6 +13,8 @@
  * and in the Duration readout. "Wait here for this crowd" is retired.
  */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
@@ -20,6 +22,7 @@ import { clearProject } from '../src/app/projectReset.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { VideoExporter, createVideoFramePlan } from '../src/services/VideoExporter.js';
 import { Scene } from '../src/models/Scene.js';
+import { buildExampleProjects } from '../src/examples/index.js';
 import { ANIMATION, VIDEO_EXPORT } from '../src/config/constants.js';
 import { computeSceneEnd, describeSceneEnd, resolveHoldAtEndMs } from '../src/utils/sceneEnd.js';
 import { formatHoldAtEnd } from '../src/utils/uiReadouts.js';
@@ -38,11 +41,22 @@ const SLOW_CROWD = { seed: 21, speed: 0.05, speedVariance: 0.3, releaseDuration:
 
 const holdSlider = () => document.getElementById('hold-at-end');
 
-/** Move the Hold at end slider as a user does: its value, then `input`. */
-function setHold(ms) {
+/** The thumb moved to `ms` as a browser moves it: the value, then `input`. */
+function moveHold(ms) {
   const slider = holdSlider();
   slider.value = String(ms);
   slider.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+/** The gesture let go (the pointer up, or the end of a keyboard step): `change`. */
+function commitHold() {
+  holdSlider().dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+/** One complete change, as a click on the track or one arrow key gives: `input`, then `change`. */
+function setHold(ms) {
+  moveHold(ms);
+  commitHold();
 }
 
 const durations = host => ({
@@ -119,10 +133,40 @@ describe('the Hold at end control', () => {
     const sent = vi.fn();
     app.eventBus.on('animation:hold-at-end-change', sent);
     setHold(3500);
-    expect(sent).toHaveBeenCalledWith(3500);
+    expect(sent.mock.calls).toEqual([[{ holdMs: 3500, commit: false }], [{ holdMs: 3500, commit: true }]]);
     expect(app.styles.holdAtEndMs).toBe(3500);
     expect(readout.textContent).toBe('3.5s');
     expect(slider.getAttribute('aria-valuetext')).toBe('3.5s');
+  });
+
+  test('its slider is a 44 px target (WCAG 2.5.5), and only it: its rail and thumb look as the others do', async () => {
+    await bootApp();
+    const style = document.createElement('style');
+    style.textContent = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
+    document.head.append(style);
+    try {
+      const slider = holdSlider();
+      expect(slider.classList.contains('range-hit-target')).toBe(true);
+      expect(getComputedStyle(slider).height).toBe('2.75rem');
+      expect(getComputedStyle(slider).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      // The other section ranges keep their 4 px rail.
+      for (const id of ['graphics-scale', 'animation-speed-right', 'path-head-size']) {
+        expect(document.getElementById(id).classList.contains('range-hit-target'), id).toBe(false);
+        expect(getComputedStyle(document.getElementById(id)).height, id).toBe('4px');
+      }
+      // Its rail is drawn on the track instead, as the others' is on the input, and the thumb sits on it.
+      const rules = [...style.sheet.cssRules].filter(rule => rule.selectorText?.includes('.range-hit-target'));
+      const rule = pseudo => rules.find(each => each.selectorText.endsWith(pseudo)).style;
+      const rail = rule('::-webkit-slider-runnable-track');
+      const plain = [...style.sheet.cssRules]
+        .find(each => each.selectorText === '.section-content input[type="range"]').style;
+      for (const property of ['height', 'background', 'border', 'border-radius']) {
+        expect(rail.getPropertyValue(property), property).toBe(plain.getPropertyValue(property));
+      }
+      expect(rule('::-webkit-slider-thumb').getPropertyValue('margin-top')).toBe('-5px');
+    } finally {
+      style.remove();
+    }
   });
 
   test('the readout writes seconds as Duration does, and a hold is kept within 0–10 s', () => {
@@ -315,6 +359,46 @@ describe('the HTML player honours the hold', () => {
     expect(durations(player)).toEqual(editor);
   });
 
+  test('on a branched route, the player draws the editor\'s dots, place for place, and they keep moving through the hold',
+    async () => {
+      // The open day's route branches, so its crowd's bound moments are the
+      // same in the player's space (DEF-79 moves them only on a linear route).
+      const app = await bootApp();
+      await app.ready;
+      document.getElementById('splash-close').click();
+      const example = buildExampleProjects().find(each => each.id === 'uon-open-day');
+      expect(await loadSnapshot(app, structuredClone(example.project))).toBe(true);
+      await settled();
+      const [crowd] = app.scene.getFlowLayers();
+      crowd.emitters[0].update({ lifecycleMode: 'respawn' });
+      app.eventBus.emit('crowd:param-changed');
+      setHold(3000);
+      app._setPreviewMode(true);
+      app.invalidateAnimationTiming();
+      const editor = durations(app);
+      expect(editor.F).toBe(editor.B + 3000);
+      expect(editor.parts.crowdsMs).toBe(0);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 360;
+      const player = new PlayerApp(canvas);
+      await player.load(JSON.parse(JSON.stringify(app._buildProjectSnapshot())), app.background.image);
+      expect(durations(player)).toEqual(editor);
+
+      const instants = [editor.B + 500, editor.B + 1500, editor.B + 2500, editor.F];
+      const drawn = instants.map(ms => {
+        const inEditor = frameAt(app, ms);
+        const inPlayer = frameAt(player, ms);
+        expect(inPlayer.head, `${ms} ms`).toBe(1);
+        expect(inEditor.head, `${ms} ms`).toBe(1);
+        expect(inPlayer.dots.length, `${ms} ms`).toBeGreaterThan(0);
+        expect(positions(inPlayer.dots), `${ms} ms`).toEqual(positions(inEditor.dots));
+        return JSON.stringify(positions(inPlayer.dots));
+      });
+      expect(new Set(drawn).size).toBe(instants.length);
+    });
+
   test('a snapshot saved without a hold plays in the player with none', async () => {
     const { app } = await editorWithCrowd('disappear');
     const held = durations(app);
@@ -398,30 +482,79 @@ describe('the hold is the project\'s', () => {
     expect(warn).toHaveBeenCalled();
   });
 
-  test('one undo entry per change: undo and redo put the hold and F back', async () => {
+  test('history follows the gesture: a drag paused half-way is one entry; undo and redo put the hold and F back',
+    async () => {
+      const { app } = await editorWithCrowd('disappear');
+      setHold(2000);
+      app.saveUndoState();
+      const before = { hold: app.styles.holdAtEndMs, ...durations(app) };
+      const entries = app.undoService._undoStack.length;
+
+      // 2 s → 3 s, held past the 400 ms other sliders wait, then on to 5 s and let go.
+      moveHold(2600);
+      moveHold(3000);
+      await new Promise(done => setTimeout(done, 450));
+      expect(app.undoService._undoStack.length).toBe(entries);
+      moveHold(4100);
+      moveHold(5000);
+      commitHold();
+      await new Promise(done => setTimeout(done, 450));
+      expect(app.undoService._undoStack.length).toBe(entries + 1);
+      const after = { hold: app.styles.holdAtEndMs, ...durations(app) };
+      expect(after.hold).toBe(5000);
+      expect(after.F).toBe(before.F + 3000);
+
+      app.undo();
+      await settled();
+      expect({ hold: app.styles.holdAtEndMs, ...durations(app) }).toEqual(before);
+      expect(holdSlider().value).toBe('2000');
+      app.redo();
+      await settled();
+      expect({ hold: app.styles.holdAtEndMs, ...durations(app) }).toEqual(after);
+      expect(holdSlider().value).toBe('5000');
+      expect(document.getElementById('hold-at-end-value').textContent).toBe('5s');
+    });
+
+  test('two separate changes in quick succession are two entries, each undone on its own', async () => {
     const { app } = await editorWithCrowd('disappear');
-    app._flushPendingUndo();
+    setHold(2000);
     app.saveUndoState();
-    const before = { hold: app.styles.holdAtEndMs, ...durations(app) };
     const entries = app.undoService._undoStack.length;
 
-    // A drag: several values within the debounce, one entry.
-    for (const ms of [2600, 3900, 5000]) setHold(ms);
-    app._flushPendingUndo();
-    expect(app.undoService._undoStack.length).toBe(entries + 1);
-    const after = { hold: app.styles.holdAtEndMs, ...durations(app) };
-    expect(after.hold).toBe(5000);
-    expect(after.F).toBe(before.F + 3000);
+    setHold(3000);
+    setHold(4500);
+    expect(app.undoService._undoStack.length).toBe(entries + 2);
 
     app.undo();
     await settled();
-    expect({ hold: app.styles.holdAtEndMs, ...durations(app) }).toEqual(before);
-    expect(holdSlider().value).toBe(String(before.hold));
-    app.redo();
+    expect(app.styles.holdAtEndMs).toBe(3000);
+    app.undo();
     await settled();
-    expect({ hold: app.styles.holdAtEndMs, ...durations(app) }).toEqual(after);
-    expect(holdSlider().value).toBe('5000');
-    expect(document.getElementById('hold-at-end-value').textContent).toBe('5s');
+    expect(app.styles.holdAtEndMs).toBe(2000);
+  });
+
+  test('keyboard steps: each arrow press is one step, one entry; a pending edit elsewhere keeps its own', async () => {
+    const { app } = await editorWithCrowd('disappear');
+    setHold(2000);
+    app.saveUndoState();
+    const entries = app.undoService._undoStack.length;
+
+    // Chromium sends `input` then `change` for each step of an arrow key.
+    for (const ms of [2100, 2200, 2300]) setHold(ms);
+    expect(app.undoService._undoStack.length).toBe(entries + 3);
+    app.undo();
+    await settled();
+    expect(app.styles.holdAtEndMs).toBe(2200);
+
+    // Graphics scale's own entry waits on its timer; moving the hold first keeps it apart.
+    const scale = document.getElementById('graphics-scale');
+    scale.value = '50';
+    scale.dispatchEvent(new Event('input', { bubbles: true }));
+    const scaled = app.styles.graphicsScale;
+    setHold(4000);
+    app.undo();
+    await settled();
+    expect([app.styles.holdAtEndMs, app.styles.graphicsScale]).toEqual([2200, scaled]);
   });
 });
 

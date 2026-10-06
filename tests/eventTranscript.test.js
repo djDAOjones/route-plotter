@@ -1369,10 +1369,11 @@ const CONTROLLER_ROWS = [
     act: app => emit(app, 'animation:speed-change', 400),
   },
   {
-    // CROWD-06: the open day was saved without a hold, so it plays with none; 3.5 s is added after its end.
+    // CROWD-06: the open day was saved without a hold, so it plays with none; 3.5 s is added after its end,
+    // and committed, as the slider's `change` commits it.
     event: 'animation:hold-at-end-change', fixture: 'open day', given: HALF_WAY,
     setup: app => seekHalfWayThroughRoute(app),
-    act: app => emit(app, 'animation:hold-at-end-change', 3500),
+    act: app => emit(app, 'animation:hold-at-end-change', { holdMs: 3500, commit: true }),
   },
   {
     event: 'animation:jkl-reverse', fixture: 'open day', given: HALF_WAY,

@@ -1266,6 +1266,28 @@ kbd{
   opacity:.72;
 }
 
+/* AAA target size (WCAG 2.5.5) for a range: the input itself is a 44px band
+   that takes the pointer anywhere along it, while the rail and thumb look as
+   every other section range's do — the rail is drawn on the runnable track,
+   not on the input (CROWD-06's Hold at end; Chromium is the app's browser). */
+.section-content input[type="range"].range-hit-target{
+  height:2.75rem;
+  background:transparent;
+  border:none;
+  border-radius:0;
+}
+
+.section-content input[type="range"].range-hit-target::-webkit-slider-runnable-track{
+  height:4px;
+  background:var(--ui-03);
+  border:1px solid var(--border-interactive); /* B1: 3:1 rail boundary (WCAG 1.4.11) */
+  border-radius:2px;
+}
+
+.section-content input[type="range"].range-hit-target::-webkit-slider-thumb{
+  margin-top:-5px; /* (4px rail − 14px thumb) ÷ 2: the thumb centred on the rail, as elsewhere */
+}
+
 .section-content label span:last-child{
   min-width:2.5rem; /* Consistent value width per spec §I */
   text-align:right;
