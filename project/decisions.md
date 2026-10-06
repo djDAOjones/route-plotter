@@ -24,14 +24,16 @@
 
 **Items:** UI-04, CROWD-06, TST-09, TST-03, TST-11, DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22
 
-**Rationale:** the review (plan step 2), against the brief, the adopted standards and GATELESS-1's order ("W5, defects runnable now, defects that wait on their W5 test, then W4, plus the found defects"):
-- The parameter hint opens from a label's own text, so a click on a label does not toggle its control (DEF-14; UI-03's decision; Nielsen 4, WCAG 2.1.3): UI-04, the owner's order of 2026-10-05, folds in DEF-14's first remedy; DEF-14 stays an item until its whole scope is met.
-- Since CROWD-05 the animation ends when the last concluding animation ends, with no padding for looping crowds, and "Wait here for this crowd" writes a fixed wait that goes stale (CROWD-05; CROWD-06's file): CROWD-06, the owner's control.
-- W5's three characterisation items from the abstraction plan's §13 are unstarted: camera, dots, curvature and time domains; the visibility-mode matrix; source-text assertions made behavioural (TST-09, TST-03, TST-11).
-- Seven live and accessibility defects held by §13 ground rule 8 are runnable now that TST-04 and TST-05 have landed (P1: DEF-20, DEF-13, DEF-32, DEF-14; P2: DEF-15, DEF-19, DEF-22).
-Deferred, already lines in Next: W4 (DEL-01 to DEL-06) and the 27 found defects (DEF-50 to DEF-80), for the phase after this one, per GATELESS-1's "then W4, plus the found defects"; EX-01 waits on the owner's direction, REV-03 and REV-05 on his evidence; the brief's open question on format 9 stands. None is new.
+**Rationale:** the review (plan step 2), against the brief, the adopted standards and GATELESS-1's order ("W5, defects runnable now, defects that wait on their W5 test, then W4 (which keeps its own mutation criterion), plus the found defects"):
+- A click on any `[data-tip]` element is taken by the hint's delegated handler, which calls `preventDefault()` and `stopPropagation()` (`src/components/ParamTooltip.js`:467-471), so a click on a label that carries its hint does not toggle its control (DEF-14, plan row :4486; Nielsen 4, WCAG 2.1.3): UI-04, the owner's order of 2026-10-05, folds in DEF-14's first remedy; DEF-14 stays an item until its whole scope is met.
+- Since CROWD-05 the animation ends when the last concluding animation ends, with no padding for looping crowds, and "Wait here for this crowd" writes a fixed timed wait at the route's last major waypoint (`src/app/crowds.js`:812-822) that goes stale when the crowd changes: CROWD-06, the owner's control; how existing projects take it is the run's call (its item file).
+- W5's three characterisation rows are unstarted: camera, dots, curvature and time domains (plan row :4565, TST-09), the visibility-mode matrix (:4561, TST-03), source-text assertions made behavioural (:4566, TST-11).
+- Seven defects held by §13 ground rule 8 are runnable now that TST-04, TST-05 and TST-13 have landed: P1 DEF-20 (:4494), DEF-13 (:4485), DEF-32 (:4493), DEF-14 (:4486); P2 DEF-15 (:4498), DEF-19 (:4499), DEF-22 (:4500).
+Deferred, already lines in Next: W4 (DEL-01 to DEL-06) and the 24 found defects, some runnable now (DEF-50, DEF-54, DEF-55, DEF-71 among them), for the phase after this one. That follows the order PLAN-1 recorded for Next (W5, the defects after their W5 test, W4, then the found defects), which the owner confirmed ("sounds good", GATELESS-1, 2026-10-05); reading "defects runnable now" as the held defects rather than the found ones is the run's call. EX-01 waits on the owner's direction, REV-03 and REV-05 on his evidence; the brief's open question on format 9 stands. None is new.
 
-The session's calls, for the owner to confirm: the owner's two items first, then W5's tests in the plan's order, then the held defects P1 before P2; the found defects after W4 rather than interleaved. Codex reviews this plan before it executes.
+The archive the checker asked for moved the two oldest entries verbatim; INTAKE is still cited as the origin of open wish lines, which resolve through `project/archive/INDEX.md`; no open item depends on its rationale, so the prune bar holds (the run's reading).
+
+The session's calls, for the owner to confirm: the owner's two items first, then W5's tests in the plan's order, then the held defects P1 before P2; the found defects after W4; CROWD-06's 0 s for saved projects. Codex reviewed this plan before it executes (r1: five corrections, made).
 
 **Supersedes:** none
 

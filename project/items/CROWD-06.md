@@ -8,7 +8,7 @@ After CROWD-05 the animation ends when the last animation that concludes has end
 
 - A "Hold at end" control in the Pacing section, under Duration: 0–10 s, default 2 s. It is saved with the project, takes part in undo and autosave, and has a plain-language hint to UI-03's standard, e.g. "Keeps the animation going after everything that finishes has finished: looping crowds keep moving and the final frame holds."
 - The hold applies the same in the editor, Preview, scrub, video export and the HTML player, and the Duration readout includes it.
-- Existing projects take the 2 s default (the owner waived backwards compatibility, 2026-10-05).
+- A project saved without the setting opens with no hold (0 s), so its playback is unchanged; a new project starts at 2 s. The run's call (PLAN-2, 2026-10-06), for the owner to confirm: the waiver this line once cited, "no backwards compatibility needed", was said of DEF-77's timing fix, not of this control.
 - "Wait here for this crowd" is retired: the fixed wait it writes at the last major waypoint goes stale, and CROWD-05 makes it redundant.
 - The control is pinned like every other control: it extends TST-04's goldens.
 - Every existing test stays green; none is deleted, skipped or weakened.
