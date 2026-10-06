@@ -18,9 +18,7 @@
 
 ### After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05 — CLOSED 2026-10-05
 
-### Phase 1 — Land the big run's open pull requests
-
-- [~] DEF-28 — A failed recovery restore is silent · Live defect P2 — since 2026-10-01
+### Phase 1 — Land the big run's open pull requests — CLOSED 2026-10-06
 
 ### Review assurance — owner evidence
 
@@ -65,7 +63,7 @@
 
 **Found defects**
 
-- [ ] DEF-50 — Autosave failure unseen — since 2026-10-05 — blocked: DEF-28
+- [ ] DEF-50 — Autosave failure unseen — since 2026-10-05
 - [ ] DEF-51 — Failed load leaves caches — since 2026-10-05
 - [ ] DEF-54 — Outside drop moves rows — since 2026-10-05
 - [ ] DEF-55 — List drop sends branch last — since 2026-10-05
@@ -77,7 +75,7 @@
 - [ ] DEF-63 — Shortcuts take modifier chords — since 2026-10-05
 - [ ] DEF-65 — Branch place: two undos — since 2026-10-05
 - [ ] DEF-66 — Export settings skip autosave — since 2026-10-05
-- [ ] DEF-67 — Open announces "paused" — since 2026-10-05 — blocked: DEF-28
+- [ ] DEF-67 — Open announces "paused" — since 2026-10-05
 - [ ] DEF-68 — Paused camera controls sleep — since 2026-10-05
 - [ ] DEF-69 — Zoom warning unattached — since 2026-10-05
 - [ ] DEF-70 — Menu item drops focus — since 2026-10-05

@@ -1,0 +1,19 @@
+# unrestored: browser recovery given a record it could not restore, so the notice offers it
+
+## #unrestored-download · click
+download route-plotter-unrestored-session.json application/json 70 bytes bcb6e9cd65a1
+app ~ focus: "body" → "#unrestored-download"
+
+## #unrestored-discard · click
+announced "The session that couldn't be restored was discarded."
+app ~ focus: "body" → "#scope-next-btn"
+storage - routePlotter_keptAutosave:1790154009997-{1}: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.6"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="The session that couldn't be restored was discarded."
+ui ~ #unrestored-notice: div aria-describedby="unrestored-notice-status" aria-labelledby="unrestored-notice-text" class="unrestored-notice" role="region" → div (not shown)
+ui - #unrestored-notice-text: p class="unrestored-notice-title" :text="Your previous session couldn't be restored."
+ui - #unrestored-notice-status: p :text="Kept until you discard it. You can download a copy."
+ui - #unrestored-notice>div[2]: div class="unrestored-notice-actions"
+ui - #unrestored-download: button class="btn btn-secondary" type="button" :text="Download it"
+ui - #unrestored-discard: button class="btn btn-secondary" type="button" :text="Discard"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="The session that couldn't be restored was discarded." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

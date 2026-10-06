@@ -93,6 +93,16 @@
     <main class="main" id="main-content" role="main" aria-labelledby="app-title">
       <!-- Left Sidebar - Settings with Collapsible Sections -->
       <aside class="sidebar" role="complementary" aria-label="Settings panel">
+        <!-- DEF-28: a recovery record that could not be restored is kept
+             until the author discards it -->
+        <div id="unrestored-notice" class="unrestored-notice" role="region" aria-labelledby="unrestored-notice-text" aria-describedby="unrestored-notice-status" hidden>
+          <p id="unrestored-notice-text" class="unrestored-notice-title">Your previous session couldn't be restored.</p>
+          <p id="unrestored-notice-status">Kept until you discard it. You can download a copy.</p>
+          <div class="unrestored-notice-actions">
+            <button id="unrestored-download" class="btn btn-secondary" type="button">Download it</button>
+            <button id="unrestored-discard" class="btn btn-secondary" type="button">Discard</button>
+          </div>
+        </div>
         <!-- Scope chip: names what the inspector is editing (waypoint / route),
              with prev/next stepping through Route → Waypoint 1 → … → last -->
         <div class="sidebar-header sidebar-header-compact">
@@ -1292,6 +1302,7 @@
     <div class="modal-content">
       <h3 id="modal-title-clear">Clear all waypoints?</h3>
       <p>This will remove all waypoints and reset the canvas. This action cannot be undone.</p>
+      <p id="clear-unrestored-note" hidden>The session that couldn't be restored will be discarded too.</p>
       <div class="modal-buttons">
         <button id="clear-cancel" class="btn btn-secondary" type="button">Cancel</button>
         <button id="clear-confirm" class="btn btn-danger" type="button">Clear</button>

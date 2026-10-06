@@ -133,6 +133,13 @@ export const ANNOUNCEMENTS = {
 // Storage keys for persistence
 export const STORAGE = {
   AUTOSAVE_KEY: 'routePlotter_autosave',
+  // A recovery record that could not be restored is kept under a key of its
+  // own, this prefix and when it was kept, which autosave never writes, until
+  // the author discards it (DEF-28)
+  KEPT_AUTOSAVE_PREFIX: 'routePlotter_keptAutosave:',
+  // The mark of a record held in the recovery key because no copy of it could
+  // be written, so no tab writes over it (DEF-28)
+  HELD_AUTOSAVE_KEY: 'routePlotter_heldAutosave',
   PREFERENCES_KEY: 'routePlotter_preferences',
   SPLASH_SHOWN_KEY: 'routePlotter_splashShown',
   AUTOSAVE_INTERVAL: 1000         // Debounce time for autosave

@@ -199,6 +199,10 @@ const LOOKED_UP = {
     share-disclosure-description share-disclosure-modal share-disclosure-title
   `),
   'src/app/sceneOutline.js': words('scene-outline'),
+  'src/app/unrestoredAutosave.js': words(`
+    clear-btn clear-unrestored-note unrestored-discard unrestored-download unrestored-notice unrestored-notice
+    unrestored-notice-status unrestored-notice-text
+  `),
   'src/app/viewport.js': words('zoom-prompt'),
   'src/app/wiringDom.js': words('example-projects-menu waypoint-scope'),
   'src/components/Tooltip.js': words('tooltip-container'),

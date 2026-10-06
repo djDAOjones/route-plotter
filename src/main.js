@@ -77,6 +77,7 @@ import { networkMixin } from './app/network.js';
 import { sceneOutlineMixin } from './app/sceneOutline.js';
 import { privacyMixin } from './app/privacy.js';
 import { restoreStartupProject } from './app/startup.js';
+import { setupUnrestoredNotice } from './app/unrestoredAutosave.js';
 import { loadExampleBackground } from './app/backgroundLoading.js';
 import { clearProject } from './app/projectReset.js';
 import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
@@ -605,6 +606,9 @@ class RoutePlotter {
 
     // Manual file and diagnostics sharing pauses at a disclosure/preview.
     this.setupPrivacyControls();
+
+    // A recovery record that could not be restored waits for a choice (DEF-28).
+    setupUnrestoredNotice(this);
     
     // Initialize waypoint list (shows getting started instructions when empty)
     this.updateWaypointList();

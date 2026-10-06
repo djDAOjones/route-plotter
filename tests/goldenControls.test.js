@@ -709,9 +709,27 @@ function uninstallStorage() {
   stored.clear();
 }
 
+/**
+ * A recovery record that could not be restored is kept under a key of its own
+ * (DEF-28): the time it was kept, then a count the storage module keeps and a
+ * random tail, there only to make the key unlike any other. One module serves
+ * every app this file boots, so the count says how many records were kept
+ * before, in this app and every earlier one, and the tail differs from run to
+ * run. Each key keeps its time; the rest is its place among the kept keys, in
+ * the order the app offers them by (time, then count).
+ */
+const KEPT_KEY = /^(routePlotter_keptAutosave:(\d+))-(\d+)-[0-9a-z]+$/;
+
+function keptKeyNames() {
+  const kept = [...stored.keys()].map(key => [key, key.match(KEPT_KEY)]).filter(([, match]) => match)
+    .sort(([, a], [, b]) => Number(a[2]) - Number(b[2]) || Number(a[3]) - Number(b[3]));
+  return new Map(kept.map(([key, match], index) => [key, `${match[1]}-{${index + 1}}`]));
+}
+
 /** What storage holds, as a golden can read it: each key, its value quoted, a long one elided. */
 function storageState() {
-  return new Map([...stored].sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => [key, quote(value)]));
+  const kept = keptKeyNames();
+  return new Map([...stored].map(([key, value]) => [kept.get(key) ?? key, quote(value)]).sort(([a], [b]) => a.localeCompare(b)));
 }
 
 const browserRequests = [];
@@ -1592,6 +1610,24 @@ const clickId = id => () => document.getElementById(id).click();
 const choose = (id, value) => commit(document.getElementById(id), value);
 const selectWaypoint = index => app => app.eventBus.emit('waypoint:selected', app.waypoints[index]);
 
+/**
+ * A recovery record cut off part way, as a write that did not finish leaves
+ * it: browser recovery cannot restore it.
+ */
+const UNRESTORABLE_RECORD = '{"coordVersion":9,"waypoints":[{"id":"ex-uon-1","imgX":0.16,"imgY":0.6';
+
+/**
+ * Browser recovery finds that record where it keeps one and tries it, as a
+ * start does (DEF-28): the app reads it from storage itself, in place of the
+ * reader `loadSnapshot` gave it for the fixture, keeps it under a key of
+ * its own and offers it.
+ */
+async function recoverUnrestorable(app) {
+  delete app.storageService.loadAutoSaveText;
+  stored.set('routePlotter_autosave', UNRESTORABLE_RECORD);
+  expect(await drive(app.loadAutosave()), 'browser recovery restored the record').toBe(false);
+}
+
 function selectCrowd(app) {
   app.eventBus.emit('crowd:selected', app.scene.flowLayers[0]);
 }
@@ -1697,6 +1733,13 @@ const CONTEXTS = [
     enter: app => inspectNetwork(app, (service, graph) => service.selectEdge(graph.getEdges()[0])),
   },
   { name: 'clear', about: 'Clear All asked to confirm', roots: ['#clear-confirm-modal'], enter: clickId('clear-btn') },
+  {
+    name: 'unrestored',
+    about: 'browser recovery given a record it could not restore, so the notice offers it',
+    roots: ['#unrestored-notice'],
+    enter: recoverUnrestorable,
+    logs: [/Autosave was not restored; current state was left unchanged/],
+  },
   { name: 'share', about: 'Save Project asked to disclose', roots: ['#share-disclosure-modal'], enter: clickId('save-project-btn') },
   { name: 'diagnostics', about: 'Report a bug open', roots: ['#diagnostics-modal'], enter: clickId('report-bug-btn') },
   {
