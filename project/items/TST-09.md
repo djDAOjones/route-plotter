@@ -23,3 +23,4 @@ With branched and intro/tail fixtures; gates W7 and W10. **P1**
 Characterisation [ready] — With branched and intro/tail fixtures; gates
 W7 and W10. **P1**
 ```
+- 2026-10-06 — Landed (chat 11): tests/cameraDomain, dotsDomain, curvatureCache, minorEnd, timeDomains (.test.js), helper tests/helpers/domainGoldens.js, goldens domains-*.json; eight mutants killed; deterministic over two runs.

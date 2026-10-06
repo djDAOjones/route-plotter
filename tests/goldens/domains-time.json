@@ -1,0 +1,1884 @@
+{
+  "intro.edges": {
+    "B": 13365.48081,
+    "F": 27703.833724,
+    "parts": {
+      "routeMs": 13365.48081,
+      "crowdsMs": 27703.833724,
+      "beaconsMs": 12865.48081
+    },
+    "intro": 1000,
+    "tail": 0,
+    "pathMs": 3365.48081,
+    "pausesMs": 9000,
+    "instants": {
+      "start": 0,
+      "introEnd": 1000,
+      "reachesFork": 2267.300754,
+      "tailStart": 13365.48081,
+      "B": 13365.48081,
+      "betweenBAndF": 20534.657267,
+      "F": 27703.833724
+    },
+    "states": {
+      "start": {
+        "ms": 0,
+        "progress": 0,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": true,
+        "introProgress": 0,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {},
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "introEnd": {
+        "ms": 1000,
+        "progress": 0.036096,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {
+          "ex-uon-emitter": 6
+        },
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "reachesFork": {
+        "ms": 2267.300754,
+        "progress": 0.081841,
+        "head": 0.376559,
+        "waiting": 1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0.36693]
+        ],
+        "dots": {
+          "ex-uon-emitter": 18
+        },
+        "visibleRanges": [
+          [0,0.36693,0],
+          [0,0.376559,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "hold",
+            "active": true,
+            "completed": false,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [
+              [0,1]
+            ],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "tailStart": {
+        "ms": 13365.48081,
+        "progress": 0.482442,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 47,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [0,1,0],
+          [0,1,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "B": {
+        "ms": 13365.48081,
+        "progress": 0.482442,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 47,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [0,1,0],
+          [0,1,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "betweenBAndF": {
+        "ms": 20534.657267,
+        "progress": 0.741221,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 10,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [0,1,0],
+          [0,1,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "F": {
+        "ms": 27703.833724,
+        "progress": 1,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": true,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [0,1,0],
+          [0,1,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "introEndMinus1": {
+        "ms": 999,
+        "progress": 0.03606,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": true,
+        "introProgress": 0.999,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {
+          "ex-uon-emitter": 6
+        },
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      }
+    },
+    "before": {
+      "ms": -1,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": true,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": false,
+        "pathProgress": 0,
+        "adjustedMs": 0
+      },
+      "dots": {},
+      "branches": [
+        ["ex-uon-branch",0]
+      ],
+      "seekLandsAt": 0
+    },
+    "between": {
+      "ms": 20534.657267,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": false,
+        "pathProgress": 1,
+        "adjustedMs": 19534.657267
+      },
+      "dots": {
+        "ex-uon-emitter": 10,
+        "walk-anchored": 6
+      },
+      "branches": [
+        ["ex-uon-branch",1]
+      ],
+      "seekLandsAt": 20534.657267
+    },
+    "after": {
+      "ms": 27704.833724,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": true,
+        "pathProgress": 1,
+        "adjustedMs": 26704.833724
+      },
+      "dots": {
+        "walk-anchored": 6
+      },
+      "branches": [
+        ["ex-uon-branch",1]
+      ],
+      "seekLandsAt": 27703.833724
+    }
+  },
+  "introAndTail.edges": {
+    "B": 14538.576973,
+    "F": 28151.261494,
+    "parts": {
+      "routeMs": 14538.576973,
+      "crowdsMs": 28151.261494,
+      "beaconsMs": 12865.48081
+    },
+    "intro": 1000,
+    "tail": 1173.096162,
+    "pathMs": 3365.48081,
+    "pausesMs": 9000,
+    "instants": {
+      "start": 0,
+      "introEnd": 1000,
+      "reachesFork": 2267.300754,
+      "tailStart": 13365.48081,
+      "B": 14538.576973,
+      "betweenBAndF": 21344.919233,
+      "F": 28151.261494
+    },
+    "states": {
+      "start": {
+        "ms": 0,
+        "progress": 0,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": true,
+        "introProgress": 0,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {},
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "introEnd": {
+        "ms": 1000,
+        "progress": 0.035522,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {
+          "ex-uon-emitter": 3
+        },
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "reachesFork": {
+        "ms": 2267.300754,
+        "progress": 0.08054,
+        "head": 0.376559,
+        "waiting": 1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0.36693]
+        ],
+        "dots": {
+          "ex-uon-emitter": 15
+        },
+        "visibleRanges": [
+          [0.176559,0.36693,0.176559],
+          [0.176559,0.376559,0.176559]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "hold",
+            "active": true,
+            "completed": false,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [
+              [0,1]
+            ],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "tailStart": {
+        "ms": 13365.48081,
+        "progress": 0.474774,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": true,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 47,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "B": {
+        "ms": 14538.576973,
+        "progress": 0.516445,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 43,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "betweenBAndF": {
+        "ms": 21344.919233,
+        "progress": 0.758222,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 9,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "F": {
+        "ms": 28151.261494,
+        "progress": 1,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": true,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "introEndMinus1": {
+        "ms": 999,
+        "progress": 0.035487,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": true,
+        "introProgress": 0.999,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {
+          "ex-uon-emitter": 3
+        },
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "tailStartMinus1": {
+        "ms": 13364.48081,
+        "progress": 0.474738,
+        "head": 1,
+        "waiting": 4,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 47,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "hold",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      }
+    },
+    "before": {
+      "ms": -1,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": true,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": false,
+        "pathProgress": 0,
+        "adjustedMs": 0
+      },
+      "dots": {},
+      "branches": [
+        ["ex-uon-branch",0]
+      ],
+      "seekLandsAt": 0
+    },
+    "between": {
+      "ms": 21344.919233,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": true,
+        "inEndHandle": false,
+        "complete": false,
+        "pathProgress": 1,
+        "adjustedMs": 20344.919233
+      },
+      "dots": {
+        "ex-uon-emitter": 9,
+        "walk-anchored": 6
+      },
+      "branches": [
+        ["ex-uon-branch",1]
+      ],
+      "seekLandsAt": 21344.919233
+    },
+    "after": {
+      "ms": 28152.261494,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": true,
+        "pathProgress": 1,
+        "adjustedMs": 27152.261494
+      },
+      "dots": {
+        "walk-anchored": 6
+      },
+      "branches": [
+        ["ex-uon-branch",1]
+      ],
+      "seekLandsAt": 28151.261494
+    }
+  },
+  "plain.edges": {
+    "B": 12365.48081,
+    "F": 27322.426143,
+    "parts": {
+      "routeMs": 12365.48081,
+      "crowdsMs": 27322.426143,
+      "beaconsMs": 11865.48081
+    },
+    "intro": 0,
+    "tail": 0,
+    "pathMs": 3365.48081,
+    "pausesMs": 9000,
+    "instants": {
+      "start": 0,
+      "introEnd": 0,
+      "reachesFork": 1267.300754,
+      "tailStart": 12365.48081,
+      "B": 12365.48081,
+      "betweenBAndF": 19843.953476,
+      "F": 27322.426143
+    },
+    "states": {
+      "start": {
+        "ms": 0,
+        "progress": 0,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {},
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "introEnd": {
+        "ms": 0,
+        "progress": 0,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {},
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "reachesFork": {
+        "ms": 1267.300754,
+        "progress": 0.046383,
+        "head": 0.376559,
+        "waiting": 1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {
+          "ex-uon-emitter": 8
+        },
+        "visibleRanges": [
+          [0,0,0],
+          [0,0.376559,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "hold",
+            "active": true,
+            "completed": false,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [
+              [0,1]
+            ],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "tailStart": {
+        "ms": 12365.48081,
+        "progress": 0.452576,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 54,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [0,1,0],
+          [0,1,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "B": {
+        "ms": 12365.48081,
+        "progress": 0.452576,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 54,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [0,1,0],
+          [0,1,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "betweenBAndF": {
+        "ms": 19843.953476,
+        "progress": 0.726288,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 11,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [0,1,0],
+          [0,1,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "F": {
+        "ms": 27322.426143,
+        "progress": 1,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": true,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [0,1,0],
+          [0,1,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      }
+    },
+    "before": {
+      "ms": -1,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": false,
+        "pathProgress": 0,
+        "adjustedMs": -1
+      },
+      "dots": {},
+      "branches": [
+        ["ex-uon-branch",0]
+      ],
+      "seekLandsAt": 0
+    },
+    "between": {
+      "ms": 19843.953476,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": false,
+        "pathProgress": 1,
+        "adjustedMs": 19843.953476
+      },
+      "dots": {
+        "ex-uon-emitter": 11,
+        "walk-anchored": 6
+      },
+      "branches": [
+        ["ex-uon-branch",1]
+      ],
+      "seekLandsAt": 19843.953476
+    },
+    "after": {
+      "ms": 27323.426143,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": true,
+        "pathProgress": 1,
+        "adjustedMs": 27323.426143
+      },
+      "dots": {
+        "walk-anchored": 6
+      },
+      "branches": [
+        ["ex-uon-branch",1]
+      ],
+      "seekLandsAt": 27322.426143
+    }
+  },
+  "tail.edges": {
+    "B": 13538.576973,
+    "F": 27769.853912,
+    "parts": {
+      "routeMs": 13538.576973,
+      "crowdsMs": 27769.853912,
+      "beaconsMs": 11865.48081
+    },
+    "intro": 0,
+    "tail": 1173.096162,
+    "pathMs": 3365.48081,
+    "pausesMs": 9000,
+    "instants": {
+      "start": 0,
+      "introEnd": 0,
+      "reachesFork": 1267.300754,
+      "tailStart": 12365.48081,
+      "B": 13538.576973,
+      "betweenBAndF": 20654.215442,
+      "F": 27769.853912
+    },
+    "states": {
+      "start": {
+        "ms": 0,
+        "progress": 0,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {},
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "introEnd": {
+        "ms": 0,
+        "progress": 0,
+        "head": 0,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {},
+        "visibleRanges": [
+          [0,0,0],
+          [0,0,0]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "reachesFork": {
+        "ms": 1267.300754,
+        "progress": 0.045636,
+        "head": 0.376559,
+        "waiting": 1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",0]
+        ],
+        "dots": {
+          "ex-uon-emitter": 7
+        },
+        "visibleRanges": [
+          [0.176559,0,0.176559],
+          [0.176559,0.376559,0.176559]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "hold",
+            "active": true,
+            "completed": false,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [
+              [0,1]
+            ],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "inactive",
+            "active": false,
+            "completed": false,
+            "started": false,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "tailStart": {
+        "ms": 12365.48081,
+        "progress": 0.445284,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": true,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 54,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "B": {
+        "ms": 13538.576973,
+        "progress": 0.487528,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 47,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "betweenBAndF": {
+        "ms": 20654.215442,
+        "progress": 0.743764,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 10,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "F": {
+        "ms": 27769.853912,
+        "progress": 1,
+        "head": 1,
+        "waiting": -1,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": true,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      },
+      "tailStartMinus1": {
+        "ms": 12364.48081,
+        "progress": 0.445248,
+        "head": 1,
+        "waiting": 4,
+        "inIntro": false,
+        "introProgress": 1,
+        "inTail": false,
+        "tailElapsed": 0,
+        "complete": false,
+        "branches": [
+          ["ex-uon-branch",1]
+        ],
+        "dots": {
+          "ex-uon-emitter": 54,
+          "walk-anchored": 6
+        },
+        "visibleRanges": [
+          [1,1,1],
+          [1,1,1]
+        ],
+        "beacons": {
+          "ex-uon-2": {
+            "phase": "offset",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          },
+          "ex-uon-3": {
+            "phase": "hold",
+            "active": false,
+            "completed": true,
+            "started": true,
+            "scale": null,
+            "radius": null,
+            "opacity": null,
+            "rings": [],
+            "subPhase": null,
+            "loopTime": null
+          }
+        }
+      }
+    },
+    "before": {
+      "ms": -1,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": false,
+        "pathProgress": 0,
+        "adjustedMs": -1
+      },
+      "dots": {},
+      "branches": [
+        ["ex-uon-branch",0]
+      ],
+      "seekLandsAt": 0
+    },
+    "between": {
+      "ms": 20654.215442,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": true,
+        "inEndHandle": false,
+        "complete": false,
+        "pathProgress": 1,
+        "adjustedMs": 20654.215442
+      },
+      "dots": {
+        "ex-uon-emitter": 10,
+        "walk-anchored": 6
+      },
+      "branches": [
+        ["ex-uon-branch",1]
+      ],
+      "seekLandsAt": 20654.215442
+    },
+    "after": {
+      "ms": 27770.853912,
+      "path": {
+        "waitingIndex": -1,
+        "waitElapsedMs": 0,
+        "waitTotalMs": 0,
+        "waitPathProgress": 0,
+        "inStartHandle": false,
+        "inIntro": false,
+        "inTail": false,
+        "inEndHandle": false,
+        "complete": true,
+        "pathProgress": 1,
+        "adjustedMs": 27770.853912
+      },
+      "dots": {
+        "walk-anchored": 6
+      },
+      "branches": [
+        ["ex-uon-branch",1]
+      ],
+      "seekLandsAt": 27769.853912
+    }
+  }
+}
