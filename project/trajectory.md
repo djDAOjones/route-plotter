@@ -21,6 +21,7 @@
 
 ## Phase 1 — Land the big run's open pull requests
 
+- RECALL — 8/8 (2026-10-06) — scores: 2,2,2,2 — local — see decisions
 - DEF-28 — a session that cannot be restored is kept and offered (Download it, Discard) instead of cleared or overwritten, each further one under a key of its own; Discard and Clear All say what they removed and what they could not (2026-10-06) — see decisions
 - TST-04 — every sidebar control's effect is pinned as a golden, credited by the listeners its gestures run, with the instrumentation installed before any app module loads, and readouts pinned per selection (2026-10-05) — see decisions
 - DEF-45 — announcements are read in turn, each holding the live region for 2 s, so a recovery warning is no longer replaced or lost, and a warning already waiting is not queued again, so a burst of loads leaves at most one behind (2026-10-05) — see decisions

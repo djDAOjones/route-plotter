@@ -18,8 +18,7 @@
 
 ### After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05 — CLOSED 2026-10-05
 
-### Phase 1 — Land the big run's open pull requests
-
+### Phase 1 — Land the big run's open pull requests — CLOSED 2026-10-06
 
 ### Review assurance — owner evidence
 

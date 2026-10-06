@@ -204,6 +204,7 @@ ui ~ #clear-confirm-modal: div (not shown) → div aria-labelledby="modal-title-
 ui + #clear-confirm-modal>div[0]: div class="modal-content"
 ui + #modal-title-clear: h3 :text="Clear all waypoints?"
 ui + #clear-confirm-modal>div[0]>p[1]: p :text="This will remove all waypoints and reset the canvas. This action cannot be undone."
-ui + #clear-confirm-modal>div[0]>div[2]: div class="modal-buttons"
+ui + #clear-unrestored-note: p (not shown)
+ui + #clear-confirm-modal>div[0]>div[3]: div class="modal-buttons"
 ui + #clear-cancel: button class="btn btn-secondary" type="button" :text="Cancel"
 ui + #clear-confirm: button class="btn btn-danger" type="button" :text="Clear"
