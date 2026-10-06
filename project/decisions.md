@@ -18,6 +18,26 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-06 — REL-707 — v3.2.707 ships UI-04 and DEF-14
+
+**Decision:** v3.2.707 is live from deploy commit `6f4c731` (tag `v3.2.707`), released under GATELESS-1 because UI-04's merge (`7298e65`, PR #103, closing DEF-14) changed `src/`, `styles/` and `index.html`.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.706-7298e65`, gate green (116 files, 2,698 tests), dry run, push, the Pages deploy green, 22 of 22 live files SHA-256-identical; the deploy commit's Verify was cancelled in the one-job queue and re-run. Live smoke, partial: title v3.2.707, 90 hint triggers, Open day loaded (27,028 ms) and played to its end, no failed resource; the MP4 and HTML export did not finish because the hidden browser pane suspends the page, so that check is owed (a wish line). UI-04 does not change export, so no disk save is owed for it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — REL-706 — v3.2.706 ships CROWD-06
+
+**Decision:** v3.2.706 is live from deploy commit `24cdfa8` (tag `v3.2.706`), released under GATELESS-1 because CROWD-06's merge (`ea9b09a`, PR #101) changed `src/`, `styles/` and `index.html`.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.705-ea9b09a`, gate green (110 files, 2,628 tests), dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical. Live smoke: Open day, a saved project, opens with no hold and reads as before (27,028 ms, MP4 1920×1080 29.0 s); the HTML export carries `holdAtEndMs`; no failed resource or console error. CROWD-06 changes export, so a disk save of the smoke exports is owed through the owner's Chrome with his word (a wish line, beside v3.2.703's).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-06 — UI-04 — Each hint has a "?" of its own, and DEF-14 closes with it
 
 **Decision:** UI-04 lands: every parameter hint gets a visible "?" button beside its label, opened by hover after UI-03's delay, keyboard focus or tap, described to screen readers as before, so a click on a label toggles or focuses its control; DEF-14 closes with it, every range now naming its readout through `aria-describedby` and `setRangeReadout`.
