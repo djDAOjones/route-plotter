@@ -103,6 +103,7 @@ settled:
 ## #section-leg-content>div[2]>button[1] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit animation:durationChange 31227.994232
+announced "Leg applied to 2 later waypoints. Undo is available."
 model ~ waypoints[4].pathShape: "wave" → "squiggle"
 model ~ waypoints[5].pathShape: "wave" → "squiggle"
 app ~ focus: "#label-bg-color-custom-disclosure>label[0]>input[1]" → "body"

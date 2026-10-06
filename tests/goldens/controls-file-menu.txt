@@ -27,46 +27,54 @@ ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" cla
 ## #load-project-input · choose nothing
 
 ## #load-project-input · choose not-a-project.zip
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Failed to load project: Project ZIP is malformed or truncated: end record is missing"
+announced "Loading project..."
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Loading project..."
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Failed to load project: Project ZIP is malformed or truncated: end record is missing" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Failed to load project: Project ZIP is malformed or truncated: end record is missing"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Loading project..." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #example-projects-menu>button[0] · click
 emit ui:toast {message: "Could not open Site walk"}
+announced "Opening Site walk…"
 app ~ focus: "#save-project-btn" → "#file-dropdown-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Could not open Site walk: HTTP 404"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Site walk…"
 ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 ui + #toast-container>div[0]: div class="toast" :text="Could not open Site walk"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Could not open Site walk: HTTP 404" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Could not open Site walk: HTTP 404"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Site walk…" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="Could not open Site walk"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
 ## #example-projects-menu>button[1] · click
 emit ui:toast {message: "Could not open Open day route"}
+announced "Opening Open day route…"
 app ~ focus: "#save-project-btn" → "#file-dropdown-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Could not open Open day route: HTTP 404"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Open day route…"
 ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 ui + #toast-container>div[0]: div class="toast" :text="Could not open Open day route"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Could not open Open day route: HTTP 404" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Could not open Open day route: HTTP 404"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Open day route…" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="Could not open Open day route"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
 ## #example-projects-menu>button[2] · click
 emit ui:toast {message: "Could not open Signal flow"}
+announced "Opening Signal flow…"
 app ~ focus: "#save-project-btn" → "#file-dropdown-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Could not open Signal flow: HTTP 404"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Signal flow…"
 ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 ui + #toast-container>div[0]: div class="toast" :text="Could not open Signal flow"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Could not open Signal flow: HTTP 404" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Could not open Signal flow: HTTP 404"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Signal flow…" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="Could not open Signal flow"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
@@ -78,6 +86,7 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Browser recovery excludes the background. Save a project file to preserve it."
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -96,6 +105,7 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Browser recovery excludes the background. Save a project file to preserve it."
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -114,6 +124,7 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Browser recovery excludes the background. Save a project file to preserve it."
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -132,6 +143,7 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Browser recovery excludes the background. Save a project file to preserve it."
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -150,6 +162,7 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Browser recovery excludes the background. Save a project file to preserve it."
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -168,6 +181,7 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Browser recovery excludes the background. Save a project file to preserve it."
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100

@@ -38,6 +38,7 @@ ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnosti
 ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 3904bff5)
 
 ## #diagnostics-copy · click
+announced "Diagnostics copy failed"
 app ~ focus: "#diagnostics-title" → "#diagnostics-copy"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" :text="Diagnostics copy failed"
 ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="status" → p aria-live="polite" class="diagnostics-status" role="status" :text="Copy failed. You can select the preview text manually."

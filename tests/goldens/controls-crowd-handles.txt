@@ -6,6 +6,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 pointer capture 1 taken by #crowd-busyness-graph
 pointer capture 1 let go by #crowd-busyness-graph
+announced "Busyness handle moved. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.215909
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].value: 1 → 0.716049
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available."
@@ -27,6 +28,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 pointer capture 1 taken by #crowd-busyness-graph
 pointer capture 1 let go by #crowd-busyness-graph
+announced "Busyness handle moved. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.99
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].value: 1 → 0.716049
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available."
@@ -48,6 +50,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 pointer capture 1 taken by #crowd-busyness-graph
 pointer capture 1 let go by #crowd-busyness-graph
+announced "Busyness handle moved. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.01
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].value: 1 → 0.716049
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available."
@@ -69,6 +72,7 @@ settled:
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.24
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
@@ -86,6 +90,7 @@ settled:
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.99
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
@@ -106,6 +111,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].transition: "gradual" → "step"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
@@ -121,6 +127,7 @@ settled:
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
@@ -173,6 +180,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1 → 0.24
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
@@ -199,6 +207,7 @@ ui ~ #crowd-busyness-handles>div[2]>label[3]>input[1]: input aria-describedby="{
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Busyness reset to even. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1

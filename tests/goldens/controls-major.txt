@@ -351,6 +351,7 @@ settled:
 
 ## #section-marker-content>div[7]>button[0] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "Marker reset for 1 waypoint. Undo is available."
 model ~ waypoints[3].dotSize: 14 → 13
 storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Marker reset for 1 waypoint. Undo is available."
@@ -544,6 +545,7 @@ settled:
 ## #section-on-arrival-content>div[2]>button[0] · click
 emit animation:durationChange 30705.055954
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "On arrival reset for 1 waypoint. Undo is available."
 model ~ waypoints[3].beaconStyle: "grow" → "ripple"
 model ~ waypoints[3].rippleThickness: 5 → 2
 model ~ waypoints[3].rippleMaxScale: 2400 → 1000
@@ -588,6 +590,7 @@ settled:
 ## #section-on-arrival-content>div[2]>button[1] · click
 emit animation:durationChange 29694.965768
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "On arrival applied to 2 later waypoints. Undo is available."
 model ~ waypoints[4].beaconStyle: "ripple" → "grow"
 model ~ waypoints[4].pauseMode: "none" → "timed"
 model ~ waypoints[4].camera.zoom: 2.15 → 2.05
@@ -947,6 +950,7 @@ settled:
 
 ## #section-label-content>div[2]>button[0] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "Label style reset for 1 waypoint. Undo is available."
 model ~ waypoints[3].labelOffsetX: 15 → 0
 model ~ waypoints[3].labelOffsetY: -12 → 0
 model ~ waypoints[3].labelWidth: 33 → 15
@@ -983,6 +987,7 @@ settled:
 
 ## #section-label-content>div[2]>button[1] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "Label style applied to 2 later waypoints. Undo is available."
 model ~ waypoints[4].labelOffsetX: 16 → 15
 model ~ waypoints[4].labelOffsetY: -13 → -12
 model ~ waypoints[5].labelOffsetX: 17 → 15
@@ -1335,6 +1340,7 @@ settled:
 ## #section-leg-content>div[2]>button[0] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
 emit animation:durationChange 30886.312314
+announced "Leg reset for 1 waypoint. Undo is available."
 model ~ waypoints[3].segmentWidth: 7 → 9
 model ~ waypoints[3].segmentStyle: "dashed" → "dotted"
 model ~ waypoints[3].segmentSpeed: 2.5 → 1

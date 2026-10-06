@@ -23,11 +23,12 @@ emit video:export-request "webm"
 emit video:export-error {error: Error("Video export not supported: WebM export requires WebCodecs or MediaRecorder support")}
 emit motion:preview-mode-change false
 emit animation:seek 0
+announced "Starting video export — press Esc to cancel"
 alert "Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
 model ~ animationState.duration: 21429.352554 → 21807.894043
 model ~ timingReference.width: 660 → 1173.333333
 app ~ focus: "#export-mp4-btn" → "#export-webm-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Video export failed"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel"
 ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
 ui ~ #export-menu: div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu" → div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu"
 ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
@@ -37,7 +38,8 @@ ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s �
 ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 1173.3333333333333px;"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Video export failed" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Video export failed"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 

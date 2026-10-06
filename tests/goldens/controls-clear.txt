@@ -31,6 +31,7 @@ ui - #clear-confirm: button class="btn btn-danger" type="button" :text="Clear"
 ## #clear-confirm · click
 emit waypoints:clear-all
 emit scene-outline:update {route: [], crowds: [], majorCount: 0, minorCount: 0, selectionKey: null, focusKey: null}
+announced "Animation reset"
 model + waypoints: []
 model + scene.flowLayers: []
 model ~ styles.pathHead.imageAssetId: "asset-extras-head" → null
@@ -62,7 +63,7 @@ app ~ focus: "#clear-cancel" → "#file-dropdown-btn"
 storage - routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574]
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Project cleared"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation reset"
 ui ~ #app: div inert="" → div
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #settings-help-placeholder: div (not shown) → div class="waypoint-editor-placeholder" style="display: block;"
@@ -150,4 +151,6 @@ ui - #clear-cancel: button class="btn btn-secondary" type="button" :text="Cancel
 ui - #clear-confirm: button class="btn btn-danger" type="button" :text="Clear"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 0, baseDuration: 0, mode: "constant-speed", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Project cleared" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Animation paused"
+  announced "Project cleared"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation reset" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

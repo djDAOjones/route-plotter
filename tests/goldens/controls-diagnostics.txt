@@ -40,6 +40,7 @@ ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-conte
 
 ## #diagnostics-copy · click
 clipboard "{\n  \"schemaVersion\": 1,\n  \"appVersion\": \"0.0.0-test\",\n  \"generatedAt\": \"2026-09-23T09:00:09.997Z\",\n  \"environment\": {\n    \"userAgent\": \"Moz…[450 chars, 25053f04]
+announced "Diagnostics copied"
 app ~ focus: "#diagnostics-title" → "#diagnostics-copy"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" :text="Diagnostics copied"
 ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="status" → p aria-live="polite" class="diagnostics-status" role="status" :text="Diagnostics copied."

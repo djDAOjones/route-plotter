@@ -129,6 +129,7 @@ ui - #area-draw-btn: button aria-label="Enter polygon drawing mode" class="btn b
 
 ## #section-marker-content>div[7]>button[1] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "Marker applied to 4 later waypoints. Undo is available."
 model ~ waypoints[2].markerStyle: "square" → "custom-image"
 model ~ waypoints[3].markerStyle: "square" → "custom-image"
 model ~ waypoints[4].markerStyle: "square" → "custom-image"

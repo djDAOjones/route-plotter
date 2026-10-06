@@ -2,6 +2,7 @@
 
 ## #pause-btn · click
 emit ui:animation:pause
+announced "Animation paused"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation paused"
 ui ~ #play-btn: button (not shown) → button aria-label="Play" class="btn btn-icon btn-primary" style="display: inline-block;" title="Play" type="button" :text="▶"
 ui ~ #pause-btn: button aria-label="Pause" class="btn btn-icon btn-primary" style="display: inline-block;" title="Pause" type="button" :text="⏸" → button (not shown)

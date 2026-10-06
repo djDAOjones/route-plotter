@@ -57,6 +57,10 @@
  * - `file dialog`, `download`, `clipboard`, `alert`, `pointer capture`: what
  *   it asked of the browser — a file picker, a file to save (its name, type,
  *   size and a checksum of its bytes), text to copy, a dialog, a pointer held.
+ * - `announced`: each message the live region (`#announcer`) was given to
+ *   read, in turn. The app reads them one at a time (DEF-45), so one that
+ *   waits is written, and read, only after the row; the region's own line
+ *   shows only what it says at each capture.
  * - `model`, `app`, `storage`, `ui`: how the saved project, the app's own
  *   flags (among them the focused control and the text it has selected),
  *   what it keeps in the browser's storage and the shell changed once every
@@ -755,6 +759,25 @@ function installClipboard(writeText) {
 const copying = async (text) => {
   browserRequests.push(Promise.resolve(`clipboard ${quote(text)}`));
 };
+
+/**
+ * What the live region is given to read: each message written to it, in the
+ * order written, from the records of a mutation observer (the app sets its
+ * text; clearing it gives it none to read).
+ */
+let announcementObserver = null;
+
+function watchAnnouncements() {
+  announcementObserver = new MutationObserver((records) => {
+    for (const record of records) {
+      if (record.target.id !== 'announcer') continue;
+      for (const node of record.addedNodes) {
+        if (node.nodeType === Node.TEXT_NODE && node.data.trim()) browserRequests.push(Promise.resolve(`announced ${quote(node.data)}`));
+      }
+    }
+  });
+  announcementObserver.observe(document, { childList: true, subtree: true });
+}
 
 /** An alert is a browser dialog the page opens; jsdom has none. */
 function watchAlerts() {
@@ -2510,6 +2533,7 @@ describe('control → bus goldens (TST-04)', () => {
     document.addEventListener('click', noteFileDialog, true);
     digests = answerDigestsAtOnce();
     downloads = [...watchDownloads(), watchAlerts()];
+    watchAnnouncements();
     // The app narrates itself to the console, thousands of lines across these
     // rows. None of it is what they pin; warnings and errors still reach the
     // guard, and each context declares those it provokes.
@@ -2537,6 +2561,7 @@ describe('control → bus goldens (TST-04)', () => {
   afterAll(() => {
     unwatchDispatch();
     wiringObserver?.disconnect();
+    announcementObserver?.disconnect();
     restoreRemovalBlur?.();
     uninstallStorage();
     uninstallPointerCapture();

@@ -49,6 +49,7 @@ settled:
 
 ## #section-marker-content>div[7]>button[0] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "Marker reset for 2 waypoints. Undo is available."
 model ~ waypoints[2].dotSize: 14 → 13
 model ~ waypoints[3].dotSize: 14 → 13
 storage ~ routePlotter_lastSection: "area-highlight" → "marker"
@@ -138,6 +139,7 @@ settled:
 ## #section-on-arrival-content>div[2]>button[0] · click
 emit animation:durationChange 32421.39007
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "On arrival reset for 2 waypoints. Undo is available."
 model ~ waypoints[2].beaconStyle: "glow" → "ripple"
 model ~ waypoints[2].rippleThickness: 5 → 2
 model ~ waypoints[2].rippleMaxScale: 2400 → 1000
@@ -324,6 +326,7 @@ settled:
 
 ## #section-label-content>div[2]>button[0] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "Label style reset for 2 waypoints. Undo is available."
 model ~ waypoints[2].labelOffsetX: 14 → 0
 model ~ waypoints[2].labelOffsetY: -11 → 0
 model ~ waypoints[2].labelWidth: 33 → 15
@@ -456,6 +459,7 @@ settled:
 ## #section-leg-content>div[2]>button[0] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
 emit animation:durationChange 30917.740776
+announced "Leg reset for 3 waypoints. Undo is available."
 model ~ waypoints[1].segmentWidth: 7 → 9
 model ~ waypoints[1].segmentStyle: "dashed" → "dotted"
 model ~ waypoints[1].shapeAmplitude: 22 → 10

@@ -600,6 +600,7 @@ emit background:upload [file picked.png image/png]
 settled:
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Browser recovery excludes the background. Save a project file to preserve it."
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -796,6 +797,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #skip-start-btn · click
 emit ui:animation:skip-start
+announced "Animation reset"
 model ~ animationState.mode: "constant-time" → "constant-speed"
 app ~ focus: "body" → "#skip-start-btn"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation reset"
@@ -806,6 +808,7 @@ settled:
 
 ## #play-btn · click
 emit ui:animation:play
+announced "Playing animation"
 app ~ playing: false → true
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Playing animation"
 ui ~ #play-btn: button aria-label="Play" class="btn btn-icon btn-primary" style="display: inline-block;" title="Play" type="button" :text="▶" → button (not shown)
@@ -934,6 +937,7 @@ settled:
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-visibility", layerId: "ex-uon-crowd"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Visitors hidden"
 model ~ scene.flowLayers[0].visible: true → false
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Visitors hidden"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -987,6 +991,7 @@ emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 
 emit scene:semantic-changed {kind: "crowd-added", layerId: "fl_1790154060000_kynqlqqyk"}
 emit crowd:selected layer[1]
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}, {9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:fl_1790154060000_kynqlqqyk", focusKey: null}
+announced "Crowd 1 added — dots follow the route"
 model + scene.flowLayers[1]: 25 values (8b24640c)
 app ~ crowd: null → "layer[1]"
 app ~ focus: "body" → "#add-crowd-btn"
@@ -1026,6 +1031,7 @@ settled:
 ## #waypoint-list>li[0]>button[0] · click
 emit waypoint:add-at-center
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 6, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Waypoint added at center"
 model + waypoints[6]: 57 values (a7079ff3)
 model ~ animationState.duration: 21429.352554 → 26209.45173
 app ~ selected: null → "waypoint[6]"
@@ -1061,6 +1067,7 @@ settled:
 emit waypoint:add-at-center
 emit waypoint:add-at-center
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 7, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Waypoint added at center"
 model + waypoints[6]: 57 values (ae74589f)
 model + waypoints[7]: 57 values (8badef67)
 model ~ animationState.duration: 21429.352554 → 30707.372219
@@ -1626,7 +1633,9 @@ ui - #route-scope>div[5]: div class="settings-section expanded" data-section="vi
 
 ## #waypoint-list>li[1]>span[1]>button[1] · click
 emit waypoints:reordered [waypoint[2], waypoint[0], waypoint[3], waypoint[5]]
+emit ui:announce {message: "Extras 1 moved down"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Extras 1 moved down"
 model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2a"
 model ~ waypoints[0].imgX: 0.16 → 0.52
 model ~ waypoints[0].imgY: 0.63 → 0.58
@@ -1766,10 +1775,12 @@ ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 38144.176409, baseDuration: 31644.176409, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-2a\",\"imgX\":0.52,\"imgY\":0.58,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segment…[9684 chars, 790c46ad]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 1 moved down" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[1]>button[2] · click
 emit waypoint:delete waypoint[0]
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+announced "A crowd node lost the waypoint it followed and is back at its own position."
 model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2"
 model ~ waypoints[0].imgX: 0.16 → 0.4
 model ~ waypoints[0].imgY: 0.63 → 0.47
@@ -1840,7 +1851,7 @@ model - waypoints[4].branchId: "ex-uon-branch"
 model - waypoints[4].branchFrom: "ex-uon-2"
 model - waypoints[4].branchRejoin: "ex-uon-3"
 model - waypoints[5]: 57 values (42c9f4ff)
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="A crowd node lost the waypoint it followed and is back at its own position."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
@@ -1911,8 +1922,9 @@ ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 do
 ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 29839.111931, baseDuration: 18963.896552, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Waypoint deleted"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-2\",\"imgX\":0.4,\"imgY\":0.47,\"isMajor\":false,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[8494 chars, fbff6be3]
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="A crowd node lost the waypoint it followed and is back at its own position." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
@@ -2086,6 +2098,7 @@ ui - #route-scope>div[5]: div class="settings-section expanded" data-section="vi
 ## #waypoint-list>li[2]>button[1] · click
 emit waypoint:delete waypoint[1]
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 0, selectionKey: null, focusKey: null}
+announced "A crowd node lost the waypoint it followed and is back at its own position."
 model ~ waypoints[1].id: "ex-uon-2" → "ex-uon-2a"
 model ~ waypoints[1].imgX: 0.4 → 0.52
 model ~ waypoints[1].imgY: 0.47 → 0.58
@@ -2135,7 +2148,7 @@ model - waypoints[4].branchId: "ex-uon-branch"
 model - waypoints[4].branchFrom: "ex-uon-2"
 model - waypoints[4].branchRejoin: "ex-uon-3"
 model - waypoints[5]: 57 values (42c9f4ff)
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="A crowd node lost the waypoint it followed and is back at its own position."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
@@ -2194,8 +2207,9 @@ ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 do
 ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27886.467861, baseDuration: 13844.323252, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Waypoint deleted"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[8551 chars, b8d94165]
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="A crowd node lost the waypoint it followed and is back at its own position." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
@@ -2661,7 +2675,9 @@ ui - #route-scope>div[5]: div class="settings-section expanded" data-section="vi
 
 ## #waypoint-list>li[3]>span[1]>button[0] · click
 emit waypoints:reordered [waypoint[2], waypoint[0], waypoint[3], waypoint[5]]
+emit ui:announce {message: "Extras 3 moved up"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Extras 3 moved up"
 model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2a"
 model ~ waypoints[0].imgX: 0.16 → 0.52
 model ~ waypoints[0].imgY: 0.63 → 0.58
@@ -2801,10 +2817,13 @@ ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 38144.176409, baseDuration: 31644.176409, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-2a\",\"imgX\":0.52,\"imgY\":0.58,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segment…[9684 chars, 790c46ad]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 3 moved up" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[3]>span[1]>button[1] · click
 emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
+emit ui:announce {message: "Extras 3 moved down"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Extras 3 moved down"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
 model ~ waypoints[2].imgX: 0.52 → 0.63
 model ~ waypoints[2].imgY: 0.58 → 0.55
@@ -2888,10 +2907,12 @@ ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30771.951233, baseDuration: 21409.677255, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 20eb1c99]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 3 moved down" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[3]>button[2] · click
 emit waypoint:delete waypoint[2]
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Waypoint deleted"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
 model ~ waypoints[2].imgX: 0.52 → 0.63
 model ~ waypoints[2].imgY: 0.58 → 0.55
@@ -3481,7 +3502,9 @@ ui - #route-scope>div[5]: div class="settings-section expanded" data-section="vi
 
 ## #waypoint-list>li[4]>span[1]>button[0] · click
 emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
+emit ui:announce {message: "Extras 4 moved up"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Extras 4 moved up"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
 model ~ waypoints[2].imgX: 0.52 → 0.63
 model ~ waypoints[2].imgY: 0.58 → 0.55
@@ -3565,10 +3588,13 @@ ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30771.951233, baseDuration: 21409.677255, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 20eb1c99]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 4 moved up" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[4]>span[1]>button[1] · click
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[5], waypoint[3]]
+emit ui:announce {message: "Extras 4 moved down"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Extras 4 moved down"
 model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-3"
 model ~ waypoints[3].imgX: 0.63 → 0.78
 model ~ waypoints[3].imgY: 0.55 → 0.42
@@ -3638,10 +3664,12 @@ ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30834.659415, baseDuration: 21574.089776, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, d3b7b749]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 4 moved down" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[4]>button[2] · click
 emit waypoint:delete waypoint[3]
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Waypoint deleted"
 model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-b1"
 model ~ waypoints[3].imgX: 0.63 → 0.44
 model ~ waypoints[3].imgY: 0.55 → 0.24
@@ -3882,6 +3910,7 @@ ui - #route-scope>div[5]: div class="settings-section expanded" data-section="vi
 ## #waypoint-list>li[5]>button[1] · click
 emit waypoint:delete waypoint[4]
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+announced "A crowd node lost the waypoint it followed and is back at its own position."
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
 model ~ waypoints[4].imgX: 0.44 → 0.78
 model ~ waypoints[4].imgY: 0.24 → 0.42
@@ -3896,7 +3925,7 @@ model - waypoints[4].branchId: "ex-uon-branch"
 model - waypoints[4].branchFrom: "ex-uon-2"
 model - waypoints[4].branchRejoin: "ex-uon-3"
 model - waypoints[5]: 57 values (42c9f4ff)
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="A crowd node lost the waypoint it followed and is back at its own position."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
@@ -3927,8 +3956,9 @@ ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 do
 ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Waypoint deleted"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[8474 chars, 77c291ef]
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="A crowd node lost the waypoint it followed and is back at its own position." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
@@ -4421,7 +4451,9 @@ ui - #route-scope>div[5]: div class="settings-section expanded" data-section="vi
 
 ## #waypoint-list>li[6]>span[1]>button[0] · click
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[5], waypoint[3]]
+emit ui:announce {message: "Extras 6 moved up"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Extras 6 moved up"
 model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-3"
 model ~ waypoints[3].imgX: 0.63 → 0.78
 model ~ waypoints[3].imgY: 0.55 → 0.42
@@ -4491,15 +4523,17 @@ ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30834.659415, baseDuration: 21574.089776, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, d3b7b749]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 6 moved up" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[6]>span[1]>button[1] · disabled, not operated
 
 ## #waypoint-list>li[6]>button[2] · click
 emit waypoint:delete waypoint[5]
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+announced "A crowd node lost the waypoint it followed and is back at its own position."
 model ~ animationState.duration: 21429.352554 → 13739.408618
 model - waypoints[5]: 57 values (42c9f4ff)
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="A crowd node lost the waypoint it followed and is back at its own position."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
@@ -4520,8 +4554,9 @@ ui - #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 do
 ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27846.452625, baseDuration: 13739.408618, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Waypoint deleted"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[8552 chars, b31d3fef]
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="A crowd node lost the waypoint it followed and is back at its own position." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 

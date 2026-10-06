@@ -46,6 +46,7 @@ ui - #share-disclosure-cancel: button class="btn btn-secondary" type="button" :t
 ui - #share-disclosure-confirm: button class="btn btn-primary" type="button" :text="Save project"
 
 ## #share-disclosure-confirm · click
+announced "Saving project..."
 app ~ focus: "#share-disclosure-cancel" → "#file-dropdown-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
@@ -61,4 +62,5 @@ ui - #share-disclosure-cancel: button class="btn btn-secondary" type="button" :t
 ui - #share-disclosure-confirm: button class="btn btn-primary" type="button" :text="Save project"
 settled:
   download route-project-2026-09-23.zip application/zip 2806 bytes 1f2f2b0568bf
+  announced "Project saved"
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Saving project..." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

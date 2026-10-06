@@ -3,6 +3,7 @@
 ## #redo-btn · click
 emit history:redo
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+announced "Redo"
 model ~ waypoints[0].modified: 1790154010997 → 1790154060000
 model ~ waypoints[1].modified: 1790154010997 → 1790154060000
 model ~ waypoints[2].modified: 1790154010997 → 1790154060000
