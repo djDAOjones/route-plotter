@@ -16,7 +16,7 @@
  *   2. Call `initParamTooltips()` once after DOM is ready. Hints added to the
  *      page later (the scene outline's forms, the crowd card's busyness rows,
  *      a node's path weights) are wired as they arrive, and a hint taken off
- *      the page takes its trigger with it.
+ *      the page takes its trigger, and its popup if it shows, with it.
  *
  * Performance:
  *   - Zero per-element listeners. One screen-reader-only node and one button
@@ -377,8 +377,17 @@ function followMutations(records) {
     }
   }
   for (const tip of departed) {
-    if (!tip.isConnected) triggerByTip.get(tip)?.remove();
+    if (tip.isConnected) continue;
+    triggerByTip.get(tip)?.remove();
+    // A hint whose row went takes its popup, and a pointer's pending open of
+    // it, along: nothing on the page is left for either to describe.
+    if (tip === activeTip) hideTooltip();
+    if (tip === hoverTip) {
+      cancelHoverOpen();
+      hoverTip = null;
+    }
   }
+  if (escapeDismissed && !escapeDismissed.isConnected) escapeDismissed = null;
 }
 
 /**

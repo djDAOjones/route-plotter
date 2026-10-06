@@ -1516,13 +1516,15 @@ kbd{
   gap:var(--space-2);
 }
 
-.control-row-inline span:first-child{
+/* The row's own children only: a hint's "?" in the row holds a span too
+   (UI-04), which these would stretch to the label column and grey. */
+.control-row-inline > span:first-child{
   min-width:var(--sidebar-label-width);
   font-size:var(--type-body);
   color:var(--text-02);
 }
 
-.control-row-inline span:last-child{
+.control-row-inline > span:last-child{
   font-size:var(--type-caption);
   color:var(--text-03);
 }

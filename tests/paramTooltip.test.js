@@ -1166,3 +1166,209 @@ function describedControl(tip) {
   const label = tip.closest('label');
   return label.control;
 }
+
+/**
+ * Codex's UI-04 review: a "?" is a button beside a label, inside the label's
+ * row, so a row's rule written for its own children (`.control-row-inline
+ * span:first-child`) also reached the glyph inside the button, stretching it
+ * to the label column's 96px and greying it below 7:1. The app's stylesheets
+ * are parsed here (jsdom cascades their declarations, though it resolves no
+ * `var()`), and every rule that reaches inside a trigger must be the
+ * trigger's own or one of the few page-wide ones named below.
+ */
+const STYLESHEETS = [...indexHtml.matchAll(/<link rel="stylesheet" href="(styles\/[^"?]+)/g)].map(([, href]) => href);
+
+/** Page-wide rules that reach every element, the glyph included, and why each is harmless there. */
+const PAGE_WIDE = new Map([
+  ['.sidebar *', 'max-width and box-sizing only: the glyph is 20px in a 44px button'],
+  ['.sidebar-right *', 'max-width and box-sizing only: the glyph is 20px in a 44px button'],
+]);
+
+function loadStylesheets() {
+  for (const href of STYLESHEETS) {
+    const style = document.createElement('style');
+    style.dataset.from = href;
+    style.textContent = readFileSync(resolve(process.cwd(), href), 'utf8');
+    document.head.appendChild(style);
+  }
+}
+
+/** Every selector in the loaded sheets, @media blocks included, one per comma. */
+function loadedSelectors() {
+  const selectors = [];
+  const walk = (rules) => {
+    for (const rule of rules) {
+      if (rule.cssRules) walk(rule.cssRules);
+      if (rule.selectorText) selectors.push(...rule.selectorText.split(/,(?![^(]*\))/).map(part => part.trim()));
+    }
+  };
+  for (const style of document.querySelectorAll('style[data-from]')) walk(style.sheet.cssRules);
+  return selectors;
+}
+
+/**
+ * Whether `selector` can apply to `el` in some state: a rule for a hover,
+ * focus or press, or for a pseudo-element, counts if its element matches.
+ */
+function reaches(selector, el) {
+  const element = selector
+    .replace(/::?(?:before|after|placeholder|marker|selection|-webkit-[\w-]+|-moz-[\w-]+)\b/g, '')
+    .replace(/:(?:hover|active|focus-visible|focus-within|focus)\b/g, '');
+  try {
+    return el.matches(element || '*');
+  } catch {
+    return false;
+  }
+}
+
+/** Selectors that reach inside a trigger (its glyph) or onto it without being its own. */
+function strayRules() {
+  const selectors = loadedSelectors();
+  const insides = [...document.querySelectorAll('.param-hint-trigger, .param-hint-trigger *')];
+  const stray = new Set();
+  for (const selector of selectors) {
+    if (/param-hint/.test(selector) || PAGE_WIDE.has(selector)) continue;
+    // A type or state rule on the element itself (`button`, the focus ring)
+    // is every button's; one reached through an ancestor is a row's.
+    if (!/[\s>+~]/.test(selector.replace(/\([^)]*\)/g, ''))) continue;
+    if (insides.some(el => reaches(selector, el))) stray.add(selector);
+  }
+  return { stray: [...stray], examined: selectors.length };
+}
+
+describe('UI-04 review: no row’s rule reaches inside a hint’s trigger', () => {
+  test('the settings panel, colour pickers included', () => {
+    mountShell();
+    attachSwatchPickers();
+    initParamTooltips();
+    loadStylesheets();
+    const { stray, examined } = strayRules();
+
+    // Vacuous unless the sheets were parsed, the leaking rule's row among them.
+    expect(examined).toBeGreaterThan(500);
+    expect(loadedSelectors()).toContain('.control-row-inline > span:first-child');
+    expect(stray).toEqual([]);
+  });
+
+  test('the scene outline’s forms', async () => {
+    mountShell();
+    initParamTooltips();
+    await drawWholeOutline();
+    loadStylesheets();
+    expect(document.querySelectorAll('.param-hint-trigger').length).toBeGreaterThanOrEqual(46);
+    expect(strayRules().stray).toEqual([]);
+  });
+
+  test('rows the panel builds as it is used: busyness handles and path weights', async () => {
+    const app = await bootApp();
+    try {
+      await app.ready;
+      document.getElementById('splash-close').click();
+      app.addCrowd({ enterNetworkEditor: false });
+      document.getElementById('crowd-busyness-add').click();
+      const layer = app.selectedCrowd;
+      const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
+      for (const y of [0.2, 0.8]) {
+        const exit = layer.graph.addNode({ x: 0.9, y, type: 'exit' });
+        layer.graph.addEdge({ sourceId: junction.id, targetId: exit.id, direction: 'one-way' });
+      }
+      app.networkEditService.bindForInspection(layer);
+      app.networkEditService.selectNode(junction);
+      await Promise.resolve();
+      loadStylesheets();
+      expect(document.querySelectorAll('#crowd-busyness-handles .param-hint-trigger').length).toBe(8);
+      expect(strayRules().stray).toEqual([]);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+
+  test.each(['camera-zoom', 'camera-selected-zoom'])('the %s row’s glyph keeps its own size and colour', (id) => {
+    mountShell();
+    initParamTooltips();
+    loadStylesheets();
+    const glyph = triggerOf(document.querySelector(`label[for="${id}"]`)).querySelector('.param-hint-glyph');
+    const style = window.getComputedStyle(glyph);
+
+    // Its own 1.25rem circle, not stretched to the label column's 6rem.
+    expect(style.width).toBe('1.25rem');
+    expect(style.minWidth).toBe('auto');
+    // Its button's --text-01 (#0F0F0F, 7:1 and more on every row and hover
+    // background), not the readout grey --text-03 (5.77:1 on hover).
+    expect(style.color).toBe('var(--text-01)');
+    expect(style.fontSize).toBe('var(--type-caption)');
+  });
+});
+
+/**
+ * Codex's UI-04 review: a row taken off the page took its "?" but left its
+ * hint showing, the module still holding the detached hint as the open one.
+ */
+describe('UI-04 review: a hint’s row taken away takes its showing or pending hint', () => {
+  const tooltip = () => document.getElementById('param-tooltip');
+  const showing = () => tooltip()?.style.display === 'block';
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** An outline field's hint text and trigger, and the form that holds them. */
+  async function outlineHint() {
+    mountShell();
+    initParamTooltips();
+    const { container } = await drawWholeOutline();
+    const form = container.querySelector('form[data-outline-action="update-emitter"]');
+    const tip = form.querySelector('[data-tip]');
+    return { container, form, tip, trigger: triggerOf(tip) };
+  }
+
+  test('a showing hint closes when its row goes, and the next hint opens as usual', async () => {
+    const { container, form, trigger } = await outlineHint();
+    trigger.dispatchEvent(clickEvent());
+    expect(showing()).toBe(true);
+
+    form.remove();
+    await Promise.resolve();
+    expect(trigger.isConnected).toBe(false);
+    expect(showing()).toBe(false);
+
+    // Nothing of the old hint lingers: another opens, and the first click closes it.
+    const other = triggerOf(container.querySelector('form[data-outline-action="update-edge"] [data-tip]'));
+    other.dispatchEvent(clickEvent());
+    expect(showing()).toBe(true);
+    expect(other.getAttribute('aria-expanded')).toBe('true');
+    other.dispatchEvent(clickEvent());
+    expect(showing()).toBe(false);
+  });
+
+  test('a hover open still pending when its row goes never opens', async () => {
+    const { form, trigger } = await outlineHint();
+    vi.useFakeTimers();
+    trigger.dispatchEvent(new window.PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+    vi.advanceTimersByTime(INTERACTION.HINT_HOVER_OPEN_DELAY_MS - 1);
+
+    form.remove();
+    await Promise.resolve();
+    vi.advanceTimersByTime(INTERACTION.HINT_HOVER_OPEN_DELAY_MS * 4);
+    expect(showing()).toBe(false);
+  });
+
+  test('nor when its row leaves and comes back: the pointer’s rest was on what left', async () => {
+    const { container, form, trigger } = await outlineHint();
+    vi.useFakeTimers();
+    trigger.dispatchEvent(new window.PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+    vi.advanceTimersByTime(INTERACTION.HINT_HOVER_OPEN_DELAY_MS - 1);
+
+    // A moved row keeps its hint and its trigger, back beside its label.
+    const parent = form.parentElement;
+    form.remove();
+    await Promise.resolve();
+    parent.appendChild(form);
+    await Promise.resolve();
+    expect(trigger.isConnected).toBe(true);
+
+    vi.advanceTimersByTime(INTERACTION.HINT_HOVER_OPEN_DELAY_MS * 4);
+    expect(showing()).toBe(false);
+    expect(container.contains(trigger)).toBe(true);
+  });
+});
