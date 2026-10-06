@@ -779,6 +779,21 @@ function watchAnnouncements() {
   announcementObserver.observe(document, { childList: true, subtree: true });
 }
 
+/**
+ * The browser's user agent, which the diagnostics report quotes
+ * (`createDiagnosticsBundle`). jsdom's names the system the tests run on
+ * (`darwin`, `linux`) and jsdom's version, so the Diagnostics dialog read
+ * differently on each machine: it is the Chromium these rows model instead.
+ * Nothing else in the app reads it; `navigator.platform`, which the key
+ * bindings read, is jsdom's empty string everywhere.
+ */
+const USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36';
+
+function pinUserAgent() {
+  Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => USER_AGENT });
+  return () => delete navigator.userAgent;
+}
+
 /** An alert is a browser dialog the page opens; jsdom has none. */
 function watchAlerts() {
   return vi.spyOn(window, 'alert').mockImplementation((message) => {
@@ -2516,6 +2531,7 @@ describe('control → bus goldens (TST-04)', () => {
   let downloads = [];
   let removePalette = null;
   let narration = [];
+  let unpinUserAgent = null;
 
   beforeAll(async () => {
     // The harness is in place before any module of the application is
@@ -2534,6 +2550,7 @@ describe('control → bus goldens (TST-04)', () => {
     digests = answerDigestsAtOnce();
     downloads = [...watchDownloads(), watchAlerts()];
     watchAnnouncements();
+    unpinUserAgent = pinUserAgent();
     // The app narrates itself to the console, thousands of lines across these
     // rows. None of it is what they pin; warnings and errors still reach the
     // guard, and each context declares those it provokes.
@@ -2562,6 +2579,7 @@ describe('control → bus goldens (TST-04)', () => {
     unwatchDispatch();
     wiringObserver?.disconnect();
     announcementObserver?.disconnect();
+    unpinUserAgent?.();
     restoreRemovalBlur?.();
     uninstallStorage();
     uninstallPointerCapture();

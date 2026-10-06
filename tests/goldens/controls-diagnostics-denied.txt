@@ -7,7 +7,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 3904bff5)
+ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 4f39d163)
 
 ## #diagnostics-modal>div[0]>button[0] · click
 app ~ focus: "#diagnostics-title" → "#report-bug-btn"
@@ -16,7 +16,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 3904bff5)
+ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 4f39d163)
 
 ## #diagnostics-open-security · click
 app ~ focus: "#diagnostics-title" → "#diagnostics-open-security"
@@ -35,7 +35,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 3904bff5)
+ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 4f39d163)
 
 ## #diagnostics-copy · click
 announced "Diagnostics copy failed"
@@ -46,7 +46,7 @@ settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" :text="Diagnostics copy failed" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
 
 ## #diagnostics-download · click
-download route-plotter-diagnostics-2026-09-23T09-01-00.json application/json;charset=utf-8 450 bytes 86331117a013
+download route-plotter-diagnostics-2026-09-23T09-01-00.json application/json;charset=utf-8 479 bytes e2bd7ac6ea04
 app ~ focus: "#diagnostics-title" → "#diagnostics-download"
 ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="status" → p aria-live="polite" class="diagnostics-status" role="status" :text="Diagnostics downloaded. Nothing was sent."
 

@@ -75,7 +75,7 @@ ui ~ #app: div → div inert=""
 ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
 ui ~ #export-menu: div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu" → div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu"
 ui ~ #diagnostics-modal: div (not shown) → div aria-describedby="diagnostics-description" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;"
-ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 13 inside, 3c35a864)
+ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 13 inside, acf15a31)
 
 ## #copy-debug-btn · click
 app ~ focus: "#export-mp4-btn" → "#diagnostics-copy"
@@ -86,4 +86,4 @@ ui ~ #app: div → div inert=""
 ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
 ui ~ #export-menu: div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu" → div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu"
 ui ~ #diagnostics-modal: div (not shown) → div aria-describedby="diagnostics-description" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;"
-ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 13 inside, 3c35a864)
+ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 13 inside, acf15a31)

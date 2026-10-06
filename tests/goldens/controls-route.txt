@@ -41,7 +41,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
 ui ~ #app: div → div inert=""
 ui ~ #diagnostics-modal: div (not shown) → div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;"
-ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 43af509a)
+ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, ed5f4549)
 
 ## #help-btn · click
 app ~ focus: "body" → "#splash-title"
