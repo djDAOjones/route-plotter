@@ -20,7 +20,6 @@
 
 ### Phase 1 — Land the big run's open pull requests
 
-- [~] DEF-45 — Announcements overwrite each other · Accessibility P3 — since 2026-10-01
 - [~] TST-04 — Sidebar control and readout goldens · Characterisation P1 — since 2026-10-01
 - [~] DEF-28 — A failed recovery restore is silent · Live defect P2 — since 2026-10-01
 
@@ -67,7 +66,7 @@
 
 **Found defects**
 
-- [ ] DEF-50 — Autosave failure unseen — since 2026-10-05 — blocked: DEF-28, DEF-45
+- [ ] DEF-50 — Autosave failure unseen — since 2026-10-05 — blocked: DEF-28
 - [ ] DEF-51 — Failed load leaves caches — since 2026-10-05
 - [ ] DEF-54 — Outside drop moves rows — since 2026-10-05 — blocked: TST-04
 - [ ] DEF-55 — List drop sends branch last — since 2026-10-05 — blocked: TST-04
@@ -79,7 +78,7 @@
 - [ ] DEF-63 — Shortcuts take modifier chords — since 2026-10-05
 - [ ] DEF-65 — Branch place: two undos — since 2026-10-05
 - [ ] DEF-66 — Export settings skip autosave — since 2026-10-05
-- [ ] DEF-67 — Open announces "paused" — since 2026-10-05 — blocked: DEF-45, DEF-28
+- [ ] DEF-67 — Open announces "paused" — since 2026-10-05 — blocked: DEF-28
 - [ ] DEF-68 — Paused camera controls sleep — since 2026-10-05
 - [ ] DEF-69 — Zoom warning unattached — since 2026-10-05
 - [ ] DEF-70 — Menu item drops focus — since 2026-10-05

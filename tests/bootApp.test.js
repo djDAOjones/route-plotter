@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { contextFor } from './setup.js';
 import { bootApp } from './helpers/bootApp.js';
+import { ANNOUNCEMENTS } from '../src/config/constants.js';
 
 /**
  * The first tests to run the real application (TST-01). They pin what the
@@ -43,7 +44,9 @@ describe('the whole app boots (TST-01)', () => {
     app.animationEngine.play();
     expect(announcer.textContent).toBe('Playing animation');
     app.animationEngine.pause();
-    expect(announcer.textContent).toBe('Animation paused');
+    // Read in its turn, once "Playing animation" has had its time (DEF-45).
+    await vi.waitFor(() => expect(announcer.textContent).toBe('Animation paused'),
+      { timeout: 3 * ANNOUNCEMENTS.HOLD_MS });
     expect(app.elements.playBtn.style.display).not.toBe('none');
     expect(app.elements.pauseBtn.style.display).toBe('none');
   });

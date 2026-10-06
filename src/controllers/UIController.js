@@ -2396,12 +2396,14 @@ export class UIController {
   }
   
   /**
-   * Make an announcement for screen readers
+   * Make an announcement for screen readers. The app alone writes the
+   * editor's #announcer live region, one message at a time, so this asks it
+   * through the bus: writing the region here replaced whatever the app had
+   * written (DEF-45).
+   * @param {string} message
    */
   announce(message) {
-    if (this.elements.announcer) {
-      this.elements.announcer.textContent = message;
-    }
+    this.eventBus.emit('ui:announce', { message });
   }
   
   /**

@@ -109,7 +109,7 @@ them before naming an event.
 | --- | --- | --- |
 | `waypoint:*` | InteractionHandler, UIController | Add, delete, select, move, restyle waypoints |
 | `animation:*` | AnimationEngine, UIController | Play, pause, reset, speed, completion |
-| `ui:*` | UIController, RoutePlotter | Transport commands (`ui:animation:*`), slider sync, toasts |
+| `ui:*` | UIController, RoutePlotter | Transport commands (`ui:animation:*`), slider sync, toasts, announcements (`ui:announce`, queued by the app) |
 | `video:*` | VideoExporter | Export lifecycle (started, progress, complete, error) |
 | `area:*` | AreaDrawingService, AreaEditService | Area highlight draw/edit |
 | `undo:*` | UndoService | Undo/redo availability; the commands are `history:undo` / `history:redo` |
