@@ -101,3 +101,6 @@
 - On Open day the comet trail has faded during the final 4.5 s wait, so the 1.17 s comet tail draws no trail (TST-09's time golden); whether that is meant is unverified — (from: TST-09, 2026-10-06)
 - On Open day the traced crowd walks during the reveal intro, before the head moves (TST-09's time golden); whether that is meant is unverified — (from: TST-09, 2026-10-06)
 - UI-STANDARDS § Help could name the "?" hint trigger (UI-04), but the file is at 1,848 of its 1,850-word budget; a trim or a budget raise first — (from: UI-04, 2026-10-06)
+- v3.2.706's full export check: CROWD-06 changes export (the hold at end), so the Open day example exported from the live site as MP4 and HTML is owed a save to disk and an open from there, through the owner's Chrome with his word for each download — (from: REL-706, 2026-10-06)
+- `tests/holdAtEnd.test.js`'s cross-control undo test proves undoing Hold keeps Graphics scale but not that a second Undo restores the original scale, then Redo (Codex, CROWD-06 short pass, advisory) — (from: CROWD-06, 2026-10-06)
+- v3.2.707's live export check (MP4 and HTML from the Open day example) did not finish: the hidden browser pane suspended the page mid-export; rerun it with the pane visible — (from: REL-707, 2026-10-06)
