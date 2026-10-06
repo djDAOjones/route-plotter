@@ -61,8 +61,8 @@ describe('every range in the shell is connected to its readout', () => {
     const page = new DOMParser().parseFromString(indexHtml, 'text/html');
     const ranges = page.querySelectorAll('input[type="range"]');
 
-    // Vacuous unless the shell's 49 were there.
-    expect(ranges.length).toBe(49);
+    // Vacuous unless the shell's 50 were there (CROWD-06 added Hold at end).
+    expect(ranges.length).toBe(50);
     expect(readoutFaults(page)).toEqual([]);
   });
 });

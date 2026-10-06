@@ -12,19 +12,19 @@ ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="sta
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" type="button"
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
-ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 22 inside, eec85b79)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 24 inside, fd671dbf)
-ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
-ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, 107b52a2)
-ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 46 inside, fd52c3c6)
+ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 26 inside, 7aa754b5)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
+ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 53 inside, 09d5dd9f)
+ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 26 inside, aa372eb9)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 58 inside, b7f3b694)
 ui ~ #waypoint-list>li[6]: li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true"
 ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
-ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 72 inside, 13fb4793)
-ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" (and 62 inside, a912c79c)
-ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 112 inside, bf935e9a)
-ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 86 inside, 3211b3c8)
-ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 169 inside, 371fe437)
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 78 inside, b87dbb02)
+ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" (and 74 inside, a6be0b1d)
+ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 130 inside, 29598c50)
+ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 96 inside, 20a8938d)
+ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 191 inside, 7dc35844)
 
 ## #scope-prev-btn · click
 emit waypoint:selected waypoint[4]
@@ -34,33 +34,39 @@ app ~ selection: "waypoint[5]" → "waypoint[4]"
 app ~ focus: "body" → "#scope-prev-btn"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 4 'Extras 6' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1.1·B1 'Extras 5' · branch B"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" type="button"
-ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward: No later applicable waypoint" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="No later applicable waypoint" type="button" :text="Apply onward" → button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
+ui ~ #section-marker-content>div[9]>button[1]: button aria-label="Apply Marker onward: No later applicable waypoint" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="No later applicable waypoint" type="button" :text="Apply onward" → button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="pulse" → select aria-describedby="editor-beacon-style-tip" :value="ripple"
 ui ~ #camera-prev-zoom-value: span class="slider-value slider-value-readonly" :text="2.1x" → span class="slider-value slider-value-readonly" :text="2.0x"
 ui ~ #camera-zoom: input aria-describedby="camera-zoom-value camera-zoom-tip" aria-valuetext="2.3x" max="1" min="0" step="0.01" type="range" value="0" :value="0.2924812503605781" → input aria-describedby="camera-zoom-value camera-zoom-tip" aria-valuetext="2.1x" max="1" min="0" step="0.01" type="range" value="0" :value="0.2760841649536839"
 ui ~ #camera-zoom-value: span class="slider-value" :text="2.3x" → span class="slider-value" :text="2.1x"
 ui ~ #camera-next-zoom-value: span class="slider-value slider-value-readonly" :text="—" → span class="slider-value slider-value-readonly" :text="2.3x"
 ui ~ #ripple-controls: div (not shown) → div style="display: block;"
-ui + #ripple-controls>label[0]: label for="ripple-thickness"
-ui + #ripple-controls>label[0]>span[0]: span data-tip-desc="ripple-thickness-tip" data-tip="Line thickness of the ripple rings" :text="Thickness"
+ui + #ripple-controls>button[0]: button aria-describedby="ripple-thickness-tip" aria-expanded="false" aria-label="Help: Thickness" class="param-hint-trigger" style="position-anchor: --ripple-thickness-tip;" type="button"
+ui + #ripple-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui + #ripple-controls>label[1]: label for="ripple-thickness"
+ui + #ripple-controls>label[1]>span[0]: span data-tip-desc="ripple-thickness-tip" data-tip="Line thickness of the ripple rings" style="anchor-name: --ripple-thickness-tip;" :text="Thickness"
 ui + #ripple-thickness: input aria-describedby="ripple-thickness-value ripple-thickness-tip" aria-valuetext="5 reference px" max="10" min="1" step="0.5" type="range" value="2" :value="5"
 ui + #ripple-thickness-value: span :text="5 reference px"
 ui + #ripple-thickness-tip: span class="sr-only" :text="Line thickness of the ripple rings"
-ui + #ripple-controls>label[2]: label for="ripple-max-scale"
-ui + #ripple-controls>label[2]>span[0]: span data-tip-desc="ripple-max-scale-tip" data-tip="Maximum expansion radius of the ripple effect" :text="Size"
-ui + #ripple-max-scale: input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" max="4000" min="500" step="100" type="range" value="1000" :value="2400"
+ui + #ripple-controls>button[3]: button aria-describedby="ripple-max-scale-tip" aria-expanded="false" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --ripple-max-scale-tip;" type="button"
+ui + #ripple-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui + #ripple-controls>label[4]: label for="ripple-max-scale"
+ui + #ripple-controls>label[4]>span[0]: span data-tip-desc="ripple-max-scale-tip" data-tip="Maximum expansion radius of the ripple effect" style="anchor-name: --ripple-max-scale-tip;" :text="Size"
+ui + #ripple-max-scale: input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" aria-valuetext="2400%" max="4000" min="500" step="100" type="range" value="1000" :value="2400"
 ui + #ripple-max-scale-value: span :text="2400%"
 ui + #ripple-max-scale-tip: span class="sr-only" :text="Maximum expansion radius of the ripple effect"
-ui + #ripple-controls>label[4]: label class="checkbox-label" for="ripple-wait"
+ui + #ripple-controls>label[6]: label class="checkbox-label" for="ripple-wait"
 ui + #ripple-wait: input aria-describedby="ripple-wait-tip" checked="" type="checkbox" :unchecked
-ui + #ripple-controls>label[4]>span[1]: span data-tip-desc="ripple-wait-tip" data-tip="Sets Wait Time to how long the ripple lasts, so the path head waits until its last ring has finished" :text="Wait during ripple"
+ui + #ripple-controls>label[6]>span[1]: span data-tip-desc="ripple-wait-tip" data-tip="Sets Wait Time to how long the ripple lasts, so the path head waits until its last ring has finished" style="anchor-name: --ripple-wait-tip;" :text="Wait during ripple"
+ui + #ripple-controls>button[7]: button aria-describedby="ripple-wait-tip" aria-expanded="false" aria-label="Help: Wait during ripple" class="param-hint-trigger" style="position-anchor: --ripple-wait-tip;" type="button"
+ui + #ripple-controls>button[7]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui + #ripple-wait-tip: span class="sr-only" :text="Sets Wait Time to how long the ripple lasts, so the path head waits until its last ring has finished"
 ui ~ #pulse-controls: div aria-labelledby="pulse-controls-label" class="beacon-sub-controls" role="group" style="display: block;" → div (not shown)
 ui ~ #section-on-arrival-content>div[2]>button[1]: button aria-label="Apply On arrival onward: No later applicable waypoint" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" disabled="" title="No later applicable waypoint" type="button" :text="Apply onward" → button aria-label="Apply On arrival onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 ui ~ #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 6" → input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 5"
-ui ~ #label-offset-x: input aria-describedby="label-offset-x-tip" max="50" min="-50" step="1" type="range" value="0" :value="17" → input aria-describedby="label-offset-x-tip" max="50" min="-50" step="1" type="range" value="0" :value="16"
+ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="17%" max="50" min="-50" step="1" type="range" value="0" :value="17" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="16%" max="50" min="-50" step="1" type="range" value="0" :value="16"
 ui ~ #label-offset-x-value: span :text="17%" → span :text="16%"
-ui ~ #label-offset-y: input aria-describedby="label-offset-y-tip" max="50" min="-50" step="1" type="range" value="-5" :value="-14" → input aria-describedby="label-offset-y-tip" max="50" min="-50" step="1" type="range" value="-5" :value="-13"
+ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-14%" max="50" min="-50" step="1" type="range" value="-5" :value="-14" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-13%" max="50" min="-50" step="1" type="range" value="-5" :value="-13"
 ui ~ #label-offset-y-value: span :text="-14%" → span :text="-13%"
 ui ~ #section-label-content>div[2]>button[1]: button aria-label="Apply Label style onward: No later applicable waypoint" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" title="No later applicable waypoint" type="button" :text="Apply onward" → button aria-label="Apply Label style onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" title="Apply this card to later waypoints" type="button" :text="Apply onward"
 ui ~ #leg-section-title: h2 class="section-title" :text="Leg → route end" → h2 class="section-title" :text="Leg → Waypoint 4 'Extras 6'"
@@ -70,20 +76,28 @@ ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint
 ui ~ #waypoint-list>li[6]: li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true"
 ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
 ui - #pulse-controls-label: span class="sub-controls-label" :text="Pulse settings"
-ui - #pulse-controls>label[1]: label for="pulse-amplitude"
-ui - #pulse-controls>label[1]>span[0]: span data-tip-desc="pulse-amplitude-tip" data-tip="How much the marker grows and shrinks during pulse" :text="Amplitude"
-ui - #pulse-amplitude: input aria-describedby="pulse-amplitude-value pulse-amplitude-tip" max="3" min="0" step="0.1" type="range" value="1" :value="2.5"
+ui - #pulse-controls>button[1]: button aria-describedby="pulse-amplitude-tip" aria-expanded="false" aria-label="Help: Amplitude" class="param-hint-trigger" style="position-anchor: --pulse-amplitude-tip;" type="button"
+ui - #pulse-controls>button[1]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #pulse-controls>label[2]: label for="pulse-amplitude"
+ui - #pulse-controls>label[2]>span[0]: span data-tip-desc="pulse-amplitude-tip" data-tip="How much the marker grows and shrinks during pulse" style="anchor-name: --pulse-amplitude-tip;" :text="Amplitude"
+ui - #pulse-amplitude: input aria-describedby="pulse-amplitude-value pulse-amplitude-tip" aria-valuetext="2.5" max="3" min="0" step="0.1" type="range" value="1" :value="2.5"
 ui - #pulse-amplitude-value: span :text="2.5"
 ui - #pulse-amplitude-tip: span class="sr-only" :text="How much the marker grows and shrinks during pulse"
-ui - #pulse-controls>label[3]: label for="pulse-cycle-speed"
-ui - #pulse-controls>label[3]>span[0]: span data-tip-desc="pulse-cycle-speed-tip" data-tip="Duration of one complete pulse cycle" :text="Cycle duration"
-ui - #pulse-cycle-speed: input aria-describedby="pulse-cycle-speed-value pulse-cycle-speed-tip" max="10" min="1" step="0.5" type="range" value="4" :value="7"
+ui - #pulse-controls>button[4]: button aria-describedby="pulse-cycle-speed-tip" aria-expanded="false" aria-label="Help: Cycle duration" class="param-hint-trigger" style="position-anchor: --pulse-cycle-speed-tip;" type="button"
+ui - #pulse-controls>button[4]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #pulse-controls>label[5]: label for="pulse-cycle-speed"
+ui - #pulse-controls>label[5]>span[0]: span data-tip-desc="pulse-cycle-speed-tip" data-tip="Duration of one complete pulse cycle" style="anchor-name: --pulse-cycle-speed-tip;" :text="Cycle duration"
+ui - #pulse-cycle-speed: input aria-describedby="pulse-cycle-speed-value pulse-cycle-speed-tip" aria-valuetext="7s" max="10" min="1" step="0.5" type="range" value="4" :value="7"
 ui - #pulse-cycle-speed-value: span :text="7s"
 ui - #pulse-cycle-speed-tip: span class="sr-only" :text="Duration of one complete pulse cycle"
 
 ## #scope-next-btn · disabled, not operated
 
-## #pulse-controls>label[1]>span[0] · click
+## #pulse-controls>button[1] · click
+app ~ focus: "body" → "#pulse-controls>button[1]"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
+ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
+ui ~ #pulse-controls>button[1]: button aria-describedby="pulse-amplitude-tip" aria-expanded="false" aria-label="Help: Amplitude" class="param-hint-trigger" style="position-anchor: --pulse-amplitude-tip;" type="button" → button aria-describedby="pulse-amplitude-tip" aria-expanded="true" aria-label="Help: Amplitude" class="param-hint-trigger" style="position-anchor: --pulse-amplitude-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much the marker grows and shrinks during pulse"
 
 ## #pulse-amplitude · set 1
@@ -93,14 +107,18 @@ app ~ focus: "body" → "#pulse-amplitude"
 storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
-ui ~ #pulse-amplitude: input aria-describedby="pulse-amplitude-value pulse-amplitude-tip" max="3" min="0" step="0.1" type="range" value="1" :value="2.5" → input aria-describedby="pulse-amplitude-value pulse-amplitude-tip" max="3" min="0" step="0.1" type="range" value="1" :value="1"
+ui ~ #pulse-amplitude: input aria-describedby="pulse-amplitude-value pulse-amplitude-tip" aria-valuetext="2.5" max="3" min="0" step="0.1" type="range" value="1" :value="2.5" → input aria-describedby="pulse-amplitude-value pulse-amplitude-tip" aria-valuetext="1.0" max="3" min="0" step="0.1" type="range" value="1" :value="1"
 ui ~ #pulse-amplitude-value: span :text="2.5" → span :text="1.0"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 1ddb7e9f]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
-## #pulse-controls>label[3]>span[0] · click
+## #pulse-controls>button[4] · click
+app ~ focus: "body" → "#pulse-controls>button[4]"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
+ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
+ui ~ #pulse-controls>button[4]: button aria-describedby="pulse-cycle-speed-tip" aria-expanded="false" aria-label="Help: Cycle duration" class="param-hint-trigger" style="position-anchor: --pulse-cycle-speed-tip;" type="button" → button aria-describedby="pulse-cycle-speed-tip" aria-expanded="true" aria-label="Help: Cycle duration" class="param-hint-trigger" style="position-anchor: --pulse-cycle-speed-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Duration of one complete pulse cycle"
 
 ## #pulse-cycle-speed · set 4
@@ -112,8 +130,9 @@ app ~ focus: "body" → "#pulse-cycle-speed"
 storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
-ui ~ #pulse-cycle-speed: input aria-describedby="pulse-cycle-speed-value pulse-cycle-speed-tip" max="10" min="1" step="0.5" type="range" value="4" :value="7" → input aria-describedby="pulse-cycle-speed-value pulse-cycle-speed-tip" max="10" min="1" step="0.5" type="range" value="4" :value="4"
+ui ~ #pulse-cycle-speed: input aria-describedby="pulse-cycle-speed-value pulse-cycle-speed-tip" aria-valuetext="7s" max="10" min="1" step="0.5" type="range" value="4" :value="7" → input aria-describedby="pulse-cycle-speed-value pulse-cycle-speed-tip" aria-valuetext="4s" max="10" min="1" step="0.5" type="range" value="4" :value="4"
 ui ~ #pulse-cycle-speed-value: span :text="7s" → span :text="4s"
+ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
 ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:29"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 29635.232797, baseDuration: 18429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
