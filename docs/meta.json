@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 17667,
+      "bytes": 18235,
       "imports": [],
       "format": "esm"
     },
@@ -2625,7 +2625,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 103196,
+      "bytes": 103385,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3134,7 +3134,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 55458,
+      "bytes": 56198,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3246,7 +3246,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 55324,
+      "bytes": 55562,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3655,8 +3655,19 @@
       ],
       "format": "esm"
     },
+    "src/utils/announcementQueue.js": {
+      "bytes": 5276,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/main.js": {
-      "bytes": 47991,
+      "bytes": 48611,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3902,19 +3913,24 @@
           "path": "src/utils/routeAnchors.js",
           "kind": "import-statement",
           "original": "./utils/routeAnchors.js"
+        },
+        {
+          "path": "src/utils/announcementQueue.js",
+          "kind": "import-statement",
+          "original": "./utils/announcementQueue.js"
         }
       ],
       "format": "esm"
     }
   },
   "outputs": {
-    ".docs-build-Ae3Cgc/app.js.map": {
+    ".docs-build-ZPHZ5v/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3487406
+      "bytes": 3496711
     },
-    ".docs-build-Ae3Cgc/app.js": {
+    ".docs-build-ZPHZ5v/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3923,7 +3939,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 4068
+          "bytesInOutput": 4099
         },
         "src/utils/imageCoordinates.js": {
           "bytesInOutput": 141
@@ -4127,7 +4143,7 @@
           "bytesInOutput": 1370
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 40300
+          "bytesInOutput": 40281
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 17799
@@ -4223,13 +4239,13 @@
           "bytesInOutput": 10067
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 29052
+          "bytesInOutput": 29172
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5588
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 22254
+          "bytesInOutput": 22320
         },
         "src/app/undoRedo.js": {
           "bytesInOutput": 8199
@@ -4279,11 +4295,14 @@
         "src/app/projectReset.js": {
           "bytesInOutput": 1879
         },
+        "src/utils/announcementQueue.js": {
+          "bytesInOutput": 686
+        },
         "src/main.js": {
-          "bytesInOutput": 22823
+          "bytesInOutput": 22776
         }
       },
-      "bytes": 1101755
+      "bytes": 1102592
     }
   }
 }
