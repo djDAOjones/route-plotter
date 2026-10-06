@@ -106,44 +106,72 @@ function beaconState(beacon) {
   };
 }
 
-/** The scene at the engine's instant after `move`, read from one render. */
-function sceneAfter(app, move) {
+/**
+ * Watch one frame: what the renderer evaluates and draws while it is
+ * watched, read back as the scene. `read` requires exactly one frame drawn
+ * in that time, so a frame that was never drawn cannot pass as one.
+ */
+function watchScene(app) {
   const engine = app.animationEngine;
   const evaluate = vi.spyOn(app.swarmEngine, 'evaluate');
   const branches = vi.spyOn(app.renderingService, 'activeBranches');
   const ranges = vi.spyOn(app.motionVisibilityService, 'getPathVisibleRange');
+  const frames = vi.spyOn(app.renderingService, 'render');
+  return {
+    read() {
+      expect(frames, 'one frame drawn').toHaveBeenCalledTimes(1);
+      const dots = {};
+      for (const dot of evaluate.mock.results.flatMap(result => result.value)) {
+        dots[dot.emitterId] = (dots[dot.emitterId] || 0) + 1;
+      }
+      const beacons = {};
+      for (const waypoint of app.waypoints) {
+        if (waypoint.isMajor && waypoint.beaconStyle !== 'none') {
+          beacons[waypoint.id] = beaconState(app.renderingService.beaconRenderer.beacons.get(waypoint.id));
+        }
+      }
+      return {
+        ms: engine.state.currentTime,
+        progress: engine.state.progress,
+        head: engine.getPathProgress(),
+        waiting: engine.state.isWaitingAtWaypoint ? engine.state.pauseWaypointIndex : -1,
+        inIntro: engine.isInIntroTime(),
+        introProgress: engine.getIntroProgress(),
+        inTail: engine.isInTailTime(),
+        tailElapsed: engine.getTailTimeElapsed(),
+        complete: engine.isComplete(),
+        branches: (branches.mock.results.at(-1)?.value || []).map(branch => [branch.id, branch.engine.getPathProgress()]),
+        dots,
+        visibleRanges: ranges.mock.results.map(({ value }) => [value.startProgress, value.endProgress, value.fadeStartProgress]),
+        beacons,
+      };
+    },
+    restore() {
+      for (const spy of [evaluate, branches, ranges, frames]) spy.mockRestore();
+    },
+  };
+}
+
+/** The scene at the engine's instant after `move`, read from the one render that follows. */
+function sceneAfter(app, move) {
+  const watch = watchScene(app);
   try {
     move();
     app.render();
-    const dots = {};
-    for (const dot of evaluate.mock.results.flatMap(result => result.value)) {
-      dots[dot.emitterId] = (dots[dot.emitterId] || 0) + 1;
-    }
-    const beacons = {};
-    for (const waypoint of app.waypoints) {
-      if (waypoint.isMajor && waypoint.beaconStyle !== 'none') {
-        beacons[waypoint.id] = beaconState(app.renderingService.beaconRenderer.beacons.get(waypoint.id));
-      }
-    }
-    return {
-      ms: engine.state.currentTime,
-      progress: engine.state.progress,
-      head: engine.getPathProgress(),
-      waiting: engine.state.isWaitingAtWaypoint ? engine.state.pauseWaypointIndex : -1,
-      inIntro: engine.isInIntroTime(),
-      introProgress: engine.getIntroProgress(),
-      inTail: engine.isInTailTime(),
-      tailElapsed: engine.getTailTimeElapsed(),
-      complete: engine.isComplete(),
-      branches: (branches.mock.results.at(-1)?.value || []).map(branch => [branch.id, branch.engine.getPathProgress()]),
-      dots,
-      visibleRanges: ranges.mock.results.map(({ value }) => [value.startProgress, value.endProgress, value.fadeStartProgress]),
-      beacons,
-    };
+    return watch.read();
   } finally {
-    evaluate.mockRestore();
-    branches.mockRestore();
-    ranges.mockRestore();
+    watch.restore();
+  }
+}
+
+/** The scene `draw` itself renders, read from that drawing with no redraw after it. */
+async function sceneDrawnBy(app, draw) {
+  const watch = watchScene(app);
+  try {
+    await draw();
+    return watch.read();
+  } finally {
+    watch.restore();
   }
 }
 
@@ -251,6 +279,7 @@ for (const variant of Object.keys(VARIANTS)) {
       vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
       vi.stubGlobal('alert', vi.fn());
       const exported = [];
+      let failure = null;
       app.videoExporter = {
         cancel() {},
         async export({ frameRate, duration, startBuffer, renderFrame }) {
@@ -260,14 +289,19 @@ for (const variant of Object.keys(VARIANTS)) {
             ...Object.values(instants).map(frameAt)]);
           for (const index of [...frames].sort((a, b) => a - b)) {
             const sample = plan.sampleAt(index);
-            // `renderFrame` seeks and renders; the state is read from a second render of the same instant.
-            await renderFrame(sample.progress);
-            exported.push(sceneAfter(app, () => {}));
+            // The export's own frame: what `renderFrame` draws, read from that drawing.
+            // A failed read is kept and thrown below: `exportVideo` would swallow it.
+            try {
+              exported.push(await sceneDrawnBy(app, () => renderFrame(sample.progress)));
+            } catch (error) {
+              failure ??= error;
+            }
           }
           return new Blob(['video'], { type: 'video/mp4' });
         },
       };
       await app.exportVideo();
+      if (failure) throw failure;
       expect(exported.length).toBeGreaterThan(5);
       expect(exported.at(-1)).toMatchObject({ head: 1, complete: true });
 

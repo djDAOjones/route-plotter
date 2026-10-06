@@ -21,10 +21,17 @@
  * point n − 2 at fraction 0), in Edit, Preview, a video export's last frame
  * and the HTML player alike.
  *
- * Pinned in `tests/goldens/domains-minor-end.json`. DEF-11's rule (a trailing
- * minor run is timed at the last major's speed, decided 2026-09-22) moves the
- * timing, head and arrival cases; the drawn head moves only if its index
- * arithmetic is changed.
+ * A run of minors before the first major is the mirror image: with every
+ * leg at 1.0× the arrival map scales all arrivals into the majors' span, so
+ * the first major, and a branch forking there, "arrives" before the head;
+ * at another speed the engine's markers start at the first major, so the
+ * duration collapses and the head leaps the leading minors at once.
+ *
+ * Pinned in `tests/goldens/domains-minor-end.json`. DEF-11's rule (a leading
+ * or trailing minor run is timed at the adjacent major's speed, decided
+ * 2026-09-22) moves every `*.timing` case, leading and trailing, and the
+ * bound releases; the drawn head moves only if its index arithmetic is
+ * changed.
  */
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -46,9 +53,18 @@ const still = { pauseMode: 'none', pauseTime: 0 };
 const waypoint = (id, imgX, imgY, isMajor, extra = {}) => ({ id, imgX, imgY, isMajor, ...still, ...extra });
 
 /**
- * `uniform`: a → b majors (b waits 1 s), then minors c and d to the end.
- * `faster`: the same without the wait, a's leg at 1.01×. `branch`: a → f → c majors; a branch from f
- * through x1 (major) to x2 (minor), where it ends.
+ * Trailing minors. `uniform`: a → b majors (b waits 1 s), then minors c and
+ * d to the end. `faster`: the same without the wait, a's leg at 1.01×.
+ * `branch`: a → f → c majors; a branch from f through x1 (major) to x2
+ * (minor), where it ends.
+ *
+ * Leading minors, the other half of DEF-11's row. `leadingUniform`: minors a
+ * and b, then majors c (waits 1 s) → d. `leadingFaster`: the same without
+ * the wait, c's leg at 1.01×. `leadingBranch`: minors a and b, then majors
+ * f → c, with a branch from f to x1. A branch's own run cannot start on a
+ * minor (`canForkFrom` refuses one, so it always opens on its fork), so the
+ * branched leading case is a trunk that does, with a branch from its first
+ * major.
  */
 const ROUTES = {
   uniform: () => [waypoint('a', 0.1, 0.6, true), waypoint('b', 0.45, 0.4, true, { pauseMode: 'timed', pauseTime: 1000 }),
@@ -58,6 +74,13 @@ const ROUTES = {
   branch: () => [waypoint('a', 0.1, 0.6, true), waypoint('f', 0.45, 0.4, true),
     waypoint('x1', 0.5, 0.15, true, { branchId: 'B', branchFrom: 'f' }),
     waypoint('x2', 0.75, 0.1, false, { branchId: 'B' }), waypoint('c', 0.9, 0.5, true)],
+  leadingUniform: () => [waypoint('a', 0.1, 0.6, false), waypoint('b', 0.3, 0.35, false),
+    waypoint('c', 0.55, 0.45, true, { pauseMode: 'timed', pauseTime: 1000 }), waypoint('d', 0.9, 0.3, true)],
+  leadingFaster: () => [waypoint('a', 0.1, 0.6, false), waypoint('b', 0.3, 0.35, false),
+    waypoint('c', 0.55, 0.45, true, { segmentSpeed: 1.01 }), waypoint('d', 0.9, 0.3, true)],
+  leadingBranch: () => [waypoint('a', 0.1, 0.6, false), waypoint('b', 0.3, 0.35, false),
+    waypoint('f', 0.55, 0.45, true), waypoint('x1', 0.6, 0.15, true, { branchId: 'B', branchFrom: 'f' }),
+    waypoint('c', 0.9, 0.3, true)],
 };
 
 function project(name, scene = null) {
@@ -75,6 +98,18 @@ function headAt(app, ms) {
   return PlayerCore.timelineToPath(ms, engine.getTimeline(), engine.getLiveTiming()).pathProgress;
 }
 
+/** The first instant the head is at or past `pathProgress`, found by halving. */
+function reachesMs(app, pathProgress) {
+  let low = 0;
+  let high = app.animationEngine.state.baseDuration;
+  for (let step = 0; step < 60; step += 1) {
+    const middle = (low + high) / 2;
+    if (headAt(app, middle) >= pathProgress) high = middle;
+    else low = middle;
+  }
+  return high;
+}
+
 /** Path length in canvas pixels, as timing measures it. */
 function lengthPx(app, points) {
   return app.pathCalculator.calculatePathLength(points.map(point => app.imageToCanvas(point.x, point.y)));
@@ -84,7 +119,7 @@ const FRACTIONS = [0, 0.25, 0.5, 0.75, 0.9, 0.99, 0.999, 1];
 
 describe('minor end — timing, the head and the arrival map', () => {
 
-  for (const name of ['uniform', 'faster', 'branch']) {
+  for (const name of ['uniform', 'faster', 'branch', 'leadingUniform', 'leadingFaster', 'leadingBranch']) {
     test(`${name}: the engine's timeline against the arrival map, and the head across it (DEF-11)`, async () => {
       const app = await openProject(project(name));
       const engine = app.animationEngine;
@@ -102,6 +137,11 @@ describe('minor end — timing, the head and the arrival map', () => {
         arrivalTotalMs: arrivals.totalDurationMs,
         head: FRACTIONS.map(fraction => [fraction, headAt(app, fraction * B)]),
       };
+      if (name.startsWith('leading')) {
+        // When the head first reaches each trunk waypoint, against the arrival map.
+        result.headReachesMs = Object.fromEntries(app._trunkWaypoints.map((each, index) =>
+          [each.id, reachesMs(app, app.getWaypointProgressValues()[index])]));
+      }
       if (branched) {
         const branch = app.branchPaths[0];
         const placement = branched.legs.B;
@@ -130,6 +170,23 @@ describe('minor end — timing, the head and the arrival map', () => {
       if (name === 'branch') {
         // The branch covers its whole length in its majors' span: faster than the route's speed.
         expect(result.branch.legs.B.durationMs).toBeLessThan(0.6 * (result.branch.lengthPx / 150) * 1000);
+      }
+      if (name === 'leadingUniform') {
+        // The engine times the whole path; the arrival map times only c → d and
+        // scales every arrival into it, so c "arrives" well before the head gets there.
+        expect(engine.pathDuration).toBeCloseTo(result.trunkLengthPx / 150 * 1000, 6);
+        expect(arrivals.arrivalMsById.c).toBeLessThan(result.headReachesMs.c - 100);
+      }
+      if (name === 'leadingFaster') {
+        // The duration collapses to c → d, and the head leaps the leading
+        // minors in the first instant: it is past c as soon as it moves.
+        expect(B).toBeLessThan(0.75 * (result.trunkLengthPx / 150) * 1000);
+        expect(headAt(app, 1)).toBeGreaterThan(result.progressValues[2]);
+        expect(result.headReachesMs.c).toBeLessThan(1);
+      }
+      if (name === 'leadingBranch') {
+        // The branch leaves f when the arrival map says f is reached, before the head is there.
+        expect(result.branch.legs.B.startMs).toBeLessThan(result.headReachesMs.f - 100);
       }
     });
   }
@@ -177,13 +234,21 @@ describe('minor end — timing, the head and the arrival map', () => {
 
 describe('minor end — what each host draws at the last instant', () => {
 
-  /** The heads drawn in one render, each as the path point it sits on. */
-  function headsDrawn(host, render) {
-    const draw = vi.spyOn(host.renderingService, 'drawPathHead');
+  /**
+   * The heads drawn by `draw` itself, each as the path point it sits on. What
+   * is read is the drawing done inside the call, with no redraw after it, and
+   * that call must draw exactly one frame with a head for every run: a host
+   * that skipped its frame would otherwise pass by drawing nothing.
+   */
+  async function headsDrawn(host, draw) {
+    const heads = vi.spyOn(host.renderingService, 'drawPathHead');
+    const frames = vi.spyOn(host.renderingService, 'render');
     try {
-      render();
+      await draw();
+      expect(frames, 'one frame drawn').toHaveBeenCalledTimes(1);
       const runs = [{ id: 'trunk', points: host.pathPoints }, ...host.branchPaths.map(branch => ({ id: branch.id, points: branch.pathPoints }))];
-      return draw.mock.calls.map(([, x, y]) => {
+      expect(heads, 'a head for every run').toHaveBeenCalledTimes(runs.length);
+      return heads.mock.calls.map(([, x, y]) => {
         for (const run of runs) {
           const index = run.points.findIndex(point => {
             const at = host.imageToCanvas(point.x, point.y);
@@ -194,7 +259,8 @@ describe('minor end — what each host draws at the last instant', () => {
         return { run: null, x, y };
       });
     } finally {
-      draw.mockRestore();
+      heads.mockRestore();
+      frames.mockRestore();
     }
   }
 
@@ -206,31 +272,37 @@ describe('minor end — what each host draws at the last instant', () => {
         host.animationEngine.seekToTime(host.animationEngine.state.duration);
         host.render();
       };
-      drawn.edit = headsDrawn(app, lastInstant(app));
+      drawn.edit = await headsDrawn(app, lastInstant(app));
       expect(app.animationEngine.getPathProgress()).toBe(1);
 
       app._setPreviewMode(true);
       app.invalidateAnimationTiming();
-      drawn.preview = headsDrawn(app, lastInstant(app));
+      drawn.preview = await headsDrawn(app, lastInstant(app));
 
       const snapshot = JSON.parse(JSON.stringify(app._buildProjectSnapshot()));
       vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
       vi.stubGlobal('alert', vi.fn());
+      let failure = null;
       app.videoExporter = {
         cancel() {},
         async export({ frameRate, duration, startBuffer, renderFrame }) {
           const plan = createVideoFramePlan({ frameRate, duration, startBuffer });
-          // The last frame, as the export seeks and draws it, read again in export mode.
-          await renderFrame(plan.sampleAt(plan.frameCount - 1).progress);
-          drawn.exportLastFrame = headsDrawn(app, () => app.render());
+          // The last frame, read from the drawing the export's own call does.
+          // A failed read is kept and thrown below: `exportVideo` would swallow it.
+          try {
+            drawn.exportLastFrame = await headsDrawn(app, () => renderFrame(plan.sampleAt(plan.frameCount - 1).progress));
+          } catch (error) {
+            failure = error;
+          }
           return new Blob(['video'], { type: 'video/mp4' });
         },
       };
       await app.exportVideo();
+      if (failure) throw failure;
 
       const player = new PlayerApp(document.createElement('canvas'));
       await player.load(snapshot, app.background.image);
-      drawn.player = headsDrawn(player, lastInstant(player));
+      drawn.player = await headsDrawn(player, lastInstant(player));
 
       for (const heads of Object.values(drawn)) {
         for (const head of heads) expect(head.point).toBe(head.of - 2);

@@ -7,6 +7,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
+
+- TST-09 — camera, dots, curvature cache, minor-end and time domains are pinned as they stand on a branched route, play, seek and export compared, so the camera, dot, curvature and minor-end fixes each move a baseline on purpose (2026-10-06) — see decisions
+
 ## After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05
 
 - RECALL — 8/8 (2026-10-05) — scores: 2,2,2,2 — local — see decisions
@@ -18,10 +22,6 @@
 - RECALL — 8/8 (2026-10-05) — scores: 2,2,2,2 — local — see decisions
 - UI-03 — a mouse resting on a hint's text opens it, Escape dismisses it in place, thirteen unclear hints are reworded and every setting has a hint, the scene outline's included (2026-10-05) — see decisions
 - DEF-77 — "At journey end" acts where it is seen: a new crowd's dots finish, a network with no Exit ends journeys at its ends, Respawn varies each journey, and the panel says when no dot finishes and why (2026-10-05) — see decisions
-
-## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
-
-- TST-09 — camera, dots, curvature cache, minor-end and time domains are pinned as they stand on a branched route, play, seek and export compared, so the camera, dot, curvature and minor-end fixes each move a baseline on purpose (2026-10-06) — see decisions
 
 ## Phase 1 — Land the big run's open pull requests
 
