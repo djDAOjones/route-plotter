@@ -1,0 +1,99 @@
+# route-spotlight: the background set to Spotlight Reveal, and the head to a custom image
+
+## #head-upload-btn · click
+file dialog #head-upload
+app ~ focus: "body" → "#head-upload-btn"
+storage ~ routePlotter_lastSection: "video" → "head"
+ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="head" → div class="settings-section expanded" data-last="true" data-section="head"
+
+## #head-upload · choose nothing
+
+## #head-upload · choose picked.png
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  model ~ styles.pathHead.imageAssetId: "asset-extras-head" → "9a30e678948ebf32"
+  model + imageAssets[2].id: "9a30e678948ebf32"
+  model + imageAssets[2].base64: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+  model + imageAssets[2].name: "picked.png"
+  model + imageAssets[2].width: 100
+  model + imageAssets[2].height: 100
+  model + imageAssets[2].mimeType: "image/png"
+  model + imageAssets[2].size: 68
+  ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #head-filename: p :text="asset-extras-head.png" → p :text="picked.png"
+
+## #custom-head-controls>label[1]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Whether the image rotates to follow the path direction"
+
+## #head-rotation-mode · choose "fixed"
+model ~ styles.pathHead.rotationMode: "auto" → "fixed"
+app ~ focus: "body" → "#head-rotation-mode"
+storage ~ routePlotter_lastSection: "video" → "head"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="head" → div class="settings-section expanded" data-last="true" data-section="head"
+ui ~ #head-rotation-mode: select aria-describedby="head-rotation-mode-tip" :value="auto" → select aria-describedby="head-rotation-mode-tip" :value="fixed"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9678 chars, 7992e3b1]
+
+## #head-rotation-offset-control>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Turns the image by this many degrees on top of Rotation: clockwise above 0°, anticlockwise below"
+
+## #head-rotation-offset · set -60
+model ~ styles.pathHead.rotationOffset: 45 → -60
+app ~ focus: "body" → "#head-rotation-offset"
+storage ~ routePlotter_lastSection: "video" → "head"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="head" → div class="settings-section expanded" data-last="true" data-section="head"
+ui ~ #head-rotation-offset: input aria-describedby="head-rotation-offset-tip" max="180" min="-180" step="5" type="range" value="0" :value="45" → input aria-describedby="head-rotation-offset-tip" max="180" min="-180" step="5" type="range" value="0" :value="-60"
+ui ~ #head-rotation-offset-value: span :text="45°" → span :text="-60°"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9678 chars, 590b6a58]
+
+## #spotlight-controls>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Radius of the visible area around the path head"
+
+## #reveal-size · set 333
+emit motion:reveal-size-change 2.920882
+model ~ motionSettings.revealSize: 62 → 2.920882
+app ~ focus: "body" → "#reveal-size"
+storage ~ routePlotter_lastSection: "video" → "reveal"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #reveal-size: input aria-describedby="reveal-size-tip" max="1000" min="0" step="1" type="range" value="500" :value="715" → input aria-describedby="reveal-size-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #reveal-size-value: span :text="10%" → span :text="2.9%"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9692 chars, 0905239b]
+
+## #spotlight-controls>label[2]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Softness of the spotlight edge"
+
+## #reveal-feather · set 333
+emit motion:reveal-feather-change 4.634469
+model ~ motionSettings.revealFeather: 71 → 4.634469
+app ~ focus: "body" → "#reveal-feather"
+storage ~ routePlotter_lastSection: "video" → "reveal"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #reveal-feather: input aria-describedby="reveal-feather-tip" max="1000" min="0" step="1" type="range" value="500" :value="0" → input aria-describedby="reveal-feather-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #reveal-feather-value: span :text="0.0%" → span :text="4.6%"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9691 chars, 1ebc246a]
+
+## #reveal-trail-control>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades"
+
+## #reveal-trail · set 333
+emit motion:reveal-trail-change 4.634469
+model ~ motionSettings.revealTrail: 38 → 4.634469
+app ~ focus: "body" → "#reveal-trail"
+storage ~ routePlotter_lastSection: "video" → "reveal"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #reveal-trail: input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="Whole path" max="1000" min="0" step="1" type="range" value="1000" :value="1000" → input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="4.6% of path" max="1000" min="0" step="1" type="range" value="1000" :value="333"
+ui ~ #reveal-trail-value: span :text="Whole path" → span :text="4.6% of path"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9691 chars, bf55f199]
+
+## #path-glow-intensity · disabled, not operated

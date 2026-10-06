@@ -1,0 +1,216 @@
+# major-first: waypoint 0 (ripple beacon, polygon area; the first) selected
+
+## #scope-route-btn · click
+emit waypoint:deselected
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+app ~ selected: "waypoint[0]" → null
+app ~ selection: "waypoint[0]" → ""
+ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
+ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button class="scope-route-btn" disabled="" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
+ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
+ui ~ #route-scope: div (not shown) → div class="scope-group"
+ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 22 inside, eec85b79)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 19 inside, 53769572)
+ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
+ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, 107b52a2)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 46 inside, fd52c3c6)
+ui ~ #waypoint-list>li[1]: li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true"
+ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 72 inside, 913bf924)
+ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" (and 65 inside, 0c3a4f66)
+ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 112 inside, f576727f)
+ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 86 inside, 50ff20e4)
+ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 160 inside, f9a56939)
+
+## #scope-prev-btn · click
+emit waypoint:deselected
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+app ~ selected: "waypoint[0]" → null
+app ~ selection: "waypoint[0]" → ""
+ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
+ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button class="scope-route-btn" disabled="" type="button" :text="Route"
+ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
+ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
+ui ~ #route-scope: div (not shown) → div class="scope-group"
+ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 22 inside, eec85b79)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 19 inside, 53769572)
+ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
+ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, 107b52a2)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 46 inside, fd52c3c6)
+ui ~ #waypoint-list>li[1]: li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true"
+ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 72 inside, 913bf924)
+ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" (and 65 inside, 0c3a4f66)
+ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 112 inside, f576727f)
+ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 86 inside, 50ff20e4)
+ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 160 inside, f9a56939)
+
+## #scope-next-btn · click
+emit waypoint:selected waypoint[1]
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+app ~ selected: "waypoint[0]" → "waypoint[1]"
+app ~ selection: "waypoint[0]" → "waypoint[1]"
+app ~ focus: "body" → "#scope-next-btn"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · minor 'Extras 2'"
+ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input disabled="" type="hidden" value="#CC79A7" :value="#CC79A7"
+ui ~ #section-marker-content>div[1]>fieldset[0]: fieldset aria-describedby="{#section-marker-content>div[1]>fieldset[0]>span[1]}" class="swatch-fieldset" → fieldset aria-describedby="{#section-marker-content>div[1]>fieldset[0]>span[1]}" class="swatch-fieldset" disabled=""
+ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="" → select aria-describedby="marker-style-tip" disabled="" :value="square"
+ui ~ #dot-size: input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="14 reference px" max="16" min="4" step="1" type="range" value="8" :value="14" → input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="14 reference px" disabled="" max="16" min="4" step="1" type="range" value="8" :value="14"
+ui ~ #section-marker-content>div[7]>button[0]: button aria-label="Reset Marker to route style" class="btn btn-secondary" data-card-action="reset" data-card="marker" title="Reset this card to route style" type="button" :text="Reset" → button aria-label="Reset Marker: No applicable waypoint selected" class="btn btn-secondary" data-card-action="reset" data-card="marker" disabled="" title="No applicable waypoint selected" type="button" :text="Reset"
+ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply Marker onward: Select an applicable waypoint to apply onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Select an applicable waypoint to apply onward" type="button" :text="Apply onward"
+ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="ripple" → select aria-describedby="editor-beacon-style-tip" disabled="" :value="none"
+ui ~ #pause-time-control: label for="waypoint-pause-time" style="display: flex;" → label (not shown)
+ui ~ #camera-zoom: input aria-describedby="camera-zoom-value camera-zoom-tip" aria-valuetext="1.8x" max="1" min="0" step="0.01" type="range" value="0" :value="0.20183873051440102" → input aria-describedby="camera-zoom-value camera-zoom-tip" aria-valuetext="—" disabled="" max="1" min="0" step="0.01" type="range" value="0" :value="0"
+ui ~ #camera-zoom-value: span class="slider-value" :text="1.8x" → span class="slider-value" :text="—"
+ui ~ #camera-next-zoom-value: span class="slider-value slider-value-readonly" :text="1.9x" → span class="slider-value slider-value-readonly" :text="—"
+ui ~ #camera-zoom-mode: select aria-describedby="camera-zoom-mode-tip" :value="continuous" → select aria-describedby="camera-zoom-mode-tip" disabled="" :value="continuous"
+ui ~ #ripple-controls: div style="display: block;" → div (not shown)
+ui ~ #section-on-arrival-content>div[2]>button[0]: button aria-label="Reset On arrival to route style" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" title="Reset this card to route style" type="button" :text="Reset" → button aria-label="Reset On arrival: No applicable waypoint selected" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" disabled="" title="No applicable waypoint selected" type="button" :text="Reset"
+ui ~ #section-on-arrival-content>div[2]>button[1]: button aria-label="Apply On arrival onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply On arrival onward: Select an applicable waypoint to apply onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" disabled="" title="Select an applicable waypoint to apply onward" type="button" :text="Apply onward"
+ui ~ #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 1" → input aria-describedby="waypoint-label-tip" disabled="" placeholder="Enter label text..." type="text" :value=""
+ui ~ #label-mode: select aria-describedby="label-mode-tip" :value="on" → select aria-describedby="label-mode-tip" disabled="" :value="off"
+ui ~ #label-size: input aria-describedby="label-size-value label-size-tip" aria-valuetext="27 reference px" max="48" min="16" step="1" type="range" value="16" :value="27" → input aria-describedby="label-size-value label-size-tip" aria-valuetext="27 reference px" disabled="" max="48" min="16" step="1" type="range" value="16" :value="27"
+ui ~ #label-auto-position: button class="btn btn-secondary" style="width: 100%;" title="Move the label to avoid overlapping the path, markers and other labels" :text="Auto-position" → button class="btn btn-secondary" disabled="" style="width: 100%;" title="Move the label to avoid overlapping the path, markers and other labels" :text="Auto-position"
+ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input disabled="" type="hidden" value="#009E73" :value="#009E73"
+ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[0]: fieldset aria-describedby="{#section-label-content>details[1]>div[1]>div[1]>fieldset[0]>span[1]}" class="swatch-fieldset swatch-fieldset-custom" → fieldset aria-describedby="{#section-label-content>details[1]>div[1]>div[1]>fieldset[0]>span[1]}" class="swatch-fieldset swatch-fieldset-custom" disabled=""
+ui ~ #label-bg-color: input type="hidden" value="#F0E442" :value="#F0E442" → input disabled="" type="hidden" value="#F0E442" :value="#F0E442"
+ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[0]: fieldset aria-describedby="{#section-label-content>details[1]>div[1]>div[3]>fieldset[0]>span[1]}" class="swatch-fieldset swatch-fieldset-custom" → fieldset aria-describedby="{#section-label-content>details[1]>div[1]>div[3]>fieldset[0]>span[1]}" class="swatch-fieldset swatch-fieldset-custom" disabled=""
+ui ~ #label-bg-opacity: input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="42%" max="100" min="0" step="1" type="range" value="85" :value="42" → input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="42%" disabled="" max="100" min="0" step="1" type="range" value="85" :value="42"
+ui ~ #label-width: input aria-describedby="label-width-tip" max="50" min="5" step="1" type="range" value="15" :value="33" → input aria-describedby="label-width-tip" disabled="" max="50" min="5" step="1" type="range" value="15" :value="33"
+ui ~ #label-offset-x: input aria-describedby="label-offset-x-tip" max="50" min="-50" step="1" type="range" value="0" :value="12" → input aria-describedby="label-offset-x-tip" disabled="" max="50" min="-50" step="1" type="range" value="0" :value="12"
+ui ~ #label-offset-y: input aria-describedby="label-offset-y-tip" max="50" min="-50" step="1" type="range" value="-5" :value="-9" → input aria-describedby="label-offset-y-tip" disabled="" max="50" min="-50" step="1" type="range" value="-5" :value="-9"
+ui ~ #section-label-content>div[2]>button[0]: button aria-label="Reset Label style to route style" class="btn btn-secondary" data-card-action="reset" data-card="label" title="Reset this card to route style" type="button" :text="Reset" → button aria-label="Reset Label style: No applicable waypoint selected" class="btn btn-secondary" data-card-action="reset" data-card="label" disabled="" title="No applicable waypoint selected" type="button" :text="Reset"
+ui ~ #section-label-content>div[2]>button[1]: button aria-label="Apply Label style onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply Label style onward: Select an applicable waypoint to apply onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" title="Select an applicable waypoint to apply onward" type="button" :text="Apply onward"
+ui ~ #leg-section-title: h2 class="section-title" :text="Leg → minor 'Extras 2'" → h2 class="section-title" :text="Leg → Waypoint 2 'Extras 3'"
+ui ~ #segment-speed-control: label for="waypoint-segment-speed" style="display: flex;" → label (not shown)
+ui ~ #area-shape: select aria-describedby="area-shape-tip" :value="polygon" → select aria-describedby="area-shape-tip" :value="rectangle"
+ui ~ #area-draw-controls: div style="" → div (not shown)
+ui ~ #area-rect-controls: div (not shown) → div style=""
+ui + #area-rect-controls>label[0]: label for="area-rect-width"
+ui + #area-rect-controls>label[0]>span[0]: span data-tip-desc="area-rect-width-tip" data-tip="Width of the rectangular highlight area" :text="Width"
+ui + #area-rect-width: input aria-describedby="area-rect-width-tip" max="1000" min="0" step="1" type="range" value="125" :value="329"
+ui + #area-rect-width-value: span :text="27%"
+ui + #area-rect-width-tip: span class="sr-only" :text="Width of the rectangular highlight area"
+ui + #area-rect-controls>label[2]: label for="area-rect-height"
+ui + #area-rect-controls>label[2]>span[0]: span data-tip-desc="area-rect-height-tip" data-tip="Height of the rectangular highlight area" :text="Height"
+ui + #area-rect-height: input aria-describedby="area-rect-height-tip" max="1000" min="0" step="1" type="range" value="125" :value="228"
+ui + #area-rect-height-value: span :text="19%"
+ui + #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
+ui ~ #waypoint-list>li[1]: li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true"
+ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
+ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
+ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
+ui - #pause-time-control>span[0]: span data-tip-desc="waypoint-pause-time-tip" data-tip="How long the path head waits at this waypoint before moving on" :text="Wait Time"
+ui - #waypoint-pause-time: input aria-describedby="waypoint-pause-time-tip" max="1000" min="0" step="1" type="range" value="500" :value="384"
+ui - #waypoint-pause-time-value: span :text="2.8s"
+ui - #ripple-controls>label[0]: label for="ripple-thickness"
+ui - #ripple-controls>label[0]>span[0]: span data-tip-desc="ripple-thickness-tip" data-tip="Line thickness of the ripple rings" :text="Thickness"
+ui - #ripple-thickness: input aria-describedby="ripple-thickness-value ripple-thickness-tip" aria-valuetext="5 reference px" max="10" min="1" step="0.5" type="range" value="2" :value="5"
+ui - #ripple-thickness-value: span :text="5 reference px"
+ui - #ripple-thickness-tip: span class="sr-only" :text="Line thickness of the ripple rings"
+ui - #ripple-controls>label[2]: label for="ripple-max-scale"
+ui - #ripple-controls>label[2]>span[0]: span data-tip-desc="ripple-max-scale-tip" data-tip="Maximum expansion radius of the ripple effect" :text="Size"
+ui - #ripple-max-scale: input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" max="4000" min="500" step="100" type="range" value="1000" :value="2400"
+ui - #ripple-max-scale-value: span :text="2400%"
+ui - #ripple-max-scale-tip: span class="sr-only" :text="Maximum expansion radius of the ripple effect"
+ui - #ripple-controls>label[4]: label class="checkbox-label" for="ripple-wait"
+ui - #ripple-wait: input aria-describedby="ripple-wait-tip" checked="" type="checkbox" :unchecked
+ui - #ripple-controls>label[4]>span[1]: span data-tip-desc="ripple-wait-tip" data-tip="Sets Wait Time to how long the ripple lasts, so the path head waits until its last ring has finished" :text="Wait during ripple"
+ui - #ripple-wait-tip: span class="sr-only" :text="Sets Wait Time to how long the ripple lasts, so the path head waits until its last ring has finished"
+ui - #segment-speed-control>span[0]: span data-tip-desc="waypoint-segment-speed-tip" data-tip="How fast the path head travels this leg: 2.0x takes half the time, 0.5x twice as long" :text="Segment speed"
+ui - #waypoint-segment-speed: input aria-describedby="waypoint-segment-speed-tip" max="1000" min="0" step="1" type="range" value="500" :value="699"
+ui - #waypoint-segment-speed-value: span :text="2.5x"
+ui - #area-draw-btn: button aria-label="Enter polygon drawing mode" class="btn btn-secondary" style="width: 100%;" title="" :text="Draw Area"
+
+## #section-marker-content>div[7]>button[1] · click
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+announced "Marker applied to 4 later waypoints. Undo is available."
+model ~ waypoints[2].markerStyle: "square" → "custom-image"
+model ~ waypoints[3].markerStyle: "square" → "custom-image"
+model ~ waypoints[4].markerStyle: "square" → "custom-image"
+model ~ waypoints[5].markerStyle: "square" → "custom-image"
+storage ~ routePlotter_lastSection: "area-highlight" → "marker"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Marker applied to 4 later waypoints. Undo is available."
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
+ui ~ #section-marker-content>div[7]>button[1]: button aria-label="Apply Marker onward" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" title="Apply this card to later waypoints" type="button" :text="Apply onward" → button aria-label="Apply Marker onward: Later waypoints already match" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" title="Later waypoints already match" type="button" :text="Apply onward"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9708 chars, 23d173aa]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Marker applied to 4 later waypoints. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #ripple-controls>label[0]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Line thickness of the ripple rings"
+
+## #ripple-thickness · set 4
+emit waypoint:style-changed waypoint[0]
+model ~ waypoints[0].rippleThickness: 5 → 4
+app ~ focus: "body" → "#ripple-thickness"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
+ui ~ #ripple-thickness: input aria-describedby="ripple-thickness-value ripple-thickness-tip" aria-valuetext="5 reference px" max="10" min="1" step="0.5" type="range" value="2" :value="5" → input aria-describedby="ripple-thickness-value ripple-thickness-tip" aria-valuetext="4 reference px" max="10" min="1" step="0.5" type="range" value="2" :value="4"
+ui ~ #ripple-thickness-value: span :text="5 reference px" → span :text="4 reference px"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, fb3bdb67]
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #ripple-controls>label[2]>span[0] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Maximum expansion radius of the ripple effect"
+
+## #ripple-max-scale · set 1700
+emit animation:durationChange 30779.455541
+emit waypoint:style-changed waypoint[0]
+model ~ waypoints[0].rippleMaxScale: 2400 → 1700
+app ~ focus: "body" → "#ripple-max-scale"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
+ui ~ #ripple-max-scale: input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" max="4000" min="500" step="100" type="range" value="1000" :value="2400" → input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" max="4000" min="500" step="100" type="range" value="1000" :value="1700"
+ui ~ #ripple-max-scale-value: span :text="2400%" → span :text="1700%"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 71cbde18]
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #ripple-wait · click
+emit animation:durationChange 30779.455541
+emit waypoint:path-property-changed waypoint[0]
+model ~ waypoints[0].rippleWait: false → true
+model ~ waypoints[0].pauseMode: "none" → "timed"
+model ~ waypoints[0].pauseTime: 2750 → 9600
+app ~ focus: "body" → "#ripple-wait"
+storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
+ui ~ #waypoint-pause-time: input aria-describedby="waypoint-pause-time-tip" max="1000" min="0" step="1" type="range" value="500" :value="384" → input aria-describedby="waypoint-pause-time-tip" max="1000" min="0" step="1" type="range" value="500" :value="634"
+ui ~ #waypoint-pause-time-value: span :text="2.8s" → span :text="9.6s"
+ui ~ #ripple-wait: input aria-describedby="ripple-wait-tip" checked="" type="checkbox" :unchecked → input aria-describedby="ripple-wait-tip" checked="" type="checkbox" :checked
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 672313c1]
+  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+
+## #ripple-controls>label[4]>span[1] · click
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Sets Wait Time to how long the ripple lasts, so the path head waits until its last ring has finished"
+
+## #section-leg-content>div[2]>button[1] · disabled, not operated
+
+## #area-draw-btn · click
+emit area:draw-start {waypoint: waypoint[0]}
+app ~ focus: "body" → "#area-draw-btn"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
+ui + #area-draw-banner: div aria-live="polite" role="status" style="align-items: center; background: var(--cds-interactive-01, #0f62fe); box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: rgb(255, 255, 255); display: flex; font-fami…[387 chars, b001f0ea]
+ui + #area-draw-banner>span[0]: span class="banner-text" :text="— Click to place vertices. Click near the first point to close. to cancel."
+ui + #area-draw-banner>span[0]>strong[0]: strong :text="Drawing polygon area"
+ui + #area-draw-banner>span[0]>kbd[1]: kbd :text="Esc"
+ui + #area-draw-banner>span[0]>span[2]: span class="banner-count" :text="0 vertices"
+ui + #area-draw-banner>button[1]: button aria-label="Cancel drawing" class="banner-cancel" style="background-attachment: scroll; background-clip: border-box; background-color: transparent; background-image: none; background-origin: padding-box; background-p…[1119 chars, fa48a91a] :text="Cancel"
