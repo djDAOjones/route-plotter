@@ -19,6 +19,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
+import { ANNOUNCEMENTS } from '../src/config/constants.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 
 const GONE = 'Area drawing cancelled: its waypoint was removed.';
@@ -350,6 +351,11 @@ const REMOVALS = [
 test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told once, in a toast shown for a toast’s five seconds, checked as the page’s changes are delivered and every 250 ms', async (_, { target, remove }) => {
   const app = await openDay();
   const waypoint = await target(app);
+  // The announcer writes its messages in turn (DEF-45), and what opening the
+  // project and readying its target said is on the real clock: it plays out
+  // first, so the action's own announcements meet an idle region.
+  await vi.waitFor(() => expect(document.getElementById('announcer').textContent).toBe(''),
+    { timeout: 8 * ANNOUNCEMENTS.HOLD_MS, interval: 50 });
   drawFor(app, waypoint);
   placeTriangle(app);
   // The clock has been the test's since Draw Area: what the draw and the
@@ -360,8 +366,8 @@ test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told on
     expect(app.getWaypointById(waypoint.id)).toBeUndefined();
     expect(drawing(app)).toEqual(ENDED);
     // Told from the next frame to the last moment of its five seconds, past
-    // the action's own announcement (cleared at two seconds): as the page's
-    // changes are delivered, and every 250 ms.
+    // the action's own announcements (each in turn, the last cleared by four
+    // seconds): as the page's changes are delivered, and every 250 ms.
     await vi.advanceTimersByTimeAsync(16);
     const watched = watchTold();
     for (let at = 16; at < 4999; at += 250) {
@@ -379,7 +385,7 @@ test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told on
   } finally {
     vi.useRealTimers();
   }
-});
+}, 30000); // what opening and readying said first plays out on the real clock, 2 s a message
 
 test.each(REMOVALS.flatMap(([name, how]) => [0, 1, 2].map(count => [name, count, how])))('a draw whose waypoint is %s with %i of its vertices placed, too few to close, ends too, and the author is told once', async (_, count, { target, remove }) => {
   // The draw follows its target from Draw Area on, not from when it can

@@ -28,6 +28,26 @@
 
 **Deferred:** none
 
+## 2026-10-05 — DEF-45 — Announcements are read in turn, and the queue is bounded
+
+**Decision:** DEF-45 lands (PR #70): the live region reads announcements in turn, each for 2 s, so a recovery warning is never replaced or pushed out; a must-hear message already waiting merges into the waiting copy, so at most three routine messages and one of each must-hear text wait.
+
+**Rationale:** Codex review r2 found the queue unbounded (twelve Examples loads left six warnings and 20 s of stale feedback) and two protection mutants surviving; coalescing now leaves one warning and clears the region within 10 s of the last load, and Y1, Y3 and advisories Y2, Y5 are killed. A polite message can still wait while assertive ones keep arriving (stated in the code). keyTable and areaDrawTarget read the region straight after an action; their setups now let the queue play out first, their expected text unchanged; elementIds drops main.js's second announcer lookup. No real screen reader was tried. Digest rule applied: Nielsen → 1, visibility of system status; UI-STANDARDS gains one short announce rule (within its budget). DEF-50 and DEF-67 now wait only on DEF-28.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — TST-08 — The mixin composition is guarded from main.js itself
+
+**Decision:** TST-08 lands (PR #73): `tests/mixins.test.js` parses `src/` and holds the composition to one `Object.assign` of the listed mixins, no change to a mixin, no name hidden, and every call on the app by name resolving; a shape it cannot follow is refused with its line.
+
+**Rationale:** Codex review r2 found 13 probes passing all 30 guards and r3 three more and a false positive; every evasion is refused now and pinned as an in-memory fixture, a stored callback's bound copy is accepted (42 tests), and real `src/` passes. The text prefilter is gone; a mixin exported under another name, `arguments`, a reassigned helper, `.bind` on anything but a function, reflective members (`valueOf`, `__defineGetter__`, `constructor`) writes to `Object`, and any write to a `bind`, `call` or `apply` property are refused; a helper takes the app only through a chain of handoffs that starts from `this`, and `window.window`, `window.self` and `.defaultView` read as the global itself. `window.app` is refused inside `main.js` and `src/app/` bar the one line that publishes it; outside them it stays unchecked, pinned as an exclusion (the run's call). The guards catch accidental breaks and the evasions tried; a function changed in a way the reader cannot follow, such as `Object.assign(f, src)` with a non-literal source on an alias, is not caught, and the test's header says so. Digest rule applied: house conventions → Testing and persistence.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — TST-05 — Every wired event and its listener order are pinned
 
 **Decision:** TST-05 lands (PR #72): golden transcripts pin every event the wiring subscribes to, the order its listeners run and what each changes; a payload the transcript abridges carries a digest of its plain fields (numbers to four decimals, class instances by name), and the app's waypoint lookup is checked at each step and after Undo and Redo.
