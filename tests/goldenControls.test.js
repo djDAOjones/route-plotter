@@ -91,24 +91,30 @@
  * gesture, on an element and in its phase, was never run by a row and no
  * stated reason excuses it. A control is noted with its listeners whenever it
  * stands on the page: as a listener is added to it there, as soon as the page
- * is idle after it was put there, right after each row's gesture, and after
- * the row's history is undone and redone. So a control a row creates is
- * noted, and so is one its history replay then replaces, its role read while
- * it stood; one put up and taken down again within one run of the harness's
- * timers, with no idle moment between, is not. Each such listener is wrapped
- * as it is added, so a row is credited with the listeners its gesture ran,
- * not with where its events went (an event stopped on the way, or one that
- * does not bubble, reaches no listener past that point); and every event type
- * the app listens for on a control is either a gesture or says what it is
- * instead. A handler set through an element's `on…` property is a listener
+ * is idle after it was put there (once the app's own observers have answered
+ * too), right after each row's gesture (once the microtasks it queued have
+ * run), and after the row's history is undone and redone. So a control a
+ * row creates is noted, and so is one its history replay then replaces, its
+ * role read while it stood; one put up and taken down again within one run
+ * of the harness's timers, with no idle moment between, is not. Each such
+ * listener is wrapped as it is added, so a row is credited with the
+ * listeners its gesture ran, not with where its events went (an event
+ * stopped on the way, or one that does not bubble, reaches no listener past
+ * that point); and every event type the app listens for on a control is
+ * either a gesture or says what it is instead. A handler set through an element's `on…` property is a listener
  * too, recorded, noted and credited as one; a handler set on the document or
  * the window, or written as a content attribute, fails the inventory, as
- * nothing here can account for it (`recordHandlers`). The inventory is of
- * controls: the app's own `addEventListener` listeners on the document and
- * the window are not in it. A waypoint row is a major's, a minor's or the
- * add row, and a layer row the route's or a crowd's: each is its own
- * control, whatever its position. Keyboard gestures belong to the key table
- * (TST-13), and are excused by gesture, not by a click row.
+ * nothing here can account for it (`recordHandlers`). Both are recorded
+ * however the app reaches them: the harness replaces `addEventListener` and
+ * the `on…` properties before any module of the application is evaluated
+ * (this file imports none statically), so one that keeps either as it is
+ * evaluated, and wires a control through it later, is recorded too
+ * (`applicationModulesEvaluated`). The inventory is of controls: the app's
+ * own `addEventListener` listeners on the document and the window are not in
+ * it. A waypoint row is a major's, a minor's or the add row, and a layer row
+ * the route's or a crowd's: each is its own control, whatever its position.
+ * Keyboard gestures belong to the key table (TST-13), and are excused by
+ * gesture, not by a click row.
  *
  * Regenerate deliberately: `UPDATE_CONTROL_GOLDENS=1 npx vitest run
  * tests/goldenControls.test.js`, read the diff, then run it once more with
@@ -127,12 +133,10 @@ import {
   applyMapPalette, appState, changedLines, keyFor, modelChanges, modelState, quote, recordEmits,
   uiChanges, uiState, watchUi,
 } from './helpers/controlState.js';
-import { authoredExtrasProject, PIXEL_DATA_URL } from './fixtures/authoredExtras.js';
 import { contextFor } from './setup.js';
-import { VideoExporter } from '../src/services/VideoExporter.js';
-import { getGraphDepartureShares } from '../src/utils/graphRouting.js';
 
-const goldenDir = join(dirname(fileURLToPath(import.meta.url)), 'goldens');
+const testsDir = dirname(fileURLToPath(import.meta.url));
+const goldenDir = join(testsDir, 'goldens');
 const UPDATING = process.env.UPDATE_CONTROL_GOLDENS === '1';
 const ISOLATED = process.env.CONTROL_GOLDENS_ISOLATED === '1';
 
@@ -152,7 +156,17 @@ const FAKE_TIMERS = {
 /** Taken before any timer is faked: one real turn of the event loop. */
 const realSetImmediate = globalThis.setImmediate;
 
-const project = authoredExtrasProject();
+/**
+ * What the application provides, imported in `beforeAll` once the harness is
+ * in place (`applicationModulesEvaluated`): the project every context
+ * opens, a picked image's bytes, and the two parts of the app a context reads.
+ */
+let project = null;
+let PNG_BYTES = null;
+let VideoExporter = null;
+let getGraphDepartureShares = null;
+/** The stand-in for an application module that keeps the browser's wiring functions (`fixtures/earlyBoundWiring.js`). */
+let earlyBound = null;
 
 /** The semantic outline has its own suites; here it is one line (sceneOutline*.test.js). */
 const OUTLINE = '#scene-outline';
@@ -401,7 +415,39 @@ function wrapperFor(listener, capture) {
   return wrapper;
 }
 
+/**
+ * A module can keep `addEventListener`, or the setter of an `on…` property, as
+ * it is evaluated (`const add = Function.call.bind(EventTarget.prototype
+ * .addEventListener)`) and wire a control through it long after: replacing
+ * them later does not reach what it kept, and its listeners would escape the
+ * inventory (the review's EARLY-ADD). So the harness replaces them, and all it
+ * replaces, before any module of the application is evaluated: this file
+ * imports none statically, and `beforeAll` imports them once the harness is
+ * in place, with `fixtures/earlyBoundWiring.js`, which keeps both as such a
+ * module would. Vitest's record of the modules it has evaluated shows which
+ * of them, and of that fixture, had been evaluated when the harness went in
+ * (none may) and once the application was imported.
+ */
+const EARLY_BOUND = 'tests/fixtures/earlyBoundWiring.js';
+/** What had been evaluated as each part of the harness went in (`recordWiring`, `recordHandlers`). */
+const applicationBeforeHarness = new Set();
+let applicationWithHarness = null;
+
+function applicationModulesEvaluated() {
+  const modules = globalThis.__vitest_worker__?.evaluatedModules?.idToModuleMap;
+  if (!(modules instanceof Map)) {
+    throw new Error('Vitest no longer says which modules it has evaluated, which shows the harness was in place before the application');
+  }
+  const root = join(testsDir, '..');
+  return [...modules.values()]
+    .filter(node => node.evaluated || node.promise)
+    .map(node => relative(root, node.file ?? ''))
+    .filter(path => path.startsWith('src/') || path === EARLY_BOUND)
+    .sort();
+}
+
 function recordWiring() {
+  for (const path of applicationModulesEvaluated()) applicationBeforeHarness.add(path);
   EventTarget.prototype.addEventListener = function addEventListener(type, listener, options) {
     // A listener with an aborted signal is not added at all
     if (this instanceof Element && listener && !options?.signal?.aborted) {
@@ -534,6 +580,7 @@ function elementPrototypes() {
 }
 
 function recordHandlers() {
+  for (const path of applicationModulesEvaluated()) applicationBeforeHarness.add(path);
   const view = document.defaultView;
   const owners = [
     ...elementPrototypes().map(prototype => [prototype, prototype === HTMLBodyElement.prototype || prototype === HTMLFrameSetElement.prototype ? 'body' : 'element']),
@@ -1008,8 +1055,6 @@ function rangeTarget(element) {
   const third = snap(min + (max - min) / 3);
   return String(third) === element.value ? snap(min + (2 * (max - min)) / 3) : third;
 }
-
-const PNG_BYTES = Uint8Array.from(atob(PIXEL_DATA_URL.split(',')[1]), char => char.charCodeAt(0));
 
 /** The file a user picks: an image for image inputs, and a project that is not one for Open. */
 function pickedFile(element) {
@@ -1902,7 +1947,7 @@ function openCards(context) {
   }
 }
 
-async function establish(app, context, selections = null) {
+async function establish(app, context, selections = null, lastFrame = undefined) {
   vi.setSystemTime(FIXED_NOW);
   expect(await drive(loadSnapshot(app, project))).toBe(true);
   const splash = document.getElementById('splash');
@@ -1957,6 +2002,12 @@ async function establish(app, context, selections = null) {
     if (field && JSON.stringify(selectionOf(field)) !== range) field.setSelectionRange(start, end, direction);
   }
   await settle(50);
+  // Nor the time of the frame the engine last drew, from which it measures the
+  // next one, and draws it only once a frame's interval has passed (no
+  // `animation:update` before then). Every row runs from one fixed time, so a
+  // frame a row drew lies in the next row's future, which no browser's clock
+  // allows: it goes back to the baseline's.
+  if (lastFrame !== undefined) app.animationEngine.lastFrameTime = lastFrame;
   app.markClean();
   forgetDrawing(app);
   // A baseline is at rest: anything still pending would run inside the next row.
@@ -2003,6 +2054,7 @@ async function startSession(context) {
   session.baseComplete = capture(session, { complete: true });
   session.baseStored = new Map(stored);
   session.baseSelections = selectionState();
+  session.baseLastFrame = session.app.animationEngine.lastFrameTime;
   return session;
 }
 
@@ -2056,6 +2108,13 @@ function capture(session, { complete = false } = {}) {
     const ui = session.app.uiController;
     const waypoint = ui._renameLastClickWaypoint;
     app.set('renameClick', JSON.stringify([waypoint ? session.app.waypoints.indexOf(waypoint) : null, ui._renameLastClickTime]));
+    // The engine's frame bookkeeping: the time of the frame it last drew
+    // (`establish`), and whether it holds a frame booked. The harness drops a
+    // frame still booked when a row's timers are cleared, which no browser
+    // does; an engine left holding one never books another, so draws nothing
+    // more, and only a fresh app can stand in for it.
+    const engine = session.app.animationEngine;
+    app.set('frames', JSON.stringify({ last: engine.lastFrameTime, booked: engine.animationFrameId !== null }));
     selection = selectionState();
   }
   return { model: modelState(session.app), app, storage: storageState(), ui: session.ui.capture({ complete }), selection };
@@ -2119,9 +2178,11 @@ async function runRow(session, key, operation, name) {
     invoked = null;
   }
   // What the gesture wired, before anything (its history replayed below)
-  // can take it off the page.
-  noteWiring();
+  // can take it off the page, once the microtasks it queued have run: a
+  // browser runs them after each listener, and the hints' observer among them
+  // puts the descriptions in the rows it built, which moves controls (UI-03).
   await flush();
+  noteWiring();
   const asked = await takeBrowserRequests();
   const after = capture(session);
   const lines = [...session.emits.take(), ...seen, ...asked, ...changes(base, after)];
@@ -2299,7 +2360,7 @@ async function restore(session, element, operation, settled) {
     forgetDrawing(session.app);
     stored.clear();
     for (const [key, value] of session.baseStored) stored.set(key, value);
-    const atRest = await establish(session.app, session.context, session.baseSelections);
+    const atRest = await establish(session.app, session.context, session.baseSelections, session.baseLastFrame);
     session.emits.take();
     if (atRest && changes(session.baseComplete, capture(session, complete)).length === 0) return session;
   }
@@ -2310,6 +2371,7 @@ async function restore(session, element, operation, settled) {
   fresh.baseComplete = session.baseComplete;
   fresh.baseStored = session.baseStored;
   fresh.baseSelections = session.baseSelections;
+  fresh.baseLastFrame = session.baseLastFrame;
   const drift = changes(fresh.baseComplete, capture(fresh, complete));
   expect(drift, `a fresh app in ${session.context.name} does not match the baseline`).toEqual([]);
   return fresh;
@@ -2360,18 +2422,26 @@ function noteWiring() {
  * shown and later replaced is noted while it stood, even when no row's scan
  * finds it: a history replay can rebuild the controls a row's gesture wired
  * before the row ends.
+ *
+ * The page is idle only once the app's own observers have answered the same
+ * records, and this one, made first, is told first: the hints put a control's
+ * description after its label as its row arrives (UI-03), which moves the
+ * controls after it. So the records are read as this observer is told, and the
+ * elements noted in a microtask queued then, which runs once every observer
+ * has been told (in one microtask, in the order they were made).
  */
 let wiringObserver = null;
 
 function watchWiring() {
   wiringObserver = new MutationObserver((records) => {
-    for (const record of records) {
-      for (const node of record.addedNodes) {
-        if (!(node instanceof Element) || !node.isConnected) continue;
+    const added = records.flatMap(record => [...record.addedNodes]).filter(node => node instanceof Element);
+    queueMicrotask(() => {
+      for (const node of added) {
+        if (!node.isConnected) continue;
         noteElementWiring(node);
         for (const element of node.querySelectorAll('*')) noteElementWiring(element);
       }
-    }
+    });
   });
   wiringObserver.observe(document, { childList: true, subtree: true });
 }
@@ -2425,11 +2495,9 @@ describe('control → bus goldens (TST-04)', () => {
   let narration = [];
 
   beforeAll(async () => {
-    // The entry module is imported before the timers are faked: loading it
-    // waits on real ones. `bootApp` defines APP_VERSION too, but only once it
-    // is already importing.
-    globalThis.APP_VERSION = '0.0.0-test';
-    await import('../src/main.js');
+    // The harness is in place before any module of the application is
+    // evaluated (`applicationModulesEvaluated`), so none can keep the
+    // browser's own way to add a listener or set a handler.
     recordWiring();
     recordHandlers();
     watchInlineHandlers();
@@ -2447,6 +2515,18 @@ describe('control → bus goldens (TST-04)', () => {
     // guard, and each context declares those it provokes.
     narration = ['log', 'info', 'debug'].map(level => vi.spyOn(console, level).mockImplementation(() => {}));
     growingMocks.push(...narration, ...downloads, digests);
+    // The entry module is imported before the timers are faked: loading it
+    // waits on real ones. `bootApp` defines APP_VERSION too, but only once it
+    // is already importing.
+    globalThis.APP_VERSION = '0.0.0-test';
+    earlyBound = await import('./fixtures/earlyBoundWiring.js');
+    const extras = await import('./fixtures/authoredExtras.js');
+    project = extras.authoredExtrasProject();
+    PNG_BYTES = Uint8Array.from(atob(extras.PIXEL_DATA_URL.split(',')[1]), char => char.charCodeAt(0));
+    ({ VideoExporter } = await import('../src/services/VideoExporter.js'));
+    ({ getGraphDepartureShares } = await import('../src/utils/graphRouting.js'));
+    await import('../src/main.js');
+    applicationWithHarness = applicationModulesEvaluated();
   });
 
   // Only a context's own test notes wiring into the inventory.
@@ -3061,6 +3141,54 @@ describe('control → bus goldens (TST-04)', () => {
     }
   });
 
+  test('the harness is in place before any module of the application is evaluated, so none can keep the browser\'s own way to add a listener or set a handler', () => {
+    expect([...applicationBeforeHarness], 'evaluated before the harness was in place').toEqual([]);
+    // Not an empty record: the application, and the module that stands for
+    // one of its own, were evaluated once it was.
+    expect(applicationWithHarness).toEqual(expect.arrayContaining(['src/main.js', 'src/app/crowds.js', EARLY_BOUND]));
+  });
+
+  test('a listener added, or a handler set, through what a module kept of the browser\'s wiring functions as it was evaluated is a registration, missing until a row\'s gesture runs it, then credited', () => {
+    const kept = inventory;
+    inventory = newInventory();
+    inventoryContext = 'a fixture';
+    const field = document.createElement('input');
+    const other = document.createElement('input');
+    document.body.append(field, other);
+    const fieldControl = controlOf(field);
+    const otherControl = controlOf(other);
+    const ran = [];
+    const here = /^(.+) at tests\/goldenControls\.test\.js:\d+:\d+ \(seen in a fixture\)$/;
+    const missing = () => inventoryGaps().missing.map(line => line.match(here)?.[1] ?? line);
+    const doubleClickBoth = () => {
+      for (const target of [field, other]) target.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+    };
+    try {
+      earlyBound.addListener(field, 'dblclick', () => ran.push('listener'));
+      earlyBound.setDoubleClickHandler(other, () => ran.push('handler'));
+      const both = [`${fieldControl} dblclick`, `${otherControl} dblclick (handler)`];
+      expect(missing(), 'neither has run').toEqual(both);
+      doubleClickBoth();
+      expect(ran, 'each is live').toEqual(['listener', 'handler']);
+      expect(missing(), 'run outside a row, neither is credited').toEqual(both);
+      invoked = [];
+      dispatchKeys = new WeakMap();
+      try {
+        doubleClickBoth();
+      } finally {
+        noteCoverage(invoked);
+        invoked = null;
+      }
+      expect(ran).toEqual(['listener', 'handler', 'listener', 'handler']);
+      expect(missing(), 'each ran in a row').toEqual([]);
+    } finally {
+      field.remove();
+      other.remove();
+      inventory = kept;
+      inventoryContext = null;
+    }
+  });
+
   test('a click on the selected waypoint\'s row leaves no double-click for the next row to finish', async () => {
     // A second click on the same row within 400 ms renames it (UIController
     // times it), so a row that clicked it must not hand that on.
@@ -3160,6 +3288,52 @@ describe('control → bus goldens (TST-04)', () => {
         .rejects.toThrow('a redo that does nothing: undone and redone, the project is not what the row made it');
     } finally {
       for (const spy of spies) spy.mockRestore();
+      session.ui.disconnect();
+      retire(session);
+    }
+  }, 60_000);
+
+  test('a row whose undo gives back the history and the selection but keeps a waypoint\'s new value fails', async () => {
+    // The undone project is compared whole, each waypoint's fields included
+    // (all but its `modified` stamp), not only the stacks and the selection:
+    // an undo that carries the waypoints' pauses through, as they stand, is
+    // caught on the field alone (the review's UNDO-PAUSE).
+    vi.useFakeTimers(FAKE_TIMERS);
+    installClipboard(copying);
+    const session = await startSession(CONTEXTS.find(each => each.name === 'major'));
+    const { app } = session;
+    const restoreState = app._restoreState;
+    const spy = vi.spyOn(app, '_restoreState').mockImplementation(function keepingPauses(...args) {
+      const pauses = new Map(this.waypoints.map(waypoint => [waypoint.id, waypoint.pauseTime]));
+      const result = restoreState.apply(this, args);
+      for (const waypoint of this.waypoints) if (pauses.has(waypoint.id)) waypoint.pauseTime = pauses.get(waypoint.id);
+      return result;
+    });
+    try {
+      const history = app.undoService.createSnapshot();
+      const before = app.waypoints[MAJOR].pauseTime;
+      // The row's own gesture
+      const field = document.getElementById('waypoint-pause-time');
+      operationsFor(field).find(operation => operation.label.startsWith('set ')).run(field);
+      await settle();
+      const made = app.waypoints[MAJOR].pauseTime;
+      expect(made, 'the row changed the pause').not.toBe(before);
+      expect(app.undoService.createSnapshot().undoStack.length).toBe(history.undoStack.length + 1);
+      await expect(expectHistoryRestores(session, 'an undo that keeps a pause', history))
+        .rejects.toThrow('an undo that keeps a pause: undone, the project is not as it was before the row');
+      // All else was given back: the row's entry is undone, the waypoints
+      // selected are those the entry it went back to was kept with, and the
+      // rest of what history holds is as before; only the pause is the row's.
+      expect(app.undoService.createSnapshot().undoStack.length).toBe(history.undoStack.length);
+      expect(app.undoService.canRedo()).toBe(true);
+      expect(waypointSelection(app)).toEqual(selectionHeld(history.lastState));
+      const held = undoable(app._getUndoableState());
+      const wanted = undoable(history.lastState);
+      expect(held.waypoints[MAJOR].pauseTime, 'the undo kept the row\'s pause').toBe(made);
+      held.waypoints[MAJOR].pauseTime = before;
+      expect(held, 'and nothing else').toEqual(wanted);
+    } finally {
+      spy.mockRestore();
       session.ui.disconnect();
       retire(session);
     }

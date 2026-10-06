@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — TST-04 — Every sidebar control's effect is pinned, credited by the listeners it runs
+
+**Decision:** TST-04 lands (PR #57): golden transcripts pin what each sidebar control does (control → bus and model), credited by the listeners its gestures actually run, and the suite installs its replacements of `addEventListener`, the `on…` handler properties and its other patches before any application module is evaluated.
+
+**Rationale:** Codex review r8 found a module that binds a listener while it loads escaping the inventory (EARLY-ADD), and a history comparison that ignored waypoints (A1); both mutants pass before and fail now, normal and isolated. The suite has no static application import, and Vitest's record of evaluated modules enforces the order; listeners on the document and window stay outside the inventory. After the main merge the goldens moved, every line traced by bisecting main's nine commits (UI-03, CROWD-05, DEF-06, DEF-42, DEF-77, DEF-44); UI-03's numbered hint ids are keyed by position. Digest rule applied: house conventions → Testing and persistence. UI-04, CROWD-06, DEF-14, DEF-19, DEF-20, DEF-54, DEF-55 and W4's DEL items no longer wait on it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — TST-05 — Every wired event and its listener order are pinned
 
 **Decision:** TST-05 lands (PR #72): golden transcripts pin every event the wiring subscribes to, the order its listeners run and what each changes; a payload the transcript abridges carries a digest of its plain fields (numbers to four decimals, class instances by name), and the app's waypoint lookup is checked at each step and after Undo and Redo.

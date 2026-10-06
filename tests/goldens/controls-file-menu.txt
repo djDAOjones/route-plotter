@@ -76,10 +76,15 @@ ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" a
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 settled:
   emit video:resolution-native
+  emit animation:durationChange 30973.788202
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
+  ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 31.0 s — route 21.9 s, crowds finish +9.0 s, beacon ends +6.5 s"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
 
@@ -89,10 +94,15 @@ ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" a
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 settled:
   emit video:resolution-native
+  emit animation:durationChange 30973.788202
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
+  ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 31.0 s — route 21.9 s, crowds finish +9.0 s, beacon ends +6.5 s"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
 
@@ -102,10 +112,15 @@ ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" a
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 settled:
   emit video:resolution-native
+  emit animation:durationChange 30973.788202
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
+  ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 31.0 s — route 21.9 s, crowds finish +9.0 s, beacon ends +6.5 s"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
 
@@ -115,10 +130,15 @@ ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" a
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 settled:
   emit video:resolution-native
+  emit animation:durationChange 30973.788202
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
+  ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 31.0 s — route 21.9 s, crowds finish +9.0 s, beacon ends +6.5 s"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
 
@@ -128,10 +148,15 @@ ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" a
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 settled:
   emit video:resolution-native
+  emit animation:durationChange 30973.788202
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
+  ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 31.0 s — route 21.9 s, crowds finish +9.0 s, beacon ends +6.5 s"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
 
@@ -141,10 +166,15 @@ ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" a
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 settled:
   emit video:resolution-native
+  emit animation:durationChange 30973.788202
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9683 chars, 803edc70]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
+  ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 31.0 s — route 21.9 s, crowds finish +9.0 s, beacon ends +6.5 s"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
 

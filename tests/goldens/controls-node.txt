@@ -8,7 +8,7 @@ ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="nod
 ui ~ #node-scope>div[0]>div[0]: div aria-controls="section-node-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-node-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
 ## #section-node-content>label[0]>span[0] · click
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Entry nodes release dots into the network; exit nodes end their walk; pass-through nodes just route them onward"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or end them where no path leads out. With no exit, journeys end at…[243 chars, 0e3dfee1]
 
 ## #network-node-type · choose "normal"
 emit network:changed {commit: true}
@@ -101,12 +101,15 @@ ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 16 inside, 6848a81c)
-ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 62 inside, eba53f30)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 77 inside, cb2b8637)
-ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 24 inside, 555e9c87)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 64 inside, 165854e8)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 87 inside, 6117dbf1)
+ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 25 inside, 178f4deb)
 ui ~ #node-scope: div class="scope-group" → div (not shown)
-ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 16 inside, c25049b1)
+ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 16 inside, c7618301)
 settled:
+  emit animation:durationChange 27929.352554
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9419 chars, 71b9fc32]
+  ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
   ui - #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

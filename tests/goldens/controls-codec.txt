@@ -63,7 +63,8 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert
 ui ~ #app: div inert="" → div
 ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
-ui ~ #animation-speed-value-right: span class="slider-value" :text="21.4s" → span class="slider-value" :text="21.8s"
+ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.9s"
+ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.9 s — route 21.8 s, crowds finish +9.1 s, beacon ends +6.5 s"
 ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 1173.3333333333333px;"
 ui ~ #codec-unsupported-modal: div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui - #codec-unsupported-modal>div[0]: div class="modal-content"
@@ -75,7 +76,7 @@ ui - #codec-cancel: button class="btn btn-secondary" :text="Cancel"
 ui - #codec-mp4-reduced: button (not shown)
 ui - #codec-webm: button class="btn btn-primary" :text="Export as WebM"
 settled:
-  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Video export failed" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

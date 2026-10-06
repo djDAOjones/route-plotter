@@ -138,7 +138,7 @@ export function uiState(root = document.body, { opaque = null, cached = null, co
       const element = children[index];
       const tag = element.localName;
       if (NOT_DESCRIBED.has(tag)) continue;
-      const key = element.id ? `#${element.id}` : `${parentKey}>${tag}[${index}]`;
+      const key = ownId(element) ? `#${element.id}` : `${parentKey}>${tag}[${index}]`;
       const unshown = !complete && isUnshown(element);
       state.set(key, unshown ? `${tag} (not shown)` : cached ? cached(element, tag) : describe(element, tag));
       state.parents.set(key, parentKey);
@@ -148,6 +148,32 @@ export function uiState(root = document.body, { opaque = null, cached = null, co
     }
   };
   walk(root, root === document.body ? 'body' : `#${root.id}`);
+  return placeCountedReferences(state, root.ownerDocument);
+}
+
+/**
+ * The hints give a control with no id of its own a description whose id is a
+ * count the hint module keeps (`param-hint-7`, `ParamTooltip.js`, UI-03). A
+ * page starts that count afresh; here one module serves every app the file
+ * boots, so the number says how many descriptions came before, in this app
+ * and every earlier one, not what the page holds. Such an element is keyed by
+ * its place, as an element without an id is, and a reference to it
+ * (`aria-describedby`, `data-tip-desc`) names that place in braces, or says
+ * that nothing on the page has that id. Which control a description is for,
+ * and what it says, still show.
+ */
+const COUNTED_ID = /^param-hint-\d+$/;
+const COUNTED_REFERENCE = /\bparam-hint-\d+\b/g;
+const ownId = element => (element.id && !COUNTED_ID.test(element.id) ? element.id : '');
+
+function placeCountedReferences(state, document) {
+  for (const [key, line] of state) {
+    if (!line.includes('param-hint-')) continue;
+    state.set(key, line.replace(COUNTED_REFERENCE, (id) => {
+      const target = document.getElementById(id);
+      return target ? `{${keyFor(target)}}` : '{nothing on the page}';
+    }));
+  }
   return state;
 }
 
@@ -241,7 +267,7 @@ export function watchUi(root = document.body, { opaque = null } = {}) {
 
 /** A key for one element, as `uiState` would key it. */
 export function keyFor(element) {
-  if (element.id) return `#${element.id}`;
+  if (ownId(element)) return `#${element.id}`;
   const parent = element.parentElement;
   if (!parent || element === document.body) return 'body';
   const index = Array.prototype.indexOf.call(parent.children, element);
