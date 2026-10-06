@@ -3,14 +3,22 @@
  *
  * The engine's clock runs through more than the route: a reveal mode's 1 s
  * intro before the head moves, in Preview a comet trail's tail after it
- * arrives, and since CROWD-05 the wait for crowds that finish after the base
- * timeline B, up to the playback duration F. This pins what the scene
- * evaluates to at the edges of those domains, on the branched Open day route
- * (a branch from 2 that rejoins at 3), with its traced network crowd and a
- * route crowd bound to waypoint 2's departure:
+ * arrives, since CROWD-05 the wait for crowds that finish after the base
+ * timeline B, and since CROWD-06 a Hold at end after the last of those,
+ * which ends the playback duration F. This pins what the scene evaluates to
+ * at the edges of those domains, on the branched Open day route (a branch
+ * from 2 that rejoins at 3), with its traced network crowd and a route crowd
+ * bound to waypoint 2's departure:
  *
  *   t < 0 · t = 0 · the intro's end · the head reaching the fork · the
- *   tail's start · B · between B and F · F · t > F
+ *   tail's start · B · between B and F · the last conclusion · inside the
+ *   hold · F · t > F
+ *
+ * The hold: the fixtures are projects opened through recovery, saved without
+ * a Hold at end, so they open with none (CROWD-06's rule) and their F is the
+ * last conclusion; the `hold` variant sets the 2 s a fresh app starts with,
+ * and adds a looping crowd, which goes on moving inside the hold while what
+ * finished stays finished. B is the same with or without it.
  *
  * Each instant reads, from one render: the transport (time, progress, the
  * head, its wait, intro and tail flags, completion), each branch's progress,
@@ -39,6 +47,7 @@ import { PlayerCore } from '../src/core/PlayerCore.js';
 import { Scene } from '../src/models/Scene.js';
 import { branchPathProgressAt } from '../src/utils/branchTiming.js';
 import { VideoExporter, createVideoFramePlan } from '../src/services/VideoExporter.js';
+import { ANIMATION } from '../src/config/constants.js';
 import { domainGolden, durationsOf, exampleProject, openProject, rounded } from './helpers/domainGoldens.js';
 
 const pin = domainGolden('time');
@@ -50,22 +59,36 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+/** Motion settings per variant; `hold` adds the Hold at end a fresh app starts with. */
 const VARIANTS = {
   plain: {},
   intro: { backgroundVisibility: 'spotlight-reveal' },
   tail: { pathVisibility: 'instantaneous', pathTrail: 0.2 },
   introAndTail: { backgroundVisibility: 'spotlight-reveal', pathVisibility: 'instantaneous', pathTrail: 0.2 },
+  hold: {},
 };
 
-/** The Open day example in one motion variant, with a route crowd released as the head leaves 2. */
+/**
+ * The Open day example in one motion variant, with a route crowd released as
+ * the head leaves 2. The `hold` variant also holds 2 s at the end and has a
+ * looping crowd on the route, which never concludes, so it sets no end.
+ */
 function fixture(variant) {
   const project = exampleProject('uon-open-day');
   project.motionSettings = { ...project.motionSettings, ...VARIANTS[variant] };
   const scene = new Scene();
-  scene.addFlowLayer({ id: 'walkers', name: 'Walkers', guideType: 'route' }).addEmitter({
+  const walkers = scene.addFlowLayer({ id: 'walkers', name: 'Walkers', guideType: 'route' });
+  walkers.addEmitter({
     id: 'walk-anchored', seed: 12, dotCount: 6, speed: 0.1, speedVariance: 0.2, lifecycleMode: 'collect',
     releaseAnchor: { waypointId: 'ex-uon-2', at: 'pause-end' }, releaseDuration: 0.2, onsetVariance: 0.3,
   });
+  if (variant === 'hold') {
+    project.styles = { ...project.styles, holdAtEndMs: ANIMATION.HOLD_AT_END_DEFAULT_MS };
+    walkers.addEmitter({
+      id: 'walk-loop', seed: 13, dotCount: 4, speed: 0.12, speedVariance: 0.2, lifecycleMode: 'loop',
+      releaseStart: 0, releaseDuration: 0.3, onsetVariance: 0.3,
+    });
+  }
   project.scene.flowLayers.push(scene.toJSON().flowLayers[0]);
   return project;
 }
@@ -84,6 +107,8 @@ function domainsOf(app) {
     tailStart: routeEnd,
     B,
     betweenBAndF: (B + F) / 2,
+    // With a Hold at end: the last conclusion, where the hold starts, and its middle.
+    ...(parts.holdMs > 0 ? { concludes: F - parts.holdMs, inHold: F - parts.holdMs / 2 } : {}),
     F,
   };
   return { B, F, parts, intro, tail, pathMs: engine.pathDuration, pausesMs: engine.totalPauseTime, instants };
@@ -240,8 +265,42 @@ for (const variant of Object.keys(VARIANTS)) {
         expect(instants.tailStart).toBe(B);
       }
 
+      const holdMs = domains.parts.holdMs;
+      let holdMotion;
+      if (variant === 'hold') {
+        // The hold follows the last conclusion: B is untouched, F is that conclusion plus 2 s.
+        expect(holdMs).toBe(ANIMATION.HOLD_AT_END_DEFAULT_MS);
+        const { routeMs, crowdsMs, beaconsMs } = domains.parts;
+        expect(routeMs).toBe(B);
+        expect(F).toBe(Math.max(routeMs, crowdsMs, beaconsMs) + holdMs);
+        const plain = durationsOf(await openProject(fixture('plain')));
+        expect(B).toBe(plain.B);
+        expect(F).toBe(plain.F + holdMs);
+        // Inside the hold the route and what finished stay finished, the timeline is not.
+        expect(states.inHold).toMatchObject({ head: 1, complete: false });
+        expect(states.inHold.dots['ex-uon-emitter']).toBeUndefined();
+        // The looping crowd still moves; the collected one stays parked.
+        const walkers = app.scene.getFlowLayers().find(layer => layer.id === 'walkers');
+        const at = ms => {
+          const byEmitter = {};
+          for (const dot of app.swarmEngine.evaluate(ms, walkers, {
+            durationMs: B, routePathPoints: app.pathPoints, routeAnchors: app.getRouteArrivalMap(),
+          })) (byEmitter[dot.emitterId] ??= []).push([dot.dotIndex, dot.x, dot.y]);
+          return byEmitter;
+        };
+        holdMotion = { concludes: at(instants.concludes), inHold: at(instants.inHold), F: at(F) };
+        expect(holdMotion.inHold['walk-loop']).toHaveLength(4);
+        expect(holdMotion.inHold['walk-loop']).not.toEqual(holdMotion.concludes['walk-loop']);
+        expect(holdMotion.F['walk-loop']).not.toEqual(holdMotion.inHold['walk-loop']);
+        expect(holdMotion.inHold['walk-anchored']).toEqual(holdMotion.concludes['walk-anchored']);
+        expect(holdMotion.F['walk-anchored']).toEqual(holdMotion.concludes['walk-anchored']);
+      } else {
+        // An opened project saved without a Hold at end has none: F is the last conclusion.
+        expect(holdMs).toBe(0);
+      }
+
       const { instants: named, ...parts } = domains;
-      pin(`${variant}.edges`, rounded({ ...parts, instants: named, states, before, between, after }));
+      pin(`${variant}.edges`, rounded({ ...parts, instants: named, states, before, between, after, ...(holdMotion ? { holdMotion } : {}) }));
     });
 
     test('play == seek: frame by frame, the domain edges draw what a seek draws, on the same host and a fresh one', async () => {

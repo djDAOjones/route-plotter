@@ -34,7 +34,8 @@
     "parts": {
       "routeMs": 12365.48081,
       "crowdsMs": 27322.426143,
-      "beaconsMs": 11865.48081
+      "beaconsMs": 11865.48081,
+      "holdMs": 0
     },
     "routeAnchors": {
       "totalDurationMs": 12365.48081,
@@ -514,7 +515,8 @@
     "parts": {
       "routeMs": 10044.681044,
       "crowdsMs": 15988.13731,
-      "beaconsMs": 6292.353289
+      "beaconsMs": 6292.353289,
+      "holdMs": 0
     },
     "routeAnchors": {
       "totalDurationMs": 10044.681044,
