@@ -9,6 +9,7 @@
 
 ## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
+- TST-03 — every path and waypoint visibility mode and both reveal masks are pinned as a golden table at each window edge, on bare inputs and a real engine timeline, and seek equals play forwards, backwards and scrambled for every mode (2026-10-06) — see decisions
 - UI-04 — each hint has a "?" of its own beside its label, opened by hover, focus or tap, so a label acts as a label again (2026-10-06) — see decisions
 - DEF-14 — a click on a label toggles or focuses its control, and every range names its readout to screen readers (2026-10-06) — see decisions
 - TST-09 — camera, dots, curvature cache, minor-end and time domains are pinned as they stand on a branched route, play, seek and export compared, so the camera, dot, curvature and minor-end fixes each move a baseline on purpose (2026-10-06) — see decisions
