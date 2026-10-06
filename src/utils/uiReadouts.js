@@ -43,3 +43,16 @@ export function setRangeReadout(input, output, text) {
   if (output) output.textContent = text;
   input?.setAttribute?.('aria-valuetext', text);
 }
+
+/**
+ * The transport's readout is two times, the playhead's and the whole length;
+ * its slider says both, "0:05 of 0:30", as the exported player's does
+ * (playerEntry.js), not the slider's per-mille position. Playback writes this
+ * every frame, so the attribute is set only when it changes.
+ */
+export function setTimelineReadout(input, currentOutput, totalOutput, current, total) {
+  if (currentOutput) currentOutput.textContent = current;
+  if (totalOutput) totalOutput.textContent = total;
+  const text = `${current} of ${total}`;
+  if (input && input.getAttribute('aria-valuetext') !== text) input.setAttribute('aria-valuetext', text);
+}

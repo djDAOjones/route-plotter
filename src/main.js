@@ -545,7 +545,7 @@ class RoutePlotter {
       this.elements.animationSpeedValue.textContent = defaultDuration + 's';
     }
     if (this.elements.animationSpeedValueRight) {
-      this.elements.animationSpeedValueRight.textContent = defaultDuration + 's';
+      setRangeReadout(this.elements.animationSpeedRight, this.elements.animationSpeedValueRight, defaultDuration + 's');
     }
     // Slider value will be set via event after UIController is initialized
 

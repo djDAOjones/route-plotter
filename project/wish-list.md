@@ -100,3 +100,4 @@
 - At the last instant every host (Edit, Preview, video export, player) draws the route head at path point n−2, while the camera and the reveal's head position use n−1 (TST-09's minor-end golden, `domains-minor-end.json`); a candidate defect, unverified in Chromium — (from: TST-09, 2026-10-06)
 - On Open day the comet trail has faded during the final 4.5 s wait, so the 1.17 s comet tail draws no trail (TST-09's time golden); whether that is meant is unverified — (from: TST-09, 2026-10-06)
 - On Open day the traced crowd walks during the reveal intro, before the head moves (TST-09's time golden); whether that is meant is unverified — (from: TST-09, 2026-10-06)
+- UI-STANDARDS § Help could name the "?" hint trigger (UI-04), but the file is at 1,848 of its 1,850-word budget; a trim or a budget raise first — (from: UI-04, 2026-10-06)

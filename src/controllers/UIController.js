@@ -18,6 +18,7 @@ import {
   formatHoldAtEnd,
   formatRendererPixels,
   setRangeReadout,
+  setTimelineReadout,
 } from '../utils/uiReadouts.js';
 
 /**
@@ -700,7 +701,8 @@ export class UIController {
    */
   _updateTrailDisplay() {
     if (this.elements.pathTrailValue) {
-      this.elements.pathTrailValue.textContent = this._formatTrailDisplay(this._currentTrailFraction);
+      setRangeReadout(this.elements.pathTrail, this.elements.pathTrailValue,
+        this._formatTrailDisplay(this._currentTrailFraction));
     }
   }
   
@@ -1086,7 +1088,7 @@ export class UIController {
     this.elements.backgroundZoom?.addEventListener('input', (e) => {
       const zoom = parseInt(e.target.value);
       if (this.elements.backgroundZoomValue) {
-        this.elements.backgroundZoomValue.textContent = `${zoom}%`;
+        setRangeReadout(this.elements.backgroundZoom, this.elements.backgroundZoomValue, `${zoom}%`);
       }
       this.eventBus.emit('background:zoom-change', zoom);
     });
@@ -1155,7 +1157,7 @@ export class UIController {
         MOTION.SPOTLIGHT_SIZE_MIN,
         MOTION.SPOTLIGHT_SIZE_MAX
       );
-      this.elements.revealSizeValue.textContent = formatUIValue(sizePercent, '%');
+      setRangeReadout(this.elements.revealSize, this.elements.revealSizeValue, formatUIValue(sizePercent, '%'));
       this.eventBus.emit('motion:reveal-size-change', sizePercent);
     });
     
@@ -1167,7 +1169,8 @@ export class UIController {
         MOTION.SPOTLIGHT_FEATHER_MIN,
         MOTION.SPOTLIGHT_FEATHER_MAX
       );
-      this.elements.revealFeatherValue.textContent = formatUIValue(featherPercent, '%');
+      setRangeReadout(this.elements.revealFeather, this.elements.revealFeatherValue,
+        formatUIValue(featherPercent, '%'));
       this.eventBus.emit('motion:reveal-feather-change', featherPercent);
     });
 
@@ -1192,7 +1195,7 @@ export class UIController {
         MOTION.AOV_ANGLE_MIN,
         MOTION.AOV_ANGLE_MAX
       );
-      this.elements.aovAngleValue.textContent = formatUIValue(angleDegrees, '°');
+      setRangeReadout(this.elements.aovAngle, this.elements.aovAngleValue, formatUIValue(angleDegrees, '°'));
       this.eventBus.emit('motion:aov-angle-change', angleDegrees);
     });
     
@@ -1204,7 +1207,7 @@ export class UIController {
         MOTION.AOV_DISTANCE_MIN,
         MOTION.AOV_DISTANCE_MAX
       );
-      this.elements.aovDistanceValue.textContent = formatUIValue(distancePercent, '%');
+      setRangeReadout(this.elements.aovDistance, this.elements.aovDistanceValue, formatUIValue(distancePercent, '%'));
       this.eventBus.emit('motion:aov-distance-change', distancePercent);
     });
     
@@ -1213,7 +1216,7 @@ export class UIController {
       const sliderValue = parseInt(e.target.value);
       // Linear mapping: slider 0-1000 → value 0-100%
       const dropoffPercent = (sliderValue / 1000) * MOTION.AOV_DROPOFF_MAX;
-      this.elements.aovDropoffValue.textContent = formatUIValue(dropoffPercent, '%');
+      setRangeReadout(this.elements.aovDropoff, this.elements.aovDropoffValue, formatUIValue(dropoffPercent, '%'));
       this.eventBus.emit('motion:aov-dropoff-change', dropoffPercent);
     });
     
@@ -1288,7 +1291,7 @@ export class UIController {
     for (const [slider, readout, value, min, max] of pairs) {
       if (!slider || !Number.isFinite(value)) continue;
       slider.value = String(log2ValueToSlider(value, min, max));
-      if (readout) readout.textContent = formatUIValue(value, '%');
+      setRangeReadout(slider, readout, formatUIValue(value, '%'));
     }
 
     const trail = motionSettings.revealTrail;
@@ -1337,7 +1340,8 @@ export class UIController {
       const timeMs = timeSec * 1000;
 
       // Format display nicely
-      this.elements.waypointPauseTimeValue.textContent = formatUIValue(timeSec, 's');
+      setRangeReadout(this.elements.waypointPauseTime, this.elements.waypointPauseTimeValue,
+        formatUIValue(timeSec, 's'));
 
       const targets = this._bulkTargets(true);
       if (targets.length > 0) {
@@ -1364,7 +1368,7 @@ export class UIController {
 
       // Format display nicely (speed uses 2 decimal places when < 1 for precision)
       const displaySpeed = speedMultiplier < 1 ? speedMultiplier.toFixed(2) : formatUIValue(speedMultiplier);
-      this.elements.waypointSegmentSpeedValue.textContent = `${displaySpeed}x`;
+      setRangeReadout(this.elements.waypointSegmentSpeed, this.elements.waypointSegmentSpeedValue, `${displaySpeed}x`);
 
       const targets = this._bulkTargets(true);
       if (targets.length > 0) {
@@ -1417,7 +1421,8 @@ export class UIController {
     this.elements.areaCircleRadius?.addEventListener('input', (e) => {
       const normalized = parseInt(e.target.value) / 1000;
       const radius = AREA_HIGHLIGHT.CIRCLE_RADIUS_MIN + normalized * (AREA_HIGHLIGHT.CIRCLE_RADIUS_MAX - AREA_HIGHLIGHT.CIRCLE_RADIUS_MIN);
-      this.elements.areaCircleRadiusValue.textContent = `${Math.round(radius * 100)}%`;
+      setRangeReadout(this.elements.areaCircleRadius, this.elements.areaCircleRadiusValue,
+        `${Math.round(radius * 100)}%`);
       applyAreaChange((ah) => { ah.radius = radius; });
     });
 
@@ -1425,7 +1430,7 @@ export class UIController {
     this.elements.areaRectWidth?.addEventListener('input', (e) => {
       const normalized = parseInt(e.target.value) / 1000;
       const width = AREA_HIGHLIGHT.RECT_SIZE_MIN + normalized * (AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN);
-      this.elements.areaRectWidthValue.textContent = `${Math.round(width * 100)}%`;
+      setRangeReadout(this.elements.areaRectWidth, this.elements.areaRectWidthValue, `${Math.round(width * 100)}%`);
       applyAreaChange((ah) => { ah.width = width; });
     });
 
@@ -1433,7 +1438,7 @@ export class UIController {
     this.elements.areaRectHeight?.addEventListener('input', (e) => {
       const normalized = parseInt(e.target.value) / 1000;
       const height = AREA_HIGHLIGHT.RECT_SIZE_MIN + normalized * (AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN);
-      this.elements.areaRectHeightValue.textContent = `${Math.round(height * 100)}%`;
+      setRangeReadout(this.elements.areaRectHeight, this.elements.areaRectHeightValue, `${Math.round(height * 100)}%`);
       applyAreaChange((ah) => { ah.height = height; });
     });
 
@@ -1445,7 +1450,7 @@ export class UIController {
     // Fill opacity slider (0-100 → 0-1)
     this.elements.areaFillOpacity?.addEventListener('input', (e) => {
       const pct = parseInt(e.target.value);
-      this.elements.areaFillOpacityValue.textContent = `${pct}%`;
+      setRangeReadout(this.elements.areaFillOpacity, this.elements.areaFillOpacityValue, `${pct}%`);
       applyAreaChange((ah) => { ah.fillOpacity = pct / 100; });
     });
 
@@ -1478,14 +1483,14 @@ export class UIController {
     // Fade in slider (0-10000ms)
     this.elements.areaFadeIn?.addEventListener('input', (e) => {
       const ms = parseInt(e.target.value);
-      this.elements.areaFadeInValue.textContent = `${(ms / 1000).toFixed(1)}s`;
+      setRangeReadout(this.elements.areaFadeIn, this.elements.areaFadeInValue, `${(ms / 1000).toFixed(1)}s`);
       applyAreaChange((ah) => { ah.fadeInMs = ms; });
     });
 
     // Fade out slider (0-10000ms)
     this.elements.areaFadeOut?.addEventListener('input', (e) => {
       const ms = parseInt(e.target.value);
-      this.elements.areaFadeOutValue.textContent = `${(ms / 1000).toFixed(1)}s`;
+      setRangeReadout(this.elements.areaFadeOut, this.elements.areaFadeOutValue, `${(ms / 1000).toFixed(1)}s`);
       applyAreaChange((ah) => { ah.fadeOutMs = ms; });
     });
 
@@ -2165,7 +2170,7 @@ export class UIController {
       const maxScale = waypoint.rippleMaxScale || 1000;
       this.elements.rippleMaxScale.value = maxScale;
       if (this.elements.rippleMaxScaleValue) {
-        this.elements.rippleMaxScaleValue.textContent = `${maxScale}%`;
+        setRangeReadout(this.elements.rippleMaxScale, this.elements.rippleMaxScaleValue, `${maxScale}%`);
       }
     }
     
@@ -2190,7 +2195,8 @@ export class UIController {
       // Convert seconds to slider value using logarithmic scale
       this.elements.waypointPauseTime.value = this.pauseTimeToSlider(pauseSeconds);
       // Format display nicely
-      this.elements.waypointPauseTimeValue.textContent = formatUIValue(pauseSeconds, 's');
+      setRangeReadout(this.elements.waypointPauseTime, this.elements.waypointPauseTimeValue,
+        formatUIValue(pauseSeconds, 's'));
     }
     
     // Update segment speed slider
@@ -2198,7 +2204,7 @@ export class UIController {
       const speed = waypoint.segmentSpeed || 1.0;
       this.elements.waypointSegmentSpeed.value = this.segmentSpeedToSlider(speed);
       const displaySpeed = speed < 1 ? speed.toFixed(2) : formatUIValue(speed);
-      this.elements.waypointSegmentSpeedValue.textContent = `${displaySpeed}x`;
+      setRangeReadout(this.elements.waypointSegmentSpeed, this.elements.waypointSegmentSpeedValue, `${displaySpeed}x`);
     }
     
     // Update pause control visibility
@@ -2242,7 +2248,8 @@ export class UIController {
       const sliderVal = Math.round(((ah.radius - AREA_HIGHLIGHT.CIRCLE_RADIUS_MIN) / range) * 1000);
       this.elements.areaCircleRadius.value = Math.max(0, Math.min(1000, sliderVal));
       if (this.elements.areaCircleRadiusValue) {
-        this.elements.areaCircleRadiusValue.textContent = `${Math.round(ah.radius * 100)}%`;
+        setRangeReadout(this.elements.areaCircleRadius, this.elements.areaCircleRadiusValue,
+          `${Math.round(ah.radius * 100)}%`);
       }
     }
     
@@ -2251,14 +2258,16 @@ export class UIController {
       const range = AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN;
       this.elements.areaRectWidth.value = Math.round(((ah.width - AREA_HIGHLIGHT.RECT_SIZE_MIN) / range) * 1000);
       if (this.elements.areaRectWidthValue) {
-        this.elements.areaRectWidthValue.textContent = `${Math.round(ah.width * 100)}%`;
+        setRangeReadout(this.elements.areaRectWidth, this.elements.areaRectWidthValue,
+          `${Math.round(ah.width * 100)}%`);
       }
     }
     if (this.elements.areaRectHeight) {
       const range = AREA_HIGHLIGHT.RECT_SIZE_MAX - AREA_HIGHLIGHT.RECT_SIZE_MIN;
       this.elements.areaRectHeight.value = Math.round(((ah.height - AREA_HIGHLIGHT.RECT_SIZE_MIN) / range) * 1000);
       if (this.elements.areaRectHeightValue) {
-        this.elements.areaRectHeightValue.textContent = `${Math.round(ah.height * 100)}%`;
+        setRangeReadout(this.elements.areaRectHeight, this.elements.areaRectHeightValue,
+          `${Math.round(ah.height * 100)}%`);
       }
     }
     
@@ -2270,7 +2279,7 @@ export class UIController {
       const pct = Math.round((ah.fillOpacity ?? AREA_HIGHLIGHT.FILL_OPACITY_DEFAULT) * 100);
       this.elements.areaFillOpacity.value = pct;
       if (this.elements.areaFillOpacityValue) {
-        this.elements.areaFillOpacityValue.textContent = `${pct}%`;
+        setRangeReadout(this.elements.areaFillOpacity, this.elements.areaFillOpacityValue, `${pct}%`);
       }
     }
     
@@ -2301,13 +2310,15 @@ export class UIController {
     if (this.elements.areaFadeIn) {
       this.elements.areaFadeIn.value = ah.fadeInMs ?? AREA_HIGHLIGHT.FADE_IN_DEFAULT;
       if (this.elements.areaFadeInValue) {
-        this.elements.areaFadeInValue.textContent = `${((ah.fadeInMs ?? AREA_HIGHLIGHT.FADE_IN_DEFAULT) / 1000).toFixed(1)}s`;
+        setRangeReadout(this.elements.areaFadeIn, this.elements.areaFadeInValue,
+          `${((ah.fadeInMs ?? AREA_HIGHLIGHT.FADE_IN_DEFAULT) / 1000).toFixed(1)}s`);
       }
     }
     if (this.elements.areaFadeOut) {
       this.elements.areaFadeOut.value = ah.fadeOutMs ?? AREA_HIGHLIGHT.FADE_OUT_DEFAULT;
       if (this.elements.areaFadeOutValue) {
-        this.elements.areaFadeOutValue.textContent = `${((ah.fadeOutMs ?? AREA_HIGHLIGHT.FADE_OUT_DEFAULT) / 1000).toFixed(1)}s`;
+        setRangeReadout(this.elements.areaFadeOut, this.elements.areaFadeOutValue,
+          `${((ah.fadeOutMs ?? AREA_HIGHLIGHT.FADE_OUT_DEFAULT) / 1000).toFixed(1)}s`);
       }
     }
     
@@ -2376,12 +2387,10 @@ export class UIController {
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
     
-    if (this.elements.currentTime) {
-      this.elements.currentTime.textContent = formatTime(currentTime);
-    }
-    if (this.elements.totalTime) {
-      this.elements.totalTime.textContent = formatTime(duration);
-    }
+    setTimelineReadout(
+      this.elements.timelineSlider, this.elements.currentTime, this.elements.totalTime,
+      formatTime(currentTime), formatTime(duration)
+    );
   }
   
   /**

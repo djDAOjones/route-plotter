@@ -913,7 +913,7 @@ function syncLoadedProjectControls(app, staged) {
   if (app.elements?.exportResX) app.elements.exportResX.value = exportSettings.resolutionX;
   if (app.elements?.exportResY) app.elements.exportResY.value = exportSettings.resolutionY;
   if (app.elements?.backgroundZoom) app.elements.backgroundZoom.value = exportSettings.backgroundZoom;
-  if (app.elements?.backgroundZoomValue) app.elements.backgroundZoomValue.textContent = `${exportSettings.backgroundZoom}%`;
+  setRangeReadout(app.elements?.backgroundZoom, app.elements?.backgroundZoomValue, `${exportSettings.backgroundZoom}%`);
   app.coordinateTransform?.setBackgroundZoom?.(exportSettings.backgroundZoom / 100);
 
   if (app.elements?.bgFitToggle) {

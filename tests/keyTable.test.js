@@ -1931,7 +1931,8 @@ const LISTENER_ROWS = [
     covers: [KEY_LISTENER.hint],
     async run(log) {
       const app = await editor();
-      document.querySelector('#pause-time-control [data-tip]').click();
+      // The hint opens from its own "?" (UI-04), no longer from the label text.
+      document.querySelector('.param-hint-trigger[aria-describedby="waypoint-pause-time-tip"]').click();
       const hint = () => document.getElementById('param-tooltip');
       const state = () => (hint()?.style.display === 'block' ? `showing "${hint().textContent}"` : 'hidden');
       const shown = state();

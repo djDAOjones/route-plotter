@@ -7,6 +7,7 @@
  * Object.assign(RoutePlotter.prototype, playbackMixin).
  */
 import { ANIMATION } from '../config/constants.js';
+import { setTimelineReadout } from '../utils/uiReadouts.js';
 
 // ========== JKL PLAYBACK METHODS ==========
 // Video editor style playback controls (like Premiere Pro, Final Cut, etc.)
@@ -302,8 +303,10 @@ export const playbackMixin = {
     const current = currentTime !== null ? currentTime : this.animationEngine.state.currentTime;
     const total = duration !== null ? duration : this.animationEngine.state.duration;
     
-    this.elements.currentTime.textContent = formatTime(current);
-    this.elements.totalTime.textContent = formatTime(total);
+    setTimelineReadout(
+      this.elements.timelineSlider, this.elements.currentTime, this.elements.totalTime,
+      formatTime(current), formatTime(total)
+    );
     
     // Also update export summary
     this.updateExportSummary();

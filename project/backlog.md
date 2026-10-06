@@ -22,13 +22,11 @@
 
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
-- [ ] UI-04 — A hint trigger of its own (UI-03's second part) — since 2026-10-05 — (from: GATELESS-1, 2026-10-05)
 - [ ] TST-03 — Visibility mode matrix · Characterisation P1 — since 2026-10-01
 - [ ] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01
 - [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01
 - [ ] DEF-13 — A focused button swallows every shortcut · Accessibility P1 — since 2026-10-01
 - [ ] DEF-32 — Activating a list row loses focus · Accessibility P1 — since 2026-10-01
-- [ ] DEF-14 — A hint click stops a label toggling · Accessibility P1 — since 2026-10-01
 - [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01
 - [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01
 - [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01

@@ -260,7 +260,7 @@ export const wiringDomMixin = {
       const targets = this.selectionTargets();
       if (targets.length > 0) {
         for (const wp of targets) wp.shapeFrequency = parseInt(e.target.value);
-        this.elements.shapeFrequencyValue.textContent = e.target.value;
+        setRangeReadout(this.elements.shapeFrequency, this.elements.shapeFrequencyValue, e.target.value);
         this.eventBus.emit('waypoint:path-property-changed', this.selectedWaypoint);
       }
     });
@@ -412,7 +412,7 @@ export const wiringDomMixin = {
     // Ripple max scale control
     this.elements.rippleMaxScale?.addEventListener('input', (e) => {
       const value = parseInt(e.target.value);
-      this.elements.rippleMaxScaleValue.textContent = `${value}%`;
+      setRangeReadout(this.elements.rippleMaxScale, this.elements.rippleMaxScaleValue, `${value}%`);
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         for (const wp of targets) wp.rippleMaxScale = value;
@@ -435,7 +435,7 @@ export const wiringDomMixin = {
     // Pulse amplitude control
     this.elements.pulseAmplitude?.addEventListener('input', (e) => {
       const value = parseFloat(e.target.value);
-      this.elements.pulseAmplitudeValue.textContent = value.toFixed(1);
+      setRangeReadout(this.elements.pulseAmplitude, this.elements.pulseAmplitudeValue, value.toFixed(1));
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         for (const wp of targets) wp.pulseAmplitude = value;
@@ -446,7 +446,7 @@ export const wiringDomMixin = {
     // Pulse cycle speed control
     this.elements.pulseCycleSpeed?.addEventListener('input', (e) => {
       const value = parseFloat(e.target.value);
-      this.elements.pulseCycleSpeedValue.textContent = `${value}s`;
+      setRangeReadout(this.elements.pulseCycleSpeed, this.elements.pulseCycleSpeedValue, `${value}s`);
       const targets = this.selectionTargets(true);
       if (targets.length > 0) {
         for (const wp of targets) wp.pulseCycleSpeed = value;
@@ -558,7 +558,7 @@ export const wiringDomMixin = {
       if (targets.length > 0) {
         const width = parseInt(e.target.value);
         for (const wp of targets) wp.labelWidth = width;
-        this.elements.labelWidthValue.textContent = `${width}%`;
+        setRangeReadout(this.elements.labelWidth, this.elements.labelWidthValue, `${width}%`);
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -571,7 +571,7 @@ export const wiringDomMixin = {
         // LABEL-01: moving it by hand settles it — auto-position stops
         // volunteering for this label from here on.
         for (const wp of targets) { wp.labelOffsetX = offset; wp.labelPlacedByHand = true; }
-        this.elements.labelOffsetXValue.textContent = `${offset}%`;
+        setRangeReadout(this.elements.labelOffsetX, this.elements.labelOffsetXValue, `${offset}%`);
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -582,7 +582,7 @@ export const wiringDomMixin = {
       if (targets.length > 0) {
         const offset = parseInt(e.target.value);
         for (const wp of targets) { wp.labelOffsetY = offset; wp.labelPlacedByHand = true; }
-        this.elements.labelOffsetYValue.textContent = `${offset}%`;
+        setRangeReadout(this.elements.labelOffsetY, this.elements.labelOffsetYValue, `${offset}%`);
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }
     });
@@ -724,7 +724,7 @@ export const wiringDomMixin = {
     this.elements.headRotationOffset?.addEventListener('input', (e) => {
       this.styles.pathHead.rotationOffset = parseInt(e.target.value);
       if (this.elements.headRotationOffsetValue) {
-        this.elements.headRotationOffsetValue.textContent = `${e.target.value}°`;
+        setRangeReadout(this.elements.headRotationOffset, this.elements.headRotationOffsetValue, `${e.target.value}°`);
       }
       this.queueRender();
       this.saveUndoStateDebounced();
@@ -742,9 +742,9 @@ export const wiringDomMixin = {
       this.renderingService.setGraphicsScale(scale);
       
       // Format display: "0.5×", "1×", "2.3×" etc.
-      this.elements.graphicsScaleValue.textContent =
+      setRangeReadout(this.elements.graphicsScale, this.elements.graphicsScaleValue,
         (scale >= 1 ? scale.toFixed(scale === Math.round(scale) ? 0 : 1)
-                     : scale.toFixed(2).replace(/0$/, '')) + '×';
+                     : scale.toFixed(2).replace(/0$/, '')) + '×');
       
       this.queueRender();
       this.saveUndoStateDebounced();
@@ -781,7 +781,7 @@ export const wiringDomMixin = {
     this.elements.pathGlowIntensity?.addEventListener('input', (e) => {
       const pct = parseInt(e.target.value);
       this.styles.pathGlow.intensity = pct / 100;
-      if (this.elements.pathGlowValue) this.elements.pathGlowValue.textContent = pct + '%';
+      setRangeReadout(this.elements.pathGlowIntensity, this.elements.pathGlowValue, pct + '%');
       this.queueRender();
       this.saveUndoStateDebounced();
       this.autoSave();
@@ -1017,11 +1017,13 @@ export const wiringDomMixin = {
     if (this.selectedWaypoint && targets.includes(this.selectedWaypoint)) {
       if (this.elements.labelOffsetX) {
         this.elements.labelOffsetX.value = this.selectedWaypoint.labelOffsetX;
-        this.elements.labelOffsetXValue.textContent = `${this.selectedWaypoint.labelOffsetX}%`;
+        setRangeReadout(this.elements.labelOffsetX, this.elements.labelOffsetXValue,
+          `${this.selectedWaypoint.labelOffsetX}%`);
       }
       if (this.elements.labelOffsetY) {
         this.elements.labelOffsetY.value = this.selectedWaypoint.labelOffsetY;
-        this.elements.labelOffsetYValue.textContent = `${this.selectedWaypoint.labelOffsetY}%`;
+        setRangeReadout(this.elements.labelOffsetY, this.elements.labelOffsetYValue,
+          `${this.selectedWaypoint.labelOffsetY}%`);
       }
     }
 

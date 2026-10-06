@@ -730,15 +730,90 @@ kbd{
 /* (.duration-block removed — Duration/Scale/Path emphasis now live in the
    left inspector's Route scope: Pacing + Path emphasis cards, Phase 4) */
 
-/* ── Parameter Tooltip (Carbon Definition Tooltip pattern) ─────────────
-   [data-tip] labels get dotted underline hint; shared .param-tooltip
-   element positioned by JS to avoid sidebar overflow clipping.
+/* ── Parameter Tooltip (Carbon Toggletip pattern) ──────────────────────
+   Each hint has a "?" button of its own (UI-04, ParamTooltip.js); the
+   label's text is plain label text again, so a click on it reaches its
+   control (DEF-14). The shared .param-tooltip element is positioned by JS
+   to avoid sidebar overflow clipping.
    Colors hardcoded (#161616 bg, #fff text) for guaranteed WCAG AAA 7:1+
    contrast regardless of which CSS variable theme is active. */
 
-[data-tip]{
-  cursor:help;
-  border-bottom:1px dotted currentColor;
+/* A wired hint's label text holds a 44px slot after itself for its trigger
+   (WCAG 2.5.5), and is at least as tall, so the trigger overlaps no
+   neighbouring row or control. The trigger is a sibling of the label, not a
+   child (a button inside a label is invalid and joins the control's name),
+   so CSS anchor positioning draws it in that slot: the anchor's name is set
+   inline by ParamTooltip.js, one per hint. */
+[data-tip-desc]{
+  display:flex;
+  align-items:center;
+  min-height:var(--touch-target-min);
+  margin-inline-end:var(--touch-target-min);
+}
+/* The trigger's containing block: the label's own container, inside the
+   sidebar's scroller and its sections' clip, so it scrolls and folds away
+   with its row. */
+:has(> .param-hint-trigger){
+  position:relative;
+}
+/* Carbon's ghost icon-only button: the whole 44px square is the target, the
+   "?" glyph sits in its middle. Focus takes the universal ring. */
+.param-hint-trigger{
+  position:absolute;
+  left:anchor(right);
+  top:calc(anchor(center) - var(--touch-target-min) / 2);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  width:var(--touch-target-min);
+  min-width:var(--touch-target-min);
+  height:var(--touch-target-min);
+  min-height:var(--touch-target-min);
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:var(--radius-1);
+  background:transparent;
+  color:var(--text-01);
+  cursor:pointer;
+}
+.param-hint-trigger[hidden]{
+  display:none;
+}
+.param-hint-trigger:hover{
+  background:var(--hover-ui);
+}
+.param-hint-trigger:active{
+  background:var(--active-ui);
+}
+.param-hint-glyph{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  width:1.25rem;
+  height:1.25rem;
+  border:1px solid var(--border-strongest);
+  border-radius:50%;
+  font-family:var(--font-sans);
+  font-size:var(--type-caption);
+  font-weight:600;
+  line-height:1;
+}
+/* Its hint is showing: the glyph fills, so the state is not colour alone. */
+.param-hint-trigger[aria-expanded="true"] .param-hint-glyph{
+  border-color:var(--text-02);
+  background:var(--text-02);
+  color:var(--text-04);
+}
+/* Forced colours drop the fill; the system's highlight pair carries it. */
+@media (forced-colors: active){
+  .param-hint-trigger[aria-expanded="true"] .param-hint-glyph{
+    border-color:Highlight;
+    background:Highlight;
+    color:HighlightText;
+  }
 }
 .param-tooltip{
   display:none;
@@ -1198,6 +1273,13 @@ kbd{
   min-width:0;
 }
 
+/* `display:flex` above outranks the browser's own `[hidden]` rule, so a row
+   the app hides by its label's `hidden` (the reveal trail, REVEAL-01) still
+   showed, and its hint trigger, which follows `hidden`, did not (UI-04). */
+.section-content label[hidden]{
+  display:none;
+}
+
 .section-content label span:first-child{
   flex:0 0 6rem; /* Consistent label width per spec §I */
   color:var(--text-02);
@@ -1216,6 +1298,10 @@ kbd{
 
 .section-content input[type="range"]{
   flex:1;
+  /* Below a range's own 129px default, so a hint's 44px trigger slot is
+     taken from the track, not from the readout beside it or past the
+     sidebar's edge (UI-04). */
+  min-width:3rem;
   margin:0 var(--space-2);
   accent-color:var(--control-accent);
   -webkit-appearance:none;
@@ -1299,6 +1385,8 @@ kbd{
 
 .section-content select{
   flex:1;
+  /* Shrinks rather than overflow the sidebar beside a hint's trigger slot. */
+  min-width:0;
   min-height:var(--control-minh); /* 44px target */
   padding:var(--space-1) var(--space-2);
   padding-right:2rem;
@@ -1450,13 +1538,15 @@ kbd{
   gap:var(--space-2);
 }
 
-.control-row-inline span:first-child{
+/* The row's own children only: a hint's "?" in the row holds a span too
+   (UI-04), which these would stretch to the label column and grey. */
+.control-row-inline > span:first-child{
   min-width:var(--sidebar-label-width);
   font-size:var(--type-body);
   color:var(--text-02);
 }
 
-.control-row-inline span:last-child{
+.control-row-inline > span:last-child{
   font-size:var(--type-caption);
   color:var(--text-03);
 }
@@ -2034,6 +2124,8 @@ kbd{
 
 .control-group .scene-outline-field > span:first-child{
   flex:none;
+  /* As wide as its words, so its hint's trigger sits right after them. */
+  align-self:flex-start;
   color:var(--text-02);
   font-size:var(--type-caption);
   font-weight:600;

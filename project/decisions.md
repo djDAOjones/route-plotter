@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-06 — UI-04 — Each hint has a "?" of its own, and DEF-14 closes with it
+
+**Decision:** UI-04 lands: every parameter hint gets a visible "?" button beside its label, opened by hover after UI-03's delay, keyboard focus or tap, described to screen readers as before, so a click on a label toggles or focuses its control; DEF-14 closes with it, every range now naming its readout through `aria-describedby` and `setRangeReadout`.
+
+**Rationale:** the hint's delegated click handler cancelled every click on a `[data-tip]` label (`ParamTooltip.js`), so six hinted checkboxes never toggled from their text and about 70 labels never focused their control; 28 ranges lacked their readout. The "?" sits in a 44 px slot after the label, a Carbon ghost icon button in UoN tokens with a forced-colours rule; rows added later gain and lose theirs. Two adjacent fixes the "?" needs, the run's call: a hidden label hides (the reveal-trail row always showed), and ranges may shrink to keep rows inside the sidebar. 36 tests fail on main; six mutants are killed. UI-STANDARDS gains no "?" line, at 1,848 of its 1,850 words (a wish line). Digest rules applied: WCAG 2.2 AAA → 2.5.5 Target Size, 2.1.3 Keyboard, 2.4.13 Focus Appearance; Nielsen → 4, consistency; Carbon → productive; house conventions → Testing and persistence, and Patterns to follow (readouts through `setRangeReadout`).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-06 — TST-09 — Camera, dots, curvature, minor-end and time domains are pinned as they stand
 
 **Decision:** TST-09 lands: five suites (41 tests, goldens under `tests/goldens/domains-*.json`, regenerated with UPDATE_DOMAIN_GOLDENS=1) pin today's camera, dot positions, curvature cache, minor-end timing and the time domains from before the start to past the playback end, on the branched Open day route, so the fixes they gate (DEF-05, DEF-07, DEF-10, DEF-11, DEF-12, DEF-79) each move a baseline on purpose.

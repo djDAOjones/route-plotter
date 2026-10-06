@@ -14,6 +14,7 @@ import { resolveRouteBranches, branchPathWaypoints, trunkWaypoints } from '../ut
 import { composeRouteTimeline } from '../utils/branchTiming.js';
 import { resolveGraphAnchors } from '../utils/routeAnchors.js';
 import { computeSceneEnd, describeSceneEnd } from '../utils/sceneEnd.js';
+import { setRangeReadout } from '../utils/uiReadouts.js';
 
 /**
  * The waypoints `pathPoints` was built from — `waypoints` itself on a linear
@@ -236,7 +237,7 @@ function writeDurationReadout(app) {
   const elements = app.elements || {};
   const durationSec = Math.round(engine.state.duration / 100) / 10;
   if (elements.animationSpeedValue) elements.animationSpeedValue.textContent = durationSec + 's';
-  if (elements.animationSpeedValueRight) elements.animationSpeedValueRight.textContent = durationSec + 's';
+  setRangeReadout(elements.animationSpeedRight, elements.animationSpeedValueRight, durationSec + 's');
   const breakdown = elements.durationBreakdown;
   if (breakdown) {
     const text = describeSceneEnd(engine.sceneEndParts, engine.state.duration);
