@@ -1,0 +1,11 @@
+# playing: the animation playing
+
+## #pause-btn · click
+emit ui:animation:pause
+announced "Animation paused"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation paused"
+ui ~ #play-btn: button (not shown) → button aria-label="Play" class="btn btn-icon btn-primary" style="display: inline-block;" title="Play" type="button" :text="▶"
+ui ~ #pause-btn: button aria-label="Pause" class="btn btn-icon btn-primary" style="display: inline-block;" title="Pause" type="button" :text="⏸" → button (not shown)
+settled:
+  emit animation:update {isPlaying: true, progress: 0.068497, pathProgress: 0.376559, currentTime: 2108.297363, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: true, pauseWaypointIndex: 1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 1790154009997}
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation paused" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

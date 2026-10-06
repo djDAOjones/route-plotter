@@ -1,0 +1,39 @@
+# splash: Help open
+
+## #splash · click
+app ~ focus: "#splash-title" → "body"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+ui ~ #app: div inert="" → div
+ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
+ui - #splash>div[0]: div class="splash-content" (and 148 inside, 03fcc657)
+
+## #splash-close-x · click
+app ~ focus: "#splash-title" → "body"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+ui ~ #app: div inert="" → div
+ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
+ui - #splash>div[0]: div class="splash-content" (and 148 inside, 03fcc657)
+
+## #splash-help>div[0]>details[2]>summary[0] · click
+app ~ focus: "#splash-title" → "#splash-help>div[0]>details[2]>summary[0]"
+ui ~ #splash-help>div[0]>details[2]: details class="controls-accordion" open="" → details class="controls-accordion"
+
+## #splash-close · click
+app ~ focus: "#splash-title" → "body"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+ui ~ #app: div inert="" → div
+ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
+ui - #splash>div[0]: div class="splash-content" (and 148 inside, 03fcc657)
+
+## #splash-dont-show · click
+app ~ focus: "#splash-title" → "#splash-dont-show"
+ui ~ #splash-dont-show: input type="checkbox" :unchecked → input type="checkbox" :checked
+
+## #splash>div[0]>p[5]>a[0] · click
+app ~ focus: "#splash-title" → "#splash>div[0]>p[5]>a[0]"

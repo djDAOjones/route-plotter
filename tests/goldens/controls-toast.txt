@@ -1,0 +1,29 @@
+# toast: waypoint 3's label typed in where it overlaps something, so a toast offers to move it (held: its timer stopped)
+
+## #toast-container>div[0]>button[0] · click
+emit waypoint:style-changed waypoint[3]
+model ~ waypoints[3].labelOffsetX: 15 → 0
+model ~ waypoints[3].labelOffsetY: -12 → 8
+app ~ focus: "body" → "#toast-container>div[0]>button[0]"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #toast-container>div[0]: div class="toast is-visible" :text="This label overlaps something." → div class="toast" :text="This label overlaps something."
+ui ~ #label-offset-x: input aria-describedby="label-offset-x-tip" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-tip" max="50" min="-50" step="1" type="range" value="0" :value="0"
+ui ~ #label-offset-x-value: span :text="15%" → span :text="0%"
+ui ~ #label-offset-y: input aria-describedby="label-offset-y-tip" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-tip" max="50" min="-50" step="1" type="range" value="-5" :value="8"
+ui ~ #label-offset-y-value: span :text="-12%" → span :text="8%"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  app ~ focus: "#toast-container>div[0]>button[0]" → "body"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 7cffcd28] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9679 chars, c8219268]
+  ui - #toast-container>div[0]: div class="toast" :text="This label overlaps something."
+  ui - #toast-container>div[0]>button[0]: button class="toast-action" type="button" :text="Auto-position"
+  ui - #toast-container>div[0]>button[1]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+
+## #toast-container>div[0]>button[1] · click
+app ~ focus: "body" → "#toast-container>div[0]>button[1]"
+ui ~ #toast-container>div[0]: div class="toast is-visible" :text="This label overlaps something." → div class="toast" :text="This label overlaps something."
+settled:
+  app ~ focus: "#toast-container>div[0]>button[1]" → "body"
+  ui - #toast-container>div[0]: div class="toast" :text="This label overlaps something."
+  ui - #toast-container>div[0]>button[0]: button class="toast-action" type="button" :text="Auto-position"
+  ui - #toast-container>div[0]>button[1]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

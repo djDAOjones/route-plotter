@@ -1,0 +1,89 @@
+# export-menu: the Export menu open
+
+## #export-mp4-btn · click
+app ~ focus: "#export-mp4-btn" → "#modal-title-codec"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" :text="Skip to main content" → a class="skip-link" href="#main-content" inert="" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
+ui ~ #app: div → div inert=""
+ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
+ui ~ #export-menu: div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu" → div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu"
+ui ~ #codec-unsupported-modal: div (not shown) → div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;"
+ui + #codec-unsupported-modal>div[0]: div class="modal-content"
+ui + #codec-unsupported-modal>div[0]>button[0]: button aria-label="Close" class="modal-close-x" data-modal-close="" title="Close" :text="×"
+ui + #modal-title-codec: h3 tabindex="-1" :text="MP4 export unavailable"
+ui + #codec-modal-message: p :text="Your browser does not support H.264 encoding, which is required for MP4 export. You can export as WebM instead — most video players and editors support this format."
+ui + #codec-unsupported-modal>div[0]>div[3]: div class="modal-buttons"
+ui + #codec-cancel: button class="btn btn-secondary" :text="Cancel"
+ui + #codec-mp4-reduced: button (not shown)
+ui + #codec-webm: button class="btn btn-primary" :text="Export as WebM"
+
+## #export-webm-btn · click
+emit video:export-request "webm"
+emit video:export-error {error: Error("Video export not supported: WebM export requires WebCodecs or MediaRecorder support")}
+emit motion:preview-mode-change false
+emit animation:seek 0
+announced "Starting video export — press Esc to cancel"
+alert "Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
+model ~ animationState.duration: 21429.352554 → 21807.894043
+model ~ timingReference.width: 660 → 1173.333333
+app ~ focus: "#export-mp4-btn" → "#export-webm-btn"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel"
+ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
+ui ~ #export-menu: div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu" → div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu"
+ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.9s"
+ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.9 s — route 21.8 s, crowds finish +9.1 s, beacon ends +6.5 s"
+ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 1173.3333333333333px;"
+settled:
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Video export failed"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui - #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+
+## #export-html-btn · click
+emit html:export-request
+app ~ focus: "#export-mp4-btn" → "#share-disclosure-cancel"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" :text="Skip to main content" → a class="skip-link" href="#main-content" inert="" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
+ui ~ #app: div → div inert=""
+ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
+ui ~ #export-menu: div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu" → div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu"
+ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #share-disclosure-modal: div (not shown) → div aria-describedby="share-disclosure-description" aria-labelledby="share-disclosure-title" aria-modal="true" class="modal" role="dialog" style="display: flex;"
+ui + #share-disclosure-modal>div[0]: div class="modal-content"
+ui + #share-disclosure-modal>div[0]>button[0]: button aria-label="Close" class="modal-close-x" data-share-disclosure-close="" title="Close" type="button" :text="×"
+ui + #share-disclosure-title: h3 :text="Export standalone HTML?"
+ui + #share-disclosure-description: p :text="The HTML file contains your route, timings, crowd settings and the original bytes of the images it uses, but not the filenames stored for them. An image file c…[314 chars, 691eb3b2]
+ui + #share-disclosure-modal>div[0]>div[3]: div class="modal-buttons"
+ui + #share-disclosure-cancel: button class="btn btn-secondary" type="button" :text="Cancel"
+ui + #share-disclosure-confirm: button class="btn btn-primary" type="button" :text="Export HTML"
+settled:
+  ui - #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+
+## #download-debug-btn · click
+app ~ focus: "#export-mp4-btn" → "#diagnostics-download"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" :text="Skip to main content" → a class="skip-link" href="#main-content" inert="" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
+ui ~ #app: div → div inert=""
+ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
+ui ~ #export-menu: div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu" → div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu"
+ui ~ #diagnostics-modal: div (not shown) → div aria-describedby="diagnostics-description" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;"
+ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 13 inside, acf15a31)
+
+## #copy-debug-btn · click
+app ~ focus: "#export-mp4-btn" → "#diagnostics-copy"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" :text="Skip to main content" → a class="skip-link" href="#main-content" inert="" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
+ui ~ #app: div → div inert=""
+ui ~ #export-dropdown-btn: button aria-controls="export-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾" → button aria-controls="export-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-primary dropdown-toggle" title="Export animation" :text="Export ▾"
+ui ~ #export-menu: div aria-hidden="false" aria-labelledby="export-dropdown-btn" class="dropdown-menu is-open" role="menu" → div aria-hidden="true" aria-labelledby="export-dropdown-btn" class="dropdown-menu" role="menu"
+ui ~ #diagnostics-modal: div (not shown) → div aria-describedby="diagnostics-description" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;"
+ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 13 inside, acf15a31)

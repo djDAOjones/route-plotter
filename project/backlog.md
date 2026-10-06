@@ -20,7 +20,6 @@
 
 ### Phase 1 — Land the big run's open pull requests
 
-- [~] TST-04 — Sidebar control and readout goldens · Characterisation P1 — since 2026-10-01
 
 ### Review assurance — owner evidence
 
@@ -35,8 +34,8 @@
 
 **After TST-04 — the owner's order of 2026-10-05**
 
-- [ ] UI-04 — A hint trigger of its own (UI-03's second part) — since 2026-10-05 — blocked: TST-04 — (from: GATELESS-1, 2026-10-05)
-- [ ] CROWD-06 — Hold at end: the animation carries on after everything has finished — since 2026-10-05 — blocked: TST-04 — (from: CROWD-05, 2026-10-05)
+- [ ] UI-04 — A hint trigger of its own (UI-03's second part) — since 2026-10-05 — (from: GATELESS-1, 2026-10-05)
+- [ ] CROWD-06 — Hold at end: the animation carries on after everything has finished — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 
 **W5 — deepen the characterisation**
 
@@ -46,29 +45,29 @@
 
 **Defects after their W5 test (§13 ground rule 8)**
 
-- [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01 — blocked: TST-04
+- [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01
 - [ ] DEF-13 — A focused button swallows every shortcut · Accessibility P1 — since 2026-10-01
 - [ ] DEF-32 — Activating a list row loses focus · Accessibility P1 — since 2026-10-01
-- [ ] DEF-14 — A hint click stops a label toggling · Accessibility P1 — since 2026-10-01 — blocked: TST-04
+- [ ] DEF-14 — A hint click stops a label toggling · Accessibility P1 — since 2026-10-01
 - [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01
-- [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01 — blocked: TST-04
+- [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01
 - [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01
 
 **W4 — remove clearly dead code (§20 Q8; mutate every branch of anything moved, and account for every survivor)**
 
-- [ ] DEL-02 — Render dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-03 — Engine, geometry and bus dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-04 — Wiring dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-05 — UI, config and CSS dead code · Dead code P1 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-06 — Services dead API · Dead code P2 — since 2026-10-01 — blocked: TST-04
-- [ ] DEL-01 — Unused barrels · Dead code P2 — since 2026-10-01 — blocked: TST-04
+- [ ] DEL-02 — Render dead code · Dead code P1 — since 2026-10-01
+- [ ] DEL-03 — Engine, geometry and bus dead code · Dead code P1 — since 2026-10-01
+- [ ] DEL-04 — Wiring dead code · Dead code P1 — since 2026-10-01
+- [ ] DEL-05 — UI, config and CSS dead code · Dead code P1 — since 2026-10-01
+- [ ] DEL-06 — Services dead API · Dead code P2 — since 2026-10-01
+- [ ] DEL-01 — Unused barrels · Dead code P2 — since 2026-10-01
 
 **Found defects**
 
 - [ ] DEF-50 — Autosave failure unseen — since 2026-10-05
 - [ ] DEF-51 — Failed load leaves caches — since 2026-10-05
-- [ ] DEF-54 — Outside drop moves rows — since 2026-10-05 — blocked: TST-04
-- [ ] DEF-55 — List drop sends branch last — since 2026-10-05 — blocked: TST-04
+- [ ] DEF-54 — Outside drop moves rows — since 2026-10-05
+- [ ] DEF-55 — List drop sends branch last — since 2026-10-05
 - [ ] DEF-56 — Constant-time open unscheduled — since 2026-10-05
 - [ ] DEF-57 — Branch majors lack clock — since 2026-10-05
 - [ ] DEF-58 — Export edits change scene — since 2026-10-05
