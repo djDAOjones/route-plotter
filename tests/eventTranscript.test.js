@@ -102,6 +102,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
+import { setTimeout as realDelay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
@@ -109,7 +110,7 @@ import { FIXED_NOW, freezeClock, loadSnapshot } from './helpers/projectSnapshot.
 import { authoredExtrasProject, PIXEL_DATA_URL } from './fixtures/authoredExtras.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { loadExampleBackground } from '../src/app/backgroundLoading.js';
-import { STORAGE } from '../src/config/constants.js';
+import { ANNOUNCEMENTS, STORAGE } from '../src/config/constants.js';
 import { EventBus } from '../src/core/EventBus.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { Scene } from '../src/models/Scene.js';
@@ -1241,6 +1242,37 @@ function checkedSwatch(input) {
 }
 
 /**
+ * The live region, quiet: what opening the fixture said has had its turns
+ * (DEF-45). The queue writes one message at a time, each held for
+ * `ANNOUNCEMENTS.HOLD_MS`; the first it wrote while the fixture opened is held
+ * on the real clock, set before the fake one, and those after it wait on the
+ * fake clock. So the real clock runs until that hold ends, and the fake one
+ * lets the rest pass.
+ */
+async function quietAnnouncer() {
+  const region = document.getElementById('announcer');
+  for (let waited = 0; region.textContent; waited += 50) {
+    if (waited > 5 * ANNOUNCEMENTS.HOLD_MS) throw new Error('The live region never fell quiet');
+    await realDelay(50);
+    await vi.advanceTimersByTimeAsync(ANNOUNCEMENTS.HOLD_MS);
+  }
+}
+
+/** Each text the live region shows from the act on, when, and how politely. */
+const regionWrites = [];
+let regionObserver = null;
+
+function watchAnnouncer() {
+  const region = document.getElementById('announcer');
+  const start = Date.now();
+  regionObserver?.disconnect();
+  regionWrites.length = 0;
+  regionObserver = new MutationObserver(() => regionWrites.push(
+    `${Date.now() - start} ms ${JSON.stringify(region.textContent)} (${region.getAttribute('aria-live')})`));
+  regionObserver.observe(region, { childList: true });
+}
+
+/**
  * The app's export settings as `exportVideo` is entered, before the real one
  * would apply the request it is handed (`exporting.js`): the entry settings
  * the replaced function was called on, not a run of the export.
@@ -1762,6 +1794,23 @@ const CONTROLLER_ROWS = [
   {
     event: 'ui:toast', fixture: 'open day',
     act: app => emit(app, 'ui:toast', { message: 'Shift-click deletes; Ctrl+Z brings it back', duration: 3000 }),
+  },
+  {
+    event: 'ui:announce', fixture: 'open day',
+    given: 'the live region quiet',
+    how: 'two requests as the waypoint list sends them, the second also carrying an assertive priority and the'
+      + ' essential mark, which the bus does not pass on',
+    setup: async () => {
+      await quietAnnouncer();
+      regionObserver?.disconnect();
+      regionWrites.length = 0;
+    },
+    observe: () => ({ announcer: [...regionWrites] }),
+    act: app => {
+      watchAnnouncer();
+      emit(app, 'ui:announce', { message: 'Waypoint 2 moved up' });
+      emit(app, 'ui:announce', { message: 'Waypoint 2 moved down', priority: 'assertive', essential: true });
+    },
   },
   {
     event: 'canvas:zoom-in', fixture: 'open day', given: 'ex-uon-2 selected',

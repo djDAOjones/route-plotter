@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-45 — Announcements are read in turn, and the queue is bounded
+
+**Decision:** DEF-45 lands (PR #70): the live region reads announcements in turn, each for 2 s, so a recovery warning is never replaced or pushed out; a must-hear message already waiting merges into the waiting copy, so at most three routine messages and one of each must-hear text wait.
+
+**Rationale:** Codex review r2 found the queue unbounded (twelve Examples loads left six warnings and 20 s of stale feedback) and two protection mutants surviving; coalescing now leaves one warning and clears the region within 10 s of the last load, and Y1, Y3 and advisories Y2, Y5 are killed. A polite message can still wait while assertive ones keep arriving (stated in the code). keyTable and areaDrawTarget read the region straight after an action; their setups now let the queue play out first, their expected text unchanged; elementIds drops main.js's second announcer lookup. No real screen reader was tried. Digest rule applied: Nielsen → 1, visibility of system status; UI-STANDARDS gains one short announce rule (within its budget). DEF-50 and DEF-67 now wait only on DEF-28.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — TST-08 — The mixin composition is guarded from main.js itself
 
 **Decision:** TST-08 lands (PR #73): `tests/mixins.test.js` parses `src/` and holds the composition to one `Object.assign` of the listed mixins, no change to a mixin, no name hidden, and every call on the app by name resolving; a shape it cannot follow is refused with its line.

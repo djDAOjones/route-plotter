@@ -655,6 +655,14 @@ function prepareAutosaveSnapshot(app) {
   }
 }
 
+// What browser recovery did or could not do must be heard. The author did not
+// ask, and nothing says it again: the omission and auto-save warnings are
+// suppressed once said, and a restore happens once per load. So the
+// announcement queue never lets later routine messages displace it (DEF-45).
+// The same notice said while its text still waits (a second project opened
+// before the first one's warning was read) is read once, after both.
+const RECOVERY_NOTICE = Object.freeze({ essential: true });
+
 function reportAutosaveOmissions(app, { omittedAssets, omittedBackground }) {
   const newlyOmittedAssets = omittedAssets && !app._autosaveAssetWarningShown;
   const newlyOmittedBackground = omittedBackground && !app._autosaveBackgroundWarningShown;
@@ -662,11 +670,14 @@ function reportAutosaveOmissions(app, { omittedAssets, omittedBackground }) {
   app._autosaveBackgroundWarningShown = omittedBackground;
 
   if (newlyOmittedAssets && newlyOmittedBackground) {
-    app.announce('Browser recovery excludes the background and custom images. Save a project file to preserve them.');
+    app.announce('Browser recovery excludes the background and custom images. Save a project file to preserve them.',
+      'polite', RECOVERY_NOTICE);
   } else if (newlyOmittedAssets) {
-    app.announce('Browser recovery excludes custom images. Save a project file to preserve them.');
+    app.announce('Browser recovery excludes custom images. Save a project file to preserve them.',
+      'polite', RECOVERY_NOTICE);
   } else if (newlyOmittedBackground) {
-    app.announce('Browser recovery excludes the background. Save a project file to preserve it.');
+    app.announce('Browser recovery excludes the background. Save a project file to preserve it.',
+      'polite', RECOVERY_NOTICE);
   }
 }
 
@@ -694,7 +705,8 @@ function reportAutosaveFailure(app) {
   app._autosaveFailureWarningShown = true;
   // A kept record that could not be restored may be what stops the write
   // (DEF-28): it stays, and the report says what the author can do.
-  app.announce('Auto-save failed. Save a project file to keep your work.' + recoveryFailureGuidance(app));
+  app.announce('Auto-save failed. Save a project file to keep your work.' + recoveryFailureGuidance(app),
+    'polite', RECOVERY_NOTICE);
 }
 
 /**
@@ -1139,9 +1151,12 @@ export const persistenceMixin = {
       const recovery = replaceImmediateRecovery(this);
       const recoveryUnavailable = recovery.attempted && !recovery.saved;
       
-      this.announce(recoveryUnavailable
-        ? 'Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.' + recoveryFailureGuidance(this)
-        : 'Project loaded');
+      if (recoveryUnavailable) {
+        this.announce('Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.'
+          + recoveryFailureGuidance(this), 'polite', RECOVERY_NOTICE);
+      } else {
+        this.announce('Project loaded');
+      }
       console.log(`📦 Project loaded: ${file.name} (${this.waypoints.length} waypoints, ${this.imageAssetService.getAssetCount()} assets)`);
       return true;
     } catch (err) {
@@ -1343,11 +1358,13 @@ export const persistenceMixin = {
       console.debug('Loaded waypoints:', staged.waypoints.length);
       console.debug('Loaded flow layers:', staged.scene.getFlowLayers().length);
       if (recovery.attempted && !recovery.saved) {
-        this.announce('Previous session restored, but browser recovery is now unavailable. Save a project file to keep it safe.' + recoveryFailureGuidance(this));
+        this.announce('Previous session restored, but browser recovery is now unavailable. Save a project file to keep it safe.'
+          + recoveryFailureGuidance(this), 'polite', RECOVERY_NOTICE);
       } else {
         // Announced over a record kept earlier, so it names that record too.
         const earlier = keptEarlierNote(this);
-        this.announce(earlier ? `Previous session restored.${earlier}` : 'Previous session restored', earlier ? 'assertive' : 'polite');
+        this.announce(earlier ? `Previous session restored.${earlier}` : 'Previous session restored',
+          earlier ? 'assertive' : 'polite', RECOVERY_NOTICE);
       }
       return true;
     } catch (error) {

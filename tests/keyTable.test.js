@@ -83,6 +83,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { ANNOUNCEMENTS } from '../src/config/constants.js';
 import { formatBinding, getDefaultBindings, isMac, MODIFIER_DISPLAY } from '../src/config/keybindings.js';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
 import { bootApp } from './helpers/bootApp.js';
@@ -122,6 +123,7 @@ afterEach(async () => {
   }
   flashedSections.length = 0;
   delete Element.prototype.scrollIntoView;
+  vi.useRealTimers();
 });
 
 /** Three majors across the middle of the image, the middle one selected. */
@@ -145,11 +147,33 @@ async function editor({ selected = 1, progress = 0.5 } = {}) {
   // A first run opens Help, whose focus trap holds the keyboard.
   document.getElementById('splash-close').click();
   await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+  // The live region writes what the editor says in turn, each message for a
+  // hold (DEF-45). From here the editor's timeouts run on the test's clock,
+  // which keeps pace with the real one, so a test can also let what has been
+  // said play out at once (`playOut`) before the key it reads.
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
   for (const imgX of ROUTE_X) app.eventBus.emit('waypoint:add', { imgX, imgY: 0.5, isMajor: true });
   if (selected === null) app.eventBus.emit('waypoint:deselected');
   else app.eventBus.emit('waypoint:selected', app.waypoints[selected]);
   app.eventBus.emit('ui:animation:seek', progress);
   return app;
+}
+
+/**
+ * Let what the editor has said take its turns until the live region is idle,
+ * so the next message is written at once, where a row reads it (DEF-45). The
+ * queue clears the region only once nothing waits, and nothing else writes it.
+ * @returns {string} The last message the region showed ('' if it was idle)
+ */
+function playOut() {
+  const region = document.getElementById('announcer');
+  let last = '';
+  for (let turn = 0; region.textContent; turn += 1) {
+    if (turn > 20) throw new Error('The live region never fell quiet');
+    last = region.textContent;
+    vi.advanceTimersByTime(ANNOUNCEMENTS.HOLD_MS);
+  }
+  return last;
 }
 
 /** Switch the header toggle to Edit, as a user does before working on legs. */
@@ -258,7 +282,7 @@ function sameWaypoints(a, b) {
  * was cancelled.
  */
 function observe(app, act) {
-  document.getElementById('announcer').textContent = '';
+  playOut();
   const before = editorState(app);
   const emit = vi.spyOn(app.eventBus, 'emit');
   let event;
@@ -1243,8 +1267,10 @@ describe('the transport keys over time (TST-13)', () => {
     // animation" then "Animation complete", and nothing moves. The Play
     // button restarts from the beginning first.
     const app = await editor({ progress: 1 });
-    const said = () => document.getElementById('announcer').textContent;
+    // What the region says last, once the messages before it have had their turns (DEF-45).
+    const said = playOut;
     for (const key of [' ', 'k']) {
+      playOut();
       press(key);
       expect(transport(app)).toBe('playing at 1×');
       await vi.waitFor(() => expect(app.animationEngine.isPlaying()).toBe(false));
@@ -1582,7 +1608,7 @@ const LISTENER_ROWS = [
       const said = () => document.getElementById('announcer').textContent || '—';
       const step = (name, target, key, typedValue) => {
         target.value = typedValue;
-        document.getElementById('announcer').textContent = '';
+        playOut();
         const event = log.press(KEY_LISTENER.busyness, key, target);
         return `${name}: ${key} ${taken(event)}; ${envelope()}; said ${said()}`;
       };
@@ -1599,7 +1625,7 @@ const LISTENER_ROWS = [
       ]);
       // A value typed and every other key pressed: nothing is applied.
       field(0, 'value').value = '55';
-      document.getElementById('announcer').textContent = '';
+      playOut();
       log.sweep(KEY_LISTENER.busyness, () => field(0, 'value'), () => `${envelope()}; said ${said()}`);
     }
   },
@@ -1844,6 +1870,7 @@ const LISTENER_ROWS = [
       const exporting = app.exportVideo();
       await exportRunning;
       log.sweep(KEY_LISTENER.exportEscape, document.body, () => `cancelled ${cancelled}`, { page: app });
+      playOut();
       const page = keysReachingThePage();
       const event = log.press(KEY_LISTENER.exportEscape, 'Escape', document.body);
       page.stop();

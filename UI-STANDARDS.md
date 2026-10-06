@@ -68,8 +68,9 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 
 - Every async action must show status: loading, progress, success,
   or error. The UI must never appear frozen.
-- Important status changes must be announced programmatically, not
-  only shown visually.
+- Announce important status changes through `announce()`, never into
+  `#announcer`; mark must-hear ones `{ essential: true }`
+  (`src/utils/announcementQueue.js`).
 - Auto-save, export, import, and recovery states must be visible.
 
 ### Empty and no-data states

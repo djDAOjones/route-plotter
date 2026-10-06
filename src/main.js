@@ -82,6 +82,7 @@ import { loadExampleBackground } from './app/backgroundLoading.js';
 import { clearProject } from './app/projectReset.js';
 import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
 import { boundEntryWaypointIds } from './utils/routeAnchors.js';
+import { createAnnouncementQueue } from './utils/announcementQueue.js';
 
 // Main application class for Route Plotter v3
 class RoutePlotter {
@@ -452,6 +453,11 @@ class RoutePlotter {
       areaDeleteControls: document.getElementById('area-delete-controls'),
       areaDeleteBtn: document.getElementById('area-delete-btn')
     };
+
+    // The one writer for the editor's #announcer live region: every
+    // announcement, a component's too (`ui:announce`), is written in turn
+    // (DEF-45).
+    this._announcements = createAnnouncementQueue(this.elements.announcer);
     
     this.ready = this.init().catch(error => {
       const appRoot = document.getElementById('app');
@@ -873,13 +879,17 @@ class RoutePlotter {
   }
   
   // ----- Accessibility and persistence helpers -----
-  announce(message, priority = 'polite') {
-    const el = document.getElementById('announcer');
-    if (!el) return;
-    el.setAttribute('aria-live', priority);
-    el.textContent = message;
-    // Clear after a short delay so repeated messages are announced
-    setTimeout(() => { el.textContent = ''; }, 2000);
+  /**
+   * Announce a message to screen readers. Messages are written to the live
+   * region in turn, each for its own time, so one announced just before
+   * another is not lost (DEF-45; the rules are in utils/announcementQueue.js).
+   * @param {string} message
+   * @param {'polite'|'assertive'} [priority='polite'] - Assertive waits ahead of polite messages
+   * @param {{essential?: boolean}} [options] - essential: the author must hear it, so a burst
+   *   of routine messages never displaces it
+   */
+  announce(message, priority = 'polite', options) {
+    this._announcements.announce(message, priority, options);
   }
   
   /**

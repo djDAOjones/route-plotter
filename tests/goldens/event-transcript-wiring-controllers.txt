@@ -3467,6 +3467,26 @@ later: nothing counted
   history: stack 1, redo 0 (unchanged)
 recovery: as the project stands
 
+## ui:announce
+fixture: open day
+given: the live region quiet
+act: two requests as the waypoint list sends them, the second also carrying an assertive priority and the essential mark, which the bus does not pass on
+at once: nothing counted
+  ui:announce {message: "Waypoint 2 moved up"}
+    said "Waypoint 2 moved up"
+  ui:announce {essential: true, message: "Waypoint 2 moved down", priority: "assertive"}
+    said "Waypoint 2 moved down"
+  model:
+    ~ row.announcer: [] -> ["0 ms \"Waypoint 2 moved up\" (polite)"]
+  selection: none (unchanged)
+  history: stack 1, redo 0 (unchanged)
+later: nothing counted
+  model:
+    ~ row.announcer: ["0 ms \"Waypoint 2 moved up\" (polite)"] -> ["0 ms \"Waypoint 2 moved up\" (polite)", "2000 ms \"Waypoint 2 moved down\" (polite)", "4000 ms \"\" (polite)"]
+  selection: none (unchanged)
+  history: stack 1, redo 0 (unchanged)
+recovery: as the project stands
+
 ## canvas:zoom-in
 fixture: open day
 given: ex-uon-2 selected

@@ -707,7 +707,8 @@ describe('transactional project loading', () => {
 
     expect(app.storageService.clearAutoSave).toHaveBeenCalledTimes(1);
     expect(app.announce).toHaveBeenLastCalledWith(
-      'Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.'
+      'Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.',
+      'polite', { essential: true }
     );
     expect(app.announce).not.toHaveBeenCalledWith('Project loaded');
   });
