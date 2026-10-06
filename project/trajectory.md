@@ -7,6 +7,11 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
+
+- UI-04 — each hint has a "?" of its own beside its label, opened by hover, focus or tap, so a label acts as a label again (2026-10-06) — see decisions
+- DEF-14 — a click on a label toggles or focuses its control, and every range names its readout to screen readers (2026-10-06) — see decisions
+
 ## After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05
 
 - RECALL — 8/8 (2026-10-05) — scores: 2,2,2,2 — local — see decisions

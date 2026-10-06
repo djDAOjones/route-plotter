@@ -22,3 +22,4 @@ A hint click stops a label toggling · Accessibility P1
 - [ ] **DEF-14 A hint click stops a label toggling** · Accessibility
 [gated: TST-04 impl] **P1**
 ```
+- 2026-10-06 — Closed with UI-04 (chat 11): the label-click remedy and the readout wiring (28 ranges, about 55 readout writes through setRangeReadout) are both met; tests/paramTooltip.test.js and tests/rangeReadouts.test.js pin them.
