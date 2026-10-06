@@ -349,13 +349,14 @@ export class StorageService {
    * goes (DEF-28) — from where it was kept, with every identical copy that
    * can be read, but never a different record written there since. Ending a
    * hold removes its mark only while the mark is this record's.
-   * @param {{ text: string, where: string, key?: string }} kept - As offered:
+   * @param {{ text: string, where: string, key?: string, copies?: string[] }} kept - As offered:
    *   `key` is the key it was kept under, if it was (one this tab may have
-   *   been unable to read when it offered it)
-   * @returns {boolean} Whether no readable copy of it is left in the store,
-   *   as far as the store could be searched
+   *   been unable to read when it offered it); `copies`, the keys the caller
+   *   knows hold it
+   * @returns {boolean} Whether no copy of it is left in the store that can be
+   *   read, or that the caller knows of, as far as the store could be searched
    */
-  discardKept({ text, key }) {
+  discardKept({ text, key, copies = [] }) {
     // Wherever it was when it was offered, even kept only in memory: another
     // tab may have kept it since. The recovery key's copy first, and only if
     // it is this record: if it cannot go, the record stays on offer.
@@ -369,10 +370,13 @@ export class StorageService {
     // cannot say none is left.
     const kept = this.listKept();
     if (!kept.ok) return false;
+    let left = false;
     for (const record of kept.records) {
       if (record.text === text && !this._removeKey(record.key)) return false;
+      // A copy the caller knows of, which cannot be read now, is left.
+      if (record.text === null && copies.includes(record.key)) left = true;
     }
-    return true;
+    return !left;
   }
 
   /**

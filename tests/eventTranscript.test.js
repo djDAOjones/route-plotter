@@ -373,7 +373,10 @@ async function bootReturning() {
     await app.ready;
     return app;
   } finally {
-    localStorage.getItem.mockImplementation(() => null);
+    // From here browser recovery reads back what was last written to it, as
+    // storage does: autosave skips an unchanged snapshot only while the key
+    // still holds it (DEF-28).
+    localStorage.getItem.mockImplementation(key => (key === STORAGE.AUTOSAVE_KEY ? storedRecoveryText() : null));
   }
 }
 
@@ -1019,6 +1022,12 @@ function countsText(counts) {
  * nothing; a write after either is held again.
  */
 function storedRecovery() {
+  const held = storedRecoveryText();
+  return held === null ? null : JSON.parse(held);
+}
+
+/** The text browser recovery holds, replayed as `storedRecovery` replays it. */
+function storedRecoveryText() {
   const calls = mock => mock.calls.map((args, index) => ({ args, order: mock.invocationCallOrder[index] }));
   const operations = [
     ...calls(localStorage.setItem.mock).map(each => ({ ...each, kind: 'write' })),
@@ -1030,7 +1039,7 @@ function storedRecovery() {
     if (kind === 'clear') held = null;
     else if (String(args[0]) === STORAGE.AUTOSAVE_KEY) held = kind === 'write' ? String(args[1]) : null;
   }
-  return held === null ? null : JSON.parse(held);
+  return held;
 }
 
 /**

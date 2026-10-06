@@ -53,7 +53,8 @@ function offersOf(app) {
  * keep only in memory; `heldText`, one it held, and `heldDurable`, once that
  * is seen kept where every tab knows. And what it has seen of other tabs:
  * `seen`, each kept key it has read, with its text; `gone`, each key it knew
- * a record by and then read empty where the store could not be searched,
+ * a record by and then read empty where the store could not be searched, or
+ * saw a search no longer list while it listed a key this tab cannot read,
  * offered and looked for no more, but kept apart, with its text, until a
  * search can say whether any copy of that record is left; `discarded`, each
  * record whose every kept copy it saw go, which only the author's Discard or
@@ -141,6 +142,7 @@ function readStore(app) {
   if (kept.ok) {
     const listed = new Set(kept.records.map(record => record.key));
     for (const key of started.keys.keys()) if (!listed.has(key)) started.keys.delete(key);
+    for (const key of started.unreadAtStart) if (!listed.has(key)) started.unreadAtStart.delete(key);
   } else {
     // In the order a search lists them, newest first, as when it works; with
     // them, the keys listed at this start whose records could not be read then
@@ -205,17 +207,24 @@ function readStore(app) {
  * other key keeps its record, so only then is it taken for one. A hold that
  * ends is not taken for one: a build that knows no mark may have written
  * over it. Nor is a key this tab never read (it may have come and gone
- * between two reads): that choice this tab cannot see.
+ * between two reads): that choice this tab cannot see. And a search that
+ * lists a key whose record is neither read nor known here has not shown
+ * that no copy is left, since that key may keep one: what has gone is kept
+ * apart as gone until a search lists only keys whose records are known.
  */
 function noteDiscards(started, kept, parked, keptTexts) {
   if (!kept.ok) return;
   const present = new Set(kept.records.map(record => record.key));
-  for (const [key, text] of started.gone) started.seen.set(key, text);
-  started.gone.clear();
+  const settled = kept.records.every(record => parked.has(record.key));
+  if (settled) {
+    for (const [key, text] of started.gone) started.seen.set(key, text);
+    started.gone.clear();
+  }
   for (const [key, text] of started.seen) {
     if (present.has(key)) continue;
     started.seen.delete(key);
-    if (!keptTexts.has(text)) started.discarded.add(text);
+    if (!settled) started.gone.set(key, text);
+    else if (!keptTexts.has(text)) started.discarded.add(text);
   }
   for (const [key, text] of parked) started.seen.set(key, text);
 }
@@ -370,10 +379,12 @@ export function discardForClearAll(app) {
   started.unkept = [];
   started.heldText = null;
   const { ok } = app.storageService.discardAllKept();
-  // Every kept record went: no key this tab knew is to be looked for again.
+  // Every kept record went: no key this tab knew, or listed at this start, is
+  // to be looked for again.
   if (ok) {
     started.keys.clear();
     started.seen.clear();
+    started.unreadAtStart.clear();
   }
   const after = readStore(app);
   showOffers(app, after);
@@ -416,12 +427,15 @@ export function setupUnrestoredNotice(app) {
   document.getElementById('unrestored-discard')?.addEventListener('click', () => {
     const [offer] = offersOf(app);
     if (!offer) return;
-    if (!app.storageService.discardKept(offer)) {
+    const started = thisStart(app);
+    // Every key this tab knows it under: one the Discard cannot read is a copy left.
+    const copies = [started.keys, started.seen]
+      .flatMap(known => [...known].filter(([, text]) => text === offer.text).map(([key]) => key));
+    if (!app.storageService.discardKept({ ...offer, copies })) {
       showOffers(app);
       app.announce("The session that couldn't be restored could not be discarded.", 'assertive');
       return;
     }
-    const started = thisStart(app);
     started.discarded.add(offer.text);
     started.unkept = started.unkept.filter(text => text !== offer.text);
     if (started.heldText === offer.text) started.heldText = null;

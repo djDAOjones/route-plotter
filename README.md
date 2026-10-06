@@ -195,13 +195,16 @@ browser's storage can't be read at the moment, and can still be downloaded;
 one seen empty is forgotten, and not offered again; and once a search works
 again, what it lists is what is offered. Discard removes every copy of the record it
 can read, wherever it has moved, and says it failed if the store cannot be
-searched, or the key it was offered under cannot be read. A restore still in progress when
+searched, or the key it was offered under, or another key this tab knows it
+under, cannot be read; that copy then stays on offer. A restore still in progress when
 the author discards its record in another tab (by Discard or Clear All)
 keeps it no more, once this tab has seen that tab keep it and then seen it
 go, whether a search showed it gone or its key was read empty while the
-store could not be searched; the latter counts once a search shows no other
-copy left, so a restore that fails before any search works keeps the record
-again, since nothing has shown every copy gone. A hold another tab ends is
+store could not be searched; either counts only once a search shows no other
+copy left, every key it lists read or known to this tab, so a restore that
+fails before such a search (none works, or one lists a key this tab cannot
+read, which may keep a copy) keeps the record again, and announces it, since
+nothing has shown every copy gone. A hold another tab ends is
 not taken for such a choice, since a build
 that knows no mark writing over it looks the same. Only that
 Discard and **Clear All** remove one, and Clear All's dialog says so. When storage cannot hold both a kept record and a new autosave, the
