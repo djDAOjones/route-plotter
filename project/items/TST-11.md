@@ -22,3 +22,4 @@ Behavioural tests for source-text assertions
 - [ ] **TST-11 Behavioural tests for source-text assertions** ·
 Characterisation [gated: SPL-06 impl] **P1**
 ```
+- 2026-10-06 — Round 1 (TST-11's first PR): behavioural tests added beside the source-text assertions (`tests/reviewAccessibilityBehaviour.test.js`, `tests/perfHarnessBehaviour.test.js`, `tests/buildScriptMain.test.js`); the PR body maps each assertion to its tests. Left, on the owner's word: retire the source-text assertions at `reviewAccessibility.test.js` 388–394 and 662–690, `releaseSafety.test.js` 56–89 and `perfHarness.test.js` 101–122; the two that pin only a comment (`reviewAccessibility.test.js:666`, `perfHarness.test.js:116`) go or stay with them. The source checks at `reviewAccessibility.test.js` 366, 378–387, 395–396 and 400 lie outside the row. The shipped shell has no `#bg-fit-toggle` (`main.js:260` looks it up), so the Fit/Fill test adds one before boot.
