@@ -176,6 +176,23 @@ export const wiringControllersMixin = {
       this.autoSave();
     });
     
+    // Hold at end (CROWD-06): only the playback duration grows or shrinks,
+    // measured again where it stands, so nothing timed against the base
+    // timeline moves and the head stays at the same instant. History follows
+    // the gesture, not a timer: one entry when it commits (the pointer let
+    // go, or a keyboard step), however long the drag paused on the way.
+    this.eventBus.on('animation:hold-at-end-change', ({ holdMs, commit }) => {
+      if (this.styles.holdAtEndMs !== holdMs) {
+        // Another control's pending entry is its own, kept before this one moves.
+        this._flushPendingUndo();
+        this.styles.holdAtEndMs = holdMs;
+        this.refreshSceneEnd();
+        this.queueRender();
+        this.autoSave();
+      }
+      if (commit) this.saveUndoState();
+    });
+    
     /**
      * JKL Video Editor Style Playback Controls
      * 

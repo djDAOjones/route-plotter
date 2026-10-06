@@ -183,7 +183,7 @@ const LOOKED_UP = {
   'src/app/editorPanel.js': words('waypoint-scope'),
   'src/app/exporting.js': words('export-dropdown-btn'),
   'src/app/network.js': words(`
-    crowd-fit-wait-btn crowd-guide-hint crowd-trace-route-btn network-edge-delete network-edge-direction
+    crowd-guide-hint crowd-trace-route-btn network-edge-delete network-edge-direction
     network-edge-direction network-edge-hint network-edge-swap network-edge-swap network-edge-weight
     network-edge-weight network-edge-weight-value network-edit-btn network-node-delete network-node-hint
     network-node-type network-node-type network-path-weight-rows network-path-weight-rows
@@ -234,7 +234,8 @@ const LOOKED_UP = {
     export-include-text export-mp4-btn export-res-x export-res-y export-summary export-webm-btn
     graphics-scale graphics-scale-label graphics-scale-value head-filename head-preview head-preview-img
     head-rotation-mode head-rotation-offset head-rotation-offset-control head-rotation-offset-value
-    head-upload head-upload-btn help-btn label-auto-position label-bg-color label-bg-opacity
+    head-upload head-upload-btn help-btn hold-at-end hold-at-end-value label-auto-position label-bg-color
+    label-bg-opacity
     label-bg-opacity-value label-color label-mode label-offset-x label-offset-x-value label-offset-y
     label-offset-y-value label-size label-size-value label-size-warning label-width label-width-value
     load-project-btn load-project-input marker-filename marker-preview marker-preview-img marker-style

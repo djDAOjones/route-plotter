@@ -28,6 +28,16 @@
 
 **Deferred:** none
 
+## 2026-10-06 — CROWD-06 — A Hold at end control carries the animation on after everything has finished
+
+**Decision:** CROWD-06 lands: a "Hold at end" slider in Pacing (0–10 s) adds its time after the last end of anything that finishes, the same in the editor, Preview, scrub, video export and the HTML player, and Duration includes it; a project saved without the setting opens with no hold, a new project or Clear All starts at 2 s; "Wait here for this crowd" is retired.
+
+**Rationale:** the hold extends only the playback duration, so the base timeline and every crowd release timed against it are unchanged, and looping crowds keep moving through it while the route head holds its end. 0 s for saved projects is the run's call (PLAN-2), keeping their playback as it was; the owner's waiver was said of DEF-77. `END_BUFFER_SECONDS`, the unused intent, gives way to `ANIMATION.HOLD_AT_END_*`. The retired button's utility, `waitForCrowdMs`, stays unused with its tests, and the two tests that went through the button fit the wait with it directly, assertions unchanged, so no test is deleted. Two wish lines about the retired button retire with it: its title naming the selected waypoint while it targeted the last major is gone, and the very long wait it worked out on networks where no journey ends keeps its line, reworded to the cause, `scheduleDots` counting Disappear and Collect dots as finishing. After Codex review r1: the slider alone has a 44 px hit area (`range-hit-target`), and undo records one entry per committed change (`change`), not after a 400 ms pause; the editor and the player match dot for dot through the hold on the branched route. 15 new tests fail on main; the mutants of both rounds are killed. Digest rules applied: house conventions → Testing and persistence; Nielsen → 1, visibility of system status (the Duration breakdown).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-06 — PLAN-2 — Phase 2 runs the owner's after-TST-04 items, then W5 and the defects it held
 
 **Decision:** Phase 2 runs, in order, the owner's two items placed after TST-04 (UI-04, then CROWD-06), W5's three characterisation items (TST-09, TST-03, TST-11), then the seven defects that waited for W5's tests (DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22), one at a time under GATELESS-1.

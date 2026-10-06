@@ -530,6 +530,7 @@
     "labelMode": "on",
     "graphicsScale": 1.6,
     "showPathCasing": false,
+    "holdAtEndMs": 0,
     "pathWidth": 9,
     "pathHead": {
       "style": "custom-image",
