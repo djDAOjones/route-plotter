@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-06 — CROWD-06 — A Hold at end control carries the animation on after everything has finished
+
+**Decision:** CROWD-06 lands: a "Hold at end" slider in Pacing (0–10 s) adds its time after the last end of anything that finishes, the same in the editor, Preview, scrub, video export and the HTML player, and Duration includes it; a project saved without the setting opens with no hold, a new project or Clear All starts at 2 s; "Wait here for this crowd" is retired.
+
+**Rationale:** the hold extends only the playback duration, so the base timeline and every crowd release timed against it are unchanged, and looping crowds keep moving through it while the route head holds its end. 0 s for saved projects is the run's call (PLAN-2), keeping their playback as it was; the owner's waiver was said of DEF-77. `END_BUFFER_SECONDS`, the unused intent, gives way to `ANIMATION.HOLD_AT_END_*`. The retired button's utility, `waitForCrowdMs`, stays unused with its tests, and the two tests that went through the button fit the wait with it directly, assertions unchanged, so no test is deleted. 15 new tests fail on main; eight mutants are killed. Digest rules applied: house conventions → Testing and persistence; Nielsen → 1, visibility of system status (the Duration breakdown).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-06 — PLAN-2 — Phase 2 runs the owner's after-TST-04 items, then W5 and the defects it held
 
 **Decision:** Phase 2 runs, in order, the owner's two items placed after TST-04 (UI-04, then CROWD-06), W5's three characterisation items (TST-09, TST-03, TST-11), then the seven defects that waited for W5's tests (DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22), one at a time under GATELESS-1.
@@ -515,12 +525,4 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 **Supersedes:** 2026-10-03 — V3-CONFIRM — The working clone sits beside the owner's checkout, kept on the device; gh runs outside the sandbox
 
 **Deferred:** none
-
-## 2026-10-03 — V3-CONFIRM — The working clone sits beside the owner's checkout, kept on the device; gh runs outside the sandbox
-
-**Decision:** sessions work in the fresh clone `route-plotter/` beside the owner's OneDrive checkout, in the same folder, with OneDrive's Always Keep on This Device set on it, because the owner keeps the project's working copy with its other files; and `gh` runs outside the sandbox (`sandbox.excludedCommands`), so each `gh` call asks unless the owner pre-approves it.
-
-**Rationale:** the owner's instruction of 2026-10-03: a fresh clone, but inside the project's OneDrive folder rather than elsewhere on the disk. The working setup in `DEV-INFRASTRUCTURE.md` said "outside OneDrive" because OneDrive can evict `.git` internals to online-only, and git then fails with `mmap failed: Operation timed out`; keeping the clone's folder on the device removes that cause, so the setup and the rules file now name the clone and the setting. The owner's checkout stays his: fast-forward only, when clean. The clone was made on 2026-10-03 from `main` at 662b2e2 with `npm ci`; `npm run check` passed there (93 test files, 1566 tests) and the session hook ran from its path. On `gh` (8ebaad9, #80): under the strict allowlist a sandboxed `gh` is refused, and with `api.github.com` added it fails TLS verification on macOS (x509 OSStatus -26276, the sandbox denies Go the system trust service); tested headless on Claude Code 2.1.267, an excluded `gh` reaches GitHub and a sandboxed `git push` authenticates. The owner chose this over `api.github.com` plus `enableWeakerNetworkIsolation`, which keeps `gh` sandboxed but which the client marks as reduced security.
-
-**Supersedes:** none
 
