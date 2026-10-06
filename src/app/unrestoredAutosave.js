@@ -450,7 +450,11 @@ export function setupUnrestoredNotice(app) {
     // Autosave could not write while the record was held; the project goes
     // to browser recovery now, not at the next change.
     if (offer.where === 'held') app.saveRecovery?.();
-    app.announce(next ? `${DISCARDED} ${messageFor(next)}` : DISCARDED);
+    // The Discard confirms the author's own choice. A record still on offer is
+    // what recovery could not do, which nothing else says of any but the first
+    // offered at the start, so that is heard whatever follows (DEF-45).
+    if (next) app.announce(`${DISCARDED} ${messageFor(next)}`, 'polite', { essential: true });
+    else app.announce(DISCARDED);
   });
   // Clear All's dialog says how many it would discard, as the store has it now.
   document.getElementById('clear-btn')?.addEventListener('click', () => showOffers(app));

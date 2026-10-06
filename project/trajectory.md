@@ -21,6 +21,7 @@
 
 ## Phase 1 — Land the big run's open pull requests
 
+- DEF-28 — a session that cannot be restored is kept and offered (Download it, Discard) instead of cleared or overwritten, each further one under a key of its own; Discard and Clear All say what they removed and what they could not (2026-10-06) — see decisions
 - DEF-45 — announcements are read in turn, each holding the live region for 2 s, so a recovery warning is no longer replaced or lost, and a warning already waiting is not queued again, so a burst of loads leaves at most one behind (2026-10-05) — see decisions
 - TST-08 — the mixin composition is guarded from the parsed source: `main.js` composes exactly the listed mixins and reaches the prototype nowhere else, nothing changes a mixin, and every call on the app by name reaches a function it has; what the reader cannot follow is refused with its line (2026-10-05) — see decisions
 - TST-05 — every event the wiring subscribes to and the order its listeners run are pinned as golden transcripts, with hidden payload fields digested and the waypoint lookup checked after each step, Undo and Redo (2026-10-05) — see decisions

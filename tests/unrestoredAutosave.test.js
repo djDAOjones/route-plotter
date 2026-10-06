@@ -26,7 +26,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { LOAD_REFUSED } from './helpers/projectSnapshot.js';
-import { STORAGE } from '../src/config/constants.js';
+import { ANNOUNCEMENTS, STORAGE } from '../src/config/constants.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { StorageService } from '../src/services/StorageService.js';
 import { keepUnrestoredAutosave, keptEarlierNote } from '../src/app/unrestoredAutosave.js';
@@ -180,6 +180,12 @@ const status = () => document.getElementById('unrestored-notice-status').textCon
 const clearNote = () => document.getElementById('clear-unrestored-note');
 const announcer = () => document.getElementById('announcer').textContent;
 const discard = () => document.getElementById('unrestored-discard').click();
+/**
+ * Let what the editor said while starting take its turns, on the real clock,
+ * until the live region is idle, so what follows is written to it at once
+ * (DEF-45: each message holds the region for a hold).
+ */
+const quiet = () => vi.waitFor(() => expect(announcer()).toBe(''), { timeout: 4 * ANNOUNCEMENTS.HOLD_MS, interval: 50 });
 /** Clear All's dialog opened and cancelled: the notice reads the store again. */
 function refresh() {
   document.getElementById('clear-btn').click();
@@ -292,6 +298,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
     allowConsole(LOAD_REFUSED);
     const { store, app } = await bootRecording({ [AUTOSAVE]: await refusedRecord() });
     const announced = listen(app);
+    await quiet();
 
     discard();
 
@@ -299,6 +306,16 @@ describe('a record that cannot be restored (DEF-28)', () => {
     expect(notice().hidden).toBe(true);
     expect(announced()).toEqual([{ message: DISCARDED, priority: 'polite' }]);
     expect(announcer()).toBe(DISCARDED);
+  }, 20000); // what starting said plays out first on the real clock
+
+  test('a Discard that leaves another record on offer says so as a message the author must hear; one that leaves none, as a routine confirmation', async () => {
+    const { app } = await bootRecording({ [keptKey(1, 'a')]: 'older record', [keptKey(2, 'b')]: 'newer record' });
+    const announce = vi.spyOn(app, 'announce');
+
+    discard();
+    expect(announce.mock.calls.at(-1)).toEqual([`${DISCARDED} ${EARLIER} ${KEPT}`, 'polite', { essential: true }]);
+    discard();
+    expect(announce.mock.calls.at(-1)).toEqual([DISCARDED]);
   });
 
   test('is offered again by the next start, as one kept earlier, until the author chooses', async () => {
@@ -468,6 +485,7 @@ describe('more than one record that could not be restored (DEF-28)', () => {
     );
     expect(kept(store)).toEqual([record]);
     expect(store.get(AUTOSAVE)).toBe(record);
+    await quiet();
 
     // While the copy in the recovery key cannot go, Discard says it failed.
     discard();
@@ -480,7 +498,7 @@ describe('more than one record that could not be restored (DEF-28)', () => {
     expect(store.has(AUTOSAVE)).toBe(false);
     await restart(prototype);
     expect(notice().hidden).toBe(true);
-  });
+  }, 20000); // what starting said plays out first on the real clock
 });
 
 describe('a record no copy of which fits (DEF-28)', () => {

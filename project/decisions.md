@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-06 — DEF-28 — A session that cannot be restored is kept and offered, not lost
+
+**Decision:** DEF-28 lands (PR #54): a recovery record that cannot be restored is kept under a key of its own, or held where no copy fits, and offered (Download it, Discard) instead of being cleared or overwritten; Discard and Clear All report what they removed and what they could not, and every message about it is must-hear under DEF-45's queue.
+
+**Rationale:** Codex review r11's three findings are fixed in `unrestoredAutosave.js` and `StorageService.discardKept`: a search settles a disappearance only once every listed key's text is known (F1); Discard keeps and reports a copy it cannot read (F2); a search and a successful Clear All retire start-time keys, so Clear All reports no phantom discard (F3). Nine cases close P1–P3 and the three test gaps; each named mutant passed before and fails now. Merging DEF-45 marked the recovery announcements essential and made Discard's next-offer message must-hear. Digest rules applied: house conventions → Testing and persistence; Nielsen → 9, recognise, diagnose and recover from errors. DEF-50 and DEF-67 no longer wait on it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — DEF-45 — Announcements are read in turn, and the queue is bounded
 
 **Decision:** DEF-45 lands (PR #70): the live region reads announcements in turn, each for 2 s, so a recovery warning is never replaced or pushed out; a must-hear message already waiting merges into the waiting copy, so at most three routine messages and one of each must-hear text wait.
