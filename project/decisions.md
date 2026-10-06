@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-05 — DEF-45 — Announcements are read in turn, and the queue is bounded
+
+**Decision:** DEF-45 lands (PR #70): the live region reads announcements in turn, each for 2 s, so a recovery warning is never replaced or pushed out; a must-hear message already waiting merges into the waiting copy, so at most three routine messages and one of each must-hear text wait.
+
+**Rationale:** Codex review r2 found the queue unbounded (twelve Examples loads left six warnings and 20 s of stale feedback) and two protection mutants surviving; coalescing now leaves one warning and clears the region within 10 s of the last load, and Y1, Y3 and advisories Y2, Y5 are killed. A polite message can still wait while assertive ones keep arriving (stated in the code). Three suites from main read the region straight after an action; their setups now let the queue play out first, their expected text unchanged. No real screen reader was tried. Digest rule applied: Nielsen → 1, visibility of system status; UI-STANDARDS gains one short announce rule (within its budget). DEF-50 and DEF-67 now wait only on DEF-28.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — TST-14 — The restart script's safety checks can fail, and the context menu has tests
 
 **Decision:** TST-14 lands (PR #74): every check in `tests/restartSafety.test.sh` is an `if` that says what broke, its stand-in tools answer only the forms and processes they model, and `tests/contextMenu.test.js` pins the menu and the canvas's right-click menus.

@@ -68,14 +68,9 @@ Nielsen's heuristics are **hard rules**, not aspirations.
 
 - Every async action must show status: loading, progress, success,
   or error. The UI must never appear frozen.
-- Important status changes must be announced programmatically, not
-  only shown visually.
-- Announce through the app's `announce()` (components emit `ui:announce`);
-  never write the editor's `#announcer` live region directly. The queue writes
-  each message in turn, 2 s each. Under a burst, routine confirmations may be
-  merged or give way, oldest first; a message the author must hear never does:
-  mark it `{ essential: true }`, as persistence does for what browser recovery
-  did or could not do.
+- Announce important status changes through `announce()`, never into
+  `#announcer`; mark must-hear ones `{ essential: true }`
+  (`src/utils/announcementQueue.js`).
 - Auto-save, export, import, and recovery states must be visible.
 
 ### Empty and no-data states

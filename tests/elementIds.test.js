@@ -214,7 +214,7 @@ const LOOKED_UP = {
   `),
   'src/main.js': words(`
     animation-speed animation-speed-right animation-speed-value animation-speed-value-right announcer
-    announcer aov-angle aov-angle-value aov-distance aov-distance-value aov-dropoff aov-dropoff-value app
+    aov-angle aov-angle-value aov-distance aov-distance-value aov-dropoff aov-dropoff-value app
     app app-title area-border-color area-border-controls area-border-style area-border-width
     area-border-width-value area-circle-controls area-circle-radius area-circle-radius-value area-delete-btn
     area-delete-controls area-draw-btn area-draw-controls area-fade-in area-fade-in-value area-fade-out

@@ -654,6 +654,8 @@ function prepareAutosaveSnapshot(app) {
 // ask, and nothing says it again: the omission and auto-save warnings are
 // suppressed once said, and a restore happens once per load. So the
 // announcement queue never lets later routine messages displace it (DEF-45).
+// The same notice said while its text still waits (a second project opened
+// before the first one's warning was read) is read once, after both.
 const RECOVERY_NOTICE = Object.freeze({ essential: true });
 
 function reportAutosaveOmissions(app, { omittedAssets, omittedBackground }) {

@@ -10,23 +10,36 @@
  * Messages are now written to the region in turn. One announced while the
  * region is idle is written at once, so code that reads the region straight
  * after announcing still sees it; one announced while another shows waits.
- * Each keeps the region for `ANNOUNCEMENTS.HOLD_MS`, and only once nothing
- * waits is the region cleared and made polite again, so a repeated message
- * still reads as a change. There is one timer at a time, so no clear can land
- * on a later message.
+ * Each one written keeps the region for `ANNOUNCEMENTS.HOLD_MS`, and only
+ * once nothing waits is the region cleared and made polite again, so a
+ * repeated message still reads as a change. There is one timer at a time, so
+ * no clear can land on a later message.
  *
- * - A message the author must hear is never dropped: one its caller marks
+ * - A message the author must hear never gives way: one its caller marks
  *   essential (what browser recovery did or could not do, which nothing says
  *   again) and every assertive one. Only routine messages, which confirm what
- *   the author has just done, ever give way.
+ *   the author has just done, ever give way. Any message can merge, below.
  * - An assertive message waits ahead of the polite ones, but never cuts short
  *   the message showing. The region is assertive only while it shows one.
  * - A message identical to the one it would follow is merged into it: the
  *   region already says it, or will next, and the same text written again is
  *   not read again. The merged message keeps the stronger protection.
+ * - A message the author must hear whose text already waits, anywhere in the
+ *   queue, is merged into that waiting copy instead: the copy is written after
+ *   this request, so it tells the author what this one would. So the same
+ *   notice said again and again (an omission warning for each project opened)
+ *   waits once. The message showing is not such a copy, unless it is the one
+ *   followed: it was written before this request, so the same text after
+ *   other messages is written again. Routine messages merge only into the one
+ *   they would follow.
  * - At most `ANNOUNCEMENTS.MAX_WAITING` routine messages wait. Beyond that the
  *   oldest gives way, so a burst of toggles falls no further behind; messages
  *   the author must hear do not count.
+ * - So what waits is bounded however long input goes on: at most
+ *   `MAX_WAITING` routine messages and one of each text the author must hear
+ *   (the app's are fixed texts). Once input stops, the region clears within
+ *   one hold for the message showing and one for each message waiting. Not
+ *   bounded: how long a polite message waits while assertive ones keep coming.
  * - A blank or whitespace-only message has nothing to read and is ignored.
  *   Text is written as text, never parsed as markup.
  *
@@ -84,8 +97,10 @@ export function createAnnouncementQueue(region) {
       const firstPolite = waiting.findIndex(each => each.priority !== 'assertive');
       const at = priority === 'assertive' && firstPolite !== -1 ? firstPolite : waiting.length;
       const before = at > 0 ? waiting[at - 1] : showing;
-      if (before.message === message) {
-        before.kept ||= entry.kept;
+      const copy = entry.kept ? waiting.find(each => each.message === message) : undefined;
+      const same = copy ?? (before.message === message ? before : undefined);
+      if (same) {
+        same.kept ||= entry.kept;
         return;
       }
       waiting.splice(at, 0, entry);

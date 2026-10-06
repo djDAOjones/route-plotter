@@ -14,6 +14,11 @@
  * persistence never says it again (the falsification review's R1). A message
  * the author must hear now never gives way; only routine ones do.
  *
+ * That queue had no bound: each project opened asked for its warning again,
+ * and every copy waited, so twelve Site walk openings a second apart left six
+ * still to read twenty seconds after the last (the second review's F1). A
+ * message the author must hear now goes into the same text still waiting.
+ *
  * Every text the region shows is recorded by a MutationObserver and stamped
  * with the fake clock, so each test reads the region's whole history: what was
  * written, in what order, and for how long. That is what reached the region;
@@ -360,6 +365,146 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     ]);
   });
 
+  test('the same routine text, merged into a message the author must hear waiting, leaves it unable to give way', async () => {
+    // The other order: the must-hear message first, its routine duplicate after.
+    const app = await bootIdleApp();
+    const { shown } = recordRegion();
+    const start = Date.now();
+
+    app.announce('Waypoint moved');
+    app.announce(AUTOSAVE_FAILED, 'polite', { essential: true });
+    app.announce(AUTOSAVE_FAILED);
+    for (const message of ['Undo', 'Redo', 'Waypoint deleted', 'Waypoint duplicated']) app.announce(message);
+    await playOut();
+
+    expect(since(shown, start)).toEqual([
+      [0, 'Waypoint moved'],
+      [HOLD, AUTOSAVE_FAILED],
+      [2 * HOLD, 'Redo'],
+      [3 * HOLD, 'Waypoint deleted'],
+      [4 * HOLD, 'Waypoint duplicated'],
+      [5 * HOLD, ''],
+    ]);
+  });
+
+  test('a message the author must hear goes into the same text still waiting, so each such text waits once', async () => {
+    const app = await bootIdleApp();
+    const { shown } = recordRegion();
+    const start = Date.now();
+
+    // Two must-hear notices, each said again with other messages between.
+    app.announce('Waypoint moved');
+    app.announce(AUTOSAVE_FAILED, 'polite', { essential: true });
+    app.announce('Undo');
+    app.announce(BACKGROUND_WARNING, 'polite', { essential: true });
+    app.announce(AUTOSAVE_FAILED, 'polite', { essential: true });
+    app.announce('Redo');
+    app.announce(BACKGROUND_WARNING, 'polite', { essential: true });
+    await playOut();
+
+    // Each is written where its text first waited, once.
+    expect(since(shown, start)).toEqual([
+      [0, 'Waypoint moved'],
+      [HOLD, AUTOSAVE_FAILED],
+      [2 * HOLD, 'Undo'],
+      [3 * HOLD, BACKGROUND_WARNING],
+      [4 * HOLD, 'Redo'],
+      [5 * HOLD, ''],
+    ]);
+
+    // A routine copy of its text waiting, not the one it follows, takes it in
+    // and can no longer give way.
+    shown.length = 0;
+    const joined = Date.now();
+    app.announce('Waypoint moved');
+    app.announce(IMAGES_WARNING);
+    app.announce('Undo');
+    app.announce(IMAGES_WARNING, 'polite', { essential: true });
+    for (const message of ['Redo', 'Waypoint deleted', 'Waypoint duplicated']) app.announce(message);
+    await playOut();
+
+    expect(since(shown, joined)).toEqual([
+      [0, 'Waypoint moved'],
+      [HOLD, IMAGES_WARNING],
+      [2 * HOLD, 'Redo'],
+      [3 * HOLD, 'Waypoint deleted'],
+      [4 * HOLD, 'Waypoint duplicated'],
+      [5 * HOLD, ''],
+    ]);
+
+    // Assertive messages too: errors that alternate wait once each, still ahead.
+    shown.length = 0;
+    const again = Date.now();
+    app.announce('Saving project...');
+    app.announce('Project saved');
+    for (const message of ['First error.', 'Second error.', 'First error.', 'Second error.', 'First error.']) {
+      app.announce(message, 'assertive');
+    }
+    await playOut();
+
+    expect(since(shown, again)).toEqual([
+      [0, 'Saving project...'],
+      [HOLD, 'First error.'],
+      [2 * HOLD, 'Second error.'],
+      [3 * HOLD, 'Project saved'],
+      [4 * HOLD, ''],
+    ]);
+  });
+
+  test('a must-hear text is written again after others once its first copy has been; routine text merges only into what it follows', async () => {
+    const app = await bootIdleApp();
+    const { shown } = recordRegion();
+    const start = Date.now();
+
+    // The copy showing was written before the second request, so it cannot answer it.
+    app.announce(AUTOSAVE_FAILED, 'polite', { essential: true });
+    app.announce('Undo');
+    app.announce(AUTOSAVE_FAILED, 'polite', { essential: true });
+    // A routine message waits again after another, as a repeated action is.
+    app.announce('Redo');
+    app.announce('Undo');
+    await playOut();
+
+    expect(since(shown, start)).toEqual([
+      [0, AUTOSAVE_FAILED],
+      [HOLD, 'Undo'],
+      [2 * HOLD, AUTOSAVE_FAILED],
+      [3 * HOLD, 'Redo'],
+      [4 * HOLD, 'Undo'],
+      [5 * HOLD, ''],
+    ]);
+  });
+
+  test('under sustained input a repeated must-hear notice waits once, keeps being read, and the region clears soon after input stops', async () => {
+    // An opening's messages once a second for a minute: synthetic traffic,
+    // five times the twelve real openings below.
+    const app = await bootIdleApp();
+    const { shown } = recordRegion();
+    const start = Date.now();
+
+    for (let second = 0; second < 60; second += 1) {
+      if (second) await vi.advanceTimersByTimeAsync(1000);
+      for (const message of ['Opening Site walk…', 'Loading project...', 'Animation paused']) app.announce(message);
+      app.announce(BACKGROUND_WARNING, 'polite', { essential: true });
+      app.announce('Project loaded');
+    }
+    const stopped = Date.now();
+    await vi.advanceTimersByTimeAsync(30 * HOLD);
+
+    const warnings = shown.filter(([, text]) => text === BACKGROUND_WARNING).map(([at]) => at);
+    // While input goes on the notice is never starved: no more than the routine
+    // messages that may wait come between two readings of it.
+    const gaps = warnings.slice(1).map((at, turn) => at - warnings[turn]);
+    expect(warnings[0] - start).toBeLessThanOrEqual((ANNOUNCEMENTS.MAX_WAITING + 1) * HOLD);
+    expect(Math.max(...gaps)).toBeLessThanOrEqual((ANNOUNCEMENTS.MAX_WAITING + 1) * HOLD);
+    // Once input stops, one copy is left to read, and the region is clear
+    // within a hold for the message showing and one for each that may wait.
+    expect(warnings.filter(at => at > stopped)).toHaveLength(1);
+    const [clearedAt, cleared] = shown.at(-1);
+    expect(cleared).toBe('');
+    expect(clearedAt - stopped).toBeLessThanOrEqual((1 + ANNOUNCEMENTS.MAX_WAITING + 1) * HOLD);
+  });
+
   test('a blank or whitespace-only message is never written and never takes a turn', async () => {
     const app = await bootIdleApp();
     const { region, shown } = recordRegion();
@@ -393,6 +538,16 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
 
     expect(region.textContent).toBe(message);
     expect(region.children).toHaveLength(0);
+  });
+
+  test('a message is written exactly as given, its surrounding spaces too', async () => {
+    // Only a message with nothing to read is refused; one with text is not trimmed.
+    const app = await bootIdleApp();
+    const { region } = recordRegion();
+
+    app.announce('  Waypoint moved \n');
+
+    expect(region.textContent).toBe('  Waypoint moved \n');
   });
 
   test('a queue without a live region announces nothing, and does not throw', () => {
@@ -540,6 +695,104 @@ describe('what browser recovery did or could not do reaches the region, whatever
       [2 * HOLD, 'Waypoint deleted'],
       [3 * HOLD, 'Waypoint duplicated'],
       [4 * HOLD, 'All waypoints selected'],
+      [5 * HOLD, ''],
+    ]);
+  });
+
+  test('a second project opened before the first one\'s warning is read gets that warning read once, after both are open', async () => {
+    const app = await bootIdleApp();
+    const file = await projectFile(app, { background: true });
+    const { shown } = recordRegion();
+
+    expect(await settle(app.loadProject(file))).toBe(true);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(await settle(app.loadProject(file))).toBe(true);
+    await playOut();
+
+    // The first opening's warning still waited when the second asked for it.
+    expect(since(shown)).toEqual([
+      [0, 'Loading project...'],
+      [HOLD, BACKGROUND_WARNING],
+      [2 * HOLD, 'Loading project...'],
+      [3 * HOLD, 'Animation paused'],
+      [4 * HOLD, 'Project loaded'],
+      [5 * HOLD, ''],
+    ]);
+  });
+
+  test('a second project opened while the first one\'s warning is read gets its own warning after its opening', async () => {
+    const app = await bootIdleApp();
+    const file = await projectFile(app, { background: true });
+    const { region, shown } = recordRegion();
+
+    expect(await settle(app.loadProject(file))).toBe(true);
+    await vi.advanceTimersByTimeAsync(2 * HOLD + 300);
+    expect(region.textContent).toBe(BACKGROUND_WARNING);
+    expect(await settle(app.loadProject(file))).toBe(true);
+    await playOut();
+
+    // The first opening's own pause (DEF-67) and "Project loaded" each take a turn.
+    expect(since(shown)).toEqual([
+      [0, 'Loading project...'],
+      [HOLD, 'Animation paused'],
+      [2 * HOLD, BACKGROUND_WARNING],
+      [3 * HOLD, 'Loading project...'],
+      [4 * HOLD, 'Animation paused'],
+      [5 * HOLD, BACKGROUND_WARNING],
+      [6 * HOLD, 'Project loaded'],
+      [7 * HOLD, ''],
+    ]);
+  });
+
+  test('twelve Site walk openings a second apart leave one warning to read after the last, and the region clear soon after', async () => {
+    // The second review's reproduction, through the Examples menu with the
+    // shipped archive: the site serves it from the build output, docs/.
+    const app = await bootIdleApp();
+    const serveRepository = globalThis.fetch;
+    globalThis.fetch = vi.fn(input => serveRepository(String(input).replace(/^examples\//, 'docs/examples/')));
+    const opening = vi.spyOn(app, 'loadExampleProject');
+    const siteWalk = [...document.querySelectorAll('#example-projects-menu button')]
+      .find(item => item.textContent === 'Site walk');
+    const { shown } = recordRegion();
+
+    for (let click = 0; click < 12; click += 1) {
+      if (click) await vi.advanceTimersByTimeAsync(1000);
+      siteWalk.click();
+      expect(await settle(opening.mock.results.at(-1).value)).toBe(true);
+    }
+    const stopped = Date.now();
+    await playOut();
+
+    // Every opening asked for the warning; one copy waited for them all, and
+    // is read after the last.
+    const warnings = shown.filter(([, text]) => text === BACKGROUND_WARNING).map(([at]) => at);
+    expect(warnings.filter(at => at > stopped)).toHaveLength(1);
+    // The region is clear within a hold for the message showing and one for each that may wait.
+    const [clearedAt, cleared] = shown.at(-1);
+    expect(cleared).toBe('');
+    expect(clearedAt - stopped).toBeLessThanOrEqual((1 + ANNOUNCEMENTS.MAX_WAITING + 1) * HOLD);
+  });
+
+  test('Clear All\'s warning that recovery could not be cleared is shown though a burst of routine messages follows it', async () => {
+    const app = await bootIdleApp();
+    vi.spyOn(app.storageService, 'clearAutoSave').mockReturnValue(false);
+    document.getElementById('splash-close').click();
+    const { shown } = recordRegion();
+
+    // Clear All, then Clear in its confirmation.
+    press(app, 'clear');
+    await vi.advanceTimersByTimeAsync(0);
+    document.getElementById('clear-confirm').click();
+    for (const message of ['Undo', 'Redo', 'Waypoint deleted', 'Waypoint duplicated']) app.announce(message);
+    await playOut();
+
+    // It is assertive, so it is kept, and shown after what Clear All's reset said.
+    expect(since(shown)).toEqual([
+      [0, 'Animation reset'],
+      [HOLD, 'Browser recovery could not be cleared; reload may restore old work.'],
+      [2 * HOLD, 'Redo'],
+      [3 * HOLD, 'Waypoint deleted'],
+      [4 * HOLD, 'Waypoint duplicated'],
       [5 * HOLD, ''],
     ]);
   });
