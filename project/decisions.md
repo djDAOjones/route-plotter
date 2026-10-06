@@ -18,6 +18,45 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-06 — PLAN-2 — Phase 2 runs the owner's after-TST-04 items, then W5 and the defects it held
+
+**Decision:** Phase 2 runs, in order, the owner's two items placed after TST-04 (UI-04, then CROWD-06), W5's three characterisation items (TST-09, TST-03, TST-11), then the seven defects that waited for W5's tests (DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22), one at a time under GATELESS-1.
+
+**Items:** UI-04, CROWD-06, TST-09, TST-03, TST-11, DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22
+
+**Rationale:** the review (plan step 2), against the brief, the adopted standards and GATELESS-1's order ("W5, defects runnable now, defects that wait on their W5 test, then W4, plus the found defects"):
+- The parameter hint opens from a label's own text, so a click on a label does not toggle its control (DEF-14; UI-03's decision; Nielsen 4, WCAG 2.1.3): UI-04, the owner's order of 2026-10-05, folds in DEF-14's first remedy; DEF-14 stays an item until its whole scope is met.
+- Since CROWD-05 the animation ends when the last concluding animation ends, with no padding for looping crowds, and "Wait here for this crowd" writes a fixed wait that goes stale (CROWD-05; CROWD-06's file): CROWD-06, the owner's control.
+- W5's three characterisation items from the abstraction plan's §13 are unstarted: camera, dots, curvature and time domains; the visibility-mode matrix; source-text assertions made behavioural (TST-09, TST-03, TST-11).
+- Seven live and accessibility defects held by §13 ground rule 8 are runnable now that TST-04 and TST-05 have landed (P1: DEF-20, DEF-13, DEF-32, DEF-14; P2: DEF-15, DEF-19, DEF-22).
+Deferred, already lines in Next: W4 (DEL-01 to DEL-06) and the 27 found defects (DEF-50 to DEF-80), for the phase after this one, per GATELESS-1's "then W4, plus the found defects"; EX-01 waits on the owner's direction, REV-03 and REV-05 on his evidence; the brief's open question on format 9 stands. None is new.
+
+The session's calls, for the owner to confirm: the owner's two items first, then W5's tests in the plan's order, then the held defects P1 before P2; the found defects after W4 rather than interleaved. Codex reviews this plan before it executes.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — REL-705 — v3.2.705 ships DEF-28
+
+**Decision:** v3.2.705 is live from deploy commit `e6cb2dd` (tag `v3.2.705`), released under GATELESS-1 because DEF-28's merge (`3095574`, PR #54) changed `src/`, `styles/` and `index.html`.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.704-3095574`, gate green (109 files, 2,608 tests), dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical. Live smoke as for v3.2.704, the same readings (27,028 ms, MP4 29.0 s, HTML complete), no failed resource or console error. DEF-28 does not change export, so no disk save is owed.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — REL-704 — v3.2.704 ships DEF-45
+
+**Decision:** v3.2.704 is live from deploy commit `2edf75a` (tag `v3.2.704`), released under GATELESS-1 because DEF-45's merge (`44d3009`, PR #70) changed `src/`.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.703-44d3009`, gate green, dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical to the build. Live smoke in the browser pane (1280×800): title v3.2.704, Open day played 3,002 ms of 27,028, ran to its end with no frame queued, MP4 1920×1080 29.0 s `ftypisom`, HTML export with its project, CSP and the live player, no failed resource, no console error. DEF-45 does not change export, so no disk save is owed; v3.2.703's stays owed (a wish line).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-06 — DEF-28 — A session that cannot be restored is kept and offered, not lost
 
 **Decision:** DEF-28 lands (PR #54): a recovery record that cannot be restored is kept under a key of its own, or held where no copy fits, and offered (Download it, Discard) instead of being cleared or overwritten; Discard and Clear All report what they removed and what they could not; under DEF-45's queue every message saying a session could not be restored or removed is must-hear, while Discard's and Clear All's own confirmations stay routine. Phase 1 closes with it: all 14 PLAN-1 items landed; next is UI-04, by the owner's order of 2026-10-05 (after TST-04).
@@ -483,26 +522,3 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 
 **Supersedes:** none
 
-## 2026-10-02 — V3-CONFIRM — The owner signs the ledger, confirms Network and Handoff, installs the session hooks
-
-**Decision:** the profile, brief and rules carry the owner's reviewed signature of 2026-10-02 in place of the delegated lines; the Network line (listed hosts github.com, registry.npmjs.org) and the Handoff split (Claude Code executes; Codex reviews read-only) are confirmed and lose their `[guess]`; `.claude/settings.json` and `.claude/settings.intake.json` are committed from `tools/harness.mjs`, with the two session hooks, and `.gitignore` admits those two files — because the owner answered the three open intake questions on 2026-10-02 ("sign both now", the recommended Network and Handoff, "install Claude Code side in both").
-
-**Rationale:** the owner's answers, given in chat on 2026-10-02 after the merge. Two edits to the generated settings, reviewed on his behalf and recorded here: the home directory is written as `~/` rather than an absolute path, since this repository is public; and the denies on `gh`, `git fetch` and `git pull` are removed, since github.com is a listed host and the project's own rules require `gh` for every pull request and a fetch to keep a clone current. The Codex profile is not installed: the lab found the generated profile fails to start a session on Codex 0.155.1, so that side waits for a verified generator. The hooks run only where the client runs them; the first attended session should confirm with `/hooks` that the two SessionStart and PostToolUse hooks are loaded. `[guess]` stays on "Prose: en-GB", which the owner has not addressed. This change lands by pull request under the owner's instruction of 2026-10-02 to progress both projects to full v3 now.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-01 — INTAKE — Route Plotter adopts pm-next v3 from canon 4.7.0
-
-**Decision:** the project's contract, verbs and tools are pm-next v3's (PM-Skills-lab commit 155f145), the ledger under `project/` is written from the canon record at 75ba7ae — Direction and the full brief from the brief, the rules file from `AGENTS.md` with `UI-STANDARDS.md`, `DEV-INFRASTRUCTURE.md`, the dev guide and the abstraction plan kept in place and routed, the architecture carried as a routed file and the conventions as a house digest, every open item as a backlog line with an item file holding its canon text verbatim, every wish line carried — and the canon record under `pm_skills/` is frozen in place, pinned by `project/migration/inventory.json`, because the maintainer named this project for the lab's V3-FIELD on 2026-10-01 and v3's intake verb is the route for a canon project.
-
-**Rationale:** the maintainer's word of 2026-10-01 ("V3-FIELD with uon video helper and route plotter"); the lab's item is V3-FIELD-2 and the pre-registration row is in the lab's V2-FIELD-1 record. Inventory: `project/migration/inventory.json` at the snapshot commit 75ba7ae, written by the lab's `lab/tools/migrate-canon.mjs`; census: `project/migration/census.md`, 499 rows from seven sources — the canon `AGENTS.md`, `CLAUDE.md`, `UI-STANDARDS.md`, `DEV-INFRASTRUCTURE.md`, the brief, the conventions and the architecture; the source list was closed by reading the canon contract, its two rulebooks, the three hot memory files it names, the README (product description, no rule), the one ticket (its obligations are its own item's criteria, carried into the item file, not standing rules) and the big run's two decisions of 2026-09-28, whose standing delegation is cited from the rules file and the Direction, never restated; every row was read in its destination's context by this session and, read-only, by Codex Astra, whose twelve findings — a dropped search obligation, a lost scope exclusion, document-maintenance rules and a harness tip retired as machinery, the refactor contract and the W4 group condition uncarried, a close-out read and a watcher-stop step lost, two additions without a source, a contradictory claim on the Network line, the item schema file missing, stale references — were each repaired before the push (the lab's V3-FIELD-2 item). Where each obligation went: the hard rules, the commit-push-release rules, the protected paths and the owner's archive rule to the rules file's Always; the read tiers, workflow, memory budgets, document ownership and framework section aliases retired as canon machinery, replaced by v3's rule 1, the verbs and the checker; the engineering rules (minimal change, documentation, testing and persistence) and the conventions to the house digest; the rulebook rules to their kept files, routed by task; the brief to the full brief, summarised by Direction, with the owner's pending format-9 confirmation as its open question. The canon framework files beside the record stay frozen with it: nothing routes to them, and a retire is a wish line. The Push line keeps the project's own route — the working branch with a pull request, never `main` — which v3's harness-push default admits as the project's origin. What the tool cannot establish, and this session does not claim: that the source list is complete, that each destination keeps its obligation's force; the owner has not yet confirmed the Network line or reviewed the signatures — both are proposals until he does. Settings: `tools/harness.mjs` output recorded in the lab's raw-evidence lane, nothing written into the tree; the two session hooks are offered, installed only on the owner's word. The Network line and the Handoff split are proposed from recorded practice and marked `[guess]`; the three signatures are delegated under the instruction to run V3-FIELD and name it, the owner's reviewed lines due within two weeks (3.8). Known hazard, recorded: the big run was live at migration time with ten open pull requests (#64, #69–#77) whose closes write the canon memory; this migration lands as a pull request the owner merges when the run allows, and any canon write after the snapshot is a reconciliation against the inventory, never a loss. The migration commit carries no product work; its one gate-plumbing edit is the line above.
-
-- Migration edit: package.json — re-applied — `check` ends with `node tools/check.mjs`, so the gate and the Verify workflow run the v3 checker
-- Migration edit: AGENTS.md — retired — replaced by v3's contract verbatim; every canon obligation routed by the census
-- Migration edit: CLAUDE.md — retired — v3's adapter; its guidance moved to the profile's Harness line and the rules file's Environment
-
-**Supersedes:** none
-
-**Deferred:** none

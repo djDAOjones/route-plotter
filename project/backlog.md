@@ -20,6 +20,21 @@
 
 ### Phase 1 — Land the big run's open pull requests — CLOSED 2026-10-06
 
+### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
+
+- [ ] UI-04 — A hint trigger of its own (UI-03's second part) — since 2026-10-05 — (from: GATELESS-1, 2026-10-05)
+- [ ] CROWD-06 — Hold at end: the animation carries on after everything has finished — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
+- [ ] TST-09 — Camera, dots, curvature, minor-end and time domains — since 2026-10-01
+- [ ] TST-03 — Visibility mode matrix · Characterisation P1 — since 2026-10-01
+- [ ] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01
+- [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01
+- [ ] DEF-13 — A focused button swallows every shortcut · Accessibility P1 — since 2026-10-01
+- [ ] DEF-32 — Activating a list row loses focus · Accessibility P1 — since 2026-10-01
+- [ ] DEF-14 — A hint click stops a label toggling · Accessibility P1 — since 2026-10-01
+- [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01
+- [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01
+- [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01
+
 ### Review assurance — owner evidence
 
 - [!] REV-03 — Unified pointer transactions · Review assurance — since 2026-10-01 — blocked: owner evidence — physical Android Chrome
@@ -30,27 +45,6 @@
 **The built-in examples — the owner's word of 2026-10-05**
 
 - [!] EX-01 — Overhaul the built-in examples — since 2026-10-05 — blocked: the owner's direction on what each example shows — (from: CROWD-05, 2026-10-05)
-
-**After TST-04 — the owner's order of 2026-10-05**
-
-- [ ] UI-04 — A hint trigger of its own (UI-03's second part) — since 2026-10-05 — (from: GATELESS-1, 2026-10-05)
-- [ ] CROWD-06 — Hold at end: the animation carries on after everything has finished — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-
-**W5 — deepen the characterisation**
-
-- [ ] TST-09 — Camera, dots, curvature, minor-end and time domains — since 2026-10-01
-- [ ] TST-03 — Visibility mode matrix · Characterisation P1 — since 2026-10-01
-- [ ] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01
-
-**Defects after their W5 test (§13 ground rule 8)**
-
-- [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01
-- [ ] DEF-13 — A focused button swallows every shortcut · Accessibility P1 — since 2026-10-01
-- [ ] DEF-32 — Activating a list row loses focus · Accessibility P1 — since 2026-10-01
-- [ ] DEF-14 — A hint click stops a label toggling · Accessibility P1 — since 2026-10-01
-- [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01
-- [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01
-- [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01
 
 **W4 — remove clearly dead code (§20 Q8; mutate every branch of anything moved, and account for every survivor)**
 
