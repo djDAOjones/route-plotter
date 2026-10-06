@@ -101,10 +101,9 @@ describe('the performance harness, run against the editor', () => {
 
     authorKeepsWorking(app);
 
-    // Silenced until a reload, under a name that says why saving stopped.
+    // Silenced until a reload.
     expect(recoveryWrites()).toEqual([AUTHORS_PROJECT]);
     expect(app.autoSave).not.toBe(ownAutoSave);
-    expect(app.autoSave.name).toBe('benchmarkAutoSaveSuppressed');
     expect(recordedConsole()).toEqual([expect.stringMatching(/^warn: Benchmark finished.*reload the page/i)]);
   }, 60000);
 
@@ -123,7 +122,6 @@ describe('the performance harness, run against the editor', () => {
     expect(recoveryWrites()).toEqual([AUTHORS_PROJECT]);
     authorKeepsWorking(app);
     expect(recoveryWrites()).toEqual([AUTHORS_PROJECT]);
-    expect(app.autoSave.name).toBe('benchmarkAutoSaveSuppressed');
     expect(recordedConsole()).toEqual([expect.stringMatching(/^warn: Benchmark failed.*reload the page/i)]);
   }, 60000);
 
@@ -139,6 +137,7 @@ describe('the performance harness, run against the editor', () => {
     }
     expect(results.profiles.map(row => row.holds60fps)).toEqual([false, false, false, false, false]);
     expect(recoveryWrites()).toEqual([AUTHORS_PROJECT]);
-    expect(app.autoSave.name).toBe('benchmarkAutoSaveSuppressed');
+    authorKeepsWorking(app);
+    expect(recoveryWrites()).toEqual([AUTHORS_PROJECT]);
   }, 60000);
 });

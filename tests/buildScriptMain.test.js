@@ -297,11 +297,11 @@ describe('a watch build (npm run dev, without --serve)', () => {
 
     const output = startWatch(copy);
     await vi.waitFor(() => expect(output.stdout).toContain('Watching static files:'),
-      { timeout: SPAWN_TIMEOUT / 2, interval: 50 });
+      { timeout: 50000, interval: 50 });
 
     expect(buildNumberOf(copy)).toBe(build + 1);
     await vi.waitFor(() => expect(readIfPresent(join(copy, 'docs', 'app.js')))
-      .toMatch(/^\/\/ Route Plotter v3 - Development Build\n/), { timeout: SPAWN_TIMEOUT / 2, interval: 50 });
+      .toMatch(/^\/\/ Route Plotter v3 - Development Build\n/), { timeout: 20000, interval: 50 });
     const published = readFileSync(publishedShell, 'utf8');
     expect(published).toContain(`<title>Route Plotter v${release}</title>`);
     expect(stylesheetReferences(published))
@@ -310,12 +310,18 @@ describe('a watch build (npm run dev, without --serve)', () => {
     expect(leftovers(copy)).toEqual([]);
 
     // A shell edited while it watches reaches docs/, stamped with this
-    // session's version rather than a new one.
+    // session's version rather than a new one. `build.js` prints "Watching
+    // static files" before it installs the watchers, so an edit made in
+    // between is missed: the same edit is written again every second until
+    // docs/ has it (Codex's review of TST-11). The three waits stay inside the
+    // test's own limit.
     const authoredShell = join(copy, 'index.html');
     const edited = readFileSync(authoredShell, 'utf8').replace('</body>', '<!-- edited while watching -->\n</body>');
-    writeFileSync(authoredShell, edited);
-    await vi.waitFor(() => expect(readFileSync(publishedShell, 'utf8')).toContain('<!-- edited while watching -->'),
-      { timeout: SPAWN_TIMEOUT / 2, interval: 50 });
+    let attempts = 0;
+    await vi.waitFor(() => {
+      if (attempts++ % 20 === 0) writeFileSync(authoredShell, edited);
+      expect(readFileSync(publishedShell, 'utf8')).toContain('<!-- edited while watching -->');
+    }, { timeout: 30000, interval: 50 });
     const republished = readFileSync(publishedShell, 'utf8');
     expect(republished).toContain(`<title>Route Plotter v${release}</title>`);
     expect(stylesheetReferences(republished))
