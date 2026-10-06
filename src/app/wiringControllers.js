@@ -176,6 +176,17 @@ export const wiringControllersMixin = {
       this.autoSave();
     });
     
+    // Hold at end (CROWD-06): only the playback duration grows or shrinks,
+    // measured again where it stands, so nothing timed against the base
+    // timeline moves and the head stays at the same instant.
+    this.eventBus.on('animation:hold-at-end-change', (holdMs) => {
+      this.styles.holdAtEndMs = holdMs;
+      this.refreshSceneEnd();
+      this.queueRender();
+      this.saveUndoStateDebounced();
+      this.autoSave();
+    });
+    
     /**
      * JKL Video Editor Style Playback Controls
      * 

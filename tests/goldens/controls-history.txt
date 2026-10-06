@@ -24,7 +24,7 @@ ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="sta
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 22 inside, eec85b79)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 19 inside, 53769572)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 24 inside, a4b1415d)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, 107b52a2)
@@ -38,5 +38,5 @@ ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (an
 ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 169 inside, 2c9e33f4)
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, e782bb4a] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 9496c026]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 0e8be9d3] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, a8c142d7]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Undo" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

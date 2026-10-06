@@ -79,7 +79,7 @@ describe('computeSceneEnd', () => {
   test('a route alone: the end is the base timeline and the readout says nothing more', () => {
     const end = computeSceneEnd({ baseMs: 12000 });
 
-    expect(end).toEqual({ endMs: 12000, parts: { routeMs: 12000, crowdsMs: 0, beaconsMs: 0 } });
+    expect(end).toEqual({ endMs: 12000, parts: { routeMs: 12000, crowdsMs: 0, beaconsMs: 0, holdMs: 0 } });
     expect(describeSceneEnd(end.parts, end.endMs)).toBe('');
   });
 
@@ -118,7 +118,7 @@ describe('computeSceneEnd', () => {
 
     const end = sceneEndOver(layers, engine);
 
-    expect(end).toEqual({ endMs: B, parts: { routeMs: B, crowdsMs: 0, beaconsMs: 0 } });
+    expect(end).toEqual({ endMs: B, parts: { routeMs: B, crowdsMs: 0, beaconsMs: 0, holdMs: 0 } });
     expect(walk).not.toHaveBeenCalled(); // skipped before any walk
   });
 
@@ -198,7 +198,8 @@ describe('computeSceneEnd', () => {
     const engine = new SwarmEngine();
     const layer = routeLayer([{ ...SLOW, lifecycleMode: 'disappear' }]);
 
-    expect(sceneEndOver([layer], engine, 0)).toEqual({ endMs: 0, parts: { routeMs: 0, crowdsMs: 0, beaconsMs: 0 } });
+    expect(sceneEndOver([layer], engine, 0))
+      .toEqual({ endMs: 0, parts: { routeMs: 0, crowdsMs: 0, beaconsMs: 0, holdMs: 0 } });
   });
 });
 
@@ -273,7 +274,9 @@ describe('beaconEndMs, read against the beacon classes', () => {
       baseMs: ARRIVAL, beaconSchedules: [schedule('glow')], waypoints: waypoint({ beaconStyle: 'glow' }),
     });
 
-    expect(end).toEqual({ endMs: ARRIVAL + 3000, parts: { routeMs: ARRIVAL, crowdsMs: 0, beaconsMs: ARRIVAL + 3000 } });
+    expect(end).toEqual({
+      endMs: ARRIVAL + 3000, parts: { routeMs: ARRIVAL, crowdsMs: 0, beaconsMs: ARRIVAL + 3000, holdMs: 0 },
+    });
     expect(describeSceneEnd(end.parts, end.endMs)).toBe('Ends at 11.0 s — route 8.0 s, beacon ends +3.0 s');
   });
 });

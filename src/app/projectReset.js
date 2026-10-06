@@ -2,6 +2,7 @@ import { invalidateProjectOperations } from './operationGeneration.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { isBuiltInPathHeadStyle } from '../utils/pathHeadPresets.js';
 import { discardForClearAll } from './unrestoredAutosave.js';
+import { ANIMATION } from '../config/constants.js';
 
 /**
  * Establish a new, empty, non-undoable project baseline.
@@ -61,6 +62,10 @@ export function clearProject(app) {
     app._sceneEndTimeout = null;
   }
   app.updateDurationReadout?.();
+  // A new project's Hold at end (CROWD-06), once the cleared timeline is in
+  // place: an empty project has no end to hold after, so it stays at nothing.
+  app.styles.holdAtEndMs = ANIMATION.HOLD_AT_END_DEFAULT_MS;
+  app.syncHoldAtEndControl?.();
 
   app.pause();
   app.updateTimeDisplay();

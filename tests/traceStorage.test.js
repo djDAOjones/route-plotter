@@ -258,6 +258,11 @@ test.each([
   if (image) withMarkerImage(app);
   const backgroundData = background ? await withBackground(app) : null;
   const layer = app.scene.flowLayers[0];
+  // Each null is two values, one in the name and one in the label the trace
+  // copies it to, so an odd room is first made even by an area point on the
+  // end major: three values the trace does not copy. (A project's own count
+  // turned odd with CROWD-06's Hold at end, one value in its styles.)
+  if ((100000 - valuesIn(traced(app, layer))) % 2) app.waypoints[1].areaHighlight.points = [{ x: 0.5, y: 0.5 }];
   app.waypoints[0].name = Array(Math.floor((100000 - valuesIn(traced(app, layer))) / 2)).fill(null);
   expect(valuesIn(traced(app, layer))).toBe(100000);
   const reopensFrom = async zip => (await undrawn()).loadProject(zip);

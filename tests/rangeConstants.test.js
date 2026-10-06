@@ -133,6 +133,7 @@ const FIELD_CONTRACT = {
   'path-head-size': ['range', 4, 24, 8, 1],
   // No value: start-up writes the thumb from ANIMATION.DEFAULT_SPEED.
   'animation-speed-right': ['range', 1, 4000, null, 5],
+  'hold-at-end': ['range', 0, 10000, 2000, 100],
   'graphics-scale': ['range', -200, 200, 0, 1],
   'path-trail': ['range', 0, 1000, 590, 1],
   'reveal-size': ['range', 0, 1000, 500, 1],
@@ -275,6 +276,11 @@ const PAIRINGS = {
     max: [AREA_HIGHLIGHT.FADE_MAX, 'AREA_HIGHLIGHT.FADE_MAX'],
     value: [AREA_HIGHLIGHT.FADE_OUT_DEFAULT, 'AREA_HIGHLIGHT.FADE_OUT_DEFAULT'] },
   'path-head-size': { toModel: s => s, value: [RENDERING.PATH_HEAD_SIZE, 'RENDERING.PATH_HEAD_SIZE'] },
+  // CROWD-06: the slider is the hold in ms.
+  'hold-at-end': { toModel: s => s,
+    min: [0, 'no hold'],
+    max: [ANIMATION.HOLD_AT_END_MAX_MS, 'ANIMATION.HOLD_AT_END_MAX_MS'],
+    value: [ANIMATION.HOLD_AT_END_DEFAULT_MS, 'ANIMATION.HOLD_AT_END_DEFAULT_MS'] },
   'path-trail': { toModel: s => scales.sliderToTrailFraction(s),
     min: [0, 'trail off'],
     max: [MOTION.PATH_TRAIL_MAX, 'MOTION.PATH_TRAIL_MAX'],
@@ -598,6 +604,8 @@ const WRITERS_ON_A_NEW_PROJECT = {
     'segment-width', 'shape-amplitude', 'shape-frequency', 'waypoint-pause-time', 'waypoint-segment-speed'
   ],
   'src/app/network.js': ['network-edge-weight'],
+  // Start-up puts the Hold at end thumb where a new project's hold is (CROWD-06).
+  'src/app/undoRedo.js': ['hold-at-end'],
   'src/app/wiringControllers.js': ['export-res-x', 'export-res-y'],
   'src/controllers/UIController.js': [
     'animation-speed-right', 'area-border-width', 'area-circle-radius', 'area-fade-in', 'area-fade-out',
@@ -613,7 +621,8 @@ const WRITERS_AT_THE_LIMITS = {
   'src/app/persistence.js': ['background-zoom', 'bg-overlay', 'export-frame-rate', 'export-res-x', 'export-res-y',
     'path-trail'],
   'src/app/playback.js': ['timeline-slider'],
-  'src/app/undoRedo.js': ['graphics-scale', 'head-rotation-offset', 'path-glow-intensity', 'path-head-size'],
+  'src/app/undoRedo.js': ['graphics-scale', 'head-rotation-offset', 'hold-at-end', 'path-glow-intensity',
+    'path-head-size'],
   // Nothing here is typed, so the frame-rate and size handlers do not write.
   'src/controllers/UIController.js': WRITERS_ON_A_NEW_PROJECT['src/controllers/UIController.js']
     .filter(id => !['export-frame-rate', 'export-res-x', 'export-res-y'].includes(id))
@@ -786,6 +795,7 @@ const RECEIVED = {
   'head-rotation-offset': onRoute(app => app.styles.pathHead.rotationOffset),
   'path-head-size': onRoute(app => app.styles.pathHead.size),
   'animation-speed-right': onRoute((app, sent) => sent('animation:speed-change')),
+  'hold-at-end': onRoute(app => app.styles.holdAtEndMs),
   'graphics-scale': onRoute(app => app.styles.graphicsScale),
   'path-trail': onRoute(app => app.motionSettings.pathTrail),
   'reveal-size': onRoute(app => app.motionSettings.revealSize),
@@ -919,7 +929,7 @@ describe('index.html ranges against the code (TST-13)', () => {
     const paired = new Set([...Object.keys(PAIRINGS), ...Object.keys(APP_DEFAULTS), ...Object.keys(NO_COUNTERPART)]);
     expect([...FIELDS.keys()].filter(id => !paired.has(id)), 'a new field needs a pairing').toEqual([]);
     expect([...paired].filter(id => !FIELDS.has(id)), 'a paired field has gone from index.html').toEqual([]);
-    expect(FIELDS.size).toBe(52);
+    expect(FIELDS.size).toBe(53);
     const explained = [...Object.values(NO_COUNTERPART).map(({ why }) => why),
       ...Object.values(DISAGREEMENTS).map(({ why }) => why),
       ...Object.values(LOAD_LIMITS).map(({ why }) => why), ...Object.values(NEW_PROJECT_MISFITS),

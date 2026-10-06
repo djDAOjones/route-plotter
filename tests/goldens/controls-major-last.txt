@@ -13,7 +13,7 @@ ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-bt
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 22 inside, eec85b79)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 19 inside, 53769572)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 24 inside, a4b1415d)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, 107b52a2)
@@ -97,7 +97,7 @@ ui ~ #pulse-amplitude: input aria-describedby="pulse-amplitude-value pulse-ampli
 ui ~ #pulse-amplitude-value: span :text="2.5" → span :text="1.0"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 5c593c7e]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 1ddb7e9f]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #pulse-controls>label[3]>span[0] · click
@@ -118,7 +118,7 @@ ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 29635.232797, baseDuration: 18429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 8cdc62c5]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 8d46785c]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 
 ## #section-leg-content>div[2]>button[1] · disabled, not operated

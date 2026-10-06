@@ -31,12 +31,12 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 22 inside, eec85b79)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 19 inside, 53769572)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 24 inside, a4b1415d)
 ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 45 inside, 099a0562)
 ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 20 inside, 61c5df6b)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 21 inside, 107b52a2)
 ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 46 inside, fd52c3c6)
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 755d29ae] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, 0a0db5ae]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 87e9828f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, b3d50e8f]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Redo" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
