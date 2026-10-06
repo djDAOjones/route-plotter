@@ -28,6 +28,26 @@
 
 **Deferred:** none
 
+## 2026-10-05 — TST-08 — The mixin composition is guarded from main.js itself
+
+**Decision:** TST-08 lands (PR #73): `tests/mixins.test.js` parses `src/` and holds the composition to one `Object.assign` of the listed mixins, no change to a mixin, no name hidden, and every call on the app by name resolving; a shape it cannot follow is refused with its line.
+
+**Rationale:** Codex review r2 found 13 probes passing all 30 guards and r3 three more and a false positive; every evasion is refused now and pinned as an in-memory fixture, a stored callback's bound copy is accepted (42 tests), and real `src/` passes. The text prefilter is gone; a mixin exported under another name, `arguments`, a reassigned helper, `.bind` on anything but a function, reflective members (`valueOf`, `__defineGetter__`, `constructor`) writes to `Object`, and any write to a `bind`, `call` or `apply` property are refused; a helper takes the app only through a chain of handoffs that starts from `this`, and `window.window`, `window.self` and `.defaultView` read as the global itself. `window.app` is refused inside `main.js` and `src/app/` bar the one line that publishes it; outside them it stays unchecked, pinned as an exclusion (the run's call). The guards catch accidental breaks and the evasions tried; a function changed in a way the reader cannot follow, such as `Object.assign(f, src)` with a non-literal source on an alias, is not caught, and the test's header says so. Digest rule applied: house conventions → Testing and persistence.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-05 — TST-05 — Every wired event and its listener order are pinned
+
+**Decision:** TST-05 lands (PR #72): golden transcripts pin every event the wiring subscribes to, the order its listeners run and what each changes; a payload the transcript abridges carries a digest of its plain fields (numbers to four decimals, class instances by name), and the app's waypoint lookup is checked at each step and after Undo and Redo.
+
+**Rationale:** Codex review r3's two mutants are killed in the tests only: the getter refusing new `wp_` IDs (B1) and the scene outline emitting `x: 0` (B2); advisories U2, U3 and U5 are killed too. A digest keeps the goldens readable but says only that a hidden field changed, not which, and misses a change past the fourth decimal. Two Chromium checks the row named are wish lines. Every golden line that moved with the main merge traces to DEF-06, DEF-42, DEF-44, DEF-64, DEF-77 or CROWD-05; the "paused half way" rows now seek half the route's own timeline, as before CROWD-05. Digest rule applied: house conventions → Testing and persistence. DEF-15, DEF-22, DEF-65, DEF-66 and DEF-74 no longer wait on it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-05 — TST-14 — The restart script's safety checks can fail, and the context menu has tests
 
 **Decision:** TST-14 lands (PR #74): every check in `tests/restartSafety.test.sh` is an `if` that says what broke, its stand-in tools answer only the forms and processes they model, and `tests/contextMenu.test.js` pins the menu and the canvas's right-click menus.
