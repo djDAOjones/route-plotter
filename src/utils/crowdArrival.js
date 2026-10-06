@@ -104,6 +104,7 @@ export function dotsReachingJourneyEnd(schedules = [], durationMs = 0) {
   return count;
 }
 
+// Unused by the app since CROWD-06 retired "Wait here for this crowd"; W4 may remove it under its mutation criterion.
 /**
  * The wait a waypoint needs so the head does not leave before the crowd has
  * finished — solved, not iterated.

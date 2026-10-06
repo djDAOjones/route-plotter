@@ -23,12 +23,17 @@
  * reveals have no time tail, and the camera's last ease is per-frame
  * smoothing with no timeline end.
  *
+ * Then the project's Hold at end (CROWD-06): the animation carries on for
+ * that long after the last end, so F grows by exactly the hold and B does
+ * not. Time keeps running through it, so a looping crowd keeps moving, while
+ * the route head and everything that concluded show their final state.
+ *
  * A pure function of (project state, B, seeds): the same answer in the
  * editor, on scrub, in a video export and in the HTML player.
  */
 
 import { BEACON_TIMING } from '../services/BeaconRenderer.js';
-import { WAYPOINT_VISIBILITY } from '../config/constants.js';
+import { ANIMATION, WAYPOINT_VISIBILITY } from '../config/constants.js';
 
 /** GrowBeacon's fixed hold at peak scale (s), `GrowBeacon.HOLD_DURATION_SEC`. */
 const GROW_HOLD_SEC = 1.0;
@@ -124,10 +129,24 @@ export function beaconEndMs(schedules = [], waypoints = [], { waypointVisibility
 }
 
 /**
+ * The Hold at end a project's styles ask for, in ms (CROWD-06): within the
+ * control's 0–10 s, and none where the value is missing or not a number, as
+ * in a project saved before the control existed.
+ * @param {*} value `styles.holdAtEndMs`
+ * @returns {number}
+ */
+export function resolveHoldAtEndMs(value) {
+  const ms = Number(value);
+  if (value === null || value === undefined || !Number.isFinite(ms) || ms <= 0) return 0;
+  return Math.min(ms, ANIMATION.HOLD_AT_END_MAX_MS);
+}
+
+/**
  * @typedef {Object} SceneEndParts
  * @property {number} routeMs The base timeline, B
  * @property {number} crowdsMs When the last finishing crowd dot finishes, or 0
  * @property {number} beaconsMs When the last beacon stops changing, or 0
+ * @property {number} holdMs The Hold at end after the last of those, or 0
  */
 
 /**
@@ -145,6 +164,8 @@ export function beaconEndMs(schedules = [], waypoints = [], { waypointVisibility
  * @param {Object|null} [input.motionSettings] The settings beacons are drawn
  *   under: Preview's, or null in Edit
  * @param {number} [input.beaconOffsetMs=0]
+ * @param {number} [input.holdMs=0] The Hold at end (`styles.holdAtEndMs`):
+ *   added after the last end, never to B; nothing to hold when there is no end
  * @returns {{endMs: number, parts: SceneEndParts}}
  */
 export function computeSceneEnd({
@@ -156,6 +177,7 @@ export function computeSceneEnd({
   waypoints = [],
   motionSettings = null,
   beaconOffsetMs = 0,
+  holdMs = 0,
 }) {
   const routeMs = Number.isFinite(baseMs) && baseMs > 0 ? baseMs : 0;
   let crowdsMs = 0;
@@ -173,9 +195,11 @@ export function computeSceneEnd({
       offsetMs: beaconOffsetMs,
     })
     : 0;
+  const concludesMs = Math.max(routeMs, crowdsMs, beaconsMs);
+  const hold = concludesMs > 0 ? resolveHoldAtEndMs(holdMs) : 0;
   return {
-    endMs: Math.max(routeMs, crowdsMs, beaconsMs),
-    parts: { routeMs, crowdsMs, beaconsMs },
+    endMs: concludesMs + hold,
+    parts: { routeMs, crowdsMs, beaconsMs, holdMs: hold },
   };
 }
 
@@ -183,9 +207,11 @@ export function computeSceneEnd({
 const seconds = ms => `${(ms / 1000).toFixed(1)} s`;
 
 /**
- * The Duration readout's breakdown, e.g. "Ends at 16.5 s — route 12.0 s,
- * crowds finish +4.5 s", or '' when the route alone sets the end: the
- * Duration value is then the full length and the line would repeat it.
+ * The Duration readout's breakdown, e.g. "Ends at 18.5 s — route 12.0 s,
+ * crowds finish +4.5 s, hold at end +2.0 s", or '' when the route alone sets
+ * the end: the Duration value is then the full length and the line would
+ * repeat it. Crowds and beacons are measured from the route's end; the hold
+ * comes after the last of them, and is named as its control is.
  * @param {SceneEndParts|null} parts
  * @param {number} endMs F
  * @returns {string}
@@ -195,5 +221,6 @@ export function describeSceneEnd(parts, endMs) {
   const past = [];
   if (parts.crowdsMs > parts.routeMs) past.push(`crowds finish +${seconds(parts.crowdsMs - parts.routeMs)}`);
   if (parts.beaconsMs > parts.routeMs) past.push(`beacon ends +${seconds(parts.beaconsMs - parts.routeMs)}`);
+  if (parts.holdMs > 0) past.push(`hold at end +${seconds(parts.holdMs)}`);
   return `Ends at ${seconds(endMs)} — route ${seconds(parts.routeMs)}, ${past.join(', ')}`;
 }

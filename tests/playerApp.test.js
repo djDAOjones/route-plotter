@@ -246,6 +246,23 @@ describe('PlayerApp export parity (golden cross-check)', () => {
     expect(player.animationEngine.state.duration).toBe(app.animationEngine.state.duration);
   });
 
+  test('a Hold at end reaches the exported player: the app\'s timeline, F longer by the hold (CROWD-06)', async () => {
+    const plain = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    const app = makeAuthoredApp({ motionSettings: { ...BASE_MOTION } });
+    app.styles.holdAtEndMs = 4000;
+    app.updateAnimationDuration();
+    expect(app.animationEngine.state.duration).toBe(plain.animationEngine.state.duration + 4000);
+    expect(app.animationEngine.state.baseDuration).toBe(plain.animationEngine.state.baseDuration);
+    const snapshot = app._buildProjectSnapshot();
+    expect(snapshot.styles.holdAtEndMs).toBe(4000);
+
+    const player = await makePlayerFromSnapshot(snapshot);
+    expect(timelineFingerprint(player.animationEngine)).toEqual(timelineFingerprint(app.animationEngine));
+    expect(player.animationEngine.state.baseDuration).toBe(app.animationEngine.state.baseDuration);
+    expect(player.animationEngine.sceneEndParts).toEqual(app.animationEngine.sceneEndParts);
+    expect(player.animationEngine.sceneEndParts.holdMs).toBe(4000);
+  });
+
   test('reveal intro and comet tail rules survive the round-trip', async () => {
     const app = makeAuthoredApp({
       motionSettings: { ...BASE_MOTION, backgroundVisibility: 'spotlight-reveal', pathVisibility: 'instantaneous', pathTrail: 0.3 }

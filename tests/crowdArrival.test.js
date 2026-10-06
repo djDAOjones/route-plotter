@@ -20,6 +20,7 @@ import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import { Scene } from '../src/models/Scene.js';
 import { bootApp } from './helpers/bootApp.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { fitWaitWithWaitForCrowdMs } from './helpers/fitCrowdWait.js';
 
 const flat = value => value;
 
@@ -256,7 +257,8 @@ describe('SwarmEngine.scheduleDots', () => {
  * the other: an anchored crowd's release (`releaseStartFraction` in
  * `routeAnchors.js`, scaled by the engine's duration in `SwarmEngine`), a
  * branch's start (`RenderingService.activeBranches`) and the wait
- * `fitRouteWaitToCrowd` solves (`crowds.js`). Each test pins what the booted
+ * `waitForCrowdMs` solves (as "Wait here for this crowd" fitted it until
+ * CROWD-06; `helpers/fitCrowdWait.js`). Each test pins what the booted
  * app does today, so the fix changes it on purpose, and says what it should
  * become.
  *
@@ -385,7 +387,8 @@ describe('DEF-12: route time read as engine time', () => {
     expect(atFork.branch).toBeCloseTo(0.2, 9);
   });
 
-  test('DEF-12: under a reveal intro, a fitted wait holds the head 1,000 ms after the crowd arrives', async () => {
+  test('DEF-12: under a reveal intro, a wait fitted by waitForCrowdMs holds the head 1,000 ms after the crowd arrives',
+    async () => {
     /** The head's wait at c, measured on the engine's clock, minus the crowd's last arrival. */
     async function lingerAfterFit(motionSettings) {
       const app = await appWith({
@@ -394,7 +397,7 @@ describe('DEF-12: route time read as engine time', () => {
       });
       const [layer] = app.scene.getFlowLayers();
       const c = app.waypoints[2];
-      expect(app.fitRouteWaitToCrowd(layer, c)).toBe(true);
+      expect(fitWaitWithWaitForCrowdMs(app, layer, c)).toBe(true);
       expect(c.pauseMode).toBe('timed');
 
       // The head reaches c after the intro and the 10 s route, then waits.

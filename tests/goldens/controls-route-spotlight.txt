@@ -34,7 +34,7 @@ ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="he
 ui ~ #head-rotation-mode: select aria-describedby="head-rotation-mode-tip" :value="auto" → select aria-describedby="head-rotation-mode-tip" :value="fixed"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9678 chars, 7992e3b1]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9693 chars, f9222721] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9694 chars, 266af394]
 
 ## #head-rotation-offset-control>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Turns the image by this many degrees on top of Rotation: clockwise above 0°, anticlockwise below"
@@ -49,7 +49,7 @@ ui ~ #head-rotation-offset: input aria-describedby="head-rotation-offset-tip" ma
 ui ~ #head-rotation-offset-value: span :text="45°" → span :text="-60°"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9678 chars, 590b6a58]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9693 chars, f9222721] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9694 chars, db512365]
 
 ## #spotlight-controls>label[0]>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Radius of the visible area around the path head"
@@ -64,7 +64,7 @@ ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #reveal-size: input aria-describedby="reveal-size-tip" max="1000" min="0" step="1" type="range" value="500" :value="715" → input aria-describedby="reveal-size-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #reveal-size-value: span :text="10%" → span :text="2.9%"
 settled:
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9692 chars, 0905239b]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9693 chars, f9222721] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9708 chars, 394e21d6]
 
 ## #spotlight-controls>label[2]>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Softness of the spotlight edge"
@@ -79,7 +79,7 @@ ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #reveal-feather: input aria-describedby="reveal-feather-tip" max="1000" min="0" step="1" type="range" value="500" :value="0" → input aria-describedby="reveal-feather-tip" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #reveal-feather-value: span :text="0.0%" → span :text="4.6%"
 settled:
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9691 chars, 1ebc246a]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9693 chars, f9222721] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9707 chars, da815fe1]
 
 ## #reveal-trail-control>span[0] · click
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades"
@@ -94,6 +94,6 @@ ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #reveal-trail: input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="Whole path" max="1000" min="0" step="1" type="range" value="1000" :value="1000" → input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="4.6% of path" max="1000" min="0" step="1" type="range" value="1000" :value="333"
 ui ~ #reveal-trail-value: span :text="Whole path" → span :text="4.6% of path"
 settled:
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9677 chars, 6a9a5946] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9691 chars, bf55f199]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9693 chars, f9222721] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9707 chars, eb62456e]
 
 ## #path-glow-intensity · disabled, not operated

@@ -10,7 +10,8 @@ import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import { PROJECT_ARCHIVE_LIMITS, SIZE_LIMITS } from '../services/ImageAssetService.js';
 import { collectImageAssetReferences, planImageAssetAdmission } from '../utils/assetReferences.js';
-import { formatRendererPixels, setRangeReadout } from '../utils/uiReadouts.js';
+import { formatHoldAtEnd, formatRendererPixels, setRangeReadout } from '../utils/uiReadouts.js';
+import { resolveHoldAtEndMs } from '../utils/sceneEnd.js';
 import {
   pathHeadStyleUsesImageControls,
   resolvePathHeadImage,
@@ -467,5 +468,16 @@ export const undoRedoMixin = {
     if (this.elements.pathGlowValue) {
       this.elements.pathGlowValue.textContent = glowPct + '%';
     }
+    this.syncHoldAtEndControl();
+  },
+
+  /**
+   * Put the Hold at end slider and its readout where the project's hold is
+   * (CROWD-06): at start-up, after a load, an undo or redo, and Clear All.
+   */
+  syncHoldAtEndControl() {
+    const holdMs = resolveHoldAtEndMs(this.styles?.holdAtEndMs);
+    if (this.elements?.holdAtEnd) this.elements.holdAtEnd.value = String(holdMs);
+    setRangeReadout(this.elements?.holdAtEnd, this.elements?.holdAtEndValue, formatHoldAtEnd(holdMs));
   }
 };

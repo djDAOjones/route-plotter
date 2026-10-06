@@ -24,3 +24,4 @@ After CROWD-05 the animation ends when the last animation that concludes has end
 ## Notes
 
 - 2026-10-05 — Split from CROWD-05 by the Backlog status session under the owner's delegation ("do whats best"). It follows TST-04, so TST-04's long-running PR need not absorb a new control, and sits beside DEF-20, which fixes the same Duration control. The 2 s default mirrors the export's 2 s start buffer.
+- 2026-10-06 — Landed (chat 11): the hold in `sceneEnd.js` after the last concluding end; the control in index.html under Duration, event `animation:hold-at-end-change`, the value in `styles.holdAtEndMs`; saved projects open at 0 s, new ones and Clear All at 2 s; "Wait here" retired, `waitForCrowdMs` kept unused with its tests.
