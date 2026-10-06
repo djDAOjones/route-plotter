@@ -250,7 +250,8 @@ export const editorPanelMixin = {
       // Update UI via UIController (pause slider shows the primary's value)
       if (wp === this.selectedWaypoint && this.uiController && this.elements.waypointPauseTime) {
         this.elements.waypointPauseTime.value = this.uiController.pauseTimeToSlider(totalRippleTime);
-        this.elements.waypointPauseTimeValue.textContent = `${totalRippleTime.toFixed(1)}s`;
+        setRangeReadout(this.elements.waypointPauseTime, this.elements.waypointPauseTimeValue,
+          `${totalRippleTime.toFixed(1)}s`);
       }
 
       console.debug(`🔔 [Beacon] Ripple wait enabled - set pause time to ${totalRippleTime.toFixed(1)}s`);
@@ -402,18 +403,18 @@ export const editorPanelMixin = {
     if (this.elements.rippleMaxScale) {
       const value = source.rippleMaxScale || 1000;
       this.elements.rippleMaxScale.value = value;
-      this.elements.rippleMaxScaleValue.textContent = `${value}%`;
+      setRangeReadout(this.elements.rippleMaxScale, this.elements.rippleMaxScaleValue, `${value}%`);
     }
     if (this.elements.rippleWait) this.elements.rippleWait.checked = source.rippleWait !== false;
     if (this.elements.pulseAmplitude) {
       const value = source.pulseAmplitude ?? 1;
       this.elements.pulseAmplitude.value = value;
-      this.elements.pulseAmplitudeValue.textContent = value.toFixed(1);
+      setRangeReadout(this.elements.pulseAmplitude, this.elements.pulseAmplitudeValue, value.toFixed(1));
     }
     if (this.elements.pulseCycleSpeed) {
       const value = source.pulseCycleSpeed ?? 4;
       this.elements.pulseCycleSpeed.value = value;
-      this.elements.pulseCycleSpeedValue.textContent = `${value}s`;
+      setRangeReadout(this.elements.pulseCycleSpeed, this.elements.pulseCycleSpeedValue, `${value}s`);
     }
 
     if (this.elements.waypointLabel) this.elements.waypointLabel.value = source.label || '';
@@ -440,17 +441,17 @@ export const editorPanelMixin = {
     if (this.elements.labelWidth) {
       const value = source.labelWidth ?? TEXT_LABEL.WIDTH_DEFAULT;
       this.elements.labelWidth.value = value;
-      this.elements.labelWidthValue.textContent = `${value}%`;
+      setRangeReadout(this.elements.labelWidth, this.elements.labelWidthValue, `${value}%`);
     }
     if (this.elements.labelOffsetX) {
       const value = source.labelOffsetX ?? TEXT_LABEL.OFFSET_DEFAULT_X;
       this.elements.labelOffsetX.value = value;
-      this.elements.labelOffsetXValue.textContent = `${value}%`;
+      setRangeReadout(this.elements.labelOffsetX, this.elements.labelOffsetXValue, `${value}%`);
     }
     if (this.elements.labelOffsetY) {
       const value = source.labelOffsetY ?? TEXT_LABEL.OFFSET_DEFAULT_Y;
       this.elements.labelOffsetY.value = value;
-      this.elements.labelOffsetYValue.textContent = `${value}%`;
+      setRangeReadout(this.elements.labelOffsetY, this.elements.labelOffsetYValue, `${value}%`);
     }
 
     const pauseSeconds = (source.pauseTime || 0) / 1000;
@@ -458,8 +459,8 @@ export const editorPanelMixin = {
       this.elements.waypointPauseTime.value = this.uiController?.pauseTimeToSlider
         ? this.uiController.pauseTimeToSlider(pauseSeconds)
         : pauseSeconds;
-      this.elements.waypointPauseTimeValue.textContent =
-        formatUIValue(pauseSeconds, 's');
+      setRangeReadout(this.elements.waypointPauseTime, this.elements.waypointPauseTimeValue,
+        formatUIValue(pauseSeconds, 's'));
     }
     if (this.elements.pauseTimeControl) this.elements.pauseTimeControl.style.display = 'flex';
 
@@ -469,7 +470,7 @@ export const editorPanelMixin = {
         ? this.uiController.segmentSpeedToSlider(speed)
         : speed;
       const display = speed < 1 ? speed.toFixed(2) : formatUIValue(speed);
-      this.elements.waypointSegmentSpeedValue.textContent = `${display}x`;
+      setRangeReadout(this.elements.waypointSegmentSpeed, this.elements.waypointSegmentSpeedValue, `${display}x`);
     }
     if (this.elements.segmentSpeedControl) this.elements.segmentSpeedControl.style.display = 'flex';
 
@@ -603,7 +604,7 @@ export const editorPanelMixin = {
       }
       if (this.elements.shapeFrequency) {
         this.elements.shapeFrequency.value = shapeFrequency;
-        this.elements.shapeFrequencyValue.textContent = shapeFrequency;
+        setRangeReadout(this.elements.shapeFrequency, this.elements.shapeFrequencyValue, shapeFrequency);
       }
       this._updateShapeParamsVisibility(this.selectedWaypoint.pathShape || 'line');
       
@@ -675,7 +676,8 @@ export const editorPanelMixin = {
         }
         if (this.elements.rippleMaxScale) {
           this.elements.rippleMaxScale.value = this.selectedWaypoint.rippleMaxScale || 1000;
-          this.elements.rippleMaxScaleValue.textContent = `${this.elements.rippleMaxScale.value}%`;
+          setRangeReadout(this.elements.rippleMaxScale, this.elements.rippleMaxScaleValue,
+            `${this.elements.rippleMaxScale.value}%`);
         }
         if (this.elements.rippleWait) {
           this.elements.rippleWait.checked = this.selectedWaypoint.rippleWait !== undefined 
@@ -689,14 +691,14 @@ export const editorPanelMixin = {
             ? this.selectedWaypoint.pulseAmplitude 
             : 1.0;
           this.elements.pulseAmplitude.value = amplitude;
-          this.elements.pulseAmplitudeValue.textContent = amplitude.toFixed(1);
+          setRangeReadout(this.elements.pulseAmplitude, this.elements.pulseAmplitudeValue, amplitude.toFixed(1));
         }
         if (this.elements.pulseCycleSpeed) {
           const cycleSpeed = this.selectedWaypoint.pulseCycleSpeed !== undefined 
             ? this.selectedWaypoint.pulseCycleSpeed 
             : 4.0;
           this.elements.pulseCycleSpeed.value = cycleSpeed;
-          this.elements.pulseCycleSpeedValue.textContent = `${cycleSpeed}s`;
+          setRangeReadout(this.elements.pulseCycleSpeed, this.elements.pulseCycleSpeedValue, `${cycleSpeed}s`);
         }
         
         // Label controls
@@ -724,26 +726,26 @@ export const editorPanelMixin = {
         if (this.elements.labelWidth) {
           const width = this.selectedWaypoint.labelWidth || TEXT_LABEL.WIDTH_DEFAULT;
           this.elements.labelWidth.value = width;
-          this.elements.labelWidthValue.textContent = `${width}%`;
+          setRangeReadout(this.elements.labelWidth, this.elements.labelWidthValue, `${width}%`);
         }
         
         // Label offsets
         if (this.elements.labelOffsetX) {
           const offsetX = this.selectedWaypoint.labelOffsetX !== undefined ? this.selectedWaypoint.labelOffsetX : TEXT_LABEL.OFFSET_DEFAULT_X;
           this.elements.labelOffsetX.value = offsetX;
-          this.elements.labelOffsetXValue.textContent = `${offsetX}%`;
+          setRangeReadout(this.elements.labelOffsetX, this.elements.labelOffsetXValue, `${offsetX}%`);
         }
         if (this.elements.labelOffsetY) {
           const offsetY = this.selectedWaypoint.labelOffsetY !== undefined ? this.selectedWaypoint.labelOffsetY : TEXT_LABEL.OFFSET_DEFAULT_Y;
           this.elements.labelOffsetY.value = offsetY;
-          this.elements.labelOffsetYValue.textContent = `${offsetY}%`;
+          setRangeReadout(this.elements.labelOffsetY, this.elements.labelOffsetYValue, `${offsetY}%`);
         }
         
         // Enable pause controls for major waypoints
         this.elements.waypointPauseTime.disabled = false;
         const pauseTimeSec = (this.selectedWaypoint.pauseTime || 0) / 1000;
         this.elements.waypointPauseTime.value = pauseTimeSec;
-        this.elements.waypointPauseTimeValue.textContent = pauseTimeSec + 's';
+        setRangeReadout(this.elements.waypointPauseTime, this.elements.waypointPauseTimeValue, pauseTimeSec + 's');
         this.elements.pauseTimeControl.style.display = 'flex';
       } else {
         // Minor waypoint - disable features that don't apply
@@ -762,7 +764,7 @@ export const editorPanelMixin = {
         // Disable pause controls for minor waypoints
         this.elements.waypointPauseTime.disabled = true;
         this.elements.waypointPauseTime.value = 0;
-        this.elements.waypointPauseTimeValue.textContent = '0s';
+        setRangeReadout(this.elements.waypointPauseTime, this.elements.waypointPauseTimeValue, '0s');
         this.elements.pauseTimeControl.style.display = 'none';
       }
 

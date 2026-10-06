@@ -212,7 +212,7 @@
               <!-- Wait Time -->
               <label id="pause-time-control" for="waypoint-pause-time">
                 <span data-tip="How long the path head waits at this waypoint before moving on">Wait Time</span>
-                <input type="range" id="waypoint-pause-time" min="0" max="1000" value="500" step="1">
+                <input type="range" id="waypoint-pause-time" min="0" max="1000" value="500" step="1" aria-describedby="waypoint-pause-time-value" aria-valuetext="1.5s">
                 <span id="waypoint-pause-time-value">1.5s</span>
               </label>
 
@@ -277,7 +277,7 @@
                     </label>
                     <label for="ripple-max-scale">
                       <span data-tip="Maximum expansion radius of the ripple effect">Size</span>
-                      <input type="range" id="ripple-max-scale" min="500" max="4000" value="1000" step="100" aria-describedby="ripple-max-scale-value">
+                      <input type="range" id="ripple-max-scale" min="500" max="4000" value="1000" step="100" aria-describedby="ripple-max-scale-value" aria-valuetext="1000%">
                       <span id="ripple-max-scale-value">1000%</span>
                     </label>
                     <label class="checkbox-label" for="ripple-wait">
@@ -291,12 +291,12 @@
                     <span id="pulse-controls-label" class="sub-controls-label">Pulse settings</span>
                     <label for="pulse-amplitude">
                       <span data-tip="How much the marker grows and shrinks during pulse">Amplitude</span>
-                      <input type="range" id="pulse-amplitude" min="0" max="3" value="1" step="0.1" aria-describedby="pulse-amplitude-value">
+                      <input type="range" id="pulse-amplitude" min="0" max="3" value="1" step="0.1" aria-describedby="pulse-amplitude-value" aria-valuetext="1.0">
                       <span id="pulse-amplitude-value">1.0</span>
                     </label>
                     <label for="pulse-cycle-speed">
                       <span data-tip="Duration of one complete pulse cycle">Cycle duration</span>
-                      <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value">
+                      <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value" aria-valuetext="4s">
                       <span id="pulse-cycle-speed-value">4s</span>
                     </label>
                   </div>
@@ -384,21 +384,21 @@
               <!-- Text Width (for wrapping) -->
               <label for="label-width">
                 <span data-tip="Maximum width before text wraps to a new line">Text Area Width</span>
-                <input type="range" id="label-width" min="5" max="50" value="15" step="1">
+                <input type="range" id="label-width" min="5" max="50" value="15" step="1" aria-describedby="label-width-value" aria-valuetext="15%">
                 <span id="label-width-value">15%</span>
               </label>
               
               <!-- Position X Offset -->
               <label for="label-offset-x">
                 <span data-tip="How far the label sits left (negative) or right (positive) of the waypoint, as a percentage of the canvas width">Horizontal Position</span>
-                <input type="range" id="label-offset-x" min="-50" max="50" value="0" step="1">
+                <input type="range" id="label-offset-x" min="-50" max="50" value="0" step="1" aria-describedby="label-offset-x-value" aria-valuetext="0%">
                 <span id="label-offset-x-value">0%</span>
               </label>
               
               <!-- Position Y Offset -->
               <label for="label-offset-y">
                 <span data-tip="How far the label sits above (negative) or below (positive) the waypoint, as a percentage of the canvas height">Vertical Position</span>
-                <input type="range" id="label-offset-y" min="-50" max="50" value="-5" step="1">
+                <input type="range" id="label-offset-y" min="-50" max="50" value="-5" step="1" aria-describedby="label-offset-y-value" aria-valuetext="-5%">
                 <span id="label-offset-y-value">-5%</span>
               </label>
               
@@ -453,7 +453,7 @@
               <!-- Segment Speed -->
               <label id="segment-speed-control" for="waypoint-segment-speed">
                 <span data-tip="How fast the path head travels this leg: 2.0x takes half the time, 0.5x twice as long">Segment speed</span>
-                <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1">
+                <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1" aria-describedby="waypoint-segment-speed-value" aria-valuetext="1.0x">
                 <span id="waypoint-segment-speed-value">1.0x</span>
               </label>
               </div>
@@ -471,7 +471,7 @@
                 </label>
                 <label for="shape-frequency">
                   <span data-tip="Number of squiggle waves per path segment">Frequency</span>
-                  <input type="range" id="shape-frequency" min="1" max="20" value="5" step="1">
+                  <input type="range" id="shape-frequency" min="1" max="20" value="5" step="1" aria-describedby="shape-frequency-value" aria-valuetext="5">
                   <span id="shape-frequency-value">5</span>
                 </label>
               </div>
@@ -524,7 +524,7 @@
               <div id="area-circle-controls" style="display: none;">
                 <label for="area-circle-radius">
                   <span data-tip="Radius of the circular highlight area">Size</span>
-                  <input type="range" id="area-circle-radius" min="0" max="1000" value="100" step="1">
+                  <input type="range" id="area-circle-radius" min="0" max="1000" value="100" step="1" aria-describedby="area-circle-radius-value" aria-valuetext="5%">
                   <span id="area-circle-radius-value">5%</span>
                 </label>
               </div>
@@ -533,12 +533,12 @@
               <div id="area-rect-controls" style="display: none;">
                 <label for="area-rect-width">
                   <span data-tip="Width of the rectangular highlight area">Width</span>
-                  <input type="range" id="area-rect-width" min="0" max="1000" value="125" step="1">
+                  <input type="range" id="area-rect-width" min="0" max="1000" value="125" step="1" aria-describedby="area-rect-width-value" aria-valuetext="10%">
                   <span id="area-rect-width-value">10%</span>
                 </label>
                 <label for="area-rect-height">
                   <span data-tip="Height of the rectangular highlight area">Height</span>
-                  <input type="range" id="area-rect-height" min="0" max="1000" value="125" step="1">
+                  <input type="range" id="area-rect-height" min="0" max="1000" value="125" step="1" aria-describedby="area-rect-height-value" aria-valuetext="10%">
                   <span id="area-rect-height-value">10%</span>
                 </label>
               </div>
@@ -567,7 +567,7 @@
                 <!-- Fill Opacity -->
                 <label for="area-fill-opacity">
                   <span data-tip="Opacity of the area fill. Set to 0% to show only the border">Fill Opacity</span>
-                  <input type="range" id="area-fill-opacity" min="0" max="100" value="30" step="1">
+                  <input type="range" id="area-fill-opacity" min="0" max="100" value="30" step="1" aria-describedby="area-fill-opacity-value" aria-valuetext="30%">
                   <span id="area-fill-opacity-value">30%</span>
                 </label>
               </div>
@@ -619,14 +619,14 @@
                 <!-- Fade In -->
                 <label for="area-fade-in">
                   <span data-tip="Duration of the fade-in animation when the area appears">Fade In</span>
-                  <input type="range" id="area-fade-in" min="0" max="10000" value="500" step="100">
+                  <input type="range" id="area-fade-in" min="0" max="10000" value="500" step="100" aria-describedby="area-fade-in-value" aria-valuetext="0.5s">
                   <span id="area-fade-in-value">0.5s</span>
                 </label>
                 
                 <!-- Fade Out -->
                 <label for="area-fade-out">
                   <span data-tip="Duration of the fade-out animation when the area disappears">Fade Out</span>
-                  <input type="range" id="area-fade-out" min="0" max="10000" value="500" step="100">
+                  <input type="range" id="area-fade-out" min="0" max="10000" value="500" step="100" aria-describedby="area-fade-out-value" aria-valuetext="0.5s">
                   <span id="area-fade-out-value">0.5s</span>
                 </label>
               </div>
@@ -690,7 +690,7 @@
                 </label>
                 <label id="head-rotation-offset-control" for="head-rotation-offset">
                   <span data-tip="Turns the image by this many degrees on top of Rotation: clockwise above 0°, anticlockwise below">Offset</span>
-                  <input type="range" id="head-rotation-offset" min="-180" max="180" value="0" step="5">
+                  <input type="range" id="head-rotation-offset" min="-180" max="180" value="0" step="5" aria-describedby="head-rotation-offset-value" aria-valuetext="0°">
                   <span id="head-rotation-offset-value">0°</span>
                 </label>
               </div>
@@ -716,7 +716,7 @@
             <div id="section-pacing-content" class="section-content">
               <label id="speed-control-right" class="sidebar-control-row" for="animation-speed-right">
                 <span data-tip="Total animation playback time. Changing it speeds up or slows down every leg alike. The end waits for crowds and beacons that are still finishing">Duration</span>
-                <input type="range" id="animation-speed-right" min="1" max="4000" step="5" aria-describedby="pacing-duration-breakdown">
+                <input type="range" id="animation-speed-right" min="1" max="4000" step="5" aria-describedby="animation-speed-value-right pacing-duration-breakdown" aria-valuetext="10s">
                 <span id="animation-speed-value-right" class="slider-value">10s</span>
               </label>
               <p id="pacing-duration-breakdown" class="section-hint" hidden></p>
@@ -727,7 +727,7 @@
               <div id="graphics-scale-control" style="margin-top:0.5rem;">
                 <label class="sidebar-control-row" for="graphics-scale">
                   <span id="graphics-scale-label" data-tip="Scales all graphics (paths, markers, labels, beacons) uniformly. Adjust individual sizes first, then fine-tune overall scale">Scale</span>
-                  <input type="range" id="graphics-scale" min="-200" max="200" value="0" step="1">
+                  <input type="range" id="graphics-scale" min="-200" max="200" value="0" step="1" aria-describedby="graphics-scale-value" aria-valuetext="1×">
                   <span id="graphics-scale-value" class="slider-value">1×</span>
                 </label>
               </div>
@@ -788,7 +788,7 @@
               <!-- Trail Size (for instantaneous/comet mode) - hidden unless comet selected -->
               <label id="path-trail-control" for="path-trail" style="display: none;">
                 <span data-tip="Length of the visible path trail in comet mode">Trail size</span>
-                <input type="range" id="path-trail" min="0" max="1000" value="590" step="1">
+                <input type="range" id="path-trail" min="0" max="1000" value="590" step="1" aria-describedby="path-trail-value" aria-valuetext="15%">
                 <span id="path-trail-value">15%</span>
               </label>
               
@@ -796,12 +796,12 @@
               <div id="spotlight-controls" style="display:none;">
                 <label for="reveal-size">
                   <span data-tip="Radius of the visible area around the path head">Spotlight Size</span>
-                  <input type="range" id="reveal-size" min="0" max="1000" value="500" step="1">
+                  <input type="range" id="reveal-size" min="0" max="1000" value="500" step="1" aria-describedby="reveal-size-value" aria-valuetext="10%">
                   <span id="reveal-size-value">10%</span>
                 </label>
                 <label for="reveal-feather">
                   <span data-tip="Softness of the spotlight edge">Spotlight Feather</span>
-                  <input type="range" id="reveal-feather" min="0" max="1000" value="500" step="1">
+                  <input type="range" id="reveal-feather" min="0" max="1000" value="500" step="1" aria-describedby="reveal-feather-value" aria-valuetext="25%">
                   <span id="reveal-feather-value">25%</span>
                 </label>
                 <label for="reveal-trail" id="reveal-trail-control" hidden>
@@ -816,17 +816,17 @@
               <div id="aov-controls" style="display:none;">
                 <label for="aov-angle">
                   <span data-tip="Width of the angle-of-view cone in degrees">View Angle</span>
-                  <input type="range" id="aov-angle" min="0" max="1000" value="500" step="1">
+                  <input type="range" id="aov-angle" min="0" max="1000" value="500" step="1" aria-describedby="aov-angle-value" aria-valuetext="60°">
                   <span id="aov-angle-value">60°</span>
                 </label>
                 <label for="aov-distance">
                   <span data-tip="How far the view cone extends from the path head">View Distance</span>
-                  <input type="range" id="aov-distance" min="0" max="1000" value="500" step="1">
+                  <input type="range" id="aov-distance" min="0" max="1000" value="500" step="1" aria-describedby="aov-distance-value" aria-valuetext="10%">
                   <span id="aov-distance-value">10%</span>
                 </label>
                 <label for="aov-dropoff">
                   <span data-tip="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head">View Dropoff</span>
-                  <input type="range" id="aov-dropoff" min="0" max="1000" value="500" step="1">
+                  <input type="range" id="aov-dropoff" min="0" max="1000" value="500" step="1" aria-describedby="aov-dropoff-value" aria-valuetext="25%">
                   <span id="aov-dropoff-value">25%</span>
                 </label>
               </div>
@@ -856,7 +856,7 @@
                 </label>
                 <label class="sidebar-control-row" for="path-glow-intensity">
                   <span data-tip="How far the path glow spreads outward from the path">Glow intensity</span>
-                  <input type="range" id="path-glow-intensity" min="0" max="100" value="50" step="1" disabled>
+                  <input type="range" id="path-glow-intensity" min="0" max="100" value="50" step="1" disabled aria-describedby="path-glow-value" aria-valuetext="50%">
                   <span id="path-glow-value" class="slider-value">50%</span>
                 </label>
               </fieldset>
@@ -882,7 +882,7 @@
               <!-- Zoom -->
               <label class="control-row-inline" for="background-zoom">
                 <span data-tip="Scale of the background image">Zoom</span>
-                <input type="range" id="background-zoom" min="50" max="400" step="1" value="100" style="flex: 1;">
+                <input type="range" id="background-zoom" min="50" max="400" step="1" value="100" style="flex: 1;" aria-describedby="background-zoom-value" aria-valuetext="100%">
                 <span id="background-zoom-value">100%</span>
               </label>
 
@@ -1188,7 +1188,7 @@
 
               <label for="network-edge-weight">
                 <span data-tip="How strongly dots prefer this edge at a junction, shown as the share of departures that pick it">Traffic</span>
-                <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1">
+                <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1" aria-describedby="network-edge-weight-value" aria-valuetext="100% configured share">
                 <span id="network-edge-weight-value">100% configured share</span>
               </label>
               <p id="network-edge-hint" class="section-hint">
@@ -1219,7 +1219,7 @@
           
           <div class="timeline">
             <span id="current-time" class="time">0:00</span>
-            <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="1000" value="0" step="1" aria-label="Timeline position">
+            <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="1000" value="0" step="1" aria-label="Timeline position" aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:00">
             <span id="total-time" class="time">0:00</span>
           </div>
         </div>

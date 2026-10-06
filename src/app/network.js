@@ -18,6 +18,7 @@ import { INTERACTION } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
 import { getGraphDepartureShares } from '../utils/graphRouting.js';
 import { nearestOnPolyline } from '../utils/segmentHitTest.js';
+import { setRangeReadout } from '../utils/uiReadouts.js';
 
 const NODE_TYPE_LABELS = {
   normal: 'pass-through',
@@ -589,9 +590,10 @@ export const networkMixin = {
       getGraphDepartureShares(graph, nodeId)
         .find(share => share.edge.id === edge.id)?.percent ?? 0;
 
-    valueEl.textContent = edge.direction === 'one-way'
+    // The readout's label names the weight slider it belongs to.
+    setRangeReadout(valueEl.closest('label')?.control, valueEl, edge.direction === 'one-way'
       ? `${shareFrom(edge.sourceId)}% configured share`
-      : `${shareFrom(edge.sourceId)}% · ${shareFrom(edge.targetId)}% configured shares`;
+      : `${shareFrom(edge.sourceId)}% · ${shareFrom(edge.targetId)}% configured shares`);
   },
 
   /**

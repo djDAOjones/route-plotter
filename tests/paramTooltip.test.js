@@ -59,6 +59,14 @@ function triggers() {
 }
 
 /**
+ * A hint's own "?" button (UI-04): the trigger described by the hint's
+ * description, as its control is.
+ */
+function triggerOf(tip) {
+  return document.querySelector(`.param-hint-trigger[aria-describedby="${tip.getAttribute('data-tip-desc')}"]`);
+}
+
+/**
  * A real pointer click is cancelable. A synthetic one that is not lets jsdom
  * run the label's default activation, which forwards a second click to the
  * control and dismisses the very tooltip under test.
@@ -138,6 +146,7 @@ describe('parameter hints as control descriptions', () => {
 });
 
 describe('the visible tooltip stays reachable without a tab stop', () => {
+  let tip;
   let trigger;
   let control;
 
@@ -145,7 +154,9 @@ describe('the visible tooltip stays reachable without a tab stop', () => {
     mountShell();
     initParamTooltips();
     control = document.getElementById('dot-size');
-    trigger = control.closest('label').querySelector('[data-tip]');
+    tip = control.closest('label').querySelector('[data-tip]');
+    // UI-04: the hint opens from its own "?", no longer from the label text.
+    trigger = triggerOf(tip);
   });
 
   /** The shared element is created lazily on first show. */
@@ -157,10 +168,10 @@ describe('the visible tooltip stays reachable without a tab stop', () => {
     el.focus();
   }
 
-  test('clicking the hint shows it, and clicking again closes it', () => {
+  test('clicking the hint’s trigger shows it, and clicking again closes it', () => {
     trigger.dispatchEvent(clickEvent());
     expect(tooltip().style.display).toBe('block');
-    expect(tooltip().textContent).toBe(trigger.getAttribute('data-tip'));
+    expect(tooltip().textContent).toBe(tip.getAttribute('data-tip'));
 
     trigger.dispatchEvent(clickEvent());
     expect(tooltip().style.display).toBe('none');
@@ -171,7 +182,9 @@ describe('the visible tooltip stays reachable without a tab stop', () => {
 
     // Announcing both the tooltip and the description would say it twice.
     expect(tooltip().getAttribute('aria-hidden')).toBe('true');
-    expect(trigger.hasAttribute('aria-describedby')).toBe(false);
+    expect(tip.hasAttribute('aria-describedby')).toBe(false);
+    // The trigger is described by the description node, never by the tooltip.
+    expect(trigger.getAttribute('aria-describedby')).toBe(tip.getAttribute('data-tip-desc'));
   });
 
   test('clicking the control it describes dismisses the hint', () => {
@@ -186,7 +199,7 @@ describe('the visible tooltip stays reachable without a tab stop', () => {
     tabTo(control);
 
     expect(tooltip().style.display).toBe('block');
-    expect(tooltip().textContent).toBe(trigger.getAttribute('data-tip'));
+    expect(tooltip().textContent).toBe(tip.getAttribute('data-tip'));
   });
 
   test('a mouse click on the control does not reveal it', () => {
@@ -263,6 +276,7 @@ describe('hints that cannot be resolved are skipped, not half-wired', () => {
 describe('a mouse resting on a hint opens it', () => {
   const OPEN = INTERACTION.HINT_HOVER_OPEN_DELAY_MS;
   const CLOSE = INTERACTION.HINT_HOVER_CLOSE_DELAY_MS;
+  let tip;
   let trigger;
   let control;
 
@@ -280,7 +294,9 @@ describe('a mouse resting on a hint opens it', () => {
     mountShell();
     initParamTooltips();
     control = document.getElementById('dot-size');
-    trigger = control.closest('label').querySelector('[data-tip]');
+    tip = control.closest('label').querySelector('[data-tip]');
+    // UI-04: the pointer rests on the hint's own "?", not on the label text.
+    trigger = triggerOf(tip);
   });
 
   afterEach(() => {
@@ -301,7 +317,7 @@ describe('a mouse resting on a hint opens it', () => {
 
     vi.advanceTimersByTime(1);
     expect(showing()).toBe(true);
-    expect(tooltip().textContent).toBe(trigger.getAttribute('data-tip'));
+    expect(tooltip().textContent).toBe(tip.getAttribute('data-tip'));
   });
 
   test('a pointer that leaves before the delay opens nothing', () => {
@@ -370,7 +386,7 @@ describe('a mouse resting on a hint opens it', () => {
   test('a hint whose text is redrawn before the delay does not open for the old copy', () => {
     // The scene outline redraws its forms while a pointer may rest on one.
     pointTo(trigger);
-    trigger.closest('label').replaceWith(trigger.closest('label').cloneNode(true));
+    tip.closest('label').replaceWith(tip.closest('label').cloneNode(true));
     vi.advanceTimersByTime(OPEN * 4);
 
     expect(showing()).toBe(false);
@@ -484,6 +500,7 @@ describe('a mouse resting on a hint opens it', () => {
       top, bottom, left: 20, right: 220, width: 200, height: bottom - top, x: 20, y: top,
     });
     trigger.getBoundingClientRect = () => box(100, 116);
+    tip.getBoundingClientRect = () => box(100, 116);
     control.getBoundingClientRect = () => box(120, 152);
     const frame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((run) => {
       run(0);
@@ -512,6 +529,7 @@ describe('a mouse resting on a hint opens it', () => {
     try {
       // Room above: it flips to sit just above the text.
       trigger.getBoundingClientRect = () => box(500, 516);
+      tip.getBoundingClientRect = () => box(500, 516);
       control.getBoundingClientRect = () => box(520, 700);
       hoverOpen();
       expect(parseFloat(tooltip().style.top)).toBe(500 - 100 - 6);
@@ -521,6 +539,7 @@ describe('a mouse resting on a hint opens it', () => {
       // on screen rather than above the top of the window.
       pointTo(document.body);
       trigger.getBoundingClientRect = () => box(40, 56);
+      tip.getBoundingClientRect = () => box(40, 56);
       control.getBoundingClientRect = () => box(60, window.innerHeight - 4);
       hoverOpen();
       expect(parseFloat(tooltip().style.top)).toBe(12);
@@ -736,16 +755,17 @@ describe('the scene outline’s fields have hints, drawn as the outline is', () 
     expect(describedText(weight)).toEqual([hint]);
   });
 
-  test('resting on an outline field’s label opens its hint', async () => {
+  test('resting on an outline field’s “?” opens its hint', async () => {
     const { container } = await drawWholeOutline();
     vi.useFakeTimers();
     try {
-      const trigger = container.querySelector('form[data-outline-action="update-emitter"] [data-tip]');
+      const tip = container.querySelector('form[data-outline-action="update-emitter"] [data-tip]');
+      const trigger = triggerOf(tip);
       trigger.dispatchEvent(new window.PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
       vi.advanceTimersByTime(INTERACTION.HINT_HOVER_OPEN_DELAY_MS);
       const tooltip = document.getElementById('param-tooltip');
       expect(tooltip.style.display).toBe('block');
-      expect(tooltip.textContent).toBe(trigger.getAttribute('data-tip'));
+      expect(tooltip.textContent).toBe(tip.getAttribute('data-tip'));
     } finally {
       vi.useRealTimers();
     }
@@ -759,8 +779,8 @@ describe('the scene outline’s fields have hints, drawn as the outline is', () 
     try {
       const form = container.querySelector('form[data-outline-action="update-edge"]');
       const weight = form.elements.weight;
-      const trigger = [...form.querySelectorAll('[data-tip]')]
-        .find(tip => tip.getAttribute('data-tip') === hintOf(weight));
+      const trigger = triggerOf([...form.querySelectorAll('[data-tip]')]
+        .find(tip => tip.getAttribute('data-tip') === hintOf(weight)));
       expect(trigger).toBeTruthy();
       trigger.dispatchEvent(new window.PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
       vi.advanceTimersByTime(INTERACTION.HINT_HOVER_OPEN_DELAY_MS);
@@ -827,3 +847,322 @@ describe('Release bias says which way is earlier', () => {
     expect(hintOf(field)).toMatch(/\babove 0 is later\b/);
   });
 });
+
+/**
+ * UI-04 — each hint has a "?" trigger of its own, and the label's text is a
+ * label again (DEF-14). Before, a click on the text opened the hint and was
+ * cancelled, so a checkbox's label did not toggle it and no label passed its
+ * click on to its control.
+ */
+
+/** Every wired hint in `root`: its text, control, label or legend and trigger. */
+function wiredHints(root = document) {
+  return [...root.querySelectorAll('[data-tip][data-tip-desc]')].map((tip) => {
+    const namer = tip.closest('label, legend');
+    const host = namer.tagName === 'LEGEND' ? namer.parentElement : namer;
+    const triggers = [...document.querySelectorAll('.param-hint-trigger')]
+      .filter(button => button.getAttribute('aria-describedby') === tip.getAttribute('data-tip-desc'));
+    return { tip, namer, host, triggers };
+  });
+}
+
+/**
+ * What is wrong with each hint's trigger, if anything: there must be exactly
+ * one, a real button beside its label (never in it), named in the label's
+ * words, described by the hint, saying whether it is expanded, and tied to the
+ * label's text for anchor positioning.
+ */
+function triggerFaults(root = document) {
+  const faults = [];
+  for (const { tip, namer, host, triggers } of wiredHints(root)) {
+    const words = tip.textContent.replace(/\s+/g, ' ').trim();
+    if (triggers.length !== 1) {
+      faults.push(`${words}: ${triggers.length} triggers`);
+      continue;
+    }
+    const [trigger] = triggers;
+    if (trigger.tagName !== 'BUTTON' || trigger.type !== 'button') faults.push(`${words}: not a button`);
+    if (namer.contains(trigger) || trigger.closest('label, legend')) faults.push(`${words}: inside its label`);
+    if (trigger.previousElementSibling !== host && trigger.nextElementSibling !== host) {
+      faults.push(`${words}: not beside its label`);
+    }
+    if (trigger.getAttribute('aria-label') !== `Help: ${words}`) {
+      faults.push(`${words}: named "${trigger.getAttribute('aria-label')}"`);
+    }
+    const description = document.getElementById(trigger.getAttribute('aria-describedby'));
+    if (description?.textContent !== tip.getAttribute('data-tip')) faults.push(`${words}: not described by its hint`);
+    if (trigger.getAttribute('aria-expanded') !== 'false') faults.push(`${words}: expanded at rest`);
+    const anchor = tip.style.getPropertyValue('anchor-name');
+    if (!anchor || trigger.style.getPropertyValue('position-anchor') !== anchor) {
+      faults.push(`${words}: not anchored to its label text`);
+    }
+  }
+  // None without a hint on the page: a hint taken away takes its trigger.
+  const owned = new Set(wiredHints(root).flatMap(({ triggers }) => triggers));
+  for (const trigger of root.querySelectorAll('.param-hint-trigger')) {
+    if (!owned.has(trigger)) faults.push(`${trigger.getAttribute('aria-label')}: no hint on the page`);
+  }
+  return faults;
+}
+
+describe('UI-04: every hint has a “?” trigger of its own', () => {
+  test('the settings panel: one trigger per hint, colour pickers included, and none astray', () => {
+    mountShell();
+    attachSwatchPickers();
+    initParamTooltips();
+
+    // Vacuous unless the panel's hints were there to check.
+    expect(wiredHints().length).toBeGreaterThan(80);
+    expect(document.querySelectorAll('.param-hint-trigger').length).toBe(wiredHints().length);
+    expect(triggerFaults()).toEqual([]);
+  });
+
+  test('re-initialising adds no second trigger', () => {
+    mountShell();
+    initParamTooltips();
+    const count = document.querySelectorAll('.param-hint-trigger').length;
+    initParamTooltips();
+    initParamTooltips();
+
+    expect(document.querySelectorAll('.param-hint-trigger').length).toBe(count);
+    expect(triggerFaults()).toEqual([]);
+  });
+
+  test('Tab meets the trigger where the eye does: before a control its text leads, after a checkbox', () => {
+    mountShell();
+    initParamTooltips();
+    const triggerFor = control => triggerOf(control.closest('label').querySelector('[data-tip]'));
+
+    // Text, then its control: the "?" is reached before the control.
+    const size = document.getElementById('dot-size');
+    expect(triggerFor(size).nextElementSibling).toBe(size.closest('label'));
+    // A checkbox, then its text: the "?" is reached after the checkbox.
+    const casing = document.getElementById('path-casing-toggle');
+    expect(triggerFor(casing).previousElementSibling).toBe(casing.closest('label'));
+  });
+
+  test('rows the panel builds as it is used get theirs as they arrive, and lose them as they go', async () => {
+    const app = await bootApp();
+    try {
+      await app.ready;
+      document.getElementById('splash-close').click();
+      app.addCrowd({ enterNetworkEditor: false });
+      document.getElementById('crowd-busyness-add').click();
+      const layer = app.selectedCrowd;
+      const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
+      for (const y of [0.2, 0.8]) {
+        const exit = layer.graph.addNode({ x: 0.9, y, type: 'exit' });
+        layer.graph.addEdge({ sourceId: junction.id, targetId: exit.id, direction: 'one-way' });
+      }
+      app.networkEditService.bindForInspection(layer);
+      app.networkEditService.selectNode(junction);
+      await Promise.resolve();
+
+      const busyness = document.getElementById('crowd-busyness-handles');
+      const weights = document.getElementById('network-path-weight-rows');
+      // Three handles' fields and two path weights, each with its own "?".
+      expect(wiredHints(busyness).length).toBe(8);
+      expect(wiredHints(weights).length).toBe(2);
+      expect(triggerFaults()).toEqual([]);
+
+      // The middle handle goes: its rows are drawn again, one trigger each.
+      busyness.querySelector('.crowd-busyness-remove').click();
+      await Promise.resolve();
+      expect(wiredHints(busyness).length).toBe(5);
+      expect(triggerFaults()).toEqual([]);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+
+  test('the scene outline’s fields get theirs as each form is drawn, and redrawing keeps one each', async () => {
+    mountShell();
+    initParamTooltips();
+    const { container, eventBus } = await drawWholeOutline();
+
+    expect(wiredHints(container).length).toBeGreaterThanOrEqual(46);
+    expect(triggerFaults()).toEqual([]);
+
+    // A redraw replaces every form; the old triggers go with them.
+    eventBus.emit('scene-outline:update', outlineFixture());
+    await Promise.resolve();
+    expect(triggerFaults()).toEqual([]);
+  });
+
+  test('a row hidden by hiding its label hides its trigger, and closes its hint', () => {
+    mountShell();
+    initParamTooltips();
+    const label = document.getElementById('pause-time-control');
+    const trigger = triggerOf(label.querySelector('[data-tip]'));
+    const tooltip = () => document.getElementById('param-tooltip');
+
+    trigger.dispatchEvent(clickEvent());
+    expect(tooltip().style.display).toBe('block');
+
+    // The app hides Wait Time for a minor waypoint by its label's style.
+    label.style.display = 'none';
+    return Promise.resolve().then(() => {
+      expect(trigger.hidden).toBe(true);
+      expect(tooltip().style.display).toBe('none');
+      expect(trigger.getAttribute('aria-expanded')).toBe('false');
+
+      label.style.display = 'flex';
+      return Promise.resolve();
+    }).then(() => {
+      expect(trigger.hidden).toBe(false);
+      // And by its `hidden` attribute (the reveal trail).
+      label.hidden = true;
+      return Promise.resolve();
+    }).then(() => {
+      expect(trigger.hidden).toBe(true);
+    });
+  });
+});
+
+describe('UI-04: the trigger opens its hint on hover, focus and tap; the label text is a label', () => {
+  const OPEN = INTERACTION.HINT_HOVER_OPEN_DELAY_MS;
+  const tooltip = () => document.getElementById('param-tooltip');
+  const showing = () => tooltip()?.style.display === 'block';
+  let tip;
+  let trigger;
+  let control;
+
+  function tabTo(el) {
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    el.focus();
+  }
+
+  beforeEach(() => {
+    mountShell();
+    initParamTooltips();
+    control = document.getElementById('waypoint-pause-time');
+    tip = control.closest('label').querySelector('[data-tip]');
+    trigger = triggerOf(tip);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('a mouse resting on the “?” opens it after the delay; resting on the label text opens nothing', () => {
+    vi.useFakeTimers();
+    tip.dispatchEvent(new window.PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+    vi.advanceTimersByTime(OPEN * 4);
+    expect(showing()).toBe(false);
+
+    trigger.dispatchEvent(new window.PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+    vi.advanceTimersByTime(OPEN - 1);
+    expect(showing()).toBe(false);
+    vi.advanceTimersByTime(1);
+    expect(showing()).toBe(true);
+    expect(tooltip().textContent).toBe(tip.getAttribute('data-tip'));
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  test('keyboard focus on the “?” opens it; Escape closes it while focus stays; leaving closes it', () => {
+    tabTo(trigger);
+    expect(showing()).toBe(true);
+    expect(tooltip().textContent).toBe(tip.getAttribute('data-tip'));
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(showing()).toBe(false);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    trigger.dispatchEvent(new window.FocusEvent('focusin', { bubbles: true }));
+    expect(showing()).toBe(false);
+
+    // A new visit opens it again; Tab on to the control keeps it, then away closes it.
+    trigger.blur();
+    tabTo(trigger);
+    expect(showing()).toBe(true);
+    tabTo(control);
+    expect(showing()).toBe(true);
+    control.blur();
+    expect(showing()).toBe(false);
+  });
+
+  test('a click or tap on the “?” toggles it, and a mouse’s focus does not open it first', () => {
+    // A mouse press focuses the button before its click: that focus is not
+    // a keyboard's, so the click opens the hint rather than closing it.
+    trigger.dispatchEvent(new window.MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    trigger.focus();
+    expect(showing()).toBe(false);
+    trigger.dispatchEvent(clickEvent());
+    expect(showing()).toBe(true);
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+
+    trigger.dispatchEvent(clickEvent());
+    expect(showing()).toBe(false);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  test('one hint at a time: opening another closes the first, and its trigger says so', () => {
+    const other = triggerOf(document.getElementById('dot-size').closest('label').querySelector('[data-tip]'));
+    trigger.dispatchEvent(clickEvent());
+    other.dispatchEvent(clickEvent());
+
+    expect(showing()).toBe(true);
+    expect(other.getAttribute('aria-expanded')).toBe('true');
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  test('a click on the label text opens no hint, and closes one that shows', () => {
+    tip.dispatchEvent(clickEvent());
+    expect(showing()).toBe(false);
+
+    trigger.dispatchEvent(clickEvent());
+    expect(showing()).toBe(true);
+    tip.dispatchEvent(clickEvent());
+    expect(showing()).toBe(false);
+  });
+});
+
+describe('DEF-14: a click on a hinted label acts as a label', () => {
+  beforeEach(() => {
+    mountShell();
+    attachSwatchPickers();
+    initParamTooltips();
+  });
+
+  test('every hinted checkbox toggles when its label text is clicked', () => {
+    const boxes = [...document.querySelectorAll('input[type="checkbox"]')]
+      .filter(box => [...box.labels].some(label => label.querySelector('[data-tip]')));
+    // The five DEF-14 counted, and Wait during ripple.
+    expect(boxes.map(box => box.id)).toEqual([
+      'ripple-wait', 'path-casing-toggle', 'path-glow-toggle',
+      'export-include-image', 'export-include-camera', 'export-include-text',
+    ]);
+
+    const stuck = boxes.filter((box) => {
+      const before = box.checked;
+      box.labels[0].querySelector('[data-tip]').dispatchEvent(clickEvent());
+      return box.checked === before;
+    }).map(box => box.id);
+    expect(stuck).toEqual([]);
+  });
+
+  test('every hinted label passes a click on its text on to its control, as a browser focuses or toggles it', () => {
+    // A disabled control takes no click from its label, in a browser or here.
+    const labels = wiredHints()
+      .filter(({ namer, tip }) => namer.tagName === 'LABEL' && !describedControl(tip).disabled);
+    // Vacuous unless the labels DEF-14 counted (about 70) were there.
+    expect(labels.length).toBeGreaterThan(70);
+
+    const unforwarded = labels.filter(({ tip }) => {
+      const control = describedControl(tip);
+      let reached = 0;
+      const count = () => { reached += 1; };
+      control.addEventListener('click', count);
+      tip.dispatchEvent(clickEvent());
+      control.removeEventListener('click', count);
+      return reached !== 1;
+    }).map(({ tip }) => tip.textContent.trim());
+    expect(unforwarded).toEqual([]);
+  });
+});
+
+/** A label's control, as a browser resolves it: its `for` target, or the control it wraps. */
+function describedControl(tip) {
+  const label = tip.closest('label');
+  return label.control;
+}

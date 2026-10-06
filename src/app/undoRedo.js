@@ -435,7 +435,8 @@ export const undoRedoMixin = {
     if (this.elements.headRotationOffset) {
       this.elements.headRotationOffset.value = ph.rotationOffset || 0;
       if (this.elements.headRotationOffsetValue) {
-        this.elements.headRotationOffsetValue.textContent = `${ph.rotationOffset || 0}°`;
+        setRangeReadout(this.elements.headRotationOffset, this.elements.headRotationOffsetValue,
+          `${ph.rotationOffset || 0}°`);
       }
     }
     // Sync graphics scale slider and RenderingService
@@ -446,9 +447,9 @@ export const undoRedoMixin = {
       this.elements.graphicsScale.value = Math.round(Math.log2(gs) * 100);
     }
     if (this.elements.graphicsScaleValue) {
-      this.elements.graphicsScaleValue.textContent =
+      setRangeReadout(this.elements.graphicsScale, this.elements.graphicsScaleValue,
         (gs >= 1 ? gs.toFixed(gs === Math.round(gs) ? 0 : 1)
-                  : gs.toFixed(2).replace(/0$/, '')) + '×';
+                  : gs.toFixed(2).replace(/0$/, '')) + '×');
     }
     // Sync path casing toggle
     if (this.elements.pathCasingToggle) {
@@ -465,7 +466,7 @@ export const undoRedoMixin = {
       this.elements.pathGlowIntensity.disabled = glow.enabled !== true;
     }
     if (this.elements.pathGlowValue) {
-      this.elements.pathGlowValue.textContent = glowPct + '%';
+      setRangeReadout(this.elements.pathGlowIntensity, this.elements.pathGlowValue, glowPct + '%');
     }
   }
 };

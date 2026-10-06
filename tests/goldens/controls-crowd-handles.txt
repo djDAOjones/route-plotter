@@ -14,8 +14,8 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 75 46.66666666666666 L 282 16"
 ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="75" cy="46.66666666666666" data-busyness-handle="1" r="22"
 ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="75" cy="46.66666666666666" r="8"
-ui ~ #crowd-busyness-handles>div[1]>label[1]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="21.6"
-ui ~ #crowd-busyness-handles>div[1]>label[3]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[4]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[4]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="71.6"
+ui ~ #crowd-busyness-handles>div[1]>label[2]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="21.6"
+ui ~ #crowd-busyness-handles>div[1]>label[5]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="71.6"
 settled:
   emit animation:durationChange 30956.772238
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30956.772238, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -36,8 +36,8 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 279.36 46.66666666666666 L 282 16"
 ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="279.36" cy="46.66666666666666" data-busyness-handle="1" r="22"
 ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="279.36" cy="46.66666666666666" r="8"
-ui ~ #crowd-busyness-handles>div[1]>label[1]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99"
-ui ~ #crowd-busyness-handles>div[1]>label[3]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[4]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[4]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="71.6"
+ui ~ #crowd-busyness-handles>div[1]>label[2]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99"
+ui ~ #crowd-busyness-handles>div[1]>label[5]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="71.6"
 settled:
   emit animation:durationChange 30559.840779
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30559.840779, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -58,17 +58,17 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 20.64 46.66666666666666 L 282 16"
 ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="20.64" cy="46.66666666666666" data-busyness-handle="1" r="22"
 ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="20.64" cy="46.66666666666666" r="8"
-ui ~ #crowd-busyness-handles>div[1]>label[1]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="1"
-ui ~ #crowd-busyness-handles>div[1]>label[3]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[4]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[4]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="71.6"
+ui ~ #crowd-busyness-handles>div[1]>label[2]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="1"
+ui ~ #crowd-busyness-handles>div[1]>label[5]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="71.6"
 settled:
   emit animation:durationChange 30963.557344
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30963.557344, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9748 chars, e181b384]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
-## #crowd-busyness-handles>div[0]>label[1]>input[1] · read-only, not operated
+## #crowd-busyness-handles>div[0]>label[2]>input[1] · read-only, not operated
 
-## #crowd-busyness-handles>div[1]>label[1]>input[1] · enter 24
+## #crowd-busyness-handles>div[1]>label[2]>input[1] · enter 24
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
@@ -81,12 +81,12 @@ ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 81.36 16 L 282 16"
 ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="81.36" cy="16" data-busyness-handle="1" r="22"
 ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="81.36" cy="16" r="8"
-ui ~ #crowd-busyness-handles>div[1]>label[1]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
+ui ~ #crowd-busyness-handles>div[1]>label[2]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9731 chars, 97e74678]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
-## #crowd-busyness-handles>div[1]>label[1]>input[1] · enter 99999
+## #crowd-busyness-handles>div[1]>label[2]>input[1] · enter 99999
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
@@ -99,15 +99,19 @@ ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 279.36 16 L 282 16"
 ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="279.36" cy="16" data-busyness-handle="1" r="22"
 ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="279.36" cy="16" r="8"
-ui ~ #crowd-busyness-handles>div[1]>label[1]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99"
+ui ~ #crowd-busyness-handles>div[1]>label[2]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9731 chars, 4e1cbe58]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
-## #crowd-busyness-handles>div[1]>label[5]>span[0] · click
+## #crowd-busyness-handles>div[1]>button[7] · click
+app ~ focus: "body" → "#crowd-busyness-handles>div[1]>button[7]"
+storage ~ routePlotter_lastSection: "motion" → "release"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-busyness-handles>div[1]>button[7]: button aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" aria-expanded="false" aria-label="Help: Change" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[9]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" aria-expanded="true" aria-label="Help: Change" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[9]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps"
 
-## #crowd-busyness-handles>div[1]>label[5]>select[1] · choose "step"
+## #crowd-busyness-handles>div[1]>label[8]>select[1] · choose "step"
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
@@ -118,12 +122,12 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 150 16 H 282 V 16"
-ui ~ #crowd-busyness-handles>div[1]>label[5]>select[1]: select aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" data-busyness-field="transition" data-busyness-index="1" :value="gradual" → select aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" data-busyness-field="transition" data-busyness-index="1" :value="step"
+ui ~ #crowd-busyness-handles>div[1]>label[8]>select[1]: select aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" data-busyness-field="transition" data-busyness-index="1" :value="gradual" → select aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" data-busyness-field="transition" data-busyness-index="1" :value="step"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9727 chars, 4b1fdbe3]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
-## #crowd-busyness-handles>div[1]>button[7] · click
+## #crowd-busyness-handles>div[1]>button[10] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
@@ -141,42 +145,41 @@ ui ~ #crowd-busyness-graph: svg aria-label="3 busyness handles across the releas
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 282 16"
 ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="1" r="22"
 ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8"
-ui ~ #crowd-busyness-handles>div[1]>label[1]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
+ui ~ #crowd-busyness-handles>div[1]>label[2]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
 ui ~ #crowd-busyness-reset: button class="btn btn-ghost" type="button" :text="Reset to even" → button class="btn btn-ghost" disabled="" type="button" :text="Reset to even"
 ui - #crowd-busyness-graph>circle[6]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="2" r="22"
 ui - #crowd-busyness-graph>circle[7]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8"
-ui - #crowd-busyness-handles>div[1]>label[5]: label
-ui - #crowd-busyness-handles>div[1]>label[5]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[1]>span[6]}" data-tip="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps" :text="Change"
-ui - #crowd-busyness-handles>div[1]>label[5]>select[1]: select aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" data-busyness-field="transition" data-busyness-index="1" :value="gradual"
-ui - #crowd-busyness-handles>div[1]>label[5]>select[1]>option[0]: option value="gradual" :text="Gradual"
-ui - #crowd-busyness-handles>div[1]>label[5]>select[1]>option[1]: option value="step" :text="Sudden"
-ui - #crowd-busyness-handles>div[1]>span[6]: span class="sr-only" :text="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps"
-ui - #crowd-busyness-handles>div[1]>button[7]: button aria-label="Remove busyness handle 2" class="btn btn-ghost crowd-busyness-remove" data-busyness-field="remove" data-busyness-index="1" type="button" :text="Remove"
-ui - #crowd-busyness-handles>div[2]: div class="crowd-busyness-handle-row"
-ui - #crowd-busyness-handles>div[2]>span[0]: span class="crowd-busyness-handle-title" :text="Handle 3"
-ui - #crowd-busyness-handles>div[2]>label[1]: label
-ui - #crowd-busyness-handles>div[2]>label[1]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[2]>span[2]}" data-tip="Where this handle sits in the window: 0% at its start, 100% at its end. The first and last handles stay put" :text="Time"
-ui - #crowd-busyness-handles>div[2]>label[1]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[2]>span[2]}" aria-label="Time for busyness handle 3, percent" data-busyness-field="time" data-busyness-index="2" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
-ui - #crowd-busyness-handles>div[2]>label[1]>span[2]: span :text="%"
-ui - #crowd-busyness-handles>div[2]>span[2]: span class="sr-only" :text="Where this handle sits in the window: 0% at its start, 100% at its end. The first and last handles stay put"
-ui - #crowd-busyness-handles>div[2]>label[3]: label
-ui - #crowd-busyness-handles>div[2]>label[3]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[2]>span[4]}" data-tip="How busy the release is at this handle: higher sets more dots off around it, 0% none" :text="Busy"
-ui - #crowd-busyness-handles>div[2]>label[3]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[2]>span[4]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100"
-ui - #crowd-busyness-handles>div[2]>label[3]>span[2]: span :text="%"
-ui - #crowd-busyness-handles>div[2]>span[4]: span class="sr-only" :text="How busy the release is at this handle: higher sets more dots off around it, 0% none"
+ui - #crowd-busyness-handles>div[1]>button[7]: button aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" aria-expanded="false" aria-label="Help: Change" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[9]};" type="button"
+ui - #crowd-busyness-handles>div[1]>button[7]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #crowd-busyness-handles>div[1]>label[8]: label
+ui - #crowd-busyness-handles>div[1]>label[8]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[1]>span[9]}" data-tip="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps" style="anchor-name: --{#crowd-busyness-handles>div[1]>span[9]};" :text="Change"
+ui - #crowd-busyness-handles>div[1]>label[8]>select[1]: select aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" data-busyness-field="transition" data-busyness-index="1" :value="gradual"
+ui - #crowd-busyness-handles>div[1]>label[8]>select[1]>option[0]: option value="gradual" :text="Gradual"
+ui - #crowd-busyness-handles>div[1]>label[8]>select[1]>option[1]: option value="step" :text="Sudden"
+ui - #crowd-busyness-handles>div[1]>span[9]: span class="sr-only" :text="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps"
+ui - #crowd-busyness-handles>div[1]>button[10]: button aria-label="Remove busyness handle 2" class="btn btn-ghost crowd-busyness-remove" data-busyness-field="remove" data-busyness-index="1" type="button" :text="Remove"
+ui - #crowd-busyness-handles>div[2]: div class="crowd-busyness-handle-row" (and 15 inside, 59afc9ae)
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, bbb93da2]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
-## #crowd-busyness-handles>div[2]>label[1]>span[0] · click
+## #crowd-busyness-handles>div[2]>button[1] · click
+app ~ focus: "body" → "#crowd-busyness-handles>div[2]>button[1]"
+storage ~ routePlotter_lastSection: "motion" → "release"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-busyness-handles>div[2]>button[1]: button aria-describedby="{#crowd-busyness-handles>div[2]>span[3]}" aria-expanded="false" aria-label="Help: Time" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[2]>span[3]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[2]>span[3]}" aria-expanded="true" aria-label="Help: Time" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[2]>span[3]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Where this handle sits in the window: 0% at its start, 100% at its end. The first and last handles stay put"
 
-## #crowd-busyness-handles>div[2]>label[1]>input[1] · read-only, not operated
+## #crowd-busyness-handles>div[2]>label[2]>input[1] · read-only, not operated
 
-## #crowd-busyness-handles>div[2]>label[3]>span[0] · click
+## #crowd-busyness-handles>div[2]>button[4] · click
+app ~ focus: "body" → "#crowd-busyness-handles>div[2]>button[4]"
+storage ~ routePlotter_lastSection: "motion" → "release"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-busyness-handles>div[2]>button[4]: button aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-expanded="false" aria-label="Help: Busy" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[2]>span[6]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-expanded="true" aria-label="Help: Busy" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[2]>span[6]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How busy the release is at this handle: higher sets more dots off around it, 0% none"
 
-## #crowd-busyness-handles>div[2]>label[3]>input[1] · enter 24
+## #crowd-busyness-handles>div[2]>label[5]>input[1] · enter 24
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
@@ -189,19 +192,20 @@ ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 98.08"
 ui ~ #crowd-busyness-graph>circle[6]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="2" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="98.08" data-busyness-handle="2" r="22"
 ui ~ #crowd-busyness-graph>circle[7]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="98.08" r="8"
-ui ~ #crowd-busyness-handles>div[2]>label[3]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[2]>span[4]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[2]>span[4]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
+ui ~ #crowd-busyness-handles>div[2]>label[5]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="24"
 settled:
   emit animation:durationChange 29597.591002
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 29597.591002, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9733 chars, 142239ac]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:29"
 
-## #crowd-busyness-handles>div[2]>label[3]>input[1] · enter 99999
-app ~ focus: "body" → "#crowd-busyness-handles>div[2]>label[3]>input[1]"
+## #crowd-busyness-handles>div[2]>label[5]>input[1] · enter 99999
+app ~ focus: "body" → "#crowd-busyness-handles>div[2]>label[5]>input[1]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-busyness-handles>div[2]>label[3]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[2]>span[4]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[2]>span[4]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
+ui ~ #crowd-busyness-handles>div[2]>label[5]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
 
 ## #crowd-busyness-reset · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
@@ -221,29 +225,20 @@ ui ~ #crowd-busyness-graph: svg aria-label="3 busyness handles across the releas
 ui ~ #crowd-busyness-graph>path[1]: path class="crowd-busyness-line" d="M 18 16 L 150 16 L 282 16" → path class="crowd-busyness-line" d="M 18 16 L 282 16"
 ui ~ #crowd-busyness-graph>circle[4]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="150" cy="16" data-busyness-handle="1" r="22" → circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="1" r="22"
 ui ~ #crowd-busyness-graph>circle[5]: circle aria-hidden="true" class="crowd-busyness-handle" cx="150" cy="16" r="8" → circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8"
-ui ~ #crowd-busyness-handles>div[1]>label[1]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[2]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
+ui ~ #crowd-busyness-handles>div[1]>label[2]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="50" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-label="Time for busyness handle 2, percent" data-busyness-field="time" data-busyness-index="1" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
 ui ~ #crowd-busyness-reset: button class="btn btn-ghost" type="button" :text="Reset to even" → button class="btn btn-ghost" disabled="" type="button" :text="Reset to even"
 ui - #crowd-busyness-graph>circle[6]: circle aria-hidden="true" class="crowd-busyness-handle-target" cx="282" cy="16" data-busyness-handle="2" r="22"
 ui - #crowd-busyness-graph>circle[7]: circle aria-hidden="true" class="crowd-busyness-handle" cx="282" cy="16" r="8"
-ui - #crowd-busyness-handles>div[1]>label[5]: label
-ui - #crowd-busyness-handles>div[1]>label[5]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[1]>span[6]}" data-tip="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps" :text="Change"
-ui - #crowd-busyness-handles>div[1]>label[5]>select[1]: select aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" data-busyness-field="transition" data-busyness-index="1" :value="gradual"
-ui - #crowd-busyness-handles>div[1]>label[5]>select[1]>option[0]: option value="gradual" :text="Gradual"
-ui - #crowd-busyness-handles>div[1]>label[5]>select[1]>option[1]: option value="step" :text="Sudden"
-ui - #crowd-busyness-handles>div[1]>span[6]: span class="sr-only" :text="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps"
-ui - #crowd-busyness-handles>div[1]>button[7]: button aria-label="Remove busyness handle 2" class="btn btn-ghost crowd-busyness-remove" data-busyness-field="remove" data-busyness-index="1" type="button" :text="Remove"
-ui - #crowd-busyness-handles>div[2]: div class="crowd-busyness-handle-row"
-ui - #crowd-busyness-handles>div[2]>span[0]: span class="crowd-busyness-handle-title" :text="Handle 3"
-ui - #crowd-busyness-handles>div[2]>label[1]: label
-ui - #crowd-busyness-handles>div[2]>label[1]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[2]>span[2]}" data-tip="Where this handle sits in the window: 0% at its start, 100% at its end. The first and last handles stay put" :text="Time"
-ui - #crowd-busyness-handles>div[2]>label[1]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[2]>span[2]}" aria-label="Time for busyness handle 3, percent" data-busyness-field="time" data-busyness-index="2" inputmode="decimal" max="100" min="0" readonly="" step="0.1" type="number" :value="100"
-ui - #crowd-busyness-handles>div[2]>label[1]>span[2]: span :text="%"
-ui - #crowd-busyness-handles>div[2]>span[2]: span class="sr-only" :text="Where this handle sits in the window: 0% at its start, 100% at its end. The first and last handles stay put"
-ui - #crowd-busyness-handles>div[2]>label[3]: label
-ui - #crowd-busyness-handles>div[2]>label[3]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[2]>span[4]}" data-tip="How busy the release is at this handle: higher sets more dots off around it, 0% none" :text="Busy"
-ui - #crowd-busyness-handles>div[2]>label[3]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[2]>span[4]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100"
-ui - #crowd-busyness-handles>div[2]>label[3]>span[2]: span :text="%"
-ui - #crowd-busyness-handles>div[2]>span[4]: span class="sr-only" :text="How busy the release is at this handle: higher sets more dots off around it, 0% none"
+ui - #crowd-busyness-handles>div[1]>button[7]: button aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" aria-expanded="false" aria-label="Help: Change" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[9]};" type="button"
+ui - #crowd-busyness-handles>div[1]>button[7]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #crowd-busyness-handles>div[1]>label[8]: label
+ui - #crowd-busyness-handles>div[1]>label[8]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[1]>span[9]}" data-tip="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps" style="anchor-name: --{#crowd-busyness-handles>div[1]>span[9]};" :text="Change"
+ui - #crowd-busyness-handles>div[1]>label[8]>select[1]: select aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" data-busyness-field="transition" data-busyness-index="1" :value="gradual"
+ui - #crowd-busyness-handles>div[1]>label[8]>select[1]>option[0]: option value="gradual" :text="Gradual"
+ui - #crowd-busyness-handles>div[1]>label[8]>select[1]>option[1]: option value="step" :text="Sudden"
+ui - #crowd-busyness-handles>div[1]>span[9]: span class="sr-only" :text="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps"
+ui - #crowd-busyness-handles>div[1]>button[10]: button aria-label="Remove busyness handle 2" class="btn btn-ghost crowd-busyness-remove" data-busyness-field="remove" data-busyness-index="1" type="button" :text="Remove"
+ui - #crowd-busyness-handles>div[2]: div class="crowd-busyness-handle-row" (and 15 inside, 59afc9ae)
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f045fc23] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, bbb93da2]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness reset to even. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

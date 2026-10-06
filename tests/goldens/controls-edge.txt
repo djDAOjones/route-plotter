@@ -7,7 +7,11 @@ storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"la
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section" data-last="true" data-section="edge"
 ui ~ #edge-scope>div[0]>div[0]: div aria-controls="section-edge-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-edge-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
 
-## #section-edge-content>label[0]>span[0] · click
+## #section-edge-content>button[0] · click
+app ~ focus: "body" → "#section-edge-content>button[0]"
+storage + routePlotter_lastSection: "edge"
+ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
+ui ~ #section-edge-content>button[0]: button aria-describedby="network-edge-direction-tip" aria-expanded="false" aria-label="Help: Direction" class="param-hint-trigger" style="position-anchor: --network-edge-direction-tip;" type="button" → button aria-describedby="network-edge-direction-tip" aria-expanded="true" aria-label="Help: Direction" class="param-hint-trigger" style="position-anchor: --network-edge-direction-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Two-way edges carry dots in both directions; one-way edges only from their start node"
 
 ## #network-edge-direction · choose "two-way"
@@ -23,6 +27,7 @@ ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="sta
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
 ui ~ #network-edge-direction: select aria-describedby="network-edge-direction-tip" :value="one-way" → select aria-describedby="network-edge-direction-tip" :value="two-way"
 ui ~ #network-edge-swap: button class="btn btn-secondary" title="Reverse which way this one-way edge carries dots" type="button" :text="Swap direction" → button (not shown)
+ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="100% configured share" max="50" min="1" step="1" type="range" value="10" :value="10" → input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="100% · 34% configured shares" max="50" min="1" step="1" type="range" value="10" :value="10"
 ui ~ #network-edge-weight-value: span :text="100% configured share" → span :text="100% · 34% configured shares"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, eaf972d8]
@@ -37,14 +42,20 @@ storage + routePlotter_lastSection: "edge"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
+ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="100% configured share" max="50" min="1" step="1" type="range" value="10" :value="10" → input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="34% configured share" max="50" min="1" step="1" type="range" value="10" :value="10"
 ui ~ #network-edge-weight-value: span :text="100% configured share" → span :text="34% configured share"
 settled:
   emit animation:durationChange 27929.352554
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9684 chars, 5bee2f20]
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
 
-## #section-edge-content>label[3]>span[0] · click
+## #section-edge-content>button[4] · click
+app ~ focus: "body" → "#section-edge-content>button[4]"
+storage + routePlotter_lastSection: "edge"
+ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
+ui ~ #section-edge-content>button[4]: button aria-describedby="network-edge-weight-tip" aria-expanded="false" aria-label="Help: Traffic" class="param-hint-trigger" style="position-anchor: --network-edge-weight-tip;" type="button" → button aria-describedby="network-edge-weight-tip" aria-expanded="true" aria-label="Help: Traffic" class="param-hint-trigger" style="position-anchor: --network-edge-weight-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How strongly dots prefer this edge at a junction, shown as the share of departures that pick it"
 
 ## #network-edge-weight · set 17
@@ -54,7 +65,7 @@ app ~ focus: "body" → "#network-edge-weight"
 storage + routePlotter_lastSection: "edge"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
-ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-tip" max="50" min="1" step="1" type="range" value="10" :value="10" → input aria-describedby="network-edge-weight-tip" max="50" min="1" step="1" type="range" value="10" :value="17"
+ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="100% configured share" max="50" min="1" step="1" type="range" value="10" :value="10" → input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="100% configured share" max="50" min="1" step="1" type="range" value="10" :value="17"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
@@ -97,16 +108,17 @@ ui + #toast-container>div[0]: div class="toast" :text="Deleted edge — press Ct
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Edge · one-way" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
-ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 16 inside, 3d5e2bfd)
-ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 64 inside, 165854e8)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 87 inside, 6117dbf1)
-ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 25 inside, 178f4deb)
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 18 inside, 1c760a79)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 70 inside, 788d231f)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 107 inside, 733ba0ea)
+ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 31 inside, a6a69c45)
 ui ~ #edge-scope: div class="scope-group" → div (not shown)
-ui - #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" (and 20 inside, c8961aff)
+ui - #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" (and 24 inside, 212c6c6d)
 settled:
   emit animation:durationChange 27929.352554
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9533 chars, 6e0d1694]
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
   ui - #toast-container>div[0]: div class="toast" :text="Deleted edge — press Ctrl+Z to undo"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

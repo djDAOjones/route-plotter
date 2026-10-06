@@ -64,6 +64,7 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert
 ui ~ #app: div inert="" → div
 ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1445"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.9s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.9 s — route 21.8 s, crowds finish +9.1 s, beacon ends +6.5 s"
 ui ~ #main-content>div[1]>div[1]: div class="controls" style="width: 660px;" → div class="controls" style="width: 1173.3333333333333px;"

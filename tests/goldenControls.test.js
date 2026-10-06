@@ -1551,7 +1551,9 @@ function operationsFor(element) {
 }
 
 function singleGestures(element) {
-  if (element.matches('.section-header, summary, [data-tip], .dropdown-toggle, button[aria-expanded]')) return [toggle];
+  if (element.matches('.section-header, summary, .param-hint-trigger, .dropdown-toggle, button[aria-expanded]')) {
+    return [toggle];
+  }
   if (element instanceof HTMLSelectElement) {
     return [...element.options]
       .filter(option => !option.disabled && option.value !== element.value)
@@ -1586,7 +1588,9 @@ function singleGestures(element) {
   return [click];
 }
 
-const INTERACTIVE = `button, input, select, textarea, a[href], summary, [role=button], [data-tip], [role=listitem], ${DRAGGABLE_ROW}, ${BUSYNESS_GRAPH}`;
+// A hint opens from its own "?" button (UI-04), which `button` takes in; the
+// label text that carries its `data-tip` is a label's text, not a control.
+const INTERACTIVE = `button, input, select, textarea, a[href], summary, [role=button], [role=listitem], ${DRAGGABLE_ROW}, ${BUSYNESS_GRAPH}`;
 
 /**
  * Shown to a user: nothing on the way up hides it, makes it inert or hides it
@@ -2044,8 +2048,8 @@ async function establish(app, context, selections = null, lastFrame = undefined)
   document.body.click();
   // The one hint tooltip is shared, and keeps the text of the last hint
   // shown: each baseline shows and hides the first hint, so it exists, hidden,
-  // holding that hint's text.
-  const hint = document.querySelector('[data-tip]');
+  // holding that hint's text. A hint opens from its "?" (UI-04).
+  const hint = document.querySelector('.param-hint-trigger');
   hint.click();
   hint.click();
   const transport = app.animationEngine.state;
