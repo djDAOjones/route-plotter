@@ -149,7 +149,7 @@
       "format": "esm"
     },
     "src/utils/uiReadouts.js": {
-      "bytes": 1590,
+      "bytes": 2236,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2625,7 +2625,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 104160,
+      "bytes": 105022,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2797,7 +2797,7 @@
       "format": "esm"
     },
     "src/components/ParamTooltip.js": {
-      "bytes": 20910,
+      "bytes": 28583,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2959,7 +2959,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 44361,
+      "bytes": 44751,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3125,7 +3125,7 @@
       "format": "esm"
     },
     "src/app/pathTiming.js": {
-      "bytes": 36487,
+      "bytes": 36540,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -3166,12 +3166,17 @@
           "path": "src/utils/sceneEnd.js",
           "kind": "import-statement",
           "original": "../utils/sceneEnd.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
         }
       ],
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 59257,
+      "bytes": 59253,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3344,7 +3349,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 19097,
+      "bytes": 19215,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -3385,12 +3390,17 @@
       "format": "esm"
     },
     "src/app/playback.js": {
-      "bytes": 10760,
+      "bytes": 10859,
       "imports": [
         {
           "path": "src/config/constants.js",
           "kind": "import-statement",
           "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
         }
       ],
       "format": "esm"
@@ -3439,7 +3449,7 @@
       "format": "esm"
     },
     "src/app/editorPanel.js": {
-      "bytes": 35424,
+      "bytes": 36062,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3547,7 +3557,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 24821,
+      "bytes": 24984,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3568,6 +3578,11 @@
           "path": "src/utils/segmentHitTest.js",
           "kind": "import-statement",
           "original": "../utils/segmentHitTest.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
         }
       ],
       "format": "esm"
@@ -3704,7 +3719,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 49196,
+      "bytes": 49235,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3966,13 +3981,13 @@
     }
   },
   "outputs": {
-    ".docs-build-tAJBq9/app.js.map": {
+    ".docs-build-7jTOLc/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3554626
+      "bytes": 3570236
     },
-    ".docs-build-tAJBq9/app.js": {
+    ".docs-build-7jTOLc/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4020,7 +4035,7 @@
           "bytesInOutput": 11724
         },
         "src/utils/uiReadouts.js": {
-          "bytesInOutput": 474
+          "bytesInOutput": 636
         },
         "src/services/StorageService.js": {
           "bytesInOutput": 8260
@@ -4185,7 +4200,7 @@
           "bytesInOutput": 1370
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 40589
+          "bytesInOutput": 41002
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 17799
@@ -4221,7 +4236,7 @@
           "bytesInOutput": 2154
         },
         "src/components/ParamTooltip.js": {
-          "bytesInOutput": 4199
+          "bytesInOutput": 6118
         },
         "src/components/Dropdown.js": {
           "bytesInOutput": 2252
@@ -4263,7 +4278,7 @@
           "bytesInOutput": 4585
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 18233
+          "bytesInOutput": 18447
         },
         "src/app/wiringBus.js": {
           "bytesInOutput": 6154
@@ -4287,10 +4302,10 @@
           "bytesInOutput": 2159
         },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 10117
+          "bytesInOutput": 10101
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 29856
+          "bytesInOutput": 29841
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5588
@@ -4299,10 +4314,10 @@
           "bytesInOutput": 22558
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 8419
+          "bytesInOutput": 8482
         },
         "src/app/playback.js": {
-          "bytesInOutput": 3804
+          "bytesInOutput": 3813
         },
         "src/app/camera.js": {
           "bytesInOutput": 4383
@@ -4314,7 +4329,7 @@
           "bytesInOutput": 4621
         },
         "src/app/editorPanel.js": {
-          "bytesInOutput": 19111
+          "bytesInOutput": 19493
         },
         "src/app/pointer.js": {
           "bytesInOutput": 1871
@@ -4323,7 +4338,7 @@
           "bytesInOutput": 21345
         },
         "src/app/network.js": {
-          "bytesInOutput": 11560
+          "bytesInOutput": 11580
         },
         "src/utils/sceneSemantics.js": {
           "bytesInOutput": 4300
@@ -4344,10 +4359,10 @@
           "bytesInOutput": 686
         },
         "src/main.js": {
-          "bytesInOutput": 22960
+          "bytesInOutput": 22984
         }
       },
-      "bytes": 1113629
+      "bytes": 1116804
     }
   }
 }
