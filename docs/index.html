@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.705</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.705">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.705">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.705">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.705">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.705">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.705">
+  <title>Route Plotter v3.2.706</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.706">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.706">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.706">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.706">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.706">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.706">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -726,6 +726,12 @@
               <p id="pacing-comet-hint" class="section-hint" hidden>
                 In Preview, a non-zero Comet trail extends Duration while the tail clears after the route head reaches the end.
               </p>
+              <!-- Hold at end (CROWD-06): added to Duration after everything that finishes has finished -->
+              <label class="sidebar-control-row" for="hold-at-end">
+                <span data-tip="Keeps the animation going after everything that finishes has finished: looping crowds keep moving and the final frame holds">Hold at end</span>
+                <input type="range" id="hold-at-end" class="range-hit-target" min="0" max="10000" value="2000" step="100" aria-describedby="hold-at-end-value" aria-valuetext="2s">
+                <span id="hold-at-end-value" class="slider-value">2s</span>
+              </label>
               <!-- Graphics Scale — global multiplier for all vector element sizes -->
               <div id="graphics-scale-control" style="margin-top:0.5rem;">
                 <label class="sidebar-control-row" for="graphics-scale">
@@ -992,8 +998,6 @@
                       title="Draw the network this crowd walks: nodes joined by edges">Edit network</button>
               <button id="crowd-trace-route-btn" class="btn btn-secondary" type="button" hidden
                       title="Copy the route into this crowd's network, so its dots follow the same shape and can branch where the route branches">Trace route into network</button>
-              <button id="crowd-fit-wait-btn" class="btn btn-secondary" type="button"
-                      title="Set a wait on the selected waypoint (or the last one) long enough for this crowd to finish">Wait here for this crowd</button>
               <p class="section-hint" id="crowd-guide-hint">Dots follow your route. Custom network lets you draw paths of their own.</p>
             </div>
           </div>
@@ -1357,6 +1361,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.705"></script>
+  <script src="app.js?v=3.2.706"></script>
 </body>
 </html>
