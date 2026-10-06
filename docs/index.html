@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.704</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.704">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.704">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.704">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.704">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.704">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.704">
+  <title>Route Plotter v3.2.705</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.705">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.705">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.705">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.705">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.705">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.705">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -96,6 +96,16 @@
     <main class="main" id="main-content" role="main" aria-labelledby="app-title">
       <!-- Left Sidebar - Settings with Collapsible Sections -->
       <aside class="sidebar" role="complementary" aria-label="Settings panel">
+        <!-- DEF-28: a recovery record that could not be restored is kept
+             until the author discards it -->
+        <div id="unrestored-notice" class="unrestored-notice" role="region" aria-labelledby="unrestored-notice-text" aria-describedby="unrestored-notice-status" hidden>
+          <p id="unrestored-notice-text" class="unrestored-notice-title">Your previous session couldn't be restored.</p>
+          <p id="unrestored-notice-status">Kept until you discard it. You can download a copy.</p>
+          <div class="unrestored-notice-actions">
+            <button id="unrestored-download" class="btn btn-secondary" type="button">Download it</button>
+            <button id="unrestored-discard" class="btn btn-secondary" type="button">Discard</button>
+          </div>
+        </div>
         <!-- Scope chip: names what the inspector is editing (waypoint / route),
              with prev/next stepping through Route → Waypoint 1 → … → last -->
         <div class="sidebar-header sidebar-header-compact">
@@ -1295,6 +1305,7 @@
     <div class="modal-content">
       <h3 id="modal-title-clear">Clear all waypoints?</h3>
       <p>This will remove all waypoints and reset the canvas. This action cannot be undone.</p>
+      <p id="clear-unrestored-note" hidden>The session that couldn't be restored will be discarded too.</p>
       <div class="modal-buttons">
         <button id="clear-cancel" class="btn btn-secondary" type="button">Cancel</button>
         <button id="clear-confirm" class="btn btn-danger" type="button">Clear</button>
@@ -1346,6 +1357,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.704"></script>
+  <script src="app.js?v=3.2.705"></script>
 </body>
 </html>

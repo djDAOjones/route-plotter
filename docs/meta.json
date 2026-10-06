@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 18235,
+      "bytes": 18662,
       "imports": [],
       "format": "esm"
     },
@@ -160,7 +160,7 @@
       "format": "esm"
     },
     "src/services/StorageService.js": {
-      "bytes": 10048,
+      "bytes": 23552,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3071,6 +3071,43 @@
       ],
       "format": "esm"
     },
+    "src/services/DiagnosticsService.js": {
+      "bytes": 5184,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/app/privacy.js": {
+      "bytes": 13904,
+      "imports": [
+        {
+          "path": "src/services/DiagnosticsService.js",
+          "kind": "import-statement",
+          "original": "../services/DiagnosticsService.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/unrestoredAutosave.js": {
+      "bytes": 22573,
+      "imports": [
+        {
+          "path": "src/app/privacy.js",
+          "kind": "import-statement",
+          "original": "./privacy.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/utils/sceneEnd.js": {
       "bytes": 9052,
       "imports": [
@@ -3134,7 +3171,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 56198,
+      "bytes": 58711,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3210,6 +3247,11 @@
           "path": "src/examples/index.js",
           "kind": "import-statement",
           "original": "../examples/index.js"
+        },
+        {
+          "path": "src/app/unrestoredAutosave.js",
+          "kind": "import-statement",
+          "original": "./unrestoredAutosave.js"
         },
         {
           "path": "src/app/pathTiming.js",
@@ -3608,34 +3650,19 @@
       ],
       "format": "esm"
     },
-    "src/services/DiagnosticsService.js": {
-      "bytes": 5184,
-      "imports": [],
-      "format": "esm"
-    },
-    "src/app/privacy.js": {
-      "bytes": 13897,
+    "src/app/startup.js": {
+      "bytes": 722,
       "imports": [
         {
-          "path": "src/services/DiagnosticsService.js",
+          "path": "src/app/unrestoredAutosave.js",
           "kind": "import-statement",
-          "original": "../services/DiagnosticsService.js"
-        },
-        {
-          "path": "src/utils/focusTrap.js",
-          "kind": "import-statement",
-          "original": "../utils/focusTrap.js"
+          "original": "./unrestoredAutosave.js"
         }
       ],
       "format": "esm"
     },
-    "src/app/startup.js": {
-      "bytes": 479,
-      "imports": [],
-      "format": "esm"
-    },
     "src/app/projectReset.js": {
-      "bytes": 3726,
+      "bytes": 4382,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
@@ -3651,6 +3678,11 @@
           "path": "src/utils/pathHeadPresets.js",
           "kind": "import-statement",
           "original": "../utils/pathHeadPresets.js"
+        },
+        {
+          "path": "src/app/unrestoredAutosave.js",
+          "kind": "import-statement",
+          "original": "./unrestoredAutosave.js"
         }
       ],
       "format": "esm"
@@ -3667,7 +3699,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 48611,
+      "bytes": 48795,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3895,6 +3927,11 @@
           "original": "./app/startup.js"
         },
         {
+          "path": "src/app/unrestoredAutosave.js",
+          "kind": "import-statement",
+          "original": "./app/unrestoredAutosave.js"
+        },
+        {
           "path": "src/app/backgroundLoading.js",
           "kind": "import-statement",
           "original": "./app/backgroundLoading.js"
@@ -3924,13 +3961,13 @@
     }
   },
   "outputs": {
-    ".docs-build-ZPHZ5v/app.js.map": {
+    ".docs-build-3ZplZ8/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3496711
+      "bytes": 3553398
     },
-    ".docs-build-ZPHZ5v/app.js": {
+    ".docs-build-3ZplZ8/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -3939,7 +3976,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 4099
+          "bytesInOutput": 4195
         },
         "src/utils/imageCoordinates.js": {
           "bytesInOutput": 141
@@ -3981,7 +4018,7 @@
           "bytesInOutput": 418
         },
         "src/services/StorageService.js": {
-          "bytesInOutput": 4183
+          "bytesInOutput": 8260
         },
         "src/services/CoordinateTransform.js": {
           "bytesInOutput": 3754
@@ -4232,6 +4269,15 @@
         "src/app/backgroundLoading.js": {
           "bytesInOutput": 1721
         },
+        "src/services/DiagnosticsService.js": {
+          "bytesInOutput": 2176
+        },
+        "src/app/privacy.js": {
+          "bytesInOutput": 9648
+        },
+        "src/app/unrestoredAutosave.js": {
+          "bytesInOutput": 6900
+        },
         "src/utils/sceneEnd.js": {
           "bytesInOutput": 1959
         },
@@ -4239,7 +4285,7 @@
           "bytesInOutput": 10067
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 29172
+          "bytesInOutput": 29615
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5588
@@ -4283,26 +4329,20 @@
         "src/app/sceneOutline.js": {
           "bytesInOutput": 26814
         },
-        "src/services/DiagnosticsService.js": {
-          "bytesInOutput": 2176
-        },
-        "src/app/privacy.js": {
-          "bytesInOutput": 9648
-        },
         "src/app/startup.js": {
-          "bytesInOutput": 110
+          "bytesInOutput": 116
         },
         "src/app/projectReset.js": {
-          "bytesInOutput": 1879
+          "bytesInOutput": 2119
         },
         "src/utils/announcementQueue.js": {
           "bytesInOutput": 686
         },
         "src/main.js": {
-          "bytesInOutput": 22776
+          "bytesInOutput": 22785
         }
       },
-      "bytes": 1102592
+      "bytes": 1114363
     }
   }
 }
