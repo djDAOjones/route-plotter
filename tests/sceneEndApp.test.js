@@ -24,6 +24,7 @@ import { computeSceneEnd, describeSceneEnd } from '../src/utils/sceneEnd.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { TextLabelService } from '../src/services/TextLabelService.js';
 import { AreaHighlightRenderer } from '../src/services/AreaHighlightRenderer.js';
+import { fitWaitWithWaitForCrowdMs } from './helpers/fitCrowdWait.js';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -38,10 +39,21 @@ const FRAME_MS = 40;
 /** A crowd on the route too slow to finish before the route does. */
 const SLOW_CROWD = { seed: 21, speed: 0.05, speedVariance: 0.3, releaseDuration: 0.5, onsetVariance: 0.4 };
 
+/**
+ * These pin the concluding end itself, which a new project's Hold at end now
+ * follows (CROWD-06, 2 s): a project booted here holds for none, as every
+ * project did before it. The hold is pinned in `holdAtEnd.test.js`.
+ */
+function withoutHold(app) {
+  app.styles.holdAtEndMs = 0;
+  return app;
+}
+
 /** The shipped editor, a two-click route and a crowd on it with `lifecycleMode`. */
 async function editorWithCrowd(lifecycleMode = 'disappear') {
   const app = await bootApp();
   await app.ready;
+  withoutHold(app);
   document.getElementById('splash-close').click();
   await settled();
   app.eventBus.emit('waypoint:add', { imgX: 0.1, imgY: 0.5, isMajor: true });
@@ -88,7 +100,7 @@ describe('a crowd that finishes after the route', () => {
 
     expect(B).toBe(routeOnly.B);
     expect(F).toBeGreaterThan(B + 1000);
-    expect(parts).toEqual({ routeMs: B, crowdsMs: F, beaconsMs: 0 });
+    expect(parts).toEqual({ routeMs: B, crowdsMs: F, beaconsMs: 0, holdMs: 0 });
     expect(F).toBe(app.swarmEngine.crowdFinishMs(app.selectedCrowd, {
       durationMs: B, routePathPoints: app.pathPoints, routeAnchors: app.getRouteArrivalMap(),
     }));
@@ -438,7 +450,7 @@ describe('B and F across saving, reopening, undo and reset', () => {
     const { B } = durations(app);
     for (const waypoint of [...app.waypoints]) app.eventBus.emit('waypoint:delete', waypoint);
     await settled();
-    expect(durations(app)).toEqual({ B, F: B, parts: { routeMs: B, crowdsMs: 0, beaconsMs: 0 } });
+    expect(durations(app)).toEqual({ B, F: B, parts: { routeMs: B, crowdsMs: 0, beaconsMs: 0, holdMs: 0 } });
   });
 
   test('a playback Reset keeps B: a crowd on a network releases and ends as it did once the route is gone', async () => {
@@ -491,14 +503,15 @@ describe('B and F across saving, reopening, undo and reset', () => {
     expect(breakdown.textContent).toBe('');
   });
 
-  test('"Wait here for this crowd" reads B: fitted twice, the same wait; undo puts both durations back', async () => {
+  test('a wait fitted by waitForCrowdMs reads B: fitted twice, the same wait; undo puts both durations back',
+    async () => {
     const { app, layer } = await editorWithCrowd('disappear');
     app.saveUndoState(); // what the crowd edit's debounce does 400 ms later
     const unfitted = durations(app);
     const last = app.waypoints.at(-1);
     const pauseBefore = last.pauseTime;
 
-    expect(app.fitRouteWaitToCrowd(layer, last)).toBe(true);
+    expect(fitWaitWithWaitForCrowdMs(app, layer, last)).toBe(true);
     await settled();
     const fittedWait = last.pauseTime;
     const fitted = durations(app);
@@ -507,7 +520,7 @@ describe('B and F across saving, reopening, undo and reset', () => {
     expect(fitted.B).toBeGreaterThanOrEqual(fitted.parts.crowdsMs);
     expect(fitted.F).toBe(fitted.B);
 
-    expect(app.fitRouteWaitToCrowd(layer, last)).toBe(true);
+    expect(fitWaitWithWaitForCrowdMs(app, layer, last)).toBe(true);
     await settled();
     expect(last.pauseTime).toBe(fittedWait);
     expect(durations(app)).toEqual(fitted);
@@ -546,7 +559,7 @@ describe('the route\'s own part is the base timeline, whatever composes it', () 
     expect(engine.totalPauseTime).toBeGreaterThan(0);
     expect(app.getBranchTimeline().totalDurationMs).toBeGreaterThan(trunkTimeline + 500);
     expect(B).toBe(app.getBranchTimeline().totalDurationMs);
-    expect({ F, parts }).toEqual({ F: B, parts: { routeMs: B, crowdsMs: 0, beaconsMs: 0 } });
+    expect({ F, parts }).toEqual({ F: B, parts: { routeMs: B, crowdsMs: 0, beaconsMs: 0, holdMs: 0 } });
   });
 
   test('waits included, the route ends at B exactly, and a crowd edit never moves it', async () => {
@@ -587,6 +600,7 @@ describe('the route\'s own part is the base timeline, whatever composes it', () 
   test('Preview\'s comet tail is part of the route, and is what ends it there', async () => {
     const app = await bootApp();
     await app.ready;
+    withoutHold(app);
     app.eventBus.emit('waypoint:add', { imgX: 0.1, imgY: 0.5, isMajor: true });
     app.eventBus.emit('waypoint:add', { imgX: 0.9, imgY: 0.5, isMajor: true });
     await settled();
@@ -599,7 +613,9 @@ describe('the route\'s own part is the base timeline, whatever composes it', () 
 
     expect(app.animationEngine.totalTailTime).toBeGreaterThan(0);
     expect(preview.B).toBe(edit.B + app.animationEngine.totalTailTime);
-    expect(preview).toEqual({ B: preview.B, F: preview.B, parts: { routeMs: preview.B, crowdsMs: 0, beaconsMs: 0 } });
+    expect(preview).toEqual({
+      B: preview.B, F: preview.B, parts: { routeMs: preview.B, crowdsMs: 0, beaconsMs: 0, holdMs: 0 },
+    });
   });
 });
 
@@ -607,6 +623,7 @@ describe('what else concludes after the route', () => {
   test('a glow at the last waypoint is waited for, and the slider still sets the route\'s pace', async () => {
     const app = await bootApp();
     await app.ready;
+    withoutHold(app);
     app.eventBus.emit('waypoint:add', { imgX: 0.1, imgY: 0.5, isMajor: true });
     app.eventBus.emit('waypoint:add', { imgX: 0.9, imgY: 0.5, isMajor: true });
     await settled();
@@ -620,7 +637,7 @@ describe('what else concludes after the route', () => {
 
     expect(F).toBe(glow.arrivalMs + 3000);
     expect(F).toBeGreaterThan(B);
-    expect(parts).toEqual({ routeMs: B, crowdsMs: 0, beaconsMs: F });
+    expect(parts).toEqual({ routeMs: B, crowdsMs: 0, beaconsMs: F, holdMs: 0 });
     expect(document.getElementById('pacing-duration-breakdown').textContent).toBe(describeSceneEnd(parts, F));
 
     app.eventBus.emit('animation:speed-change', app.animationEngine.state.speed * 2);

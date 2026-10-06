@@ -28,6 +28,26 @@
 
 **Deferred:** none
 
+## 2026-10-06 — TST-09 — Camera, dots, curvature, minor-end and time domains are pinned as they stand
+
+**Decision:** TST-09 lands: five suites (41 tests, goldens under `tests/goldens/domains-*.json`, regenerated with UPDATE_DOMAIN_GOLDENS=1) pin today's camera, dot positions, curvature cache, minor-end timing and the time domains from before the start to past the playback end, on the branched Open day route, so the fixes they gate (DEF-05, DEF-07, DEF-10, DEF-11, DEF-12, DEF-79) each move a baseline on purpose.
+
+**Rationale:** each domain compares play, seek and export where the harness allows; eight source mutants (camera state kept across seeks, a frame-late dot, a cache key ignoring the middle point, a minor end counted as major, the tail evaluated on B, releases on F, beacons ignoring the intro, a rate limit never released) fail it. It confirmed DEF-79 (a linear-route video export re-measures a bound crowd's arrival, 5,915 ms against 2,292 ms) and found four candidates, wish lines until verified. The checker asks for an archive at 46 live entries, but the oldest is now GATELESS-1's founding grant, which open lines cite and the run works under, so it stays live under the owner's prune bar (2026-08-27: budgets yield to context feeding open work); the run's call. It ran alongside UI-04 and CROWD-06, which PLAN-2 orders first, under GATELESS-1's rule of up to three items in flight with merges one at a time; it lands when ready. Digest rule applied: house conventions → Testing and persistence.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — CROWD-06 — A Hold at end control carries the animation on after everything has finished
+
+**Decision:** CROWD-06 lands: a "Hold at end" slider in Pacing (0–10 s) adds its time after the last end of anything that finishes, the same in the editor, Preview, scrub, video export and the HTML player, and Duration includes it; a project saved without the setting opens with no hold, a new project or Clear All starts at 2 s; "Wait here for this crowd" is retired.
+
+**Rationale:** the hold extends only the playback duration, so the base timeline and every crowd release timed against it are unchanged, and looping crowds keep moving through it while the route head holds its end. 0 s for saved projects is the run's call (PLAN-2), keeping their playback as it was; the owner's waiver was said of DEF-77. `END_BUFFER_SECONDS`, the unused intent, gives way to `ANIMATION.HOLD_AT_END_*`. The retired button's utility, `waitForCrowdMs`, stays unused with its tests, and the two tests that went through the button fit the wait with it directly, assertions unchanged, so no test is deleted. Two wish lines about the retired button retire with it: its title naming the selected waypoint while it targeted the last major is gone, and the very long wait it worked out on networks where no journey ends keeps its line, reworded to the cause, `scheduleDots` counting Disappear and Collect dots as finishing. After Codex review r1: the slider alone has a 44 px hit area (`range-hit-target`), and undo records one entry per committed change (`change`), not after a 400 ms pause; the editor and the player match dot for dot through the hold on the branched route. 15 new tests fail on main; the mutants of both rounds are killed. Digest rules applied: house conventions → Testing and persistence; Nielsen → 1, visibility of system status (the Duration breakdown).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-06 — PLAN-2 — Phase 2 runs the owner's after-TST-04 items, then W5 and the defects it held
 
 **Decision:** Phase 2 runs, in order, the owner's two items placed after TST-04 (UI-04, then CROWD-06), W5's three characterisation items (TST-09, TST-03, TST-11), then the seven defects that waited for W5's tests (DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22), one at a time under GATELESS-1.

@@ -22,8 +22,6 @@
 
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
-- [ ] CROWD-06 — Hold at end: the animation carries on after everything has finished — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-- [ ] TST-09 — Camera, dots, curvature, minor-end and time domains — since 2026-10-01
 - [ ] TST-03 — Visibility mode matrix · Characterisation P1 — since 2026-10-01
 - [ ] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01
 - [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01

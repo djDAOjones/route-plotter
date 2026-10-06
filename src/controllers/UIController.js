@@ -15,6 +15,7 @@ import { buildRouteNumbering } from '../utils/waypointNaming.js';
 import { resolveRouteBranches } from '../utils/routeBranches.js';
 import {
   formatBackgroundOverlay,
+  formatHoldAtEnd,
   formatRendererPixels,
   setRangeReadout,
   setTimelineReadout,
@@ -867,6 +868,18 @@ export class UIController {
     
     this.elements.animationSpeed?.addEventListener('input', handleSpeedSliderInput);
     this.elements.animationSpeedRight?.addEventListener('input', handleSpeedSliderInput);
+
+    // Hold at end (CROWD-06): the slider's value is the hold in ms; the app
+    // lengthens the playback duration by it. `input` shows each value as the
+    // thumb moves; `change` is the gesture's end (the pointer let go, or one
+    // keyboard step), where the value is committed to history.
+    const sendHoldAtEnd = (e, commit) => {
+      const holdMs = parseInt(e.target.value, 10);
+      setRangeReadout(this.elements.holdAtEnd, this.elements.holdAtEndValue, formatHoldAtEnd(holdMs));
+      this.eventBus.emit('animation:hold-at-end-change', { holdMs, commit });
+    };
+    this.elements.holdAtEnd?.addEventListener('input', (e) => sendHoldAtEnd(e, false));
+    this.elements.holdAtEnd?.addEventListener('change', (e) => sendHoldAtEnd(e, true));
     
     /**
      * Listen for programmatic slider updates from other parts of the app

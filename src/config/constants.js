@@ -14,7 +14,14 @@ export const ANIMATION = {
   MAX_DELTA_TIME: 100,           // Maximum time jump to prevent huge leaps
   DEFAULT_PLAYBACK_SPEED: 1,
   DEFAULT_WAIT_TIME: 1500,       // Default waypoint pause time (1.5 seconds)
-  TIMELINE_RESOLUTION: 1000      // Slider steps (0-1000)
+  TIMELINE_RESOLUTION: 1000,     // Slider steps (0-1000)
+  // Hold at end (CROWD-06): how long the animation carries on after
+  // everything that finishes has finished, added to the playback duration
+  // only. A new project's hold mirrors the export's 2 s start buffer; a
+  // project saved without one holds for none. Replaces MOTION's unread
+  // END_BUFFER_SECONDS.
+  HOLD_AT_END_DEFAULT_MS: 2000,
+  HOLD_AT_END_MAX_MS: 10000
 };
 
 // Video export settings
@@ -286,9 +293,6 @@ export const MOTION = {
   
   // Waypoint animation timing
   WAYPOINT_ANIMATION_TIME: 0.5,    // Seconds for waypoint scale animation
-  
-  // End buffer for effects to complete
-  END_BUFFER_SECONDS: 2,           // Extra time at end for trail fade-out
   
   // ========== TIMELINE HANDLES ==========
   // Extra time at start/end of timeline for video export and beacon animations

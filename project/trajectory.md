@@ -11,6 +11,8 @@
 
 - UI-04 — each hint has a "?" of its own beside its label, opened by hover, focus or tap, so a label acts as a label again (2026-10-06) — see decisions
 - DEF-14 — a click on a label toggles or focuses its control, and every range names its readout to screen readers (2026-10-06) — see decisions
+- TST-09 — camera, dots, curvature cache, minor-end and time domains are pinned as they stand on a branched route, play, seek and export compared, so the camera, dot, curvature and minor-end fixes each move a baseline on purpose (2026-10-06) — see decisions
+- CROWD-06 — a Hold at end control (0–10 s) carries the animation on after everything that finishes has finished, the same in every output; projects saved before it open with none, and "Wait here for this crowd" is retired (2026-10-06) — see decisions
 
 ## After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05
 

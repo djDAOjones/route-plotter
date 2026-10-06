@@ -17,7 +17,7 @@ ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #aov-angle: input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="60°" max="1000" min="0" step="1" type="range" value="500" :value="500" → input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="48°" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #aov-angle-value: span :text="60°" → span :text="48°"
 settled:
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, 65149334] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9696 chars, 47560427]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9712 chars, b03d57fe]
 
 ## #aov-controls>button[3] · click
 app ~ focus: "body" → "#aov-controls>button[3]"
@@ -36,7 +36,7 @@ ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #aov-distance: input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="10%" max="1000" min="0" step="1" type="range" value="500" :value="500" → input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="4.6%" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #aov-distance-value: span :text="10%" → span :text="4.6%"
 settled:
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, 65149334] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9695 chars, 4facebb8]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9711 chars, b6f17f1b]
 
 ## #aov-controls>button[6] · click
 app ~ focus: "body" → "#aov-controls>button[6]"
@@ -55,6 +55,6 @@ ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui ~ #aov-dropoff: input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="25%" max="1000" min="0" step="1" type="range" value="500" :value="500" → input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="34%" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #aov-dropoff-value: span :text="25%" → span :text="34%"
 settled:
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9681 chars, 65149334] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 6aad4e1a]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9713 chars, f40485d9]
 
 ## #path-glow-intensity · disabled, not operated

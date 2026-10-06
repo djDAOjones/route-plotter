@@ -1,0 +1,1096 @@
+{
+  "branched.keyframes": {
+    "ids": ["ex-uon-1","ex-uon-2","ex-uon-b1","ex-uon-3"],
+    "progress": [0,0.376559,1,0],
+    "trunk": ["ex-uon-1","ex-uon-2","ex-uon-2a","ex-uon-2b","ex-uon-3"]
+  },
+  "branched.nearAndScrub": {
+    "start": {
+      "ms": 0,
+      "rested": {
+        "zoom": 1.94,
+        "centerX": 481.8,
+        "centerY": 281.424,
+        "enabled": true
+      },
+      "near": {
+        "zoom": 1.833765,
+        "centerX": 459.377318,
+        "centerY": 288.599258,
+        "enabled": true
+      },
+      "scrub": {
+        "zoom": 1.741101,
+        "centerX": 189.535229,
+        "centerY": 415.8,
+        "enabled": true
+      }
+    },
+    "climb": {
+      "ms": 640,
+      "rested": {
+        "zoom": 2.041687,
+        "centerX": 186.439634,
+        "centerY": 360.304189,
+        "enabled": true
+      },
+      "near": {
+        "zoom": 2.041687,
+        "centerX": 186.439634,
+        "centerY": 360.304189,
+        "enabled": true
+      },
+      "scrub": {
+        "zoom": 2.041687,
+        "centerX": 186.439634,
+        "centerY": 360.304189,
+        "enabled": true
+      }
+    },
+    "held": {
+      "ms": 3040,
+      "rested": {
+        "zoom": 4,
+        "centerX": 264.122631,
+        "centerY": 310.196182,
+        "enabled": true
+      },
+      "near": {
+        "zoom": 4,
+        "centerX": 264.122631,
+        "centerY": 310.196182,
+        "enabled": true
+      },
+      "scrub": {
+        "zoom": 2.297397,
+        "centerX": 264.122631,
+        "centerY": 310.196182,
+        "enabled": true
+      }
+    },
+    "lastLeg": {
+      "ms": 7040,
+      "rested": {
+        "zoom": 6.757145,
+        "centerX": 420.380606,
+        "centerY": 359.399389,
+        "enabled": true
+      },
+      "near": {
+        "zoom": 6.757145,
+        "centerX": 420.380606,
+        "centerY": 359.399389,
+        "enabled": true
+      },
+      "scrub": {
+        "zoom": 6.095935,
+        "centerX": 409.91561,
+        "centerY": 357.235594,
+        "enabled": true
+      }
+    },
+    "end": {
+      "ms": 12000,
+      "rested": {
+        "zoom": 2,
+        "centerX": 495,
+        "centerY": 277.2,
+        "enabled": true
+      },
+      "near": {
+        "zoom": 1.946984,
+        "centerX": 483.82752,
+        "centerY": 280.775194,
+        "enabled": true
+      },
+      "scrub": {
+        "zoom": 1.845677,
+        "centerX": 463.617078,
+        "centerY": 284.918659,
+        "enabled": true
+      }
+    }
+  },
+  "branched.play": {
+    "start": {
+      "ms": 0,
+      "flatInstant": true,
+      "seeked": {
+        "zoom": 1.94,
+        "centerX": 481.8,
+        "centerY": 281.424,
+        "enabled": true
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 1,
+          "centerX": 330,
+          "centerY": 330,
+          "enabled": false
+        },
+        "settleFrames": 0
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 1,
+          "centerX": 330,
+          "centerY": 330,
+          "enabled": false
+        },
+        "settleFrames": 0
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 1,
+          "centerX": 330,
+          "centerY": 330,
+          "enabled": false
+        },
+        "settleFrames": 0
+      },
+      "export25": {
+        "reached": {
+          "zoom": 1,
+          "centerX": 330,
+          "centerY": 330,
+          "enabled": false
+        },
+        "settleFrames": 0
+      }
+    },
+    "climb": {
+      "ms": 640,
+      "flatInstant": false,
+      "seeked": {
+        "zoom": 2.041687,
+        "centerX": 186.439634,
+        "centerY": 360.304189,
+        "enabled": true
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 1.166303,
+          "centerX": 283.730801,
+          "centerY": 351.082403,
+          "enabled": true
+        },
+        "settleFrames": 111
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 1.265493,
+          "centerX": 260.767931,
+          "centerY": 359.91793,
+          "enabled": true
+        },
+        "settleFrames": 109
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 1.101472,
+          "centerX": 301.079729,
+          "centerY": 343.282135,
+          "enabled": true
+        },
+        "settleFrames": 112
+      },
+      "export25": {
+        "reached": {
+          "zoom": 1.034308,
+          "centerX": 319.053914,
+          "centerY": 340.946086,
+          "enabled": true
+        },
+        "settleFrames": 118
+      }
+    },
+    "held": {
+      "ms": 3040,
+      "flatInstant": false,
+      "seeked": {
+        "zoom": 4,
+        "centerX": 264.122631,
+        "centerY": 310.196182,
+        "enabled": true
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 3.887138,
+          "centerX": 263.766334,
+          "centerY": 310.770356,
+          "enabled": true
+        },
+        "settleFrames": 77
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 3.994968,
+          "centerX": 264.110539,
+          "centerY": 310.205648,
+          "enabled": true
+        },
+        "settleFrames": 27
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 3.438991,
+          "centerX": 264.974317,
+          "centerY": 314.250376,
+          "enabled": true
+        },
+        "settleFrames": 103
+      },
+      "export25": {
+        "reached": {
+          "zoom": 1.504056,
+          "centerX": 264.92356,
+          "centerY": 310.702255,
+          "enabled": true
+        },
+        "settleFrames": 136
+      }
+    },
+    "lastLeg": {
+      "ms": 7040,
+      "flatInstant": false,
+      "seeked": {
+        "zoom": 6.757145,
+        "centerX": 420.380606,
+        "centerY": 359.399389,
+        "enabled": true
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 5.049268,
+          "centerX": 363.751885,
+          "centerY": 362.629994,
+          "enabled": true
+        },
+        "settleFrames": 121
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 5.558734,
+          "centerX": 389.038212,
+          "centerY": 368.002687,
+          "enabled": true
+        },
+        "settleFrames": 115
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 4.625387,
+          "centerX": 333.87759,
+          "centerY": 349.519537,
+          "enabled": true
+        },
+        "settleFrames": 124
+      },
+      "export25": {
+        "reached": {
+          "zoom": 3.00603,
+          "centerX": 363.752162,
+          "centerY": 362.629978,
+          "enabled": true
+        },
+        "settleFrames": 140
+      }
+    },
+    "end": {
+      "ms": 12000,
+      "flatInstant": false,
+      "seeked": {
+        "zoom": 2,
+        "centerX": 495,
+        "centerY": 277.2,
+        "enabled": true
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 2.017113,
+          "centerX": 495.014218,
+          "centerY": 277.20685,
+          "enabled": true
+        },
+        "settleFrames": 46
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 2.000077,
+          "centerX": 495.000032,
+          "centerY": 277.200001,
+          "enabled": true
+        },
+        "settleFrames": 0
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 2.245322,
+          "centerX": 494.369835,
+          "centerY": 277.852583,
+          "enabled": true
+        },
+        "settleFrames": 89
+      },
+      "export25": {
+        "reached": {
+          "zoom": 2.127302,
+          "centerX": 499.134847,
+          "centerY": 277.20685,
+          "enabled": true
+        },
+        "settleFrames": 79
+      }
+    }
+  },
+  "branched.priors": {
+    "start": {
+      "ms": 0,
+      "flatInstant": true,
+      "runs": [
+        {
+          "prior": 8037.562527,
+          "first": {
+            "zoom": 1.94,
+            "centerX": 481.8,
+            "centerY": 281.424,
+            "enabled": true
+          },
+          "frames": 111
+        },
+        {
+          "prior": 7419.288486,
+          "first": {
+            "zoom": 7.382137,
+            "centerX": 453.63233,
+            "centerY": 322.131445,
+            "enabled": true
+          },
+          "frames": 142
+        }
+      ]
+    },
+    "climb": {
+      "ms": 640,
+      "flatInstant": false,
+      "runs": [
+        {
+          "prior": 8037.562527,
+          "first": {
+            "zoom": 2.041687,
+            "centerX": 186.439634,
+            "centerY": 360.304189,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 7419.288486,
+          "first": {
+            "zoom": 2.041687,
+            "centerX": 186.439634,
+            "centerY": 360.304189,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 0,
+          "first": {
+            "zoom": 1.982936,
+            "centerX": 197.005677,
+            "centerY": 358.073801,
+            "enabled": true
+          },
+          "frames": 66
+        }
+      ]
+    },
+    "held": {
+      "ms": 3040,
+      "flatInstant": false,
+      "runs": [
+        {
+          "prior": 8037.562527,
+          "first": {
+            "zoom": 4,
+            "centerX": 264.122631,
+            "centerY": 310.196182,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 7419.288486,
+          "first": {
+            "zoom": 4,
+            "centerX": 264.122631,
+            "centerY": 310.196182,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 0,
+          "first": {
+            "zoom": 3.8308,
+            "centerX": 268.971206,
+            "centerY": 311.653743,
+            "enabled": true
+          },
+          "frames": 83
+        }
+      ]
+    },
+    "lastLeg": {
+      "ms": 7040,
+      "flatInstant": false,
+      "runs": [
+        {
+          "prior": 618.274041,
+          "first": {
+            "zoom": 6.757145,
+            "centerX": 420.380606,
+            "centerY": 359.399389,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 1236.548081,
+          "first": {
+            "zoom": 6.757145,
+            "centerX": 420.380606,
+            "centerY": 359.399389,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 0,
+          "first": {
+            "zoom": 6.432442,
+            "centerX": 413.728594,
+            "centerY": 357.235594,
+            "enabled": true
+          },
+          "frames": 94
+        }
+      ]
+    },
+    "end": {
+      "ms": 12000,
+      "flatInstant": false,
+      "runs": [
+        {
+          "prior": 618.274041,
+          "first": {
+            "zoom": 2,
+            "centerX": 495,
+            "centerY": 277.2,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 1236.548081,
+          "first": {
+            "zoom": 2,
+            "centerX": 495,
+            "centerY": 277.2,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 0,
+          "first": {
+            "zoom": 1.9436,
+            "centerX": 482.856,
+            "centerY": 281.08608,
+            "enabled": true
+          },
+          "frames": 66
+        }
+      ]
+    }
+  },
+  "branched.seek": {
+    "columns": ["fractionOfB","pathProgress","targetZoom","zoom","centerX","centerY","enabled"],
+    "rows": [
+      [0,0,1,1.94,481.8,281.424,true],
+      [0.05,0.18371,1.903894,1.903894,183.687194,362.176112,true],
+      [0.1,0.367421,3.999683,3.999683,262.811232,310.624064,true],
+      [0.15,0.376559,4,4,264.122631,310.196182,true],
+      [0.2,0.376559,4,4,264.122631,310.196182,true],
+      [0.25,0.376559,4,4,264.122631,310.196182,true],
+      [0.3,0.376559,4,4,264.122631,310.196182,true],
+      [0.35,0.376559,4,4,264.122631,310.196182,true],
+      [0.4,0.376559,4,4,264.122631,310.196182,true],
+      [0.45,0.376559,4,4,264.122631,310.196182,true],
+      [0.5,0.5,4.087021,4.087021,309.419073,350.15976,true],
+      [0.55,0.68371,5.572541,5.572541,386.83476,372.702649,true],
+      [0.6,0.867421,7.789508,7.789508,464.382967,321.447223,true],
+      [0.65,1,2,2,495,277.2,true],
+      [0.7,1,2,1.9436,482.856,281.08608,true],
+      [0.75,1,2,1.893765,472.577318,284.375258,true],
+      [0.8,1,2,1.849731,463.877442,287.159218,true],
+      [0.85,1,2,1.810822,456.513867,289.515563,true],
+      [0.9,1,2,1.776442,450.281337,291.509972,true],
+      [0.95,1,2,1.746064,445.006124,293.19804,true],
+      [1,1,2,1.719223,440.541183,294.626821,true]
+    ]
+  },
+  "linear.keyframes": {
+    "ids": ["ex-parm-1","ex-parm-2","ex-parm-3"],
+    "progress": [0,0.566757,1],
+    "trunk": ["ex-parm-1","ex-parm-1a","ex-parm-2","ex-parm-3"]
+  },
+  "linear.nearAndScrub": {
+    "start": {
+      "ms": 0,
+      "rested": {
+        "zoom": 1,
+        "centerX": 330,
+        "centerY": 330,
+        "enabled": false
+      },
+      "near": {
+        "zoom": 1,
+        "centerX": 330,
+        "centerY": 330,
+        "enabled": false
+      },
+      "scrub": {
+        "zoom": 1,
+        "centerX": 330,
+        "centerY": 330,
+        "enabled": false
+      }
+    },
+    "climb": {
+      "ms": 960,
+      "rested": {
+        "zoom": 1.380928,
+        "centerX": 238.969821,
+        "centerY": 405.810319,
+        "enabled": true
+      },
+      "near": {
+        "zoom": 1.349043,
+        "centerX": 248.239443,
+        "centerY": 398.691446,
+        "enabled": true
+      },
+      "scrub": {
+        "zoom": 1.317337,
+        "centerX": 257.3804,
+        "centerY": 391.557905,
+        "enabled": true
+      }
+    },
+    "held": {
+      "ms": 4000,
+      "rested": {
+        "zoom": 3,
+        "centerX": 344.083024,
+        "centerY": 316.235357,
+        "enabled": true
+      },
+      "near": {
+        "zoom": 2.893968,
+        "centerX": 343.129434,
+        "centerY": 317.167389,
+        "enabled": true
+      },
+      "scrub": {
+        "zoom": 2.682432,
+        "centerX": 342.239395,
+        "centerY": 318.037306,
+        "enabled": true
+      }
+    },
+    "lastLeg": {
+      "ms": 8000,
+      "rested": {
+        "zoom": 3,
+        "centerX": 467.039627,
+        "centerY": 238.789462,
+        "enabled": true
+      },
+      "near": {
+        "zoom": 2.893968,
+        "centerX": 456.261141,
+        "centerY": 245.908643,
+        "enabled": true
+      },
+      "scrub": {
+        "zoom": 2.682432,
+        "centerX": 440.284895,
+        "centerY": 255.40761,
+        "enabled": true
+      }
+    },
+    "end": {
+      "ms": 9600,
+      "rested": {
+        "zoom": 2.486597,
+        "centerX": 423.345135,
+        "centerY": 266.865001,
+        "enabled": true
+      },
+      "near": {
+        "zoom": 2.234744,
+        "centerX": 402.686736,
+        "centerY": 280.837534,
+        "enabled": true
+      },
+      "scrub": {
+        "zoom": 2.091019,
+        "centerX": 391.522054,
+        "centerY": 288.388889,
+        "enabled": true
+      }
+    }
+  },
+  "linear.play": {
+    "start": {
+      "ms": 0,
+      "flatInstant": true,
+      "seeked": {
+        "zoom": 1,
+        "centerX": 330,
+        "centerY": 330,
+        "enabled": false
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 1,
+          "centerX": 330,
+          "centerY": 330,
+          "enabled": false
+        },
+        "settleFrames": 0
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 1,
+          "centerX": 330,
+          "centerY": 330,
+          "enabled": false
+        },
+        "settleFrames": 0
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 1,
+          "centerX": 330,
+          "centerY": 330,
+          "enabled": false
+        },
+        "settleFrames": 0
+      },
+      "export25": {
+        "reached": {
+          "zoom": 1,
+          "centerX": 330,
+          "centerY": 330,
+          "enabled": false
+        },
+        "settleFrames": 0
+      }
+    },
+    "climb": {
+      "ms": 960,
+      "flatInstant": false,
+      "seeked": {
+        "zoom": 1.380928,
+        "centerX": 238.969821,
+        "centerY": 405.810319,
+        "enabled": true
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 1.110687,
+          "centerX": 297.113365,
+          "centerY": 362.008423,
+          "enabled": true
+        },
+        "settleFrames": 91
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 1.170317,
+          "centerX": 281.974783,
+          "centerY": 376.972039,
+          "enabled": true
+        },
+        "settleFrames": 87
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 1.068587,
+          "centerX": 308.818989,
+          "centerY": 350.149879,
+          "enabled": true
+        },
+        "settleFrames": 93
+      },
+      "export25": {
+        "reached": {
+          "zoom": 1.051919,
+          "centerX": 313.712266,
+          "centerY": 346.287734,
+          "enabled": true
+        },
+        "settleFrames": 95
+      }
+    },
+    "held": {
+      "ms": 4000,
+      "flatInstant": false,
+      "seeked": {
+        "zoom": 3,
+        "centerX": 344.083024,
+        "centerY": 316.235357,
+        "enabled": true
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 2.967769,
+          "centerX": 343.007491,
+          "centerY": 316.976178,
+          "enabled": true
+        },
+        "settleFrames": 57
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 2.999297,
+          "centerX": 344.06464,
+          "centerY": 316.247584,
+          "enabled": true
+        },
+        "settleFrames": 0
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 2.758888,
+          "centerX": 336.52997,
+          "centerY": 321.690779,
+          "enabled": true
+        },
+        "settleFrames": 89
+      },
+      "export25": {
+        "reached": {
+          "zoom": 1.72393,
+          "centerX": 343.167439,
+          "centerY": 316.915545,
+          "enabled": true
+        },
+        "settleFrames": 120
+      }
+    },
+    "lastLeg": {
+      "ms": 8000,
+      "flatInstant": false,
+      "seeked": {
+        "zoom": 3,
+        "centerX": 467.039627,
+        "centerY": 238.789462,
+        "enabled": true
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 2.999934,
+          "centerX": 423.975227,
+          "centerY": 265.893457,
+          "enabled": true
+        },
+        "settleFrames": 51
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 3,
+          "centerX": 443.767495,
+          "centerY": 253.431863,
+          "enabled": true
+        },
+        "settleFrames": 44
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 2.98907,
+          "centerX": 399.856785,
+          "centerY": 281.097439,
+          "enabled": true
+        },
+        "settleFrames": 57
+      },
+      "export25": {
+        "reached": {
+          "zoom": 2.966131,
+          "centerX": 423.975265,
+          "centerY": 265.893442,
+          "enabled": true
+        },
+        "settleFrames": 57
+      }
+    },
+    "end": {
+      "ms": 9600,
+      "flatInstant": true,
+      "seeked": {
+        "zoom": 2.76632,
+        "centerX": 445.675855,
+        "centerY": 252.997332,
+        "enabled": true
+      },
+      "realtime25": {
+        "reached": {
+          "zoom": 1.641314,
+          "centerX": 386.58467,
+          "centerY": 284.651053,
+          "enabled": true
+        },
+        "settleFrames": 105
+      },
+      "realtime50": {
+        "reached": {
+          "zoom": 1.255221,
+          "centerX": 354.832313,
+          "centerY": 308.07962,
+          "enabled": true
+        },
+        "settleFrames": 90
+      },
+      "realtime12": {
+        "reached": {
+          "zoom": 2.061917,
+          "centerX": 404.434566,
+          "centerY": 273.530087,
+          "enabled": true
+        },
+        "settleFrames": 113
+      },
+      "export25": {
+        "reached": {
+          "zoom": 2.720356,
+          "centerX": 516.456166,
+          "centerY": 207.710041,
+          "enabled": true
+        },
+        "settleFrames": 127
+      }
+    }
+  },
+  "linear.priors": {
+    "start": {
+      "ms": 0,
+      "flatInstant": true,
+      "runs": [
+        {
+          "prior": 8537.978888,
+          "first": {
+            "zoom": 2.88,
+            "centerX": 506.088,
+            "centerY": 214.632,
+            "enabled": true
+          },
+          "frames": 122
+        },
+        {
+          "prior": 8035.744835,
+          "first": {
+            "zoom": 2.88,
+            "centerX": 459.425964,
+            "centerY": 243.979431,
+            "enabled": true
+          },
+          "frames": 122
+        },
+        {
+          "prior": 9040.21294,
+          "first": {
+            "zoom": 1,
+            "centerX": 330,
+            "centerY": 330,
+            "enabled": false
+          },
+          "frames": 0
+        }
+      ]
+    },
+    "climb": {
+      "ms": 960,
+      "flatInstant": false,
+      "runs": [
+        {
+          "prior": 8537.978888,
+          "first": {
+            "zoom": 1.380928,
+            "centerX": 238.969821,
+            "centerY": 405.810319,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 8035.744835,
+          "first": {
+            "zoom": 1.380928,
+            "centerX": 238.969821,
+            "centerY": 405.810319,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 9040.21294,
+          "first": {
+            "zoom": 1.359443,
+            "centerX": 245.669642,
+            "centerY": 400.230679,
+            "enabled": true
+          },
+          "frames": 50
+        }
+      ]
+    },
+    "held": {
+      "ms": 4000,
+      "flatInstant": false,
+      "runs": [
+        {
+          "prior": 502.234052,
+          "first": {
+            "zoom": 3,
+            "centerX": 344.083024,
+            "centerY": 316.235357,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 8537.978888,
+          "first": {
+            "zoom": 3,
+            "centerX": 344.083024,
+            "centerY": 316.235357,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 0,
+          "first": {
+            "zoom": 2.8872,
+            "centerX": 343.046513,
+            "centerY": 317.248435,
+            "enabled": true
+          },
+          "frames": 77
+        }
+      ]
+    },
+    "lastLeg": {
+      "ms": 8000,
+      "flatInstant": false,
+      "runs": [
+        {
+          "prior": 502.234052,
+          "first": {
+            "zoom": 3,
+            "centerX": 467.039627,
+            "centerY": 238.789462,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 1004.468104,
+          "first": {
+            "zoom": 3,
+            "centerX": 467.039627,
+            "centerY": 238.789462,
+            "enabled": true
+          },
+          "frames": 0
+        },
+        {
+          "prior": 0,
+          "first": {
+            "zoom": 2.8872,
+            "centerX": 456.95351,
+            "centerY": 245.502557,
+            "enabled": true
+          },
+          "frames": 77
+        }
+      ]
+    },
+    "end": {
+      "ms": 9600,
+      "flatInstant": true,
+      "runs": [
+        {
+          "prior": 502.234052,
+          "first": {
+            "zoom": 1.044461,
+            "centerX": 316.288552,
+            "centerY": 343.711448,
+            "enabled": true
+          },
+          "frames": 62
+        },
+        {
+          "prior": 1004.468104,
+          "first": {
+            "zoom": 1.420484,
+            "centerX": 236.166508,
+            "centerY": 396.801945,
+            "enabled": true
+          },
+          "frames": 98
+        },
+        {
+          "prior": 0,
+          "first": {
+            "zoom": 1,
+            "centerX": 330,
+            "centerY": 330,
+            "enabled": false
+          },
+          "frames": 0
+        }
+      ]
+    }
+  },
+  "linear.seek": {
+    "columns": ["fractionOfB","pathProgress","targetZoom","zoom","centerX","centerY","enabled"],
+    "rows": [
+      [0,0,1,1,330,330,false],
+      [0.05,0.124171,1.047299,1.047299,315.096252,344.903748,true],
+      [0.1,0.248343,1.447324,1.447324,228.007074,402.61081,true],
+      [0.15,0.372514,2.513569,2.513569,265.327059,368.526129,true],
+      [0.2,0.496686,2.975188,2.975188,315.628481,335.031046,true],
+      [0.25,0.566757,3,3,344.083024,316.235357,true],
+      [0.3,0.566757,3,2.8872,343.046513,317.248435,true],
+      [0.35,0.566757,3,2.78753,342.169211,318.105904,true],
+      [0.4,0.566757,3,2.699461,341.426662,318.831665,true],
+      [0.45,0.566757,3,2.621644,340.798169,319.44595,true],
+      [0.5,0.566757,3,2.552885,340.266212,319.965881,true],
+      [0.55,0.566757,3,2.492129,339.815964,320.40595,true],
+      [0.6,0.566757,3,2.438445,339.434874,320.778425,true],
+      [0.65,0.566757,3,2.39101,339.112319,321.093687,true],
+      [0.7,0.625829,3,3,368.388856,300.881601,true],
+      [0.75,0.75,3,3,419.528576,268.680884,true],
+      [0.8,0.874171,3,3,470.680395,236.499381,true],
+      [0.85,0.998343,3,3,521.4,204.6,true],
+      [0.9,1,1,2.7672,492.00096,223.86144,true],
+      [0.95,1,1,2.561498,467.117613,240.164323,true],
+      [1,1,1,2.37974,446.056347,253.963083,true]
+    ]
+  }
+}

@@ -206,7 +206,10 @@ class RoutePlotter {
       graphicsScale: 1, // Global multiplier for all vector element sizes (0.25–4×)
       showPathCasing: true, // White outline behind path for contrast on busy backgrounds
       // Optional soft halo beneath the path (intensity 0–1; mirrors RENDERING.PATH_GLOW_DEFAULT_INTENSITY)
-      pathGlow: { enabled: false, intensity: 0.5 }
+      pathGlow: { enabled: false, intensity: 0.5 },
+      // How long the animation carries on after everything that finishes has
+      // finished (CROWD-06): a new project's; one saved without it holds none
+      holdAtEndMs: ANIMATION.HOLD_AT_END_DEFAULT_MS
     };
     
     // Beacon animation state
@@ -270,6 +273,9 @@ class RoutePlotter {
       animationSpeedValueRight: document.getElementById('animation-speed-value-right'),
       // What makes up the Duration when the scene runs past the route (CROWD-05)
       durationBreakdown: document.getElementById('pacing-duration-breakdown'),
+      // Hold at end (CROWD-06)
+      holdAtEnd: document.getElementById('hold-at-end'),
+      holdAtEndValue: document.getElementById('hold-at-end-value'),
       speedControl: document.getElementById('speed-control'),
       // durationControl: document.getElementById('duration-control'), // Removed from UI
       // Note: waypointEditor and waypointEditorPlaceholder removed - now using collapsible sections
@@ -542,6 +548,8 @@ class RoutePlotter {
       setRangeReadout(this.elements.animationSpeedRight, this.elements.animationSpeedValueRight, defaultDuration + 's');
     }
     // Slider value will be set via event after UIController is initialized
+
+    this.syncHoldAtEndControl();
     
     // Slider is now properly synchronized after resets
     

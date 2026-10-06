@@ -90,7 +90,7 @@ settled:
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 1eab812c]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="31s" max="4000" min="1" step="5" type="range" :value="1445"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
@@ -110,7 +110,7 @@ settled:
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 1eab812c]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="31s" max="4000" min="1" step="5" type="range" :value="1445"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
@@ -130,7 +130,7 @@ settled:
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 1eab812c]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="31s" max="4000" min="1" step="5" type="range" :value="1445"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
@@ -150,7 +150,7 @@ settled:
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 1eab812c]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="31s" max="4000" min="1" step="5" type="range" :value="1445"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
@@ -170,7 +170,7 @@ settled:
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 1eab812c]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="31s" max="4000" min="1" step="5" type="range" :value="1445"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
@@ -190,7 +190,7 @@ settled:
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9671 chars, 1f2f8574] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9682 chars, 3de59d49]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 1eab812c]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
   ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="31s" max="4000" min="1" step="5" type="range" :value="1445"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"

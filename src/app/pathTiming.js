@@ -152,8 +152,9 @@ function retimeRoute(app) {
 /**
  * The scene's end for base timeline `baseMs` (CROWD-05): the latest of the
  * route's own timeline and every animation that concludes after it, the
- * crowds and the beacons, measured against `baseMs`. A module helper, as
- * `routeOf` is, for the hosts that borrow this mixin.
+ * crowds and the beacons, measured against `baseMs`, then the project's Hold
+ * at end (CROWD-06), which the player reads from the same saved styles. A
+ * module helper, as `routeOf` is, for the hosts that borrow this mixin.
  * @param {Object} app RoutePlotter or PlayerApp
  * @param {number} baseMs
  * @returns {{endMs: number, parts: import('../utils/sceneEnd.js').SceneEndParts}}
@@ -174,6 +175,7 @@ function composeSceneEnd(app, baseMs) {
     // Beacons are drawn under the motion settings in Preview only.
     motionSettings: app.previewMode ? app.motionSettings : null,
     beaconOffsetMs: (engine.startHandleTime || 0) + (engine.introTime || 0),
+    holdMs: app.styles?.holdAtEndMs,
   });
 }
 
@@ -212,7 +214,7 @@ export function measureSceneEnd(app) {
   const previous = engine.sceneEndParts;
   const unchanged = endMs === engine.state.duration && previous
     && previous.routeMs === parts.routeMs && previous.crowdsMs === parts.crowdsMs
-    && previous.beaconsMs === parts.beaconsMs;
+    && previous.beaconsMs === parts.beaconsMs && previous.holdMs === parts.holdMs;
   if (!unchanged) {
     const timeMs = engine.state.currentTime;
     engine.setDuration(endMs, baseMs, parts);

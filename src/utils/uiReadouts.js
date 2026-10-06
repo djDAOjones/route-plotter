@@ -28,6 +28,16 @@ export function formatBackgroundOverlay(value) {
   return `${formatted}% ${numericValue < 0 ? 'darker' : 'lighter'}`;
 }
 
+/**
+ * The Hold at end readout (CROWD-06), written as the Duration readout above
+ * it writes seconds: to a tenth, e.g. "2s" or "3.5s".
+ * @param {number} ms
+ * @returns {string}
+ */
+export function formatHoldAtEnd(ms) {
+  return `${Math.round(Number(ms) / 100) / 10}s`;
+}
+
 /** Keep the visible readout and the range input's accessible value in sync. */
 export function setRangeReadout(input, output, text) {
   if (output) output.textContent = text;

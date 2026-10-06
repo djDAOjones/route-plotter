@@ -73,6 +73,9 @@ const CANONICAL_PROJECT_DEFAULTS = Object.freeze({
     labelMode: TEXT_VISIBILITY.FADE_UP,
     graphicsScale: 1,
     showPathCasing: true,
+    // A project saved before Hold at end existed plays as it did: no hold
+    // (CROWD-06). A new project starts at ANIMATION.HOLD_AT_END_DEFAULT_MS.
+    holdAtEndMs: 0,
   }),
   pathHead: Object.freeze({
     style: 'arrow',
@@ -363,7 +366,7 @@ function assertProjectSettings(data) {
       Number(data.background.overlay ?? 0) > 100)) {
     throw new Error('Invalid background overlay');
   }
-  assertFiniteFields(data.styles, ['pathThickness', 'dotSize', 'graphicsScale'], 'style');
+  assertFiniteFields(data.styles, ['pathThickness', 'dotSize', 'graphicsScale', 'holdAtEndMs'], 'style');
   assertFiniteFields(data.styles?.pathHead, ['size', 'rotationOffset'], 'path-head style');
   assertFiniteFields(data.styles?.pathGlow, ['intensity'], 'path-glow style');
   assertSafeStoredColor(data.styles?.pathColor, 'style pathColor');
@@ -372,6 +375,10 @@ function assertProjectSettings(data) {
   if (data.styles?.graphicsScale != null &&
       (Number(data.styles.graphicsScale) <= 0 || Number(data.styles.graphicsScale) > 16)) {
     throw new Error('Invalid graphics scale');
+  }
+  if (data.styles?.holdAtEndMs != null &&
+      (Number(data.styles.holdAtEndMs) < 0 || Number(data.styles.holdAtEndMs) > ANIMATION.HOLD_AT_END_MAX_MS)) {
+    throw new Error('Invalid hold at end');
   }
   assertFiniteFields(data.motionSettings, [
     'pathTrail', 'revealSize', 'revealFeather', 'revealTrail',
@@ -461,6 +468,8 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
   // (DEF-37): `Number(null)` stored 0, which the next save would write and
   // load refuses.
   if (stylesData.graphicsScale === null) delete stylesData.graphicsScale;
+  // Likewise a null Hold at end is an absent one: no hold (CROWD-06).
+  if (stylesData.holdAtEndMs === null) delete stylesData.holdAtEndMs;
   const styles = {
     ...CANONICAL_PROJECT_DEFAULTS.styles,
     ...stylesData,
@@ -474,7 +483,7 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
       ...(stylesData?.pathGlow || {}),
     },
   };
-  for (const field of ['pathThickness', 'dotSize', 'graphicsScale']) {
+  for (const field of ['pathThickness', 'dotSize', 'graphicsScale', 'holdAtEndMs']) {
     if (field in stylesData) styles[field] = Number(stylesData[field]);
   }
   for (const field of ['size', 'rotationOffset']) {
