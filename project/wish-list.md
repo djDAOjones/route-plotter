@@ -109,3 +109,4 @@
 - The spotlight reveal's intro never shows: the mask is empty for the whole 1 s intro, then appears at full size (a reveal engine at 500 ms); the intro-curve work of §20 Q10 (W10) is its likely home — (from: TST-03, 2026-10-06)
 - `buildAOVRevealMask` throws a TypeError at negative progress, which the engine never sends today (TST-03) — (from: TST-03, 2026-10-06)
 - After playing to the end of a route whose last waypoint waits, the engine's wait state goes stale (played, it reports waiting; seeked to the same instant, it does not): `updateAnimation`'s end branch skips `_applyWaitState`; no visibility output differs today (TST-03) — (from: TST-03, 2026-10-06)
+- The renderer's `_getPauseElapsed` counts the intro: 500 ms into a wait after a 1 s intro it reads 1,500 ms, where the engine's pause state reads 500; `getPathVisibleRange` ignores it given the timeline context, so no output differs today (Codex, TST-03's review) — (from: TST-03, 2026-10-07)

@@ -9,11 +9,14 @@
  * reveal modes' intro), either seeked straight to an instant or played to it
  * frame by frame. The arguments are assembled as `RenderingService` assembles
  * them (`renderPath`, `renderWaypoints`, the reveal branches of `render`),
- * from the engine's public API only.
+ * from the engine's public API and, for a wait's elapsed time, the renderer's
+ * own `_getPauseElapsed`, so the two cannot drift there; the rest is a copy
+ * of the renderer's code, read against it at the head TST-03 landed on.
  */
 
 import { EventBus } from '../../src/core/EventBus.js';
 import { AnimationEngine } from '../../src/services/AnimationEngine.js';
+import { RenderingService } from '../../src/services/RenderingService.js';
 import { Waypoint } from '../../src/models/Waypoint.js';
 
 /** Path travel in the route fixture, pauses excluded. */
@@ -71,7 +74,7 @@ export function pathArguments(engine) {
   const isInTailTime = engine.isInTailTime();
   let pauseElapsed = 0;
   if (isInTailTime) pauseElapsed = engine.getTailTimeElapsed();
-  else if (isWaiting) pauseElapsed = engine.getPauseState().elapsed;
+  else if (isWaiting) pauseElapsed = RenderingService.prototype._getPauseElapsed(engine);
   return {
     pathProgress: engine.getPathProgress(),
     pathDuration,

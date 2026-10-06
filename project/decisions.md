@@ -18,11 +18,11 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
-## 2026-10-06 — TST-03 — Every visibility mode is pinned as a golden table, and seek equals play for each
+## 2026-10-07 — TST-03 — Every visibility mode is pinned as a golden table, and seek equals play for each
 
-**Decision:** TST-03 lands: three suites (178 tests; goldens `tests/goldens/visibility-*.json`, regenerated with UPDATE_VISIBILITY_GOLDENS=1) pin `getPathVisibleRange` for all five path modes and the comet trail, `getWaypointVisibility` for all five waypoint modes, and both reveal-mask builders, as they stand, and show seek equal to play for every mode.
+**Decision:** TST-03 lands: three suites (179 tests; goldens `tests/goldens/visibility-*.json`, regenerated with UPDATE_VISIBILITY_GOLDENS=1) pin `getPathVisibleRange` for all five path modes and the comet trail, `getWaypointVisibility` for all five waypoint modes, and both reveal-mask builders, as they stand, and show seek equal to play for every mode.
 
-**Rationale:** the plan row asks for "a mode-matrix golden table; seek == sequential for every mode": each mode is sampled at every window edge and clamp, on bare inputs and along a real engine timeline with waits, intro and tail, cold against one instance run forwards, backwards and scrambled; no mode differed, so nothing was pinned as a difference. 117 of 138 source mutants fail it (every mode branch, swapped hide windows, edges, easings, trail length, mask radius); the 21 survivors are equivalent at a boundary or by construction, unreachable, dead code, or killed by `revealTrail`. Area, text and the non-reveal background modes are not MVS code (§8.4). Six candidates are wish lines until verified, one a DEL-02 note. Digest rule applied: house conventions → Testing and persistence.
+**Rationale:** the plan row asks for "a mode-matrix golden table; seek == sequential for every mode": each mode is sampled at every window edge and clamp, on bare inputs and along a real engine timeline with waits, intro and tail, cold against one instance run forwards, backwards and scrambled; no mode differed, so nothing was pinned as a difference. 117 of 138 source mutants fail it (every mode branch, swapped hide windows, edges, easings, trail length, mask radius); the 21 survivors are equivalent at a boundary or by construction, unreachable, dead code, or killed by `revealTrail`. Codex's review found the mask goldens blind to drawing state (an alpha of 0, or a 1×1 clip, set before the clear passed every test): each draw now carries the state it draws with and a clip on the mask fails, and those mutants and an alpha of 0 at each build's clear now fail it. Area, text and the non-reveal background modes are not MVS code (§8.4). Six candidates are wish lines until verified, one a DEL-02 note. Digest rule applied: house conventions → Testing and persistence.
 
 **Supersedes:** none
 

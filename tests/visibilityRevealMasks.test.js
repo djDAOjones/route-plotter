@@ -16,7 +16,12 @@
  *
  * A mask is read here as `tests/setup.js` records it: the calls painted on it
  * since it was last emptied (by a full clear, a resize or being made), in
- * `drawLog.js`'s text, three decimal places. Pinned
+ * `drawLog.js`'s text, three decimal places, each draw with the state it draws
+ * with (`state: 'drawn'`: its transform, alpha, compositing and fill), since a
+ * clear empties pixels, not the context's state: an alpha of 0 set before the
+ * clear would otherwise leave a mask that reveals nothing reading the same
+ * (Codex's review of TST-03). The recorder keeps no clip region, so a build
+ * that clips its mask fails here until the clip is pinned on purpose. Pinned
  * (`tests/goldens/visibility-masks.json`): each builder across its settings
  * (spotlight size, feather including BUG-02's zero, REVEAL-01's trail at its
  * sentinel, mid-range and minimum; cone angle, distance and dropoff, with and
@@ -96,16 +101,18 @@ function isEmptying(line, canvas) {
 }
 
 /**
- * Run one build and read the mask it leaves. With `state: 'drawn'`, each draw
- * carries the styles it used (`drawLog.js`), for the seek checks.
+ * Run one build and read the mask it leaves, each draw carrying the styles it
+ * used (`drawLog.js`'s `state: 'drawn'`).
  * @returns {{size: number[], lines: string[]}}
  */
-function maskAfter(mvs, build, { state = false } = {}) {
+function maskAfter(mvs, build, { state = 'drawn' } = {}) {
   discardFrame();
   build(mvs);
   const lines = takeFrame({ motionVisibilityService: mvs }, { state });
   const canvas = mvs.revealMaskCanvas;
   expect(lines.filter(line => !line.startsWith('mask ')), 'a build paints only its mask').toEqual([]);
+  expect(lines.filter(line => /^mask clip\b/.test(line)),
+    'a build clips its mask, which the recorder cannot follow across a clear: pin the clip on purpose').toEqual([]);
   const before = held.get(mvs);
   let content = before && before.canvas === canvas ? [...before.lines] : [];
   for (const line of lines) {
@@ -278,15 +285,18 @@ describe('the reveal masks (golden)', () => {
   });
 });
 
+/** A transcript line's call, without the state it draws with (` @ …`). */
+const call = line => line.split(' @ ')[0];
+
 /** The numbers in one transcript line after its call name. */
-const args = line => line.split(' ').slice(2).map(Number);
+const args = line => call(line).split(' ').slice(2).map(Number);
 
 describe('the reveal masks, derived by hand', () => {
   test('a spotlight is a disc 10% of the canvas\'s mean side at each passed point and at the head', () => {
     // (200 + 100) / 2 × 10% = 15 px; a zero feather leaves a half-pixel edge (BUG-02).
     const { lines } = coldMask(mask('spotlight default', 0.5));
     // 9 × 0.5 = 4.5: points 0–4, then the head halfway from point 4 to 5, at (100, 30).
-    expect(arcs(lines)).toEqual(['mask arc 20 20 15 0 6.283', 'mask arc 40 20 15 0 6.283', 'mask arc 60 20 15 0 6.283',
+    expect(arcs(lines).map(call)).toEqual(['mask arc 20 20 15 0 6.283', 'mask arc 40 20 15 0 6.283', 'mask arc 60 20 15 0 6.283',
       'mask arc 80 20 15 0 6.283', 'mask arc 100 20 15 0 6.283', 'mask arc 100 30 15 0 6.283']);
     const centres = [[20, 20], [40, 20], [60, 20], [80, 20], [100, 20], [100, 30]];
     expect(lines.filter(line => line.includes('createRadialGradient')).map(args))

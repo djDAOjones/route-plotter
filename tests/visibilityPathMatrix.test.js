@@ -309,6 +309,36 @@ describe('the path modes, seek == sequential', () => {
 });
 
 /**
+ * The wait's elapsed time the renderer passes is its own `_getPauseElapsed`,
+ * which `pathArguments` calls rather than copies. It counts the intro: 500 ms
+ * into a 1 s wait that starts at 3,000 ms, after a 1 s intro, it reads
+ * 1,500 ms, where the engine's pause state reads 500. Given the timeline
+ * context, as the renderer always gives it, the service ignores that argument,
+ * so no mode's answer differs today (Codex's review of TST-03; a wish line).
+ */
+describe("the renderer's wait elapsed", () => {
+  const WAIT_ROUTE = [
+    { id: 'A', progress: 0, pauseTime: 0 },
+    { id: 'B', progress: 0.5, pauseTime: 1000 },
+    { id: 'C', progress: 1, pauseTime: 0 },
+  ];
+
+  test('counts the intro, and no mode reads it given the timeline context', () => {
+    const { engine } = routeEngine({ route: WAIT_ROUTE, pathMs: 4000, introMs: 1000 });
+    engine.seekToTime(3500);
+    expect(engine.state.isWaitingAtWaypoint).toBe(true);
+    expect(engine.getPauseState().elapsed).toBe(500);
+    const args = pathArguments(engine);
+    expect(args.pauseElapsed).toBe(1500);
+    for (const [, mode, trail] of CASES) {
+      const settings = { pathVisibility: mode, pathTrail: trail };
+      expect(range(service(), settings, { ...args, pauseElapsed: 500 }), `${mode} at trail ${trail}`)
+        .toEqual(range(service(), settings, args));
+    }
+  });
+});
+
+/**
  * `getPathPointOpacity` has no caller in `src/` (the renderer fades the trail
  * itself), and DEL-02 deletes it; that change deletes this block with it.
  * Until then it is pinned as it stands. Its comment says the fade runs "from
