@@ -23,7 +23,6 @@
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
 - [ ] UI-04 — A hint trigger of its own (UI-03's second part) — since 2026-10-05 — (from: GATELESS-1, 2026-10-05)
-- [ ] TST-09 — Camera, dots, curvature, minor-end and time domains — since 2026-10-01
 - [ ] TST-03 — Visibility mode matrix · Characterisation P1 — since 2026-10-01
 - [ ] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01
 - [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01

@@ -18,3 +18,4 @@ For a linear route, route anchors are resolved in the space being drawn, not the
 
 - 2026-10-05 — Found by CROWD-05's work (the run's implementing session), by code reading; to verify before fixing.
 - 2026-10-05 — Widened from the player to video export too, by Codex's review r1 of CROWD-05; CROWD-05 measures each scene end in the space it renders in, so neither cuts a crowd off, but their lengths can differ from the editor's.
+- 2026-10-06 — Confirmed by TST-09's dots golden: in a linear-route video export the arrival at `ex-parm-2` is re-measured at 5,915 ms against 2,292 ms in the editor, so the bound crowd's dots differ; the branched route matches.

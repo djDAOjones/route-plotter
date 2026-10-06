@@ -1,0 +1,187 @@
+{
+  "app.edits": {
+    "1-opened": {
+      "trunk": ["ex-uon-1","ex-uon-2","ex-uon-2a","ex-uon-2b","ex-uon-3"],
+      "points": {
+        "editor": 402,
+        "fresh": 402,
+        "player": 402
+      },
+      "divergence": {
+        "fresh": 0,
+        "player": 0
+      },
+      "branchDivergence": {
+        "ex-uon-branch": 0
+      },
+      "pathDurationMs": {
+        "editor": 3365.48081,
+        "player": 3365.48081
+      },
+      "cacheSize": 2
+    },
+    "2-drag-keeping-key": {
+      "trunk": ["ex-uon-1","ex-uon-2","ex-uon-2a","ex-uon-2b","ex-uon-3"],
+      "points": {
+        "editor": 408,
+        "fresh": 413,
+        "player": 413
+      },
+      "divergence": {
+        "fresh": 0.005208,
+        "player": 0.005208
+      },
+      "branchDivergence": {
+        "ex-uon-branch": 0
+      },
+      "pathDurationMs": {
+        "editor": 3512.359396,
+        "player": 3512.456709
+      },
+      "cacheSize": 2
+    },
+    "3-insert-on-leg": {
+      "trunk": ["ex-uon-1","added-1","ex-uon-2","ex-uon-2a","ex-uon-2b","ex-uon-3"],
+      "points": {
+        "editor": 502,
+        "fresh": 502,
+        "player": 502
+      },
+      "divergence": {
+        "fresh": 0,
+        "player": 0
+      },
+      "branchDivergence": {
+        "ex-uon-branch": 0
+      },
+      "pathDurationMs": {
+        "editor": 3511.543012,
+        "player": 3511.543012
+      },
+      "cacheSize": 3
+    },
+    "4-delete": {
+      "trunk": ["ex-uon-1","ex-uon-2","ex-uon-2a","ex-uon-2b","ex-uon-3"],
+      "points": {
+        "editor": 408,
+        "fresh": 413,
+        "player": 413
+      },
+      "divergence": {
+        "fresh": 0.005208,
+        "player": 0.005208
+      },
+      "branchDivergence": {
+        "ex-uon-branch": 0
+      },
+      "pathDurationMs": {
+        "editor": 3512.359396,
+        "player": 3512.456709
+      },
+      "cacheSize": 3
+    },
+    "5-branch-add": {
+      "trunk": ["ex-uon-1","ex-uon-2","ex-uon-2a","ex-uon-2b","ex-uon-3"],
+      "points": {
+        "editor": 408,
+        "fresh": 413,
+        "player": 413
+      },
+      "divergence": {
+        "fresh": 0.005208,
+        "player": 0.005208
+      },
+      "branchDivergence": {
+        "ex-uon-branch": 0,
+        "added-2": 0
+      },
+      "pathDurationMs": {
+        "editor": 3512.359396,
+        "player": 3512.456709
+      },
+      "cacheSize": 4
+    }
+  },
+  "pathCalculator.steps": {
+    "1-initial": {
+      "agree": true,
+      "curvatureAgrees": true,
+      "keyKnown": false,
+      "cacheSize": 1,
+      "roughPoints": 401,
+      "points": [402,402],
+      "length": [764.882002,764.882002],
+      "divergence": 0
+    },
+    "2-move-keeping-key": {
+      "agree": false,
+      "curvatureAgrees": false,
+      "keyKnown": true,
+      "cacheSize": 1,
+      "roughPoints": 401,
+      "points": [408,413],
+      "length": [798.263499,798.285616],
+      "divergence": 0.005208
+    },
+    "3-insert": {
+      "agree": true,
+      "curvatureAgrees": true,
+      "keyKnown": false,
+      "cacheSize": 2,
+      "roughPoints": 501,
+      "points": [502,502],
+      "length": [799.453577,799.453577],
+      "divergence": 0
+    },
+    "4-delete": {
+      "agree": false,
+      "curvatureAgrees": false,
+      "keyKnown": true,
+      "cacheSize": 2,
+      "roughPoints": 401,
+      "points": [408,413],
+      "length": [798.263499,798.285616],
+      "divergence": 0.005208
+    },
+    "5-branch-add": {
+      "agree": true,
+      "curvatureAgrees": true,
+      "keyKnown": false,
+      "cacheSize": 3,
+      "roughPoints": 201,
+      "points": [318,318],
+      "length": [619.390072,619.390072],
+      "divergence": 0
+    },
+    "6-trunk-after-branch": {
+      "agree": false,
+      "curvatureAgrees": false,
+      "keyKnown": true,
+      "cacheSize": 3,
+      "roughPoints": 401,
+      "points": [408,413],
+      "length": [798.263499,798.285616],
+      "divergence": 0.005208
+    },
+    "7-move-changing-key": {
+      "agree": true,
+      "curvatureAgrees": true,
+      "keyKnown": false,
+      "cacheSize": 4,
+      "roughPoints": 401,
+      "points": [413,413],
+      "length": [799.673927,799.673927],
+      "divergence": 0
+    },
+    "8-move-back": {
+      "agree": true,
+      "curvatureAgrees": true,
+      "keyKnown": true,
+      "cacheSize": 4,
+      "roughPoints": 401,
+      "points": [402,402],
+      "length": [764.882002,764.882002],
+      "divergence": 0
+    }
+  }
+}
