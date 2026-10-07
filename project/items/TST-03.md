@@ -21,3 +21,4 @@ Visibility mode matrix · Characterisation P1
 ```text
 - [ ] **TST-03 Visibility mode matrix** · Characterisation [ready] **P1**
 ```
+- 2026-10-06 — Landed (TST-03's PR): `tests/visibilityPathMatrix.test.js`, `visibilityWaypointMatrix.test.js`, `visibilityRevealMasks.test.js`, helpers `tests/helpers/visibilityGoldens.js` (order checker: fresh, forwards, backwards, scrambled) and `visibilityTimeline.js` (a real `AnimationEngine`, MVS's arguments assembled as `RenderingService` does, a copy that can drift from the renderer). The dead `getPathPointOpacity` is pinned in a block labelled DEL-02, to go with the method; it fades the opposite way to its comment.
