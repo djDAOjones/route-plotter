@@ -9,6 +9,7 @@
 
 ## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
+- DEF-81 — Verify's job limit rises from 15 to 30 minutes, so a suite that now runs about 14 minutes on GitHub is no longer cut off (2026-10-07) — see decisions
 - TST-03 — every path and waypoint visibility mode and both reveal masks are pinned as a golden table at each window edge, on bare inputs and a real engine timeline, and seek equals play forwards, backwards and scrambled for every mode (2026-10-07) — see decisions
 - UI-04 — each hint has a "?" of its own beside its label, opened by hover, focus or tap, so a label acts as a label again (2026-10-06) — see decisions
 - DEF-14 — a click on a label toggles or focuses its control, and every range names its readout to screen readers (2026-10-06) — see decisions
