@@ -22,7 +22,6 @@
 
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
-- [ ] TST-03 — Visibility mode matrix · Characterisation P1 — since 2026-10-01
 - [!] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01 — blocked: the owner's word to retire the source-text assertions its new tests cover (GATELESS-1 bars deleting a test)
 - [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01
 - [ ] DEF-13 — A focused button swallows every shortcut · Accessibility P1 — since 2026-10-01
