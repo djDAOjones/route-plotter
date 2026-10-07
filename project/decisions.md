@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-07 — DEF-81 — Verify gets 30 minutes, since the suite reached 15
+
+**Decision:** DEF-81 lands: the Verify job's limit (`.github/workflows/ci.yml`, `timeout-minutes`) rises from 15 to 30 minutes, the only change, because the suite now runs about 14 minutes on GitHub and runs were being cancelled at 15.
+
+**Rationale:** on 6–7 October both pull_request runs, TST-03's on `ec83404` and TST-11's on `c95c85e`, were cancelled at 15m17s with tests still running; TST-03's re-run passed in 14m06s; main's own runs took about 13 minutes, and TST-11 adds a minute more. Nothing is skipped, sharded or changed in the suite; a faster one is a wish line. The record does not cover CI's limit, so this narrowest fix is the run's call under GATELESS-1, for the owner to confirm; Codex checked it. CI configuration ships nothing, so no release.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-07 — TST-03 — Every visibility mode is pinned as a golden table, and seek equals play for each
 
 **Decision:** TST-03 lands: three suites (179 tests; goldens `tests/goldens/visibility-*.json`, regenerated with UPDATE_VISIBILITY_GOLDENS=1) pin `getPathVisibleRange` for all five path modes and the comet trail, `getWaypointVisibility` for all five waypoint modes, and both reveal-mask builders, as they stand, and show seek equal to play for every mode.
