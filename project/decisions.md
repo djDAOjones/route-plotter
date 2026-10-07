@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-07 — TST-11 — Behavioural tests stand beside the source-text assertions; retiring those waits on the owner
+
+**Decision:** TST-11's first round lands: 25 behavioural tests pin every source-text assertion its row names that has behaviour, on the booted editor or by running `build.js` in the SPL-06 harness's copy; the source-text assertions stay unchanged, and the item stays open, `[!]`, until the owner says they may go.
+
+**Rationale:** the row says "Replace", but GATELESS-1 bars deleting a test and the record does not say whether a replacement counts, so the narrowest reading adds and keeps (the run's call, for the owner to confirm; Codex, asked first: "corrected A—add coverage; keep TST-11 open pending explicit replacement authority"). Of 64 source mutants, all 49 that break behaviour fail the suite (48 on the new tests, the version predicate on `buildScript`'s), 18 of them missed by the old reads (the rollback made unreachable among them); all 15 moves counted neutral (an extracted `isCurrent()`, renamed locals) pass the new tests and fail the old reads, though one, the rollback's cleanup before its restore (RS-N14), keeps the final state but not the order, which only the old read pins (Codex). Two contracts are comments and stay source-only. `publicationBoundary`'s check build also runs in the copy now, beside the original. One candidate defect is a wish line. Digest rule applied: house conventions → Testing and persistence.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-07 — DEF-81 — Verify gets 30 minutes, since the suite reached 15
 
 **Decision:** DEF-81 lands: the Verify job's limit (`.github/workflows/ci.yml`, `timeout-minutes`) rises from 15 to 30 minutes, the only change, because the suite now runs about 14 minutes on GitHub and runs were being cancelled at 15.
