@@ -143,12 +143,15 @@ describe('after Open, every pacing and reveal control stands where the project i
     expect(durationSlider().value).toBe(String(thumbFor(150)));
     expect(byId('animation-speed-value-right').textContent).toBe(`${Math.round(duration / 100) / 10}s`);
 
-    // One step slower: the speed the thumb now means, and the duration with it.
+    // One native keyboard step slower (→ adds the range's step of 5), from
+    // where a browser shows the thumb: on the range's grid (1, 6, …), so 1586.
+    const shown = 1 + Math.round((thumbFor(150) - 1) / 5) * 5;
+    expect(shown).toBe(1586);
     const sent = recordSent(app);
-    moveAsUser('animation-speed-right', thumbFor(150) + 5);
+    moveAsUser('animation-speed-right', shown + 5);
     await settled();
     const [nudged] = sent('animation:speed-change');
-    expect(nudged).toBe(Math.round(4000 ** (1 - (thumbFor(150) + 4) / 3999)));
+    expect(nudged).toBe(Math.round(4000 ** (1 - (shown + 5 - 1) / 3999)));
     expect(Math.abs(nudged - 150)).toBeLessThanOrEqual(2);
     const ratio = app.animationEngine.state.duration / duration;
     expect(ratio).toBeGreaterThan(0.97);
@@ -260,5 +263,47 @@ describe('Clear All in Preview goes back to Edit, and the switch says so (DEF-20
     byId('mode-toggle-btn').click();
     expect(app.previewMode).toBe(true);
     expect(byId('mode-toggle-btn').getAttribute('aria-checked')).toBe('true');
+  });
+
+  test('a waypoint drag still held through Clear All ends with the project, not back on the deleted waypoint', async () => {
+    const app = await openEditor();
+    expect(await openProject(app, openDayProject())).toBe(true);
+    expect(app.previewMode).toBe(true);
+    const waypoint = app.waypoints.find(each => each.isMajor);
+    app.eventBus.emit('waypoint:selected', waypoint);
+    expect(app.selectedWaypoint).toBe(waypoint);
+
+    // Pressed on the selected waypoint and dragged past the threshold, still held.
+    const { x, y } = app.imageToCanvas(waypoint.imgX, waypoint.imgY);
+    const pointer = (type, at) => app.canvas.dispatchEvent(new PointerEvent(type, {
+      bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true,
+      button: type === 'pointerdown' ? 0 : -1, buttons: type === 'pointerup' ? 0 : 1, clientX: at[0], clientY: at[1]
+    }));
+    pointer('pointerdown', [x, y]);
+    pointer('pointermove', [x + 20, y + 20]);
+    expect(app.interactionHandler.isDragging).toBe(true);
+
+    // Clear All confirmed from the keyboard (activation clicks, no pointer) while the drag is held.
+    const sent = recordSent(app);
+    byId('clear-btn').click();
+    await Promise.resolve();
+    byId('clear-confirm').click();
+
+    expect(app.waypoints).toEqual([]);
+    // The project boundary ends the drag without putting back its geometry or selection.
+    expect(sent('waypoint:drag-cancelled')).toEqual([]);
+    expect(sent('waypoint:selected')).toEqual([]);
+    expect([app.selectedWaypoint, app.selectedWaypoints]).toEqual([null, []]);
+    expect([app.interactionHandler.selectedWaypoint ?? null, app.interactionHandler.selectedWaypoints])
+      .toEqual([null, []]);
+    expect(app.undoService.createSnapshot().lastState).not.toContain(waypoint.id);
+    // And the mode still goes back to Edit, the switch with it.
+    expect([app.previewMode, byId('mode-toggle-btn').getAttribute('aria-checked')]).toEqual([false, 'false']);
+    expect(sent('motion:preview-mode-change')).toEqual([false]);
+
+    // Letting go afterwards changes nothing.
+    pointer('pointerup', [x + 20, y + 20]);
+    expect(app.waypoints).toEqual([]);
+    expect([app.selectedWaypoint, app.selectedWaypoints]).toEqual([null, []]);
   });
 });

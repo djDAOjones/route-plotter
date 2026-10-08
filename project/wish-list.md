@@ -115,3 +115,4 @@
 - Start-up leaves the Angle of View and path-trail thumbs at the markup's values until a project loads (`_syncInitialUIState`); DEF-20 covered Open, rollback and Clear All — (from: DEF-20, 2026-10-08)
 - `tests/publicationBoundary.test.js:59` and `tests/releaseSafety.test.js:24` call `spawnSync` with no subprocess timeout, so a stuck child blocks the worker and only CI's job limit stops it (Codex, DEF-81's review) — (from: DEF-81, 2026-10-07)
 - The owner to confirm the run's three readings of his chat 12 words ("whole hog", "tonight", no scheduled resumption) — (from: GATELESS-1, 2026-10-08)
+- A loaded value past a slider's reach (Angle of View 400°, View Distance 0.25%) shows its readout beside a thumb at the end, so the first step jumps the setting: CON-14's range policy, unchanged by DEF-20 (Codex, DEF-20's review) — (from: DEF-20, 2026-10-08)

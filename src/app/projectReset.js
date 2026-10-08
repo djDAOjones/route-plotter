@@ -71,11 +71,13 @@ export function clearProject(app) {
   app.updateTimeDisplay();
   app.updateWaypointList();
 
+  app.eventBus.emit('app:cleared');
   // Back to Edit through the one mode setter, so the header switch says so
   // and the mode's listeners hear it; the event this sent had none (DEF-20).
+  // Only after app:cleared: a gesture still held ends there without being
+  // put back, where a mode change first would restore the deleted waypoint's
+  // drag and selection.
   app._setPreviewMode(false);
-
-  app.eventBus.emit('app:cleared');
   app.uiController?.updateWaypointEditor(null);
   app.render();
 
