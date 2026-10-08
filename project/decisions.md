@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — REL-710 — v3.2.710 ships UI-06's words PR
+
+**Decision:** v3.2.710 is live from deploy commit `72fcaf9` (tag `v3.2.710`), released under GATELESS-1 because UI-06's words merge (`9adb695`, PR #115) changed `src/`, `index.html` and `styles/`; the build ends in 0, so the owner's export-save rule makes a disk save owed (a wish line tracks it).
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.709-9adb695`, gate green (129 files, 3,003 tests), dry run, push, Verify and the Pages build and deploy green, 22 of 22 live files SHA-256-identical. Live smoke at 1280×800 with the pane's visibility overridden: title v3.2.710, Open day played 3,002 ms, then to its end at 27,283 ms with no frame queued; MP4 1920×1080 29.3 s `ftypisom` (9.66 MB); HTML (2.04 MB) with its CSP, the project and the live `player.js`; no failed resource or console error. The PR changed the exported player's words (`src/services/HTMLExportService.js`, `src/player/playerAccessibility.js`: the player's Skip to start button and announcement), so `docs/player.js` changed, and the build ends in 0: both halves of the owner's export-save rule apply, and the disk save is owed on both counts. Codex reviewed the PR in three rounds (r1: one blocking, the test harness released every disconnected canvas, and four real; r2: one blocking, ownership inferred from timing, and two real; r3: approve), all fixed before the merge, and the PR was rebased onto v3.2.709 with its control golden regenerated (one line) and its path-weight error text moved to the new error-text token. The words PR made two wish lines, retired here with their text: "The help screen still says Alt+Click force-adds a major waypoint (`src/config/helpContent.js`), but Alt+click on a major waypoint now forks a branch, and it says nothing of crowds, networks or branching (a candidate, unverified) — (from: DEF-77, 2026-10-05)" and "The Zoom transition option "Quick — on arrival" zooms in the incoming leg's first 500 ms, not on arrival: its label misdescribes it, as its hint did (Codex, UI-03 review r2) — (from: UI-03, 2026-10-05)".
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-08 — REL-709 — v3.2.709 ships UI-06's colour and tokens PR; DEF-94 closes
 
 **Decision:** v3.2.709 is live from deploy commit `6b7f861` (tag `v3.2.709`), released under GATELESS-1 because UI-06's colour and tokens merge (`1bc07cd`, PR #114) changed `styles/` and one line of `src/`; DEF-94 (the outline's error marks) closes with it, since the tokens the stylesheets used are now defined.
