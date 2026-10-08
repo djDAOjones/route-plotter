@@ -1770,6 +1770,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[1]>button[0]"
 
 ## #waypoint-list>li[1]>button[0] · double-click
 emit waypoint:selected waypoint[0]
@@ -1864,6 +1866,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[1]>button[0]"
 
 ## #waypoint-list>li[1]>button[0] · Cmd-click
 emit waypoint:selected waypoint[0]
@@ -1889,6 +1893,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[1]>button[0]"
 
 ## #waypoint-list>li[1]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[0]
@@ -1914,6 +1920,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[1]>button[0]"
 
 ## #waypoint-list>li[1]>span[1]>button[0] · disabled, not operated
 
@@ -2242,6 +2250,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[2]>button[0]"
 
 ## #waypoint-list>li[2]>button[0] · double-click
 emit waypoint:selected waypoint[1]
@@ -2334,6 +2344,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[2]>button[0]"
 
 ## #waypoint-list>li[2]>button[0] · Cmd-click
 emit waypoint:selected waypoint[1]
@@ -2359,6 +2371,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[2]>button[0]"
 
 ## #waypoint-list>li[2]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[1]
@@ -2384,6 +2398,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[2]>button[0]"
 
 ## #waypoint-list>li[2]>button[1] · click
 emit waypoint:delete waypoint[1]
@@ -2820,6 +2836,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[3]>button[0]"
 
 ## #waypoint-list>li[3]>button[0] · double-click
 emit waypoint:selected waypoint[2]
@@ -2914,6 +2932,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[3]>button[0]"
 
 ## #waypoint-list>li[3]>button[0] · Cmd-click
 emit waypoint:selected waypoint[2]
@@ -2939,6 +2959,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[3]>button[0]"
 
 ## #waypoint-list>li[3]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[2]
@@ -2964,6 +2986,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[3]>button[0]"
 
 ## #waypoint-list>li[3]>span[1]>button[0] · click
 emit waypoints:reordered [waypoint[2], waypoint[0], waypoint[3], waypoint[5]]
@@ -3650,6 +3674,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
 
 ## #waypoint-list>li[4]>button[0] · double-click
 emit waypoint:selected waypoint[3]
@@ -3744,6 +3770,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
 
 ## #waypoint-list>li[4]>button[0] · Cmd-click
 emit waypoint:selected waypoint[3]
@@ -3769,6 +3797,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
 
 ## #waypoint-list>li[4]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[3]
@@ -3794,6 +3824,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
 
 ## #waypoint-list>li[4]>span[1]>button[0] · click
 emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
@@ -4061,6 +4093,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[5]>button[0]"
 
 ## #waypoint-list>li[5]>button[0] · double-click
 emit waypoint:selected waypoint[4]
@@ -4153,6 +4187,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[5]>button[0]"
 
 ## #waypoint-list>li[5]>button[0] · Cmd-click
 emit waypoint:selected waypoint[4]
@@ -4178,6 +4214,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[5]>button[0]"
 
 ## #waypoint-list>li[5]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[4]
@@ -4203,6 +4241,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[5]>button[0]"
 
 ## #waypoint-list>li[5]>button[1] · click
 emit waypoint:delete waypoint[4]
@@ -4598,6 +4638,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[6]>button[0]"
 
 ## #waypoint-list>li[6]>button[0] · double-click
 emit waypoint:selected waypoint[5]
@@ -4695,6 +4737,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[6]>button[0]"
 
 ## #waypoint-list>li[6]>button[0] · Cmd-click
 emit waypoint:selected waypoint[5]
@@ -4721,6 +4765,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[6]>button[0]"
 
 ## #waypoint-list>li[6]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[5]
@@ -4747,6 +4793,8 @@ ui - #route-scope>div[2]: div class="settings-section expanded" data-section="re
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[6]>button[0]"
 
 ## #waypoint-list>li[6]>span[1]>button[0] · click
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[5], waypoint[3]]

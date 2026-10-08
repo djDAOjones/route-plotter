@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — DEF-32 — Activating a list row keeps focus on that row
+
+**Decision:** DEF-32 lands: a row's selection rebuilds the waypoint list once, by the app's `waypoint:selected` handler, whose restore puts focus back on the selected row; the row rebuilds the list itself only when nothing else has. It merges after DEF-13.
+
+**Rationale:** the row's own second rebuild replaced the row the app's restore was about to focus, after focus had already fallen to the page, so every activation left focus on `<body>` (WCAG 2.4.3; REV-02 added the restore's "focus was in the list" guard). 4 tests fail on main; 3 of 3 mutants are killed. Codex r1: with the second rebuild gone, the restore frame also overrode a move to another row before it ran; it now restores only focus that was dropped (to the page or a removed node), 3 tests, 5 mutants killed. 25 control-golden rows gain a settled focus line on the row, all single selections. With focus kept on a row, main's key guard ignores Delete, the arrows and Cmd+Z/S there (TST-13's table), where today focus on the page lets them work: so DEF-13 lands first, the run's call. Multi-selection clicks still leave focus on the page, as the restore has always excluded them: the narrowest reading, the run's call. Digest rules: wcag-2.2-aaa (2.4.3 focus order); nielsen 1.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-08 — DEF-13 — A focused control keeps only its own keys; every other shortcut runs
 
 **Decision:** DEF-13 lands: `handleKeyDown`'s guard keeps every key in a field (input, textarea, select, contenteditable) and for a control inside a modal dialog, as before; any other focused control (button, link, summary, `role=button`) keeps only Space, a menu item or option also the four arrows; every other shortcut runs and is prevented. DEF-32 merges after it.

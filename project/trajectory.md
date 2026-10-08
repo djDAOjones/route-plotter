@@ -9,6 +9,7 @@
 
 ## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
+- DEF-32 — activating a waypoint-list row by click, Enter or Space rebuilds the list once, so focus stays on the selected row instead of falling to the page (2026-10-08) — see decisions
 - DEF-13 — a focused button, list row, summary, section header or link keeps only Space (a menu item or option also its arrows), so Delete, the nudge arrows, Undo, Save and the timeline keys work after a click, and Cmd+S no longer opens the browser's Save dialog (2026-10-08) — see decisions
 - DEF-20 — after Open, a failed Open's rollback and Clear All the controls show the project they hold: the Duration thumb sits at its speed, so one nudge moves it one step, the reveal and Angle of View sliders follow it, and Clear All leaves Preview through the one mode setter (2026-10-08) — see decisions
 - DEF-81 — Verify's job limit rises from 15 to 30 minutes, so a suite that now runs about 14 minutes on GitHub is no longer cut off (2026-10-07) — see decisions

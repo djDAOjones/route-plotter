@@ -1913,7 +1913,13 @@ export class UIController {
         }
 
         this._switchToWaypointTab();
-        this.updateWaypointList(this._waypointsCache);
+        // The app answers each selection event by rebuilding this list, and
+        // that rebuild gives focus back to the selected row a frame later.
+        // Rebuilding again here replaced that row before its frame, and saw
+        // no list focus to give back, so focus fell to the page after every
+        // activation (DEF-32). Rebuild only when nothing has: this row is
+        // still on the page.
+        if (rowBtn.isConnected) this.updateWaypointList(this._waypointsCache);
       };
 
       // Row button click — selects waypoint, and detects double-click for rename.
@@ -2049,14 +2055,16 @@ export class UIController {
       this.elements.waypointList.appendChild(item);
 
       // Restore keyboard position only for a rerender initiated from this
-      // list. If focus moved elsewhere before the frame runs, leave it there.
+      // list, and only where the rebuild dropped focus: on the page, or on a
+      // removed node a browser has not yet moved focus off. A move made
+      // before the frame runs, to another row included, stays (DEF-32).
       if (waypoint === this.selectedWaypoint && this.selectedWaypoints.size <= 1 &&
           focusWasInWaypointList && !focusedControlWasEditing) {
         requestAnimationFrame(() => {
           const active = document.activeElement;
-          const rebuildDroppedFocus = !active || active === document.body || active === document.documentElement;
-          if (rowBtn.isConnected &&
-              (rebuildDroppedFocus || this.elements.waypointList.contains(active))) {
+          const rebuildDroppedFocus = !active || active === document.body || active === document.documentElement ||
+            !active.isConnected;
+          if (rowBtn.isConnected && rebuildDroppedFocus) {
             rowBtn.focus();
           }
         });
