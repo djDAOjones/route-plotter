@@ -11,6 +11,14 @@ hand-edited under `docs/`.
 
 | File | Role |
 | --- | --- |
+| `ui-06-gui-review-2026-10-08.md` | UI-06's code half: contrast pairs, target sizes, cascade, audit reconciliation (2026-10-08) |
+| `crowd-07-crowd-review-2026-10-08.md` | CROWD-07's code half: parameter matrix, no-effect table, naming, hints, novice pre-analysis (2026-10-08) |
+| `crowd-07-probe-2026-10-08.mjs` | the Node probe of the real SwarmEngine behind the crowd review's figures (run from the repo root) |
+| `ui-06-contrast-2026-10-08.mjs` | the WCAG contrast calculator behind the GUI review's 60 pairs |
+| `ui-review-v3.1.593-digest-2026-10-08.md` | digest of the v3.1.593 authoring review (a claude.ai artifact) that the GUI review reconciles |
+| `design-review-walkthrough-2026-10-08.md` | the Chromium walkthrough of both reviews, with the screenshot list |
+| `design-review-second-opinion-2026-10-08.md` | Codex's read-only review of the findings (verdicts per row) |
+| `design-review-2026-10-08-shots/` | 45 screenshots the item files' Shot columns point at |
 | `route-plotter-continuation-prompt-big-run-2026-09-28.md` | **Current** paste-ready prompt for the big run, written once Joe had answered the open calls: W5, W4 and the runnable defects, then W6 to W12 as their prerequisites merge, merged by the agent under the standing authority in the decision log ("the big run"), with one release at the end. Amended in place on 2026-09-28 (#53) with Joe's answers to what the run would have parked ("the big run, amended"). It stays current for every session of the run. |
 | `route-plotter-continuation-prompt-open-calls-2026-09-28.md` | Superseded by the big-run prompt of the same day. Historical provenance: it put the calls waiting on Joe, which Joe answered on 2026-09-28. |
 | `route-plotter-continuation-prompt-2026-09-28.md` | Superseded by the open-calls prompt of the same day. Historical provenance: it briefed DEF-38 and DEF-39, which merged on 2026-09-28 (#46, #47) with DEF-47 (#48), unreleased. |
