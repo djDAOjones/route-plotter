@@ -156,6 +156,47 @@ describe('UI-02 waypoint list', () => {
     expect(builds).toHaveBeenCalledTimes(1);
   });
 
+  test('a row focused after an activation, before its frame, keeps focus (DEF-32)', async () => {
+    ui.updateWaypointList(route);
+    bus.on('waypoint:selected', wp => {
+      ui.setSelection([wp], wp);
+      ui.updateWaypointList(route);
+    });
+
+    const pressed = rows()[0].querySelector('.waypoint-row');
+    pressed.focus();
+    pressed.click();
+    const movedTo = rows()[3].querySelector('.waypoint-row');
+    movedTo.focus();
+    await frame();
+
+    expect(document.activeElement).toBe(movedTo);
+  });
+
+  test('focus left on the removed row until the frame goes to its replacement (DEF-32)', async () => {
+    ui.updateWaypointList(route);
+    bus.on('waypoint:selected', wp => {
+      ui.setSelection([wp], wp);
+      ui.updateWaypointList(route);
+    });
+
+    const pressed = rows()[1].querySelector('.waypoint-row');
+    pressed.focus();
+    pressed.click();
+    // jsdom, like Chromium, moves focus to the page as the row is removed. A
+    // browser that fixes focus up only at its next rendering update still
+    // reports the removed row, so the frame must treat that as dropped too.
+    Object.defineProperty(document, 'activeElement', { configurable: true, get: () => pressed });
+    try {
+      await frame();
+    } finally {
+      delete document.activeElement;
+    }
+
+    expect(pressed.isConnected).toBe(false);
+    expect(document.activeElement).toBe(rows()[1].querySelector('.waypoint-row'));
+  });
+
   test('shift-click ranges over the displayed route, minors included', () => {
     ui.updateWaypointList(route);
     const multi = [];

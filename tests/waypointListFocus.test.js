@@ -61,14 +61,15 @@ function focusName() {
 }
 
 describe('activating a waypoint row (DEF-32)', () => {
-  test('Enter or Space on a focused row selects its waypoint and leaves focus on that row', async () => {
+  test('a focused row, once activated, selects its waypoint and keeps focus on that row', async () => {
     const app = await editor();
     const steps = [];
     // No row twice in a row: two clicks on one row within 400 ms rename it.
     for (const index of [0, 2, 1]) {
       const pressed = row(index);
       pressed.focus();
-      // What Enter and Space send a focused button.
+      // The click Enter and Space send a focused button. jsdom gives a key
+      // no native activation, so the click is sent as the browser sends it.
       pressed.click();
       await frame();
       const selected = app.waypoints.indexOf(app.selectedWaypoint) + 1;
@@ -92,5 +93,16 @@ describe('activating a waypoint row (DEF-32)', () => {
     field.focus();
     await frame();
     expect(document.activeElement).toBe(field);
+  });
+
+  test('focus the user moves to another row before the frame stays on that row', async () => {
+    const app = await editor();
+    row(0).focus();
+    row(0).click();
+    // Tab or a click takes focus on to row 3 before the restore's frame.
+    row(2).focus();
+    await frame();
+    expect({ selected: app.waypoints.indexOf(app.selectedWaypoint) + 1, focus: focusName() })
+      .toEqual({ selected: 1, focus: 'row 3' });
   });
 });

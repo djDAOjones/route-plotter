@@ -2026,14 +2026,16 @@ export class UIController {
       this.elements.waypointList.appendChild(item);
 
       // Restore keyboard position only for a rerender initiated from this
-      // list. If focus moved elsewhere before the frame runs, leave it there.
+      // list, and only where the rebuild dropped focus: on the page, or on a
+      // removed node a browser has not yet moved focus off. A move made
+      // before the frame runs, to another row included, stays (DEF-32).
       if (waypoint === this.selectedWaypoint && this.selectedWaypoints.size <= 1 &&
           focusWasInWaypointList && !focusedControlWasEditing) {
         requestAnimationFrame(() => {
           const active = document.activeElement;
-          const rebuildDroppedFocus = !active || active === document.body || active === document.documentElement;
-          if (rowBtn.isConnected &&
-              (rebuildDroppedFocus || this.elements.waypointList.contains(active))) {
+          const rebuildDroppedFocus = !active || active === document.body || active === document.documentElement ||
+            !active.isConnected;
+          if (rowBtn.isConnected && rebuildDroppedFocus) {
             rowBtn.focus();
           }
         });
