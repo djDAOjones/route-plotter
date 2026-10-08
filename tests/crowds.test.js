@@ -360,6 +360,64 @@ describe('seeded variation controls', () => {
   });
 });
 
+describe('renaming a crowd from its row', () => {
+  const rowOf = layer => [...document.querySelectorAll('#layers-strip .layer-row')]
+    .find(row => row.textContent.includes(layer.name));
+  const renaming = () => document.querySelector('#layers-strip .layer-rename-input');
+  const key = name => new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true });
+
+  test('F2 on a row selects its crowd and opens its name for editing, as a waypoint row does (UI-06 J-13)', () => {
+    const app = makeApp();
+    app.addCrowd();
+    app.addCrowd();
+    const [first, second] = app.scene.getFlowLayers();
+    expect(app.selectedCrowd).toBe(second);
+    expect(rowOf(first).getAttribute('data-tip')).toBe('Double-click or press F2 to rename');
+
+    // On a row that is not selected: selected, then its rebuilt row renaming.
+    const event = key('F2');
+    rowOf(first).dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(app.selectedCrowd).toBe(first);
+    expect(renaming()).not.toBeNull();
+    expect(renaming().value).toBe(first.name);
+    expect(renaming().closest('li')).toBe(document.querySelector('#layers-strip li:nth-child(2)'));
+    expect(document.activeElement).toBe(renaming());
+
+    // Enter keeps the name typed; the row shows it.
+    renaming().value = 'Visitors';
+    renaming().dispatchEvent(key('Enter'));
+    expect(first.name).toBe('Visitors');
+    expect(renaming()).toBeNull();
+    expect(rowOf(first).textContent).toContain('Visitors');
+
+    // On the selected crowd's row: renaming at once, and Escape keeps the old name.
+    rowOf(first).dispatchEvent(key('F2'));
+    expect(renaming().value).toBe('Visitors');
+    renaming().value = 'Others';
+    renaming().dispatchEvent(key('Escape'));
+    expect(first.name).toBe('Visitors');
+    expect(renaming()).toBeNull();
+
+    // Any other key on the row is left to the page.
+    const other = key('Enter');
+    rowOf(second).dispatchEvent(other);
+    expect(other.defaultPrevented).toBe(false);
+    expect(renaming()).toBeNull();
+    expect(app.selectedCrowd).toBe(first);
+  });
+
+  test('the Route row takes no F2: it cannot be renamed', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const route = document.querySelector('#layers-strip li:first-child .layer-row');
+    const event = key('F2');
+    route.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(renaming()).toBeNull();
+  });
+});
+
 describe('busyness envelope controls', () => {
   test('adds, edits and removes handles through one transaction per action', () => {
     const app = makeApp();
@@ -389,6 +447,79 @@ describe('busyness envelope controls', () => {
     document.querySelector('[data-busyness-field="remove"]').click();
     expect(emitter.busynessEnvelope).toHaveLength(2);
     expect(app.announced.at(-1)).toMatch(/Undo is available/);
+  });
+
+  test('an edit from a handle field keeps focus on that field once the rows are rebuilt (UI-06 B-28)', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const emitter = app.selectedCrowd.emitters[0];
+    document.getElementById('crowd-busyness-add').click();
+    document.getElementById('crowd-busyness-add').click();
+    expect(emitter.busynessEnvelope).toHaveLength(4);
+    const field = (index, name) => document.querySelector(`[data-busyness-index="${index}"][data-busyness-field="${name}"]`);
+    const enter = () => new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+    const change = () => new Event('change', { bubbles: true });
+
+    // Enter in a Busy field: the rows are rebuilt, and focus is on the new field for the same handle.
+    const busy = field(1, 'value');
+    busy.focus();
+    busy.value = '20';
+    busy.dispatchEvent(enter());
+    expect(emitter.busynessEnvelope[1].value).toBe(0.2);
+    expect(busy.isConnected).toBe(false);
+    expect(document.activeElement).toBe(field(1, 'value'));
+
+    // A change committed by leaving a Time field: the same.
+    const time = field(2, 'time');
+    time.focus();
+    time.value = '60';
+    time.dispatchEvent(change());
+    expect(emitter.busynessEnvelope[2].time).toBe(0.6);
+    expect(document.activeElement).toBe(field(2, 'time'));
+
+    // A transition chosen: the same select, rebuilt.
+    const transition = field(0, 'transition');
+    transition.focus();
+    transition.value = 'step';
+    transition.dispatchEvent(change());
+    expect(emitter.busynessEnvelope[0].transition).toBe('step');
+    expect(document.activeElement).toBe(field(0, 'transition'));
+
+    // Remove: the handle now at that index takes the focus — its Remove, or, last, its Busy field.
+    const remove = field(1, 'remove');
+    remove.focus();
+    remove.click();
+    expect(emitter.busynessEnvelope).toHaveLength(3);
+    expect(document.activeElement).toBe(field(1, 'remove'));
+    field(1, 'remove').focus();
+    field(1, 'remove').click();
+    expect(emitter.busynessEnvelope).toHaveLength(2);
+    expect(field(1, 'remove')).toBeNull();
+    expect(document.activeElement).toBe(field(1, 'value'));
+
+    // An edit refused (an all-quiet envelope: the first span is a step, so
+    // the first handle alone sets it) also rebuilds the rows: focus stays on the field.
+    const last = field(1, 'value');
+    last.value = '0';
+    last.dispatchEvent(change());
+    expect(emitter.busynessEnvelope.map(handle => handle.value)).toEqual([1, 0]);
+    const first = field(0, 'value');
+    first.focus();
+    first.value = '0';
+    first.dispatchEvent(enter());
+    expect(app.announced.at(-1)).toMatch(/at least one busyness span/);
+    expect(emitter.busynessEnvelope[0].value).toBe(1);
+    expect(first.isConnected).toBe(false);
+    expect(document.activeElement).toBe(field(0, 'value'));
+
+    // A change that arrives from elsewhere, the field unfocused, moves focus nowhere.
+    document.activeElement.blur();
+    expect(document.activeElement).toBe(document.body);
+    const unfocused = field(0, 'value');
+    unfocused.value = '50';
+    unfocused.dispatchEvent(change());
+    expect(emitter.busynessEnvelope[0].value).toBe(0.5);
+    expect(document.activeElement).toBe(document.body);
   });
 
   test('exact controls have endpoint locking and prevent an all-quiet envelope', () => {

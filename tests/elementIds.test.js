@@ -175,7 +175,7 @@ const LOOKED_UP = {
   'src/app/camera.js': words('camera-zoom-warning camera-zoom-warning'),
   'src/app/crowds.js': words(`
     add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-add-reason crowd-busyness-graph crowd-busyness-graph
-    crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
+    crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
     crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-lifecycle-hint
     crowd-pattern-hint crowd-reroll-btn layers-strip
   `),
@@ -184,7 +184,8 @@ const LOOKED_UP = {
   'src/app/network.js': words(`
     crowd-guide-hint crowd-trace-route-btn crowd-trace-route-reason network-edge-delete network-edge-direction
     network-edge-direction network-edge-hint network-edge-swap network-edge-swap network-edge-weight
-    network-edge-weight network-edge-weight-value network-edit-btn network-node-delete network-node-hint
+    network-edge-weight network-edge-weight network-edge-weight-value network-edit-btn network-node-delete
+    network-node-hint
     network-node-type network-node-type network-path-weight-rows network-path-weight-rows
     network-path-weights
   `),
@@ -255,7 +256,9 @@ const LOOKED_UP = {
   'src/player/playerEntry.js': words(`
     canvas current-time play-btn player-announcer player-error player-error-detail reset-btn
     scene-summary-content scene-summary-content speed-select timeline total-time
-  `)
+  `),
+  // Where focus returns from the banner's Done, unless the mixin names another control (UI-06 B-29).
+  'src/services/NetworkEditService.js': words('network-edit-btn')
 };
 
 /**

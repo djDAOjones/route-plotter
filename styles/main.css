@@ -364,16 +364,21 @@ select{
   background:rgba(255,255,255,0.12);
 }
 
+/* UI-06 B-20: a 44 × 44 ghost icon button (WCAG 2.5.5), as .modal-close-x is;
+   the glyph sits in its middle and the toast's own padding is pulled in so
+   the toast grows no taller than its text and offer need. */
 .toast-dismiss{
   flex-shrink:0;
-  width:1.25rem;
-  height:1.25rem;
+  width:var(--touch-target-min);
+  height:var(--touch-target-min);
+  margin:calc(-1 * var(--space-2)) calc(-1 * var(--space-3)) calc(-1 * var(--space-2)) 0;
   padding:0;
   background:transparent;
   border:none;
   border-radius:var(--radius-1);
   cursor:pointer;
-  font-size:0.875rem;
+  font-size:1.25rem;
+  line-height:1;
   color:inherit;
   opacity:0.7;
   display:flex;
@@ -624,13 +629,17 @@ kbd{
   cursor:pointer;
 }
 
-.scope-route-btn:hover:not(:disabled){
+.scope-route-btn:hover:not([aria-current="true"]){
   background:rgba(0,0,0,0.06);
 }
 
-.scope-route-btn:disabled{
-  border-color:transparent;
-  opacity:0.55;
+/* UI-06 J-08, W-01: in Route scope the button is the current scope — filled
+   in the chip's own pair (the same contrast, inverted), never disabled. From
+   every other scope it is the way back to Route. */
+.scope-route-btn[aria-current="true"]{
+  background:var(--scope-route-fg);
+  border-color:var(--scope-route-fg);
+  color:var(--scope-route-bg);
   cursor:default;
 }
 
@@ -826,7 +835,7 @@ kbd{
   background:#161616;
   color:#ffffff;
   border-radius:0.25rem;
-  font-size:0.75rem;
+  font-size:var(--type-body); /* 14 px, Carbon's tooltip body (UI-06 W-05) */
   line-height:1.45;
   box-shadow:0 4px 12px rgba(0,0,0,0.3);
   pointer-events:none; /* click-through so outside-click dismiss works */
@@ -916,16 +925,28 @@ kbd{
   }
 }
 
-/* Section header "cap" band - per spec v3.1.241 §5.1 */
+/* Section header "cap" band - per spec v3.1.241 §5.1. The header is a native
+   button inside the card's heading (UI-06 B-21, the Carbon accordion):
+   Enter and Space are the browser's, and the heading keeps its rank. */
 .section-header{
   display:flex;
   align-items:center;
   justify-content:space-between;
+  width:100%;
   min-height:var(--touch-target-min);
+  margin:0;
   padding:0.5rem 0.75rem; /* 8px 12px per spec */
+  border:none;
+  border-radius:0;
   background:var(--cap-system); /* default cap color */
+  color:inherit;
+  font:inherit;
+  letter-spacing:inherit;
+  text-align:left;
   cursor:pointer;
   user-select:none;
+  -webkit-appearance:none;
+  appearance:none;
   transition:background var(--motion-fast) var(--ease-out);
 }
 
@@ -933,12 +954,15 @@ kbd{
   filter:brightness(0.97);
 }
 
-/* Focus state for section headers - AAA compliant ring per spec §C */
+/* Focus state for section headers - AAA compliant ring per spec §C. The ring
+   is drawn inside the header's own box (UI-06 B-02): the card clips its
+   children to its rounded corners, which took an outer ring with it, and a
+   collapsed card is nothing but its header. */
 .section-header:focus-visible{
   outline:none;
   box-shadow:
-    0 0 0 2px var(--focus-inner),
-    0 0 0 5px var(--focus-outer);
+    inset 0 0 0 2px var(--focus-inner),
+    inset 0 0 0 5px var(--focus-outer);
   z-index:1; /* Ensure focus ring is above adjacent elements */
 }
 
@@ -950,11 +974,12 @@ kbd{
 .settings-section.expanded .section-header:focus-visible{
   box-shadow:
     inset 4px 0 0 0 var(--interactive-01),
-    0 0 0 2px var(--focus-inner),
-    0 0 0 5px var(--focus-outer);
+    inset 0 0 0 2px var(--focus-inner),
+    inset 0 0 0 5px var(--focus-outer);
 }
 
-/* Section title - text always #0F0F0F per spec §0 */
+/* Section title - text always #0F0F0F per spec §0. The heading wraps the
+   header button, which inherits its type. */
 .section-title{
   font-size:var(--type-label);
   line-height:var(--lh-label);
@@ -1297,6 +1322,11 @@ kbd{
   padding:2px;
 }
 
+/* AAA target size (WCAG 2.5.5) for every range (UI-06 B-01, CROWD-06's
+   recipe for Hold at end made the rule): the input itself is a 44px band
+   that takes the pointer anywhere along it, while the rail and thumb look
+   as they did — the rail is drawn on the runnable track, not on the input
+   (Chromium is the app's browser). */
 .section-content input[type="range"]{
   flex:1;
   /* Below a range's own 129px default, so a hint's 44px trigger slot is
@@ -1307,11 +1337,18 @@ kbd{
   accent-color:var(--control-accent);
   -webkit-appearance:none;
   appearance:none;
+  height:var(--touch-target-min);
+  background:transparent;
+  border:none;
+  border-radius:0;
+  outline:none;
+}
+
+.section-content input[type="range"]::-webkit-slider-runnable-track{
   height:4px;
   background:var(--ui-03);
   border:1px solid var(--border-interactive); /* B1: 3:1 rail boundary (WCAG 1.4.11) */
   border-radius:2px;
-  outline:none;
 }
 
 .section-content input[type="range"]::-webkit-slider-thumb{
@@ -1319,6 +1356,7 @@ kbd{
   appearance:none;
   width:14px;
   height:14px;
+  margin-top:-5px; /* (4px rail − 14px thumb) ÷ 2: the thumb centred on the rail */
   border-radius:50%;
   background:var(--control-accent);
   cursor:pointer;
@@ -1353,26 +1391,34 @@ kbd{
   opacity:.72;
 }
 
-/* AAA target size (WCAG 2.5.5) for a range: the input itself is a 44px band
-   that takes the pointer anywhere along it, while the rail and thumb look as
-   every other section range's do — the rail is drawn on the runnable track,
-   not on the input (CROWD-06's Hold at end; Chromium is the app's browser). */
-.section-content input[type="range"].range-hit-target{
-  height:2.75rem;
-  background:transparent;
-  border:none;
-  border-radius:0;
+/* UI-06 B-06: a range's readout sits beside its label, in one row, never
+   inside the label — inside, it joined the control's accessible name and
+   was read twice. The app shows or hides a whole row by the row. */
+.section-content .range-row{
+  display:flex;
+  align-items:center;
+  gap:var(--label-gap);
+  margin-bottom:var(--row-gap);
+  min-width:0;
 }
 
-.section-content input[type="range"].range-hit-target::-webkit-slider-runnable-track{
-  height:4px;
-  background:var(--ui-03);
-  border:1px solid var(--border-interactive); /* B1: 3:1 rail boundary (WCAG 1.4.11) */
-  border-radius:2px;
+.section-content .range-row[hidden]{
+  display:none;
 }
 
-.section-content input[type="range"].range-hit-target::-webkit-slider-thumb{
-  margin-top:-5px; /* (4px rail − 14px thumb) ÷ 2: the thumb centred on the rail, as elsewhere */
+.section-content .range-row > label{
+  flex:1;
+  margin-bottom:0;
+}
+
+.section-content .range-row > .range-readout{
+  flex:0 0 auto;
+  min-width:2.5rem; /* Consistent value width per spec §I */
+  text-align:right;
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  font-weight:var(--w-mono);
+  color:var(--text-02);
 }
 
 .section-content label span:last-child{
@@ -1512,11 +1558,14 @@ kbd{
   color:var(--text-01);
 }
 
-/* Settings sections container */
+/* Settings sections container. Its inline padding is room for the
+   last-used card's 2px ring, which the scroller's own clip took off at
+   both edges (UI-06 B-02). */
 .settings-sections{
   flex:1;
   overflow-y:auto;
   overflow-x:hidden;
+  padding-inline:0.375rem;
 }
 
 /* Scope groups: waypoint-scope vs route-scope card sets. SectionController
@@ -3314,15 +3363,40 @@ kbd{
   gap:var(--space-4);
 }
 
+/* UI-06 B-26: the slider's visible name, as the exported player shows it. */
+.timeline-label{
+  flex:none;
+  font-size:var(--type-caption);
+  line-height:var(--lh-caption);
+  font-weight:500;
+  color:var(--text-02);
+}
+
+/* The 44px band of every card range (UI-06 B-01), with the playbar's own
+   6px rail and 16px thumb drawn on the track. */
 .timeline-slider{
   flex:1;
+  height:var(--touch-target-min);
+  background:transparent;
+  border:none;
+  border-radius:0;
+  outline:none;
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+.timeline-slider::-webkit-slider-runnable-track{
   height:6px;
   border-radius:3px;
   background:var(--ui-03);
   border:1px solid var(--border-interactive); /* B1: 3:1 rail boundary (WCAG 1.4.11) */
-  outline:none;
-  -webkit-appearance:none;
-  appearance:none;
+}
+
+.timeline-slider::-moz-range-track{
+  height:6px;
+  border-radius:3px;
+  background:var(--ui-03);
+  border:1px solid var(--border-interactive); /* B1: 3:1 rail boundary (WCAG 1.4.11) */
 }
 
 .timeline-slider::-webkit-slider-thumb{
@@ -3330,6 +3404,7 @@ kbd{
   appearance:none;
   width:16px;
   height:16px;
+  margin-top:-5px; /* (6px rail − 16px thumb) ÷ 2: the thumb centred on the rail */
   border-radius:50%;
   background:var(--control-accent);
   cursor:pointer;
@@ -3590,8 +3665,10 @@ a.btn-primary:visited{
   margin-top:var(--space-5);
 }
 
-/* Checkbox below CTA — enough space to feel separate, not orphaned */
+/* Checkbox below CTA — enough space to feel separate, not orphaned, and a
+   44px row to press (WCAG 2.5.5, UI-06 B-19) */
 .splash-content>.checkbox-label{
+  min-height:var(--touch-target-min);
   margin-top:var(--space-3);
   margin-bottom:0!important;
 }
@@ -3864,7 +3941,14 @@ a.btn-primary:visited{
     flex:1 1 auto;
   }
 
-  .section-content .crowd-variation-control span:last-child{
+  .section-content .range-row:has(> .crowd-variation-control){
+    align-items:flex-start;
+  }
+
+  .section-content .range-row:has(> .crowd-variation-control) > .range-readout{
+    display:inline-flex;
+    align-items:center;
+    min-height:var(--touch-target-min);
     min-width:0;
     white-space:nowrap;
   }
@@ -3959,12 +4043,6 @@ body[data-mode="preview"]::after {
   accent-color:var(--control-accent);
 }
 
-.sidebar-control-row .slider-value{
-  min-width:2.5rem;
-  font-family:var(--font-mono);
-  font-size:var(--text-sm);
-}
-
 /* ── Forced colours (A11Y-02) ──────────────────────────────────────────────
    Windows High Contrast and its kin force `box-shadow` to none, and every
    focus ring in this project is a box-shadow drawn over `outline:none`.
@@ -3987,6 +4065,20 @@ body[data-mode="preview"]::after {
   :focus-visible{
     outline:var(--focus-width) solid Highlight !important;
     outline-offset:var(--focus-offset) !important;
+  }
+
+  /* A card header's ring is drawn inside its box (B-02), and so is its
+     outline here: the card clips what its header draws outside itself. */
+  .section-header:focus-visible{
+    outline-offset:-5px !important;
+  }
+
+  /* The current scope's fill flattens to Canvas; the system highlight pair
+     carries it, as it does a hint trigger's open state. */
+  .scope-route-btn[aria-current="true"]{
+    border-color:Highlight;
+    background:Highlight;
+    color:HighlightText;
   }
 
   /* Selection accent bars: their fill would otherwise flatten to Canvas and

@@ -272,9 +272,16 @@ export class UIController {
     this._scopePrevBtn = document.getElementById('scope-prev-btn');
     this._scopeNextBtn = document.getElementById('scope-next-btn');
 
+    // Route is the way back from every scope (UI-06 W-01): a waypoint
+    // selection leaves through its own event, as does a crowd's — the crowd
+    // event also unbinds a node or path (the network mixin), as the Layers
+    // strip's Route row does.
     this._scopeRouteBtn?.addEventListener('click', () => {
       if (this.selectedWaypoint || this.selectedWaypoints.size > 0) {
         this.eventBus.emit('waypoint:deselected');
+      }
+      if (this._selectedCrowd || this._networkSelection) {
+        this.eventBus.emit('crowd:deselected');
       }
     });
     this._scopePrevBtn?.addEventListener('click', () => this._navigateScope(-1));
@@ -436,7 +443,11 @@ export class UIController {
     this._scopeChip.dataset.scope = scope;
     if (this._scopeChipText) this._scopeChipText.textContent = text;
     if (this._scopeRouteBtn) {
-      this._scopeRouteBtn.disabled = scope !== 'waypoint' && scope !== 'multi';
+      // The current scope is marked as such, never disabled (UI-06 J-08):
+      // a greyed Route read as a control that was off, not as where you are.
+      this._scopeRouteBtn.disabled = false;
+      if (scope === 'route') this._scopeRouteBtn.setAttribute('aria-current', 'true');
+      else this._scopeRouteBtn.removeAttribute('aria-current');
     }
 
     // Prev/next stepping: only meaningful in single-selection or route
@@ -2252,7 +2263,7 @@ export class UIController {
     // Update pause control visibility
     const pauseControl = this.elements.pauseTimeControl;
     if (pauseControl) {
-      pauseControl.style.display = waypoint.isMajor ? 'block' : 'none';
+      pauseControl.style.display = waypoint.isMajor ? 'flex' : 'none';
     }
     
     // Segment speed is keyframed on majors only: minor waypoints are geometry
@@ -2261,7 +2272,7 @@ export class UIController {
     // major-leg timing model. See decision-log: major-leg keyframing.
     const speedControl = this.elements.segmentSpeedControl;
     if (speedControl) {
-      speedControl.style.display = waypoint.isMajor ? 'block' : 'none';
+      speedControl.style.display = waypoint.isMajor ? 'flex' : 'none';
     }
     
     // ========== AREA HIGHLIGHT CONTROLS ==========

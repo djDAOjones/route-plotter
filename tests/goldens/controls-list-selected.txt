@@ -41,14 +41,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="12"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-9"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #area-shape: select aria-describedby="area-shape-tip" :value="rectangle" → select aria-describedby="area-shape-tip" data-mixed="true" :value="__mixed__"
 ui ~ #area-shape>option[0]: option value="none" :text="None" → option data-mixed-option="true" disabled="" value="__mixed__" :text="Mixed"
@@ -79,20 +79,22 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
-ui - #area-rect-controls>button[0]: button aria-describedby="area-rect-width-tip" aria-expanded="false" aria-label="Help: Width" class="param-hint-trigger" style="position-anchor: --area-rect-width-tip;" type="button"
-ui - #area-rect-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-rect-controls>label[1]: label for="area-rect-width"
-ui - #area-rect-controls>label[1]>span[0]: span data-tip-desc="area-rect-width-tip" data-tip="Width of the rectangular highlight area" style="anchor-name: --area-rect-width-tip;" :text="Width"
+ui - #area-rect-controls>div[0]: div class="range-row"
+ui - #area-rect-controls>div[0]>button[0]: button aria-describedby="area-rect-width-tip" aria-expanded="false" aria-label="Help: Width" class="param-hint-trigger" style="position-anchor: --area-rect-width-tip;" type="button"
+ui - #area-rect-controls>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-rect-controls>div[0]>label[1]: label for="area-rect-width"
+ui - #area-rect-controls>div[0]>label[1]>span[0]: span data-tip-desc="area-rect-width-tip" data-tip="Width of the rectangular highlight area" style="anchor-name: --area-rect-width-tip;" :text="Width"
 ui - #area-rect-width: input aria-describedby="area-rect-width-value area-rect-width-tip" aria-valuetext="27%" max="1000" min="0" step="1" type="range" value="125" :value="329"
-ui - #area-rect-width-value: span :text="27%"
 ui - #area-rect-width-tip: span class="sr-only" :text="Width of the rectangular highlight area"
-ui - #area-rect-controls>button[3]: button aria-describedby="area-rect-height-tip" aria-expanded="false" aria-label="Help: Height" class="param-hint-trigger" style="position-anchor: --area-rect-height-tip;" type="button"
-ui - #area-rect-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-rect-controls>label[4]: label for="area-rect-height"
-ui - #area-rect-controls>label[4]>span[0]: span data-tip-desc="area-rect-height-tip" data-tip="Height of the rectangular highlight area" style="anchor-name: --area-rect-height-tip;" :text="Height"
+ui - #area-rect-width-value: span class="range-readout" :text="27%"
+ui - #area-rect-controls>div[1]: div class="range-row"
+ui - #area-rect-controls>div[1]>button[0]: button aria-describedby="area-rect-height-tip" aria-expanded="false" aria-label="Help: Height" class="param-hint-trigger" style="position-anchor: --area-rect-height-tip;" type="button"
+ui - #area-rect-controls>div[1]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-rect-controls>div[1]>label[1]: label for="area-rect-height"
+ui - #area-rect-controls>div[1]>label[1]>span[0]: span data-tip-desc="area-rect-height-tip" data-tip="Height of the rectangular highlight area" style="anchor-name: --area-rect-height-tip;" :text="Height"
 ui - #area-rect-height: input aria-describedby="area-rect-height-value area-rect-height-tip" aria-valuetext="19%" max="1000" min="0" step="1" type="range" value="125" :value="228"
-ui - #area-rect-height-value: span :text="19%"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
+ui - #area-rect-height-value: span class="range-readout" :text="19%"
 
 ## #waypoint-list>li[1]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[0]], primary: waypoint[0]}
@@ -135,14 +137,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="12"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-9"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #area-shape: select aria-describedby="area-shape-tip" :value="rectangle" → select aria-describedby="area-shape-tip" data-mixed="true" :value="__mixed__"
 ui ~ #area-shape>option[0]: option value="none" :text="None" → option data-mixed-option="true" disabled="" value="__mixed__" :text="Mixed"
@@ -169,20 +171,22 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
-ui - #area-rect-controls>button[0]: button aria-describedby="area-rect-width-tip" aria-expanded="false" aria-label="Help: Width" class="param-hint-trigger" style="position-anchor: --area-rect-width-tip;" type="button"
-ui - #area-rect-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-rect-controls>label[1]: label for="area-rect-width"
-ui - #area-rect-controls>label[1]>span[0]: span data-tip-desc="area-rect-width-tip" data-tip="Width of the rectangular highlight area" style="anchor-name: --area-rect-width-tip;" :text="Width"
+ui - #area-rect-controls>div[0]: div class="range-row"
+ui - #area-rect-controls>div[0]>button[0]: button aria-describedby="area-rect-width-tip" aria-expanded="false" aria-label="Help: Width" class="param-hint-trigger" style="position-anchor: --area-rect-width-tip;" type="button"
+ui - #area-rect-controls>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-rect-controls>div[0]>label[1]: label for="area-rect-width"
+ui - #area-rect-controls>div[0]>label[1]>span[0]: span data-tip-desc="area-rect-width-tip" data-tip="Width of the rectangular highlight area" style="anchor-name: --area-rect-width-tip;" :text="Width"
 ui - #area-rect-width: input aria-describedby="area-rect-width-value area-rect-width-tip" aria-valuetext="27%" max="1000" min="0" step="1" type="range" value="125" :value="329"
-ui - #area-rect-width-value: span :text="27%"
 ui - #area-rect-width-tip: span class="sr-only" :text="Width of the rectangular highlight area"
-ui - #area-rect-controls>button[3]: button aria-describedby="area-rect-height-tip" aria-expanded="false" aria-label="Help: Height" class="param-hint-trigger" style="position-anchor: --area-rect-height-tip;" type="button"
-ui - #area-rect-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-rect-controls>label[4]: label for="area-rect-height"
-ui - #area-rect-controls>label[4]>span[0]: span data-tip-desc="area-rect-height-tip" data-tip="Height of the rectangular highlight area" style="anchor-name: --area-rect-height-tip;" :text="Height"
+ui - #area-rect-width-value: span class="range-readout" :text="27%"
+ui - #area-rect-controls>div[1]: div class="range-row"
+ui - #area-rect-controls>div[1]>button[0]: button aria-describedby="area-rect-height-tip" aria-expanded="false" aria-label="Help: Height" class="param-hint-trigger" style="position-anchor: --area-rect-height-tip;" type="button"
+ui - #area-rect-controls>div[1]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-rect-controls>div[1]>label[1]: label for="area-rect-height"
+ui - #area-rect-controls>div[1]>label[1]>span[0]: span data-tip-desc="area-rect-height-tip" data-tip="Height of the rectangular highlight area" style="anchor-name: --area-rect-height-tip;" :text="Height"
 ui - #area-rect-height: input aria-describedby="area-rect-height-value area-rect-height-tip" aria-valuetext="19%" max="1000" min="0" step="1" type="range" value="125" :value="228"
-ui - #area-rect-height-value: span :text="19%"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
+ui - #area-rect-height-value: span class="range-readout" :text="19%"
 
 ## #waypoint-list>li[1]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[0]], primary: waypoint[0]}
@@ -225,14 +229,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="12"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-9"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #area-shape: select aria-describedby="area-shape-tip" :value="rectangle" → select aria-describedby="area-shape-tip" data-mixed="true" :value="__mixed__"
 ui ~ #area-shape>option[0]: option value="none" :text="None" → option data-mixed-option="true" disabled="" value="__mixed__" :text="Mixed"
@@ -259,20 +263,22 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
-ui - #area-rect-controls>button[0]: button aria-describedby="area-rect-width-tip" aria-expanded="false" aria-label="Help: Width" class="param-hint-trigger" style="position-anchor: --area-rect-width-tip;" type="button"
-ui - #area-rect-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-rect-controls>label[1]: label for="area-rect-width"
-ui - #area-rect-controls>label[1]>span[0]: span data-tip-desc="area-rect-width-tip" data-tip="Width of the rectangular highlight area" style="anchor-name: --area-rect-width-tip;" :text="Width"
+ui - #area-rect-controls>div[0]: div class="range-row"
+ui - #area-rect-controls>div[0]>button[0]: button aria-describedby="area-rect-width-tip" aria-expanded="false" aria-label="Help: Width" class="param-hint-trigger" style="position-anchor: --area-rect-width-tip;" type="button"
+ui - #area-rect-controls>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-rect-controls>div[0]>label[1]: label for="area-rect-width"
+ui - #area-rect-controls>div[0]>label[1]>span[0]: span data-tip-desc="area-rect-width-tip" data-tip="Width of the rectangular highlight area" style="anchor-name: --area-rect-width-tip;" :text="Width"
 ui - #area-rect-width: input aria-describedby="area-rect-width-value area-rect-width-tip" aria-valuetext="27%" max="1000" min="0" step="1" type="range" value="125" :value="329"
-ui - #area-rect-width-value: span :text="27%"
 ui - #area-rect-width-tip: span class="sr-only" :text="Width of the rectangular highlight area"
-ui - #area-rect-controls>button[3]: button aria-describedby="area-rect-height-tip" aria-expanded="false" aria-label="Help: Height" class="param-hint-trigger" style="position-anchor: --area-rect-height-tip;" type="button"
-ui - #area-rect-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-rect-controls>label[4]: label for="area-rect-height"
-ui - #area-rect-controls>label[4]>span[0]: span data-tip-desc="area-rect-height-tip" data-tip="Height of the rectangular highlight area" style="anchor-name: --area-rect-height-tip;" :text="Height"
+ui - #area-rect-width-value: span class="range-readout" :text="27%"
+ui - #area-rect-controls>div[1]: div class="range-row"
+ui - #area-rect-controls>div[1]>button[0]: button aria-describedby="area-rect-height-tip" aria-expanded="false" aria-label="Help: Height" class="param-hint-trigger" style="position-anchor: --area-rect-height-tip;" type="button"
+ui - #area-rect-controls>div[1]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-rect-controls>div[1]>label[1]: label for="area-rect-height"
+ui - #area-rect-controls>div[1]>label[1]>span[0]: span data-tip-desc="area-rect-height-tip" data-tip="Height of the rectangular highlight area" style="anchor-name: --area-rect-height-tip;" :text="Height"
 ui - #area-rect-height: input aria-describedby="area-rect-height-value area-rect-height-tip" aria-valuetext="19%" max="1000" min="0" step="1" type="range" value="125" :value="228"
-ui - #area-rect-height-value: span :text="19%"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
+ui - #area-rect-height-value: span class="range-readout" :text="19%"
 
 ## #waypoint-list>li[2]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[1], waypoint[2]], primary: waypoint[1]}
@@ -308,14 +314,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="14"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-11"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
 ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -367,7 +373,7 @@ ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-act
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
 ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -417,7 +423,7 @@ ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-act
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
 ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -472,14 +478,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="14"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-11"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="1" data-route-index="2" draggable="true"
 ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -534,14 +540,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="14"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-11"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="1" data-route-index="2" draggable="true"
 ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -596,14 +602,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="14"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-11"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="1" data-route-index="2" draggable="true"
 ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -658,24 +664,24 @@ emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {
 app ~ selected: "waypoint[3]" → null
 app ~ selection: "waypoint[3]" → ""
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
-ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button class="scope-route-btn" disabled="" type="button" :text="Route"
+ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
-ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 26 inside, e3528b88)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
-ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 74 inside, 35b9fbe3)
-ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 26 inside, aa372eb9)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 4505c3c8)
+ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
+ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 6b236c13)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
-ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 82 inside, 2707ab0d)
-ui - #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 61 inside, b69918d0)
-ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, b865019d)
-ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, 0e868546)
-ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 191 inside, 7aa39064)
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 83 inside, 6b42ebd4)
+ui - #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 62 inside, 8e022f89)
+ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 138 inside, 712d7514)
+ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 103 inside, 07477f09)
+ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 197 inside, e304af09)
 
 ## #waypoint-list>li[4]>button[0] · Ctrl-click
 emit waypoint:deselected
@@ -683,24 +689,24 @@ emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {
 app ~ selected: "waypoint[3]" → null
 app ~ selection: "waypoint[3]" → ""
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
-ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button class="scope-route-btn" disabled="" type="button" :text="Route"
+ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
-ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 26 inside, e3528b88)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
-ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 74 inside, 35b9fbe3)
-ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 26 inside, aa372eb9)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 4505c3c8)
+ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
+ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 6b236c13)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
-ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 82 inside, 2707ab0d)
-ui - #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 61 inside, b69918d0)
-ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, b865019d)
-ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, 0e868546)
-ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 191 inside, 7aa39064)
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 83 inside, 6b42ebd4)
+ui - #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 62 inside, 8e022f89)
+ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 138 inside, 712d7514)
+ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 103 inside, 07477f09)
+ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 197 inside, e304af09)
 
 ## #waypoint-list>li[5]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[4]], primary: waypoint[4]}
@@ -736,14 +742,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="16"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-13"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -798,14 +804,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="16"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-13"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -860,14 +866,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="16"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-13"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -922,14 +928,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="17"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-14"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -986,14 +992,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="17"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-14"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true"
 ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -1048,14 +1054,14 @@ ui + #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui ~ #section-label-content>div[0]>button[0]: button aria-describedby="waypoint-label-tip" aria-expanded="false" aria-label="Help: Text" class="param-hint-trigger" style="position-anchor: --waypoint-label-tip;" type="button" → button (not shown)
 ui ~ #section-label-content>div[0]>label[1]: label for="waypoint-label" style="display: block;" → label (not shown)
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="17"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="Mixed"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="Mixed"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-14"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="Mixed"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="Mixed"
 ui ~ #section-label-content>div[2]>button[1]: button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" type="button" :text="Apply onward" → button aria-describedby="label-actions-context label-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" disabled="" type="button" :text="Apply onward"
 ui ~ #section-label-content>p[3]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="label"
 ui + #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui + #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: select one waypoint to apply onward."
-ui ~ #leg-section-title: h2 class="section-title" :text="Leg → Waypoint 1.1·B1 'Extras 5'" → h2 class="section-title" :text="Leg"
+ui ~ #leg-section-title: span :text="Leg → Waypoint 1.1·B1 'Extras 5'" → span :text="Leg"
 ui ~ #leg-apply-reason: span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="leg" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true"
 ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"

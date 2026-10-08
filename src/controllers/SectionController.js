@@ -237,19 +237,12 @@ export class SectionController {
       
       if (!header || !sectionName) return;
       
-      // Click handler - set last-interacted before toggling
+      // Click handler - set last-interacted before toggling. The header is a
+      // native button inside the card's heading (UI-06 B-21), so Enter and
+      // Space reach here as its click: nothing re-implements them.
       header.addEventListener('click', () => {
         this._setLastInteracted(sectionName);
         this.toggleSection(sectionName);
-      });
-      
-      // Keyboard handler (Enter/Space)
-      header.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          this._setLastInteracted(sectionName);
-          this.toggleSection(sectionName);
-        }
       });
     });
   }

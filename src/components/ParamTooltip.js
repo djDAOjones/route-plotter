@@ -397,15 +397,24 @@ function attachTrigger(tip, control) {
   syncTrigger(tip);
 }
 
+/** A range's label and its readout share a row, and the app shows or hides the row (UI-06 B-06). */
+const ROW = '.range-row';
+
+/** Hidden by its own `hidden` or inline display, as the app hides a label or a row. */
+function isUnshown(element) {
+  return Boolean(element) && (element.hidden || element.style.display === 'none');
+}
+
 /**
- * Show or hide `tip`'s trigger with its label, and close its hint when the
- * label goes: a hint for a row no longer on screen describes nothing visible.
+ * Show or hide `tip`'s trigger with its label, or with the row its label
+ * shares with its control's readout, and close its hint when either goes: a
+ * hint for a row no longer on screen describes nothing visible.
  * @param {HTMLElement} tip
  */
 function syncTrigger(tip) {
   const host = hostOf(tip);
   if (!host) return;
-  const hidden = host.hidden || host.style.display === 'none';
+  const hidden = isUnshown(host) || isUnshown(host.parentElement?.closest(ROW));
   const trigger = triggerByTip.get(tip);
   if (trigger && trigger.hidden !== hidden) trigger.hidden = hidden;
   if (hidden && activeTip === tip) hideTooltip();
@@ -426,7 +435,8 @@ function hintsIn(node) {
  * Wire hints added after `initParamTooltips` ran, as they arrive, and take a
  * hint's trigger off the page with it. A hint that already carries a
  * description (a moved node) keeps it, and its trigger follows it. A hinted
- * label hidden or shown takes its trigger along.
+ * label, or the row it shares with its readout, hidden or shown takes its
+ * trigger along.
  * @param {MutationRecord[]} records
  */
 function followMutations(records) {
@@ -435,7 +445,7 @@ function followMutations(records) {
     if (record.type === 'attributes') {
       if (record.attributeName === 'data-tip') {
         if (record.target.isConnected) retextHint(record.target);
-      } else if (hosts.has(record.target)) {
+      } else if (hosts.has(record.target) || record.target.matches?.(ROW)) {
         hintsIn(record.target).forEach(syncTrigger);
       }
       continue;

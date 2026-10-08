@@ -88,13 +88,17 @@ export class NetworkEditService {
    * Enter network edit mode for a flow layer's graph.
    * @param {import('../models/FlowLayer.js').FlowLayer} layer
    */
-  enter(layer) {
+  enter(layer, { returnFocusTo = null } = {}) {
     if (!layer) return;
     if (this.active) this.exit();
     else if (this.layer) this.clearInspection();
 
     this.active = true;
     this.layer = layer;
+    // Where focus goes when the banner that holds it is taken away (UI-06
+    // B-29): the control that opened the mode, by default the Guide card's
+    // Edit network button.
+    this._returnFocusTo = returnFocusTo ?? document.getElementById('network-edit-btn');
     this.penNodeId = null;
     this.selection = null;
     this.hover = null;
@@ -184,6 +188,9 @@ export class NetworkEditService {
 
     const hadSelection = this.selection;
     const previousLayer = this.layer;
+    // Focus in the banner (its Done was pressed) would be lost with it.
+    const returnFocus = this._banner?.contains(document.activeElement) ? this._returnFocusTo : null;
+    this._returnFocusTo = null;
     this.active = false;
     this.layer = null;
     this.penNodeId = null;
@@ -202,6 +209,8 @@ export class NetworkEditService {
     if (hadSelection) this._emitDeselected(hadSelection, previousLayer);
     this.eventBus.emit('network:edit-mode-changed', { active: false, layer: null });
     this.eventBus.emit('render:request');
+    // After the mode change, which re-enables the button that opened the mode.
+    if (returnFocus?.isConnected && !returnFocus.disabled) returnFocus.focus();
   }
 
   // ── selection ───────────────────────────────────────────

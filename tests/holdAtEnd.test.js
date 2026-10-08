@@ -13,10 +13,9 @@
  * and in the Duration readout. "Wait here for this crowd" is retired.
  */
 
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
+import { cascade, declaration, readStyle, resolveValue, tokensFor } from './helpers/cssTokens.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { clearProject } from '../src/app/projectReset.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
@@ -139,34 +138,39 @@ describe('the Hold at end control', () => {
     expect(slider.getAttribute('aria-valuetext')).toBe('3.5s');
   });
 
-  test('its slider is a 44 px target (WCAG 2.5.5), and only it: its rail and thumb look as the others do', async () => {
+  test('its slider is a 44 px target (WCAG 2.5.5), as every range is now (UI-06 B-01): the band takes the pointer, the rail and thumb look as they did', async () => {
+    // The recipe CROWD-06 wrote for Hold at end alone — a transparent 44px
+    // input, the rail drawn on the runnable track, the thumb centred on it —
+    // is the rule for the 49 card ranges and the playbar's timeline (B-01).
+    // Each is read through the sheets' cascade as the booted shell mounts it,
+    // so a later rule that shrank one row's ranges would show here.
     await bootApp();
-    const style = document.createElement('style');
-    style.textContent = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
-    document.head.append(style);
-    try {
-      const slider = holdSlider();
-      expect(slider.classList.contains('range-hit-target')).toBe(true);
-      expect(getComputedStyle(slider).height).toBe('2.75rem');
-      expect(getComputedStyle(slider).backgroundColor).toBe('rgba(0, 0, 0, 0)');
-      // The other section ranges keep their 4 px rail.
-      for (const id of ['graphics-scale', 'animation-speed-right', 'path-head-size']) {
-        expect(document.getElementById(id).classList.contains('range-hit-target'), id).toBe(false);
-        expect(getComputedStyle(document.getElementById(id)).height, id).toBe('4px');
-      }
-      // Its rail is drawn on the track instead, as the others' is on the input, and the thumb sits on it.
-      const rules = [...style.sheet.cssRules].filter(rule => rule.selectorText?.includes('.range-hit-target'));
-      const rule = pseudo => rules.find(each => each.selectorText.endsWith(pseudo)).style;
-      const rail = rule('::-webkit-slider-runnable-track');
-      const plain = [...style.sheet.cssRules]
-        .find(each => each.selectorText === '.section-content input[type="range"]').style;
-      for (const property of ['height', 'background', 'border', 'border-radius']) {
-        expect(rail.getPropertyValue(property), property).toBe(plain.getPropertyValue(property));
-      }
-      expect(rule('::-webkit-slider-thumb').getPropertyValue('margin-top')).toBe('-5px');
-    } finally {
-      style.remove();
+    const tokens = tokensFor();
+    const winning = (element, properties) => resolveValue(cascade(element, properties)?.value ?? '', tokens);
+    const ranges = [...document.querySelectorAll('input[type="range"]')];
+    expect(ranges.length).toBe(50);
+    expect(ranges.map(range => range.id)).toContain('hold-at-end');
+    for (const range of ranges) {
+      expect(winning(range, 'height'), range.id).toBe('2.75rem');
+      expect(winning(range, ['background', 'background-color']), range.id).toBe('transparent');
+      expect(winning(range, ['border', 'border-width', 'border-style']), range.id).toBe('none');
+      expect(range.classList.contains('range-hit-target'), `${range.id} needs no class to be one`).toBe(false);
     }
+    // The rail is drawn on the track: 4px for a card range, the playbar's 6px, each with its 3:1 border.
+    const main = readStyle('main.css');
+    const track = (selector, property) => declaration(main, `${selector}::-webkit-slider-runnable-track`, property);
+    const card = '.section-content input[type="range"]';
+    expect(track(card, 'height')).toBe('4px');
+    expect(track(card, 'background')).toBe('var(--ui-03)');
+    expect(track(card, 'border')).toBe('1px solid var(--border-interactive)');
+    expect(track(card, 'border-radius')).toBe('2px');
+    expect(track('.timeline-slider', 'height')).toBe('6px');
+    expect(track('.timeline-slider', 'background')).toBe('var(--ui-03)');
+    expect(track('.timeline-slider', 'border')).toBe('1px solid var(--border-interactive)');
+    // The thumb sits centred on the rail: (rail − thumb) ÷ 2.
+    const thumb = (selector, property) => declaration(main, `${selector}::-webkit-slider-thumb`, property);
+    expect([thumb(card, 'height'), thumb(card, 'margin-top')]).toEqual(['14px', '-5px']);
+    expect([thumb('.timeline-slider', 'height'), thumb('.timeline-slider', 'margin-top')]).toEqual(['16px', '-5px']);
   });
 
   test('the readout writes seconds as Duration does, and a hold is kept within 0–10 s', () => {

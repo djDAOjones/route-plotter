@@ -632,33 +632,47 @@ describe('UIController multi-select', () => {
     expect(chipText()).toBe('Editing · 3 waypoints (1 minor)');
   });
 
-  test('Route button exits single and multi waypoint scope but not route or crowd scope', () => {
+  test('Route button exits single, multi and crowd scope, and in route scope is the current scope, never disabled (UI-06 J-08, W-01)', () => {
     ui.updateWaypointList([a, b, c]);
     const routeButton = document.getElementById('scope-route-btn');
     const deselected = [];
+    const crowdDeselected = [];
     bus.on('waypoint:deselected', () => deselected.push(true));
+    bus.on('crowd:deselected', () => crowdDeselected.push(true));
 
     ui.setSelection([a], a);
     ui.updateWaypointEditor(a);
     expect(routeButton.disabled).toBe(false);
+    expect(routeButton.hasAttribute('aria-current')).toBe(false);
     routeButton.click();
 
     ui.setSelection([a, b], b);
     ui.updateWaypointEditor(b, [a, b]);
     expect(routeButton.disabled).toBe(false);
+    expect(routeButton.hasAttribute('aria-current')).toBe(false);
     routeButton.click();
     expect(deselected).toHaveLength(2);
+    expect(crowdDeselected).toHaveLength(0);
 
+    // Route scope: the button is where you are, so it is marked, not greyed, and a click asks for nothing.
     ui.setSelection([], null);
     ui.updateWaypointEditor(null);
-    expect(routeButton.disabled).toBe(true);
-    routeButton.click();
-
-    bus.emit('crowd:selected', { name: 'Visitors' });
-    ui.updateWaypointEditor(null);
-    expect(routeButton.disabled).toBe(true);
+    expect(routeButton.disabled).toBe(false);
+    expect(routeButton.getAttribute('aria-current')).toBe('true');
     routeButton.click();
     expect(deselected).toHaveLength(2);
+    expect(crowdDeselected).toHaveLength(0);
+
+    // Crowd scope: the only way back used to be the Layers strip's Route row (W-01).
+    bus.emit('crowd:selected', { name: 'Visitors' });
+    ui.updateWaypointEditor(null);
+    expect(routeButton.disabled).toBe(false);
+    expect(routeButton.hasAttribute('aria-current')).toBe(false);
+    routeButton.click();
+    expect(deselected).toHaveLength(2);
+    expect(crowdDeselected).toHaveLength(1);
+    bus.emit('crowd:deselected');
+    expect(routeButton.getAttribute('aria-current')).toBe('true');
   });
 
   test('setSelection keeps the list rows in sync with an app-decided selection', () => {

@@ -1,11 +1,11 @@
 # node: the crowd network's first node inspected
 
-## #node-scope>div[0]>div[0] · click
-app ~ focus: "body" → "#node-scope>div[0]>div[0]"
+## #node-scope>div[0]>h2[0]>button[0] · click
+app ~ focus: "body" → "#node-scope>div[0]>h2[0]>button[0]"
 storage + routePlotter_lastSection: "node"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[259 chars, 62292118] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[260 chars, 7424b4d9]
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section" data-last="true" data-section="node"
-ui ~ #node-scope>div[0]>div[0]: div aria-controls="section-node-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-node-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
+ui ~ #node-scope>div[0]>h2[0]>button[0]: button aria-controls="section-node-content" aria-expanded="true" class="section-header" type="button" :text="Node" → button aria-controls="section-node-content" aria-expanded="false" class="section-header" type="button" :text="Node"
 
 ## #section-node-content>button[0] · click
 app ~ focus: "body" → "#section-node-content>button[0]"
@@ -104,17 +104,17 @@ ui + #toast-container>div[0]: div class="toast" :text="Deleted node — press Ct
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
-ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 20 inside, b90c7c24)
-ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 70 inside, 788d231f)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 109 inside, 081b4714)
-ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 31 inside, ed9e46ac)
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 20 inside, 26cd66a5)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 72 inside, cd087275)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 114 inside, 6613832e)
+ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 33 inside, 0f410ba2)
 ui ~ #node-scope: div class="scope-group" → div (not shown)
-ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 18 inside, 597c564e)
+ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 18 inside, dcc335c5)
 settled:
   emit animation:durationChange 27929.352554
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9435 chars, 02c90ccb]
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
   ui - #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

@@ -347,17 +347,24 @@ describe('increased contrast preference (B-27)', () => {
     // The block used to darken the rail to --ui-04 (#707D89): 2.78:1 against
     // the #003A65 thumb. The rail keeps --ui-03; its 7.8:1 border carries the
     // mode's extra strength.
+    // The input is a transparent 44px band (UI-06 B-01); the rail, with
+    // its border, is drawn on the runnable track, whose rule is read here.
     const rail = mount(TRANSPORT, '.timeline-slider');
     for (const options of [REST, MORE]) {
       const where = options.media ? ' (increased contrast)' : '';
-      const surface = paintOf(rail, ['background', 'background-color'], options);
+      const tokens = tokensFor(options.media);
+      const track = property => declaration(mainCss, '.timeline-slider::-webkit-slider-runnable-track', property);
+      const surface = colourIn(track('background'), tokens);
+      const border = colourIn(track('border'), tokens);
+      // The band itself paints nothing: the controls bar shows through it.
+      expect(paintOf(rail, ['background', 'background-color'], options).alpha).toBe(0);
       for (const thumb of ['::-webkit-slider-thumb', '::-moz-range-thumb']) {
-        const fill = colourIn(declaration(mainCss, `.timeline-slider${thumb}`, 'background'), tokensFor(options.media));
+        const fill = colourIn(declaration(mainCss, `.timeline-slider${thumb}`, 'background'), tokens);
         expectContrast(fill, surface, NON_TEXT, `thumb ${thumb} on the rail${where}`);
       }
-      expectContrast(borderColourOf(rail, 'top', options), surface, NON_TEXT, `rail border on the rail${where}`);
-      expectContrast(borderColourOf(rail, 'top', options), surfaceOf(rail.parentElement, options), NON_TEXT,
-        `rail border on the controls bar${where}`);
+      expectContrast(border, surface, NON_TEXT, `rail border on the rail${where}`);
+      expectContrast(border, surfaceOf(rail.parentElement, options), NON_TEXT, `rail border on the controls bar${where}`);
+      expect(declaration(mainCss, '.timeline-slider::-moz-range-track', 'background')).toBe(track('background'));
     }
   });
 });

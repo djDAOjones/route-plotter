@@ -41,13 +41,13 @@ storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-size: input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="14 reference px" max="16" min="4" step="1" type="range" value="8" :value="14" → input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="8 reference px" max="16" min="4" step="1" type="range" value="8" :value="8"
-ui ~ #dot-size-value: span :text="14 reference px" → span :text="8 reference px"
+ui ~ #dot-size-value: span class="range-readout" :text="14 reference px" → span class="range-readout" :text="8 reference px"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 0abccf4d]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 
-## #section-marker-content>div[9]>button[0] · click
+## #section-marker-content>div[7]>button[0] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
 announced "Marker reset for 2 waypoints. Undo is available."
 model ~ waypoints[2].dotSize: 14 → 13
@@ -58,14 +58,14 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #dot-size: input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="14 reference px" max="16" min="4" step="1" type="range" value="8" :value="14" → input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="13 reference px" max="16" min="4" step="1" type="range" value="8" :value="13"
-ui ~ #dot-size-value: span :text="14 reference px" → span :text="13 reference px"
-ui ~ #section-marker-content>div[9]>button[0]: button aria-describedby="marker-actions-context marker-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="marker" type="button" :text="Reset" → button aria-describedby="marker-actions-context marker-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="marker" disabled="" type="button" :text="Reset"
+ui ~ #dot-size-value: span class="range-readout" :text="14 reference px" → span class="range-readout" :text="13 reference px"
+ui ~ #section-marker-content>div[7]>button[0]: button aria-describedby="marker-actions-context marker-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="marker" type="button" :text="Reset" → button aria-describedby="marker-actions-context marker-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="marker" disabled="" type="button" :text="Reset"
 ui ~ #marker-reset-reason: span data-card-reason="reset" data-card="marker" → span data-card-reason="reset" data-card="marker" :text="Reset: already uses route style."
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 71136515]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Marker reset for 2 waypoints. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
-## #section-marker-content>div[9]>button[1] · disabled, not operated
+## #section-marker-content>div[7]>button[1] · disabled, not operated
 
 ## #editor-beacon-style · choose "none"
 emit animation:durationChange 30037.592687
@@ -102,8 +102,8 @@ storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section expanded" data-last="true" data-section="on-arrival"
 ui ~ #waypoint-pause-time: input aria-describedby="waypoint-pause-time-value waypoint-pause-time-tip" aria-valuetext="2.8s" max="1000" min="0" step="1" type="range" value="500" :value="384" → input aria-describedby="waypoint-pause-time-value waypoint-pause-time-tip" aria-valuetext="1.9s" max="1000" min="0" step="1" type="range" value="500" :value="333"
-ui ~ #waypoint-pause-time-value: span :text="2.8s" → span :text="1.9s"
-ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:31" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+ui ~ #waypoint-pause-time-value: span class="range-readout" :text="2.8s" → span class="range-readout" :text="1.9s"
+ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:31" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
 ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:31"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 31511.641101, baseDuration: 23349.045806, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -175,33 +175,35 @@ ui ~ #editor-beacon-style>option[3]: option value="glow" :text="Glow" → option
 ui ~ #editor-beacon-style>option[4]: option value="pop" :text="Pop" → option value="grow" :text="Grow"
 ui ~ #editor-beacon-style>option[5]: option value="grow" :text="Grow" → option value="pulse" :text="Pulse"
 ui ~ #waypoint-pause-time: input aria-describedby="waypoint-pause-time-value waypoint-pause-time-tip" aria-valuetext="2.8s" max="1000" min="0" step="1" type="range" value="500" :value="384" → input aria-describedby="waypoint-pause-time-value waypoint-pause-time-tip" aria-valuetext="1.5s" max="1000" min="0" step="1" type="range" value="500" :value="302"
-ui ~ #waypoint-pause-time-value: span :text="2.8s" → span :text="1.5s"
+ui ~ #waypoint-pause-time-value: span class="range-readout" :text="2.8s" → span class="range-readout" :text="1.5s"
 ui ~ #camera-selected-zoom: input aria-describedby="camera-selected-zoom-value camera-selected-zoom-tip" aria-valuetext="Mixed" data-mixed="true" max="1" min="0" step="0.01" type="range" value="0" :value="0.2589059774326803" → input aria-describedby="camera-selected-zoom-value camera-selected-zoom-tip" aria-valuetext="1.0x" max="1" min="0" step="0.01" type="range" value="0" :value="0"
 ui ~ #camera-selected-zoom-value: span class="slider-value" :text="Mixed" → span class="slider-value" :text="1.0x"
 ui ~ #ripple-controls: div (not shown) → div style="display: block;"
-ui + #ripple-controls>button[0]: button aria-describedby="ripple-thickness-tip" aria-expanded="false" aria-label="Help: Thickness" class="param-hint-trigger" style="position-anchor: --ripple-thickness-tip;" type="button"
-ui + #ripple-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui + #ripple-controls>label[1]: label for="ripple-thickness"
-ui + #ripple-controls>label[1]>span[0]: span data-tip-desc="ripple-thickness-tip" data-tip="Line thickness of the ripple rings" style="anchor-name: --ripple-thickness-tip;" :text="Thickness"
+ui + #ripple-controls>div[0]: div class="range-row"
+ui + #ripple-controls>div[0]>button[0]: button aria-describedby="ripple-thickness-tip" aria-expanded="false" aria-label="Help: Thickness" class="param-hint-trigger" style="position-anchor: --ripple-thickness-tip;" type="button"
+ui + #ripple-controls>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui + #ripple-controls>div[0]>label[1]: label for="ripple-thickness"
+ui + #ripple-controls>div[0]>label[1]>span[0]: span data-tip-desc="ripple-thickness-tip" data-tip="Line thickness of the ripple rings" style="anchor-name: --ripple-thickness-tip;" :text="Thickness"
 ui + #ripple-thickness: input aria-describedby="ripple-thickness-value ripple-thickness-tip" aria-valuetext="2 reference px" max="10" min="1" step="0.5" type="range" value="2" :value="2"
-ui + #ripple-thickness-value: span :text="2 reference px"
 ui + #ripple-thickness-tip: span class="sr-only" :text="Line thickness of the ripple rings"
-ui + #ripple-controls>button[3]: button aria-describedby="ripple-max-scale-tip" aria-expanded="false" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --ripple-max-scale-tip;" type="button"
-ui + #ripple-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui + #ripple-controls>label[4]: label for="ripple-max-scale"
-ui + #ripple-controls>label[4]>span[0]: span data-tip-desc="ripple-max-scale-tip" data-tip="Maximum expansion radius of the ripple effect" style="anchor-name: --ripple-max-scale-tip;" :text="Size"
+ui + #ripple-thickness-value: span class="range-readout" :text="2 reference px"
+ui + #ripple-controls>div[1]: div class="range-row"
+ui + #ripple-controls>div[1]>button[0]: button aria-describedby="ripple-max-scale-tip" aria-expanded="false" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --ripple-max-scale-tip;" type="button"
+ui + #ripple-controls>div[1]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui + #ripple-controls>div[1]>label[1]: label for="ripple-max-scale"
+ui + #ripple-controls>div[1]>label[1]>span[0]: span data-tip-desc="ripple-max-scale-tip" data-tip="Maximum expansion radius of the ripple effect" style="anchor-name: --ripple-max-scale-tip;" :text="Size"
 ui + #ripple-max-scale: input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" aria-valuetext="1000%" max="4000" min="500" step="100" type="range" value="1000" :value="1000"
-ui + #ripple-max-scale-value: span :text="1000%"
 ui + #ripple-max-scale-tip: span class="sr-only" :text="Maximum expansion radius of the ripple effect"
-ui + #ripple-controls>label[6]: label class="checkbox-label" for="ripple-wait"
+ui + #ripple-max-scale-value: span class="range-readout" :text="1000%"
+ui + #ripple-controls>label[2]: label class="checkbox-label" for="ripple-wait"
 ui + #ripple-wait: input aria-describedby="ripple-wait-tip" checked="" type="checkbox" :checked
-ui + #ripple-controls>label[6]>span[1]: span data-tip-desc="ripple-wait-tip" data-tip="Sets Wait time to how long the ripple lasts, so the path head waits until its last ring has finished" style="anchor-name: --ripple-wait-tip;" :text="Wait during ripple"
-ui + #ripple-controls>button[7]: button aria-describedby="ripple-wait-tip" aria-expanded="false" aria-label="Help: Wait during ripple" class="param-hint-trigger" style="position-anchor: --ripple-wait-tip;" type="button"
-ui + #ripple-controls>button[7]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui + #ripple-controls>label[2]>span[1]: span data-tip-desc="ripple-wait-tip" data-tip="Sets Wait time to how long the ripple lasts, so the path head waits until its last ring has finished" style="anchor-name: --ripple-wait-tip;" :text="Wait during ripple"
+ui + #ripple-controls>button[3]: button aria-describedby="ripple-wait-tip" aria-expanded="false" aria-label="Help: Wait during ripple" class="param-hint-trigger" style="position-anchor: --ripple-wait-tip;" type="button"
+ui + #ripple-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui + #ripple-wait-tip: span class="sr-only" :text="Sets Wait time to how long the ripple lasts, so the path head waits until its last ring has finished"
 ui ~ #section-on-arrival-content>div[2]>button[0]: button aria-describedby="on-arrival-actions-context on-arrival-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" type="button" :text="Reset" → button aria-describedby="on-arrival-actions-context on-arrival-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" disabled="" type="button" :text="Reset"
 ui ~ #on-arrival-reset-reason: span data-card-reason="reset" data-card="on-arrival" → span data-card-reason="reset" data-card="on-arrival" :text="Reset: already uses route style."
-ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:32" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:32" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
 ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:32"
 ui - #editor-beacon-style>option[6]: option value="pulse" :text="Pulse"
 settled:
@@ -234,7 +236,7 @@ storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-size: input aria-describedby="label-size-value label-size-tip" aria-valuetext="27 reference px" max="48" min="16" step="1" type="range" value="16" :value="27" → input aria-describedby="label-size-value label-size-tip" aria-valuetext="37 reference px" max="48" min="16" step="1" type="range" value="16" :value="37"
-ui ~ #label-size-value: span :text="27 reference px" → span :text="37 reference px"
+ui ~ #label-size-value: span class="range-readout" :text="27 reference px" → span class="range-readout" :text="37 reference px"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 37a779ed]
@@ -283,7 +285,7 @@ storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-bg-opacity: input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="42%" max="100" min="0" step="1" type="range" value="85" :value="42" → input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="85" :value="33"
-ui ~ #label-bg-opacity-value: span :text="42%" → span :text="33%"
+ui ~ #label-bg-opacity-value: span class="range-readout" :text="42%" → span class="range-readout" :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, cffb5e9f]
@@ -298,7 +300,7 @@ storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-width: input aria-describedby="label-width-value label-width-tip" aria-valuetext="33%" max="50" min="5" step="1" type="range" value="15" :value="33" → input aria-describedby="label-width-value label-width-tip" aria-valuetext="20%" max="50" min="5" step="1" type="range" value="15" :value="20"
-ui ~ #label-width-value: span :text="33%" → span :text="20%"
+ui ~ #label-width-value: span class="range-readout" :text="33%" → span class="range-readout" :text="20%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, f7698b7f]
@@ -313,7 +315,7 @@ storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="-17%" max="50" min="-50" step="1" type="range" value="0" :value="-17"
-ui ~ #label-offset-x-value: span :text="Mixed" → span :text="-17%"
+ui ~ #label-offset-x-value: span class="range-readout" :text="Mixed" → span class="range-readout" :text="-17%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9702 chars, b32e9a1a]
@@ -328,7 +330,7 @@ storage ~ routePlotter_lastSection: "area-highlight" → "label"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-17%" max="50" min="-50" step="1" type="range" value="-5" :value="-17"
-ui ~ #label-offset-y-value: span :text="Mixed" → span :text="-17%"
+ui ~ #label-offset-y-value: span class="range-readout" :text="Mixed" → span class="range-readout" :text="-17%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 59535838]
@@ -357,7 +359,7 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section expanded" data-last="true" data-section="label"
 ui ~ #label-size: input aria-describedby="label-size-value label-size-tip" aria-valuetext="27 reference px" max="48" min="16" step="1" type="range" value="16" :value="27" → input aria-describedby="label-size-value label-size-tip" aria-valuetext="16 reference px" max="48" min="16" step="1" type="range" value="16" :value="16"
-ui ~ #label-size-value: span :text="27 reference px" → span :text="16 reference px"
+ui ~ #label-size-value: span class="range-readout" :text="27 reference px" → span class="range-readout" :text="16 reference px"
 ui ~ #label-color: input type="hidden" value="#009E73" :value="#009E73" → input type="hidden" value="#1a1a1a" :value="#1a1a1a"
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[1]>div[4]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(0, 158, 115); background-image: none; background-origin: padding-box; backgro…[259 chars, 47261216] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(26, 26, 26); background-image: none; background-origin: padding-box; backgrou…[257 chars, 81813442]
 ui ~ #section-label-content>details[1]>div[1]>div[1]>fieldset[1]>div[4]>span[1]>span[1]: span class="swatch-current-text" :text="Current #009E73" → span class="swatch-current-text" :text="Current #1A1A1A"
@@ -366,13 +368,13 @@ ui ~ #label-bg-color-group-3: input class="swatch-radio" name="label-bg-color-gr
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[1]>div[4]>span[1]>span[0]: span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(240, 228, 66); background-image: none; background-origin: padding-box; backgr…[261 chars, 28ba8d62] → span aria-hidden="true" class="swatch-current-chip" style="background-attachment: scroll; background-clip: border-box; background-color: rgb(255, 255, 255); background-image: none; background-origin: padding-box; backg…[263 chars, 08924a32]
 ui ~ #section-label-content>details[1]>div[1]>div[3]>fieldset[1]>div[4]>span[1]>span[1]: span class="swatch-current-text" :text="Current #F0E442" → span class="swatch-current-text" :text="Current #FFFFFF"
 ui ~ #label-bg-opacity: input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="42%" max="100" min="0" step="1" type="range" value="85" :value="42" → input aria-describedby="label-bg-opacity-value label-bg-opacity-tip" aria-valuetext="85%" max="100" min="0" step="1" type="range" value="85" :value="85"
-ui ~ #label-bg-opacity-value: span :text="42%" → span :text="85%"
+ui ~ #label-bg-opacity-value: span class="range-readout" :text="42%" → span class="range-readout" :text="85%"
 ui ~ #label-width: input aria-describedby="label-width-value label-width-tip" aria-valuetext="33%" max="50" min="5" step="1" type="range" value="15" :value="33" → input aria-describedby="label-width-value label-width-tip" aria-valuetext="15%" max="50" min="5" step="1" type="range" value="15" :value="15"
-ui ~ #label-width-value: span :text="33%" → span :text="15%"
+ui ~ #label-width-value: span class="range-readout" :text="33%" → span class="range-readout" :text="15%"
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="0%" max="50" min="-50" step="1" type="range" value="0" :value="0"
-ui ~ #label-offset-x-value: span :text="Mixed" → span :text="0%"
+ui ~ #label-offset-x-value: span class="range-readout" :text="Mixed" → span class="range-readout" :text="0%"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="Mixed" data-mixed="true" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="0%" max="50" min="-50" step="1" type="range" value="-5" :value="0"
-ui ~ #label-offset-y-value: span :text="Mixed" → span :text="0%"
+ui ~ #label-offset-y-value: span class="range-readout" :text="Mixed" → span class="range-readout" :text="0%"
 ui ~ #section-label-content>div[2]>button[0]: button aria-describedby="label-actions-context label-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="label" type="button" :text="Reset" → button aria-describedby="label-actions-context label-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="label" disabled="" type="button" :text="Reset"
 ui ~ #label-reset-reason: span data-card-reason="reset" data-card="label" → span data-card-reason="reset" data-card="label" :text="Reset: already uses route style."
 settled:
@@ -409,7 +411,7 @@ storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-width: input aria-describedby="segment-width-value segment-width-tip" aria-valuetext="7.0 reference px" max="1000" min="0" step="1" type="range" value="333" :value="528" → input aria-describedby="segment-width-value segment-width-tip" aria-valuetext="3.4 reference px" max="1000" min="0" step="1" type="range" value="333" :value="333"
-ui ~ #segment-width-value: span :text="7.0 reference px" → span :text="3.4 reference px"
+ui ~ #segment-width-value: span class="range-readout" :text="7.0 reference px" → span class="range-readout" :text="3.4 reference px"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -442,8 +444,8 @@ storage ~ routePlotter_lastSection: "area-highlight" → "leg"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #waypoint-segment-speed: input aria-describedby="waypoint-segment-speed-value waypoint-segment-speed-tip" aria-valuetext="2.5x" max="1000" min="0" step="1" type="range" value="500" :value="699" → input aria-describedby="waypoint-segment-speed-value waypoint-segment-speed-tip" aria-valuetext="0.46x" max="1000" min="0" step="1" type="range" value="500" :value="333"
-ui ~ #waypoint-segment-speed-value: span :text="2.5x" → span :text="0.46x"
-ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:31" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+ui ~ #waypoint-segment-speed-value: span class="range-readout" :text="2.5x" → span class="range-readout" :text="0.46x"
+ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:31" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
 ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:31"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 31184.572374, baseDuration: 22491.515061, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -493,9 +495,9 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section expanded" data-last="true" data-section="leg"
 ui ~ #segment-width: input aria-describedby="segment-width-value segment-width-tip" aria-valuetext="7.0 reference px" max="1000" min="0" step="1" type="range" value="333" :value="528" → input aria-describedby="segment-width-value segment-width-tip" aria-valuetext="9.0 reference px" max="1000" min="0" step="1" type="range" value="333" :value="596"
-ui ~ #segment-width-value: span :text="7.0 reference px" → span :text="9.0 reference px"
+ui ~ #segment-width-value: span class="range-readout" :text="7.0 reference px" → span class="range-readout" :text="9.0 reference px"
 ui ~ #waypoint-segment-speed: input aria-describedby="waypoint-segment-speed-value waypoint-segment-speed-tip" aria-valuetext="2.5x" max="1000" min="0" step="1" type="range" value="500" :value="699" → input aria-describedby="waypoint-segment-speed-value waypoint-segment-speed-tip" aria-valuetext="1.0x" max="1000" min="0" step="1" type="range" value="500" :value="500"
-ui ~ #waypoint-segment-speed-value: span :text="2.5x" → span :text="1.0x"
+ui ~ #waypoint-segment-speed-value: span class="range-readout" :text="2.5x" → span class="range-readout" :text="1.0x"
 ui ~ #segment-style: select aria-describedby="segment-style-tip" :value="dashed" → select aria-describedby="segment-style-tip" :value="dotted"
 ui ~ #section-leg-content>div[2]>button[0]: button aria-describedby="leg-actions-context leg-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="leg" type="button" :text="Reset" → button aria-describedby="leg-actions-context leg-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="leg" disabled="" type="button" :text="Reset"
 ui ~ #leg-reset-reason: span data-card-reason="reset" data-card="leg" → span data-card-reason="reset" data-card="leg" :text="Reset: already uses route style."
@@ -523,30 +525,33 @@ ui ~ #area-delete-controls: div style="" → div (not shown)
 ui ~ #area-fill-controls: div style="" → div (not shown)
 ui ~ #area-border-controls: div style="" → div (not shown)
 ui ~ #area-visibility-controls: div style="" → div (not shown)
-ui - #area-rect-controls>button[0]: button aria-describedby="area-rect-width-tip" aria-expanded="false" aria-label="Help: Width" class="param-hint-trigger" style="position-anchor: --area-rect-width-tip;" type="button"
-ui - #area-rect-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-rect-controls>label[1]: label for="area-rect-width"
-ui - #area-rect-controls>label[1]>span[0]: span data-tip-desc="area-rect-width-tip" data-tip="Width of the rectangular highlight area" style="anchor-name: --area-rect-width-tip;" :text="Width"
+ui - #area-rect-controls>div[0]: div class="range-row"
+ui - #area-rect-controls>div[0]>button[0]: button aria-describedby="area-rect-width-tip" aria-expanded="false" aria-label="Help: Width" class="param-hint-trigger" style="position-anchor: --area-rect-width-tip;" type="button"
+ui - #area-rect-controls>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-rect-controls>div[0]>label[1]: label for="area-rect-width"
+ui - #area-rect-controls>div[0]>label[1]>span[0]: span data-tip-desc="area-rect-width-tip" data-tip="Width of the rectangular highlight area" style="anchor-name: --area-rect-width-tip;" :text="Width"
 ui - #area-rect-width: input aria-describedby="area-rect-width-value area-rect-width-tip" aria-valuetext="27%" max="1000" min="0" step="1" type="range" value="125" :value="329"
-ui - #area-rect-width-value: span :text="27%"
 ui - #area-rect-width-tip: span class="sr-only" :text="Width of the rectangular highlight area"
-ui - #area-rect-controls>button[3]: button aria-describedby="area-rect-height-tip" aria-expanded="false" aria-label="Help: Height" class="param-hint-trigger" style="position-anchor: --area-rect-height-tip;" type="button"
-ui - #area-rect-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-rect-controls>label[4]: label for="area-rect-height"
-ui - #area-rect-controls>label[4]>span[0]: span data-tip-desc="area-rect-height-tip" data-tip="Height of the rectangular highlight area" style="anchor-name: --area-rect-height-tip;" :text="Height"
+ui - #area-rect-width-value: span class="range-readout" :text="27%"
+ui - #area-rect-controls>div[1]: div class="range-row"
+ui - #area-rect-controls>div[1]>button[0]: button aria-describedby="area-rect-height-tip" aria-expanded="false" aria-label="Help: Height" class="param-hint-trigger" style="position-anchor: --area-rect-height-tip;" type="button"
+ui - #area-rect-controls>div[1]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-rect-controls>div[1]>label[1]: label for="area-rect-height"
+ui - #area-rect-controls>div[1]>label[1]>span[0]: span data-tip-desc="area-rect-height-tip" data-tip="Height of the rectangular highlight area" style="anchor-name: --area-rect-height-tip;" :text="Height"
 ui - #area-rect-height: input aria-describedby="area-rect-height-value area-rect-height-tip" aria-valuetext="19%" max="1000" min="0" step="1" type="range" value="125" :value="228"
-ui - #area-rect-height-value: span :text="19%"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
+ui - #area-rect-height-value: span class="range-readout" :text="19%"
 ui - #area-delete-btn: button aria-label="Delete area" class="btn btn-secondary btn-danger" style="width: 100%;" :text="Delete area"
 ui - #area-fill-color: input type="hidden" value="#E69F00" :value="#E69F00"
 ui - #area-fill-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label-tip="Colour inside the area; None leaves it unfilled" data-label="Fill" data-mode="okabe-ito" data-target-input="#area-fill-color" (and 48 inside, e53435e3)
-ui - #area-fill-controls>button[2]: button aria-describedby="area-fill-opacity-tip" aria-expanded="false" aria-label="Help: Fill opacity" class="param-hint-trigger" style="position-anchor: --area-fill-opacity-tip;" type="button"
-ui - #area-fill-controls>button[2]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-fill-controls>label[3]: label for="area-fill-opacity"
-ui - #area-fill-controls>label[3]>span[0]: span data-tip-desc="area-fill-opacity-tip" data-tip="Opacity of the area fill. Set to 0% to show only the border" style="anchor-name: --area-fill-opacity-tip;" :text="Fill opacity"
+ui - #area-fill-controls>div[2]: div class="range-row"
+ui - #area-fill-controls>div[2]>button[0]: button aria-describedby="area-fill-opacity-tip" aria-expanded="false" aria-label="Help: Fill opacity" class="param-hint-trigger" style="position-anchor: --area-fill-opacity-tip;" type="button"
+ui - #area-fill-controls>div[2]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-fill-controls>div[2]>label[1]: label for="area-fill-opacity"
+ui - #area-fill-controls>div[2]>label[1]>span[0]: span data-tip-desc="area-fill-opacity-tip" data-tip="Opacity of the area fill. Set to 0% to show only the border" style="anchor-name: --area-fill-opacity-tip;" :text="Fill opacity"
 ui - #area-fill-opacity: input aria-describedby="area-fill-opacity-value area-fill-opacity-tip" aria-valuetext="55%" max="100" min="0" step="1" type="range" value="30" :value="55"
-ui - #area-fill-opacity-value: span :text="55%"
 ui - #area-fill-opacity-tip: span class="sr-only" :text="Opacity of the area fill. Set to 0% to show only the border"
+ui - #area-fill-opacity-value: span class="range-readout" :text="55%"
 ui - #area-border-color: input type="hidden" value="#D55E00" :value="#D55E00"
 ui - #area-border-controls>div[1]: div class="swatch-picker" data-allow-custom="false" data-label-tip="Colour of the area's border line" data-label="Border" data-mode="okabe-ito" data-target-input="#area-border-color" (and 48 inside, 6f6ebf9d)
 ui - #area-border-controls>button[2]: button aria-describedby="area-border-style-tip" aria-expanded="false" aria-label="Help: Border style" class="param-hint-trigger" style="position-anchor: --area-border-style-tip;" type="button"
@@ -559,13 +564,14 @@ ui - #area-border-style>option[1]: option value="dashed" :text="Dashed"
 ui - #area-border-style>option[2]: option value="dotted" :text="Dotted"
 ui - #area-border-style>option[3]: option value="none" :text="None"
 ui - #area-border-style-tip: span class="sr-only" :text="Line style of the area border"
-ui - #area-border-controls>button[5]: button aria-describedby="area-border-width-tip" aria-expanded="false" aria-label="Help: Border width" class="param-hint-trigger" style="position-anchor: --area-border-width-tip;" type="button"
-ui - #area-border-controls>button[5]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-border-controls>label[6]: label for="area-border-width"
-ui - #area-border-controls>label[6]>span[0]: span data-tip-desc="area-border-width-tip" data-tip="Thickness of the area border in project reference pixels" style="anchor-name: --area-border-width-tip;" :text="Border width"
+ui - #area-border-controls>div[5]: div class="range-row"
+ui - #area-border-controls>div[5]>button[0]: button aria-describedby="area-border-width-tip" aria-expanded="false" aria-label="Help: Border width" class="param-hint-trigger" style="position-anchor: --area-border-width-tip;" type="button"
+ui - #area-border-controls>div[5]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-border-controls>div[5]>label[1]: label for="area-border-width"
+ui - #area-border-controls>div[5]>label[1]>span[0]: span data-tip-desc="area-border-width-tip" data-tip="Thickness of the area border in project reference pixels" style="anchor-name: --area-border-width-tip;" :text="Border width"
 ui - #area-border-width: input aria-describedby="area-border-width-value area-border-width-tip" aria-valuetext="6 reference px" max="10" min="1" step="1" type="range" value="2" :value="6"
-ui - #area-border-width-value: span :text="6 reference px"
 ui - #area-border-width-tip: span class="sr-only" :text="Thickness of the area border in project reference pixels"
+ui - #area-border-width-value: span class="range-readout" :text="6 reference px"
 ui - #area-visibility-controls>button[0]: button aria-describedby="area-visibility-tip" aria-expanded="false" aria-label="Help: Visibility" class="param-hint-trigger" style="position-anchor: --area-visibility-tip;" type="button"
 ui - #area-visibility-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #area-visibility-controls>label[1]: label for="area-visibility"
@@ -577,20 +583,22 @@ ui - #area-visibility>option[2]: option value="hide-after" :text="Hide after"
 ui - #area-visibility>option[3]: option value="hide-before-and-after" :text="Hide before and after"
 ui - #area-visibility>option[4]: option value="always-hide" :text="Always hide"
 ui - #area-visibility-tip: span class="sr-only" :text="When this area highlight is visible during animation"
-ui - #area-visibility-controls>button[3]: button aria-describedby="area-fade-in-tip" aria-expanded="false" aria-label="Help: Fade in" class="param-hint-trigger" style="position-anchor: --area-fade-in-tip;" type="button"
-ui - #area-visibility-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-visibility-controls>label[4]: label for="area-fade-in"
-ui - #area-visibility-controls>label[4]>span[0]: span data-tip-desc="area-fade-in-tip" data-tip="Duration of the fade-in animation when the area appears" style="anchor-name: --area-fade-in-tip;" :text="Fade in"
+ui - #area-visibility-controls>div[3]: div class="range-row"
+ui - #area-visibility-controls>div[3]>button[0]: button aria-describedby="area-fade-in-tip" aria-expanded="false" aria-label="Help: Fade in" class="param-hint-trigger" style="position-anchor: --area-fade-in-tip;" type="button"
+ui - #area-visibility-controls>div[3]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-visibility-controls>div[3]>label[1]: label for="area-fade-in"
+ui - #area-visibility-controls>div[3]>label[1]>span[0]: span data-tip-desc="area-fade-in-tip" data-tip="Duration of the fade-in animation when the area appears" style="anchor-name: --area-fade-in-tip;" :text="Fade in"
 ui - #area-fade-in: input aria-describedby="area-fade-in-value area-fade-in-tip" aria-valuetext="1.3s" max="10000" min="0" step="100" type="range" value="500" :value="1250"
-ui - #area-fade-in-value: span :text="1.3s"
 ui - #area-fade-in-tip: span class="sr-only" :text="Duration of the fade-in animation when the area appears"
-ui - #area-visibility-controls>button[6]: button aria-describedby="area-fade-out-tip" aria-expanded="false" aria-label="Help: Fade out" class="param-hint-trigger" style="position-anchor: --area-fade-out-tip;" type="button"
-ui - #area-visibility-controls>button[6]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui - #area-visibility-controls>label[7]: label for="area-fade-out"
-ui - #area-visibility-controls>label[7]>span[0]: span data-tip-desc="area-fade-out-tip" data-tip="Duration of the fade-out animation when the area disappears" style="anchor-name: --area-fade-out-tip;" :text="Fade out"
+ui - #area-fade-in-value: span class="range-readout" :text="1.3s"
+ui - #area-visibility-controls>div[4]: div class="range-row"
+ui - #area-visibility-controls>div[4]>button[0]: button aria-describedby="area-fade-out-tip" aria-expanded="false" aria-label="Help: Fade out" class="param-hint-trigger" style="position-anchor: --area-fade-out-tip;" type="button"
+ui - #area-visibility-controls>div[4]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #area-visibility-controls>div[4]>label[1]: label for="area-fade-out"
+ui - #area-visibility-controls>div[4]>label[1]>span[0]: span data-tip-desc="area-fade-out-tip" data-tip="Duration of the fade-out animation when the area disappears" style="anchor-name: --area-fade-out-tip;" :text="Fade out"
 ui - #area-fade-out: input aria-describedby="area-fade-out-value area-fade-out-tip" aria-valuetext="1.8s" max="10000" min="0" step="100" type="range" value="500" :value="1750"
-ui - #area-fade-out-value: span :text="1.8s"
 ui - #area-fade-out-tip: span class="sr-only" :text="Duration of the fade-out animation when the area disappears"
+ui - #area-fade-out-value: span class="range-readout" :text="1.8s"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
@@ -621,7 +629,7 @@ app ~ focus: "body" → "#area-rect-height"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-rect-height: input aria-describedby="area-rect-height-value area-rect-height-tip" aria-valuetext="19%" max="1000" min="0" step="1" type="range" value="125" :value="228" → input aria-describedby="area-rect-height-value area-rect-height-tip" aria-valuetext="27%" max="1000" min="0" step="1" type="range" value="125" :value="333"
-ui ~ #area-rect-height-value: span :text="19%" → span :text="27%"
+ui ~ #area-rect-height-value: span class="range-readout" :text="19%" → span class="range-readout" :text="27%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
@@ -654,7 +662,7 @@ app ~ focus: "body" → "#area-fill-opacity"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-fill-opacity: input aria-describedby="area-fill-opacity-value area-fill-opacity-tip" aria-valuetext="55%" max="100" min="0" step="1" type="range" value="30" :value="55" → input aria-describedby="area-fill-opacity-value area-fill-opacity-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="30" :value="33"
-ui ~ #area-fill-opacity-value: span :text="55%" → span :text="33%"
+ui ~ #area-fill-opacity-value: span class="range-readout" :text="55%" → span class="range-readout" :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
@@ -702,7 +710,7 @@ app ~ focus: "body" → "#area-border-width"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-border-width: input aria-describedby="area-border-width-value area-border-width-tip" aria-valuetext="6 reference px" max="10" min="1" step="1" type="range" value="2" :value="6" → input aria-describedby="area-border-width-value area-border-width-tip" aria-valuetext="4 reference px" max="10" min="1" step="1" type="range" value="2" :value="4"
-ui ~ #area-border-width-value: span :text="6 reference px" → span :text="4 reference px"
+ui ~ #area-border-width-value: span class="range-readout" :text="6 reference px" → span class="range-readout" :text="4 reference px"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
@@ -733,7 +741,7 @@ app ~ focus: "body" → "#area-fade-in"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-fade-in: input aria-describedby="area-fade-in-value area-fade-in-tip" aria-valuetext="1.3s" max="10000" min="0" step="100" type="range" value="500" :value="1250" → input aria-describedby="area-fade-in-value area-fade-in-tip" aria-valuetext="3.3s" max="10000" min="0" step="100" type="range" value="500" :value="3300"
-ui ~ #area-fade-in-value: span :text="1.3s" → span :text="3.3s"
+ui ~ #area-fade-in-value: span class="range-readout" :text="1.3s" → span class="range-readout" :text="3.3s"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
@@ -749,7 +757,7 @@ app ~ focus: "body" → "#area-fade-out"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui ~ #area-fade-out: input aria-describedby="area-fade-out-value area-fade-out-tip" aria-valuetext="1.8s" max="10000" min="0" step="100" type="range" value="500" :value="1750" → input aria-describedby="area-fade-out-value area-fade-out-tip" aria-valuetext="3.3s" max="10000" min="0" step="100" type="range" value="500" :value="3300"
-ui ~ #area-fade-out-value: span :text="1.8s" → span :text="3.3s"
+ui ~ #area-fade-out-value: span class="range-readout" :text="1.8s" → span class="range-readout" :text="3.3s"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}

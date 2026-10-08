@@ -386,6 +386,9 @@ export const crowdsMixin = {
     const index = Number(control?.dataset?.busynessIndex);
     const field = control?.dataset?.busynessField;
     if (!emitter || !Number.isInteger(index) || !field || !emitter.busynessEnvelope[index]) return;
+    // The rows are rebuilt by the change, taking the focused field with
+    // them: focus returns to the same field of the same handle (UI-06 B-28).
+    const hadFocus = document.activeElement === control;
 
     const next = emitter.busynessEnvelope.map(handle => ({ ...handle }));
     if (field === 'time' && index > 0 && index < next.length - 1) {
@@ -402,6 +405,24 @@ export const crowdsMixin = {
       return;
     }
     this._commitCrowdBusynessEnvelope(next, 'Busyness pattern updated.');
+    if (hadFocus) this._focusCrowdBusynessControl(index, field);
+  },
+
+  /**
+   * Focus the rebuilt field for a handle: the same field, or, for a handle
+   * just removed, the handle now at its index — its Remove, or, for the last
+   * handle, which has none, its Busy field.
+   * @param {number} index - Handle index
+   * @param {string} field - `data-busyness-field`
+   * @private
+   */
+  _focusCrowdBusynessControl(index, field) {
+    const controls = document.getElementById('crowd-busyness-handles');
+    if (!controls) return;
+    const at = (i, name) => controls.querySelector(`[data-busyness-index="${i}"][data-busyness-field="${name}"]`);
+    const last = controls.querySelectorAll('.crowd-busyness-handle-row').length - 1;
+    const target = at(index, field) ?? at(Math.min(index, last), 'value');
+    target?.focus();
   },
 
   /**
@@ -564,7 +585,7 @@ export const crowdsMixin = {
 
   /**
    * Build one crowd row: select button (swatch + name), visibility eye,
-   * delete. Double-click the name to rename inline.
+   * delete. Double-click the name, or press F2 on the row, to rename inline.
    * @param {FlowLayer} layer
    * @returns {HTMLLIElement}
    * @private
@@ -589,7 +610,7 @@ export const crowdsMixin = {
     title.className = 'layer-title';
     title.textContent = layer.name;
     // The row's own hint: shown on hover, on keyboard focus, and read as its description.
-    row.setAttribute('data-tip', 'Double-click to rename');
+    row.setAttribute('data-tip', 'Double-click or press F2 to rename');
 
     row.appendChild(swatch);
     row.appendChild(title);
@@ -600,6 +621,13 @@ export const crowdsMixin = {
       }
     });
     row.addEventListener('dblclick', () => this._startCrowdRename(layer, title));
+    // F2 renames too, as a waypoint row's does (UI-06 J-13): the row is
+    // selected first, as a double-click's first click selects it.
+    row.addEventListener('keydown', (e) => {
+      if (e.key !== 'F2') return;
+      e.preventDefault();
+      this.renameCrowd(layer);
+    });
 
     const visBtn = document.createElement('button');
     visBtn.type = 'button';
@@ -636,6 +664,20 @@ export const crowdsMixin = {
     item.appendChild(visBtn);
     item.appendChild(delBtn);
     return item;
+  },
+
+  /**
+   * Select a crowd and open its row's rename field (F2 on the row, UI-06
+   * J-13). Selecting rebuilds the strip, so the field opens on the row the
+   * rebuild made for the layer: the rows follow the scene's order, after
+   * the Route row.
+   * @param {FlowLayer} layer
+   */
+  renameCrowd(layer) {
+    if (this.selectedCrowd !== layer) this.eventBus.emit('crowd:selected', layer);
+    const index = this.scene.getFlowLayers().indexOf(layer);
+    const title = this._layersStripEl?.children[index + 1]?.querySelector('.layer-title');
+    if (title) this._startCrowdRename(layer, title);
   },
 
   /**
