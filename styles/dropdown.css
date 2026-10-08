@@ -185,9 +185,10 @@
   font-size:var(--type-caption) !important;
 }
 
-/* Danger item — red text, red hover */
+/* Danger item — red text, red hover. The text token: --support-error is
+   6.4:1 on white and 4.6:1 on the hover tint (B-09). */
 .dropdown-item-danger{
-  color:var(--support-error) !important;
+  color:var(--text-error) !important;
 }
 .dropdown-item-danger:hover{
   background:var(--support-error-bg) !important;
@@ -199,9 +200,7 @@
 }
 
 .dropdown-item kbd{
-  margin-left:auto;
-  font-size:0.6875rem;
-  opacity:0.7;
+  margin-left:auto; /* kbd's own 12 px and --text-02 chip: faded at .7 it fell to 4.4:1 (B-10) */
 }
 
 /* Passive hint caption inside dropdown */

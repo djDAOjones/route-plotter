@@ -152,7 +152,7 @@ select{
 .btn-danger:hover{
   background:var(--support-error-bg);
   border-color:var(--support-error);
-  color:var(--support-error);
+  color:var(--text-error); /* 7.8:1 on the tint; --support-error was 4.6:1 (B-09) */
 }
 .btn-danger:active{
   background:var(--uon-jubilee-red-05);
@@ -1548,7 +1548,7 @@ kbd{
 
 .control-row-inline > span:last-child{
   font-size:var(--type-caption);
-  color:var(--text-03);
+  color:var(--text-02); /* --text-03 is 6.4:1 on the card tint; this is 10.3:1 (B-08) */
 }
 
 .control-row-inline input[type="range"]{
@@ -1572,7 +1572,7 @@ kbd{
 .slider-value-readonly{
   flex:1;
   text-align:left;
-  color:var(--text-03);
+  color:var(--text-02); /* 10.3:1 on the card tint (B-08) */
   font-style:italic;
 }
 
@@ -1819,7 +1819,7 @@ kbd{
 .waypoint-list-empty .hint{
   margin-top:var(--space-2);
   font-size:var(--type-caption);
-  color:var(--text-03);
+  color:var(--text-02); /* 10.3:1 on the list's --ui-02 (B-08) */
 }
 
 /* Waypoint Item Base - calm rows without card borders
@@ -1862,9 +1862,29 @@ kbd{
 .layer-item:focus-within{
   z-index:2;
 }
-.layer-item.layer-hidden .layer-title,
+/* A hidden crowd is still a live row (selectable, renamable), so its title
+   keeps 7:1 text — --text-02 is 11:1 on --ui-01, 8.6:1 selected — and a
+   "hidden" tag beside it says the state in words; only the swatch fades
+   (UI-06 B-11). */
+.layer-item.layer-hidden .layer-title{
+  color:var(--text-02);
+}
 .layer-item.layer-hidden .layer-swatch{
   opacity:0.45;
+}
+.layer-hidden-tag{
+  flex-shrink:0;
+  padding:0 var(--space-1);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  font-size:var(--type-caption);
+  font-weight:400;
+  line-height:1.5;
+  color:var(--text-02);
+  background:var(--ui-02);
+}
+@media (forced-colors: active){
+  .layer-hidden-tag{ border-color:CanvasText; color:CanvasText; background:Canvas; }
 }
 
 .layer-row{
@@ -2335,7 +2355,9 @@ kbd{
   height:0.75rem;
   border-radius:50%;
   flex-shrink:0;
-  border:1px solid var(--border-subtle);
+  /* 4.5:1 on a white dot, 4.1:1 on the list: a white marker's dot no longer
+     vanishes (B-13); --border-subtle was 1.4:1 */
+  border:1px solid var(--border-interactive);
 }
 
 /* None-colour dot: red diagonal line over white circle */
@@ -3590,12 +3612,14 @@ a.btn-primary:visited{
   }
 }
 
-/* High contrast adjustments */
+/* Increased contrast (UI-06 B-27): the primary button stays on UoN blue —
+   white on it is 11.7:1, where white on jubilee red was 6.4:1 — and strokes
+   strengthen instead: tokens.css darkens --border-interactive to 7.8:1 and
+   every button border doubles. The header has no bottom border to recolour. */
 @media (prefers-contrast:more){
-  .btn-primary{background:var(--uon-jubilee-red);color:var(--text-04);}
+  .btn{border-width:2px;}
   .btn-secondary{background:var(--ui-02);color:var(--text-01);}
   .timeline-slider{background:var(--ui-04);}
-  .header{border-bottom-color:var(--ui-04);}
 }
 
 /* Impact overlay (zoom prompt etc) */

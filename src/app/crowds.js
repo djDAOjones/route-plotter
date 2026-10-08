@@ -591,6 +591,7 @@ export const crowdsMixin = {
 
     row.appendChild(swatch);
     row.appendChild(title);
+    if (!layer.visible) row.insertAdjacentHTML('beforeend', '<span class="layer-hidden-tag">hidden</span>');
     row.addEventListener('click', () => {
       if (this.selectedCrowd !== layer) {
         this.eventBus.emit('crowd:selected', layer);

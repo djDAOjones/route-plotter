@@ -51,7 +51,7 @@
 /* Destructive entry (Delete) — colour is reinforced by list position
    and label text, never the only carrier of meaning */
 .context-menu-item.is-danger {
-  color: var(--support-error);
+  color: var(--text-error); /* 10.9:1 at rest, 9.0:1 hovered; --support-error was 6.4:1 (B-09) */
 }
 
 .context-menu-separator {

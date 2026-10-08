@@ -1219,6 +1219,7 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item layer-hidden"
+ui + #layers-strip>li[1]>button[0]>span[2]: span class="layer-hidden-tag" :text="hidden"
 ui ~ #layers-strip>li[1]>button[1]: button aria-label="Hide Visitors" aria-pressed="true" class="layer-visibility" title="Hide crowd" type="button" → button aria-label="Show Visitors" aria-pressed="false" class="layer-visibility" title="Show crowd" type="button"
 ui ~ #layers-strip>li[1]>button[1]>svg[0]>path[0]: path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z" → path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z" opacity="0.35"
 ui + #layers-strip>li[1]>button[1]>svg[0]>path[1]: path d="M2 14L14 2"

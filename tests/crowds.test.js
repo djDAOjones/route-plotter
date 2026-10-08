@@ -192,6 +192,34 @@ describe('layers strip', () => {
     expect(semantic).toHaveLength(2);
   });
 
+  test('a hidden crowd row says so in text and keeps its title legible (UI-06 B-11)', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const style = document.createElement('style');
+    style.textContent = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
+    document.head.append(style);
+    try {
+      const row = () => document.querySelectorAll('#layers-strip .layer-item')[1];
+      expect(row().querySelector('.layer-hidden-tag')).toBeNull();
+
+      document.querySelector('#layers-strip .layer-visibility').click();
+      // The state is readable without colour: a "hidden" tag beside the
+      // title, inside the row button so its name carries the state too.
+      const tag = row().querySelector('.layer-row .layer-hidden-tag');
+      expect(tag.textContent).toBe('hidden');
+      expect(row().querySelector('.layer-row').textContent).toContain('hidden');
+      // The row is live (selectable, renamable), so the title is not faded
+      // under 7:1; jsdom applies the sheet's `opacity`, so it is read here.
+      const title = row().querySelector('.layer-title');
+      expect(Number(getComputedStyle(title).opacity || 1)).toBeGreaterThanOrEqual(0.8);
+
+      document.querySelector('#layers-strip .layer-visibility').click();
+      expect(row().querySelector('.layer-hidden-tag')).toBeNull();
+    } finally {
+      style.remove();
+    }
+  });
+
   test('renaming an unselected crowd publishes a semantic refresh event', () => {
     const app = makeApp();
     app.addCrowd();
