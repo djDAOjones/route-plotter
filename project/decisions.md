@@ -18,13 +18,23 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
-## 2026-10-08 — GATELESS-1 — The owner paused chat 12 for the weekly reset; after it, three items run in parallel
+## 2026-10-08 — GATELESS-1 — The owner paused chat 12 for the weekly reset, then let it run to his stop time
 
-**Decision:** Chat 12 paused on 6 October at 97% of the weekly plan, resumed on 7 October with no context line until the owner's stop time, then ran his extra hour and stopped; from the reset on 8 October the run keeps three items in flight, one implementing agent each, launched together, with gates, merges and releases still one at a time.
+**Decision:** Chat 12 paused on 6 October and resumed on 7 October with no context line, under the owner's stop time, then stopped; nothing was scheduled to resume it. After the weekly reset the run may launch its items' agents together, one each, within the grant's limit of up to three in flight; gates, merges and releases stay one at a time.
 
-**Rationale:** the owner, 6 October ~12:15: "lets pause at suitable moment until usage resets, then you can go whole hog with agents"; 7 October 00:08: "resume, and allow an unrestricted context window for this chat, but, importantly, cease at 01:59 tonight"; ~01:09: "you can go for one more hour or until usage is maxed. dont come back on when the usage resets". Reading "whole hog" as the prompt's limit of three items, "tonight" as 01:59 on 7 October, and the last as scheduling no resumption are the run's calls, for him to confirm.
+**Rationale:** the owner, 6 October ~12:15: "lets pause at suitable moment until usage resets, then you can go whole hog with agents"; 7 October 00:08: "resume, and allow an unrestricted context window for this chat, but, importantly, cease at 01:59 tonight"; ~01:09: "you can go for one more hour or until usage is maxed. dont come back on when the usage resets". The run's calls, for him to confirm: "whole hog" as launching up to three items' agents together, within the grant; "tonight" as 01:59 on 7 October; and the last as scheduling no resumption, so a chat he opens after the reset carries on. The pause followed the usage tool's reading of 97% of the weekly plan.
 
 **Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — DEF-81 — TST-03's cancelled run stopped at 15m18s
+
+**Decision:** DEF-81's Rationale is corrected in one fact: TST-03's pull_request run on `ec83404` was cancelled at 15m18s, and TST-11's on `c95c85e` at 15m17s; the decision is unchanged.
+
+**Rationale:** Codex's review of DEF-81 found the timing; an old entry is never edited, so this supersedes it for that one fact.
+
+**Supersedes:** 2026-10-07 — DEF-81 — Verify gets 30 minutes, since the suite reached 15
 
 **Deferred:** none
 
@@ -42,7 +52,7 @@
 
 **Decision:** DEF-81 lands: the Verify job's limit (`.github/workflows/ci.yml`, `timeout-minutes`) rises from 15 to 30 minutes, the only change, because the suite now runs about 14 minutes on GitHub and runs were being cancelled at 15.
 
-**Rationale:** on 6–7 October both pull_request runs were cancelled with tests still running, TST-03's on `ec83404` at 15m18s and TST-11's on `c95c85e` at 15m17s; TST-03's re-run passed in 14m06s; main's own runs took about 13 minutes, and TST-11 adds a minute more. Nothing is skipped, sharded or changed in the suite; a faster one is a wish line. The record does not cover CI's limit, so this narrowest fix is the run's call under GATELESS-1, for the owner to confirm; Codex checked it. CI configuration ships nothing, so no release.
+**Rationale:** on 6–7 October both pull_request runs, TST-03's on `ec83404` and TST-11's on `c95c85e`, were cancelled at 15m17s with tests still running; TST-03's re-run passed in 14m06s; main's own runs took about 13 minutes, and TST-11 adds a minute more. Nothing is skipped, sharded or changed in the suite; a faster one is a wish line. The record does not cover CI's limit, so this narrowest fix is the run's call under GATELESS-1, for the owner to confirm; Codex checked it. CI configuration ships nothing, so no release.
 
 **Supersedes:** none
 
