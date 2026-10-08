@@ -3,7 +3,7 @@
 ## #network-edit-banner>button[1] · click
 emit network:edit-mode-changed {active: false, layer: null}
 emit render:request
-app ~ focus: "body" → "#crowd-scope>div[0]>h2[0]>button[0]"
+app ~ focus: "body" → "#crowd-scope>div[1]>h2[0]>button[0]"
 storage + routePlotter_lastSection: "guide"
 ui ~ #crowd-scope>div[1]: div class="settings-section" data-section="guide" → div class="settings-section" data-last="true" data-section="guide"
 ui ~ #network-edit-btn: button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" disabled="" type="button" :text="Edit network" → button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" type="button" :text="Edit network"
