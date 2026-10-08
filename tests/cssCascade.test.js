@@ -125,6 +125,17 @@ describe('states', () => {
     expect(matchable('.x::before', new Set())).toBeNull();
     expect(matchable('.x:focus', new Set(['focus-visible']))).toBeNull();
   });
+
+  test('a compound emptied by the states keeps its place as *, so its combinators still bind', () => {
+    expect(matchable('.parent > :not(:hover) .p', new Set())).toBe('.parent > * .p');
+    expect(matchable(':not(:hover) > .p', new Set())).toBe('* > .p');
+    expect(matchable('.parent > :not(:hover) .p', new Set(['hover']))).toBeNull();
+    const sheet = rules('.parent > :not(:hover) .p{color:red}');
+    const nested = mount('<div class="parent"><div><span class="p">x</span></div></div>', '.p');
+    const direct = mount('<div class="parent"><span class="p">x</span></div>', '.p');
+    expect(cascade(nested, 'color', { rules: sheet }).value).toBe('red');
+    expect(cascade(direct, 'color', { rules: sheet })).toBeUndefined();
+  });
 });
 
 describe('nested at-rules', () => {

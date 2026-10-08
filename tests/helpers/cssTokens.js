@@ -420,6 +420,13 @@ export function matchable(selector, states) {
   if (selector.includes('::')) return null;
   let out = '';
   let i = 0;
+  // A compound that loses every simple selector to the states in force keeps
+  // its place as `*`, so the combinators around it still bind the same
+  // elements: `.parent > :not(:hover) .p` at rest is `.parent > * .p`, never
+  // `.parent > .p` (Codex, UI-06 colour PR round 3).
+  let has = false;      // this compound has emitted a simple selector
+  let stripped = false; // this compound lost one to the states in force
+  const flush = () => { if (!has && stripped) out += '*'; has = false; stripped = false; };
   while (i < selector.length) {
     const fn = selector.slice(i).match(FUNCTIONAL);
     if (fn) {
@@ -428,6 +435,7 @@ export function matchable(selector, states) {
       const name = fn[1];
       if (name === 'has') {
         out += selector.slice(i, end);
+        has = true;
       } else {
         const kept = splitTopLevel(inner).map(alternative => matchable(alternative, states)).filter(Boolean);
         if (name === 'not') {
@@ -435,10 +443,16 @@ export function matchable(selector, states) {
           // "always", and drops out; one that always matches negates to
           // "never", and sinks the selector.
           if (kept.includes('*')) return null;
-          if (kept.length) out += `:not(${kept.join(', ')})`;
+          if (kept.length) {
+            out += `:not(${kept.join(', ')})`;
+            has = true;
+          } else {
+            stripped = true;
+          }
         } else {
           if (!kept.length) return null;
           out += `:${name}(${kept.join(', ')})`;
+          has = true;
         }
       }
       i = end;
@@ -447,12 +461,17 @@ export function matchable(selector, states) {
     const state = selector.slice(i).match(STATE);
     if (state) {
       if (!states.has(state[1])) return null;
+      stripped = true;
       i += state[0].length;
       continue;
     }
-    out += selector[i];
+    const ch = selector[i];
+    if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '>' || ch === '+' || ch === '~') flush();
+    else has = true;
+    out += ch;
     i += 1;
   }
+  flush();
   return out.trim() || '*';
 }
 
