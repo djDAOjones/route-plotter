@@ -18,6 +18,26 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — GATELESS-1 — The owner paused chat 12 for the weekly reset, then let it run to his stop time
+
+**Decision:** Chat 12 paused on 6 October and resumed on 7 October with no context line, under the owner's stop time, then stopped; nothing was scheduled to resume it. After the weekly reset the run may launch its items' agents together, one each, within the grant's limit of up to three in flight; gates, merges and releases stay one at a time.
+
+**Rationale:** the owner, 6 October ~12:15: "lets pause at suitable moment until usage resets, then you can go whole hog with agents"; 7 October 00:08: "resume, and allow an unrestricted context window for this chat, but, importantly, cease at 01:59 tonight"; ~01:09: "you can go for one more hour or until usage is maxed. dont come back on when the usage resets". The run's calls, for him to confirm: "whole hog" as launching up to three items' agents together, within the grant; "tonight" as 01:59 on 7 October; and the last as scheduling no resumption, so a chat he opens after the reset carries on. The pause followed the usage tool's reading of 97% of the weekly plan.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — DEF-81 — TST-03's cancelled run stopped at 15m18s
+
+**Decision:** DEF-81's Rationale is corrected in one fact: TST-03's pull_request run on `ec83404` was cancelled at 15m18s, and TST-11's on `c95c85e` at 15m17s; the decision is unchanged.
+
+**Rationale:** Codex's review of DEF-81 found the timing; an old entry is never edited, so this supersedes it for that one fact.
+
+**Supersedes:** 2026-10-07 — DEF-81 — Verify gets 30 minutes, since the suite reached 15
+
+**Deferred:** none
+
 ## 2026-10-07 — TST-11 — Behavioural tests stand beside the source-text assertions; retiring those waits on the owner
 
 **Decision:** TST-11's first round lands: 25 behavioural tests pin every source-text assertion its row names that has behaviour, on the booted editor or by running `build.js` in the SPL-06 harness's copy; the source-text assertions stay unchanged, and the item stays open, `[!]`, until the owner says they may go.
