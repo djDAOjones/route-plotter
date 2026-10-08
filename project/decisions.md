@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — DEF-13 — A focused control keeps only its own keys; every other shortcut runs
+
+**Decision:** DEF-13 lands: `handleKeyDown`'s guard keeps every key in a field (input, textarea, select, contenteditable) and for a control inside a modal dialog, as before; any other focused control (button, link, summary, `role=button`) keeps only Space, a menu item or option also the four arrows; every other shortcut runs and is prevented. DEF-32 merges after it.
+
+**Rationale:** the guard returned early for every key on any button, link, summary or menu item, and Chromium keeps focus on a clicked button, so Delete, the arrows, Undo and Save did nothing after a click and Cmd+S opened the browser's Save dialog (round 2, C2). 8 tests fail on main; every mutant is killed. TST-13's key table moves on purpose: those keys now run from a control, and its listener sweeps set the page's handler aside. The run's calls: an open dropdown menu keeps only Space and its arrows (the register's "in-widget arrows"), so Delete and Cmd+S act there, while a waypoint context menu keeps every key through its own capture listener, as before; a modal dialog's controls keep every key, as today. Codex r1 found two newly reachable actions, fixed in r2: Escape on a focused hint "?" also deselected (the hint now cancels the Escape it consumes, and the dispatcher skips cancelled keys, so Escape on the page with a hint open keeps the selection too); Delete on an unselected row deleted the selected waypoint (a row whose waypoint is not selected, and its × and move buttons, cancel Delete, Backspace, the arrows, T and Cmd/Ctrl+D when something is selected; the run's call, T and Cmd/Ctrl+D included because they too act on a waypoint the row does not name). Found on main: a dialog's heading passes shortcuts to the editor behind (DEF-82). Digest rules: wcag-2.2-aaa (2.1.1 keyboard; 2.1.2 no trap); nielsen 3 (user control).
+
+**Supersedes:** none
+
+**Deferred:** DEF-82
+
 ## 2026-10-08 — DEF-20 — After Open, rollback and Clear All, the controls show the project they hold
 
 **Decision:** DEF-20 lands: a load (Open, and a failed Open's rollback, through `syncLoadedProjectControls`) writes the Duration thumb on the slider that exists and the reveal and Angle of View sliders; Clear All leaves Preview through the one mode setter, after its own non-restoring cancel of a held gesture; the 50 ms `isUpdatingSlider` flag, which dropped real Duration input, is deleted.
