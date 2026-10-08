@@ -708,10 +708,13 @@ export function initParamTooltips() {
   // Escape closes, and keeps it closed while focus stays on that trigger or
   // control. Capture phase: a control's own Escape handler (the scene outline
   // resets its form) stops the key before it would bubble here. The key still
-  // reaches that handler, as it did before hints opened on hover.
+  // reaches that handler, as it did before hints opened on hover. Closing the
+  // hint uses the key up, so the page's own Escape (which clears the
+  // selection) leaves it alone (DEF-13).
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || !activeTip) return;
     const holders = [triggerByTip.get(activeTip), controlByTip.get(activeTip)];
+    e.preventDefault();
     hideTooltip();
     escapeDismissed = holders.find(holder => holder?.contains(document.activeElement)) ?? escapeDismissed;
   }, true);

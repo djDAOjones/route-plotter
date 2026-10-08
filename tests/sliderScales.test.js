@@ -110,6 +110,22 @@ describe('the slider scales (SPL-01)', () => {
     }
   });
 
+  test('the angle inverse, recovered from 2fb72ff for load (DEF-20), clamps and gives back every position', () => {
+    // Values from the method as it stood in MotionVisibilityService at 2fb72ff.
+    const table = [
+      [-5, 0], [1, 0], [1.5, 4], [14.469750000000001, 100],
+      [35.26171875, 250], [60, 416], [73.71875, 500], [95, 621],
+      [120.56640625, 750], [154.44775, 900], [179.9, 1000], [180, 1000],
+      [200, 1000],
+    ];
+    for (const [angle, slider] of table) {
+      expect(scales.angleToSlider(angle, 1, 180), `angle ${angle}`).toBe(slider);
+    }
+    for (let slider = 0; slider <= 1000; slider += 1) {
+      expect(scales.angleToSlider(scales.sliderToAngle(slider, 1, 180), 1, 180), `slider ${slider}`).toBe(slider);
+    }
+  });
+
   test('readouts keep one decimal below 10 and whole numbers from 10, rounding away from zero', () => {
     const table = [
       [-12.7, '-13', '-13%'],

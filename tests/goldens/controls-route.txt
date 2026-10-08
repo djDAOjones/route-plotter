@@ -14,7 +14,7 @@ app ~ focus: "body" → "#mode-toggle-btn"
 ui ~ #mode-switch>span[0]: span class="mode-label mode-label-edit active" :text="Edit" → span class="mode-label mode-label-edit" :text="Edit"
 ui ~ #mode-toggle-btn: button aria-checked="false" aria-label="Toggle preview mode" class="mode-toggle" role="switch" type="button" → button aria-checked="true" aria-label="Toggle preview mode" class="mode-toggle" role="switch" type="button"
 ui ~ #mode-switch>span[2]: span class="mode-label mode-label-preview" :text="Preview" → span class="mode-label mode-label-preview active" :text="Preview"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="491.9s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="491.9s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="491.9s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p (not shown)
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 8:11" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -78,8 +78,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -240,7 +240,7 @@ app ~ focus: "body" → "#animation-speed-right"
 storage ~ routePlotter_lastSection: "video" → "pacing"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" → div class="settings-section expanded" data-last="true" data-section="pacing"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1336"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1336"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.8 s — route 21.5 s, crowds finish +9.3 s, beacon ends +6.5 s"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30805.366562, baseDuration: 21497.287809, mode: "constant-time", speed: 250, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -262,7 +262,7 @@ storage ~ routePlotter_lastSection: "video" → "pacing"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui ~ #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" → div class="settings-section expanded" data-last="true" data-section="pacing"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="34.1s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="34.1s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="34.1s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 34.1 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s, hold at end +3.3 s"
 ui ~ #hold-at-end: input aria-describedby="hold-at-end-value hold-at-end-tip" aria-valuetext="0s" class="range-hit-target" max="10000" min="0" step="100" type="range" value="2000" :value="0" → input aria-describedby="hold-at-end-value hold-at-end-tip" aria-valuetext="3.3s" class="range-hit-target" max="10000" min="0" step="100" type="range" value="2000" :value="3300"
@@ -452,11 +452,33 @@ model ~ animationState.duration: 21429.352554 → 20429.352554
 model ~ motionSettings.backgroundVisibility: "spotlight-reveal" → "always-show"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.4s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.4s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.4s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.4 s — route 20.4 s, crowds finish +10.0 s, beacon ends +6.5 s"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
 ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="always-show"
+ui ~ #spotlight-controls: div style="display: block;" → div (not shown)
+ui - #spotlight-controls>button[0]: button aria-describedby="reveal-size-tip" aria-expanded="false" aria-label="Help: Spotlight Size" class="param-hint-trigger" style="position-anchor: --reveal-size-tip;" type="button"
+ui - #spotlight-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #spotlight-controls>label[1]: label for="reveal-size"
+ui - #spotlight-controls>label[1]>span[0]: span data-tip-desc="reveal-size-tip" data-tip="Radius of the visible area around the path head" style="anchor-name: --reveal-size-tip;" :text="Spotlight Size"
+ui - #reveal-size: input aria-describedby="reveal-size-value reveal-size-tip" aria-valuetext="62%" max="1000" min="0" step="1" type="range" value="500" :value="1000"
+ui - #reveal-size-value: span :text="62%"
+ui - #reveal-size-tip: span class="sr-only" :text="Radius of the visible area around the path head"
+ui - #spotlight-controls>button[3]: button aria-describedby="reveal-feather-tip" aria-expanded="false" aria-label="Help: Spotlight Feather" class="param-hint-trigger" style="position-anchor: --reveal-feather-tip;" type="button"
+ui - #spotlight-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #spotlight-controls>label[4]: label for="reveal-feather"
+ui - #spotlight-controls>label[4]>span[0]: span data-tip-desc="reveal-feather-tip" data-tip="Softness of the spotlight edge" style="anchor-name: --reveal-feather-tip;" :text="Spotlight Feather"
+ui - #reveal-feather: input aria-describedby="reveal-feather-value reveal-feather-tip" aria-valuetext="71%" max="1000" min="0" step="1" type="range" value="500" :value="926"
+ui - #reveal-feather-value: span :text="71%"
+ui - #reveal-feather-tip: span class="sr-only" :text="Softness of the spotlight edge"
+ui - #spotlight-controls>button[6]: button aria-describedby="reveal-trail-tip" aria-expanded="false" aria-label="Help: Reveal trail" class="param-hint-trigger" style="position-anchor: --reveal-trail-tip;" type="button"
+ui - #spotlight-controls>button[6]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #reveal-trail-control: label for="reveal-trail"
+ui - #reveal-trail-control>span[0]: span data-tip-desc="reveal-trail-tip" data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades" style="anchor-name: --reveal-trail-tip;" :text="Reveal trail"
+ui - #reveal-trail: input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="38% of path" max="1000" min="0" step="1" type="range" value="1000" :value="790"
+ui - #reveal-trail-value: span :text="38% of path"
+ui - #reveal-trail-tip: span class="sr-only" :text="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30398.04796, baseDuration: 20429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9695 chars, b41360f9]
@@ -467,29 +489,17 @@ model ~ animationState.duration: 21429.352554 → 20429.352554
 model ~ motionSettings.backgroundVisibility: "spotlight-reveal" → "spotlight"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.4s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.4s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.4s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.4 s — route 20.4 s, crowds finish +10.0 s, beacon ends +6.5 s"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
 ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="spotlight"
-ui ~ #spotlight-controls: div (not shown) → div style="display: block;"
-ui + #spotlight-controls>button[0]: button aria-describedby="reveal-size-tip" aria-expanded="false" aria-label="Help: Spotlight Size" class="param-hint-trigger" style="position-anchor: --reveal-size-tip;" type="button"
-ui + #spotlight-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui + #spotlight-controls>label[1]: label for="reveal-size"
-ui + #spotlight-controls>label[1]>span[0]: span data-tip-desc="reveal-size-tip" data-tip="Radius of the visible area around the path head" style="anchor-name: --reveal-size-tip;" :text="Spotlight Size"
-ui + #reveal-size: input aria-describedby="reveal-size-value reveal-size-tip" aria-valuetext="10%" max="1000" min="0" step="1" type="range" value="500" :value="715"
-ui + #reveal-size-value: span :text="10%"
-ui + #reveal-size-tip: span class="sr-only" :text="Radius of the visible area around the path head"
-ui + #spotlight-controls>button[3]: button aria-describedby="reveal-feather-tip" aria-expanded="false" aria-label="Help: Spotlight Feather" class="param-hint-trigger" style="position-anchor: --reveal-feather-tip;" type="button"
-ui + #spotlight-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
-ui + #spotlight-controls>label[4]: label for="reveal-feather"
-ui + #spotlight-controls>label[4]>span[0]: span data-tip-desc="reveal-feather-tip" data-tip="Softness of the spotlight edge" style="anchor-name: --reveal-feather-tip;" :text="Spotlight Feather"
-ui + #reveal-feather: input aria-describedby="reveal-feather-value reveal-feather-tip" aria-valuetext="0.0%" max="1000" min="0" step="1" type="range" value="500" :value="0"
-ui + #reveal-feather-value: span :text="0.0%"
-ui + #reveal-feather-tip: span class="sr-only" :text="Softness of the spotlight edge"
-ui + #spotlight-controls>button[6]: button (not shown)
-ui + #reveal-trail-control: label (not shown)
-ui + #reveal-trail-tip: span class="sr-only" :text="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades"
+ui ~ #spotlight-controls>button[6]: button aria-describedby="reveal-trail-tip" aria-expanded="false" aria-label="Help: Reveal trail" class="param-hint-trigger" style="position-anchor: --reveal-trail-tip;" type="button" → button (not shown)
+ui ~ #reveal-trail-control: label for="reveal-trail" → label (not shown)
+ui - #spotlight-controls>button[6]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #reveal-trail-control>span[0]: span data-tip-desc="reveal-trail-tip" data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades" style="anchor-name: --reveal-trail-tip;" :text="Reveal trail"
+ui - #reveal-trail: input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="38% of path" max="1000" min="0" step="1" type="range" value="1000" :value="790"
+ui - #reveal-trail-value: span :text="38% of path"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30398.04796, baseDuration: 20429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9693 chars, 6a299bd6]
@@ -500,33 +510,55 @@ model ~ animationState.duration: 21429.352554 → 20429.352554
 model ~ motionSettings.backgroundVisibility: "spotlight-reveal" → "angle-of-view"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.4s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.4s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.4s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.4 s — route 20.4 s, crowds finish +10.0 s, beacon ends +6.5 s"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
 ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="angle-of-view"
+ui ~ #spotlight-controls: div style="display: block;" → div (not shown)
 ui ~ #aov-controls: div (not shown) → div style="display: block;"
 ui + #aov-controls>button[0]: button aria-describedby="aov-angle-tip" aria-expanded="false" aria-label="Help: View Angle" class="param-hint-trigger" style="position-anchor: --aov-angle-tip;" type="button"
 ui + #aov-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui + #aov-controls>label[1]: label for="aov-angle"
 ui + #aov-controls>label[1]>span[0]: span data-tip-desc="aov-angle-tip" data-tip="Width of the angle-of-view cone in degrees" style="anchor-name: --aov-angle-tip;" :text="View Angle"
-ui + #aov-angle: input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="60°" max="1000" min="0" step="1" type="range" value="500" :value="500"
-ui + #aov-angle-value: span :text="60°"
+ui + #aov-angle: input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="95°" max="1000" min="0" step="1" type="range" value="500" :value="621"
+ui + #aov-angle-value: span :text="95°"
 ui + #aov-angle-tip: span class="sr-only" :text="Width of the angle-of-view cone in degrees"
 ui + #aov-controls>button[3]: button aria-describedby="aov-distance-tip" aria-expanded="false" aria-label="Help: View Distance" class="param-hint-trigger" style="position-anchor: --aov-distance-tip;" type="button"
 ui + #aov-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui + #aov-controls>label[4]: label for="aov-distance"
 ui + #aov-controls>label[4]>span[0]: span data-tip-desc="aov-distance-tip" data-tip="How far the view cone extends from the path head" style="anchor-name: --aov-distance-tip;" :text="View Distance"
-ui + #aov-distance: input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="10%" max="1000" min="0" step="1" type="range" value="500" :value="500"
-ui + #aov-distance-value: span :text="10%"
+ui + #aov-distance: input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="66%" max="1000" min="0" step="1" type="range" value="500" :value="910"
+ui + #aov-distance-value: span :text="66%"
 ui + #aov-distance-tip: span class="sr-only" :text="How far the view cone extends from the path head"
 ui + #aov-controls>button[6]: button aria-describedby="aov-dropoff-tip" aria-expanded="false" aria-label="Help: View Dropoff" class="param-hint-trigger" style="position-anchor: --aov-dropoff-tip;" type="button"
 ui + #aov-controls>button[6]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui + #aov-controls>label[7]: label for="aov-dropoff"
 ui + #aov-controls>label[7]>span[0]: span data-tip-desc="aov-dropoff-tip" data-tip="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head" style="anchor-name: --aov-dropoff-tip;" :text="View Dropoff"
-ui + #aov-dropoff: input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="25%" max="1000" min="0" step="1" type="range" value="500" :value="500"
-ui + #aov-dropoff-value: span :text="25%"
+ui + #aov-dropoff: input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="23%" max="1000" min="0" step="1" type="range" value="500" :value="230"
+ui + #aov-dropoff-value: span :text="23%"
 ui + #aov-dropoff-tip: span class="sr-only" :text="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head"
+ui - #spotlight-controls>button[0]: button aria-describedby="reveal-size-tip" aria-expanded="false" aria-label="Help: Spotlight Size" class="param-hint-trigger" style="position-anchor: --reveal-size-tip;" type="button"
+ui - #spotlight-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #spotlight-controls>label[1]: label for="reveal-size"
+ui - #spotlight-controls>label[1]>span[0]: span data-tip-desc="reveal-size-tip" data-tip="Radius of the visible area around the path head" style="anchor-name: --reveal-size-tip;" :text="Spotlight Size"
+ui - #reveal-size: input aria-describedby="reveal-size-value reveal-size-tip" aria-valuetext="62%" max="1000" min="0" step="1" type="range" value="500" :value="1000"
+ui - #reveal-size-value: span :text="62%"
+ui - #reveal-size-tip: span class="sr-only" :text="Radius of the visible area around the path head"
+ui - #spotlight-controls>button[3]: button aria-describedby="reveal-feather-tip" aria-expanded="false" aria-label="Help: Spotlight Feather" class="param-hint-trigger" style="position-anchor: --reveal-feather-tip;" type="button"
+ui - #spotlight-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #spotlight-controls>label[4]: label for="reveal-feather"
+ui - #spotlight-controls>label[4]>span[0]: span data-tip-desc="reveal-feather-tip" data-tip="Softness of the spotlight edge" style="anchor-name: --reveal-feather-tip;" :text="Spotlight Feather"
+ui - #reveal-feather: input aria-describedby="reveal-feather-value reveal-feather-tip" aria-valuetext="71%" max="1000" min="0" step="1" type="range" value="500" :value="926"
+ui - #reveal-feather-value: span :text="71%"
+ui - #reveal-feather-tip: span class="sr-only" :text="Softness of the spotlight edge"
+ui - #spotlight-controls>button[6]: button aria-describedby="reveal-trail-tip" aria-expanded="false" aria-label="Help: Reveal trail" class="param-hint-trigger" style="position-anchor: --reveal-trail-tip;" type="button"
+ui - #spotlight-controls>button[6]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #reveal-trail-control: label for="reveal-trail"
+ui - #reveal-trail-control>span[0]: span data-tip-desc="reveal-trail-tip" data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades" style="anchor-name: --reveal-trail-tip;" :text="Reveal trail"
+ui - #reveal-trail: input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="38% of path" max="1000" min="0" step="1" type="range" value="1000" :value="790"
+ui - #reveal-trail-value: span :text="38% of path"
+ui - #reveal-trail-tip: span class="sr-only" :text="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30398.04796, baseDuration: 20429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43]
@@ -538,28 +570,50 @@ storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
 ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="angle-of-view-reveal"
+ui ~ #spotlight-controls: div style="display: block;" → div (not shown)
 ui ~ #aov-controls: div (not shown) → div style="display: block;"
 ui + #aov-controls>button[0]: button aria-describedby="aov-angle-tip" aria-expanded="false" aria-label="Help: View Angle" class="param-hint-trigger" style="position-anchor: --aov-angle-tip;" type="button"
 ui + #aov-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui + #aov-controls>label[1]: label for="aov-angle"
 ui + #aov-controls>label[1]>span[0]: span data-tip-desc="aov-angle-tip" data-tip="Width of the angle-of-view cone in degrees" style="anchor-name: --aov-angle-tip;" :text="View Angle"
-ui + #aov-angle: input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="60°" max="1000" min="0" step="1" type="range" value="500" :value="500"
-ui + #aov-angle-value: span :text="60°"
+ui + #aov-angle: input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="95°" max="1000" min="0" step="1" type="range" value="500" :value="621"
+ui + #aov-angle-value: span :text="95°"
 ui + #aov-angle-tip: span class="sr-only" :text="Width of the angle-of-view cone in degrees"
 ui + #aov-controls>button[3]: button aria-describedby="aov-distance-tip" aria-expanded="false" aria-label="Help: View Distance" class="param-hint-trigger" style="position-anchor: --aov-distance-tip;" type="button"
 ui + #aov-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui + #aov-controls>label[4]: label for="aov-distance"
 ui + #aov-controls>label[4]>span[0]: span data-tip-desc="aov-distance-tip" data-tip="How far the view cone extends from the path head" style="anchor-name: --aov-distance-tip;" :text="View Distance"
-ui + #aov-distance: input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="10%" max="1000" min="0" step="1" type="range" value="500" :value="500"
-ui + #aov-distance-value: span :text="10%"
+ui + #aov-distance: input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="66%" max="1000" min="0" step="1" type="range" value="500" :value="910"
+ui + #aov-distance-value: span :text="66%"
 ui + #aov-distance-tip: span class="sr-only" :text="How far the view cone extends from the path head"
 ui + #aov-controls>button[6]: button aria-describedby="aov-dropoff-tip" aria-expanded="false" aria-label="Help: View Dropoff" class="param-hint-trigger" style="position-anchor: --aov-dropoff-tip;" type="button"
 ui + #aov-controls>button[6]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui + #aov-controls>label[7]: label for="aov-dropoff"
 ui + #aov-controls>label[7]>span[0]: span data-tip-desc="aov-dropoff-tip" data-tip="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head" style="anchor-name: --aov-dropoff-tip;" :text="View Dropoff"
-ui + #aov-dropoff: input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="25%" max="1000" min="0" step="1" type="range" value="500" :value="500"
-ui + #aov-dropoff-value: span :text="25%"
+ui + #aov-dropoff: input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="23%" max="1000" min="0" step="1" type="range" value="500" :value="230"
+ui + #aov-dropoff-value: span :text="23%"
 ui + #aov-dropoff-tip: span class="sr-only" :text="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head"
+ui - #spotlight-controls>button[0]: button aria-describedby="reveal-size-tip" aria-expanded="false" aria-label="Help: Spotlight Size" class="param-hint-trigger" style="position-anchor: --reveal-size-tip;" type="button"
+ui - #spotlight-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #spotlight-controls>label[1]: label for="reveal-size"
+ui - #spotlight-controls>label[1]>span[0]: span data-tip-desc="reveal-size-tip" data-tip="Radius of the visible area around the path head" style="anchor-name: --reveal-size-tip;" :text="Spotlight Size"
+ui - #reveal-size: input aria-describedby="reveal-size-value reveal-size-tip" aria-valuetext="62%" max="1000" min="0" step="1" type="range" value="500" :value="1000"
+ui - #reveal-size-value: span :text="62%"
+ui - #reveal-size-tip: span class="sr-only" :text="Radius of the visible area around the path head"
+ui - #spotlight-controls>button[3]: button aria-describedby="reveal-feather-tip" aria-expanded="false" aria-label="Help: Spotlight Feather" class="param-hint-trigger" style="position-anchor: --reveal-feather-tip;" type="button"
+ui - #spotlight-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #spotlight-controls>label[4]: label for="reveal-feather"
+ui - #spotlight-controls>label[4]>span[0]: span data-tip-desc="reveal-feather-tip" data-tip="Softness of the spotlight edge" style="anchor-name: --reveal-feather-tip;" :text="Spotlight Feather"
+ui - #reveal-feather: input aria-describedby="reveal-feather-value reveal-feather-tip" aria-valuetext="71%" max="1000" min="0" step="1" type="range" value="500" :value="926"
+ui - #reveal-feather-value: span :text="71%"
+ui - #reveal-feather-tip: span class="sr-only" :text="Softness of the spotlight edge"
+ui - #spotlight-controls>button[6]: button aria-describedby="reveal-trail-tip" aria-expanded="false" aria-label="Help: Reveal trail" class="param-hint-trigger" style="position-anchor: --reveal-trail-tip;" type="button"
+ui - #spotlight-controls>button[6]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #reveal-trail-control: label for="reveal-trail"
+ui - #reveal-trail-control>span[0]: span data-tip-desc="reveal-trail-tip" data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades" style="anchor-name: --reveal-trail-tip;" :text="Reveal trail"
+ui - #reveal-trail: input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="38% of path" max="1000" min="0" step="1" type="range" value="1000" :value="790"
+ui - #reveal-trail-value: span :text="38% of path"
+ui - #reveal-trail-tip: span class="sr-only" :text="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9704 chars, dce882f4]
@@ -570,11 +624,33 @@ model ~ animationState.duration: 21429.352554 → 20429.352554
 model ~ motionSettings.backgroundVisibility: "spotlight-reveal" → "always-hide"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.4s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.4s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.4s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.4 s — route 20.4 s, crowds finish +10.0 s, beacon ends +6.5 s"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
 ui ~ #background-visibility: select aria-describedby="background-visibility-tip" :value="spotlight-reveal" → select aria-describedby="background-visibility-tip" :value="always-hide"
+ui ~ #spotlight-controls: div style="display: block;" → div (not shown)
+ui - #spotlight-controls>button[0]: button aria-describedby="reveal-size-tip" aria-expanded="false" aria-label="Help: Spotlight Size" class="param-hint-trigger" style="position-anchor: --reveal-size-tip;" type="button"
+ui - #spotlight-controls>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #spotlight-controls>label[1]: label for="reveal-size"
+ui - #spotlight-controls>label[1]>span[0]: span data-tip-desc="reveal-size-tip" data-tip="Radius of the visible area around the path head" style="anchor-name: --reveal-size-tip;" :text="Spotlight Size"
+ui - #reveal-size: input aria-describedby="reveal-size-value reveal-size-tip" aria-valuetext="62%" max="1000" min="0" step="1" type="range" value="500" :value="1000"
+ui - #reveal-size-value: span :text="62%"
+ui - #reveal-size-tip: span class="sr-only" :text="Radius of the visible area around the path head"
+ui - #spotlight-controls>button[3]: button aria-describedby="reveal-feather-tip" aria-expanded="false" aria-label="Help: Spotlight Feather" class="param-hint-trigger" style="position-anchor: --reveal-feather-tip;" type="button"
+ui - #spotlight-controls>button[3]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #spotlight-controls>label[4]: label for="reveal-feather"
+ui - #spotlight-controls>label[4]>span[0]: span data-tip-desc="reveal-feather-tip" data-tip="Softness of the spotlight edge" style="anchor-name: --reveal-feather-tip;" :text="Spotlight Feather"
+ui - #reveal-feather: input aria-describedby="reveal-feather-value reveal-feather-tip" aria-valuetext="71%" max="1000" min="0" step="1" type="range" value="500" :value="926"
+ui - #reveal-feather-value: span :text="71%"
+ui - #reveal-feather-tip: span class="sr-only" :text="Softness of the spotlight edge"
+ui - #spotlight-controls>button[6]: button aria-describedby="reveal-trail-tip" aria-expanded="false" aria-label="Help: Reveal trail" class="param-hint-trigger" style="position-anchor: --reveal-trail-tip;" type="button"
+ui - #spotlight-controls>button[6]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
+ui - #reveal-trail-control: label for="reveal-trail"
+ui - #reveal-trail-control>span[0]: span data-tip-desc="reveal-trail-tip" data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades" style="anchor-name: --reveal-trail-tip;" :text="Reveal trail"
+ui - #reveal-trail: input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="38% of path" max="1000" min="0" step="1" type="range" value="1000" :value="790"
+ui - #reveal-trail-value: span :text="38% of path"
+ui - #reveal-trail-tip: span class="sr-only" :text="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30398.04796, baseDuration: 20429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9695 chars, 1fcc1892]
@@ -604,6 +680,63 @@ ui ~ #path-trail-value: span :text="16000%" → span :text="1.4%"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9716 chars, d1c0a88f]
+
+## #spotlight-controls>button[0] · click
+app ~ focus: "body" → "#spotlight-controls>button[0]"
+storage ~ routePlotter_lastSection: "video" → "reveal"
+ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #spotlight-controls>button[0]: button aria-describedby="reveal-size-tip" aria-expanded="false" aria-label="Help: Spotlight Size" class="param-hint-trigger" style="position-anchor: --reveal-size-tip;" type="button" → button aria-describedby="reveal-size-tip" aria-expanded="true" aria-label="Help: Spotlight Size" class="param-hint-trigger" style="position-anchor: --reveal-size-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Radius of the visible area around the path head"
+
+## #reveal-size · set 333
+emit motion:reveal-size-change 2.920882
+model ~ motionSettings.revealSize: 62 → 2.920882
+app ~ focus: "body" → "#reveal-size"
+storage ~ routePlotter_lastSection: "video" → "reveal"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #reveal-size: input aria-describedby="reveal-size-value reveal-size-tip" aria-valuetext="62%" max="1000" min="0" step="1" type="range" value="500" :value="1000" → input aria-describedby="reveal-size-value reveal-size-tip" aria-valuetext="2.9%" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #reveal-size-value: span :text="62%" → span :text="2.9%"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9715 chars, 51a69294]
+
+## #spotlight-controls>button[3] · click
+app ~ focus: "body" → "#spotlight-controls>button[3]"
+storage ~ routePlotter_lastSection: "video" → "reveal"
+ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #spotlight-controls>button[3]: button aria-describedby="reveal-feather-tip" aria-expanded="false" aria-label="Help: Spotlight Feather" class="param-hint-trigger" style="position-anchor: --reveal-feather-tip;" type="button" → button aria-describedby="reveal-feather-tip" aria-expanded="true" aria-label="Help: Spotlight Feather" class="param-hint-trigger" style="position-anchor: --reveal-feather-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Softness of the spotlight edge"
+
+## #reveal-feather · set 333
+emit motion:reveal-feather-change 4.634469
+model ~ motionSettings.revealFeather: 71 → 4.634469
+app ~ focus: "body" → "#reveal-feather"
+storage ~ routePlotter_lastSection: "video" → "reveal"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #reveal-feather: input aria-describedby="reveal-feather-value reveal-feather-tip" aria-valuetext="71%" max="1000" min="0" step="1" type="range" value="500" :value="926" → input aria-describedby="reveal-feather-value reveal-feather-tip" aria-valuetext="4.6%" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #reveal-feather-value: span :text="71%" → span :text="4.6%"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9714 chars, 750d0acf]
+
+## #spotlight-controls>button[6] · click
+app ~ focus: "body" → "#spotlight-controls>button[6]"
+storage ~ routePlotter_lastSection: "video" → "reveal"
+ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #spotlight-controls>button[6]: button aria-describedby="reveal-trail-tip" aria-expanded="false" aria-label="Help: Reveal trail" class="param-hint-trigger" style="position-anchor: --reveal-trail-tip;" type="button" → button aria-describedby="reveal-trail-tip" aria-expanded="true" aria-label="Help: Reveal trail" class="param-hint-trigger" style="position-anchor: --reveal-trail-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades"
+
+## #reveal-trail · set 333
+emit motion:reveal-trail-change 4.634469
+model ~ motionSettings.revealTrail: 38 → 4.634469
+app ~ focus: "body" → "#reveal-trail"
+storage ~ routePlotter_lastSection: "video" → "reveal"
+ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
+ui ~ #reveal-trail: input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="38% of path" max="1000" min="0" step="1" type="range" value="1000" :value="790" → input aria-describedby="reveal-trail-value reveal-trail-tip" aria-valuetext="4.6% of path" max="1000" min="0" step="1" type="range" value="1000" :value="333"
+ui ~ #reveal-trail-value: span :text="38% of path" → span :text="4.6% of path"
+settled:
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9714 chars, 551890dc]
 
 ## #route-scope>div[3]>div[0] · click
 app ~ focus: "body" → "#route-scope>div[3]>div[0]"
@@ -724,7 +857,7 @@ settled:
   model ~ exportSettings.resolutionY: 720 → 100
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 1eab812c]
   ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="31s" max="4000" min="1" step="5" type="range" :value="1445"
+  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="31s" max="4000" min="1" step="5" type="range" :value="1292"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="31s"
   ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 31.0 s — route 21.9 s, crowds finish +9.0 s, beacon ends +6.5 s"
   ui ~ #export-res-x: input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="1280" → input aria-describedby="export-res-x-tip" max="7680" min="100" step="1" type="number" value="1920" :value="100"
@@ -754,7 +887,7 @@ settled:
   emit animation:durationChange 30669.646358
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30669.646358, baseDuration: 21141.447467, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   model ~ animationState.duration: 21429.352554 → 21141.447467
-  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.7s" max="4000" min="1" step="5" type="range" :value="1445"
+  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.7s" max="4000" min="1" step="5" type="range" :value="1292"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.7s"
   ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.7 s — route 21.1 s, crowds finish +9.5 s, beacon ends +6.5 s"
 
@@ -771,7 +904,7 @@ settled:
   emit animation:durationChange 30928.634062
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30928.634062, baseDuration: 21820.478814, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   model ~ animationState.duration: 21429.352554 → 21820.478814
-  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1445"
+  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1292"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.9s"
   ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.9 s — route 21.8 s, crowds finish +9.1 s, beacon ends +6.5 s"
 
@@ -794,7 +927,7 @@ settled:
   emit animation:durationChange 30928.341826
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30928.341826, baseDuration: 21819.712612, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   model ~ animationState.duration: 21429.352554 → 21819.712612
-  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1445"
+  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1292"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.9s"
   ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.9 s — route 21.8 s, crowds finish +9.1 s, beacon ends +6.5 s"
 
@@ -810,7 +943,7 @@ settled:
   emit animation:durationChange 30680.713048
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30680.713048, baseDuration: 21170.462858, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   model ~ animationState.duration: 21429.352554 → 21170.462858
-  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.7s" max="4000" min="1" step="5" type="range" :value="1445"
+  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.7s" max="4000" min="1" step="5" type="range" :value="1292"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.7s"
   ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.7 s — route 21.2 s, crowds finish +9.5 s, beacon ends +6.5 s"
 
@@ -833,7 +966,7 @@ settled:
   emit animation:durationChange 30923.834135
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   model ~ animationState.duration: 21429.352554 → 21807.894043
-  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1445"
+  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1292"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.9s"
   ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.9 s — route 21.8 s, crowds finish +9.1 s, beacon ends +6.5 s"
 
@@ -863,7 +996,7 @@ settled:
   emit animation:durationChange 30711.179885
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30711.179885, baseDuration: 21250.342856, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   model ~ animationState.duration: 21429.352554 → 21250.342856
-  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.7s" max="4000" min="1" step="5" type="range" :value="1445"
+  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.7s" max="4000" min="1" step="5" type="range" :value="1292"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.7s"
   ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.7 s — route 21.3 s, crowds finish +9.5 s, beacon ends +6.5 s"
 
@@ -944,7 +1077,6 @@ announced "Animation reset"
 model ~ animationState.mode: "constant-time" → "constant-speed"
 app ~ focus: "body" → "#skip-start-btn"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation reset"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-speed", speed: 275, playbackSpeed: 1, isPaused: false, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation reset" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -1008,8 +1140,8 @@ ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row"
 ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item selected"
 ui ~ #layers-strip>li[1]>button[0]: button aria-pressed="false" class="layer-row" type="button" → button aria-pressed="true" class="layer-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1035,8 +1167,8 @@ ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item selecte
 ui ~ #layers-strip>li[1]>button[0]: button aria-pressed="false" class="layer-row" type="button" → button aria-pressed="true" class="layer-row" type="button"
 ui + #layers-strip>li[1]>button[0]>input[1]: input aria-label="Crowd name" class="layer-rename-input" type="text" :value="Visitors"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1069,8 +1201,8 @@ ui ~ #layers-strip>li[1]>button[0]>span[1]: span class="layer-title" title="Doub
 ui ~ #layers-strip>li[1]>button[1]: button aria-label="Hide Visitors" aria-pressed="true" class="layer-visibility" title="Hide crowd" type="button" → button aria-label="Hide Renamed" aria-pressed="true" class="layer-visibility" title="Hide crowd" type="button"
 ui ~ #layers-strip>li[1]>button[2]: button aria-label="Delete Visitors" class="layer-delete" title="Delete crowd" type="button" :text="×" → button aria-label="Delete Renamed" class="layer-delete" title="Delete crowd" type="button" :text="×"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1096,7 +1228,7 @@ settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9701 chars, a9f73820]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Visitors hidden" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="27.9s" max="4000" min="1" step="5" type="range" :value="1445"
+  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="27.9s" max="4000" min="1" step="5" type="range" :value="1292"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="27.9s"
   ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 27.9 s — route 21.4 s, beacon ends +6.5 s"
   ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -1126,7 +1258,7 @@ settled:
   emit animation:durationChange 27929.352554
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[8076 chars, aebebeea]
-  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="27.9s" max="4000" min="1" step="5" type="range" :value="1445"
+  ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="27.9s" max="4000" min="1" step="5" type="range" :value="1292"
   ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="27.9s"
   ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 27.9 s — route 21.4 s, beacon ends +6.5 s"
   ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -1167,8 +1299,8 @@ ui + #layers-strip>li[2]>button[1]>svg[0]>path[0]: path d="M1 8s2.5-4.5 7-4.5S15
 ui + #layers-strip>li[2]>button[1]>svg[0]>circle[1]: circle cx="8" cy="8" r="2"
 ui + #layers-strip>li[2]>button[2]: button aria-label="Delete Crowd 1" class="layer-delete" title="Delete crowd" type="button" :text="×"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1192,7 +1324,7 @@ ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" 
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 6 · major"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="32.6s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="32.6s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="32.6s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 32.6 s — route 26.2 s, crowds finish +6.4 s, beacon ends +3.5 s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:32" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -1231,7 +1363,7 @@ ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" 
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 7 · major"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="34.3s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="34.3s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="34.3s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 34.3 s — route 30.7 s, crowds finish +3.6 s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:34" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -1403,7 +1535,7 @@ model - waypoints[4].branchFrom: "ex-uon-2"
 model - waypoints[4].branchRejoin: "ex-uon-3"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="38.1s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="38.1s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="38.1s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 38.1 s — route 31.6 s, crowds finish +3.4 s, beacon ends +6.5 s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:38" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -1633,8 +1765,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1661,8 +1793,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1699,8 +1831,8 @@ ui ~ #waypoint-list>li[1]>span[1]>button[0]: button aria-label="Move Extras 1 up
 ui ~ #waypoint-list>li[1]>span[1]>button[1]: button aria-label="Move Extras 1 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Renamed down" class="waypoint-move-btn" type="button" :text="▼"
 ui ~ #waypoint-list>li[1]>button[2]: button aria-label="Delete Extras 1" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Renamed" class="waypoint-delete" type="button" :text="×"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1729,8 +1861,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1756,8 +1888,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1783,8 +1915,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -1879,7 +2011,7 @@ model - waypoints[4].branchRejoin: "ex-uon-3"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 1 moved down"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="38.1s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="38.1s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="38.1s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 38.1 s — route 31.6 s, crowds finish +3.4 s, beacon ends +6.5 s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:38" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -2020,7 +2152,7 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="29.8s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="29.8s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="29.8s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 29.8 s — route 19.0 s, crowds finish +10.9 s, beacon ends +1.0 s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -2113,8 +2245,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
 ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2141,8 +2273,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
 ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2177,8 +2309,8 @@ ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint
 ui ~ #waypoint-list>li[2]>button[0]>span[2]: span class="waypoint-title" :text="Extras 2" → span class="waypoint-title" :text="Renamed"
 ui ~ #waypoint-list>li[2]>button[1]: button aria-label="Delete Extras 2" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Renamed" class="waypoint-delete" type="button" :text="×"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2207,8 +2339,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
 ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2234,8 +2366,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
 ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2261,8 +2393,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[2]: li class="waypoint-item waypoint-item-minor" data-route-index="1" draggable="false" → li class="waypoint-item waypoint-item-minor selected is-selected" data-route-index="1" draggable="false"
 ui ~ #waypoint-list>li[2]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2327,7 +2459,7 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="27.9s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="27.9s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="27.9s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 27.9 s — route 13.8 s, crowds finish +14.0 s, beacon ends +6.5 s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -2699,8 +2831,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="1" data-route-index="2" draggable="true"
 ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2727,8 +2859,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="1" data-route-index="2" draggable="true"
 ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2765,8 +2897,8 @@ ui ~ #waypoint-list>li[3]>span[1]>button[0]: button aria-label="Move Extras 3 up
 ui ~ #waypoint-list>li[3]>span[1]>button[1]: button aria-label="Move Extras 3 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Renamed down" class="waypoint-move-btn" type="button" :text="▼"
 ui ~ #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Renamed" class="waypoint-delete" type="button" :text="×"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2795,8 +2927,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="1" data-route-index="2" draggable="true"
 ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2822,8 +2954,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="1" data-route-index="2" draggable="true"
 ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2849,8 +2981,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[3]: li class="waypoint-item" data-original-index="1" data-route-index="2" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="1" data-route-index="2" draggable="true"
 ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -2943,7 +3075,7 @@ model - waypoints[4].branchRejoin: "ex-uon-3"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Extras 3 moved up"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="38.1s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="38.1s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="38.1s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 38.1 s — route 31.6 s, crowds finish +3.4 s, beacon ends +6.5 s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:38" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -3140,7 +3272,7 @@ model - waypoints[5]: 57 values (42c9f4ff)
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.7s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.7s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.7s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.7 s — route 21.2 s, crowds finish +9.5 s, beacon ends +6.5 s"
 ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 4"
@@ -3537,8 +3669,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -3565,8 +3697,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -3603,8 +3735,8 @@ ui ~ #waypoint-list>li[4]>span[1]>button[0]: button aria-label="Move Extras 4 up
 ui ~ #waypoint-list>li[4]>span[1]>button[1]: button aria-label="Move Extras 4 down" class="waypoint-move-btn" type="button" :text="▼" → button aria-label="Move Renamed down" class="waypoint-move-btn" type="button" :text="▼"
 ui ~ #waypoint-list>li[4]>button[2]: button aria-label="Delete Extras 4" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Renamed" class="waypoint-delete" type="button" :text="×"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -3633,8 +3765,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -3660,8 +3792,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -3687,8 +3819,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -3896,7 +4028,7 @@ model - waypoints[5]: 57 values (42c9f4ff)
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Waypoint deleted"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="29.9s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="29.9s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="29.9s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 29.9 s — route 19.2 s, crowds finish +10.7 s, beacon ends +4.0 s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
@@ -3956,8 +4088,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -3984,8 +4116,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4020,8 +4152,8 @@ ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint
 ui ~ #waypoint-list>li[5]>button[0]>span[2]: span class="waypoint-title" :text="Extras 5" → span class="waypoint-title" :text="Renamed"
 ui ~ #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Renamed" class="waypoint-delete" type="button" :text="×"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4050,8 +4182,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4077,8 +4209,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4104,8 +4236,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4354,7 +4486,7 @@ model - waypoints[4].branchFrom: "ex-uon-2"
 model - waypoints[4].branchRejoin: "ex-uon-3"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.9s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.9 s — route 21.7 s, crowds finish +9.2 s, beacon ends +1.4 s"
 ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 6"
@@ -4444,7 +4576,7 @@ model - waypoints[4].branchFrom: "ex-uon-2"
 model - waypoints[4].branchRejoin: "ex-uon-3"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.9s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="30.9s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 30.9 s — route 21.7 s, crowds finish +9.2 s, beacon ends +1.4 s"
 ui ~ #waypoint-list>li[3]>button[0]>span[2]: span class="waypoint-title" :text="Extras 3" → span class="waypoint-title" :text="Extras 6"
@@ -4501,8 +4633,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true"
 ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4530,8 +4662,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true"
 ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4569,8 +4701,8 @@ ui ~ #waypoint-list>li[6]>span[1]>button[0]: button aria-label="Move Extras 6 up
 ui ~ #waypoint-list>li[6]>span[1]>button[1]: button aria-label="Move Extras 6 down" class="waypoint-move-btn" disabled="" type="button" :text="▼" → button aria-label="Move Renamed down" class="waypoint-move-btn" disabled="" type="button" :text="▼"
 ui ~ #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="waypoint-delete" type="button" :text="×" → button aria-label="Delete Renamed" class="waypoint-delete" type="button" :text="×"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4600,8 +4732,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true"
 ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4628,8 +4760,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true"
 ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4656,8 +4788,8 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[6]: li class="waypoint-item" data-original-index="3" data-route-index="5" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="3" data-route-index="5" draggable="true"
 ui ~ #waypoint-list>li[6]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section expanded" data-section="head" (and 26 inside, 49ad4043)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 53 inside, 4292bd70)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, f57b69aa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 58 inside, f4072c41)
@@ -4753,7 +4885,7 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="A crowd node lost the waypoint it followed (Visitors) — back at its own position"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
-ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1445" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="27.8s" max="4000" min="1" step="5" type="range" :value="1445"
+ui ~ #animation-speed-right: input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="30.8s" max="4000" min="1" step="5" type="range" :value="1292" → input aria-describedby="animation-speed-value-right pacing-duration-breakdown animation-speed-right-tip" aria-valuetext="27.8s" max="4000" min="1" step="5" type="range" :value="1292"
 ui ~ #animation-speed-value-right: span class="slider-value" :text="30.8s" → span class="slider-value" :text="27.8s"
 ui ~ #pacing-duration-breakdown: p class="section-hint" :text="Ends at 30.8 s — route 21.4 s, crowds finish +9.4 s, beacon ends +6.5 s" → p class="section-hint" :text="Ends at 27.8 s — route 13.7 s, crowds finish +14.1 s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"

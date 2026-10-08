@@ -73,6 +73,32 @@ describe('review remediation keyboard path', () => {
     expect(toggle).toHaveBeenCalledTimes(1);
   });
 
+  test('an option in a list keeps Space and the arrows that move through it; other shortcuts run (DEF-13)', () => {
+    // The editor has no listbox today; the key table pins every control it has.
+    document.body.innerHTML = '<div role="listbox"><div id="option" role="option" tabindex="0">Lab</div></div>';
+    const bus = new EventBus();
+    const sent = [];
+    for (const name of ['ui:animation:toggle', 'waypoint:nudge', 'waypoint:delete-selected', 'history:undo']) {
+      bus.on(name, () => sent.push(name));
+    }
+    const context = { eventBus: bus, isEditingNetwork: false, selectedWaypoint: { id: 'wp' }, zoomLevel: 1 };
+    const option = document.getElementById('option');
+    const pressed = (key, flags = {}) => {
+      sent.length = 0;
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...flags });
+      option.addEventListener('keydown', e => {
+        InteractionHandler.prototype.handleKeyDown.call(context, e);
+      }, { once: true });
+      option.dispatchEvent(event);
+      return `${key}: ${sent.join(', ') || '—'}${event.defaultPrevented ? ', prevented' : ''}`;
+    };
+
+    expect(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Delete'].map(key => pressed(key)))
+      .toEqual(['ArrowUp: —', 'ArrowDown: —', 'ArrowLeft: —', 'ArrowRight: —', ' : —',
+        'Delete: waypoint:delete-selected, prevented']);
+    expect(pressed('z', { ctrlKey: true })).toBe('z: history:undo, prevented');
+  });
+
   test('document shortcuts remain suspended until startup recovery completes', () => {
     const bus = new EventBus();
     const toggle = vi.fn();

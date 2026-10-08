@@ -940,7 +940,13 @@ function syncLoadedProjectControls(app, staged) {
   app.uiController?.updateTrailControlVisibility?.(staged.motionSettings.pathVisibility);
   if (app.elements?.waypointVisibility) app.elements.waypointVisibility.value = staged.motionSettings.waypointVisibility;
   if (app.elements?.backgroundVisibility) app.elements.backgroundVisibility.value = staged.motionSettings.backgroundVisibility;
-  if (app.elements?.animationSpeed) {
+  // The reveal and Angle of View sliders, and the Duration thumb, follow the
+  // project too: a thumb left where the last project put it, under this
+  // project's readout, jumps the setting at the first touch (DEF-20). The
+  // Duration slider on screen is the right one; the left one was removed.
+  app.uiController?.syncRevealControls?.(staged.motionSettings);
+  app.uiController?.syncAngleOfViewControls?.(staged.motionSettings);
+  if (app.elements?.animationSpeedRight) {
     app.eventBus?.emit('ui:slider:update-speed', staged.animationState.speed);
   }
 }

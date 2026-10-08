@@ -28,6 +28,26 @@
 
 **Deferred:** none
 
+## 2026-10-08 — DEF-13 — A focused control keeps only its own keys; every other shortcut runs
+
+**Decision:** DEF-13 lands: `handleKeyDown`'s guard keeps every key in a field (input, textarea, select, contenteditable) and for a control inside a modal dialog, as before; any other focused control (button, link, summary, `role=button`) keeps only Space, a menu item or option also the four arrows; every other shortcut runs and is prevented. DEF-32 merges after it.
+
+**Rationale:** the guard returned early for every key on any button, link, summary or menu item, and Chromium keeps focus on a clicked button, so Delete, the arrows, Undo and Save did nothing after a click and Cmd+S opened the browser's Save dialog (round 2, C2). 8 tests fail on main; every mutant is killed. TST-13's key table moves on purpose: those keys now run from a control, and its listener sweeps set the page's handler aside. The run's calls: an open dropdown menu keeps only Space and its arrows (the register's "in-widget arrows"), so Delete and Cmd+S act there, while a waypoint context menu keeps every key through its own capture listener, as before; a modal dialog's controls keep every key, as today. Codex r1 found two newly reachable actions, fixed in r2: Escape on a focused hint "?" also deselected (the hint now cancels the Escape it consumes, and the dispatcher skips cancelled keys, so Escape on the page with a hint open keeps the selection too); Delete on an unselected row deleted the selected waypoint (a row whose waypoint is not selected, and its × and move buttons, cancel Delete, Backspace, the arrows, T and Cmd/Ctrl+D when something is selected; the run's call, T and Cmd/Ctrl+D included because they too act on a waypoint the row does not name). Found on main: a dialog's heading passes shortcuts to the editor behind (DEF-82). Digest rules: wcag-2.2-aaa (2.1.1 keyboard; 2.1.2 no trap); nielsen 3 (user control).
+
+**Supersedes:** none
+
+**Deferred:** DEF-82
+
+## 2026-10-08 — DEF-20 — After Open, rollback and Clear All, the controls show the project they hold
+
+**Decision:** DEF-20 lands: a load (Open, and a failed Open's rollback, through `syncLoadedProjectControls`) writes the Duration thumb on the slider that exists and the reveal and Angle of View sliders; Clear All leaves Preview through the one mode setter, after its own non-restoring cancel of a held gesture; the 50 ms `isUpdatingSlider` flag, which dropped real Duration input, is deleted.
+
+**Rationale:** the load wrote the Duration thumb only when the removed left slider existed, so after Open the thumb stayed where the last project left it (3,901 under a 12.7 s readout) and one +5 nudge made the duration hundreds of seconds; the reveal and Angle of View sliders were never written; Clear All sent `mode:changed`, which nothing hears, so the switch still said Preview. `angleToSlider` is recovered from `2fb72ff`. 7 tests fail on main; 13 of 14 mutants are killed, the 14th equivalent (the handler skips a missing slider). Thirteen control goldens move on purpose: the Duration thumb reads the fixture's 275 px/s, the Angle of View thumbs follow it, and the Spotlight rows show in the route context. Codex r1 found Clear All mid-drag restoring the deleted waypoint as the selection when the mode switch ran first; fixed by order, with a test. Start-up still leaves the Angle of View and trail thumbs at the markup: outside the item, a wish line, the run's call. Digest rules: nielsen 1 (status visible); house conventions (speed via `ui:slider:update-speed`).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-08 — GATELESS-1 — The owner paused chat 12 for the weekly reset, then let it run to his stop time
 
 **Decision:** Chat 12 paused on 6 October and resumed on 7 October with no context line, under the owner's stop time, then stopped; nothing was scheduled to resume it. After the weekly reset the run may launch its items' agents together, one each, within the grant's limit of up to three in flight; gates, merges and releases stay one at a time.

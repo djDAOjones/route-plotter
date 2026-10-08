@@ -1272,7 +1272,7 @@ const MODIFIER_READS = {
   'app/wiringControllers.js': 1, // a payload from the canvas's click
   'app/wiringDom.js': 1, // the arrow keys' nudge: TST-13
   'config/keybindings.js': 8, // the key table: TST-13
-  'controllers/UIController.js': 3, // a waypoint row's click: rows here
+  'controllers/UIController.js': 5, // a waypoint row's click: rows here; its Ctrl/Cmd+D held back (DEF-13): TST-13
   'handlers/InteractionHandler.js': 43, // the canvas: interactionPointer.test.js
   'utils/focusTrap.js': 2, // Tab in a dialog: TST-13
 };

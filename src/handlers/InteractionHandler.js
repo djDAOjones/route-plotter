@@ -898,14 +898,29 @@ export class InteractionHandler {
     if (event.defaultPrevented) return;
     const target = event.target;
     const tag = target?.tagName;
-    const isInteractive = target?.closest?.(
-      'button, a[href], summary, [role="button"], [role="menuitem"], [role="option"]'
-    );
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable || isInteractive) {
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) {
       return;
     }
     
     const key = event.key.toLowerCase();
+
+    // A focused button, link, disclosure or menu item keeps only the keys it
+    // acts on: Space, its activation (Enter, the other, is no shortcut), and
+    // in a menu or list the arrows that move through it. Every other shortcut
+    // runs, since Chromium leaves focus on a button after a click (DEF-13).
+    // Inside a modal dialog a control still keeps every key: the editor
+    // behind it is inert.
+    const control = target?.closest?.(
+      'button, a[href], summary, [role="button"], [role="menuitem"], [role="option"]'
+    );
+    if (control) {
+      if (key === ' ' || control.closest('[aria-modal="true"]')) return;
+      if (control.matches('[role="menuitem"], [role="option"]') &&
+          ['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+        return;
+      }
+    }
+
     const shift = event.shiftKey;
     const ctrl = event.ctrlKey || event.metaKey;
 
