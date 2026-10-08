@@ -6,9 +6,7 @@ import { SceneOutlineController } from '../src/controllers/SceneOutlineControlle
 import { buildSceneOutlineSnapshot, sceneOutlineKey } from '../src/utils/sceneSemantics.js';
 import { ENTITY_ID_LIMITS } from '../src/utils/entityId.js';
 import { IMAGE_COORDINATES } from '../src/config/constants.js';
-import { colourIn, declaration, hex, readStyle, tokens } from './helpers/cssTokens.js';
-
-const mainCss = readStyle('main.css');
+import { borderColourOf, cascade, colourIn, hex, tokensFor } from './helpers/cssTokens.js';
 
 function makeFixture() {
   const major = new Waypoint({
@@ -905,14 +903,25 @@ describe('native scene outline DOM', () => {
     expect([...connectForm.elements].filter(element => element.matches('input, select'))
       .every(element => element.getAttribute('aria-invalid') === 'true')).toBe(true);
 
-    // jsdom leaves var() unresolved, so the rule text is resolved through
-    // tokens.css: `--support-01` was undefined, and both marks computed to
-    // nothing.
-    const map = tokens();
+    // jsdom applies no stylesheet here and leaves var() unresolved, so the
+    // colours are computed on the rendered elements by the test helper's
+    // cascade over the real sheets: `--support-01` was undefined, and both
+    // marks computed to nothing.
+    const map = tokensFor();
     const error = hex(colourIn(map.get('--support-error'), map));
-    expect(hex(colourIn(declaration(mainCss, '.scene-outline-error', 'border-left'), map))).toBe(error);
-    expect(hex(colourIn(declaration(mainCss, '.scene-outline-field [aria-invalid="true"]', 'border-color'), map)))
-      .toBe(error);
+    expect(hex(borderColourOf(alert, 'left'))).toBe(error);
+    for (const field of connectForm.querySelectorAll('[aria-invalid="true"]')) {
+      expect(hex(borderColourOf(field)), field.name).toBe(error);
+    }
+
+    // The Delete action on a node body is `.btn.btn-secondary` too; its
+    // danger border must outrank the button border rules that follow it.
+    await openDisclosure(container, 'nodes:crowd-route');
+    await openDisclosure(container, 'node:crowd-route:node-entry');
+    const remove = container.querySelector('.scene-outline-danger');
+    expect(remove.classList.contains('btn')).toBe(true);
+    expect(hex(borderColourOf(remove))).toBe(error);
+    expect(cascade(remove, ['border', 'border-color']).selector).toBe('.btn.scene-outline-danger');
   });
 
   test('keeps a closed 2,000-node outline bounded and mounts only the focused node body', async () => {

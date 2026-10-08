@@ -92,6 +92,15 @@
   outline-offset: 2px;
 }
 
+/* Forced colours: the chip opts out (above), so its ring would stay a literal
+   #161616 — 1.16:1 on a black Canvas. The ring takes the system highlight;
+   the fills stay the palette (UI-06 review). */
+@media (forced-colors: active) {
+  .swatch-radio:checked ~ .swatch-chip {
+    outline-color: Highlight;
+  }
+}
+
 /* Focus ring for keyboard navigation - consistent with global focus style per spec §3 */
 .swatch-radio:focus-visible ~ .swatch-chip {
   outline: none;

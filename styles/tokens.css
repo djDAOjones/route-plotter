@@ -232,7 +232,10 @@
   --type-caption: var(--text-xs); --lh-caption: var(--line-tight); --w-caption: 400;
   --type-mono: var(--text-sm); --lh-mono: var(--line-tight); --w-mono: 500;
 
-  /* Carbon productive type styles the help screens use (UI-06 B-14) */
+  /* Carbon productive type styles main.css names (UI-06 B-14). body-compact
+     sizes the help screen's rows; the two heading tokens are compatibility
+     definitions — .shortcuts-modal and .splash-instructions use them and no
+     markup carries either class — so no declaration is invalid. */
   --type-body-compact: var(--text-sm); --lh-body-compact: 1.29;         /* body-compact-01: 14px/18px */
   --type-heading-02: var(--text-md);   --lh-heading-02: var(--line-base); /* heading-02: 16px/24px, 600 */
   --type-heading-03: 1.25rem;          --lh-heading-03: 1.4;              /* heading-03: 20px/28px */

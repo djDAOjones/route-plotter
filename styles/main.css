@@ -2113,7 +2113,9 @@ kbd{
   font-weight:600;
 }
 
-.scene-outline-danger{
+/* The Delete action is also .btn.btn-secondary, whose border rules come later
+   in this sheet; two classes outrank them whatever the order (DEF-94). */
+.btn.scene-outline-danger{
   border-color:var(--support-01);
 }
 
@@ -3436,6 +3438,17 @@ a.btn-primary:visited{
   transform:translateY(1px);
 }
 
+/* Play and Pause are primary icon buttons. The icon states above follow
+   .btn-primary in this sheet and would repaint them --hover-ui / --active-ui,
+   leaving the white glyph at 1.2:1 and 1.5:1; the primary fills stay
+   (15.4:1 and 17.2:1) (UI-06 review). */
+.btn-primary.btn-icon:hover{
+  background:var(--hover-primary);
+}
+.btn-primary.btn-icon:active{
+  background:var(--active-primary);
+}
+
 .btn-icon:disabled{
   opacity:0.4;
   cursor:not-allowed;
@@ -3615,11 +3628,12 @@ a.btn-primary:visited{
 /* Increased contrast (UI-06 B-27): the primary button stays on UoN blue —
    white on it is 11.7:1, where white on jubilee red was 6.4:1 — and strokes
    strengthen instead: tokens.css darkens --border-interactive to 7.8:1 and
-   every button border doubles. The header has no bottom border to recolour. */
+   every button border doubles. The header has no bottom border to recolour.
+   The timeline rail keeps --ui-03: darkened to --ui-04 it sat at 2.8:1 under
+   its #003A65 thumb; the 7.8:1 rail border carries the mode's strength. */
 @media (prefers-contrast:more){
   .btn{border-width:2px;}
   .btn-secondary{background:var(--ui-02);color:var(--text-01);}
-  .timeline-slider{background:var(--ui-04);}
 }
 
 /* Impact overlay (zoom prompt etc) */
