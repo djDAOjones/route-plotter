@@ -16,7 +16,7 @@
 import { afterEach, describe, test, expect } from 'vitest';
 import {
   FORCED_COLOURS, MORE_CONTRAST, allRules, borderColourOf, cascade, colourIn, computed, contrast, declaration,
-  hex, loadOrder, opacityOf, over, paintOf, parseColour, readStyle, surfaceOf, textPair, tokensFor, withOpacity,
+  hex, loadOrder, opacityOf, paintOf, parseColour, readStyle, surfaceOf, textPair, tokensFor,
 } from './helpers/cssTokens.js';
 
 const mainCss = readStyle('main.css');
@@ -210,10 +210,11 @@ describe('the shortcut chip in the File menu (B-10)', () => {
     // channels rounded to the 8-bit values the screen shows; 4.31 unrounded),
     // under the review's 4.43, which faded the text over the already-faded
     // chip.
-    const chip = mount(FILE_MENU, 'kbd');
-    const menu = surfaceOf(chip.parentElement);
-    const fg = over(withOpacity(paintOf(chip, 'color'), 0.7), menu);
-    const bg = over(withOpacity(paintOf(chip, ['background', 'background-color']), 0.7), menu);
+    // The fade is put back on the markup itself and measured by textPair,
+    // the way every other pair is.
+    const chip = mount(FILE_MENU.replace('<kbd>', '<kbd style="opacity: 0.7">'), 'kbd');
+    expect(opacityOf(chip)).toBe(0.7);
+    const { fg, bg } = textPair(chip);
     expect(contrast(fg, bg).toFixed(1)).toBe('4.3');
     expect(contrast(fg, bg)).toBeLessThan(TEXT);
   });
