@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — REL-711 — v3.2.711 ships UI-06's targets PR; DEF-83 closes; UI-07 filed
+
+**Decision:** v3.2.711 is live from deploy commit `ced318b` (tag `v3.2.711`), released under GATELESS-1 because UI-06's targets merge (`c0e9213`, PR #118) changed `index.html`, `styles/` and `src/`; DEF-83 (a collapsed header's focus ring) closes with it, since every header's ring is now drawn inside the header. The same record files UI-07, the layout-and-ordering review of the cards, sidebars and header the owner asked for on 2026-10-08 ("file a new backlog item for a layout-and-ordering review of the cards, sidebars and header … It runs after PRs 5–7 land and proposes options with before/after screenshots as one question round for me. It is Fable work, so the next chat asks me before launching it."), taking CROWD-07's F13 (the Variation card) and its layer-order note with it.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.710-c0e9213`, gate green (130 files, 3,027 tests), dry run, push, Verify and the Pages build and deploy green, 22 of 22 live files SHA-256-identical. Live smoke at 1280×800 with the pane's visibility overridden: title v3.2.711, Open day played 3,002 ms, then to its end at 27,028 ms with no frame queued; MP4 1920×1080 29.0 s `ftypisom` (9.82 MB); HTML (2.04 MB) with its CSP, the project and the live `player.js`; no failed resource or console error beyond the known stale `version.json` probe. The PR changed no export or player code (`src/services/HTMLExportService.js`, `src/player/` and `docs/player.js` are unchanged in `c0e9213^..c0e9213`, and `docs/player.js` is unchanged between the deploys `72fcaf9` and `ced318b`) and 711 does not end in 0, so no new disk save is owed; v3.2.710's stays owed. Codex reviewed the PR in three rounds (r1 one blocking and three real, r2 two real and one advisory, r3 approve; the Checked line of `c0e9213`); the lead's own pane check at 1,200 px found the readout row's first wrap rule incomplete, fixed in the same PR.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-08 — REL-710 — v3.2.710 ships UI-06's words PR
 
 **Decision:** v3.2.710 is live from deploy commit `72fcaf9` (tag `v3.2.710`), released under GATELESS-1 because UI-06's words merge (`9adb695`, PR #115) changed `src/`, `index.html` and `styles/`; the build ends in 0, so the owner's export-save rule makes a disk save owed (a wish line tracks it).

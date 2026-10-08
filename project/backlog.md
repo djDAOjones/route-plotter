@@ -31,6 +31,7 @@
 
 - [~] UI-06 — Review and tweak the app GUI against the UI standards — since 2026-10-06
 - [~] CROWD-07 — Review the crowd features for novices and experts — since 2026-10-06
+- [ ] UI-07 — Review the layout and order of cards, sidebars and header — since 2026-10-08
 
 ### Review assurance — owner evidence
 
@@ -79,7 +80,6 @@
 - [ ] DEF-79 — Render space moves crowd anchors — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-80 — Player retimes constant-time projects — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-82 — Dialog heading passes shortcuts — since 2026-10-08 — (from: DEF-13, 2026-10-08)
-- [ ] DEF-83 — Collapsed header focus unseen — since 2026-10-08 — (from: UI-06, 2026-10-08)
 - [ ] DEF-84 — Play silent without route — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-85 — Anchored window start misreads — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-86 — Sliders rewrite stored values — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
