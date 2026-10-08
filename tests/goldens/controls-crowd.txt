@@ -1,17 +1,41 @@
 # crowd: the crowd selected
 
-## #scope-route-btn · disabled, not operated
+## #scope-route-btn · click
+emit crowd:deselected
+emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+app ~ crowd: "layer[0]" → null
+app ~ focus: "body" → "#scope-route-btn"
+ui ~ #scope-chip: div class="scope-chip" data-scope="crowd" → div class="scope-chip" data-scope="route"
+ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
+ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" type="button"
+ui ~ #route-scope: div (not shown) → div class="scope-group"
+ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
+ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 6b236c13)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
+ui ~ #crowd-scope: div class="scope-group" → div (not shown)
+ui ~ #layers-strip>li[0]: li class="layer-item" → li class="layer-item selected"
+ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="false" class="layer-row" type="button" → button aria-pressed="true" class="layer-row" type="button"
+ui ~ #layers-strip>li[1]: li class="layer-item selected" → li class="layer-item"
+ui ~ #layers-strip>li[1]>button[0]: button aria-describedby="{#layers-strip>li[1]>span[1]}" aria-pressed="true" class="layer-row" data-tip-desc="{#layers-strip>li[1]>span[1]}" data-tip="Double-click or press F2 to rename" type="button" → button aria-describedby="{#layers-strip>li[1]>span[1]}" aria-pressed="false" class="layer-row" data-tip-desc="{#layers-strip>li[1]>span[1]}" data-tip="Double-click or press F2 to rename" type="button"
+ui - #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" (and 20 inside, f6bffd1b)
+ui - #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 72 inside, cd087275)
+ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 114 inside, d8995537)
+ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" (and 33 inside, b8cf2d66)
 
 ## #scope-prev-btn · disabled, not operated
 
 ## #scope-next-btn · disabled, not operated
 
-## #crowd-scope>div[0]>div[0] · click
-app ~ focus: "body" → "#crowd-scope>div[0]>div[0]"
+## #crowd-scope>div[0]>h2[0]>button[0] · click
+app ~ focus: "body" → "#crowd-scope>div[0]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "guide"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 5c9a7faf]
 ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section" data-last="true" data-section="guide"
-ui ~ #crowd-scope>div[0]>div[0]: div aria-controls="section-guide-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-guide-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
+ui ~ #crowd-scope>div[0]>h2[0]>button[0]: button aria-controls="section-guide-content" aria-expanded="true" class="section-header" type="button" :text="Guide" → button aria-controls="section-guide-content" aria-expanded="false" class="section-header" type="button" :text="Guide"
 
 ## #section-guide-content>button[0] · click
 app ~ focus: "body" → "#section-guide-content>button[0]"
@@ -40,7 +64,7 @@ settled:
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 290c6a1a]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
 
 ## #network-edit-btn · click
@@ -115,7 +139,7 @@ ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title=
 ui + #toast-container>div[0]: div class="toast" :text="Traced the route into Visitors — 5 nodes, 4 paths"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui ~ #crowd-scope>div[0]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
-ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
 ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -124,12 +148,12 @@ settled:
   ui - #toast-container>div[0]: div class="toast" :text="Traced the route into Visitors — 5 nodes, 4 paths"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
-## #crowd-scope>div[1]>div[0] · click
-app ~ focus: "body" → "#crowd-scope>div[1]>div[0]"
+## #crowd-scope>div[1]>h2[0]>button[0] · click
+app ~ focus: "body" → "#crowd-scope>div[1]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, ee9e1b07]
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section" data-last="true" data-section="dots"
-ui ~ #crowd-scope>div[1]>div[0]: div aria-controls="section-dots-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-dots-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
+ui ~ #crowd-scope>div[1]>h2[0]>button[0]: button aria-controls="section-dots-content" aria-expanded="true" class="section-header" type="button" :text="Dots" → button aria-controls="section-dots-content" aria-expanded="false" class="section-header" type="button" :text="Dots"
 
 ## #section-dots-content>div[1]>button[0] · click
 app ~ focus: "body" → "#section-dots-content>div[1]>button[0]"
@@ -309,11 +333,11 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9704 chars, 35a45fff]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 
-## #section-dots-content>button[2] · click
-app ~ focus: "body" → "#section-dots-content>button[2]"
+## #section-dots-content>div[2]>button[0] · click
+app ~ focus: "body" → "#section-dots-content>div[2]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
-ui ~ #section-dots-content>button[2]: button aria-describedby="crowd-dot-size-tip" aria-expanded="false" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --crowd-dot-size-tip;" type="button" → button aria-describedby="crowd-dot-size-tip" aria-expanded="true" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --crowd-dot-size-tip;" type="button"
+ui ~ #section-dots-content>div[2]>button[0]: button aria-describedby="crowd-dot-size-tip" aria-expanded="false" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --crowd-dot-size-tip;" type="button" → button aria-describedby="crowd-dot-size-tip" aria-expanded="true" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --crowd-dot-size-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dot size factor, scaled with the image like other elements"
 
 ## #crowd-dot-size · set 70
@@ -324,18 +348,18 @@ storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-size: input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="0.45×" max="200" min="5" step="5" type="range" value="40" :value="45" → input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="0.70×" max="200" min="5" step="5" type="range" value="40" :value="70"
-ui ~ #crowd-dot-size-value: span :text="0.45×" → span :text="0.70×"
+ui ~ #crowd-dot-size-value: span class="range-readout" :text="0.45×" → span class="range-readout" :text="0.70×"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, 6589e999]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 
-## #section-dots-content>button[5] · click
-app ~ focus: "body" → "#section-dots-content>button[5]"
+## #section-dots-content>div[3]>button[0] · click
+app ~ focus: "body" → "#section-dots-content>div[3]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
-ui ~ #section-dots-content>button[5]: button aria-describedby="crowd-wobble-tip" aria-expanded="false" aria-label="Help: Walking variation" class="param-hint-trigger" style="position-anchor: --crowd-wobble-tip;" type="button" → button aria-describedby="crowd-wobble-tip" aria-expanded="true" aria-label="Help: Walking variation" class="param-hint-trigger" style="position-anchor: --crowd-wobble-tip;" type="button"
+ui ~ #section-dots-content>div[3]>button[0]: button aria-describedby="crowd-wobble-tip" aria-expanded="false" aria-label="Help: Walking variation" class="param-hint-trigger" style="position-anchor: --crowd-wobble-tip;" type="button" → button aria-describedby="crowd-wobble-tip" aria-expanded="true" aria-label="Help: Walking variation" class="param-hint-trigger" style="position-anchor: --crowd-wobble-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Sideways walking variation as dots travel — 0% follows the line exactly"
 
 ## #crowd-wobble · set 33
@@ -346,25 +370,25 @@ storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-wobble: input aria-describedby="crowd-wobble-value crowd-wobble-tip" aria-valuetext="0%" max="100" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-wobble-value crowd-wobble-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="0" :value="33"
-ui ~ #crowd-wobble-value: span :text="0%" → span :text="33%"
+ui ~ #crowd-wobble-value: span class="range-readout" :text="0%" → span class="range-readout" :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9703 chars, 8b873fc1]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 
-## #crowd-scope>div[2]>div[0] · click
-app ~ focus: "body" → "#crowd-scope>div[2]>div[0]"
+## #crowd-scope>div[2]>h2[0]>button[0] · click
+app ~ focus: "body" → "#crowd-scope>div[2]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 6e43a33f]
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section" data-last="true" data-section="release"
-ui ~ #crowd-scope>div[2]>div[0]: div aria-controls="section-release-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-release-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
+ui ~ #crowd-scope>div[2]>h2[0]>button[0]: button aria-controls="section-release-content" aria-expanded="true" class="section-header" type="button" :text="Release" → button aria-controls="section-release-content" aria-expanded="false" class="section-header" type="button" :text="Release"
 
-## #section-release-content>div[0]>button[0] · click
-app ~ focus: "body" → "#section-release-content>div[0]>button[0]"
+## #section-release-content>div[0]>div[0]>button[0] · click
+app ~ focus: "body" → "#section-release-content>div[0]>div[0]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #section-release-content>div[0]>button[0]: button aria-describedby="crowd-count-tip" aria-expanded="false" aria-label="Help: Count" class="param-hint-trigger" style="position-anchor: --crowd-count-tip;" type="button" → button aria-describedby="crowd-count-tip" aria-expanded="true" aria-label="Help: Count" class="param-hint-trigger" style="position-anchor: --crowd-count-tip;" type="button"
+ui ~ #section-release-content>div[0]>div[0]>button[0]: button aria-describedby="crowd-count-tip" aria-expanded="false" aria-label="Help: Count" class="param-hint-trigger" style="position-anchor: --crowd-count-tip;" type="button" → button aria-describedby="crowd-count-tip" aria-expanded="true" aria-label="Help: Count" class="param-hint-trigger" style="position-anchor: --crowd-count-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Total dots released across the window"
 
 ## #crowd-count · set 167
@@ -375,7 +399,7 @@ storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-count: input aria-describedby="crowd-count-value crowd-count-tip" aria-valuetext="60" max="500" min="1" step="1" type="range" value="50" :value="60" → input aria-describedby="crowd-count-value crowd-count-tip" aria-valuetext="167" max="500" min="1" step="1" type="range" value="50" :value="167"
-ui ~ #crowd-count-value: span :text="60" → span :text="167"
+ui ~ #crowd-count-value: span class="range-readout" :text="60" → span class="range-readout" :text="167"
 settled:
   emit animation:durationChange 28958.821688
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28958.821688, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -383,14 +407,14 @@ settled:
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9701 chars, 246008a3]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:28"
 
-## #section-release-content>div[0]>button[3] · click
-app ~ focus: "body" → "#section-release-content>div[0]>button[3]"
+## #section-release-content>div[0]>div[1]>button[0] · click
+app ~ focus: "body" → "#section-release-content>div[0]>div[1]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #section-release-content>div[0]>button[3]: button aria-describedby="crowd-release-start-tip" aria-expanded="false" aria-label="Help: Window start" class="param-hint-trigger" style="position-anchor: --crowd-release-start-tip;" type="button" → button aria-describedby="crowd-release-start-tip" aria-expanded="true" aria-label="Help: Window start" class="param-hint-trigger" style="position-anchor: --crowd-release-start-tip;" type="button"
+ui ~ #section-release-content>div[0]>div[1]>button[0]: button aria-describedby="crowd-release-start-tip" aria-expanded="false" aria-label="Help: Window start" class="param-hint-trigger" style="position-anchor: --crowd-release-start-tip;" type="button" → button aria-describedby="crowd-release-start-tip" aria-expanded="true" aria-label="Help: Window start" class="param-hint-trigger" style="position-anchor: --crowd-release-start-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="When the first dots set off, as a position in the timeline"
 
 ## #crowd-release-start · set 33
@@ -401,18 +425,18 @@ storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-release-start: input aria-describedby="crowd-release-start-value crowd-release-start-tip" aria-valuetext="0%" max="100" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-release-start-value crowd-release-start-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="0" :value="33"
-ui ~ #crowd-release-start-value: span :text="0%" → span :text="33%"
+ui ~ #crowd-release-start-value: span class="range-readout" :text="0%" → span class="range-readout" :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9703 chars, 96873c2b]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 
-## #section-release-content>div[0]>button[6] · click
-app ~ focus: "body" → "#section-release-content>div[0]>button[6]"
+## #section-release-content>div[0]>div[2]>button[0] · click
+app ~ focus: "body" → "#section-release-content>div[0]>div[2]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #section-release-content>div[0]>button[6]: button aria-describedby="crowd-release-duration-tip" aria-expanded="false" aria-label="Help: Window length" class="param-hint-trigger" style="position-anchor: --crowd-release-duration-tip;" type="button" → button aria-describedby="crowd-release-duration-tip" aria-expanded="true" aria-label="Help: Window length" class="param-hint-trigger" style="position-anchor: --crowd-release-duration-tip;" type="button"
+ui ~ #section-release-content>div[0]>div[2]>button[0]: button aria-describedby="crowd-release-duration-tip" aria-expanded="false" aria-label="Help: Window length" class="param-hint-trigger" style="position-anchor: --crowd-release-duration-tip;" type="button" → button aria-describedby="crowd-release-duration-tip" aria-expanded="true" aria-label="Help: Window length" class="param-hint-trigger" style="position-anchor: --crowd-release-duration-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much of the timeline the release is spread across"
 
 ## #crowd-release-duration · set 33
@@ -423,7 +447,7 @@ storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-release-duration: input aria-describedby="crowd-release-duration-value crowd-release-duration-tip" aria-valuetext="45%" max="100" min="0" step="1" type="range" value="100" :value="45" → input aria-describedby="crowd-release-duration-value crowd-release-duration-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="100" :value="33"
-ui ~ #crowd-release-duration-value: span :text="45%" → span :text="33%"
+ui ~ #crowd-release-duration-value: span class="range-readout" :text="45%" → span class="range-readout" :text="33%"
 settled:
   emit animation:durationChange 28599.904201
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28599.904201, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -431,7 +455,7 @@ settled:
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 8c6fc35a]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:28"
 
 ## #section-release-content>details[1]>summary[0] · click
@@ -440,11 +464,11 @@ storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #section-release-content>details[1]: details class="section-more" open="" → details class="section-more"
 
-## #section-release-content>details[1]>div[1]>button[0] · click
-app ~ focus: "body" → "#section-release-content>details[1]>div[1]>button[0]"
+## #section-release-content>details[1]>div[1]>div[0]>button[0] · click
+app ~ focus: "body" → "#section-release-content>details[1]>div[1]>div[0]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #section-release-content>details[1]>div[1]>button[0]: button aria-describedby="crowd-onset-variance-tip" aria-expanded="false" aria-label="Help: Release timing" class="param-hint-trigger" style="position-anchor: --crowd-onset-variance-tip;" type="button" → button aria-describedby="crowd-onset-variance-tip" aria-expanded="true" aria-label="Help: Release timing" class="param-hint-trigger" style="position-anchor: --crowd-onset-variance-tip;" type="button"
+ui ~ #section-release-content>details[1]>div[1]>div[0]>button[0]: button aria-describedby="crowd-onset-variance-tip" aria-expanded="false" aria-label="Help: Release timing" class="param-hint-trigger" style="position-anchor: --crowd-onset-variance-tip;" type="button" → button aria-describedby="crowd-onset-variance-tip" aria-expanded="true" aria-label="Help: Release timing" class="param-hint-trigger" style="position-anchor: --crowd-onset-variance-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How unevenly individual dots set off within the release window"
 
 ## #crowd-onset-variance · set 33
@@ -455,7 +479,7 @@ storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-onset-variance: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="60% uneven" max="100" min="0" step="1" type="range" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="33% uneven" max="100" min="0" step="1" type="range" value="20" :value="33"
-ui ~ #crowd-onset-variance-value: span :text="60% uneven" → span :text="33% uneven"
+ui ~ #crowd-onset-variance-value: span class="range-readout" :text="60% uneven" → span class="range-readout" :text="33% uneven"
 settled:
   emit animation:durationChange 30609.179801
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30609.179801, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -464,11 +488,11 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9701 chars, 5c930a6f]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 
-## #section-release-content>details[1]>div[1]>button[3] · click
-app ~ focus: "body" → "#section-release-content>details[1]>div[1]>button[3]"
+## #section-release-content>details[1]>div[1]>div[1]>button[0] · click
+app ~ focus: "body" → "#section-release-content>details[1]>div[1]>div[1]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #section-release-content>details[1]>div[1]>button[3]: button aria-describedby="crowd-intensity-ramp-tip" aria-expanded="false" aria-label="Help: Release bias" class="param-hint-trigger" style="position-anchor: --crowd-intensity-ramp-tip;" type="button" → button aria-describedby="crowd-intensity-ramp-tip" aria-expanded="true" aria-label="Help: Release bias" class="param-hint-trigger" style="position-anchor: --crowd-intensity-ramp-tip;" type="button"
+ui ~ #section-release-content>details[1]>div[1]>div[1]>button[0]: button aria-describedby="crowd-intensity-ramp-tip" aria-expanded="false" aria-label="Help: Release bias" class="param-hint-trigger" style="position-anchor: --crowd-intensity-ramp-tip;" type="button" → button aria-describedby="crowd-intensity-ramp-tip" aria-expanded="true" aria-label="Help: Release bias" class="param-hint-trigger" style="position-anchor: --crowd-intensity-ramp-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither"
 
 ## #crowd-intensity-ramp · set -33
@@ -479,7 +503,7 @@ storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-intensity-ramp: input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-valuetext="Even" max="100" min="-100" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-valuetext="Earlier 33%" max="100" min="-100" step="1" type="range" value="0" :value="-33"
-ui ~ #crowd-intensity-ramp-value: span :text="Even" → span :text="Earlier 33%"
+ui ~ #crowd-intensity-ramp-value: span class="range-readout" :text="Even" → span class="range-readout" :text="Earlier 33%"
 settled:
   emit animation:durationChange 30345.349556
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30345.349556, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -535,7 +559,7 @@ settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 31484.032262, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, de3b20a2]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness handle moved. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:31" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:31" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:31"
 
 ## #crowd-busyness-graph · drag its first handle, then the drag is cancelled
@@ -588,6 +612,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[0].value: 1 → 0.24
+app ~ focus: "body" → "#crowd-busyness-handles>div[0]>label[5]>input[1]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -605,7 +630,7 @@ settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 31302.700978, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9703 chars, e1876854]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:31" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:31" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:31"
 
 ## #crowd-busyness-handles>div[0]>label[5]>input[1] · enter 99999
@@ -627,6 +652,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[0].transition: "gradual" → "step"
+app ~ focus: "body" → "#crowd-busyness-handles>div[0]>label[8]>select[1]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -661,6 +687,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].value: 1 → 0.24
+app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[5]>input[1]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -678,7 +705,7 @@ settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 29602.457527, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9703 chars, 2ee65f2a]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:29"
 
 ## #crowd-busyness-handles>div[1]>label[5]>input[1] · enter 99999
@@ -745,19 +772,19 @@ settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28884.727903, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9702 chars, bbee7da1]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Visitors pattern re-rolled. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:28"
 
-## #crowd-scope>div[3]>div[0] · click
-app ~ focus: "body" → "#crowd-scope>div[3]>div[0]"
+## #crowd-scope>div[3]>h2[0]>button[0] · click
+app ~ focus: "body" → "#crowd-scope>div[3]>h2[0]>button[0]"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 216d91a3]
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
-ui ~ #crowd-scope>div[3]>div[0]: div aria-controls="section-motion-content" aria-expanded="true" class="section-header" role="button" tabindex="0" → div aria-controls="section-motion-content" aria-expanded="false" class="section-header" role="button" tabindex="0"
+ui ~ #crowd-scope>div[3]>h2[0]>button[0]: button aria-controls="section-motion-content" aria-expanded="true" class="section-header" type="button" :text="Motion" → button aria-controls="section-motion-content" aria-expanded="false" class="section-header" type="button" :text="Motion"
 
-## #section-motion-content>button[0] · click
-app ~ focus: "body" → "#section-motion-content>button[0]"
+## #section-motion-content>div[0]>button[0] · click
+app ~ focus: "body" → "#section-motion-content>div[0]>button[0]"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
-ui ~ #section-motion-content>button[0]: button aria-describedby="crowd-speed-tip" aria-expanded="false" aria-label="Help: Speed" class="param-hint-trigger" style="position-anchor: --crowd-speed-tip;" type="button" → button aria-describedby="crowd-speed-tip" aria-expanded="true" aria-label="Help: Speed" class="param-hint-trigger" style="position-anchor: --crowd-speed-tip;" type="button"
+ui ~ #section-motion-content>div[0]>button[0]: button aria-describedby="crowd-speed-tip" aria-expanded="false" aria-label="Help: Speed" class="param-hint-trigger" style="position-anchor: --crowd-speed-tip;" type="button" → button aria-describedby="crowd-speed-tip" aria-expanded="true" aria-label="Help: Speed" class="param-hint-trigger" style="position-anchor: --crowd-speed-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dot travel speed in image lengths per second: 1 is the image's width across or its height down"
 
 ## #crowd-speed · set 34
@@ -767,7 +794,7 @@ app ~ focus: "body" → "#crowd-speed"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-speed: input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.06 image lengths/s" max="100" min="1" step="1" type="range" value="15" :value="6" → input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.34 image lengths/s" max="100" min="1" step="1" type="range" value="15" :value="34"
-ui ~ #crowd-speed-value: span :text="0.06 image lengths/s" → span :text="0.34 image lengths/s"
+ui ~ #crowd-speed-value: span class="range-readout" :text="0.06 image lengths/s" → span class="range-readout" :text="0.34 image lengths/s"
 settled:
   emit animation:durationChange 27929.352554
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -775,13 +802,13 @@ settled:
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, a1b57040]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
 
-## #section-motion-content>button[3] · click
-app ~ focus: "body" → "#section-motion-content>button[3]"
+## #section-motion-content>div[1]>button[0] · click
+app ~ focus: "body" → "#section-motion-content>div[1]>button[0]"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
-ui ~ #section-motion-content>button[3]: button aria-describedby="crowd-speed-variance-tip" aria-expanded="false" aria-label="Help: Pace variation" class="param-hint-trigger" style="position-anchor: --crowd-speed-variance-tip;" type="button" → button aria-describedby="crowd-speed-variance-tip" aria-expanded="true" aria-label="Help: Pace variation" class="param-hint-trigger" style="position-anchor: --crowd-speed-variance-tip;" type="button"
+ui ~ #section-motion-content>div[1]>button[0]: button aria-describedby="crowd-speed-variance-tip" aria-expanded="false" aria-label="Help: Pace variation" class="param-hint-trigger" style="position-anchor: --crowd-speed-variance-tip;" type="button" → button aria-describedby="crowd-speed-variance-tip" aria-expanded="true" aria-label="Help: Pace variation" class="param-hint-trigger" style="position-anchor: --crowd-speed-variance-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Per-dot pace variation — 0% moves every dot at the same speed"
 
 ## #crowd-speed-variance · set 33
@@ -791,7 +818,7 @@ app ~ focus: "body" → "#crowd-speed-variance"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-speed-variance: input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="35%" max="100" min="0" step="1" type="range" value="20" :value="35" → input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="20" :value="33"
-ui ~ #crowd-speed-variance-value: span :text="35%" → span :text="33%"
+ui ~ #crowd-speed-variance-value: span class="range-readout" :text="35%" → span class="range-readout" :text="33%"
 settled:
   emit animation:durationChange 30156.273151
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30156.273151, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -800,10 +827,10 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, cb886c25]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 
-## #section-motion-content>button[6] · click
-app ~ focus: "body" → "#section-motion-content>button[6]"
+## #section-motion-content>button[2] · click
+app ~ focus: "body" → "#section-motion-content>button[2]"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
-ui ~ #section-motion-content>button[6]: button aria-describedby="crowd-lifecycle-tip" aria-expanded="false" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button" → button aria-describedby="crowd-lifecycle-tip" aria-expanded="true" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button"
+ui ~ #section-motion-content>button[2]: button aria-describedby="crowd-lifecycle-tip" aria-expanded="false" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button" → button aria-describedby="crowd-lifecycle-tip" aria-expanded="true" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="What a dot does when it reaches the end of its journey"
 
 ## #crowd-lifecycle · choose "respawn"
@@ -820,7 +847,7 @@ settled:
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 8537ef84]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
 
 ## #crowd-lifecycle · choose "loop"
@@ -837,7 +864,7 @@ settled:
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9695 chars, e289879a]
   ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
 
 ## #crowd-lifecycle · choose "collect"

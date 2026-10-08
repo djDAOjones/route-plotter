@@ -74,6 +74,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.24
+app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[2]>input[1]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -92,6 +93,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.99
+app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[2]>input[1]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -117,6 +119,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].transition: "gradual" → "step"
+app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[8]>select[1]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -136,6 +139,7 @@ model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].transition: "gradual"
+app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[5]>input[1]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -185,6 +189,7 @@ emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-c
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1 → 0.24
+app ~ focus: "body" → "#crowd-busyness-handles>div[2]>label[5]>input[1]"
 storage ~ routePlotter_lastSection: "motion" → "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
@@ -198,7 +203,7 @@ settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 29597.591002, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9746 chars, fc466822] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9749 chars, 7612d6d5]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-label="Timeline position" aria-valuetext="0:00 of 0:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:29"
 
 ## #crowd-busyness-handles>div[2]>label[5]>input[1] · enter 99999

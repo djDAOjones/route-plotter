@@ -40,6 +40,26 @@ const NODE_TYPE_CYCLE = ['normal', 'entry', 'exit'];
 const SELECTION_OUTER = '#FFFFFF';
 const SELECTION_INNER = '#111111';
 
+/**
+ * The control to give focus to, or, when the card holding it is collapsed
+ * (its content is display:none, so a browser cannot focus it), the card's
+ * header button: the visible control that reveals it. The card is not
+ * opened: leaving the mode is no reason to change the layout the user set.
+ * Decided by the header's `aria-expanded` (jsdom lays nothing out). When
+ * that target is itself inside something hidden — the mode left with the
+ * crowd deselected, so SectionController has already hidden the Crowd scope
+ * group — the scope chip's Route button, always shown and never disabled,
+ * takes the focus instead.
+ * @param {HTMLElement} control
+ * @returns {HTMLElement}
+ */
+function visibleFocusTarget(control) {
+  const header = control.closest('.settings-section')?.querySelector('.section-header');
+  const target = !header || header.getAttribute('aria-expanded') === 'true' ? control : header;
+  if (!target.closest('[hidden]')) return target;
+  return document.getElementById('scope-route-btn') ?? target;
+}
+
 export class NetworkEditService {
   /**
    * @param {EventBus} eventBus - Application event bus
@@ -88,13 +108,17 @@ export class NetworkEditService {
    * Enter network edit mode for a flow layer's graph.
    * @param {import('../models/FlowLayer.js').FlowLayer} layer
    */
-  enter(layer) {
+  enter(layer, { returnFocusTo = null } = {}) {
     if (!layer) return;
     if (this.active) this.exit();
     else if (this.layer) this.clearInspection();
 
     this.active = true;
     this.layer = layer;
+    // Where focus goes when the banner that holds it is taken away (UI-06
+    // B-29): the control that opened the mode, by default the Guide card's
+    // Edit network button.
+    this._returnFocusTo = returnFocusTo ?? document.getElementById('network-edit-btn');
     this.penNodeId = null;
     this.selection = null;
     this.hover = null;
@@ -184,6 +208,9 @@ export class NetworkEditService {
 
     const hadSelection = this.selection;
     const previousLayer = this.layer;
+    // Focus in the banner (its Done was pressed) would be lost with it.
+    const returnFocus = this._banner?.contains(document.activeElement) ? this._returnFocusTo : null;
+    this._returnFocusTo = null;
     this.active = false;
     this.layer = null;
     this.penNodeId = null;
@@ -202,6 +229,8 @@ export class NetworkEditService {
     if (hadSelection) this._emitDeselected(hadSelection, previousLayer);
     this.eventBus.emit('network:edit-mode-changed', { active: false, layer: null });
     this.eventBus.emit('render:request');
+    // After the mode change, which re-enables the button that opened the mode.
+    if (returnFocus?.isConnected && !returnFocus.disabled) visibleFocusTarget(returnFocus).focus();
   }
 
   // ── selection ───────────────────────────────────────────

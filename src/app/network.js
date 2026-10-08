@@ -213,7 +213,7 @@ export const networkMixin = {
     // Drawing a network is editing: leave Preview through the canonical
     // switch (flipping back to Preview later closes the mode)
     this._setPreviewMode(false);
-    svc.enter(layer);
+    svc.enter(layer, { returnFocusTo: this._editNetworkBtn });
     this.updateGuideCard();
     this.announce('Editing the network — click the map to place linked nodes. Escape lifts the pen.');
   },
@@ -619,8 +619,8 @@ export const networkMixin = {
       getGraphDepartureShares(graph, nodeId)
         .find(share => share.edge.id === edge.id)?.percent ?? 0;
 
-    // The readout's label names the weight slider it belongs to.
-    setRangeReadout(valueEl.closest('label')?.control, valueEl, edge.direction === 'one-way'
+    // The readout sits beside the weight slider's label, not in it (UI-06 B-06).
+    setRangeReadout(document.getElementById('network-edge-weight'), valueEl, edge.direction === 'one-way'
       ? `${shareFrom(edge.sourceId)}% of departures`
       : `${shareFrom(edge.sourceId)}% · ${shareFrom(edge.targetId)}% of departures`);
   },

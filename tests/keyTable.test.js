@@ -1143,7 +1143,7 @@ describe('what the page shortcuts react to (TST-13)', () => {
     ["the selected waypoint's row", () => document.querySelector('[data-route-index="1"] > .waypoint-row')],
     ["another waypoint's row", () => document.querySelector('[data-route-index="0"] > .waypoint-row')],
     ['a sidebar disclosure', () => document.querySelector('.section-more > summary')],
-    ['a settings section header', () => document.querySelector('[data-section="video"] > .section-header')],
+    ['a settings section header', () => document.querySelector('[data-section="video"] .section-header')],
     ['a skip link', () => document.querySelector('.skip-link')],
     ['a menu item, its menu open', () => {
       document.getElementById('export-dropdown-btn').click();
@@ -1190,9 +1190,10 @@ describe('what the page shortcuts react to (TST-13)', () => {
     // Delete and the nudge would act on the selected waypoint, which this
     // row does not name: the row keeps them.
     "another waypoint's row": { ...ON_A_CONTROL, Delete: '—, prevented', '→': '—, prevented' },
-    // The disclosure and the section header take Space to open themselves.
+    // The disclosure takes Space to open itself; a section header is a
+    // native button (UI-06 B-21), whose Space is the browser's own.
     'a sidebar disclosure': { ...ON_A_CONTROL, Space: '—, prevented' },
-    'a settings section header': { ...ON_A_CONTROL, Space: '—, prevented' },
+    'a settings section header': ON_A_CONTROL,
     'a skip link': ON_A_CONTROL,
     // A menu keeps the arrows that move through it too.
     'a menu item, its menu open': { ...ON_A_CONTROL, '→': '—' },
@@ -1485,6 +1486,7 @@ const focusName = () => {
 const KEY_LISTENER = {
   crowdRename: 'src/app/crowds.js: input keydown #1',
   busyness: 'src/app/crowds.js: input keydown #2',
+  crowdRow: 'src/app/crowds.js: row keydown',
   exportEscape: 'src/app/exporting.js: window keydown (capture)',
   contextMenu: 'src/components/ContextMenu.js: document keydown (capture)',
   menuButton: 'src/components/Dropdown.js: trigger keydown',
@@ -1493,7 +1495,6 @@ const KEY_LISTENER = {
   // UI-06: declared the document's, not an app's (bootApp leaves it when it stops an app)
   hint: 'src/components/ParamTooltip.js: document keydown (capture, documentLifetime)',
   outline: 'src/controllers/SceneOutlineController.js: this.container keydown',
-  sectionHeader: 'src/controllers/SectionController.js: header keydown',
   more: 'src/controllers/SectionController.js: summary keydown',
   waypointRename: 'src/controllers/UIController.js: input keydown',
   waypointRow: 'src/controllers/UIController.js: rowBtn keydown',
@@ -1534,6 +1535,10 @@ const KEY_LISTENERS = {
     what: 'a busyness handle number field: Enter applies what was typed (TST-04 mutant C5 breaks it)',
     keys: ['Enter'], reads: ['preventDefault'],
     pinnedBy: { 'tests/crowds.test.js': ['Enter'] } },
+  [KEY_LISTENER.crowdRow]: {
+    what: "F2 on a crowd's row in the Layers strip selects it and starts its rename, as a waypoint row's does (UI-06 J-13)",
+    keys: ['F2'], reads: ['preventDefault'],
+    pinnedBy: { 'tests/crowds.test.js': ['F2'] } },
   [KEY_LISTENER.exportEscape]: {
     what: 'Escape during a video export cancels it, ahead of every other listener',
     keys: ['Escape'], reads: ['preventDefault', 'stopImmediatePropagation'] },
@@ -1557,9 +1562,6 @@ const KEY_LISTENERS = {
     what: 'Escape in a scene outline field drops the draft and resets its form',
     keys: ['Escape'], reads: ['preventDefault', 'stopPropagation', 'target'],
     pinnedBy: { 'tests/sceneOutline.test.js': ['Escape'] } },
-  [KEY_LISTENER.sectionHeader]: {
-    what: 'a settings section header: Enter and Space open and close it (TST-04 mutant C8 breaks it)',
-    keys: [' ', 'Enter'], reads: ['preventDefault'] },
   [KEY_LISTENER.more]: {
     what: 'a More disclosure: Enter and Space open and close it',
     keys: [' ', 'Enter'], reads: ['preventDefault'],
@@ -1761,30 +1763,37 @@ const LISTENER_ROWS = [
   },
 
   {
-    title: 'Enter and Space on a settings section header open and close it; every other key does not',
-    covers: [KEY_LISTENER.sectionHeader],
+    title: "F2 on a crowd's row selects it and starts its rename; every other key does not",
+    covers: [KEY_LISTENER.crowdRow],
     async run(log) {
       const app = await editor();
-      const section = document.querySelector('.settings-section[data-section="video"]');
-      const header = section.querySelector('.section-header');
-      header.focus();
-      const state = () => `${header.getAttribute('aria-expanded') === 'true' ? 'open' : 'closed'}` +
-        `${section.classList.contains('expanded') ? '' : ' (no class)'}, last used ` +
-        `${document.querySelector('.settings-section[data-last="true"]')?.dataset.section ?? 'none'}`;
-      const before = state();
-      const steps = ['a', 'Enter', ' ', 'Tab'].map(key =>
-        `${key === ' ' ? 'Space' : key}: ${taken(log.press(KEY_LISTENER.sectionHeader, key, header))}; ${state()}`);
-      // Focus alone marks the section last used (SectionController's focusin).
-      // A is the page's own shortcut (it adds a waypoint): since DEF-13 a
-      // focused header leaves it to the page.
-      expect([before, ...steps]).toEqual([
-        'closed (no class), last used video',
-        'a: taken; closed (no class), last used video',
-        'Enter: taken; open, last used video',
-        'Space: taken; closed (no class), last used video',
-        'Tab: left; closed (no class), last used video'
+      document.getElementById('add-crowd-btn').click();
+      document.getElementById('add-crowd-btn').click();
+      const [first, second] = app.scene.getFlowLayers();
+      expect(app.selectedCrowd).toBe(second);
+      const row = layer => [...document.querySelectorAll('#layers-strip .layer-row')]
+        .find(each => each.textContent.includes(layer.name));
+      const renaming = () => document.querySelector('#layers-strip .layer-rename-input');
+      const state = () => `${renaming() ? `renaming "${renaming().value}"` : 'not renaming'}, ` +
+        `selected ${app.selectedCrowd?.name ?? 'none'}`;
+      const page = keysReachingThePage();
+      // F2 on the row of a crowd that is not selected: selected, then renaming, in the row the selection rebuilt.
+      row(first).focus();
+      const steps = [`F2: ${taken(log.press(KEY_LISTENER.crowdRow, 'F2', row(first)))}; ${state()}, focus ${focusName()}`];
+      renaming().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      steps.push(`Escape: ${state()}`);
+      // F2 on the selected crowd's row: renaming at once.
+      steps.push(`F2: ${taken(log.press(KEY_LISTENER.crowdRow, 'F2', row(first)))}; ${state()}`);
+      renaming().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      page.stop();
+      expect(page.keys, 'keys the row let through to the page').toEqual(['F2', 'F2']);
+      expect(steps).toEqual([
+        'F2: taken; renaming "Crowd 1", selected Crowd 1, focus Crowd name',
+        'Escape: not renaming, selected Crowd 1',
+        'F2: taken; renaming "Crowd 1", selected Crowd 1'
       ]);
-      log.sweep(KEY_LISTENER.sectionHeader, header, state, { page: app });
+      // Every other key, on the row: nothing (the strip is rebuilt by a selection, so the row is looked up afresh).
+      log.sweep(KEY_LISTENER.crowdRow, () => row(first), state, { page: app });
     }
   },
 
@@ -2184,6 +2193,9 @@ const scannedReads = listeners =>
 const REVIEWED_READS = Object.fromEntries(Object.entries(KEY_LISTENERS)
   .map(([name, entry]) => [name, readShape(entry)]));
 
+/** SectionController's one key listener, the More disclosure's, where the reviews' mutants are made. */
+const MORE_LISTENER = "      summary.addEventListener('keydown', (event) => {";
+
 /** A file of `src/` with a review's edits made in memory, read as the inventory reads `src/`. */
 function scanEdited(file, edits) {
   let text = readFileSync(join(repoRoot, file), 'utf8');
@@ -2381,16 +2393,15 @@ describe('every key listener the app adds (TST-13)', () => {
     expect(player).toEqual({ ...REVIEWED_READS[KEY_LISTENER.playerPage],
       unanalysed: [expect.stringMatching(/^line \d+: the key is compared with case EXTRA_PLAY_KEY$/)] });
     // N4: a held key ignored through a helper's second argument, the helper
-    // having been passed the event first.
-    const header = edited('src/controllers/SectionController.js', [
+    // having been passed the event first. (On the More disclosure's listener:
+    // the section header's keydown went with UI-06 B-21.)
+    const more = edited('src/controllers/SectionController.js', [
       ['export class SectionController',
         'function repeatOf(first, second) { return second?.repeat; }\n\nexport class SectionController'],
-      ["      header.addEventListener('keydown', (e) => {",
-        "      header.addEventListener('keydown', (e) => {\n        repeatOf(e);\n" +
-        '        if (repeatOf(null, e)) return;']
-    ])[KEY_LISTENER.sectionHeader];
-    expect(header).not.toEqual(REVIEWED_READS[KEY_LISTENER.sectionHeader]);
-    expect(header).toEqual({ ...REVIEWED_READS[KEY_LISTENER.sectionHeader], reads: ['preventDefault', 'repeat'] });
+      [MORE_LISTENER, `${MORE_LISTENER}\n        repeatOf(event);\n        if (repeatOf(null, event)) return;`]
+    ])[KEY_LISTENER.more];
+    expect(more).not.toEqual(REVIEWED_READS[KEY_LISTENER.more]);
+    expect(more).toEqual({ ...REVIEWED_READS[KEY_LISTENER.more], reads: ['preventDefault', 'repeat'] });
   });
 
   test("the reader follows a function only where its file does nothing else with the name (round 4's review, F1)", () => {
@@ -2479,17 +2490,16 @@ describe('every key listener the app adds (TST-13)', () => {
   });
 
   test("round 4's review's mutants of the real source fail the inventory's own comparison", () => {
-    // P1: the section header passes its event to a helper its file declares
+    // P1: the More disclosure passes its event to a helper its file declares
     // and then reassigns to read Alt.
-    const header = scannedReads(scanEdited('src/controllers/SectionController.js', [
+    const more = scannedReads(scanEdited('src/controllers/SectionController.js', [
       ['export class SectionController',
         'function ignoresKey(e) { return false; }\nignoresKey = e => e.altKey;\n\nexport class SectionController'],
-      ["      header.addEventListener('keydown', (e) => {",
-        "      header.addEventListener('keydown', (e) => {\n        if (ignoresKey(e)) return;"]
-    ]).listeners)[KEY_LISTENER.sectionHeader];
-    expect(header).not.toEqual(REVIEWED_READS[KEY_LISTENER.sectionHeader]);
-    expect(header).toEqual({ ...REVIEWED_READS[KEY_LISTENER.sectionHeader], unanalysed: [expect.stringMatching(
-      /^line \d+: e is passed to ignoresKey, which the scan cannot follow \(line \d+ uses ignoresKey other than by calling it or passing it on\)$/)] });
+      [MORE_LISTENER, `${MORE_LISTENER}\n        if (ignoresKey(event)) return;`]
+    ]).listeners)[KEY_LISTENER.more];
+    expect(more).not.toEqual(REVIEWED_READS[KEY_LISTENER.more]);
+    expect(more).toEqual({ ...REVIEWED_READS[KEY_LISTENER.more], unanalysed: [expect.stringMatching(
+      /^line \d+: event is passed to ignoresKey, which the scan cannot follow \(line \d+ uses ignoresKey other than by calling it or passing it on\)$/)] });
     // P3: a player listener added through escaped literals.
     const player = scanEdited('src/player/playerEntry.js', [['const TIMELINE_RESOLUTION = 10000;',
       "document['addEvent\\u004cistener']('key\\u0064own', e => {\n  if (e.key === 'Ω') e.preventDefault();\n});\n" +
@@ -2551,17 +2561,16 @@ describe('every key listener the app adds (TST-13)', () => {
     ]);
   });
 
-  const HEADER_LISTENER = "      header.addEventListener('keydown', (e) => {";
   const PARTIAL = 'function (e) { return false; } && (e => e.altKey)';
   test.each([
     ['a helper declared as more than a function', 'src/controllers/SectionController.js', [
       ['export class SectionController', `const ignoresKey = ${PARTIAL};\n\nexport class SectionController`],
-      [HEADER_LISTENER, `${HEADER_LISTENER}\n        if (ignoresKey(e)) return;`]
-    ], KEY_LISTENER.sectionHeader, /\(ignoresKey is declared as function \(e\)/],
+      [MORE_LISTENER, `${MORE_LISTENER}\n        if (ignoresKey(event)) return;`]
+    ], KEY_LISTENER.more, /\(ignoresKey is declared as function \(e\)/],
     ['a method assigned more than a function', 'src/controllers/SectionController.js', [
       ['    this.eventBus = eventBus;', `    this.eventBus = eventBus;\n    this.ignoresKey = ${PARTIAL};`],
-      [HEADER_LISTENER, `${HEADER_LISTENER}\n        if (this.ignoresKey(e)) return;`]
-    ], KEY_LISTENER.sectionHeader, /\(this\.ignoresKey is assigned function \(e\)/],
+      [MORE_LISTENER, `${MORE_LISTENER}\n        if (this.ignoresKey(event)) return;`]
+    ], KEY_LISTENER.more, /\(this\.ignoresKey is assigned function \(e\)/],
     ['the dispatcher bound once its bind is written', 'src/handlers/InteractionHandler.js', [
       ['    this.handleKeyDown = this.handleKeyDown.bind(this);',
         '    this.handleKeyDown.bind = () => e => e.altKey;\n    this.handleKeyDown = this.handleKeyDown.bind(this);']

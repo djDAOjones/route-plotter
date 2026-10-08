@@ -47,9 +47,13 @@ function readoutFaults(root) {
   return [...root.querySelectorAll('input[type="range"]')].flatMap((range) => {
     const readout = readoutOf(range);
     if (!readout) return [`${range.id}: no readout token`];
-    // The readout is the one on screen with it: in its label, or its row.
-    const row = range.closest('label, .control-row, .timeline, .sidebar-control-row');
+    // The readout is the one on screen with it: in its row — the one its
+    // label shares with it (UI-06 B-06), the camera's, the playbar's — and
+    // never in its label, where it would join the control's name.
+    const row = range.closest('.range-row') ?? range.closest('.control-row, .timeline, .sidebar-control-row');
     if (!row?.contains(readout)) return [`${range.id}: its first token, #${readout.id}, is not its readout`];
+    const label = range.closest('label');
+    if (label?.contains(readout)) return [`${range.id}: its readout #${readout.id} is inside its label`];
     const said = range.getAttribute('aria-valuetext');
     const shown = expectedValueText(range);
     return said === shown ? [] : [`${range.id}: says ${JSON.stringify(said)}, shows ${JSON.stringify(shown)}`];
@@ -64,6 +68,31 @@ describe('every range in the shell is connected to its readout', () => {
     // Vacuous unless the shell's 50 were there (CROWD-06 added Hold at end).
     expect(ranges.length).toBe(50);
     expect(readoutFaults(page)).toEqual([]);
+  });
+
+  test('a readout describes its range and never names it: the label\'s words are the whole name (UI-06 B-06)', () => {
+    const page = new DOMParser().parseFromString(indexHtml, 'text/html');
+    const inLabel = [...page.querySelectorAll('label input[type="range"]')];
+    // The 47 card ranges in a label; the camera and playbar ranges sit beside theirs.
+    expect(inLabel.length).toBe(47);
+    for (const range of inLabel) {
+      const label = range.closest('label');
+      const readout = readoutOf(range);
+      expect(label.contains(readout), `${range.id}'s readout is in its label`).toBe(false);
+      expect(label.getAttribute('for'), range.id).toBe(range.id);
+      // The readout is the row's, right after the label; the row is what the app shows or hides.
+      expect(readout.closest('.range-row'), range.id).toBe(label.closest('.range-row'));
+      expect(readout.classList.contains('range-readout'), range.id).toBe(true);
+      // The name is the label's words alone: no readout text, no unit, no number.
+      const name = label.textContent.replace(/\s+/g, ' ').trim();
+      expect(name, range.id).toBe(label.querySelector('span[data-tip]').textContent.trim());
+      expect(name, range.id).not.toContain(readout.textContent.trim());
+    }
+    // The app toggles these rows whole: their ids sit on the row, not the label.
+    for (const id of ['pause-time-control', 'segment-speed-control', 'head-rotation-offset-control',
+      'speed-control-right', 'path-trail-control', 'reveal-trail-control']) {
+      expect(page.getElementById(id)?.classList.contains('range-row'), id).toBe(true);
+    }
   });
 });
 

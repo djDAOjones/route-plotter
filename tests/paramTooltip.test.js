@@ -1000,29 +1000,49 @@ describe('UI-04: every hint has a “?” trigger of its own', () => {
     expect(triggerFaults()).toEqual([]);
   });
 
-  test('a row hidden by hiding its label hides its trigger, and closes its hint', () => {
+  test('a row hidden by hiding its label, or the row its label shares with its readout, hides its trigger and closes its hint', () => {
     mountShell();
     initParamTooltips();
-    const label = document.getElementById('pause-time-control');
-    const trigger = triggerOf(label.querySelector('[data-tip]'));
+    // The Wait time row: its label and readout in one row, which the app
+    // shows and hides (UI-06 B-06); a label on its own is hidden by itself.
+    const row = document.getElementById('pause-time-control');
+    const label = row.querySelector('label');
+    const trigger = triggerOf(row.querySelector('[data-tip]'));
     const tooltip = () => document.getElementById('param-tooltip');
 
     trigger.dispatchEvent(clickEvent());
     expect(tooltip().style.display).toBe('block');
 
-    // The app hides Wait Time for a minor waypoint by its label's style.
-    label.style.display = 'none';
+    // The app hides Wait time for a minor waypoint by its row's style.
+    row.style.display = 'none';
     return Promise.resolve().then(() => {
       expect(trigger.hidden).toBe(true);
       expect(tooltip().style.display).toBe('none');
       expect(trigger.getAttribute('aria-expanded')).toBe('false');
 
-      label.style.display = 'flex';
+      row.style.display = 'flex';
       return Promise.resolve();
     }).then(() => {
       expect(trigger.hidden).toBe(false);
-      // And by its `hidden` attribute (the reveal trail).
+      // And by the row's `hidden` attribute (the reveal trail).
+      row.hidden = true;
+      return Promise.resolve();
+    }).then(() => {
+      expect(trigger.hidden).toBe(true);
+      row.hidden = false;
+      return Promise.resolve();
+    }).then(() => {
+      expect(trigger.hidden).toBe(false);
+      // A label hidden by itself still takes its trigger with it.
+      trigger.dispatchEvent(clickEvent());
+      expect(tooltip().style.display).toBe('block');
       label.hidden = true;
+      return Promise.resolve();
+    }).then(() => {
+      expect(trigger.hidden).toBe(true);
+      expect(tooltip().style.display).toBe('none');
+      label.hidden = false;
+      label.style.display = 'none';
       return Promise.resolve();
     }).then(() => {
       expect(trigger.hidden).toBe(true);
@@ -1517,8 +1537,8 @@ describe('UI-06: a button carries its own hint, reachable by keyboard', () => {
         expect(describedText(control), `#${id} is described by its hint`).toContain(control.getAttribute('data-tip'));
       }
       const layerRow = document.querySelector('#layers-strip .layer-item:nth-child(2) .layer-row');
-      expect(layerRow.getAttribute('data-tip')).toBe('Double-click to rename');
-      expect(describedText(layerRow)).toEqual(['Double-click to rename']);
+      expect(layerRow.getAttribute('data-tip')).toBe('Double-click or press F2 to rename');
+      expect(describedText(layerRow)).toEqual(['Double-click or press F2 to rename']);
       const examples = [...document.querySelectorAll('#example-projects-menu button')];
       expect(examples.length).toBeGreaterThan(0);
       for (const item of examples) {

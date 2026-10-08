@@ -6,7 +6,7 @@ app ~ focus: "body" → "#unrestored-download"
 
 ## #unrestored-discard · click
 announced "The session that couldn't be restored was discarded."
-app ~ focus: "body" → "#scope-next-btn"
+app ~ focus: "body" → "#scope-route-btn"
 storage - routePlotter_keptAutosave:1790154009997-{1}: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.6"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="The session that couldn't be restored was discarded."
 ui ~ #unrestored-notice: div aria-describedby="unrestored-notice-status" aria-labelledby="unrestored-notice-text" class="unrestored-notice" role="region" → div (not shown)

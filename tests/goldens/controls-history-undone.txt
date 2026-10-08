@@ -18,24 +18,24 @@ ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 ui ~ #redo-btn: button aria-label="Redo" class="btn btn-icon" title="Redo (Ctrl+⇧+Z)" → button aria-label="Redo" class="btn btn-icon" disabled="" title="Redo (Ctrl+⇧+Z)"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
-ui ~ #scope-route-btn: button class="scope-route-btn" disabled="" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
+ui ~ #scope-route-btn: button aria-current="true" class="scope-route-btn" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major"
 ui ~ #waypoint-scope: div (not shown) → div class="scope-group" data-mixed-reset-bound="true"
-ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 80 inside, 734df5c0)
-ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 61 inside, b69918d0)
-ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, b865019d)
-ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, 0e868546)
-ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 191 inside, 7aa39064)
+ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 81 inside, 25fc5af3)
+ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 62 inside, 8e022f89)
+ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 138 inside, 712d7514)
+ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 103 inside, 07477f09)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 197 inside, e304af09)
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
-ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 26 inside, e3528b88)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
-ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 74 inside, 35b9fbe3)
-ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 26 inside, aa372eb9)
-ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 4505c3c8)
+ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
+ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
+ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 6b236c13)
+ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 87e9828f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, b3d50e8f]

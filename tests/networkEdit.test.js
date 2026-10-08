@@ -151,6 +151,39 @@ describe('mode lifecycle', () => {
     expect(app.events).toContainEqual(['network:edit-mode-changed', { active: true, layer }]);
   });
 
+  test("the banner's Done gives focus back to the Edit network button, once the exit has re-enabled it (UI-06 B-29)", () => {
+    const button = document.getElementById('network-edit-btn');
+    const layer = app.scene.addFlowLayer({ guideType: 'graph', emitters: [{}] });
+    app.selectedCrowd = layer;
+    app.enterNetworkEditMode();
+    expect(button.hidden).toBe(false);
+    expect(button.disabled).toBe(true);
+    const done = document.querySelector('#network-edit-banner .banner-done');
+    done.focus();
+    expect(document.activeElement).toBe(done);
+
+    done.click();
+    expect(svc.active).toBe(false);
+    expect(document.getElementById('network-edit-banner')).toBeNull();
+    expect(button.disabled).toBe(false);
+    expect(document.activeElement).toBe(button);
+  });
+
+  test('an exit with focus elsewhere moves it nowhere, and the service finds the button itself when the mixin names none', () => {
+    const button = document.getElementById('network-edit-btn');
+    const layer = enterMode(app);
+    // Escape's exit, or a crowd deselected: focus was never in the banner.
+    expect(document.activeElement).toBe(document.body);
+    svc.exit();
+    expect(document.activeElement).toBe(document.body);
+
+    svc.enter(layer);
+    const done = document.querySelector('#network-edit-banner .banner-done');
+    done.focus();
+    done.click();
+    expect(document.activeElement).toBe(button);
+  });
+
   test('exit clears tool state, removes the banner, deselects', () => {
     enterMode(app);
     svc.placeNode({ x: 0.5, y: 0.5 });
@@ -956,11 +989,14 @@ describe('mixin glue', () => {
     app.syncNetworkCards();
     const readout = document.getElementById('network-edge-weight-value').textContent;
     expect(readout).toBe('100% · 25% of departures');
+    // The slider says what its readout shows (the readout sits beside its label, UI-06 B-06).
+    expect(document.getElementById('network-edge-weight').getAttribute('aria-valuetext')).toBe(readout);
 
     ab.setDirection('one-way'); // departures from a only
     app.syncNetworkCards();
     expect(document.getElementById('network-edge-weight-value').textContent)
       .toBe('100% of departures');
+    expect(document.getElementById('network-edge-weight').getAttribute('aria-valuetext')).toBe('100% of departures');
     expect(a.id).toBe(ab.sourceId);
   });
 

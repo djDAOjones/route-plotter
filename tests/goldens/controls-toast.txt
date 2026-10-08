@@ -8,9 +8,9 @@ app ~ focus: "body" → "#toast-container>div[0]>button[0]"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #toast-container>div[0]: div class="toast is-visible" :text="This label overlaps something." → div class="toast" :text="This label overlaps something."
 ui ~ #label-offset-x: input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="15%" max="50" min="-50" step="1" type="range" value="0" :value="15" → input aria-describedby="label-offset-x-value label-offset-x-tip" aria-valuetext="0%" max="50" min="-50" step="1" type="range" value="0" :value="0"
-ui ~ #label-offset-x-value: span :text="15%" → span :text="0%"
+ui ~ #label-offset-x-value: span class="range-readout" :text="15%" → span class="range-readout" :text="0%"
 ui ~ #label-offset-y: input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="-12%" max="50" min="-50" step="1" type="range" value="-5" :value="-12" → input aria-describedby="label-offset-y-value label-offset-y-tip" aria-valuetext="8%" max="50" min="-50" step="1" type="range" value="-5" :value="8"
-ui ~ #label-offset-y-value: span :text="-12%" → span :text="8%"
+ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span class="range-readout" :text="8%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
   app ~ focus: "#toast-container>div[0]>button[0]" → "body"
