@@ -3516,7 +3516,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 43045,
+      "bytes": 43154,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3981,13 +3981,13 @@
     }
   },
   "outputs": {
-    ".docs-build-N6EqYu/app.js.map": {
+    ".docs-build-k4K8bj/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3577305
+      "bytes": 3577461
     },
-    ".docs-build-N6EqYu/app.js": {
+    ".docs-build-k4K8bj/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4335,7 +4335,7 @@
           "bytesInOutput": 1871
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 21345
+          "bytesInOutput": 21437
         },
         "src/app/network.js": {
           "bytesInOutput": 11580
@@ -4362,7 +4362,7 @@
           "bytesInOutput": 22984
         }
       },
-      "bytes": 1118203
+      "bytes": 1118295
     }
   }
 }
