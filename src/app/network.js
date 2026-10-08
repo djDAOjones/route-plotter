@@ -409,8 +409,9 @@ export const networkMixin = {
       // reason is a line under it that it is described by (UI-06 B-07).
       const reason = document.getElementById('crowd-trace-route-reason');
       if (reason) {
-        reason.textContent = hasRoute ? '' : 'Add at least two route waypoints first.';
-        reason.hidden = hasRoute;
+        const shown = graphGuided && !hasRoute;
+        reason.textContent = shown ? 'Add at least two route waypoints first.' : '';
+        reason.hidden = !shown;
       }
     }
     if (this._guideHintEl && layer) {

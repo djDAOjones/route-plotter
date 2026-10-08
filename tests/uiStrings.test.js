@@ -24,6 +24,8 @@
  * Image titles and example-project names are titles, and are left out.
  */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, test, expect, vi } from 'vitest';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
 import { bootApp } from './helpers/bootApp.js';
@@ -50,6 +52,8 @@ const ALLOWED_WORDS = new Set([
   'Route', 'Plotter', 'Okabe-Ito', 'UoN', 'PARM', 'MP4', 'WebM', 'HTML', 'GitHub', 'Issues', 'Carbon',
   'Nielsen', 'WCAG', 'Esc', 'H.264', 'Nervous', 'System', 'Aerial', 'Map', 'Courts', 'Garlic', 'Rocketry',
   'Home', 'End', 'Space', 'Del', 'Shift', 'Cmd', 'Ctrl', 'Alt', 'Tab', 'Enter',
+  // Readout words a hint quotes as the readout writes them ("Left (Earlier)…", "right (Later)").
+  'Earlier', 'Later',
 ]);
 
 /** Runs of capitalised words that are names, not Title Case. */
@@ -112,6 +116,10 @@ function hintFault(text) {
   };
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
+    // "(Square)": a capital after an opening parenthesis is Title Case too.
+    if (/^\([A-Z]/.test(token) && !ALLOWED_WORDS.has(bare(token))) {
+      return `capital after an opening parenthesis "${token}" in "${text.slice(0, 60)}"`;
+    }
     const neutral = index === 0 || endsSegment(tokens[index - 1]) || ALLOWED_WORDS.has(bare(token));
     if (!neutral && isCapitalisedWord(token)) {
       run.push(bare(token));
@@ -327,6 +335,23 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
     }
   });
 
+  test('no stylesheet rule the words PR cleared sets text-transform: uppercase, and the badge says Preview', () => {
+    const css = ['styles/main.css', 'styles/dropdown.css']
+      .map(file => readFileSync(resolve(process.cwd(), file), 'utf8')).join('\n')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body]) => [selector.trim(), body]);
+    const cleared = ['.section-title', '.controls-category h4', '.dropdown-submenu-label', '.control-group h3'];
+    // The rules are there to check, and none of them transforms its case.
+    for (const selector of cleared) {
+      const found = rules.filter(([text]) => text.split(',').map(each => each.trim()).includes(selector));
+      expect(found.length, `${selector} is styled`).toBeGreaterThan(0);
+      expect(found.filter(([, body]) => /text-transform\s*:\s*uppercase/.test(body)).map(([text]) => text)).toEqual([]);
+    }
+    const badge = rules.find(([text]) => text === 'body[data-mode="preview"]::after');
+    expect(badge?.[1]).toMatch(/content:\s*'Preview'/);
+    expect(css).not.toMatch(/content:\s*'PREVIEW'/);
+  });
+
   test('the exported player’s page', () => {
     const html = Object.create(HTMLExportService.prototype)._generateHTML('Route', null, {}, '');
     const page = new DOMParser().parseFromString(html, 'text/html');
@@ -355,6 +380,11 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
     expect(hintFault('Use Type to change this node. Choose Edit network to move nodes.')).toBeNull();
     expect(hintFault('Left (Earlier) sets more dots off; Even favours neither')).toBeNull();
     expect(hintFault('1920×1080 (16:9 HD)')).toBeNull();
+    // A capital after an opening parenthesis is Title Case too, unless a name.
+    expect(hintFault('1080×1080 (Square)')).toMatch(/capital after an opening parenthesis "\(Square\)"/);
+    expect(hintFault('1080×1080 (square)')).toBeNull();
+    expect(hintFault('Export the route (MP4 or WebM)')).toBeNull();
+    expect(hintFault('Made with Route Plotter (UoN)')).toBeNull();
     expect(hintFault('Create animated routes with Route Plotter')).toBeNull();
     // Prose: sentence case, and none of the words the glossary retired.
     expect(proseFault('Network editing — click the map to place linked nodes.')).toBeNull();

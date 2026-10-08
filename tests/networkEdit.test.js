@@ -1149,6 +1149,34 @@ describe('mixin glue', () => {
     expect(trace.getAttribute('data-tip')).toMatch(/Copy the route/);
   });
 
+  test('the Trace reason goes with its action when the guide is switched to Follow route, and returns with it', () => {
+    const layer = bindForInspection(app);
+    app.updateGuideCard();
+    const trace = document.getElementById('crowd-trace-route-btn');
+    const reason = document.getElementById('crowd-trace-route-reason');
+    expect(trace.hidden).toBe(false);
+    expect(reason.hidden).toBe(false);
+
+    layer.setGuideType('route');
+    app.updateGuideCard();
+    expect(trace.hidden).toBe(true);
+    expect(reason.hidden).toBe(true);
+    expect(reason.textContent).toBe('');
+
+    layer.setGuideType('graph');
+    app.updateGuideCard();
+    expect(trace.hidden).toBe(false);
+    expect(trace.disabled).toBe(true);
+    expect(reason.hidden).toBe(false);
+    expect(reason.textContent).toBe('Add at least two route waypoints first.');
+
+    app.waypoints = [{}, {}];
+    layer.setGuideType('route');
+    app.updateGuideCard();
+    expect(trace.hidden).toBe(true);
+    expect(reason.hidden).toBe(true);
+  });
+
   test('junction rows rebuild from fresh edge objects after restore', () => {
     const layer = enterMode(app);
     const junction = layer.graph.addNode({ id: 'junction', x: 0.5, y: 0.5 });

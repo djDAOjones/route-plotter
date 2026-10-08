@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, vi } from 'vitest';
-import { recorderOwnership } from '../setup.js';
+import { contextFor } from '../setup.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -58,9 +58,7 @@ function stopApp(app) {
     }
   };
 
-  attempt(() => { if (app._renderRafId) cancelAnimationFrame(app._renderRafId); });
-  attempt(() => { app.renderQueued = false; });
-  attempt(() => app.animationEngine?.stop?.() ?? app.animationEngine?.pause?.());
+  attempt(() => quiesce(app));
   attempt(() => app.storageService?.cancelAutoSave?.());
   attempt(() => app.eventBus?.removeAllListeners?.());
   attempt(() => releasePageListeners(app));
@@ -80,13 +78,28 @@ function deactivateFocusTraps(app) {
 }
 
 /**
- * The boot each app came from, for the canvas recorder (tests/setup.js): the
- * contexts of the canvases a boot makes are the app's, and go when it is
- * stopped — after the test's assertions. A canvas a test makes for itself,
- * before the boot or once the app is ready, is the test's and stays.
- * @type {WeakMap<object, object>}
+ * The shell each app's boot parsed (the body's children, as they stood), for
+ * the canvas recorder (tests/setup.js). A canvas is an app's — its context
+ * released when the app is stopped, after the test's assertions — only if it
+ * is one the app holds (its page canvas, its layers' canvases) or stands in
+ * that shell. Ownership is explicit, never a matter of when a canvas was
+ * made: one a test makes for itself, before the boot, while its start-up is
+ * pending or once it is ready, detached or beside the shell, is the test's
+ * and stays. (A canvas a test puts inside the shell is the shell's.)
+ * @type {WeakMap<object, Element[]>}
  */
-const bootOf = new WeakMap();
+const shellOf = new WeakMap();
+
+/** The canvases an app owns: the ones it holds, and every one in its shell. */
+function canvasesOf(app) {
+  const owned = new Set([app.canvas, app.renderingService?.vectorCanvas, app.motionVisibilityService?.revealMaskCanvas]
+    .filter(Boolean));
+  for (const root of shellOf.get(app) ?? []) {
+    if (root.matches?.('canvas')) owned.add(root);
+    root.querySelectorAll?.('canvas').forEach(canvas => owned.add(canvas));
+  }
+  return [...owned];
+}
 /** The apps whose `ready` has settled: a stopped one is released at once. */
 const settled = new WeakSet();
 
@@ -102,15 +115,28 @@ function onceSettled(app, step) {
   else Promise.resolve(app.ready).then(step, step);
 }
 
-/** Release a stopped app's contexts (see `onceSettled`). */
+/**
+ * Release a stopped app's contexts (see `onceSettled` and `canvasesOf`). A
+ * start-up still in flight when the app was stopped starts the render loop
+ * again on its way to ready (`startRenderLoop` in `init`), so the loop is
+ * stopped and its frames cancelled once more here, just before the release:
+ * no frame of the app's is left to land on a released canvas.
+ */
 function releaseRecordingContexts(app) {
-  const boot = bootOf.get(app);
-  if (!boot) return;
-  bootOf.delete(app);
+  if (!shellOf.has(app)) return;
   onceSettled(app, () => {
-    recorderOwnership.end(boot);
-    recorderOwnership.release(boot);
+    quiesce(app);
+    for (const canvas of canvasesOf(app)) contextFor(canvas)?.release();
+    shellOf.delete(app);
   });
+}
+
+/** Stop what would draw: the queued render, the engine's loop and its frames. */
+function quiesce(app) {
+  if (app._renderRafId) cancelAnimationFrame(app._renderRafId);
+  app._renderRafId = null;
+  app.renderQueued = false;
+  app.animationEngine?.stop?.() ?? app.animationEngine?.pause?.();
 }
 
 /**
@@ -244,40 +270,29 @@ function entryModule() {
 }
 
 export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
-  // Every canvas context made from here until the app is ready is this
-  // boot's, to be released when the app is stopped (tests/setup.js).
-  const boot = { startedAt: Date.now() };
-  recorderOwnership.begin(boot);
-  try {
-    document.body.innerHTML = shellBody;
-    installBrowserStubs({ ...DEFAULT_VIEWPORT, ...viewport });
+  document.body.innerHTML = shellBody;
+  // The shell this boot parsed: what is in it is the app's (`canvasesOf`).
+  const shell = [...document.body.children];
+  installBrowserStubs({ ...DEFAULT_VIEWPORT, ...viewport });
 
-    delete window.app;
-    // Imported once per worker on purpose: a fresh import would register another
-    // DOMContentLoaded listener, and the next boot would build an app per
-    // listener, leaving untracked apps running.
-    await entryModule();
-    recordPageListeners(() => document.dispatchEvent(new Event('DOMContentLoaded')));
+  delete window.app;
+  // Imported once per worker on purpose: a fresh import would register another
+  // DOMContentLoaded listener, and the next boot would build an app per
+  // listener, leaving untracked apps running.
+  await entryModule();
+  recordPageListeners(() => document.dispatchEvent(new Event('DOMContentLoaded')));
 
-    const app = window.app;
-    if (!app) throw new Error('The app did not boot: window.app is unset');
-    booted.add(app);
-    bootOf.set(app, boot);
-    // Ready, the boot is over: a canvas made from then on is the test's.
-    const over = () => {
-      settled.add(app);
-      recorderOwnership.end(boot);
-    };
-    Promise.resolve(app.ready).then(over, over);
+  const app = window.app;
+  if (!app) throw new Error('The app did not boot: window.app is unset');
+  booted.add(app);
+  shellOf.set(app, shell);
+  const over = () => settled.add(app);
+  Promise.resolve(app.ready).then(over, over);
 
-    // The bus swallows listener errors by design (ISO-02), which in a test means
-    // a broken handler passes silently. Here they are failures.
-    app.eventBus.onListenerError = (error, { eventName }) => {
-      throw new Error(`Listener for "${eventName}" threw: ${error.message}`, { cause: error });
-    };
-    return app;
-  } catch (error) {
-    recorderOwnership.end(boot);
-    throw error;
-  }
+  // The bus swallows listener errors by design (ISO-02), which in a test means
+  // a broken handler passes silently. Here they are failures.
+  app.eventBus.onListenerError = (error, { eventName }) => {
+    throw new Error(`Listener for "${eventName}" threw: ${error.message}`, { cause: error });
+  };
+  return app;
 }

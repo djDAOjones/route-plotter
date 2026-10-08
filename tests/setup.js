@@ -23,9 +23,33 @@ function defineGlobal(name, value) {
   });
 }
 
-// Mock DOM animation frame APIs
-defineGlobal('requestAnimationFrame', vi.fn((cb) => setTimeout(() => cb(Date.now()), 0)));
-defineGlobal('cancelAnimationFrame', vi.fn((id) => clearTimeout(id)));
+// Mock DOM animation frame APIs. A frame is cancelled by its own id, in a
+// set of its own, not by `clearTimeout`: a test file that fakes timers puts
+// the clock back in its afterEach before `bootApp` stops the app, and the
+// real clock's `clearTimeout` would miss a frame the fake one holds. The
+// callback checks the set, so a cancelled frame never runs, whatever clock
+// fires its timer.
+const cancelledFrames = new Set();
+/** Each pending frame's timer handle, so a cancel under the same clock clears it too (no timer left behind). */
+const frameTimers = new Map();
+let frameSerial = 0;
+defineGlobal('requestAnimationFrame', vi.fn((cb) => {
+  const id = ++frameSerial;
+  frameTimers.set(id, setTimeout(() => {
+    frameTimers.delete(id);
+    if (cancelledFrames.delete(id)) return;
+    cb(Date.now());
+  }, 0));
+  return id;
+}));
+defineGlobal('cancelAnimationFrame', vi.fn((id) => {
+  const timer = frameTimers.get(id);
+  if (timer !== undefined) {
+    clearTimeout(timer);
+    frameTimers.delete(id);
+  }
+  cancelledFrames.add(id);
+}));
 
 // Mock performance API (getter-only in jsdom)
 defineGlobal('performance', { now: vi.fn(() => Date.now()) });
@@ -392,13 +416,13 @@ function createRecordingContext(canvas) {
    * the watcher `settle` holds, every canvas ever given a context stayed
    * alive, with the whole page and app around it — about 12 MB a boot, until
    * the largest files ran out of worker heap (UI-06). `bootApp` releases the
-   * contexts of the app it stops (`recorderOwnership`), after the test's
-   * assertions. Reading a released context — its transcript or its canvas —
-   * throws, so a transcript read too late fails where it is read rather than
-   * reading empty. Drawing on one is dropped quietly: a stopped app's last
-   * frame can still land (a frame scheduled under one clock, cancelled under
-   * another), and throwing into that timer would fail whatever test runs
-   * next for a stale app's sake.
+   * contexts of the app it stops — of the app's own canvases, and of those
+   * in the shell its boot parsed — after the test's assertions. Everything a
+   * released context is then asked throws: its transcript, its canvas, a
+   * draw, a style, so a transcript read too late, or a draw a stale app
+   * makes, fails where it happens rather than passing quietly. The app's own
+   * late frames are cancelled when it is stopped, so none is left to fire.
+   * `recorderId` stays readable: it is an identity, not a use.
    */
   context.release = () => {
     settle = () => {};
@@ -410,24 +434,9 @@ function createRecordingContext(canvas) {
       throw new Error("This canvas's recording context was released with its app when bootApp stopped it " +
         '(UI-06): read its transcript before the app is retired, or make the canvas before the boot so it is the test’s own');
     };
-    const quietly = (key) => (...args) => (
-      key === 'createLinearGradient' || key === 'createRadialGradient'
-        ? { __recorderId: '[released]', addColorStop: () => undefined }
-        : CONTEXT_METHOD_RESULTS[key]?.(...args)
-    );
     for (const key of Object.keys(context)) {
-      const descriptor = Object.getOwnPropertyDescriptor(context, key);
-      if (key === 'calls' || key === 'takeCalls' || key === 'canvas') {
-        Object.defineProperty(context, key, { configurable: true, enumerable: false, get: released, set: released });
-      } else if (typeof descriptor.value === 'function') {
-        Object.defineProperty(context, key, { configurable: true, enumerable: false, writable: true, value: quietly(key) });
-      } else if (descriptor.get) {
-        Object.defineProperty(context, key, {
-          configurable: true, enumerable: false, get: () => CONTEXT_STYLE_DEFAULTS[key], set: () => undefined,
-        });
-      } else {
-        Object.defineProperty(context, key, { configurable: true, enumerable: false, writable: true, value: descriptor.value });
-      }
+      if (key === 'recorderId' || key === 'release') continue;
+      Object.defineProperty(context, key, { configurable: true, enumerable: false, get: released, set: released });
     }
   };
 
@@ -438,30 +447,6 @@ const canvasContexts = new WeakMap();
 
 /** The contexts let go of (see `release`): nothing settles or reads them again. */
 const releasedContexts = new WeakSet();
-
-/**
- * Whose a context is. `bootApp` names the boot it is making as the owner from
- * before the shell is parsed until the app is ready, so the contexts of the
- * canvases that boot makes (the page's, the vector layer's) are that boot's,
- * and `bootApp` releases them when it stops the app — after the test's
- * assertions, never for another boot. A context made at any other time, a
- * canvas a test makes for itself, has no owner and is never released.
- */
-let recorderOwner = null;
-/** @type {WeakMap<object, Set<object>>} owner → its contexts, until released */
-const contextsByOwner = new WeakMap();
-const recorderOwnership = Object.freeze({
-  begin(owner) {
-    recorderOwner = owner;
-  },
-  end(owner) {
-    if (recorderOwner === owner) recorderOwner = null;
-  },
-  release(owner) {
-    for (const context of contextsByOwner.get(owner) ?? []) context.release();
-    contextsByOwner.delete(owner);
-  },
-});
 
 /**
  * Every canvas given a recording context, held weakly so that a canvas
@@ -549,11 +534,6 @@ if (hasDom) HTMLCanvasElement.prototype.getContext = vi.fn(function getContext()
     context = createRecordingContext(this);
     canvasContexts.set(this, context);
     trackCanvasSize(this, context);
-    if (recorderOwner) {
-      let owned = contextsByOwner.get(recorderOwner);
-      if (!owned) contextsByOwner.set(recorderOwner, owned = new Set());
-      owned.add(context);
-    }
   }
   return context;
 });
@@ -603,7 +583,6 @@ export {
   contextFor,
   contextIdFor,
   recordCallOrder,
-  recorderOwnership,
   takeOrderedCalls
 };
 

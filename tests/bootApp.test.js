@@ -126,6 +126,31 @@ describe('the harness lets a stopped app go, and only that (UI-06)', () => {
     expect(second.canvas).not.toBe(first.canvas);
   });
 
+  test('a canvas the test makes while a boot is still pending is the test’s: retiring the app leaves it', async () => {
+    // Ownership is not a matter of timing: a context belongs to a boot only
+    // because its canvas is the app's own (its page canvas, its layers') or
+    // stands inside the shell that boot parsed. A canvas a test makes while
+    // the boot's start-up is in flight is neither, wherever it is put.
+    const pending = bootApp();
+    const detached = document.createElement('canvas');
+    const beside = document.body.appendChild(document.createElement('canvas'));
+    const mine = [detached, beside].map(canvas => canvas.getContext('2d'));
+    mine.forEach((ctx, index) => ctx.fillRect(index, 0, 1, 1));
+    const app = await pending;
+    await app.ready;
+    retireApp(app);
+
+    expect(mine[0].canvas).toBe(detached);
+    expect(mine[1].canvas).toBe(beside);
+    expect(mine.map(ctx => ctx.calls)).toEqual([[['fillRect', 0, 0, 1, 1]], [['fillRect', 1, 0, 1, 1]]]);
+    mine.forEach(ctx => ctx.fillRect(2, 2, 2, 2));
+    expect(mine.every(ctx => ctx.calls.length === 2)).toBe(true);
+    // While the app's own canvases went with it.
+    expect(() => contextFor(app.canvas).calls).toThrow(/released/);
+    expect(() => contextFor(app.renderingService.vectorCanvas).calls).toThrow(/released/);
+    beside.remove();
+  });
+
   test('a context made while an app is live, after its boot, is the test’s: retiring the app leaves it', async () => {
     const app = await bootApp();
     await app.ready;
@@ -165,22 +190,24 @@ describe('the harness lets a stopped app go, and only that (UI-06)', () => {
     expect(tooltip.style.display).toBe('none');
   });
 
-  test('a stopped app’s own context is released: read, it says so; drawn on, it takes nothing', async () => {
+  test('a stopped app’s own context is released: read, drawn on or restyled, it says so', async () => {
     const app = await bootApp();
     await app.ready;
     const ctx = contextFor(app.canvas);
     expect(ctx.calls.length).toBeGreaterThan(0);
     retireApp(app);
 
-    // A transcript or canvas read too late fails where it is read.
+    // Nothing a released context is asked passes quietly: a transcript or
+    // canvas read too late, a draw, a malformed draw, a style, all fail where
+    // they happen. The app's own late frames are cancelled when it is
+    // stopped, so none is left to fire.
     expect(() => ctx.calls).toThrow(/released/);
     expect(() => ctx.takeCalls()).toThrow(/released/);
     expect(() => ctx.canvas).toThrow(/released/);
-    // A stopped app's last frame can still land: it is dropped, not thrown
-    // into whatever test runs next.
-    expect(() => ctx.fillRect(0, 0, 1, 1)).not.toThrow();
-    expect(() => { ctx.fillStyle = '#000'; }).not.toThrow();
-    expect(ctx.globalAlpha).toBe(1);
-    expect(() => ctx.createLinearGradient(0, 0, 1, 1).addColorStop(0, '#000')).not.toThrow();
+    expect(() => ctx.fillRect(0, 0, 1, 1)).toThrow(/released/);
+    expect(() => ctx.translate(1)).toThrow(/released/);
+    expect(() => { ctx.fillStyle = '#000'; }).toThrow(/released/);
+    expect(() => ctx.globalAlpha).toThrow(/released/);
+    expect(() => ctx.createLinearGradient(0, 0, 1, 1)).toThrow(/released/);
   });
 });
