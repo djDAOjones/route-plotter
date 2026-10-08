@@ -752,12 +752,12 @@ export class NetworkEditService {
     this._banner.setAttribute('aria-live', 'polite');
     this._banner.innerHTML = `
       <span class="banner-text">
-        <strong>Drawing network</strong> — click places a linked node,
-        click a node to continue from it, drag an edge to bend it.
+        <strong>Editing the network</strong> — click places a linked node,
+        click a node to continue from it, drag a path to bend it.
         <kbd>Esc</kbd> lifts the pen.
         <span class="banner-count"></span>
       </span>
-      <button class="banner-done" type="button" aria-label="Finish network editing">Done</button>
+      <button class="banner-done" type="button">Done</button>
     `;
 
     // Inline styles, same pattern as the area-draw banner (transient element)
@@ -804,7 +804,7 @@ export class NetworkEditService {
     const edges = this.layer.graph.getEdges().length;
     countEl.textContent = nodes === 0
       ? 'Click the map to start.'
-      : `${nodes} node${nodes === 1 ? '' : 's'} · ${edges} edge${edges === 1 ? '' : 's'}`;
+      : `${nodes} node${nodes === 1 ? '' : 's'} · ${edges} path${edges === 1 ? '' : 's'}`;
   }
 
   /** @private */

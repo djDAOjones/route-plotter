@@ -336,8 +336,10 @@ describe('waypoint card action integration', () => {
     document.body.innerHTML = `
       <div id="waypoint-scope">
         ${Object.values(WAYPOINT_CARD).map(card => `
-          <button data-card="${card}" data-card-action="reset"></button>
-          <button data-card="${card}" data-card-action="apply-onward"></button>
+          <button data-card="${card}" data-card-action="reset" aria-describedby="${card}-reset-reason">Reset</button>
+          <button data-card="${card}" data-card-action="apply-onward" aria-describedby="${card}-apply-reason">Apply onward</button>
+          <p hidden><span id="${card}-reset-reason" data-card="${card}" data-card-reason="reset"></span>
+            <span id="${card}-apply-reason" data-card="${card}" data-card-reason="apply-onward"></span></p>
         `).join('')}
       </div>`;
     const first = Waypoint.createMajor(0.1, 0.1);
@@ -346,9 +348,19 @@ describe('waypoint card action integration', () => {
 
     app._syncWaypointCardActions();
 
+    // The reason is a visible line the action is described by; its name
+    // stays its words, and no title carries what only a pointer reaches (UI-06 J-21, B-07).
     const apply = document.querySelector('[data-card="marker"][data-card-action="apply-onward"]');
     expect(apply.disabled).toBe(true);
-    expect(apply.title).toBe('Select one waypoint to apply onward');
-    expect(apply.getAttribute('aria-label')).toContain('Select one waypoint');
+    expect(apply.hasAttribute('title')).toBe(false);
+    expect(apply.hasAttribute('aria-label')).toBe(false);
+    const reason = document.getElementById('marker-apply-reason');
+    expect(reason.textContent).toBe('Apply onward: select one waypoint to apply onward.');
+    expect(reason.closest('p').hidden).toBe(false);
+    expect(apply.getAttribute('aria-describedby')).toBe('marker-apply-reason');
+    // Reset has its own line, empty while it is enabled.
+    const reset = document.querySelector('[data-card="marker"][data-card-action="reset"]');
+    expect(reset.disabled).toBe(false);
+    expect(document.getElementById('marker-reset-reason').textContent).toBe('');
   });
 });

@@ -331,7 +331,7 @@ export class HTMLExportService {
   </section>
   <div class="controls">
     <button id="play-btn" class="btn btn-primary" type="button">Play</button>
-    <button id="reset-btn" class="btn btn-secondary" type="button">Reset</button>
+    <button id="reset-btn" class="btn btn-secondary" type="button">Skip to start</button>
     <label class="timeline-control" for="timeline">Timeline
       <input id="timeline" class="timeline" type="range" min="0" max="10000" step="1" value="0">
     </label>

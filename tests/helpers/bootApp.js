@@ -62,7 +62,48 @@ function stopApp(app) {
   attempt(() => app.animationEngine?.stop?.() ?? app.animationEngine?.pause?.());
   attempt(() => app.storageService?.cancelAutoSave?.());
   attempt(() => app.eventBus?.removeAllListeners?.());
+  attempt(() => releasePageListeners(app));
   return failures;
+}
+
+/**
+ * The listeners a boot puts on the document and the window for the app (a
+ * resize, a click, a keydown, a storage event: each closes over the app), by
+ * app. With the canvas recorder letting a replaced shell go, these were what
+ * still kept a stopped app alive, so a file that boots an app per test held
+ * every one until it ended and the largest ran out of worker heap (UI-06).
+ * Only what the synchronous boot registers is recorded, so a test's own spies
+ * on `addEventListener` are never caught up in it; and a module that binds
+ * its delegated listeners once per document (ParamTooltip, which serves every
+ * app the document boots) keeps them: they hold no app.
+ * @type {WeakMap<object, Array<[EventTarget, string, EventListenerOrEventListenerObject, *]>>}
+ */
+const pageListeners = new WeakMap();
+const KEPT_FOR_THE_DOCUMENT = ['ParamTooltip.js'];
+
+function recordPageListeners(boot) {
+  const added = [];
+  const originals = [document, window].map(target => [target, target.addEventListener]);
+  for (const [target, original] of originals) {
+    target.addEventListener = function recordedAddEventListener(type, listener, options) {
+      const stack = new Error().stack ?? '';
+      if (!KEPT_FOR_THE_DOCUMENT.some(file => stack.includes(file))) added.push([target, type, listener, options]);
+      return original.call(this, type, listener, options);
+    };
+  }
+  try {
+    return boot();
+  } finally {
+    for (const [target, original] of originals) target.addEventListener = original;
+    if (window.app) pageListeners.set(window.app, added);
+  }
+}
+
+function releasePageListeners(app) {
+  for (const [target, type, listener, options] of pageListeners.get(app) ?? []) {
+    target.removeEventListener(type, listener, options);
+  }
+  pageListeners.delete(app);
 }
 
 /** The shipped shell's body, without the script tags that load the bundle. */
@@ -154,6 +195,10 @@ function entryModule() {
 
 export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
   document.body.innerHTML = shellBody;
+  // The shell just replaced, and every canvas off the page with it, is let
+  // go of by the canvas recorder (tests/setup.js), or Vitest's mocks would
+  // keep it, and the app around it, for the worker's life.
+  globalThis.__releaseRecordingContexts?.();
   installBrowserStubs({ ...DEFAULT_VIEWPORT, ...viewport });
 
   delete window.app;
@@ -161,7 +206,7 @@ export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
   // DOMContentLoaded listener, and the next boot would build an app per
   // listener, leaving untracked apps running.
   await entryModule();
-  document.dispatchEvent(new Event('DOMContentLoaded'));
+  recordPageListeners(() => document.dispatchEvent(new Event('DOMContentLoaded')));
 
   const app = window.app;
   if (!app) throw new Error('The app did not boot: window.app is unset');

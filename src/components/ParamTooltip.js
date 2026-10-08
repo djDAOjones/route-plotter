@@ -13,19 +13,26 @@
  *      one (or inside a fieldset's <legend>). The label names the control the
  *      hint describes: its `for` target, or the control it wraps; a legend
  *      names its fieldset.
- *   2. Call `initParamTooltips()` once after DOM is ready. Hints added to the
+ *   2. Or add `data-tip` to a `<button>` that stands in no label (UI-06): the
+ *      button is then its own trigger. A mouse resting on it opens the hint
+ *      after the same delay, keyboard focus opens it, Escape dismisses it, and
+ *      the hint is the button's description. No "?" is drawn beside it. Its
+ *      `title`, which only a pointer could reveal, goes.
+ *   3. Call `initParamTooltips()` once after DOM is ready. Hints added to the
  *      page later (the scene outline's forms, the crowd card's busyness rows,
- *      a node's path weights) are wired as they arrive, and a hint taken off
- *      the page takes its trigger, and its popup if it shows, with it.
+ *      a node's path weights) are wired as they arrive, a hint whose text the
+ *      app changes (a button's reason) keeps its description current, and a
+ *      hint taken off the page takes its trigger, and its popup if it shows,
+ *      with it.
  *
  * Performance:
  *   - Zero per-element listeners. One screen-reader-only node and one button
  *     per hint.
  *   - Single RAF-batched positioning calculation on show.
  *   - One MutationObserver on the document: its child lists, which the app
- *     rewrites in playback at most once a second, and its `hidden` and
- *     `style` attributes, which wake it more often (a playing transport
- *     restyles its buttons) but cost one WeakSet lookup each. It observes the
+ *     rewrites in playback at most once a second, and its `hidden`, `style`
+ *     and `data-tip` attributes, which wake it more often (a playing
+ *     transport restyles its buttons) but cost one WeakSet lookup each. It observes the
  *     document alone: an observer holds what it observes, and one holding
  *     each label would keep every replaced shell alive.
  *
@@ -124,6 +131,10 @@ const controlByTip = new WeakMap();
 const triggerByTip = new WeakMap();
 /** @type {WeakMap<HTMLButtonElement, HTMLElement>} "?" trigger → its hint text */
 const tipByTrigger = new WeakMap();
+/** @type {WeakMap<HTMLElement, HTMLElement>} hint text → its description node */
+const descriptionByTip = new WeakMap();
+/** @type {WeakMap<HTMLElement, HTMLElement>} description node → the hint text it serves now */
+const tipByDescription = new WeakMap();
 /**
  * Documents whose delegated listeners are already bound. Re-initialising
  * (a rebuilt shell, or one jsdom document across several tests) must not stack
@@ -169,13 +180,26 @@ function labelOf(tip) {
 }
 
 /**
+ * Whether a hint is a button's own (UI-06): a `data-tip` on a button that
+ * stands in no label or legend. The button is then the control described,
+ * the host the hint hides with, and the thing a pointer rests on.
+ * @param {HTMLElement} tip - Element carrying the data-tip attribute
+ * @returns {boolean}
+ */
+function isOwnHint(tip) {
+  return tip.tagName === 'BUTTON' && !labelOf(tip);
+}
+
+/**
  * The element a hint's trigger stands beside: its label, or the fieldset a
  * legend names. Beside the fieldset rather than in it, so a disabled picker
- * does not disable its help and its grid gains no cell.
+ * does not disable its help and its grid gains no cell. A button's own hint
+ * has no trigger beside it: the button is its host.
  * @param {HTMLElement} tip - Element carrying the data-tip attribute
  * @returns {HTMLElement|null}
  */
 function hostOf(tip) {
+  if (isOwnHint(tip)) return tip;
   const label = labelOf(tip);
   return label?.tagName === 'LEGEND' ? label.parentElement : label;
 }
@@ -183,11 +207,12 @@ function hostOf(tip) {
 /**
  * The control a hint describes: the enclosing label's `for` target, or
  * the control a label wraps (fields built at run time carry no `for`), or a
- * legend's fieldset.
+ * legend's fieldset, or the button that carries the hint itself.
  * @param {HTMLElement} tip - Element carrying the data-tip attribute
  * @returns {HTMLElement|null}
  */
 function describedControl(tip) {
+  if (isOwnHint(tip)) return tip;
   const label = labelOf(tip);
   if (!label) return null;
   if (label.tagName === 'LEGEND') {
@@ -225,9 +250,12 @@ function describeControl(tip) {
 function isDescribed(tip, control) {
   const existingId = tip.getAttribute('data-tip-desc');
   if (existingId && controlByTip.get(tip) === control) return true;
-  if (existingId && document.getElementById(existingId)) {
+  const existing = existingId ? document.getElementById(existingId) : null;
+  if (existing) {
     tipByControl.set(control, tip);
     controlByTip.set(tip, control);
+    descriptionByTip.set(tip, existing);
+    tipByDescription.set(existing, tip);
     return true;
   }
   return false;
@@ -261,8 +289,9 @@ function addDescription(tip, control, text) {
   description.className = 'sr-only';
   description.textContent = text;
 
-  // After the </label>, never inside it — inside would join the accessible name.
-  labelOf(tip).insertAdjacentElement('afterend', description);
+  // After the </label>, never inside it — inside would join the accessible
+  // name. A button's own hint goes after the button, for the same reason.
+  (labelOf(tip) ?? tip).insertAdjacentElement('afterend', description);
 
   const existing = control.getAttribute('aria-describedby');
   // Append: a slider readout already owns the first token and announces first.
@@ -271,6 +300,28 @@ function addDescription(tip, control, text) {
 
   tipByControl.set(control, tip);
   controlByTip.set(tip, control);
+  descriptionByTip.set(tip, description);
+  tipByDescription.set(description, tip);
+}
+
+/**
+ * A hint's text has changed (the app rewords a button's reason as its state
+ * changes): say the new text wherever the old one was — its description,
+ * and the popup if it is the one showing. A hint not yet wired is wired.
+ * @param {HTMLElement} tip
+ */
+function retextHint(tip) {
+  const description = descriptionByTip.get(tip);
+  if (!description || !controlByTip.has(tip)) {
+    describeControl(tip);
+    return;
+  }
+  const text = tip.getAttribute('data-tip') ?? '';
+  if (description.textContent !== text) description.textContent = text;
+  if (activeTip === tip) {
+    if (text) tooltipEl.textContent = text;
+    else hideTooltip();
+  }
 }
 
 /**
@@ -305,6 +356,12 @@ function createTrigger(tip) {
  * @param {HTMLElement} control
  */
 function attachTrigger(tip, control) {
+  // A button's own hint: the button is the trigger, so none is drawn.
+  if (isOwnHint(tip)) {
+    hosts.add(tip);
+    syncTrigger(tip);
+    return;
+  }
   let trigger = triggerByTip.get(tip);
   if (!trigger) {
     trigger = createTrigger(tip);
@@ -335,11 +392,11 @@ function attachTrigger(tip, control) {
  * @param {HTMLElement} tip
  */
 function syncTrigger(tip) {
-  const trigger = triggerByTip.get(tip);
   const host = hostOf(tip);
-  if (!trigger || !host) return;
+  if (!host) return;
   const hidden = host.hidden || host.style.display === 'none';
-  if (trigger.hidden !== hidden) trigger.hidden = hidden;
+  const trigger = triggerByTip.get(tip);
+  if (trigger && trigger.hidden !== hidden) trigger.hidden = hidden;
   if (hidden && activeTip === tip) hideTooltip();
 }
 
@@ -365,7 +422,11 @@ function followMutations(records) {
   const departed = [];
   for (const record of records) {
     if (record.type === 'attributes') {
-      if (hosts.has(record.target)) hintsIn(record.target).forEach(syncTrigger);
+      if (record.attributeName === 'data-tip') {
+        if (record.target.isConnected) retextHint(record.target);
+      } else if (hosts.has(record.target)) {
+        hintsIn(record.target).forEach(syncTrigger);
+      }
       continue;
     }
     for (const node of record.removedNodes) {
@@ -379,6 +440,11 @@ function followMutations(records) {
   for (const tip of departed) {
     if (tip.isConnected) continue;
     triggerByTip.get(tip)?.remove();
+    // A description left standing when its hint went alone (a button taken
+    // off the page by itself) describes nothing: it goes too. One a copy of
+    // the hint has taken over (a redrawn label) stays with the copy.
+    const description = descriptionByTip.get(tip);
+    if (description?.isConnected && tipByDescription.get(description) === tip) description.remove();
     // A hint whose row went takes its popup, and a pointer's pending open of
     // it, along: nothing on the page is left for either to describe.
     if (tip === activeTip) hideTooltip();
@@ -573,8 +639,16 @@ function hideTooltip() {
  */
 function followPointer(target) {
   const element = target?.nodeType === 1 ? target : null;
-  const trigger = element?.closest(`.${TRIGGER_CLASS}`) ?? null;
-  const tip = trigger ? tipByTrigger.get(trigger) ?? null : null;
+  // What the pointer rests on: a "?" trigger, or a button that is its own.
+  let rest = element?.closest(`.${TRIGGER_CLASS}`) ?? null;
+  let tip = rest ? tipByTrigger.get(rest) ?? null : null;
+  if (!tip) {
+    const own = element?.closest('[data-tip]') ?? null;
+    if (own && controlByTip.get(own) === own) {
+      rest = own;
+      tip = own;
+    }
+  }
   pointerOnHint = Boolean(element && tooltipEl?.contains(element));
 
   if (tip !== hoverTip) {
@@ -586,7 +660,7 @@ function followPointer(target) {
         // A rebuild (the scene outline redraws its forms) can replace the
         // hint while the pointer rests on its trigger; the old trigger goes
         // with it, but only once the page's mutations have been answered.
-        if (trigger.isConnected && tip.isConnected) showTooltip(tip, 'hover');
+        if (rest.isConnected && tip.isConnected) showTooltip(tip, 'hover');
       }, INTERACTION.HINT_HOVER_OPEN_DELAY_MS);
     }
   }
@@ -646,7 +720,7 @@ export function initParamTooltips() {
 
   // Observing the document itself, not <body>, outlives a replaced shell.
   new MutationObserver(followMutations).observe(document, {
-    childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'style'],
+    childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'style', 'data-tip'],
   });
 
   // A click on a trigger toggles its hint. Nothing else here is a trigger: a

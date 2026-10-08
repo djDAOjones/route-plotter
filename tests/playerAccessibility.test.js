@@ -142,7 +142,7 @@ describe('standalone player transport announcer', () => {
     announcer.pause(state);
     expect(region.textContent).toBe('Paused at 0:05.');
     announcer.reset();
-    expect(region.textContent).toBe('Reset to start, 0:00.');
+    expect(region.textContent).toBe('Skipped to start, 0:00.');
     announcer.end(state);
     expect(region.textContent).toBe('Moved to end, 1:05.');
     announcer.committedSeek(state);

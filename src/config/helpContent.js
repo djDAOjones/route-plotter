@@ -34,7 +34,7 @@ import { MODIFIER_DISPLAY, getBindingsByCategory } from './keybindings.js';
 const HELP_SECTIONS = [
   {
     id: 'create',
-    title: 'Create Your Route',
+    title: 'Create your route',
     items: [
       '<strong>Drag an image</strong> onto the canvas to get started',
       '<strong>Click</strong> the map to add waypoints',
@@ -43,22 +43,23 @@ const HELP_SECTIONS = [
   },
   {
     id: 'edit',
-    title: 'Edit Points',
+    title: 'Edit points',
     items: [
       `<strong>${MODIFIER_DISPLAY.shift}+Click</strong> a waypoint to delete it`,
       `<strong>${MODIFIER_DISPLAY.meta}+Click</strong> to add a minor waypoint`,
-      `<strong>${MODIFIER_DISPLAY.alt}+Click</strong> to force-add a major waypoint`,
+      `<strong>${MODIFIER_DISPLAY.alt}+Click</strong> a major waypoint to start a branch; ` +
+        `<strong>${MODIFIER_DISPLAY.alt}+Click</strong> empty map to add a major waypoint without selecting`,
       `<strong>${MODIFIER_DISPLAY.alt}+${MODIFIER_DISPLAY.meta}+Click</strong> to force-add a minor waypoint`,
       'Use the <strong>sidebar</strong> to adjust styles and timing'
     ]
   },
   {
     id: 'export',
-    title: 'Preview & Export',
+    title: 'Preview and export',
     items: [
       'Press <kbd>Space</kbd> to play/pause the animation',
-      'Use <strong>Preview</strong> mode to hide controls',
-      '<strong>Export Video</strong> when ready to share'
+      'Use <strong>Preview</strong> mode to see the animation as it will export',
+      '<strong>Export video</strong> when ready to share'
     ]
   }
 ];
@@ -108,7 +109,7 @@ function renderControlsAccordion() {
   return `
     <details class="controls-accordion">
       <summary>
-        <span class="accordion-title">All Keyboard Shortcuts & Controls</span>
+        <span class="accordion-title">All keyboard shortcuts and controls</span>
         <span class="accordion-hint">Click to expand</span>
       </summary>
       <div class="controls-content">
@@ -129,7 +130,7 @@ export function getInlineHelpHTML() {
     { key: 'Click', desc: 'Add waypoint' },
     { key: 'Drag', desc: 'Move waypoint' },
     { key: `${MODIFIER_DISPLAY.shift}+Click`, desc: 'Delete' },
-    { key: 'Space', desc: 'Play/Pause' }
+    { key: 'Space', desc: 'Play/pause' }
   ];
   
   const items = essentials
@@ -138,7 +139,7 @@ export function getInlineHelpHTML() {
   
   return `
     <div class="waypoint-instructions">
-      <h2>Quick Start</h2>
+      <h2>Quick start</h2>
       <div class="inline-shortcuts">${items}</div>
       <button type="button" class="shortcuts-hint-btn" data-action="show-help">
         <kbd>?</kbd> View all controls

@@ -40,10 +40,13 @@ function mountShell() {
     .replace(/<\/?html[^>]*>/gi, '');
 }
 
-/** The control a hint describes: its enclosing label's `for` target. */
+/**
+ * The control a hint describes: its enclosing label's `for` target, or, for
+ * a button's own hint (UI-06), the button itself.
+ */
 function controlFor(trigger) {
   const label = trigger.tagName === 'LABEL' ? trigger : trigger.closest('label');
-  return document.getElementById(label.getAttribute('for'));
+  return label ? document.getElementById(label.getAttribute('for')) : trigger;
 }
 
 /** The text `aria-describedby` actually resolves to, in announcement order. */
@@ -54,8 +57,12 @@ function describedText(control) {
     .map(id => document.getElementById(id)?.textContent?.trim() ?? null);
 }
 
+/**
+ * The hints on labels and legends. A button's own hint (UI-06) is the
+ * button's: it keeps the button's role, and is covered on its own below.
+ */
 function triggers() {
-  return [...document.querySelectorAll('[data-tip]')];
+  return [...document.querySelectorAll('[data-tip]')].filter(el => el.closest('label, legend'));
 }
 
 /**
@@ -118,7 +125,7 @@ describe('parameter hints as control descriptions', () => {
   test('description nodes sit outside the label, leaving the name intact', () => {
     const leaked = triggers()
       .map(el => (el.tagName === 'LABEL' ? el : el.closest('label')))
-      .filter(label => label.querySelector('.sr-only[id$="-tip"]'))
+      .filter(label => label?.querySelector('.sr-only[id$="-tip"]'))
       .map(label => label.getAttribute('for'));
 
     expect(leaked).toEqual([]);
@@ -855,9 +862,13 @@ describe('Release bias says which way is earlier', () => {
  * click on to its control.
  */
 
-/** Every wired hint in `root`: its text, control, label or legend and trigger. */
+/**
+ * Every wired hint on a label or legend in `root`: its text, control, label
+ * or legend and trigger. A button's own hint (UI-06) has no "?": the button
+ * is its trigger, so it is not a UI-04 hint and is covered on its own below.
+ */
 function wiredHints(root = document) {
-  return [...root.querySelectorAll('[data-tip][data-tip-desc]')].map((tip) => {
+  return [...root.querySelectorAll('[data-tip][data-tip-desc]')].filter(tip => tip.closest('label, legend')).map((tip) => {
     const namer = tip.closest('label, legend');
     const host = namer.tagName === 'LEGEND' ? namer.parentElement : namer;
     const triggers = [...document.querySelectorAll('.param-hint-trigger')]
@@ -1370,5 +1381,153 @@ describe('UI-04 review: a hint’s row taken away takes its showing or pending h
     vi.advanceTimersByTime(INTERACTION.HINT_HOVER_OPEN_DELAY_MS * 4);
     expect(showing()).toBe(false);
     expect(container.contains(trigger)).toBe(true);
+  });
+});
+
+/**
+ * UI-06 (B-07) — a button may carry its own hint. Help that only `title`
+ * gave (Auto-position, the presets, Edit network, the example projects) was
+ * revealed by pointer alone. A `data-tip` on the button itself makes the
+ * button its own trigger: a mouse resting on it opens the hint after the
+ * delay, keyboard focus opens it, Escape dismisses it while focus stays,
+ * and the hint is the button's description. No "?" is drawn: the button is
+ * the target. Its `title` goes, so the two never disagree.
+ */
+describe('UI-06: a button carries its own hint, reachable by keyboard', () => {
+  const OPEN = INTERACTION.HINT_HOVER_OPEN_DELAY_MS;
+  const CLOSE = INTERACTION.HINT_HOVER_CLOSE_DELAY_MS;
+  const tooltip = () => document.getElementById('param-tooltip');
+  const showing = () => tooltip()?.style.display === 'block';
+  let button;
+
+  function tabTo(el) {
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    el.focus();
+  }
+
+  function pointTo(el) {
+    el.dispatchEvent(new window.PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+  }
+
+  beforeEach(() => {
+    mountShell();
+    initParamTooltips();
+    button = document.getElementById('label-auto-position');
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('the button is described by its hint, has no title and no "?" of its own', () => {
+    const hint = button.getAttribute('data-tip');
+    expect(hint).toMatch(/\w/);
+    expect(button.hasAttribute('title')).toBe(false);
+    expect(describedText(button)).toEqual([hint]);
+    // The description sits beside the button, never inside it: inside would
+    // join the accessible name.
+    expect(button.querySelector('.sr-only')).toBeNull();
+    expect(document.querySelector(`.param-hint-trigger[aria-describedby="${button.getAttribute('data-tip-desc')}"]`))
+      .toBeNull();
+    expect(button.hasAttribute('aria-expanded')).toBe(false);
+  });
+
+  test('a mouse resting on the button opens it after the delay; leaving closes it', () => {
+    vi.useFakeTimers();
+    pointTo(button);
+    vi.advanceTimersByTime(OPEN - 1);
+    expect(showing()).toBe(false);
+    vi.advanceTimersByTime(1);
+    expect(showing()).toBe(true);
+    expect(tooltip().textContent).toBe(button.getAttribute('data-tip'));
+
+    pointTo(document.body);
+    vi.advanceTimersByTime(CLOSE);
+    expect(showing()).toBe(false);
+  });
+
+  test('keyboard focus opens it; Escape closes it while focus stays; leaving closes it', () => {
+    tabTo(button);
+    expect(showing()).toBe(true);
+    expect(tooltip().textContent).toBe(button.getAttribute('data-tip'));
+
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(showing()).toBe(false);
+    expect(document.activeElement).toBe(button);
+    button.dispatchEvent(new window.FocusEvent('focusin', { bubbles: true }));
+    expect(showing()).toBe(false);
+
+    button.blur();
+    tabTo(button);
+    expect(showing()).toBe(true);
+    button.blur();
+    expect(showing()).toBe(false);
+  });
+
+  test('a mouse click on the button opens nothing, and closes a hint that shows', () => {
+    button.dispatchEvent(new window.MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    button.focus();
+    expect(showing()).toBe(false);
+
+    // A keyboard arrival is a new visit: leave first, so the focus is real.
+    button.blur();
+    tabTo(button);
+    expect(showing()).toBe(true);
+    button.dispatchEvent(clickEvent());
+    expect(showing()).toBe(false);
+  });
+
+  test('a hint whose text changes keeps its description current, and the hint that shows', () => {
+    tabTo(button);
+    expect(showing()).toBe(true);
+    button.setAttribute('data-tip', 'Moves the label clear of everything');
+    return Promise.resolve().then(() => {
+      expect(describedText(button)).toEqual(['Moves the label clear of everything']);
+      expect(tooltip().textContent).toBe('Moves the label clear of everything');
+    });
+  });
+
+  test('a button whose hint is hidden with it closes the hint', () => {
+    tabTo(button);
+    expect(showing()).toBe(true);
+    button.hidden = true;
+    return Promise.resolve().then(() => {
+      expect(showing()).toBe(false);
+    });
+  });
+
+  test('every control that has a hint has no title: the hint replaced it', async () => {
+    const app = await bootApp();
+    try {
+      await app.ready;
+      document.getElementById('splash-close').click();
+      app.addCrowd({ enterNetworkEditor: false });
+      document.getElementById('crowd-busyness-add').click();
+      await Promise.resolve();
+
+      const hinted = [...document.querySelectorAll('[data-tip]')];
+      const titled = hinted.filter(el => el.hasAttribute('title')).map(el => el.id || el.className);
+      expect(titled).toEqual([]);
+      // The controls the review listed as title-only help all carry a hint now.
+      for (const id of ['label-auto-position', 'preset-native', 'preset-16-9', 'preset-1-1', 'preset-9-16',
+        'network-edit-btn', 'crowd-trace-route-btn', 'network-edge-swap', 'add-crowd-btn', 'crowd-busyness-add']) {
+        const control = document.getElementById(id);
+        expect(control.getAttribute('data-tip'), `#${id}'s hint`).toMatch(/\w/);
+        expect(describedText(control), `#${id} is described by its hint`).toContain(control.getAttribute('data-tip'));
+      }
+      const layerRow = document.querySelector('#layers-strip .layer-item:nth-child(2) .layer-row');
+      expect(layerRow.getAttribute('data-tip')).toBe('Double-click to rename');
+      expect(describedText(layerRow)).toEqual(['Double-click to rename']);
+      const examples = [...document.querySelectorAll('#example-projects-menu button')];
+      expect(examples.length).toBeGreaterThan(0);
+      for (const item of examples) {
+        expect(item.hasAttribute('title')).toBe(false);
+        expect(describedText(item)).toEqual([item.getAttribute('data-tip')]);
+      }
+      // Export's "Export animation" said nothing its words do not: gone, with no hint.
+      expect(document.getElementById('export-dropdown-btn').hasAttribute('title')).toBe(false);
+    } finally {
+      app.interactionHandler.destroy();
+    }
   });
 });

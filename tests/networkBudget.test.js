@@ -22,8 +22,8 @@ import { NetworkEditService } from '../src/services/NetworkEditService.js';
 
 const FULL = {
   node: 'The project node limit has been reached.',
-  edge: 'The project edge limit has been reached.',
-  bend: 'The project bend-point limit has been reached.',
+  edge: 'The project path limit has been reached.',
+  bend: 'The project bend limit has been reached.',
 };
 
 /**

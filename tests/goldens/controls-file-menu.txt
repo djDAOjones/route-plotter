@@ -48,7 +48,7 @@ settled:
   ui - #toast-container>div[0]: div class="toast" :text="Could not open Site walk"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
-## #example-projects-menu>button[1] · click
+## #example-projects-menu>button[2] · click
 emit ui:toast {message: "Could not open Open day route"}
 announced "Opening Open day route…"
 app ~ focus: "#save-project-btn" → "#file-dropdown-btn"
@@ -63,7 +63,7 @@ settled:
   ui - #toast-container>div[0]: div class="toast" :text="Could not open Open day route"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 
-## #example-projects-menu>button[2] · click
+## #example-projects-menu>button[4] · click
 emit ui:toast {message: "Could not open Signal flow"}
 announced "Opening Signal flow…"
 app ~ focus: "#save-project-btn" → "#file-dropdown-btn"
@@ -208,8 +208,8 @@ ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" a
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
 ui ~ #clear-confirm-modal: div (not shown) → div aria-labelledby="modal-title-clear" aria-modal="true" class="modal" role="dialog" style="display: flex;"
 ui + #clear-confirm-modal>div[0]: div class="modal-content"
-ui + #modal-title-clear: h3 :text="Clear all waypoints?"
-ui + #clear-confirm-modal>div[0]>p[1]: p :text="This will remove all waypoints and reset the canvas. This action cannot be undone."
+ui + #modal-title-clear: h3 :text="Clear the whole project?"
+ui + #clear-confirm-modal>div[0]>p[1]: p :text="This removes every waypoint, crowd and network and resets the settings. It cannot be undone."
 ui + #clear-unrestored-note: p (not shown)
 ui + #clear-confirm-modal>div[0]>div[3]: div class="modal-buttons"
 ui + #clear-cancel: button class="btn btn-secondary" type="button" :text="Cancel"

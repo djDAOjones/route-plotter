@@ -47,6 +47,15 @@ const MAJOR_ONLY_CARDS = new Set([
   WAYPOINT_CARD.LABEL,
 ]);
 
+/** "Already uses route style" as the rest of a sentence. */
+function lowerFirst(text) {
+  return text ? text.charAt(0).toLowerCase() + text.slice(1) : '';
+}
+
+function setReason(span, text) {
+  if (span && span.textContent !== text) span.textContent = text;
+}
+
 export const editorPanelMixin = {
 
   /**
@@ -87,23 +96,19 @@ export const editorPanelMixin = {
         source: this._waypointCardSource(card),
         styles: this.styles,
       });
-      const label = WAYPOINT_CARD_LABELS[card];
       const reset = waypointScope.querySelector(`[data-card="${card}"][data-card-action="reset"]`);
       const apply = waypointScope.querySelector(`[data-card="${card}"][data-card-action="apply-onward"]`);
-      if (reset) {
-        reset.disabled = !state.canReset;
-        reset.title = state.resetReason;
-        reset.setAttribute('aria-label', state.canReset
-          ? `Reset ${label} to route style`
-          : `Reset ${label}: ${state.resetReason}`);
-      }
-      if (apply) {
-        apply.disabled = !state.canApplyOnward;
-        apply.title = state.applyReason;
-        apply.setAttribute('aria-label', state.canApplyOnward
-          ? `Apply ${label} onward`
-          : `Apply ${label} onward: ${state.applyReason}`);
-      }
+      if (reset) reset.disabled = !state.canReset;
+      if (apply) apply.disabled = !state.canApplyOnward;
+      // A disabled action's reason is a visible line under the row, which the
+      // action is described by; its name stays its words (UI-06 J-21, B-07).
+      // The shell holds the line and its spans, with the describedby tokens.
+      const resetReason = waypointScope.querySelector(`[data-card="${card}"][data-card-reason="reset"]`);
+      const applyReason = waypointScope.querySelector(`[data-card="${card}"][data-card-reason="apply-onward"]`);
+      setReason(resetReason, state.canReset ? '' : `Reset: ${lowerFirst(state.resetReason)}.`);
+      setReason(applyReason, state.canApplyOnward ? '' : `Apply onward: ${lowerFirst(state.applyReason)}.`);
+      const line = resetReason?.closest('p') ?? applyReason?.closest('p');
+      if (line) line.hidden = !(resetReason?.textContent || applyReason?.textContent);
     }
   },
 

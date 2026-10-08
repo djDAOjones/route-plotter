@@ -244,12 +244,12 @@ describe('layers strip', () => {
     const app = makeApp({ hasRoute: false });
     const button = document.getElementById('add-crowd-btn');
     expect(button.disabled).toBe(false);
-    expect(button.title).toMatch(/draw the network/);
+    expect(button.getAttribute('data-tip')).toMatch(/draw the network/);
 
     app.waypoints = [{}, {}];
     app.eventBus.emit('waypoint:list-updated', app.waypoints);
     expect(button.disabled).toBe(false);
-    expect(button.title).toMatch(/follows the route/);
+    expect(button.getAttribute('data-tip')).toMatch(/follows the route/);
   });
 });
 
@@ -257,9 +257,9 @@ describe('crowd copy', () => {
   test('lifecycle controls are neutral to route and network guides', () => {
     const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
     expect(html).toContain('At journey end');
-    expect(html).toContain('Respawn at entry');
+    expect(html).toContain('Respawn at the start');
     expect(html).toContain('Repeat journey');
-    expect(html).toContain('Collect at exit');
+    expect(html).toContain('Collect at the end');
     expect(html).not.toContain('At route end');
   });
 });
@@ -332,7 +332,7 @@ describe('seeded variation controls', () => {
     const app = makeApp({ hasRoute: false });
     app.addCrowd({ enterNetworkEditor: false });
     expect(document.getElementById('crowd-pattern-hint').textContent)
-      .toMatch(/Junction shares set route proportions.*which dots take them/);
+      .toMatch(/Path shares set the route proportions.*which dots take each path/);
   });
 });
 

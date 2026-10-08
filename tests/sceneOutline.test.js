@@ -345,8 +345,8 @@ describe('native scene outline DOM', () => {
     expect(container.textContent).toContain('<img src=x onerror=window.outlineInjected=true>');
     expect(container.textContent).toContain('</summary><script>window.outlineInjected=true</script>');
     expect(container.textContent).toContain('Minor waypoint 1.1 — Curve point');
-    expect(container.textContent).toContain('Stored custom network — inactive');
-    expect(container.textContent).toContain('Bend point 1');
+    expect(container.textContent).toContain('Custom network — not in use');
+    expect(container.textContent).toContain('Bend 1');
     expect(container.textContent).not.toContain('At route end');
 
     // Closed branches retain their native summaries but omit their expensive
@@ -360,11 +360,11 @@ describe('native scene outline DOM', () => {
     expect(container.textContent).toContain('At journey end');
 
     const selected = container.querySelector('[aria-pressed="true"]');
-    expect(selected.textContent).toBe('Select bend point 1');
+    expect(selected.textContent).toBe('Select bend 1');
 
     const extraEmitter = await openDisclosure(container, 'emitter:crowd-route:emitter-extra');
     expect(extraEmitter.querySelector('form')).toBeNull();
-    expect(extraEmitter.textContent).toContain('Multi-emitter authoring remains a later crowd-control feature');
+    expect(extraEmitter.textContent).toContain('editing more than one emitter in a crowd is a later feature');
 
     await openDisclosure(container, 'waypoint:wp-minor');
     await openDisclosure(container, 'polygon:wp-minor');
@@ -738,8 +738,8 @@ describe('native scene outline DOM', () => {
       .map(select => select.textContent);
 
     expect(summaries).toEqual([
-      'Crowd 1 — custom network, 1 emitter',
-      'Crowd 2 — custom network, 1 emitter',
+      'Crowd 1 — Custom network, 1 emitter',
+      'Crowd 2 — Custom network, 1 emitter',
     ]);
     expect(selectors).toEqual(['Select Crowd 1', 'Select Crowd 2']);
   });

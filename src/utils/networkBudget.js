@@ -12,8 +12,8 @@ import { SCENE_LIMITS } from '../models/Scene.js';
 /** What the author is told when there is no room. */
 export const NETWORK_FULL = Object.freeze({
   node: 'The project node limit has been reached.',
-  edge: 'The project edge limit has been reached.',
-  bend: 'The project bend-point limit has been reached.',
+  edge: 'The project path limit has been reached.',
+  bend: 'The project bend limit has been reached.',
 });
 
 /**

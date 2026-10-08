@@ -297,15 +297,15 @@ describe('passive inspection', () => {
     expect(document.getElementById('network-node-hint').textContent).not.toMatch(/T cycles|Shift-click/);
 
     svc.selectEdge(edge);
-    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Direction and Traffic/);
-    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Delete edge/);
+    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Direction and Share/);
+    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Delete path/);
     expect(document.getElementById('network-edge-hint').textContent).not.toMatch(/Shift-click/);
 
     svc.enter(layer);
     svc.selectNode(source);
     expect(document.getElementById('network-node-hint').textContent).toMatch(/T cycles.*drag.*Shift-click/);
     svc.selectEdge(edge);
-    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Drag the edge.*Shift-click/);
+    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Drag the path.*Shift-click/);
   });
 
   test('Node card edits and deletes a passive selection with one commit per action', () => {
@@ -952,12 +952,12 @@ describe('mixin glue', () => {
     svc.selectEdge(ab); // weight 1; at b the sibling has weight 3 → 25%
     app.syncNetworkCards();
     const readout = document.getElementById('network-edge-weight-value').textContent;
-    expect(readout).toBe('100% · 25% configured shares');
+    expect(readout).toBe('100% · 25% of departures');
 
     ab.setDirection('one-way'); // departures from a only
     app.syncNetworkCards();
     expect(document.getElementById('network-edge-weight-value').textContent)
-      .toBe('100% configured share');
+      .toBe('100% of departures');
     expect(a.id).toBe(ab.sourceId);
   });
 
@@ -1019,6 +1019,56 @@ describe('mixin glue', () => {
     expect(input.getAttribute('aria-invalid')).toBe('true');
     expect(app.events.filter(([event]) => event === 'crowd:param-changed'))
       .toHaveLength(paramEventsBefore);
+  });
+
+  test('an invalid weight says what to do, inline and announced, and is not silently put back (UI-06 B-30)', () => {
+    const layer = enterMode(app);
+    const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
+    const exitA = layer.graph.addNode({ x: 0.9, y: 0.2, type: 'exit' });
+    const exitB = layer.graph.addNode({ x: 0.9, y: 0.8, type: 'exit' });
+    const first = layer.graph.addEdge({ sourceId: junction.id, targetId: exitA.id, direction: 'one-way' });
+    layer.graph.addEdge({ sourceId: junction.id, targetId: exitB.id, direction: 'one-way' });
+    svc.selectNode(junction);
+    app.syncNetworkCards();
+    const input = document.querySelector('.network-path-weight-row input');
+    const type = (value) => {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    type('abc');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    // The message is the first thing the field is described by, and is shown.
+    const errorId = input.getAttribute('aria-describedby').split(/\s+/)[0];
+    const error = document.getElementById(errorId);
+    expect(error).not.toBeNull();
+    expect(error.hidden).toBe(false);
+    expect(error.textContent).toBe('Enter a weight of 0.01 or more; the path keeps 1 until you do.');
+    expect(input.validationMessage).toBe(error.textContent);
+    expect(app.announced.at(-1)).toBe(error.textContent);
+    expect(first.weight).toBe(1);
+
+    // A valid weight clears it and applies.
+    const announcedSoFar = app.announced.length;
+    type('2');
+    expect(input.getAttribute('aria-invalid')).toBeNull();
+    expect(error.hidden).toBe(true);
+    expect(first.weight).toBe(2);
+    expect(app.announced.length).toBe(announcedSoFar);
+
+    type('-1');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(error.hidden).toBe(false);
+    expect(error.textContent).toBe('Enter a weight of 0.01 or more; the path keeps 2 until you do.');
+    expect(app.announced.at(-1)).toBe(error.textContent);
+
+    // Leaving the field does not put the old value back behind the author's
+    // back: what they typed, and why it did not apply, stay in view.
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(input.value).toBe('-1');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(error.hidden).toBe(false);
+    expect(first.weight).toBe(2);
   });
 
   test('junction rows rebuild from fresh edge objects after restore', () => {
@@ -1107,7 +1157,7 @@ describe('mixin glue', () => {
     layer.graph.addNode({ x: 0.2, y: 0.2 });
     layer.graph.addNode({ x: 0.8, y: 0.2 });
     app.updateGuideCard();
-    expect(document.getElementById('crowd-guide-hint').textContent).toMatch(/2 nodes, 0 edges/);
+    expect(document.getElementById('crowd-guide-hint').textContent).toMatch(/2 nodes, 0 paths/);
   });
 
   test('a route-free network explains the timing needed for preview and export', () => {

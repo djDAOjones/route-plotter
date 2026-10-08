@@ -447,7 +447,7 @@ const HELP_ROWS = {
   Waypoints: [
     ['addWaypoint', 'Click', 'Add waypoint'],
     ['addMinorWaypoint', `${META_TEXT}+Click`, 'Add minor waypoint'],
-    ['forceAddWaypoint', `${ALT_TEXT}+Click`, 'Force add major (bypass selection)'],
+    ['forceAddWaypoint', `${ALT_TEXT}+Click`, 'Start a branch from a major waypoint; on empty map, add a major without selecting'],
     ['forceAddMinorWaypoint', `${META_TEXT}+${ALT_TEXT}+Click`, 'Force add minor (bypass selection)'],
     ['deleteWaypoint', `${SHIFT_TEXT}+Click`, 'Delete waypoint'],
     ['selectWaypoint', 'Click', 'Select waypoint'],
@@ -469,9 +469,9 @@ const HELP_ROWS = {
     ['zoomReset', '0', 'Reset zoom']
   ],
   Playback: [
-    ['playPause', 'Space', 'Play / Pause'],
-    ['skipToStart', 'HOME', 'Go to start'],
-    ['skipToEnd', 'END', 'Go to end'],
+    ['playPause', 'Space', 'Play / pause'],
+    ['skipToStart', 'HOME', 'Skip to start'],
+    ['skipToEnd', 'END', 'Skip to end'],
     ['playReverse', 'J', 'Play reverse'],
     ['playForward', 'L', 'Play forward'],
     ['stepBackward', ',', 'Skip to start'],
@@ -510,16 +510,18 @@ const KEYS_HELP_DOES_NOT_SHOW = { deleteSelected: ['Backspace'], zoomIn: ['+'], 
  */
 const HELP_PROSE = {
   // An image file dropped on the canvas becomes the background: no binding.
-  'Create Your Route': [['Drag an image onto the canvas to get started', null],
+  'Create your route': [['Drag an image onto the canvas to get started', null],
     ['Click the map to add waypoints', 'addWaypoint'],
     ['Drag waypoints to reposition them', 'moveWaypoint']],
-  'Edit Points': [[`${SHIFT_TEXT}+Click a waypoint to delete it`, 'deleteWaypoint'],
+  'Edit points': [[`${SHIFT_TEXT}+Click a waypoint to delete it`, 'deleteWaypoint'],
     [`${META_TEXT}+Click to add a minor waypoint`, 'addMinorWaypoint'],
-    [`${ALT_TEXT}+Click to force-add a major waypoint`, 'forceAddWaypoint'],
+    // UI-06 (wish-list 62): Alt-click on a waypoint starts a branch (ROUTE-01c); force-add is the empty-map case.
+    [`${ALT_TEXT}+Click a major waypoint to start a branch; ${ALT_TEXT}+Click empty map to add a major waypoint ` +
+      'without selecting', 'forceAddWaypoint'],
     [`${ALT_TEXT}+${META_TEXT}+Click to force-add a minor waypoint`, 'forceAddMinorWaypoint']],
-  'Preview & Export': [['Space to play/pause the animation', 'playPause']],
+  'Preview and export': [['Space to play/pause the animation', 'playPause']],
   'Quick Start': [['Click Add waypoint', 'addWaypoint'], ['Drag Move waypoint', 'moveWaypoint'],
-    [`${SHIFT_TEXT}+Click Delete`, 'deleteWaypoint'], ['Space Play/Pause', 'playPause']]
+    [`${SHIFT_TEXT}+Click Delete`, 'deleteWaypoint'], ['Space Play/pause', 'playPause']]
 };
 
 /** A chord as Help writes it (`⌘+⇧+Z`, `Alt+Click`), as its gesture or key and its modifiers. */
@@ -765,7 +767,7 @@ describe("Help's key table (TST-13)", () => {
     ['a waypoint', ['shift'], help('deleteWaypoint'), DELETED_FIRST],
     ['a waypoint', ['alt'],
       undocumented('arms a branch from the waypoint (ROUTE-01c) for the next click to place; ' +
-        'Help still calls Alt-click "Force add major"'),
+        'Help names it on its Alt-click line (UI-06), while the table entry stays the empty-map force-add'),
       {
         branchFrom: '#0 major 0.25,0.5',
         toasts: ['Branch from this waypoint — click where it should go (Esc to cancel)'],
@@ -1274,7 +1276,7 @@ describe('what the page shortcuts react to (TST-13)', () => {
       ['Delete on row 2', { route: [FIRST, LAST], selected: [], primary: null, said: 'Waypoint deleted' },
         'prevented', 'focus the page'],
       ['hint', 'showing'],
-      ['Escape on the hint\'s "?"', {}, 'prevented', 'focus Help: Wait Time'],
+      ['Escape on the hint\'s "?"', {}, 'prevented', 'focus Help: Wait time'],
       ['hint', 'hidden']
     ]);
   });

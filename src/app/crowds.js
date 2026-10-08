@@ -272,7 +272,7 @@ export const crowdsMixin = {
 
     this._wireCrowdSlider('crowd-speed', (raw) => {
       emitterOf()?.update({ speed: raw / 100 });
-      return `${(raw / 100).toFixed(2)} img/s`;
+      return `${(raw / 100).toFixed(2)} image lengths/s`;
     });
 
     this._wireCrowdSlider('crowd-speed-variance', (raw) => {
@@ -555,9 +555,10 @@ export const crowdsMixin = {
     if (this._addCrowdBtn) {
       const noRoute = this.waypoints.length < 2;
       this._addCrowdBtn.disabled = false;
-      this._addCrowdBtn.title = noRoute
+      // Its hint, not a title: a title is help only a pointer can reach (UI-06 B-07).
+      this._addCrowdBtn.setAttribute('data-tip', noRoute
         ? 'Add a crowd and draw the network it follows'
-        : 'Add a crowd of dots that follows the route';
+        : 'Add a crowd of dots that follows the route');
     }
   },
 
@@ -587,7 +588,8 @@ export const crowdsMixin = {
     const title = document.createElement('span');
     title.className = 'layer-title';
     title.textContent = layer.name;
-    title.title = 'Double-click to rename';
+    // The row's own hint: shown on hover, on keyboard focus, and read as its description.
+    row.setAttribute('data-tip', 'Double-click to rename');
 
     row.appendChild(swatch);
     row.appendChild(title);
@@ -834,7 +836,7 @@ export const crowdsMixin = {
       formatCrowdReleaseBias(em.intensityRamp * 100)
     );
     set('crowd-speed', Math.round(em.speed * 100));
-    setText('crowd-speed-value', `${em.speed.toFixed(2)} img/s`);
+    setText('crowd-speed-value', `${em.speed.toFixed(2)} image lengths/s`);
     set('crowd-speed-variance', Math.round(em.speedVariance * 100));
     setText('crowd-speed-variance-value', `${Math.round(em.speedVariance * 100)}%`);
     set('crowd-lifecycle', em.lifecycleMode);
@@ -844,7 +846,7 @@ export const crowdsMixin = {
     const hint = document.getElementById('crowd-pattern-hint');
     if (hint) {
       hint.textContent = layer.guideType === 'graph'
-        ? 'Junction shares set route proportions. Re-roll changes which dots take them, plus individual walking and set-off variation.'
+        ? 'Path shares set the route proportions. Re-roll changes which dots take each path, plus individual walking and set-off variation.'
         : 'Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path.';
     }
 
@@ -979,7 +981,7 @@ export const crowdsMixin = {
     const add = document.getElementById('crowd-busyness-add');
     if (add) {
       add.disabled = handles.length >= MAX_BUSYNESS_HANDLES;
-      add.title = add.disabled ? `Maximum ${MAX_BUSYNESS_HANDLES} handles` : 'Add a handle in the widest span';
+      add.setAttribute('data-tip', add.disabled ? `Maximum ${MAX_BUSYNESS_HANDLES} handles` : 'Add a handle in the widest span');
     }
     const reset = document.getElementById('crowd-busyness-reset');
     if (reset) {

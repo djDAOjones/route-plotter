@@ -410,7 +410,7 @@ export class UIController {
         const type = this._networkSelection.node?.type;
         text = `Editing · Node · ${type === 'normal' ? 'pass-through' : type}`;
       } else {
-        text = `Editing · Edge · ${this._networkSelection.edge?.direction}`;
+        text = `Editing · Path · ${this._networkSelection.edge?.direction}`;
       }
     } else if (this._selectedCrowd) {
       scope = 'crowd';
@@ -425,9 +425,8 @@ export class UIController {
       scope = 'waypoint';
       const chipIndex = (this._listedWaypoints || []).indexOf(waypoint);
       const chipEntry = chipIndex === -1 ? null : this._listedNumbering?.[chipIndex];
-      const kind = chipEntry?.branchId
-        ? ` · branch ${chipEntry.branchLetter}`
-        : (waypoint.isMajor ? ' · major' : '');
+      // A branch waypoint's number says which branch it is on (UI-06 J-02).
+      const kind = chipEntry?.branchId ? '' : (waypoint.isMajor ? ' · major' : '');
       text = `Editing · ${this._waypointDisplayName(waypoint)}${kind}`;
     } else {
       scope = 'route';
@@ -1708,8 +1707,13 @@ export class UIController {
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.className = 'waypoint-row waypoint-add-btn';
-    addBtn.innerHTML = '<span class="waypoint-add-icon" aria-hidden="true">+</span><span>Add Waypoint</span>';
-    addBtn.setAttribute('aria-label', 'Add new waypoint at center of map');
+    addBtn.innerHTML = '<span class="waypoint-add-icon" aria-hidden="true">+</span><span>Add waypoint</span>';
+    // Its words are its name (UI-06 B-04); where the waypoint goes is its description.
+    addBtn.setAttribute('aria-describedby', 'waypoint-add-desc');
+    const addDescription = document.createElement('span');
+    addDescription.id = 'waypoint-add-desc';
+    addDescription.className = 'sr-only';
+    addDescription.textContent = 'at the centre of the map';
 
     addBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1717,6 +1721,7 @@ export class UIController {
     });
 
     addItem.appendChild(addBtn);
+    addItem.appendChild(addDescription);
     this.elements.waypointList.appendChild(addItem);
 
     // Route order, majors and minors together. A minor is not draggable and

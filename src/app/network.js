@@ -29,21 +29,26 @@ const NODE_TYPE_LABELS = {
 const NETWORK_CARD_HINTS = {
   passive: {
     node: 'Dots appear at entries and finish at exits. Use Type to change this node, or Delete node to remove it. Choose Edit network to move nodes.',
-    edge: 'Configured share among paths leaving each end. Use Direction and Traffic to edit this edge, or Delete edge to remove it. Choose Edit network to bend paths.',
+    edge: 'Share of the dots leaving each end. Use Direction and Share to edit this path, or Delete path to remove it. Choose Edit network to bend paths.',
   },
   active: {
     node: 'Dots appear at entries and finish at exits. T cycles the type; drag to move; Shift-click deletes.',
-    edge: 'Configured share among paths leaving each end. Arriving dots avoid an immediate U-turn when another path is available. Drag the edge to bend it; Shift-click deletes.',
+    edge: 'Share of the dots leaving each end. Arriving dots avoid turning straight back when another path is available. Drag the path to bend it; Shift-click deletes.',
   },
 };
 
-/** A junction's path-weight row hint (UI-03), worded as the Edge card's Traffic hint. */
+/** A node's path-weight row hint (UI-03), worded as the Path card's Share hint. */
 const PATH_WEIGHT_HINT = 'How strongly dots leaving this node prefer this path, '
-  + 'shown as its configured share of departures. Arriving dots avoid an immediate U-turn when another path is available';
+  + 'shown as the share of them that take it. Arriving dots avoid turning straight back when another path is available';
 
 /** Compact author-facing weight text without losing useful decimals. */
 function formatWeight(weight) {
   return Number(weight.toFixed(2)).toString();
+}
+
+/** What an invalid weight is told, and what the path keeps meanwhile (UI-06 B-30). */
+function weightMessage(edge) {
+  return `Enter a weight of 0.01 or more; the path keeps ${formatWeight(edge.weight)} until you do.`;
 }
 
 export const networkMixin = {
@@ -205,7 +210,7 @@ export const networkMixin = {
     this._setPreviewMode(false);
     svc.enter(layer);
     this.updateGuideCard();
-    this.announce('Network editing — click the map to place linked nodes. Escape lifts the pen.');
+    this.announce('Editing the network — click the map to place linked nodes. Escape lifts the pen.');
   },
 
   /**
@@ -217,7 +222,7 @@ export const networkMixin = {
   _deleteNetworkSelection(kind) {
     this.networkEditService.deleteSelection();
     this.eventBus.emit('ui:toast', {
-      message: `Deleted ${kind} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+      message: `Deleted ${kind === 'edge' ? 'path' : kind} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
     });
   },
 
@@ -253,7 +258,7 @@ export const networkMixin = {
       } else {
         svc.deleteEdge(hit.edge);
         this.eventBus.emit('ui:toast', {
-          message: `Deleted edge — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+          message: `Deleted path — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
         });
       }
       return;
@@ -385,8 +390,6 @@ export const networkMixin = {
       const graphGuided = !!layer && layer.guideType === 'graph';
       this._editNetworkBtn.hidden = !graphGuided;
       this._editNetworkBtn.disabled = this.networkEditService.active;
-      this._editNetworkBtn.textContent =
-        this.networkEditService.active ? 'Editing network…' : 'Edit network';
     }
     if (this._traceRouteBtn) {
       // Tracing needs a graph-guided crowd to write into and a route worth
@@ -397,9 +400,9 @@ export const networkMixin = {
       const hasRoute = (this.waypoints?.length || 0) >= 2;
       this._traceRouteBtn.hidden = !graphGuided;
       this._traceRouteBtn.disabled = !hasRoute;
-      this._traceRouteBtn.title = hasRoute
+      this._traceRouteBtn.setAttribute('data-tip', hasRoute
         ? 'Copy the route into this crowd\u2019s network, so its dots follow the same shape and can branch where the route branches'
-        : 'Add at least two route waypoints first';
+        : 'Add at least two route waypoints first');
     }
     if (this._guideHintEl && layer) {
       if (layer.guideType !== 'graph') {
@@ -410,7 +413,7 @@ export const networkMixin = {
         const networkHint = nodes === 0
           ? 'No network yet — Edit network hands you the pen.'
           : `Dots walk this crowd's own network (${nodes} node${nodes === 1 ? '' : 's'}, `
-            + `${edges} edge${edges === 1 ? '' : 's'}).`;
+            + `${edges} path${edges === 1 ? '' : 's'}).`;
         const timingHint = this.waypoints?.length < 2
           ? ' Add at least two route waypoints to set the master timing before previewing or exporting.'
           : '';
@@ -490,6 +493,7 @@ export const networkMixin = {
       const inputId = `network-path-weight-${index + 1}`;
       const nameId = `${inputId}-name`;
       const outputId = `${inputId}-value`;
+      const errorId = `${inputId}-error`;
 
       const row = document.createElement('label');
       row.className = 'network-path-weight-row';
@@ -508,26 +512,41 @@ export const networkMixin = {
       input.step = '0.01';
       input.value = formatWeight(departure.edge.weight);
       input.setAttribute('aria-labelledby', nameId);
-      input.setAttribute('aria-describedby', `${outputId} network-path-weights-help`);
-      input.addEventListener('input', () => {
-        const weight = Number(input.value);
-        if (!Number.isFinite(weight) || weight < 0.01) {
-          input.setCustomValidity('Enter a weight of 0.01 or more.');
-          input.setAttribute('aria-invalid', 'true');
-          return;
-        }
+      // The error first, when there is one, then the readout and the help.
+      input.setAttribute('aria-describedby', `${errorId} ${outputId} network-path-weights-help`);
+
+      // An invalid weight is told what is wrong, in view and aloud, and the
+      // typed value stays for the author to fix: silently putting the old
+      // weight back said nothing (UI-06 B-30).
+      const error = document.createElement('span');
+      error.id = errorId;
+      error.className = 'network-path-weight-error';
+      error.hidden = true;
+      const setInvalid = (message) => {
+        const was = input.validity.customError;
+        input.setCustomValidity(message);
+        input.setAttribute('aria-invalid', 'true');
+        error.textContent = message;
+        error.hidden = false;
+        if (!was) this.announce(message);
+      };
+      const setValid = () => {
         input.setCustomValidity('');
         input.removeAttribute('aria-invalid');
+        error.textContent = '';
+        error.hidden = true;
+      };
+      input.addEventListener('input', () => {
+        const weight = Number(input.value);
+        if (input.value.trim() === '' || !Number.isFinite(weight) || weight < 0.01) {
+          setInvalid(weightMessage(departure.edge));
+          return;
+        }
+        setValid();
         departure.edge.setWeight(weight);
         this._updateNodePathWeightReadouts(node.id);
         // crowd:param-changed → crowds mixin → debounced undo/autosave/render.
         this.eventBus.emit('crowd:param-changed');
-      });
-      input.addEventListener('change', () => {
-        if (input.validity.valid) return;
-        input.value = formatWeight(departure.edge.weight);
-        input.setCustomValidity('');
-        input.removeAttribute('aria-invalid');
       });
 
       const output = document.createElement('output');
@@ -535,7 +554,7 @@ export const networkMixin = {
       output.className = 'network-path-weight-value';
       output.setAttribute('for', inputId);
 
-      row.append(name, input, output);
+      row.append(name, input, output, error);
       rowsEl.appendChild(row);
     });
 
@@ -579,8 +598,8 @@ export const networkMixin = {
 
     // The readout's label names the weight slider it belongs to.
     setRangeReadout(valueEl.closest('label')?.control, valueEl, edge.direction === 'one-way'
-      ? `${shareFrom(edge.sourceId)}% configured share`
-      : `${shareFrom(edge.sourceId)}% · ${shareFrom(edge.targetId)}% configured shares`);
+      ? `${shareFrom(edge.sourceId)}% of departures`
+      : `${shareFrom(edge.sourceId)}% · ${shareFrom(edge.targetId)}% of departures`);
   },
 
   /**

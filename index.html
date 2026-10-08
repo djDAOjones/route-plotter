@@ -32,8 +32,8 @@
         </div>
         <!-- History Controls -->
         <div class="header-group">
-          <button id="undo-btn" class="btn btn-icon" title="Undo (Cmd+Z)" disabled aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6a4 4 0 0 1 0 8H9"/><polyline points="6 4 3 7 6 10"/></svg></button>
-          <button id="redo-btn" class="btn btn-icon" title="Redo (Cmd+Shift+Z)" disabled aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7H7a4 4 0 0 0 0 8h1"/><polyline points="10 4 13 7 10 10"/></svg></button>
+          <button id="undo-btn" class="btn btn-icon" title="Undo (⌘+Z)" disabled aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6a4 4 0 0 1 0 8H9"/><polyline points="6 4 3 7 6 10"/></svg></button>
+          <button id="redo-btn" class="btn btn-icon" title="Redo (⌘+⇧+Z)" disabled aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7H7a4 4 0 0 0 0 8h1"/><polyline points="10 4 13 7 10 10"/></svg></button>
         </div>
         <!-- File Dropdown (consolidates Save, Open, Examples, Clear) -->
         <div class="dropdown" id="file-dropdown">
@@ -42,18 +42,18 @@
           </button>
           <div class="dropdown-menu dropdown-menu-file" id="file-menu" role="menu" aria-labelledby="file-dropdown-btn">
             <button id="save-project-btn" class="dropdown-item" role="menuitem" type="button">
-              <span class="dropdown-item-label">Save Project</span>
-              <kbd>⌘S</kbd>
+              <span class="dropdown-item-label">Save project</span>
+              <kbd>⌘+S</kbd>
             </button>
             <button id="load-project-btn" class="dropdown-item" role="menuitem" type="button">
-              <span class="dropdown-item-label">Open Project</span>
+              <span class="dropdown-item-label">Open project</span>
             </button>
             <input id="load-project-input" type="file" accept=".zip" style="display:none" aria-label="Load project file" />
             <div class="dropdown-separator" role="separator"></div>
-            <div class="dropdown-submenu-label" aria-hidden="true">Example Projects</div>
+            <div class="dropdown-submenu-label" aria-hidden="true">Example projects</div>
             <div id="example-projects-menu" role="group" aria-label="Example projects"></div>
             <div class="dropdown-separator" role="separator"></div>
-            <div class="dropdown-submenu-label" aria-hidden="true">Example Backgrounds</div>
+            <div class="dropdown-submenu-label" aria-hidden="true">Example backgrounds</div>
             <div id="example-backgrounds-menu" role="group" aria-label="Example backgrounds">
               <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Court.png">Courts</button>
               <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/Garlic.jpg">Garlic</button>
@@ -63,18 +63,18 @@
               <button class="dropdown-item dropdown-item-example" role="menuitem" data-image="images/UoN_map.png">UoN Map</button>
             </div>
             <div class="dropdown-separator" role="separator"></div>
-            <button id="clear-btn" class="dropdown-item dropdown-item-danger" role="menuitem" type="button">Clear All</button>
+            <button id="clear-btn" class="dropdown-item dropdown-item-danger" role="menuitem" type="button">Clear all</button>
           </div>
         </div>
         <!-- Export Dropdown -->
         <div class="dropdown" id="export-dropdown">
-          <button class="btn btn-primary dropdown-toggle" id="export-dropdown-btn" aria-haspopup="true" aria-expanded="false" title="Export animation">
+          <button class="btn btn-primary dropdown-toggle" id="export-dropdown-btn" aria-haspopup="true" aria-expanded="false">
             Export ▾
           </button>
           <div class="dropdown-menu" id="export-menu" role="menu" aria-labelledby="export-dropdown-btn">
-            <button id="export-mp4-btn" class="dropdown-item" role="menuitem" type="button">Export MP4</button>
-            <button id="export-webm-btn" class="dropdown-item" role="menuitem" type="button">Export WebM</button>
-            <button id="export-html-btn" class="dropdown-item" role="menuitem" type="button">Export HTML</button>
+            <button id="export-mp4-btn" class="dropdown-item" role="menuitem" type="button">Export MP4…</button>
+            <button id="export-webm-btn" class="dropdown-item" role="menuitem" type="button">Export WebM…</button>
+            <button id="export-html-btn" class="dropdown-item" role="menuitem" type="button">Export HTML…</button>
             <div class="dropdown-separator" role="separator"></div>
             <button id="download-debug-btn" class="dropdown-item" role="menuitem" type="button">Download diagnostics…</button>
             <button id="copy-debug-btn" class="dropdown-item" role="menuitem" type="button">Copy diagnostics…</button>
@@ -149,12 +149,12 @@
               
               <!-- Icon dropdown -->
               <label for="marker-style">
-                <span data-tip="Shape of the waypoint marker on the map">Icon</span>
+                <span data-tip="Shape of the waypoint marker on the map">Shape</span>
                 <select id="marker-style">
                   <option value="dot">Dot</option>
                   <option value="square">Square</option>
                   <option value="flag">Flag</option>
-                  <option value="custom">Custom Image</option>
+                  <option value="custom">Custom image</option>
                   <option value="none">None</option>
                 </select>
               </label>
@@ -162,8 +162,9 @@
               <!-- Custom Marker Upload Controls (shown when marker=custom) -->
               <div id="custom-marker-controls" style="display:none;">
                 <div class="upload-row">
-                  <button id="marker-upload-btn" class="btn btn-secondary" aria-label="Upload custom marker image">Upload Image</button>
+                  <button id="marker-upload-btn" class="btn btn-secondary" aria-describedby="marker-upload-desc">Upload image</button>
                   <input id="marker-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom marker image" />
+                  <span id="marker-upload-desc" class="sr-only">a custom marker image</span>
                 </div>
                 <div id="marker-preview" style="display:none; margin-bottom:0.5rem;">
                   <span id="marker-filename" style="font-size:0.75rem; opacity:0.7;"></span>
@@ -179,9 +180,12 @@
               </label>
 
               <div class="waypoint-card-actions" role="group" aria-label="Marker actions">
-                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="marker" aria-label="Reset Marker to route style">Reset</button>
-                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" aria-label="Apply Marker onward">Apply onward</button>
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="marker" aria-describedby="marker-actions-context marker-reset-reason">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" aria-describedby="marker-actions-context marker-apply-reason">Apply onward</button>
               </div>
+              <!-- UI-06 J-21: a disabled action's reason, shown here and read as its description -->
+              <p class="section-hint waypoint-card-actions-reason" data-card="marker" hidden><span id="marker-reset-reason" data-card="marker" data-card-reason="reset"></span> <span id="marker-apply-reason" data-card="marker" data-card-reason="apply-onward"></span></p>
+              <span id="marker-actions-context" class="sr-only">Marker</span>
             </div>
           </div>
 
@@ -211,7 +215,7 @@
 
               <!-- Wait Time -->
               <label id="pause-time-control" for="waypoint-pause-time">
-                <span data-tip="How long the path head waits at this waypoint before moving on">Wait Time</span>
+                <span data-tip="How long the path head waits at this waypoint before moving on">Wait time</span>
                 <input type="range" id="waypoint-pause-time" min="0" max="1000" value="500" step="1" aria-describedby="waypoint-pause-time-value" aria-valuetext="1.5s">
                 <span id="waypoint-pause-time-value">1.5s</span>
               </label>
@@ -224,13 +228,13 @@
                 <div id="camera-single-controls">
                   <!-- Previous Waypoint Zoom (read-only display) -->
                   <div class="control-row control-row-inline">
-                    <span class="control-label control-label-short">Prev Zoom</span>
+                    <span class="control-label control-label-short">Previous zoom</span>
                     <span id="camera-prev-zoom-value" class="slider-value slider-value-readonly">—</span>
                   </div>
 
                   <!-- Current Waypoint Zoom -->
                   <div class="control-row control-row-inline">
-                    <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Zoom transition sets whether the camera reaches it gradually over the incoming leg or quickly at the leg's start">This Zoom</label>
+                    <label class="control-label control-label-short" for="camera-zoom" data-tip="Camera zoom level at this waypoint. Zoom transition sets whether the camera reaches it gradually over the incoming leg or quickly at the leg's start">This zoom</label>
                     <input type="range" id="camera-zoom" min="0" max="1" step="0.01" value="0"
                            aria-describedby="camera-zoom-value" aria-valuetext="1.0x">
                     <span id="camera-zoom-value" class="slider-value">1.0x</span>
@@ -238,7 +242,7 @@
 
                   <!-- Next Waypoint Zoom (read-only display) -->
                   <div class="control-row control-row-inline">
-                    <span class="control-label control-label-short">Next Zoom</span>
+                    <span class="control-label control-label-short">Next zoom</span>
                     <span id="camera-next-zoom-value" class="slider-value slider-value-readonly">—</span>
                   </div>
                 </div>
@@ -246,7 +250,7 @@
                 <!-- Multi-select zoom control (shown when multiple waypoints selected) -->
                 <div id="camera-multi-controls" style="display: none;">
                   <div class="control-row control-row-inline">
-                    <label class="control-label control-label-short" for="camera-selected-zoom" data-tip="Set zoom level for all selected waypoints at once">Selected Zooms</label>
+                    <label class="control-label control-label-short" for="camera-selected-zoom" data-tip="Set zoom level for all selected waypoints at once">Selected zooms</label>
                     <input type="range" id="camera-selected-zoom" min="0" max="1" step="0.01" value="0"
                            aria-describedby="camera-selected-zoom-value" aria-valuetext="1.0x">
                     <span id="camera-selected-zoom-value" class="slider-value">1.0x</span>
@@ -264,7 +268,7 @@
                     </span>
                     <select id="camera-zoom-mode">
                       <option value="continuous">Gradual — over the leg</option>
-                      <option value="immediate">Quick — on arrival</option>
+                      <option value="immediate">Quick — at the start of the leg</option>
                     </select>
                   </label>
 
@@ -282,7 +286,7 @@
                     </label>
                     <label class="checkbox-label" for="ripple-wait">
                       <input type="checkbox" id="ripple-wait" checked>
-                      <span data-tip="Sets Wait Time to how long the ripple lasts, so the path head waits until its last ring has finished">Wait during ripple</span>
+                      <span data-tip="Sets Wait time to how long the ripple lasts, so the path head waits until its last ring has finished">Wait during ripple</span>
                     </label>
                   </div>
 
@@ -303,9 +307,12 @@
                 </div>
               </details>
               <div class="waypoint-card-actions" role="group" aria-label="On arrival actions">
-                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" aria-label="Reset On arrival to route style">Reset</button>
-                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" aria-label="Apply On arrival onward">Apply onward</button>
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="on-arrival" aria-describedby="on-arrival-actions-context on-arrival-reset-reason">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="on-arrival" aria-describedby="on-arrival-actions-context on-arrival-apply-reason">Apply onward</button>
               </div>
+              <!-- UI-06 J-21: a disabled action's reason, shown here and read as its description -->
+              <p class="section-hint waypoint-card-actions-reason" data-card="on-arrival" hidden><span id="on-arrival-reset-reason" data-card="on-arrival" data-card-reason="reset"></span> <span id="on-arrival-apply-reason" data-card="on-arrival" data-card-reason="apply-onward"></span></p>
+              <span id="on-arrival-actions-context" class="sr-only">On arrival</span>
             </div>
           </div>
 
@@ -330,9 +337,9 @@
                 <span data-tip="When the label appears during animation playback">Visibility</span>
                 <select id="label-mode">
                   <option value="off">Off</option>
-                  <option value="on">Always On</option>
-                  <option value="fade-up" selected>Fade Up</option>
-                  <option value="fade-up-down">Fade Up & Down</option>
+                  <option value="on">Always on</option>
+                  <option value="fade-up" selected>Fade up</option>
+                  <option value="fade-up-down">Fade up and down</option>
                 </select>
               </label>
               
@@ -346,7 +353,7 @@
               <!-- LABEL-01: promoted out of More. It is the shortest route to a
                    readable label, so burying it made the whole feature invisible. -->
               <div class="control-row">
-                <button id="label-auto-position" class="btn btn-secondary" style="width:100%;" title="Move the label to avoid overlapping the path, markers and other labels">Auto-position</button>
+                <button id="label-auto-position" class="btn btn-secondary" style="width:100%;" data-tip="Move the label to avoid overlapping the path, markers and other labels">Auto-position</button>
               </div>
               </div>
 
@@ -383,21 +390,21 @@
               
               <!-- Text Width (for wrapping) -->
               <label for="label-width">
-                <span data-tip="Maximum width before text wraps to a new line">Text Area Width</span>
+                <span data-tip="Maximum width before text wraps to a new line">Text area width</span>
                 <input type="range" id="label-width" min="5" max="50" value="15" step="1" aria-describedby="label-width-value" aria-valuetext="15%">
                 <span id="label-width-value">15%</span>
               </label>
               
               <!-- Position X Offset -->
               <label for="label-offset-x">
-                <span data-tip="How far the label sits left (negative) or right (positive) of the waypoint, as a percentage of the canvas width">Horizontal Position</span>
+                <span data-tip="How far the label sits left (negative) or right (positive) of the waypoint, as a percentage of the canvas width">Horizontal position</span>
                 <input type="range" id="label-offset-x" min="-50" max="50" value="0" step="1" aria-describedby="label-offset-x-value" aria-valuetext="0%">
                 <span id="label-offset-x-value">0%</span>
               </label>
               
               <!-- Position Y Offset -->
               <label for="label-offset-y">
-                <span data-tip="How far the label sits above (negative) or below (positive) the waypoint, as a percentage of the canvas height">Vertical Position</span>
+                <span data-tip="How far the label sits above (negative) or below (positive) the waypoint, as a percentage of the canvas height">Vertical position</span>
                 <input type="range" id="label-offset-y" min="-50" max="50" value="-5" step="1" aria-describedby="label-offset-y-value" aria-valuetext="-5%">
                 <span id="label-offset-y-value">-5%</span>
               </label>
@@ -405,9 +412,12 @@
                 </div>
               </details>
               <div class="waypoint-card-actions" role="group" aria-label="Label actions">
-                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="label" aria-label="Reset Label to route style">Reset</button>
-                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" aria-label="Apply Label style onward">Apply onward</button>
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="label" aria-describedby="label-actions-context label-reset-reason">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="label" aria-describedby="label-actions-context label-apply-reason">Apply onward</button>
               </div>
+              <!-- UI-06 J-21: a disabled action's reason, shown here and read as its description -->
+              <p class="section-hint waypoint-card-actions-reason" data-card="label" hidden><span id="label-reset-reason" data-card="label" data-card-reason="reset"></span> <span id="label-apply-reason" data-card="label" data-card-reason="apply-onward"></span></p>
+              <span id="label-actions-context" class="sr-only">Label style</span>
             </div>
           </div>
           
@@ -452,7 +462,7 @@
 
               <!-- Segment Speed -->
               <label id="segment-speed-control" for="waypoint-segment-speed">
-                <span data-tip="How fast the path head travels this leg: 2.0x takes half the time, 0.5x twice as long">Segment speed</span>
+                <span data-tip="How fast the path head travels this leg: 2.0x takes half the time, 0.5x twice as long">Leg speed</span>
                 <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1" aria-describedby="waypoint-segment-speed-value" aria-valuetext="1.0x">
                 <span id="waypoint-segment-speed-value">1.0x</span>
               </label>
@@ -488,9 +498,12 @@
                 </div>
               </details>
               <div class="waypoint-card-actions" role="group" aria-label="Leg actions">
-                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="leg" aria-label="Reset Leg to route style">Reset</button>
-                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" aria-label="Apply Leg onward">Apply onward</button>
+                <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="leg" aria-describedby="leg-actions-context leg-reset-reason">Reset</button>
+                <button type="button" class="btn btn-secondary" data-card-action="apply-onward" data-card="leg" aria-describedby="leg-actions-context leg-apply-reason">Apply onward</button>
               </div>
+              <!-- UI-06 J-21: a disabled action's reason, shown here and read as its description -->
+              <p class="section-hint waypoint-card-actions-reason" data-card="leg" hidden><span id="leg-reset-reason" data-card="leg" data-card-reason="reset"></span> <span id="leg-apply-reason" data-card="leg" data-card-reason="apply-onward"></span></p>
+              <span id="leg-actions-context" class="sr-only">Leg</span>
             </div>
           </div>
           
@@ -517,7 +530,7 @@
               
               <!-- Draw Area button (shown when draw shape selected) -->
               <div id="area-draw-controls" style="display: none;">
-                <button id="area-draw-btn" class="btn btn-secondary" style="width:100%;" aria-label="Enter polygon drawing mode">Draw Area</button>
+                <button id="area-draw-btn" class="btn btn-secondary" style="width:100%;">Draw area</button>
               </div>
               
               <!-- Circle size slider (shown when circle selected) -->
@@ -566,7 +579,7 @@
                 
                 <!-- Fill Opacity -->
                 <label for="area-fill-opacity">
-                  <span data-tip="Opacity of the area fill. Set to 0% to show only the border">Fill Opacity</span>
+                  <span data-tip="Opacity of the area fill. Set to 0% to show only the border">Fill opacity</span>
                   <input type="range" id="area-fill-opacity" min="0" max="100" value="30" step="1" aria-describedby="area-fill-opacity-value" aria-valuetext="30%">
                   <span id="area-fill-opacity-value">30%</span>
                 </label>
@@ -586,7 +599,7 @@
                 
                 <!-- Border Style -->
                 <label for="area-border-style">
-                  <span data-tip="Line style of the area border">Border Style</span>
+                  <span data-tip="Line style of the area border">Border style</span>
                   <select id="area-border-style">
                     <option value="solid">Solid</option>
                     <option value="dashed">Dashed</option>
@@ -597,7 +610,7 @@
                 
                 <!-- Border Width -->
                 <label for="area-border-width">
-                  <span data-tip="Thickness of the area border in project reference pixels">Border Width</span>
+                  <span data-tip="Thickness of the area border in project reference pixels">Border width</span>
                   <input type="range" id="area-border-width" min="1" max="10" value="2" step="1" aria-describedby="area-border-width-value" aria-valuetext="2 reference px">
                   <span id="area-border-width-value">2 reference px</span>
                 </label>
@@ -608,24 +621,24 @@
                 <label for="area-visibility">
                   <span data-tip="When this area highlight is visible during animation">Visibility</span>
                   <select id="area-visibility">
-                    <option value="always-show">Always Show</option>
-                    <option value="hide-before" selected>Hide Before</option>
-                    <option value="hide-after">Hide After</option>
-                    <option value="hide-before-and-after">Hide Before &amp; After</option>
-                    <option value="always-hide">Always Hide</option>
+                    <option value="always-show">Always show</option>
+                    <option value="hide-before" selected>Hide before</option>
+                    <option value="hide-after">Hide after</option>
+                    <option value="hide-before-and-after">Hide before and after</option>
+                    <option value="always-hide">Always hide</option>
                   </select>
                 </label>
                 
                 <!-- Fade In -->
                 <label for="area-fade-in">
-                  <span data-tip="Duration of the fade-in animation when the area appears">Fade In</span>
+                  <span data-tip="Duration of the fade-in animation when the area appears">Fade in</span>
                   <input type="range" id="area-fade-in" min="0" max="10000" value="500" step="100" aria-describedby="area-fade-in-value" aria-valuetext="0.5s">
                   <span id="area-fade-in-value">0.5s</span>
                 </label>
                 
                 <!-- Fade Out -->
                 <label for="area-fade-out">
-                  <span data-tip="Duration of the fade-out animation when the area disappears">Fade Out</span>
+                  <span data-tip="Duration of the fade-out animation when the area disappears">Fade out</span>
                   <input type="range" id="area-fade-out" min="0" max="10000" value="500" step="100" aria-describedby="area-fade-out-value" aria-valuetext="0.5s">
                   <span id="area-fade-out-value">0.5s</span>
                 </label>
@@ -664,7 +677,7 @@
                   <option value="arrow">Arrow</option>
                   <option value="dot">Dot</option>
                   <option value="drone">Drone</option>
-                  <option value="custom">Custom</option>
+                  <option value="custom">Custom image</option>
                   <option value="none">None</option>
                 </select>
               </label>
@@ -673,8 +686,9 @@
               <div id="custom-head-controls" style="display:none;">
                 <div id="custom-head-upload-controls">
                   <div class="upload-row">
-                    <button id="head-upload-btn" class="btn btn-secondary" aria-label="Upload custom path head image">Upload Image</button>
+                    <button id="head-upload-btn" class="btn btn-secondary" aria-describedby="head-upload-desc">Upload image</button>
                     <input id="head-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload custom path head image" />
+                    <span id="head-upload-desc" class="sr-only">a custom head image</span>
                   </div>
                   <div id="head-preview" class="preview-box" style="display:none;">
                     <p id="head-filename">No image selected</p>
@@ -684,7 +698,7 @@
                 <label for="head-rotation-mode">
                   <span data-tip="Whether the image rotates to follow the path direction">Rotation</span>
                   <select id="head-rotation-mode">
-                    <option value="auto">Follow Path</option>
+                    <option value="auto">Follow path</option>
                     <option value="fixed">Fixed</option>
                   </select>
                 </label>
@@ -752,37 +766,37 @@
               <div class="section-primary">
               <!-- Marker Mode (renamed from Waypoint Mode per spec) -->
               <label for="waypoint-visibility">
-                <span data-tip="When waypoint markers are visible during animation">Marker Mode</span>
+                <span data-tip="When waypoint markers are visible during animation">Markers</span>
                 <select id="waypoint-visibility">
-                  <option value="always-show" selected>Always Show</option>
-                  <option value="hide-before">Hide Before</option>
-                  <option value="hide-after">Hide After</option>
-                  <option value="hide-before-and-after">Hide Before & After</option>
-                  <option value="always-hide">Always Hide</option>
+                  <option value="always-show" selected>Always show</option>
+                  <option value="hide-before">Hide before</option>
+                  <option value="hide-after">Hide after</option>
+                  <option value="hide-before-and-after">Hide before and after</option>
+                  <option value="always-hide">Always hide</option>
                 </select>
               </label>
               
               <!-- Path Mode -->
               <label for="path-visibility">
-                <span data-tip="How the path line appears during animation">Path Mode</span>
+                <span data-tip="How the path line appears during animation">Path</span>
                 <select id="path-visibility">
-                  <option value="always-show">Always Show</option>
-                  <option value="show-on-progression" selected>Show on Progression</option>
-                  <option value="hide-on-progression">Hide on Progression</option>
-                  <option value="instantaneous">Instantaneous (Comet)</option>
-                  <option value="always-hide">Always Hide</option>
+                  <option value="always-show">Always show</option>
+                  <option value="show-on-progression" selected>Reveal as it goes</option>
+                  <option value="hide-on-progression">Hide as it goes</option>
+                  <option value="instantaneous">Comet trail</option>
+                  <option value="always-hide">Always hide</option>
                 </select>
               </label>
               
               <!-- Background Mode -->
               <label for="background-visibility">
-                <span data-tip="Visibility effect applied to the background during animation">Background Mode</span>
+                <span data-tip="Visibility effect applied to the background during animation">Background</span>
                 <select id="background-visibility">
-                  <option value="always-show" selected>Always Show</option>
+                  <option value="always-show" selected>Always show</option>
                   <option value="spotlight">Spotlight</option>
-                  <option value="spotlight-reveal">Spotlight Reveal</option>
-                  <option value="angle-of-view">Angle of View</option>
-                  <option value="angle-of-view-reveal">Angle of View Reveal</option>
+                  <option value="spotlight-reveal">Spotlight reveal</option>
+                  <option value="angle-of-view">Angle of view</option>
+                  <option value="angle-of-view-reveal">Angle of view reveal</option>
                   <option value="always-hide">Hide</option>
                 </select>
               </label>
@@ -801,12 +815,12 @@
               <!-- Spotlight Settings (only shown when background = spotlight or spotlight-reveal) -->
               <div id="spotlight-controls" style="display:none;">
                 <label for="reveal-size">
-                  <span data-tip="Radius of the visible area around the path head">Spotlight Size</span>
+                  <span data-tip="Radius of the visible area around the path head">Spotlight size</span>
                   <input type="range" id="reveal-size" min="0" max="1000" value="500" step="1" aria-describedby="reveal-size-value" aria-valuetext="10%">
                   <span id="reveal-size-value">10%</span>
                 </label>
                 <label for="reveal-feather">
-                  <span data-tip="Softness of the spotlight edge">Spotlight Feather</span>
+                  <span data-tip="Softness of the spotlight edge">Edge softness</span>
                   <input type="range" id="reveal-feather" min="0" max="1000" value="500" step="1" aria-describedby="reveal-feather-value" aria-valuetext="25%">
                   <span id="reveal-feather-value">25%</span>
                 </label>
@@ -821,17 +835,17 @@
               <!-- Angle of View Settings (only shown when background = angle-of-view or angle-of-view-reveal) -->
               <div id="aov-controls" style="display:none;">
                 <label for="aov-angle">
-                  <span data-tip="Width of the angle-of-view cone in degrees">View Angle</span>
+                  <span data-tip="Width of the angle-of-view cone in degrees">View angle</span>
                   <input type="range" id="aov-angle" min="0" max="1000" value="500" step="1" aria-describedby="aov-angle-value" aria-valuetext="60°">
                   <span id="aov-angle-value">60°</span>
                 </label>
                 <label for="aov-distance">
-                  <span data-tip="How far the view cone extends from the path head">View Distance</span>
+                  <span data-tip="How far the view cone extends from the path head">View distance</span>
                   <input type="range" id="aov-distance" min="0" max="1000" value="500" step="1" aria-describedby="aov-distance-value" aria-valuetext="10%">
                   <span id="aov-distance-value">10%</span>
                 </label>
                 <label for="aov-dropoff">
-                  <span data-tip="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head">View Dropoff</span>
+                  <span data-tip="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head">Fade towards the far end</span>
                   <input type="range" id="aov-dropoff" min="0" max="1000" value="500" step="1" aria-describedby="aov-dropoff-value" aria-valuetext="25%">
                   <span id="aov-dropoff-value">25%</span>
                 </label>
@@ -895,8 +909,9 @@
               <!-- Upload -->
               <div class="upload-row">
                 <span>Upload</span>
-                <button id="bg-upload-btn" class="btn btn-secondary" aria-label="Upload background image">Choose Image</button>
+                <button id="bg-upload-btn" class="btn btn-secondary" aria-describedby="bg-upload-desc">Choose image</button>
                 <input id="bg-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload background image" />
+                <span id="bg-upload-desc" class="sr-only">the background image</span>
               </div>
               <p class="sr-only" id="bg-drop-hint">Tip: Drag an image onto the canvas to set the background.</p>
             </div>
@@ -929,16 +944,16 @@
               <div class="export-presets">
                 <span>Presets</span>
                 <div class="btn-group-inline">
-                  <button id="preset-native" class="btn btn-secondary btn-small" title="Use loaded image dimensions">Native</button>
-                  <button id="preset-16-9" class="btn btn-secondary btn-small" title="1920×1080 (16:9 HD)">16:9</button>
-                  <button id="preset-1-1" class="btn btn-secondary btn-small" title="1080×1080 (Square)">1:1</button>
-                  <button id="preset-9-16" class="btn btn-secondary btn-small" title="1080×1920 (Portrait)">9:16</button>
+                  <button id="preset-native" class="btn btn-secondary btn-small" data-tip="Use loaded image dimensions">Native</button>
+                  <button id="preset-16-9" class="btn btn-secondary btn-small" data-tip="1920×1080 (16:9 HD)">16:9</button>
+                  <button id="preset-1-1" class="btn btn-secondary btn-small" data-tip="1080×1080 (Square)">1:1</button>
+                  <button id="preset-9-16" class="btn btn-secondary btn-small" data-tip="1080×1920 (Portrait)">9:16</button>
                 </div>
               </div>
               
               <!-- Frame Rate - under presets per spec §L -->
               <label for="export-frame-rate">
-                <span data-tip="Frames per second in the exported video">Frame Rate</span>
+                <span data-tip="Frames per second in the exported video">Frame rate</span>
                 <input type="number" id="export-frame-rate" min="10" max="60" step="1" value="25">
                 <span>fps</span>
               </label>
@@ -992,9 +1007,9 @@
                 </select>
               </label>
               <button id="network-edit-btn" class="btn btn-secondary" type="button" hidden
-                      title="Draw the network this crowd walks: nodes joined by edges">Edit network</button>
+                      data-tip="Draw the network this crowd walks: nodes joined by paths">Edit network</button>
               <button id="crowd-trace-route-btn" class="btn btn-secondary" type="button" hidden
-                      title="Copy the route into this crowd's network, so its dots follow the same shape and can branch where the route branches">Trace route into network</button>
+                      data-tip="Copy the route into this crowd's network, so its dots follow the same shape and can branch where the route branches">Trace route into network</button>
               <p class="section-hint" id="crowd-guide-hint">Dots follow your route. Custom network lets you draw paths of their own.</p>
             </div>
           </div>
@@ -1106,9 +1121,9 @@
             </div>
             <div id="section-motion-content" class="section-content">
               <label for="crowd-speed">
-                <span data-tip="Dot travel speed in image-widths per second">Speed</span>
-                <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1" aria-describedby="crowd-speed-value" aria-valuetext="0.15 img/s">
-                <span id="crowd-speed-value">0.15 img/s</span>
+                <span data-tip="Dot travel speed in image lengths per second: 1 is the image's width across or its height down">Speed</span>
+                <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1" aria-describedby="crowd-speed-value" aria-valuetext="0.15 image lengths/s">
+                <span id="crowd-speed-value">0.15 image lengths/s</span>
               </label>
 
               <label for="crowd-speed-variance">
@@ -1120,10 +1135,10 @@
               <label for="crowd-lifecycle">
                 <span data-tip="What a dot does when it reaches the end of its journey">At journey end</span>
                 <select id="crowd-lifecycle" aria-describedby="crowd-lifecycle-hint">
-                  <option value="respawn">Respawn at entry</option>
+                  <option value="respawn">Respawn at the start</option>
                   <option value="loop">Repeat journey</option>
                   <option value="disappear">Disappear</option>
-                  <option value="collect">Collect at exit</option>
+                  <option value="collect">Collect at the end</option>
                 </select>
               </label>
               <!-- DEF-77: crowds.js fills this while no dot reaches its journey end -->
@@ -1146,7 +1161,7 @@
             </div>
             <div id="section-node-content" class="section-content">
               <label for="network-node-type">
-                <span data-tip="Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or end them where no path leads out. With no exit, journeys end at nodes with one connection; with no entry, dots set off from any node they can leave">Type</span>
+                <span data-tip="Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or end them where no path leads out. With no exit, journeys end at nodes with one path; with no entry, dots set off from any node they can leave">Type</span>
                 <select id="network-node-type">
                   <option value="normal">Pass-through</option>
                   <option value="entry">Entry</option>
@@ -1157,8 +1172,8 @@
               <fieldset id="network-path-weights" class="network-path-weights" hidden>
                 <legend>Path weights</legend>
                 <p id="network-path-weights-help" class="section-hint">
-                  Relative weights set each path's configured share. Actual choices avoid an immediate U-turn when
-                  another path is available.
+                  Relative weights set each path's share of the dots leaving this node. Dots avoid turning straight
+                  back when another path is available.
                 </p>
                 <div id="network-path-weight-rows" class="network-path-weight-rows"></div>
               </fieldset>
@@ -1176,30 +1191,30 @@
 
           <div class="settings-section" data-section="edge">
             <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-edge-content">
-              <h2 class="section-title">Edge</h2>
+              <h2 class="section-title">Path</h2>
               <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
             </div>
             <div id="section-edge-content" class="section-content">
               <label for="network-edge-direction">
-                <span data-tip="Two-way edges carry dots in both directions; one-way edges only from their start node">Direction</span>
+                <span data-tip="Two-way paths carry dots in both directions; one-way paths only from the node the path leaves">Direction</span>
                 <select id="network-edge-direction">
                   <option value="two-way">Two-way</option>
                   <option value="one-way">One-way</option>
                 </select>
               </label>
               <button id="network-edge-swap" class="btn btn-secondary" type="button" hidden
-                      title="Reverse which way this one-way edge carries dots">Swap direction</button>
+                      data-tip="Reverse which way this one-way path carries dots">Swap direction</button>
 
               <label for="network-edge-weight">
-                <span data-tip="How strongly dots prefer this edge at a junction, shown as the share of departures that pick it">Traffic</span>
-                <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1" aria-describedby="network-edge-weight-value" aria-valuetext="100% configured share">
-                <span id="network-edge-weight-value">100% configured share</span>
+                <span data-tip="How strongly dots prefer this path where paths meet, shown as the share of departures that take it">Share</span>
+                <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1" aria-describedby="network-edge-weight-value" aria-valuetext="100% of departures">
+                <span id="network-edge-weight-value">100% of departures</span>
               </label>
               <p id="network-edge-hint" class="section-hint">
-                Configured share among paths leaving each end. Use Direction and Traffic to edit this edge, or Delete
-                edge to remove it. Choose Edit network to bend paths.
+                Share of the dots leaving each end. Use Direction and Share to edit this path, or Delete path to
+                remove it. Choose Edit network to bend paths.
               </p>
-              <button id="network-edge-delete" class="btn btn-secondary" type="button">Delete edge</button>
+              <button id="network-edge-delete" class="btn btn-secondary" type="button">Delete path</button>
             </div>
           </div>
 
@@ -1247,8 +1262,8 @@
           <details id="scene-outline-panel" open>
             <summary id="scene-outline-title" class="scene-outline-title">Full scene outline</summary>
             <p id="scene-outline-help" class="section-hint">
-              Inspect and author route geometry, every crowd and emitter, custom networks,
-              edge bends, and polygon vertices without using the canvas.
+              Inspect and edit the route, every crowd and its emitters, custom networks,
+              path bends and polygon vertices without using the canvas.
             </p>
             <div id="scene-outline" class="scene-outline" role="region"
                  aria-labelledby="scene-outline-title" aria-describedby="scene-outline-help"></div>
@@ -1269,7 +1284,7 @@
       <!-- Help content injected here by main.js -->
       <div id="splash-help"></div>
 
-      <button id="splash-close" class="btn btn-primary" type="button">Get Started</button>
+      <button id="splash-close" class="btn btn-primary" type="button">Get started</button>
       
       <label class="checkbox-label" for="splash-dont-show">
         <input type="checkbox" id="splash-dont-show">
@@ -1304,8 +1319,8 @@
   <!-- Clear Confirmation Modal (N5-1) -->
   <div id="clear-confirm-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-clear" style="display: none;">
     <div class="modal-content">
-      <h3 id="modal-title-clear">Clear all waypoints?</h3>
-      <p>This will remove all waypoints and reset the canvas. This action cannot be undone.</p>
+      <h3 id="modal-title-clear">Clear the whole project?</h3>
+      <p>This removes every waypoint, crowd and network and resets the settings. It cannot be undone.</p>
       <p id="clear-unrestored-note" hidden>The session that couldn't be restored will be discarded too.</p>
       <div class="modal-buttons">
         <button id="clear-cancel" class="btn btn-secondary" type="button">Cancel</button>

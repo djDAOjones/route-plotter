@@ -383,10 +383,41 @@ function createRecordingContext(canvas) {
     settle = take;
   };
 
+  /**
+   * Let go of the canvas, its size watcher and the transcript. Vitest keeps
+   * every mock it makes for the worker's life, and each of this context's
+   * methods is one whose closure reaches this object: through `canvas` and
+   * the watcher `settle` holds, every canvas ever given a context stayed
+   * alive, with the whole page and app around it — about 12 MB a boot, until
+   * the largest files ran out of worker heap (UI-06). `bootApp` releases the
+   * contexts of the shell it replaces; nothing reads a stopped app's canvas.
+   */
+  context.release = () => {
+    settle = () => {};
+    context.canvas = null;
+    calls.length = 0;
+    stack.length = 0;
+    drawingState = null;
+  };
+
   return context;
 }
 
 const canvasContexts = new WeakMap();
+
+/**
+ * Every context made since the last release, for `bootApp` to release once
+ * their canvases are off the page (see `release` above). Held strongly only
+ * until then.
+ */
+const unreleasedContexts = new Set();
+globalThis.__releaseRecordingContexts = () => {
+  for (const context of unreleasedContexts) {
+    if (context.canvas?.isConnected) continue;
+    context.release();
+    unreleasedContexts.delete(context);
+  }
+};
 
 /**
  * Every canvas given a recording context, held weakly so that a canvas
@@ -474,6 +505,7 @@ if (hasDom) HTMLCanvasElement.prototype.getContext = vi.fn(function getContext()
     context = createRecordingContext(this);
     canvasContexts.set(this, context);
     trackCanvasSize(this, context);
+    unreleasedContexts.add(context);
   }
   return context;
 });

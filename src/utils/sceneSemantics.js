@@ -60,11 +60,11 @@ function waypointName(waypoint, numbering) {
     ? waypoint.name.trim()
     : (typeof waypoint.label === 'string' ? waypoint.label.trim() : '');
   // A branch waypoint says so: its number alone ("2·B1") would leave a
-  // screen-reader user to decode the notation (ROUTE-01c).
-  const kind = numbering.branchId
-    ? `Branch ${numbering.branchLetter} waypoint`
-    : (numbering.isMajor ? 'Major waypoint' : 'Minor waypoint');
-  const base = `${kind} ${numbering.displayNumber}`;
+  // screen-reader user to decode the notation (ROUTE-01c). It is named as
+  // the list and the chip name it, the branch after (UI-06 J-02).
+  const base = numbering.branchId
+    ? `Waypoint ${numbering.displayNumber} (branch ${numbering.branchLetter})`
+    : `${numbering.isMajor ? 'Major waypoint' : 'Minor waypoint'} ${numbering.displayNumber}`;
   return authored ? `${base} — ${authored}` : base;
 }
 

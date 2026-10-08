@@ -12,7 +12,7 @@ app ~ focus: "body" → "#section-node-content>button[0]"
 storage + routePlotter_lastSection: "node"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #section-node-content>button[0]: button aria-describedby="network-node-type-tip" aria-expanded="false" aria-label="Help: Type" class="param-hint-trigger" style="position-anchor: --network-node-type-tip;" type="button" → button aria-describedby="network-node-type-tip" aria-expanded="true" aria-label="Help: Type" class="param-hint-trigger" style="position-anchor: --network-node-type-tip;" type="button"
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or end them where no path leads out. With no exit, journeys end at…[243 chars, 0e3dfee1]
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or end them where no path leads out. With no exit, journeys end at nodes with one path; with no entry, dots set off from any node they can leave"
 
 ## #network-node-type · choose "normal"
 emit network:changed {commit: true}
@@ -22,7 +22,7 @@ model ~ scene.flowLayers[0].graph.nodes[0].type: "entry" → "normal"
 app ~ focus: "body" → "#network-node-type"
 storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · pass-through"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="normal"
@@ -37,7 +37,7 @@ model ~ scene.flowLayers[0].graph.nodes[0].type: "entry" → "exit"
 app ~ focus: "body" → "#network-node-type"
 storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · exit"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="exit"
@@ -99,17 +99,17 @@ model - scene.flowLayers[0].graph.edges[3].direction: "one-way"
 model - scene.flowLayers[0].graph.edges[3].controlPoints: []
 storage + routePlotter_lastSection: "node"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
-ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Cmd+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Cmd+Z)"
+ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
 ui + #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
-ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 17 inside, ff8d7094)
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 19 inside, 8b118692)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 70 inside, 788d231f)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 107 inside, 733ba0ea)
-ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 31 inside, a6a69c45)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 108 inside, a914203e)
+ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 31 inside, ed9e46ac)
 ui ~ #node-scope: div class="scope-group" → div (not shown)
-ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 18 inside, 0a5fdae6)
+ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 18 inside, 597c564e)
 settled:
   emit animation:durationChange 27929.352554
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
