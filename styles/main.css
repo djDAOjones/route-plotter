@@ -1331,7 +1331,11 @@ kbd{
   flex:1;
   /* Below a range's own 129px default, so a hint's 44px trigger slot is
      taken from the track, not from the readout beside it or past the
-     sidebar's edge (UI-04). */
+     sidebar's edge (UI-04). The explicit width is what the range contributes
+     to its label's content width — `min-width` alone leaves that at the
+     129px, which at a 288px sidebar pushed the label past its row and
+     clipped the rail's end (UI-06, round 1b); `flex:1` still grows it. */
+  width:3rem;
   min-width:3rem;
   margin:0 var(--space-2);
   accent-color:var(--control-accent);

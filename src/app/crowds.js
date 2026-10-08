@@ -688,6 +688,7 @@ export const crowdsMixin = {
    */
   _crowdRowOf(layer) {
     const index = this.scene.getFlowLayers().indexOf(layer);
+    if (index < 0) return null; // not in the scene: no row, not the Route row
     return this._layersStripEl?.children[index + 1]?.querySelector('.layer-row') ?? null;
   },
 

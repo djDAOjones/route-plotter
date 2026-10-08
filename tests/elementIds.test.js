@@ -257,8 +257,9 @@ const LOOKED_UP = {
     canvas current-time play-btn player-announcer player-error player-error-detail reset-btn
     scene-summary-content scene-summary-content speed-select timeline total-time
   `),
-  // Where focus returns from the banner's Done, unless the mixin names another control (UI-06 B-29).
-  'src/services/NetworkEditService.js': words('network-edit-btn')
+  // Where focus returns from the banner's Done, unless the mixin names another control (UI-06 B-29),
+  // and the Route button it falls back to when that control sits in a hidden scope group (round 2).
+  'src/services/NetworkEditService.js': words('network-edit-btn scope-route-btn')
 };
 
 /**

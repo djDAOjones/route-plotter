@@ -45,14 +45,19 @@ const SELECTION_INNER = '#111111';
  * (its content is display:none, so a browser cannot focus it), the card's
  * header button: the visible control that reveals it. The card is not
  * opened: leaving the mode is no reason to change the layout the user set.
- * Decided by the header's `aria-expanded` (jsdom lays nothing out).
+ * Decided by the header's `aria-expanded` (jsdom lays nothing out). When
+ * that target is itself inside something hidden — the mode left with the
+ * crowd deselected, so SectionController has already hidden the Crowd scope
+ * group — the scope chip's Route button, always shown and never disabled,
+ * takes the focus instead.
  * @param {HTMLElement} control
  * @returns {HTMLElement}
  */
 function visibleFocusTarget(control) {
   const header = control.closest('.settings-section')?.querySelector('.section-header');
-  if (!header || header.getAttribute('aria-expanded') === 'true') return control;
-  return header;
+  const target = !header || header.getAttribute('aria-expanded') === 'true' ? control : header;
+  if (!target.closest('[hidden]')) return target;
+  return document.getElementById('scope-route-btn') ?? target;
 }
 
 export class NetworkEditService {

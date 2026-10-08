@@ -428,6 +428,24 @@ describe('renaming a crowd from its row', () => {
     expect(app.selectedCrowd).toBe(first);
   });
 
+  test('renaming a crowd that is no longer in the scene opens nothing and focuses nothing (Codex round 2)', () => {
+    const app = makeApp();
+    app.addCrowd();
+    app.addCrowd();
+    const [first, second] = app.scene.getFlowLayers();
+    // The row of a layer the scene no longer holds would otherwise be
+    // looked up as the Route row (index −1 + 1), and its name edited.
+    app.scene.removeFlowLayer(first.id);
+    app.updateLayersStrip();
+    expect(app._crowdRowOf(first)).toBeNull();
+    expect(app._crowdRowOf(second)).not.toBeNull();
+    document.activeElement?.blur?.();
+    app.renameCrowd(first);
+    expect(renaming()).toBeNull();
+    expect(document.activeElement).toBe(document.body);
+    expect(document.querySelector('#layers-strip li:first-child .layer-title').textContent).toBe('Route');
+  });
+
   test('the Route row takes no F2: it cannot be renamed', () => {
     const app = makeApp();
     app.addCrowd();

@@ -203,6 +203,33 @@ describe('Done gives focus back to a control that is on screen (UI-06 B-29, Code
     expect(document.activeElement.closest('.settings-section')).toBe(guide);
   });
 
+  test('when leaving the mode also leaves Crowd scope, focus goes to the Route button: the Guide card is in a hidden group', async () => {
+    // The Layers strip's Route row, or the scope chip's Route, sends
+    // crowd:deselected with Done focused; SectionController hides #crowd-scope
+    // before the network mixin exits the mode, so neither the button nor its
+    // header can take focus (Codex round 2). The Route button is always shown
+    // and, since this PR, never disabled.
+    const { app, guide, header, button } = await drawing();
+    app.enterNetworkEditMode();
+    done().focus();
+    app.eventBus.emit('crowd:deselected');
+    expect(app.networkEditService.active).toBe(false);
+    expect(document.getElementById('network-edit-banner')).toBeNull();
+    expect(document.getElementById('crowd-scope').hidden).toBe(true);
+    expect(guide.contains(button)).toBe(true);
+    expect(document.activeElement).toBe(document.getElementById('scope-route-btn'));
+    expect(document.activeElement.closest('[hidden]')).toBeNull();
+    expect(document.activeElement.disabled).toBe(false);
+    // The same with the Guide card expanded: the header would have been the target.
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayers()[0]);
+    header.click();
+    expect(header.getAttribute('aria-expanded')).toBe('true');
+    app.enterNetworkEditMode();
+    done().focus();
+    app.eventBus.emit('crowd:deselected');
+    expect(document.activeElement).toBe(document.getElementById('scope-route-btn'));
+  });
+
   test('with the Guide card expanded, Done focuses the Edit network button itself', async () => {
     const { app, header, button } = await drawing();
     header.click();
@@ -289,9 +316,23 @@ describe('a readout never overlaps its slider (UI-06 B-06, Codex round 1)', () =
     expect(cascade(readout, ['margin-inline-start', 'margin-left', 'margin'])?.value).toBe('auto');
     expect(cascade(readout, 'flex')?.value).toBe('0 0 auto');
     // The slider keeps its minimum, which the label's content width includes, and its 44px band.
+    // Its min-content contribution to the label must be that 3rem, not its
+    // intrinsic 129px: a range's `min-width` alone does not lower what it
+    // contributes (the lead's pane at 1,200px: label 37px past the row,
+    // every slider 129px, every readout wrapped), an explicit `width` does.
+    // Then the label's content width on the Size row is 96 (text column) +
+    // 44 (help slot) + 4 (gap) + 8 + 48 + 8 (slider and its margins) = 208px,
+    // and in the 252px row a readout up to the 40px it is always given sits
+    // inline ("2s", "None", "100%") while "8 reference px" wraps under.
     const slider = row.querySelector('input[type="range"]');
+    expect(cascade(slider, 'width')?.value).toBe('3rem');
     expect(cascade(slider, 'min-width')?.value).toBe('3rem');
+    expect(cascade(slider, 'flex')?.value).toBe('1');
     expect(winning(slider, 'height')).toBe('2.75rem');
+    // The timeline is outside the cards: its own rule, no width of its own.
+    const timeline = mount(fragment('.controls'), '.timeline-slider');
+    expect(cascade(timeline, 'width')).toBeUndefined();
+    expect(cascade(timeline, 'flex')?.value).toBe('1');
     // The same at the narrow breakpoints: nothing there lets the label shrink again.
     for (const media of ['@media (max-width: 80rem)', '@media (max-width: 64rem)', '@media (max-width: 30rem)']) {
       expect(cascade(label, 'min-width', { media: [media] })?.value, media).toBe('min-content');
