@@ -15,7 +15,7 @@
  * the block helpers are exercised directly and the gesture is live-verified.
  */
 
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { EventBus } from '../src/core/EventBus.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import { UIController } from '../src/controllers/UIController.js';
@@ -114,6 +114,46 @@ describe('UI-02 waypoint list', () => {
     expect(selected).toEqual([route[1]]);
     expect(rows()[1].classList.contains('is-selected')).toBe(true);
     expect(rows()[1].querySelector('.waypoint-row').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  // DEF-32: Enter and Space send a focused row a click. The app answers the
+  // selection by rebuilding the list, and the row must not rebuild it again:
+  // that replaced the row the focus restore was to focus, and left focus on
+  // the page.
+  const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
+
+  test('a row the app answers by rebuilding the list keeps focus on its new row (DEF-32)', async () => {
+    ui.updateWaypointList(route);
+    // As the app's waypoint:selected handler does: adopt the selection, rebuild.
+    bus.on('waypoint:selected', wp => {
+      ui.setSelection([wp], wp);
+      ui.updateWaypointList(route);
+    });
+    const builds = vi.spyOn(ui, 'updateWaypointList');
+
+    const pressed = rows()[1].querySelector('.waypoint-row');
+    pressed.focus();
+    pressed.click();
+    await frame();
+
+    expect(document.activeElement).toBe(rows()[1].querySelector('.waypoint-row'));
+    expect(document.activeElement.getAttribute('aria-pressed')).toBe('true');
+    // Once: the app's rebuild is the activation's only one.
+    expect(builds).toHaveBeenCalledTimes(1);
+  });
+
+  test('a row nobody answers rebuilds the list itself, and keeps focus (DEF-32)', async () => {
+    ui.updateWaypointList(route);
+    const builds = vi.spyOn(ui, 'updateWaypointList');
+
+    const pressed = rows()[3].querySelector('.waypoint-row');
+    pressed.focus();
+    pressed.click();
+    await frame();
+
+    expect(rows()[3].classList.contains('is-selected')).toBe(true);
+    expect(document.activeElement).toBe(rows()[3].querySelector('.waypoint-row'));
+    expect(builds).toHaveBeenCalledTimes(1);
   });
 
   test('shift-click ranges over the displayed route, minors included', () => {

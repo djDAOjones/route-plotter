@@ -595,6 +595,8 @@ ui - #camera-zoom-value: span class="slider-value" :text="2.0x"
 ui - #camera-single-controls>div[2]: div class="control-row control-row-inline"
 ui - #camera-single-controls>div[2]>span[0]: span class="control-label control-label-short" :text="Next Zoom"
 ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :text="2.1x"
+settled:
+  app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
 
 ## #waypoint-list>li[4]>button[0] · Cmd-click
 emit waypoint:deselected

@@ -1899,7 +1899,13 @@ export class UIController {
         }
 
         this._switchToWaypointTab();
-        this.updateWaypointList(this._waypointsCache);
+        // The app answers each selection event by rebuilding this list, and
+        // that rebuild gives focus back to the selected row a frame later.
+        // Rebuilding again here replaced that row before its frame, and saw
+        // no list focus to give back, so focus fell to the page after every
+        // activation (DEF-32). Rebuild only when nothing has: this row is
+        // still on the page.
+        if (rowBtn.isConnected) this.updateWaypointList(this._waypointsCache);
       };
 
       // Row button click — selects waypoint, and detects double-click for rename.
