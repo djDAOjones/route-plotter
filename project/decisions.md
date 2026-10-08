@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — GATELESS-1 — The owner paused chat 12 for the weekly reset; after it, three items run in parallel
+
+**Decision:** Chat 12 paused on 6 October at 97% of the weekly plan, resumed on 7 October with no context line until the owner's stop time, then ran his extra hour and stopped; from the reset on 8 October the run keeps three items in flight, one implementing agent each, launched together, with gates, merges and releases still one at a time.
+
+**Rationale:** the owner, 6 October ~12:15: "lets pause at suitable moment until usage resets, then you can go whole hog with agents"; 7 October 00:08: "resume, and allow an unrestricted context window for this chat, but, importantly, cease at 01:59 tonight"; ~01:09: "you can go for one more hour or until usage is maxed. dont come back on when the usage resets". Reading "whole hog" as the prompt's limit of three items, "tonight" as 01:59 on 7 October, and the last as scheduling no resumption are the run's calls, for him to confirm.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-07 — TST-11 — Behavioural tests stand beside the source-text assertions; retiring those waits on the owner
 
 **Decision:** TST-11's first round lands: 25 behavioural tests pin every source-text assertion its row names that has behaviour, on the booted editor or by running `build.js` in the SPL-06 harness's copy; the source-text assertions stay unchanged, and the item stays open, `[!]`, until the owner says they may go.
@@ -32,7 +42,7 @@
 
 **Decision:** DEF-81 lands: the Verify job's limit (`.github/workflows/ci.yml`, `timeout-minutes`) rises from 15 to 30 minutes, the only change, because the suite now runs about 14 minutes on GitHub and runs were being cancelled at 15.
 
-**Rationale:** on 6–7 October both pull_request runs, TST-03's on `ec83404` and TST-11's on `c95c85e`, were cancelled at 15m17s with tests still running; TST-03's re-run passed in 14m06s; main's own runs took about 13 minutes, and TST-11 adds a minute more. Nothing is skipped, sharded or changed in the suite; a faster one is a wish line. The record does not cover CI's limit, so this narrowest fix is the run's call under GATELESS-1, for the owner to confirm; Codex checked it. CI configuration ships nothing, so no release.
+**Rationale:** on 6–7 October both pull_request runs were cancelled with tests still running, TST-03's on `ec83404` at 15m18s and TST-11's on `c95c85e` at 15m17s; TST-03's re-run passed in 14m06s; main's own runs took about 13 minutes, and TST-11 adds a minute more. Nothing is skipped, sharded or changed in the suite; a faster one is a wish line. The record does not cover CI's limit, so this narrowest fix is the run's call under GATELESS-1, for the owner to confirm; Codex checked it. CI configuration ships nothing, so no release.
 
 **Supersedes:** none
 
