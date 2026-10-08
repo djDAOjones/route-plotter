@@ -23,7 +23,6 @@
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
 - [!] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01 — blocked: the owner's word to retire the source-text assertions its new tests cover (GATELESS-1 bars deleting a test)
-- [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01
 - [ ] DEF-32 — Activating a list row loses focus · Accessibility P1 — since 2026-10-01
 - [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01
 - [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01

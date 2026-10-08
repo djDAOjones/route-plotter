@@ -24,8 +24,8 @@ ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="sta
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 26 inside, 7aa754b5)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, 713f2a37)
-ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 53 inside, 09d5dd9f)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 30 inside, e132b03d)
+ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 74 inside, ddde74bb)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 26 inside, aa372eb9)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 25 inside, d53b2a01)
 ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 58 inside, b7f3b694)

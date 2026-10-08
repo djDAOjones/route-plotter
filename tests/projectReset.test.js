@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearProject } from '../src/app/projectReset.js';
 import { undoRedoMixin } from '../src/app/undoRedo.js';
 import { pathTimingMixin } from '../src/app/pathTiming.js';
+import { playbackMixin } from '../src/app/playback.js';
 import {
   beginAsyncProjectOperation,
   isAsyncProjectOperationCurrent,
@@ -92,6 +93,9 @@ function makeApp() {
     updateLayersStrip: vi.fn(),
     queueRender: vi.fn(),
     calculatePath() { return pathTimingMixin.calculatePath.call(this); },
+    // The app's one mode setter, which Clear All goes back to Edit through (DEF-20).
+    _setPreviewMode(isPreview) { return playbackMixin._setPreviewMode.call(this, isPreview); },
+    _updateModeSwitch() { return playbackMixin._updateModeSwitch.call(this); },
     pause: vi.fn(),
     updateTimeDisplay: vi.fn(),
     updateWaypointList: vi.fn(),

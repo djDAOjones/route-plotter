@@ -28,6 +28,16 @@
 
 **Deferred:** DEF-82
 
+## 2026-10-08 — DEF-20 — After Open, rollback and Clear All, the controls show the project they hold
+
+**Decision:** DEF-20 lands: a load (Open, and a failed Open's rollback, through `syncLoadedProjectControls`) writes the Duration thumb on the slider that exists and the reveal and Angle of View sliders; Clear All leaves Preview through the one mode setter, after its own non-restoring cancel of a held gesture; the 50 ms `isUpdatingSlider` flag, which dropped real Duration input, is deleted.
+
+**Rationale:** the load wrote the Duration thumb only when the removed left slider existed, so after Open the thumb stayed where the last project left it (3,901 under a 12.7 s readout) and one +5 nudge made the duration hundreds of seconds; the reveal and Angle of View sliders were never written; Clear All sent `mode:changed`, which nothing hears, so the switch still said Preview. `angleToSlider` is recovered from `2fb72ff`. 7 tests fail on main; 13 of 14 mutants are killed, the 14th equivalent (the handler skips a missing slider). Thirteen control goldens move on purpose: the Duration thumb reads the fixture's 275 px/s, the Angle of View thumbs follow it, and the Spotlight rows show in the route context. Codex r1 found Clear All mid-drag restoring the deleted waypoint as the selection when the mode switch ran first; fixed by order, with a test. Start-up still leaves the Angle of View and trail thumbs at the markup: outside the item, a wish line, the run's call. Digest rules: nielsen 1 (status visible); house conventions (speed via `ui:slider:update-speed`).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-08 — GATELESS-1 — The owner paused chat 12 for the weekly reset, then let it run to his stop time
 
 **Decision:** Chat 12 paused on 6 October and resumed on 7 October with no context line, under the owner's stop time, then stopped; nothing was scheduled to resume it. After the weekly reset the run may launch its items' agents together, one each, within the grant's limit of up to three in flight; gates, merges and releases stay one at a time.
