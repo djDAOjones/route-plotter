@@ -18,6 +18,26 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — REL-708 — v3.2.708 ships DEF-20, DEF-13 and DEF-32
+
+**Decision:** v3.2.708 is live from deploy commit `acbf290` (tag `v3.2.708`), released under GATELESS-1 because DEF-20's, DEF-13's and DEF-32's merges (`72164a1`, `7355522`, `93b647b`; PRs #109, #111, #110) changed `src/`; one release for the three, the run's reading of the owner's "deploy", for him to confirm.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.707-93b647b`, gate green, dry run, push, Verify and the Pages build and deploy green, 22 of 22 live files SHA-256-identical. Live smoke at 1280×800: title v3.2.708, Open day played 3,002 ms, then to its end at 27,283 ms with no frame queued; MP4 1920×1080 29.3 s `ftypisom`; HTML with its CSP, the project and the live `player.js`; no failed resource or console error. None of the three changes export and the build does not end in 0, so no disk save is owed. This in-page export check pays v3.2.707's owed one, which the hidden pane had suspended: the same export code, and 707 is no longer live; the run's call, for the owner to confirm.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — GATELESS-1 — The owner closes chat 13 after DEF-20, DEF-13 and DEF-32 ship; Phase 3 runs in another chat
+
+**Decision:** On the owner's word, chat 13 landed DEF-20, DEF-13 and DEF-32, deployed them, ran past the profile's 200k line and closed out; one release for the three is the run's reading, for him to confirm; these are one-offs for this chat, and the grant's standing conditions are unchanged; Phase 3 (UI-06, CROWD-07) runs in another chat, which writes once this run has paused; this run resumes Phase 2 at DEF-15 when he opens a fresh chat.
+
+**Rationale:** the owner, 8 October ~11:45: "phase 3 is starting in another chat. it wont edit files until you have paused, so keep going through other items until asked"; ~13:00: "halt when reach end of current ticket"; ~13:10: "conclude DEF-13, DEF-20, and DEF-32, the commit, push, deploy, and close out this chat"; ~13:15: "dont worry about going beyond 200k context". The run's calls, for him to confirm: the later instruction replaced "halt when reach end of current ticket"; "deploy" as one release for the three merges in place of one each; and Phase 3's record, UI-06 and CROWD-07 included, belongs to that other chat, so this run files neither.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-08 — DEF-32 — Activating a list row keeps focus on that row
 
 **Decision:** DEF-32 lands: a row's selection rebuilds the waypoint list once, by the app's `waypoint:selected` handler, whose restore puts focus back on the selected row; the row rebuilds the list itself only when nothing else has. It merges after DEF-13.
