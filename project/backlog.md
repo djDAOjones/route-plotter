@@ -27,6 +27,11 @@
 - [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01
 - [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01
 
+### Phase 3 — Design reviews — the owner's word of 2026-10-06
+
+- [~] UI-06 — Review and tweak the app GUI against the UI standards — since 2026-10-06
+- [~] CROWD-07 — Review the crowd features for novices and experts — since 2026-10-06
+
 ### Review assurance — owner evidence
 
 - [!] REV-03 — Unified pointer transactions · Review assurance — since 2026-10-01 — blocked: owner evidence — physical Android Chrome
@@ -74,6 +79,18 @@
 - [ ] DEF-79 — Render space moves crowd anchors — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-80 — Player retimes constant-time projects — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-82 — Dialog heading passes shortcuts — since 2026-10-08 — (from: DEF-13, 2026-10-08)
+- [ ] DEF-83 — Collapsed header focus unseen — since 2026-10-08 — (from: UI-06, 2026-10-08)
+- [ ] DEF-84 — Play silent without route — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-85 — Anchored window start misreads — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-86 — Sliders rewrite stored values — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-87 — Traced node drag no-op — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-88 — Branch keeps crowd inspector — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-89 — Guide helper stale after trace — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-90 — Window length readout unclipped — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-91 — Example background fails silently — since 2026-10-08 — (from: UI-06, 2026-10-08)
+- [ ] DEF-92 — Crowd sliders undo on timer — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-93 — Journey-end hint misadvises — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-94 — Outline errors lack red mark — since 2026-10-08 — (from: UI-06, 2026-10-08)
 
 ## Icebox
 
