@@ -384,7 +384,10 @@ describe('choosing an item', () => {
 
     expect(convert.getAttribute('aria-disabled')).toBe('true');
     expect(convert.hasAttribute('disabled')).toBe(false);
-    expect(convert.title).toBe('The route needs at least one major waypoint');
+    // Why, as a line under the entry the keyboard reaches too, not a title (UI-06 B-07).
+    expect(convert.hasAttribute('title')).toBe(false);
+    expect(document.getElementById(convert.getAttribute('aria-describedby')).textContent)
+      .toBe('The route needs at least one major waypoint');
     convert.focus();
     expect(document.activeElement).toBe(convert);
 
@@ -649,7 +652,8 @@ describe('the menu in the booted app', () => {
     expect(labelsOf(menu)).toEqual(['Add waypoint here', 'Add minor waypoint here']);
     const minor = itemCalled(menu, 'Add minor waypoint here');
     expect(minor.getAttribute('aria-disabled')).toBe('true');
-    expect(minor.title).toBe('Minor waypoints shape a leg — add a waypoint first');
+    expect(document.getElementById(minor.getAttribute('aria-describedby')).textContent)
+      .toBe('Minor waypoints shape a leg — add a waypoint first');
     minor.click();
     expect(app.waypoints).toEqual([]);
     expect(menu.isOpen).toBe(true);
@@ -667,7 +671,8 @@ describe('the menu in the booted app', () => {
     expect(menu.menu.getAttribute('aria-label')).toBe('Waypoint actions');
     const convert = itemCalled(menu, 'Convert to minor waypoint');
     expect(convert.getAttribute('aria-disabled')).toBe('true');
-    expect(convert.title).toBe('The route needs at least one major waypoint');
+    expect(document.getElementById(convert.getAttribute('aria-describedby')).textContent)
+      .toBe('The route needs at least one major waypoint');
     convert.click();
     expect(first.isMajor).toBe(true);
     expect(menu.isOpen).toBe(true);
@@ -679,7 +684,7 @@ describe('the menu in the booted app', () => {
     expect(menu.menu.getAttribute('aria-label')).toBe('Canvas actions');
     const enabledMinor = itemCalled(menu, 'Add minor waypoint here');
     expect(enabledMinor.getAttribute('aria-disabled')).toBeNull();
-    expect(enabledMinor.title).toBe('');
+    expect(enabledMinor.hasAttribute('aria-describedby')).toBe(false);
     enabledMinor.click();
     expect(menu.isOpen).toBe(false);
     expect(app.waypoints).toHaveLength(2);
@@ -732,7 +737,7 @@ describe('the menu in the booted app', () => {
     ]);
     const toMajor = itemCalled(menu, 'Convert to major waypoint');
     expect(toMajor.getAttribute('aria-disabled')).toBeNull();
-    expect(toMajor.title).toBe('');
+    expect(toMajor.hasAttribute('aria-describedby')).toBe(false);
     toMajor.click();
     expect(app.waypoints.map(waypoint => waypoint.isMajor)).toEqual([true, true, true, true]);
 

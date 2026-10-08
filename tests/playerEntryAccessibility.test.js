@@ -240,7 +240,7 @@ describe('standalone player accessibility wiring', () => {
     document.getElementById('play-btn').click();
     expect(announcer.textContent).toBe('Paused at 0:44.');
     document.getElementById('reset-btn').click();
-    expect(announcer.textContent).toBe('Reset to start, 0:00.');
+    expect(announcer.textContent).toBe('Skipped to start, 0:00.');
 
     document.body.dispatchEvent(new KeyboardEvent('keydown', {
       key: 'End', bubbles: true, cancelable: true,
@@ -249,7 +249,7 @@ describe('standalone player accessibility wiring', () => {
     document.body.dispatchEvent(new KeyboardEvent('keydown', {
       key: 'Home', bubbles: true, cancelable: true,
     }));
-    expect(announcer.textContent).toBe('Reset to start, 0:00.');
+    expect(announcer.textContent).toBe('Skipped to start, 0:00.');
 
     const speed = document.getElementById('speed-select');
     speed.value = '1.5';

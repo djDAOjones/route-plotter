@@ -205,7 +205,7 @@ export function createTransportAnnouncer(element, options = {}) {
       writeNow(`Paused at ${formatPlayerTime(positionSnapshot(state).currentTime)}.`);
     },
     reset() {
-      writeNow('Reset to start, 0:00.');
+      writeNow('Skipped to start, 0:00.');
     },
     end(state) {
       writeNow(`Moved to end, ${formatPlayerTime(positionSnapshot(state).duration)}.`);

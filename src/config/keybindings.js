@@ -63,14 +63,14 @@ const DEFAULT_BINDINGS = {
       key: 'click',
       modifiers: ['alt'],
       action: 'waypoint:force-add',
-      description: 'Force add major (bypass selection)',
+      description: 'Start a branch from a major waypoint; on empty map, add a major without selecting',
       category: 'waypoint'
     },
     forceAddMinorWaypoint: {
       key: 'click',
       modifiers: ['alt', 'meta'], // Alt+Cmd/Ctrl+Click
       action: 'waypoint:force-add-minor',
-      description: 'Force add minor (bypass selection)',
+      description: 'Add a minor waypoint without selecting',
       category: 'waypoint'
     },
     deleteWaypoint: {
@@ -235,7 +235,7 @@ const DEFAULT_BINDINGS = {
       key: ' ',
       modifiers: [],
       action: 'animation:toggle',
-      description: 'Play / Pause',
+      description: 'Play / pause',
       displayKey: 'Space', // For display purposes
       category: 'playback'
     },
@@ -243,14 +243,14 @@ const DEFAULT_BINDINGS = {
       key: 'Home',
       modifiers: [],
       action: 'ui:animation:skip-start',
-      description: 'Go to start',
+      description: 'Skip to start',
       category: 'playback'
     },
     skipToEnd: {
       key: 'End',
       modifiers: [],
       action: 'ui:animation:skip-end',
-      description: 'Go to end',
+      description: 'Skip to end',
       category: 'playback'
     },
     playReverse: {

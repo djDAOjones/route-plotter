@@ -11,7 +11,7 @@
 
 import { describe, test, expect, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
-import { getKeybindings } from '../src/config/keybindings.js';
+import { formatBinding, getKeybindings } from '../src/config/keybindings.js';
 
 /**
  * The bus events one key press produces on a booted app.
@@ -66,7 +66,8 @@ describe('Help describes what the keys do (DEF-21)', () => {
     expect(eventsFrom(app, { key: 'o', metaKey: true })).not.toContain('file:open');
     expect(document.querySelector('#load-project-btn kbd')).toBeNull();
     // The shortcut the menu does show is real.
-    expect(document.querySelector('#save-project-btn kbd')?.textContent).toBe('⌘S');
+    // Written as Help writes the chord, for this platform (UI-06 J-17): ⌘+S on a Mac, Ctrl+S here.
+    expect(document.querySelector('#save-project-btn kbd')?.textContent).toBe(formatBinding(getKeybindings().keyboard.save));
     expect(eventsFrom(app, { key: 's', metaKey: true })).toContain('file:save');
   });
 

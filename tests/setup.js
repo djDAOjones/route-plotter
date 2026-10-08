@@ -23,9 +23,33 @@ function defineGlobal(name, value) {
   });
 }
 
-// Mock DOM animation frame APIs
-defineGlobal('requestAnimationFrame', vi.fn((cb) => setTimeout(() => cb(Date.now()), 0)));
-defineGlobal('cancelAnimationFrame', vi.fn((id) => clearTimeout(id)));
+// Mock DOM animation frame APIs. A frame is cancelled by its own id, in a
+// set of its own, not by `clearTimeout`: a test file that fakes timers puts
+// the clock back in its afterEach before `bootApp` stops the app, and the
+// real clock's `clearTimeout` would miss a frame the fake one holds. The
+// callback checks the set, so a cancelled frame never runs, whatever clock
+// fires its timer.
+const cancelledFrames = new Set();
+/** Each pending frame's timer handle, so a cancel under the same clock clears it too (no timer left behind). */
+const frameTimers = new Map();
+let frameSerial = 0;
+defineGlobal('requestAnimationFrame', vi.fn((cb) => {
+  const id = ++frameSerial;
+  frameTimers.set(id, setTimeout(() => {
+    frameTimers.delete(id);
+    if (cancelledFrames.delete(id)) return;
+    cb(Date.now());
+  }, 0));
+  return id;
+}));
+defineGlobal('cancelAnimationFrame', vi.fn((id) => {
+  const timer = frameTimers.get(id);
+  if (timer !== undefined) {
+    clearTimeout(timer);
+    frameTimers.delete(id);
+  }
+  cancelledFrames.add(id);
+}));
 
 // Mock performance API (getter-only in jsdom)
 defineGlobal('performance', { now: vi.fn(() => Date.now()) });
@@ -166,7 +190,8 @@ function describeValue(value) {
     // A canvas drawn from is drawn as it is now: a size given to it through
     // its attributes, not yet recorded, is recorded before this call
     // (`trackCanvasSize`).
-    canvasContexts.get(value)?.settle();
+    const drawn = canvasContexts.get(value);
+    if (drawn && !releasedContexts.has(drawn)) drawn.settle();
     const id = contextIdFor(value);
     return id === null ? '[canvas]' : `[canvas #${id}]`;
   }
@@ -207,8 +232,9 @@ function recordCallOrder(enabled) {
 function takeOrderedCalls() {
   for (const held of sizedCanvases) {
     const canvas = held.deref();
-    if (canvas) canvasContexts.get(canvas)?.settle();
-    else sizedCanvases.delete(held);
+    const context = canvas ? canvasContexts.get(canvas) : null;
+    if (context && !releasedContexts.has(context)) context.settle();
+    else if (!canvas || releasedContexts.has(context)) sizedCanvases.delete(held);
   }
   return orderedCalls.splice(0, orderedCalls.length);
 }
@@ -383,10 +409,44 @@ function createRecordingContext(canvas) {
     settle = take;
   };
 
+  /**
+   * Let go of the canvas, its size watcher and the transcript. Vitest keeps
+   * every mock it makes for the worker's life, and each of this context's
+   * methods is one whose closure reaches this object: through `canvas` and
+   * the watcher `settle` holds, every canvas ever given a context stayed
+   * alive, with the whole page and app around it — about 12 MB a boot, until
+   * the largest files ran out of worker heap (UI-06). `bootApp` releases the
+   * contexts of the app it stops — of the app's own canvases, and of those
+   * in the shell its boot parsed — after the test's assertions. Everything a
+   * released context is then asked throws: its transcript, its canvas, a
+   * draw, a style, so a transcript read too late, or a draw a stale app
+   * makes, fails where it happens rather than passing quietly. The app's own
+   * late frames are cancelled when it is stopped, so none is left to fire.
+   * `recorderId` stays readable: it is an identity, not a use.
+   */
+  context.release = () => {
+    settle = () => {};
+    calls.length = 0;
+    stack.length = 0;
+    drawingState = null;
+    releasedContexts.add(context);
+    const released = () => {
+      throw new Error("This canvas's recording context was released with its app when bootApp stopped it " +
+        '(UI-06): read its transcript before the app is retired, or make the canvas before the boot so it is the test’s own');
+    };
+    for (const key of Object.keys(context)) {
+      if (key === 'recorderId' || key === 'release') continue;
+      Object.defineProperty(context, key, { configurable: true, enumerable: false, get: released, set: released });
+    }
+  };
+
   return context;
 }
 
 const canvasContexts = new WeakMap();
+
+/** The contexts let go of (see `release`): nothing settles or reads them again. */
+const releasedContexts = new WeakSet();
 
 /**
  * Every canvas given a recording context, held weakly so that a canvas

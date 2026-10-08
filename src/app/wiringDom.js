@@ -26,6 +26,7 @@ import {
   resolvePathHeadImage,
 } from '../utils/pathHeadPresets.js';
 import { buildExampleProjects } from '../examples/index.js';
+import { formatBinding, getKeybindings } from '../config/keybindings.js';
 
 export const wiringDomMixin = {
   
@@ -67,12 +68,21 @@ export const wiringDomMixin = {
         item.className = 'dropdown-item dropdown-item-example';
         item.setAttribute('role', 'menuitem');
         item.textContent = example.name;
-        item.title = example.description;
+        // Its hint, reachable by keyboard, not a title (UI-06 B-07).
+        item.setAttribute('data-tip', example.description);
         item.addEventListener('click', () => this.loadExampleProject(example.id));
         exampleProjectsMenu.appendChild(item);
       }
     }
     
+    // The shortcuts the header shows are written as Help writes them, for
+    // this platform (UI-06 J-17): ⌘ on a Mac, Ctrl elsewhere.
+    const { undo, redo, save } = getKeybindings().keyboard;
+    if (this.elements.undoBtn) this.elements.undoBtn.title = `Undo (${formatBinding(undo)})`;
+    if (this.elements.redoBtn) this.elements.redoBtn.title = `Redo (${formatBinding(redo)})`;
+    const saveChip = this.elements.saveProjectBtn?.querySelector('kbd');
+    if (saveChip) saveChip.textContent = formatBinding(save);
+
     // Sidebar tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {

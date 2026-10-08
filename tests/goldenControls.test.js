@@ -2155,15 +2155,12 @@ function retire(session) {
   document.activeElement?.blur();
   session.emits.restore();
   session.app.destroy();
-  retireApp(session.app);
-  for (const { target, type, listener, options } of session.listeners) {
-    target.removeEventListener(type, listener, options);
-  }
-  session.listeners = [];
   // Vitest keeps every mock it makes, and each canvas's recording context is
   // made of mocks: through a canvas, its page and the calls it was given, a
   // retired app would be kept for the rest of the file. So its canvases leave
   // the page, emptied, as does the calls' record of the files it fetched.
+  // Before `retireApp`, which releases the app's contexts (tests/setup.js):
+  // a released context answers nothing, by design.
   for (const canvas of session.canvases) {
     const context = contextFor(canvas);
     context?.takeCalls();
@@ -2174,10 +2171,15 @@ function retire(session) {
     canvas.remove();
   }
   session.canvases.clear();
+  forgetDrawing(session.app);
+  retireApp(session.app);
+  for (const { target, type, listener, options } of session.listeners) {
+    target.removeEventListener(type, listener, options);
+  }
+  session.listeners = [];
   if (vi.isMockFunction(globalThis.fetch)) globalThis.fetch.mockClear();
   // The document remembers the element last focused, and through it that page.
   document.activeElement?.blur();
-  forgetDrawing(session.app);
   if (owner === session) owner = null;
   vi.clearAllTimers();
 }

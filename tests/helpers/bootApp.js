@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, vi } from 'vitest';
+import { contextFor } from '../setup.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -57,12 +58,128 @@ function stopApp(app) {
     }
   };
 
-  attempt(() => { if (app._renderRafId) cancelAnimationFrame(app._renderRafId); });
-  attempt(() => { app.renderQueued = false; });
-  attempt(() => app.animationEngine?.stop?.() ?? app.animationEngine?.pause?.());
+  attempt(() => quiesce(app));
   attempt(() => app.storageService?.cancelAutoSave?.());
   attempt(() => app.eventBus?.removeAllListeners?.());
+  attempt(() => releasePageListeners(app));
+  // A dialog's focus trap listens on the window and the document while the
+  // dialog is open (added as it shows, so not among the boot's own listeners
+  // above): a splash a test never closed would take every later test's
+  // Escape. Once start-up has settled, since the splash shows during it.
+  attempt(() => onceSettled(app, () => deactivateFocusTraps(app)));
+  attempt(() => releaseRecordingContexts(app));
   return failures;
+}
+
+function deactivateFocusTraps(app) {
+  const traps = [app._splashFocusTrap, app._shareDisclosureTrap, app._diagnosticsTrap,
+    app.uiController?._codecFocusTrap, app.uiController?._clearFocusTrap];
+  for (const trap of traps) trap?.deactivate?.();
+}
+
+/**
+ * The shell each app's boot parsed (the body's children, as they stood), for
+ * the canvas recorder (tests/setup.js). A canvas is an app's — its context
+ * released when the app is stopped, after the test's assertions — only if it
+ * is one the app holds (its page canvas, its layers' canvases) or stands in
+ * that shell. Ownership is explicit, never a matter of when a canvas was
+ * made: one a test makes for itself, before the boot, while its start-up is
+ * pending or once it is ready, detached or beside the shell, is the test's
+ * and stays. (A canvas a test puts inside the shell is the shell's.)
+ * @type {WeakMap<object, Element[]>}
+ */
+const shellOf = new WeakMap();
+
+/** The canvases an app owns: the ones it holds, and every one in its shell. */
+function canvasesOf(app) {
+  const owned = new Set([app.canvas, app.renderingService?.vectorCanvas, app.motionVisibilityService?.revealMaskCanvas]
+    .filter(Boolean));
+  for (const root of shellOf.get(app) ?? []) {
+    if (root.matches?.('canvas')) owned.add(root);
+    root.querySelectorAll?.('canvas').forEach(canvas => owned.add(canvas));
+  }
+  return [...owned];
+}
+/** The apps whose `ready` has settled: a stopped one is released at once. */
+const settled = new WeakSet();
+
+/**
+ * Run `step` for a stopped app at once when its start-up has settled, else
+ * once it has: a start-up still in flight (a test that did not await
+ * `ready`) is left to finish — drawing against a live canvas, showing and
+ * trapping its splash — rather than throwing into the next test's console or
+ * leaving a trap it had not yet set.
+ */
+function onceSettled(app, step) {
+  if (settled.has(app)) step();
+  else Promise.resolve(app.ready).then(step, step);
+}
+
+/**
+ * Release a stopped app's contexts (see `onceSettled` and `canvasesOf`). A
+ * start-up still in flight when the app was stopped starts the render loop
+ * again on its way to ready (`startRenderLoop` in `init`), so the loop is
+ * stopped and its frames cancelled once more here, just before the release:
+ * no frame of the app's is left to land on a released canvas.
+ */
+function releaseRecordingContexts(app) {
+  if (!shellOf.has(app)) return;
+  onceSettled(app, () => {
+    quiesce(app);
+    for (const canvas of canvasesOf(app)) contextFor(canvas)?.release();
+    shellOf.delete(app);
+  });
+}
+
+/** Stop what would draw: the queued render, the engine's loop and its frames. */
+function quiesce(app) {
+  if (app._renderRafId) cancelAnimationFrame(app._renderRafId);
+  app._renderRafId = null;
+  app.renderQueued = false;
+  app.animationEngine?.stop?.() ?? app.animationEngine?.pause?.();
+}
+
+/**
+ * The listeners a boot puts on the document and the window for the app (a
+ * resize, a click, a keydown, a storage event: each closes over the app), by
+ * app. With the canvas recorder letting a stopped app's contexts go, these
+ * were what still kept the app alive, so a file that boots an app per test
+ * held every one until it ended and the largest ran out of worker heap
+ * (UI-06). Only what the synchronous boot registers is recorded, so a test's
+ * own spies on `addEventListener` are never caught up in it. A listener that
+ * is the document's rather than an app's says so in its options
+ * (`documentLifetime: true`, ParamTooltip's `DOCUMENT_LIFETIME`): bound once
+ * per document, it serves every app the document boots and holds none, so
+ * it is left in place.
+ * @type {WeakMap<object, Array<[EventTarget, string, EventListenerOrEventListenerObject, *]>>}
+ */
+const pageListeners = new WeakMap();
+
+/** Whether listener options declare the listener the document's, not an app's. */
+const forTheDocument = options => Boolean(options && typeof options === 'object' && options.documentLifetime);
+
+function recordPageListeners(boot) {
+  const added = [];
+  const originals = [document, window].map(target => [target, target.addEventListener]);
+  for (const [target, original] of originals) {
+    target.addEventListener = function recordedAddEventListener(type, listener, options) {
+      if (!forTheDocument(options)) added.push([target, type, listener, options]);
+      return original.call(this, type, listener, options);
+    };
+  }
+  try {
+    return boot();
+  } finally {
+    for (const [target, original] of originals) target.addEventListener = original;
+    if (window.app) pageListeners.set(window.app, added);
+  }
+}
+
+function releasePageListeners(app) {
+  for (const [target, type, listener, options] of pageListeners.get(app) ?? []) {
+    target.removeEventListener(type, listener, options);
+  }
+  pageListeners.delete(app);
 }
 
 /** The shipped shell's body, without the script tags that load the bundle. */
@@ -154,6 +271,8 @@ function entryModule() {
 
 export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
   document.body.innerHTML = shellBody;
+  // The shell this boot parsed: what is in it is the app's (`canvasesOf`).
+  const shell = [...document.body.children];
   installBrowserStubs({ ...DEFAULT_VIEWPORT, ...viewport });
 
   delete window.app;
@@ -161,11 +280,14 @@ export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
   // DOMContentLoaded listener, and the next boot would build an app per
   // listener, leaving untracked apps running.
   await entryModule();
-  document.dispatchEvent(new Event('DOMContentLoaded'));
+  recordPageListeners(() => document.dispatchEvent(new Event('DOMContentLoaded')));
 
   const app = window.app;
   if (!app) throw new Error('The app did not boot: window.app is unset');
   booted.add(app);
+  shellOf.set(app, shell);
+  const over = () => settled.add(app);
+  Promise.resolve(app.ready).then(over, over);
 
   // The bus swallows listener errors by design (ISO-02), which in a test means
   // a broken handler passes silently. Here they are failures.

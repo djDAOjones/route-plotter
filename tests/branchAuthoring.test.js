@@ -97,7 +97,7 @@ describe('branch numbering', () => {
     const snapshot = buildSceneOutlineSnapshot({ waypoints: route, scene: null });
 
     expect(snapshot.route[0].name).toBe('Major waypoint 1');
-    expect(snapshot.route[1].name).toBe('Branch B waypoint 1·B1 — Detour');
+    expect(snapshot.route[1].name).toBe('Waypoint 1·B1 (branch B) — Detour');
     expect(snapshot.route[1].branchLetter).toBe('B');
   });
 });
@@ -307,7 +307,7 @@ describe('the branch row in the waypoint list', () => {
     ui.updateWaypointEditor(route[2]);
 
     expect(document.getElementById('scope-chip-text').textContent)
-      .toBe('Editing · Waypoint 2·B1 · branch B');
+      .toBe('Editing · Waypoint 2·B1');
   });
 
   test('the chip still numbers a trunk major as before', () => {

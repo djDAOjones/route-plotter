@@ -4,7 +4,7 @@
 app ~ focus: "body" → "#aov-controls>button[0]"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
-ui ~ #aov-controls>button[0]: button aria-describedby="aov-angle-tip" aria-expanded="false" aria-label="Help: View Angle" class="param-hint-trigger" style="position-anchor: --aov-angle-tip;" type="button" → button aria-describedby="aov-angle-tip" aria-expanded="true" aria-label="Help: View Angle" class="param-hint-trigger" style="position-anchor: --aov-angle-tip;" type="button"
+ui ~ #aov-controls>button[0]: button aria-describedby="aov-angle-tip" aria-expanded="false" aria-label="Help: View angle" class="param-hint-trigger" style="position-anchor: --aov-angle-tip;" type="button" → button aria-describedby="aov-angle-tip" aria-expanded="true" aria-label="Help: View angle" class="param-hint-trigger" style="position-anchor: --aov-angle-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Width of the angle-of-view cone in degrees"
 
 ## #aov-angle · set 333
@@ -23,7 +23,7 @@ settled:
 app ~ focus: "body" → "#aov-controls>button[3]"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
-ui ~ #aov-controls>button[3]: button aria-describedby="aov-distance-tip" aria-expanded="false" aria-label="Help: View Distance" class="param-hint-trigger" style="position-anchor: --aov-distance-tip;" type="button" → button aria-describedby="aov-distance-tip" aria-expanded="true" aria-label="Help: View Distance" class="param-hint-trigger" style="position-anchor: --aov-distance-tip;" type="button"
+ui ~ #aov-controls>button[3]: button aria-describedby="aov-distance-tip" aria-expanded="false" aria-label="Help: View distance" class="param-hint-trigger" style="position-anchor: --aov-distance-tip;" type="button" → button aria-describedby="aov-distance-tip" aria-expanded="true" aria-label="Help: View distance" class="param-hint-trigger" style="position-anchor: --aov-distance-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How far the view cone extends from the path head"
 
 ## #aov-distance · set 333
@@ -42,7 +42,7 @@ settled:
 app ~ focus: "body" → "#aov-controls>button[6]"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
-ui ~ #aov-controls>button[6]: button aria-describedby="aov-dropoff-tip" aria-expanded="false" aria-label="Help: View Dropoff" class="param-hint-trigger" style="position-anchor: --aov-dropoff-tip;" type="button" → button aria-describedby="aov-dropoff-tip" aria-expanded="true" aria-label="Help: View Dropoff" class="param-hint-trigger" style="position-anchor: --aov-dropoff-tip;" type="button"
+ui ~ #aov-controls>button[6]: button aria-describedby="aov-dropoff-tip" aria-expanded="false" aria-label="Help: Fade towards the far end" class="param-hint-trigger" style="position-anchor: --aov-dropoff-tip;" type="button" → button aria-describedby="aov-dropoff-tip" aria-expanded="true" aria-label="Help: Fade towards the far end" class="param-hint-trigger" style="position-anchor: --aov-dropoff-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head"
 
 ## #aov-dropoff · set 333

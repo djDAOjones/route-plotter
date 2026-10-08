@@ -174,15 +174,15 @@ const words = text => text.trim().split(/\s+/);
 const LOOKED_UP = {
   'src/app/camera.js': words('camera-zoom-warning camera-zoom-warning'),
   'src/app/crowds.js': words(`
-    add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-graph crowd-busyness-graph
+    add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-add-reason crowd-busyness-graph crowd-busyness-graph
     crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
     crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-lifecycle-hint
     crowd-pattern-hint crowd-reroll-btn layers-strip
   `),
-  'src/app/editorPanel.js': words('waypoint-scope'),
+  'src/app/editorPanel.js': words('area-draw-reason waypoint-scope'),
   'src/app/exporting.js': words('export-dropdown-btn'),
   'src/app/network.js': words(`
-    crowd-guide-hint crowd-trace-route-btn network-edge-delete network-edge-direction
+    crowd-guide-hint crowd-trace-route-btn crowd-trace-route-reason network-edge-delete network-edge-direction
     network-edge-direction network-edge-hint network-edge-swap network-edge-swap network-edge-weight
     network-edge-weight network-edge-weight-value network-edit-btn network-node-delete network-node-hint
     network-node-type network-node-type network-path-weight-rows network-path-weight-rows

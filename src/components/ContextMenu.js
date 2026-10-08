@@ -26,6 +26,8 @@ export class ContextMenu {
     document.body.appendChild(this.menu);
 
     this._previousFocus = null;
+    /** Numbers the reason lines, so each entry's describedby is its own. */
+    this._reasonSerial = 0;
 
     // All bound once so add/removeEventListener pairs match
     this._onDocPointerDown = (e) => {
@@ -68,7 +70,6 @@ export class ContextMenu {
       btn.textContent = item.label;
       if (item.disabled) {
         btn.setAttribute('aria-disabled', 'true');
-        if (item.disabledReason) btn.title = item.disabledReason;
       }
 
       btn.addEventListener('click', () => {
@@ -78,6 +79,17 @@ export class ContextMenu {
       });
 
       li.appendChild(btn);
+      if (item.disabled && item.disabledReason) {
+        // Why, as a line the keyboard reaches too: a title showed it to a
+        // pointer alone (UI-06 B-07). The entry is described by it.
+        this._reasonSerial += 1;
+        const reason = document.createElement('span');
+        reason.id = `context-menu-reason-${this._reasonSerial}`;
+        reason.className = 'context-menu-item-reason';
+        reason.textContent = item.disabledReason;
+        btn.setAttribute('aria-describedby', reason.id);
+        li.appendChild(reason);
+      }
       this.menu.appendChild(li);
     });
 

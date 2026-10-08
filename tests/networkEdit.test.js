@@ -54,6 +54,9 @@ function renderNetworkGuide(service, app, layer, ctx) {
 function makeApp() {
   document.body.innerHTML = `
     <button id="network-edit-btn" type="button" hidden></button>
+    <button id="crowd-trace-route-btn" type="button" hidden aria-describedby="crowd-trace-route-reason"
+            data-tip="Copy the route into this crowd's network">Trace route into network</button>
+    <p id="crowd-trace-route-reason" hidden></p>
     <p id="crowd-guide-hint"></p>
     <select id="network-node-type">
       <option value="normal">Pass-through</option>
@@ -297,15 +300,15 @@ describe('passive inspection', () => {
     expect(document.getElementById('network-node-hint').textContent).not.toMatch(/T cycles|Shift-click/);
 
     svc.selectEdge(edge);
-    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Direction and Traffic/);
-    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Delete edge/);
+    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Direction and Share/);
+    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Delete path/);
     expect(document.getElementById('network-edge-hint').textContent).not.toMatch(/Shift-click/);
 
     svc.enter(layer);
     svc.selectNode(source);
     expect(document.getElementById('network-node-hint').textContent).toMatch(/T cycles.*drag.*Shift-click/);
     svc.selectEdge(edge);
-    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Drag the edge.*Shift-click/);
+    expect(document.getElementById('network-edge-hint').textContent).toMatch(/Drag the path.*Shift-click/);
   });
 
   test('Node card edits and deletes a passive selection with one commit per action', () => {
@@ -952,12 +955,12 @@ describe('mixin glue', () => {
     svc.selectEdge(ab); // weight 1; at b the sibling has weight 3 → 25%
     app.syncNetworkCards();
     const readout = document.getElementById('network-edge-weight-value').textContent;
-    expect(readout).toBe('100% · 25% configured shares');
+    expect(readout).toBe('100% · 25% of departures');
 
     ab.setDirection('one-way'); // departures from a only
     app.syncNetworkCards();
     expect(document.getElementById('network-edge-weight-value').textContent)
-      .toBe('100% configured share');
+      .toBe('100% of departures');
     expect(a.id).toBe(ab.sourceId);
   });
 
@@ -1019,6 +1022,159 @@ describe('mixin glue', () => {
     expect(input.getAttribute('aria-invalid')).toBe('true');
     expect(app.events.filter(([event]) => event === 'crowd:param-changed'))
       .toHaveLength(paramEventsBefore);
+  });
+
+  test('an invalid weight says what to do, inline and announced, and is not silently put back (UI-06 B-30)', () => {
+    const layer = enterMode(app);
+    const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
+    const exitA = layer.graph.addNode({ x: 0.9, y: 0.2, type: 'exit' });
+    const exitB = layer.graph.addNode({ x: 0.9, y: 0.8, type: 'exit' });
+    const first = layer.graph.addEdge({ sourceId: junction.id, targetId: exitA.id, direction: 'one-way' });
+    layer.graph.addEdge({ sourceId: junction.id, targetId: exitB.id, direction: 'one-way' });
+    svc.selectNode(junction);
+    app.syncNetworkCards();
+    const input = document.querySelector('.network-path-weight-row input');
+    const type = (value) => {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    type('abc');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    // The message is the first thing the field is described by, and is shown.
+    const errorId = input.getAttribute('aria-describedby').split(/\s+/)[0];
+    const error = document.getElementById(errorId);
+    expect(error).not.toBeNull();
+    expect(error.hidden).toBe(false);
+    expect(error.textContent).toBe('Enter a weight of 0.01 or more; the path keeps 1 until you do.');
+    expect(input.validationMessage).toBe(error.textContent);
+    expect(app.announced.at(-1)).toBe(error.textContent);
+    expect(first.weight).toBe(1);
+
+    // A valid weight clears it and applies.
+    const announcedSoFar = app.announced.length;
+    type('2');
+    expect(input.getAttribute('aria-invalid')).toBeNull();
+    expect(error.hidden).toBe(true);
+    expect(first.weight).toBe(2);
+    expect(app.announced.length).toBe(announcedSoFar);
+
+    type('-1');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(error.hidden).toBe(false);
+    expect(error.textContent).toBe('Enter a weight of 0.01 or more; the path keeps 2 until you do.');
+    expect(app.announced.at(-1)).toBe(error.textContent);
+
+    // Leaving the field does not put the old value back behind the author's
+    // back: what they typed, and why it did not apply, stay in view.
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(input.value).toBe('-1');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(error.hidden).toBe(false);
+    expect(first.weight).toBe(2);
+  });
+
+  test('a weight off the 0.01 step is refused with the increment, a blank one with the minimum, and the path keeps its weight (UI-06 B-30)', () => {
+    const layer = enterMode(app);
+    const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
+    const exitA = layer.graph.addNode({ x: 0.9, y: 0.2, type: 'exit' });
+    const exitB = layer.graph.addNode({ x: 0.9, y: 0.8, type: 'exit' });
+    const first = layer.graph.addEdge({ sourceId: junction.id, targetId: exitA.id, direction: 'one-way' });
+    layer.graph.addEdge({ sourceId: junction.id, targetId: exitB.id, direction: 'one-way' });
+    svc.selectNode(junction);
+    app.syncNetworkCards();
+    const input = document.querySelector('.network-path-weight-row input');
+    const error = document.getElementById(input.getAttribute('aria-describedby').split(/\s+/)[0]);
+    const type = (value) => {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    // 1.001 is a native step mismatch (step 0.01 from 0.01): refused, with the increment named.
+    type('1.001');
+    expect(input.validity.stepMismatch).toBe(true);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(error.hidden).toBe(false);
+    expect(error.textContent).toBe('Use steps of 0.01, from 0.01 up; the path keeps 1 until you do.');
+    expect(app.announced.at(-1)).toBe(error.textContent);
+    expect(first.weight).toBe(1);
+
+    type('2.5');
+    expect(input.getAttribute('aria-invalid')).toBeNull();
+    expect(first.weight).toBe(2.5);
+
+    type('');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(error.textContent).toBe('Enter a weight of 0.01 or more; the path keeps 2.5 until you do.');
+    expect(first.weight).toBe(2.5);
+
+    type('-1');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(error.textContent).toBe('Enter a weight of 0.01 or more; the path keeps 2.5 until you do.');
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(input.value).toBe('-1');
+    expect(first.weight).toBe(2.5);
+
+    // The description sits beside the field in its row, outside any label
+    // (UI-STANDARDS: inside, it would join the name); the label is explicit.
+    expect(error.closest('label')).toBeNull();
+    expect(error.parentElement).toBe(input.parentElement);
+    expect(input.parentElement.tagName).not.toBe('LABEL');
+    expect(input.parentElement.classList.contains('network-path-weight-row')).toBe(true);
+    const label = document.querySelector(`label[for="${input.id}"]`);
+    expect(label).not.toBeNull();
+    expect(label.textContent.trim()).toMatch(/^Path 1 to exit/);
+    expect(document.getElementById(input.getAttribute('aria-labelledby')).textContent).toBe(label.textContent);
+    expect(input.labels[0]).toBe(label);
+  });
+
+  test('Trace route into network, disabled without a route, says why in a line it is described by (UI-06 B-07)', () => {
+    bindForInspection(app);
+    app.updateGuideCard();
+    const trace = document.getElementById('crowd-trace-route-btn');
+    const reason = document.getElementById('crowd-trace-route-reason');
+    expect(trace.hidden).toBe(false);
+    expect(trace.disabled).toBe(true);
+    expect(reason.hidden).toBe(false);
+    expect(reason.textContent).toBe('Add at least two route waypoints first.');
+    expect(trace.getAttribute('aria-describedby').split(/\s+/)).toContain('crowd-trace-route-reason');
+    expect(trace.hasAttribute('title')).toBe(false);
+    expect(trace.getAttribute('data-tip')).toMatch(/Copy the route/);
+
+    app.waypoints = [{}, {}];
+    app.updateGuideCard();
+    expect(trace.disabled).toBe(false);
+    expect(reason.hidden).toBe(true);
+    expect(reason.textContent).toBe('');
+    expect(trace.getAttribute('data-tip')).toMatch(/Copy the route/);
+  });
+
+  test('the Trace reason goes with its action when the guide is switched to Follow route, and returns with it', () => {
+    const layer = bindForInspection(app);
+    app.updateGuideCard();
+    const trace = document.getElementById('crowd-trace-route-btn');
+    const reason = document.getElementById('crowd-trace-route-reason');
+    expect(trace.hidden).toBe(false);
+    expect(reason.hidden).toBe(false);
+
+    layer.setGuideType('route');
+    app.updateGuideCard();
+    expect(trace.hidden).toBe(true);
+    expect(reason.hidden).toBe(true);
+    expect(reason.textContent).toBe('');
+
+    layer.setGuideType('graph');
+    app.updateGuideCard();
+    expect(trace.hidden).toBe(false);
+    expect(trace.disabled).toBe(true);
+    expect(reason.hidden).toBe(false);
+    expect(reason.textContent).toBe('Add at least two route waypoints first.');
+
+    app.waypoints = [{}, {}];
+    layer.setGuideType('route');
+    app.updateGuideCard();
+    expect(trace.hidden).toBe(true);
+    expect(reason.hidden).toBe(true);
   });
 
   test('junction rows rebuild from fresh edge objects after restore', () => {
@@ -1107,7 +1263,7 @@ describe('mixin glue', () => {
     layer.graph.addNode({ x: 0.2, y: 0.2 });
     layer.graph.addNode({ x: 0.8, y: 0.2 });
     app.updateGuideCard();
-    expect(document.getElementById('crowd-guide-hint').textContent).toMatch(/2 nodes, 0 edges/);
+    expect(document.getElementById('crowd-guide-hint').textContent).toMatch(/2 nodes, 0 paths/);
   });
 
   test('a route-free network explains the timing needed for preview and export', () => {

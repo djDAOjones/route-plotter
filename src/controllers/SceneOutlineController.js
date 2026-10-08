@@ -55,10 +55,10 @@ const FIELD_HINTS = Object.freeze({
     'edge; beyond them is off the image',
   newNodeX: 'Where the new node goes: 0% is the image’s left edge, 100% its right edge',
   newNodeY: 'Where the new node goes: 0% is the image’s top edge, 100% its bottom edge',
-  newBendX: 'Where the new bend point goes, after the last one: 0% is the image’s left edge, 100% its right edge',
-  newBendY: 'Where the new bend point goes, after the last one: 0% is the image’s top edge, 100% its bottom edge',
+  newBendX: 'Where the new bend goes, after the last one: 0% is the image’s left edge, 100% its right edge',
+  newBendY: 'Where the new bend goes, after the last one: 0% is the image’s top edge, 100% its bottom edge',
   insertPosition: 'Where the new waypoint goes in the route order: at the start, or after the waypoint chosen',
-  waypointType: 'Major waypoints carry a wait and an outgoing leg speed; minor waypoints only shape the ' +
+  waypointType: 'Major waypoints carry a wait and a leg speed; minor waypoints only shape the ' +
     'route between them',
   wait: 'How long the path head waits at this waypoint before moving on',
   legSpeed: 'How fast the path head travels the leg after this waypoint: 2 takes half the time, ' +
@@ -67,8 +67,8 @@ const FIELD_HINTS = Object.freeze({
   fadeOut: 'How long the polygon takes to fade out when it disappears',
   crowdName: 'The crowd’s name in Layers and in this outline',
   crowdVisibility: 'Hidden crowds are not drawn, in the editor or in exports; their settings are kept',
-  guide: 'What the dots travel along: the route, or a custom network of nodes and edges',
-  dots: 'How many dots this emitter releases in all',
+  guide: 'What the dots travel along: the route, or a custom network of nodes and paths',
+  dots: 'How many dots this crowd releases in all',
   releaseStart: 'When the first dots set off, as a percentage of the timeline',
   releaseLength: 'How much of the timeline, as a percentage, the release is spread across',
   releaseTiming: 'How unevenly dots set off: 0% evenly spaced, 100% at random. Release bias and Busyness ' +
@@ -77,24 +77,33 @@ const FIELD_HINTS = Object.freeze({
   // (dotOnsetFraction in src/utils/crowdArrival.js).
   releaseBias: 'Below 0 is earlier: more dots set off near the start of the release; above 0 is later, ' +
     'near its end; 0 favours neither',
-  speed: 'How fast the dots travel: at 1, a dot covers the image’s width in about a second; Pace variation ' +
-    'makes some faster and some slower',
+  speed: 'How fast the dots travel, in image lengths per second: at 1, a dot covers the image’s width across ' +
+    'or its height down in about a second; Pace variation makes some faster and some slower',
   paceVariation: 'How much each dot’s pace differs: 0% moves every dot at the same speed',
   dotSize: 'Dot size, scaled with the image like other elements',
   walkingVariation: 'Sideways walking variation as dots travel: 0% follows the line exactly',
   dotColour: 'A hex colour such as #56B4E9, or transparent to hide the dots',
   journeyEnd: 'What a dot does when it reaches the end of its journey',
   nodeType: 'Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or ' +
-    'end them where no path leads out. With no exit, journeys end at nodes with one connection; with no ' +
+    'end them where no path leads out. With no exit, journeys end at nodes with one path; with no ' +
     'entry, dots set off from any node they can leave',
   nodeLabel: 'An optional name, shown after the node’s number in this outline',
-  sourceNode: 'The node the new edge starts from; a one-way edge carries dots only away from it',
-  destinationNode: 'The node the new edge leads to',
-  newEdgeDirection: 'Two-way edges carry dots both ways; one-way edges only from Source node to Destination node',
-  edgeDirection: 'Two-way edges carry dots both ways; one-way edges only from the first node in the edge’s ' +
+  sourceNode: 'The node the new path leaves; a one-way path carries dots only away from it',
+  destinationNode: 'The node the new path leads to',
+  newEdgeDirection: 'Two-way paths carry dots both ways; one-way paths only from Source node to Destination node',
+  edgeDirection: 'Two-way paths carry dots both ways; one-way paths only from the first node in the path’s ' +
     'name to the second',
-  pathWeight: 'How strongly dots prefer this edge at a junction: between paths a dot can take, weight 2 is ' +
-    'twice as likely to be picked as weight 1. Arriving dots avoid an immediate U-turn when another path is available',
+  pathWeight: 'How strongly dots prefer this path at a node where paths meet: between the paths a dot can take, ' +
+    'weight 2 is twice as likely to be picked as weight 1. Arriving dots avoid turning straight back when ' +
+    'another path is available',
+});
+
+/** What a dot does at its journey's end, as the Motion card says it (UI-06 J-02). */
+const JOURNEY_END_LABELS = Object.freeze({
+  respawn: 'Respawn at the start',
+  loop: 'Repeat journey',
+  disappear: 'Disappear',
+  collect: 'Collect at the end',
 });
 
 function el(tag, { className = '', text = '', attrs = {}, data = {} } = {}) {
@@ -593,8 +602,8 @@ export class SceneOutlineController {
     if (!group.open) return group;
     const content = el('div', { className: 'scene-outline-content' });
     content.appendChild(description(
-      'Route order includes major timing keyframes and minor geometry points. ' +
-      'Positions are percentages of the image.'
+      'Route order lists major waypoints, which carry the timing, and minor waypoints, which only shape ' +
+      'the route. Positions are percentages of the image.'
     ));
 
     content.appendChild(form('add-waypoint', {}, [
@@ -664,13 +673,13 @@ export class SceneOutlineController {
           min: 0, max: 600, step: 'any', key: `${waypoint.key}:wait`, canonicalValue: waypoint.pauseMsCanonical,
           tip: FIELD_HINTS.wait,
         }),
-        labelledInput('segmentSpeed', 'Outgoing leg speed (×)', waypoint.segmentSpeed, {
+        labelledInput('segmentSpeed', 'Leg speed (×)', waypoint.segmentSpeed, {
           min: 0.1, max: 10, step: 'any', key: `${waypoint.key}:speed`, tip: FIELD_HINTS.legSpeed,
         })
       );
     } else {
       content.appendChild(description(
-        'Minor waypoints shape route geometry; they do not own a wait or timing keyframe.'
+        'Minor waypoints only shape the route; they have no wait or leg speed of their own.'
       ));
     }
     content.appendChild(form(
@@ -801,7 +810,7 @@ export class SceneOutlineController {
     if (!group.open) return group;
     const content = el('div', { className: 'scene-outline-content' });
     content.appendChild(description(
-      'Each crowd contains persisted dot emitters and either follows the route or its retained custom network.'
+      'Each crowd releases dots that follow the route or the crowd’s own custom network.'
     ));
     content.appendChild(button('Add crowd', 'add-crowd', {}, { key: 'crowds:add' }));
     if (snapshot.crowds.length === 0) {
@@ -817,7 +826,7 @@ export class SceneOutlineController {
 
   _renderCrowd(crowd) {
     const selectedWithin = crowdContainsKey(crowd, this._snapshot.selectionKey);
-    const guide = crowd.guideType === 'route' ? 'follows route' : 'custom network';
+    const guide = crowd.guideType === 'route' ? 'Follow route' : 'Custom network';
     const details = detailsBlock(
       crowd.key,
       `${crowd.displayName} — ${guide}, ${plural(crowd.emitters.length, 'emitter')}${crowd.visible ? '' : ', hidden'}`,
@@ -845,7 +854,7 @@ export class SceneOutlineController {
         { value: 'hidden', label: 'Hidden' },
       ], { key: `${crowd.key}:visible`, tip: FIELD_HINTS.crowdVisibility }),
       labelledSelect('guideType', 'Guide', crowd.guideType, [
-        { value: 'route', label: 'Route' },
+        { value: 'route', label: 'Follow route' },
         { value: 'graph', label: 'Custom network' },
       ], { key: `${crowd.key}:guide`, tip: FIELD_HINTS.guide }),
     ], 'Apply crowd', `${crowd.key}:apply`));
@@ -867,7 +876,7 @@ export class SceneOutlineController {
       if (crowd.emitters.length === 0) {
         emitters.appendChild(el('p', {
           className: 'scene-outline-empty',
-          text: 'No emitters are stored in this crowd.',
+          text: 'This crowd has no emitters.',
         }));
       } else {
         emitters.appendChild(emitterList);
@@ -894,32 +903,32 @@ export class SceneOutlineController {
     }));
     if (!emitter.primary) {
       content.appendChild(description(
-        'Additional persisted emitters are inspectable here. ' +
-        'Multi-emitter authoring remains a later crowd-control feature.'
+        'A second emitter can be read here, not edited: editing more than one emitter in a crowd is a ' +
+        'later feature.'
       ));
       content.appendChild(readOnlyList([
-        ['Dots', emitter.dotCount],
-        ['Release start', `${emitter.releaseStart}%`],
-        ['Release length', `${emitter.releaseDuration}%`],
-        ['Speed', `${emitter.speed} image units/second`],
+        ['Count', emitter.dotCount],
+        ['Window start', `${emitter.releaseStart}%`],
+        ['Window length', `${emitter.releaseDuration}%`],
+        ['Speed', `${emitter.speed} image lengths/s`],
         ['Pace variation', `${emitter.speedVariance}%`],
         ['Release timing', `${emitter.onsetVariance}%`],
         ['Release bias', `${emitter.intensityRamp}%`],
         ['Busyness', `${emitter.busynessEnvelope.length} handles`],
         ['Walking variation', `${emitter.wobble}%`],
-        ['Lifecycle', emitter.lifecycleMode],
-        ['Seed', emitter.seed],
+        ['At journey end', JOURNEY_END_LABELS[emitter.lifecycleMode] ?? emitter.lifecycleMode],
+        ['Pattern seed', emitter.seed],
       ]));
     } else {
       content.appendChild(form('update-emitter', { layerId: crowd.id, emitterId: emitter.id }, [
-        labelledInput('dotCount', 'Dots', emitter.dotCount, {
+        labelledInput('dotCount', 'Count', emitter.dotCount, {
           min: 1, max: 5000, step: 1, inputMode: 'numeric', key: `${emitter.key}:count`, tip: FIELD_HINTS.dots,
         }),
-        labelledInput('releaseStart', 'Release start (%)', emitter.releaseStart, {
+        labelledInput('releaseStart', 'Window start (%)', emitter.releaseStart, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:start`, canonicalValue: emitter.releaseStartCanonical,
           tip: FIELD_HINTS.releaseStart,
         }),
-        labelledInput('releaseDuration', 'Release length (%)', emitter.releaseDuration, {
+        labelledInput('releaseDuration', 'Window length (%)', emitter.releaseDuration, {
           min: 0,
           max: 100,
           step: 'any',
@@ -935,7 +944,7 @@ export class SceneOutlineController {
           min: -100, max: 100, step: 'any', key: `${emitter.key}:ramp`, canonicalValue: emitter.intensityRampCanonical,
           tip: FIELD_HINTS.releaseBias,
         }),
-        labelledInput('speed', 'Speed (image units/second)', emitter.speed, {
+        labelledInput('speed', 'Speed (image lengths/s)', emitter.speed, {
           min: 0.001, max: 1000, step: 'any', key: `${emitter.key}:speed`, tip: FIELD_HINTS.speed,
         }),
         labelledInput('speedVariance', 'Pace variation (%)', emitter.speedVariance, {
@@ -957,17 +966,17 @@ export class SceneOutlineController {
           type: 'text', inputMode: null, maxLength: 11, key: `${emitter.key}:color`, tip: FIELD_HINTS.dotColour,
         }),
         labelledSelect('lifecycleMode', 'At journey end', emitter.lifecycleMode, [
-          { value: 'disappear', label: 'Disappear' },
-          { value: 'respawn', label: 'Respawn' },
-          { value: 'loop', label: 'Loop' },
-          { value: 'collect', label: 'Collect' },
+          { value: 'disappear', label: JOURNEY_END_LABELS.disappear },
+          { value: 'respawn', label: JOURNEY_END_LABELS.respawn },
+          { value: 'loop', label: JOURNEY_END_LABELS.loop },
+          { value: 'collect', label: JOURNEY_END_LABELS.collect },
         ], { key: `${emitter.key}:lifecycle`, tip: FIELD_HINTS.journeyEnd }),
-      ], 'Apply primary emitter', `${emitter.key}:apply`));
+      ], 'Apply crowd', `${emitter.key}:apply`));
       content.appendChild(description(
         `Busyness over time has ${emitter.busynessEnvelope.length} handles. ` +
         'Select this crowd in the main editor to move handles or set gradual and sudden spans.'
       ));
-      content.appendChild(readOnlyList([['Deterministic seed', emitter.seed]]));
+      content.appendChild(readOnlyList([['Pattern seed', emitter.seed]]));
     }
     details.appendChild(content);
     return itemFor(details);
@@ -977,19 +986,19 @@ export class SceneOutlineController {
     const graph = crowd.graph;
     const label = graph.active
       ? 'Custom network'
-      : 'Stored custom network — inactive while this crowd follows the route';
+      : 'Custom network — not in use while this crowd follows the route';
     const selectedWithin = networkContainsKey(graph, this._snapshot.selectionKey);
     const details = detailsBlock(
       graph.key,
-      `${label} — ${plural(graph.nodes.length, 'node')}, ${plural(graph.edges.length, 'edge')}`,
+      `${label} — ${plural(graph.nodes.length, 'node')}, ${plural(graph.edges.length, 'path')}`,
       this._isOpen(graph.key, false, selectedWithin),
       'scene-outline-network'
     );
     if (!details.open) return details;
     const content = el('div', { className: 'scene-outline-content' });
     content.appendChild(description(graph.active
-      ? 'This network guides the crowd. Add nodes, then connect them explicitly.'
-      : 'These retained paths are not rendered until the crowd guide is changed to Custom network.'));
+      ? 'This network guides the crowd. Add nodes, then connect them with paths.'
+      : 'These paths are kept but not drawn until Guide is set to Custom network.'));
     content.appendChild(form('add-node', { layerId: crowd.id }, [
       labelledInput('x', 'Node horizontal position (%)', 50, {
         min: 0, max: 100, step: 'any', key: `${graph.key}:add-node-x`, tip: FIELD_HINTS.newNodeX,
@@ -1055,7 +1064,7 @@ export class SceneOutlineController {
     const edgesKey = sceneOutlineKey('edges', crowd.id);
     const edges = detailsBlock(
       edgesKey,
-      `Edges — ${graph.edges.length}`,
+      `Paths — ${graph.edges.length}`,
       this._isOpen(
         edgesKey,
         false,
@@ -1068,7 +1077,7 @@ export class SceneOutlineController {
       graph.edges.forEach(edge => edgeList.appendChild(this._renderEdge(crowd, edge)));
       edges.appendChild(graph.edges.length
         ? edgeList
-        : el('p', { className: 'scene-outline-empty', text: 'No edges.' }));
+        : el('p', { className: 'scene-outline-empty', text: 'No paths.' }));
     }
     content.appendChild(edges);
     details.appendChild(content);
@@ -1108,7 +1117,7 @@ export class SceneOutlineController {
       }),
     ], 'Apply node', `${node.key}:apply`));
     content.appendChild(button(
-      `Delete node${node.connectedEdges ? ` and ${plural(node.connectedEdges, 'connected edge')}` : ''}`,
+      `Delete node${node.connectedEdges ? ` and ${plural(node.connectedEdges, 'connected path')}` : ''}`,
       'delete-node',
       { layerId: crowd.id, nodeId: node.id },
       { danger: true, key: `${node.key}:delete` }
@@ -1120,13 +1129,13 @@ export class SceneOutlineController {
   _renderEdge(crowd, edge) {
     const details = detailsBlock(
       edge.key,
-      `Edge ${edge.index + 1} — ${edge.sourceName} to ${edge.targetName}, ${edge.direction}`,
+      `Path ${edge.index + 1} — ${edge.sourceName} to ${edge.targetName}, ${edge.direction}`,
       this._isOpen(edge.key, false, edgeContainsKey(edge, this._snapshot.selectionKey)),
       'scene-outline-edge'
     );
     if (!details.open) return itemFor(details);
     const content = el('div', { className: 'scene-outline-content' });
-    content.appendChild(this._selectButton(`Select edge ${edge.index + 1}`, 'edge', edge.key, {
+    content.appendChild(this._selectButton(`Select path ${edge.index + 1}`, 'edge', edge.key, {
       layerId: crowd.id,
       edgeId: edge.id,
     }));
@@ -1139,8 +1148,8 @@ export class SceneOutlineController {
         min: 0.01, step: 'any', key: `${edge.key}:weight`, canonicalValue: edge.weight,
         tip: FIELD_HINTS.pathWeight,
       }),
-    ], 'Apply edge', `${edge.key}:apply`));
-    content.appendChild(button('Delete edge', 'delete-edge', {
+    ], 'Apply path', `${edge.key}:apply`));
+    content.appendChild(button('Delete path', 'delete-edge', {
       layerId: crowd.id,
       edgeId: edge.id,
     }, { danger: true, key: `${edge.key}:delete` }));
@@ -1148,7 +1157,7 @@ export class SceneOutlineController {
     const controlsKey = sceneOutlineKey('controls', crowd.id, edge.id);
     const points = detailsBlock(
       controlsKey,
-      `Bend points — ${edge.controlPoints.length}`,
+      `Bends — ${edge.controlPoints.length}`,
       this._isOpen(
         controlsKey,
         false,
@@ -1163,7 +1172,7 @@ export class SceneOutlineController {
     for (const point of points.open ? edge.controlPoints : []) {
       const pointDetails = detailsBlock(
         point.key,
-        `Bend point ${point.index + 1} — ${point.xLabel}%, ${point.yLabel}%`,
+        `Bend ${point.index + 1} — ${point.xLabel}%, ${point.yLabel}%`,
         this._isOpen(point.key, false, this._selected(point.key)),
         'scene-outline-point'
       );
@@ -1172,7 +1181,7 @@ export class SceneOutlineController {
         continue;
       }
       const pointContent = el('div', { className: 'scene-outline-content' });
-      pointContent.appendChild(this._selectButton(`Select bend point ${point.index + 1}`, 'control', point.key, {
+      pointContent.appendChild(this._selectButton(`Select bend ${point.index + 1}`, 'control', point.key, {
         layerId: crowd.id,
         edgeId: edge.id,
         index: point.index,
@@ -1190,8 +1199,8 @@ export class SceneOutlineController {
           ...bendPercentRange(point.y), step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
           tip: FIELD_HINTS.onImageY,
         }),
-      ], 'Apply bend point', `${point.key}:apply`, controlDraftContext));
-      pointContent.appendChild(button('Delete bend point', 'delete-control', {
+      ], 'Apply bend', `${point.key}:apply`, controlDraftContext));
+      pointContent.appendChild(button('Delete bend', 'delete-control', {
         layerId: crowd.id,
         edgeId: edge.id,
         index: point.index,
@@ -1204,7 +1213,7 @@ export class SceneOutlineController {
         ? list
         : el('p', {
           className: 'scene-outline-empty',
-          text: 'No bend points; the edge is straight.',
+          text: 'No bends; the path is straight.',
         }));
       points.appendChild(form('add-control', { layerId: crowd.id, edgeId: edge.id }, [
         labelledInput('x', 'New bend horizontal position (%)', 50, {
@@ -1213,7 +1222,7 @@ export class SceneOutlineController {
         labelledInput('y', 'New bend vertical position (%)', 50, {
           min: 0, max: 100, step: 'any', key: `${edge.key}:add-control-y`, tip: FIELD_HINTS.newBendY,
         }),
-      ], 'Add bend point', `${edge.key}:add-control`));
+      ], 'Add bend', `${edge.key}:add-control`));
     }
     content.appendChild(points);
     details.appendChild(content);

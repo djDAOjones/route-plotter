@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { contextFor } from './setup.js';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, retireApp } from './helpers/bootApp.js';
 import { ANNOUNCEMENTS } from '../src/config/constants.js';
 
 /**
@@ -95,5 +95,119 @@ describe('the whole app boots (TST-01)', () => {
     expect(app.waypoints).toHaveLength(2);
     expect(app.waypoints[0].imgX).toBeCloseTo(0.25);
     await vi.waitFor(() => expect(ctx.calls.length).toBeGreaterThan(0));
+  });
+});
+
+/**
+ * UI-06 — the harness lets a stopped app go, and nothing else. Vitest keeps
+ * every mock it makes, and the canvas recorder's methods are mocks whose
+ * closures reach the canvas, so every app ever booted in a worker stayed
+ * alive, with its page, until the largest files ran out of heap. The
+ * recorder now lets an app's contexts go when `bootApp` stops the app: the
+ * contexts of the canvases its boot made, after the test's assertions, never
+ * one a test holds of its own.
+ */
+describe('the harness lets a stopped app go, and only that (UI-06)', () => {
+  test('an offscreen context held across a second boot keeps its canvas and transcript', async () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillRect(1, 2, 3, 4);
+
+    const first = await bootApp();
+    await first.ready;
+    retireApp(first);
+    const second = await bootApp();
+    await second.ready;
+
+    expect(ctx.canvas).toBe(canvas);
+    expect(ctx.calls).toEqual([['fillRect', 1, 2, 3, 4]]);
+    ctx.fillRect(5, 6, 7, 8);
+    expect(ctx.calls).toHaveLength(2);
+    expect(second.canvas).not.toBe(first.canvas);
+  });
+
+  test('a canvas the test makes while a boot is still pending is the test’s: retiring the app leaves it', async () => {
+    // Ownership is not a matter of timing: a context belongs to a boot only
+    // because its canvas is the app's own (its page canvas, its layers') or
+    // stands inside the shell that boot parsed. A canvas a test makes while
+    // the boot's start-up is in flight is neither, wherever it is put.
+    const pending = bootApp();
+    const detached = document.createElement('canvas');
+    const beside = document.body.appendChild(document.createElement('canvas'));
+    const mine = [detached, beside].map(canvas => canvas.getContext('2d'));
+    mine.forEach((ctx, index) => ctx.fillRect(index, 0, 1, 1));
+    const app = await pending;
+    await app.ready;
+    retireApp(app);
+
+    expect(mine[0].canvas).toBe(detached);
+    expect(mine[1].canvas).toBe(beside);
+    expect(mine.map(ctx => ctx.calls)).toEqual([[['fillRect', 0, 0, 1, 1]], [['fillRect', 1, 0, 1, 1]]]);
+    mine.forEach(ctx => ctx.fillRect(2, 2, 2, 2));
+    expect(mine.every(ctx => ctx.calls.length === 2)).toBe(true);
+    // While the app's own canvases went with it.
+    expect(() => contextFor(app.canvas).calls).toThrow(/released/);
+    expect(() => contextFor(app.renderingService.vectorCanvas).calls).toThrow(/released/);
+    beside.remove();
+  });
+
+  test('a context made while an app is live, after its boot, is the test’s: retiring the app leaves it', async () => {
+    const app = await bootApp();
+    await app.ready;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillRect(1, 1, 1, 1);
+    retireApp(app);
+
+    expect(ctx.canvas).toBe(canvas);
+    expect(ctx.calls).toEqual([['fillRect', 1, 1, 1, 1]]);
+  });
+
+  test('the hint module’s document listeners, declared the document’s, outlive a stopped app', async () => {
+    // ParamTooltip binds its delegated listeners once per document, in the
+    // first boot; every later app relies on them. The listeners a stopped
+    // app leaves on the document are removed, but not these: they say they
+    // are the document's (`DOCUMENT_LIFETIME`), not an app's.
+    const first = await bootApp();
+    await first.ready;
+    document.getElementById('splash-close').click();
+    retireApp(first);
+    const second = await bootApp();
+    await second.ready;
+    document.getElementById('splash-close').click();
+    // The splash's focus trap lets go a tick after it closes; its own Escape
+    // would otherwise take the key.
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    // A keyboard arrival on a hinted control opens its hint through the
+    // document's focusin listener; Escape, through its keydown listener.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    document.getElementById('animation-speed-right').focus();
+    const tooltip = document.getElementById('param-tooltip');
+    expect(tooltip?.style.display).toBe('block');
+    expect(tooltip.textContent).toMatch(/^Total animation playback time/);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(tooltip.style.display).toBe('none');
+  });
+
+  test('a stopped app’s own context is released: read, drawn on or restyled, it says so', async () => {
+    const app = await bootApp();
+    await app.ready;
+    const ctx = contextFor(app.canvas);
+    expect(ctx.calls.length).toBeGreaterThan(0);
+    retireApp(app);
+
+    // Nothing a released context is asked passes quietly: a transcript or
+    // canvas read too late, a draw, a malformed draw, a style, all fail where
+    // they happen. The app's own late frames are cancelled when it is
+    // stopped, so none is left to fire.
+    expect(() => ctx.calls).toThrow(/released/);
+    expect(() => ctx.takeCalls()).toThrow(/released/);
+    expect(() => ctx.canvas).toThrow(/released/);
+    expect(() => ctx.fillRect(0, 0, 1, 1)).toThrow(/released/);
+    expect(() => ctx.translate(1)).toThrow(/released/);
+    expect(() => { ctx.fillStyle = '#000'; }).toThrow(/released/);
+    expect(() => ctx.globalAlpha).toThrow(/released/);
+    expect(() => ctx.createLinearGradient(0, 0, 1, 1)).toThrow(/released/);
   });
 });

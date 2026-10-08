@@ -568,7 +568,7 @@ describe('render and static UI regressions', () => {
     const zoomMode = document.getElementById('camera-zoom-mode');
     expect([...zoomMode.options].map(option => [option.value, option.textContent])).toEqual([
       ['continuous', 'Gradual — over the leg'],
-      ['immediate', 'Quick — on arrival'],
+      ['immediate', 'Quick — at the start of the leg'],
     ]);
   });
 

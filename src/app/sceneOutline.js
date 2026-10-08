@@ -350,7 +350,7 @@ export const sceneOutlineMixin = {
 
   _outlineEdge(layer, id) {
     const edge = layer.graph.getEdge(id);
-    if (!edge) throw new Error('That edge no longer exists.');
+    if (!edge) throw new Error('That path no longer exists.');
     return edge;
   },
 
@@ -476,7 +476,7 @@ export const sceneOutlineMixin = {
     let speed = waypoint.segmentSpeed;
     if (waypoint.isMajor) {
       waitMs = secondsDraft(command, 'waitSeconds', 'Wait');
-      speed = numberBetween(command.segmentSpeed, 'Outgoing leg speed', 0.1, 10);
+      speed = numberBetween(command.segmentSpeed, 'Leg speed', 0.1, 10);
       const prospectivePause = this.waypoints.reduce(
         (sum, item) => sum + Number(item.pauseTime || 0),
         0
@@ -613,11 +613,11 @@ export const sceneOutlineMixin = {
     const emitter = layer.getEmitter(command.emitterId);
     if (!emitter) throw new Error('That emitter no longer exists.');
     if (layer.emitters[0] !== emitter) {
-      throw new Error('Additional emitters are read-only until multi-emitter controls are designed.');
+      throw new Error('A second emitter can be read here, not edited.');
     }
-    if (!LIFECYCLE_MODES.has(command.lifecycleMode)) throw new Error('Choose a valid lifecycle.');
+    if (!LIFECYCLE_MODES.has(command.lifecycleMode)) throw new Error('Choose a valid journey end.');
     assertSafeStoredColor(command.dotColor, 'emitter dot colour', { allowTransparent: true });
-    const dotCount = positiveInteger(command.dotCount, 'Dots', EMITTER_LIMITS.MAX_DOT_COUNT);
+    const dotCount = positiveInteger(command.dotCount, 'Count', EMITTER_LIMITS.MAX_DOT_COUNT);
     const totalDots = this.scene.getFlowLayers().reduce((sum, candidate) =>
       sum + candidate.emitters.reduce((layerSum, item) => layerSum + item.dotCount, 0), 0
     ) - emitter.dotCount + dotCount;
@@ -626,8 +626,8 @@ export const sceneOutlineMixin = {
     }
     const updates = {
       dotCount,
-      releaseStart: percentDraft(command, 'releaseStart', 'Release start'),
-      releaseDuration: percentDraft(command, 'releaseDuration', 'Release length'),
+      releaseStart: percentDraft(command, 'releaseStart', 'Window start'),
+      releaseDuration: percentDraft(command, 'releaseDuration', 'Window length'),
       onsetVariance: percentDraft(command, 'onsetVariance', 'Release timing'),
       intensityRamp: originalCanonical(command, 'intensityRamp')
         ?? numberBetween(command.intensityRamp, 'Release bias', -100, 100) / 100,
@@ -648,7 +648,7 @@ export const sceneOutlineMixin = {
     this.queueRender();
     const key = sceneOutlineKey('emitter', layer.id, emitter.id);
     this._queueSceneOutlineRefresh(`${key}:apply`);
-    this.announce('Primary emitter updated.');
+    this.announce('Crowd updated.');
   },
 
   _outlineAddNode(command) {
@@ -713,7 +713,7 @@ export const sceneOutlineMixin = {
       ? sceneOutlineKey('crowd', layer.id)
       : previousOutlineSelection;
     this._queueSceneOutlineRefresh(`${sceneOutlineKey('network', layer.id)}:summary`);
-    this.announce(`Node deleted${cascaded ? ` with ${plural(cascaded, 'connected edge')}` : ''}. Undo available.`);
+    this.announce(`Node deleted${cascaded ? ` with ${plural(cascaded, 'connected path')}` : ''}. Undo available.`);
   },
 
   _outlineConnectNodes(command) {
@@ -721,7 +721,7 @@ export const sceneOutlineMixin = {
     const source = this._outlineNode(layer, command.sourceId);
     const target = this._outlineNode(layer, command.targetId);
     if (source.id === target.id) throw new Error('Choose two different nodes.');
-    if (!EDGE_DIRECTIONS.has(command.direction)) throw new Error('Choose a valid edge direction.');
+    if (!EDGE_DIRECTIONS.has(command.direction)) throw new Error('Choose a valid path direction.');
     const joined = layer.graph.getEdgesForNode(source.id).some(edge =>
       edge.sourceId === target.id || edge.targetId === target.id
     );
@@ -746,7 +746,7 @@ export const sceneOutlineMixin = {
   _outlineUpdateEdge(command) {
     const layer = this._outlineLayer(command.layerId);
     const edge = this._outlineEdge(layer, command.edgeId);
-    if (!EDGE_DIRECTIONS.has(command.direction)) throw new Error('Choose a valid edge direction.');
+    if (!EDGE_DIRECTIONS.has(command.direction)) throw new Error('Choose a valid path direction.');
     const weight = originalCanonical(command, 'weight')
       ?? numberBetween(command.weight, 'Path weight', 0.01, Number.MAX_SAFE_INTEGER);
     if (edge.direction === command.direction && edge.weight === weight) return;
@@ -767,7 +767,7 @@ export const sceneOutlineMixin = {
     }
     const key = sceneOutlineKey('edge', layer.id, edge.id);
     this._queueSceneOutlineRefresh(`${key}:apply`);
-    this.announce('Edge updated.');
+    this.announce('Path updated.');
   },
 
   _outlineDeleteEdge(command) {
@@ -786,7 +786,7 @@ export const sceneOutlineMixin = {
       ? sceneOutlineKey('crowd', layer.id)
       : previousOutlineSelection;
     this._queueSceneOutlineRefresh(`${sceneOutlineKey('network', layer.id)}:summary`);
-    this.announce('Edge deleted. Undo available.');
+    this.announce('Path deleted. Undo available.');
   },
 
   _outlineAddControl(command) {

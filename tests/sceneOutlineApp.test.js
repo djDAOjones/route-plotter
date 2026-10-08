@@ -534,6 +534,38 @@ describe('scene-outline command adapter', () => {
     expect(app.autoSaves).toBe(3);
   });
 
+  test('its messages use the controls’ words: Count, Window start, journey end, Crowd updated, Path updated (UI-06)', () => {
+    const layer = app.scene.addFlowLayer({ id: 'crowd-w', name: 'Visitors', guideType: 'graph' });
+    const primary = layer.addEmitter({ id: 'emitter-w', dotCount: 10, seed: 1 });
+    const command = {
+      action: 'update-emitter', layerId: layer.id, emitterId: primary.id,
+      dotCount: '15', releaseStart: '10', releaseDuration: '70', onsetVariance: '20', intensityRamp: '-25',
+      speed: '0.2', speedVariance: '30', dotSize: '1.5', wobble: '40', dotColor: '#0072B2', lifecycleMode: 'loop',
+    };
+    const said = (patch) => {
+      app._handleSceneOutlineCommand({ ...command, ...patch });
+      return app.announced.at(-1);
+    };
+
+    expect(said({ dotCount: 'x' })).toMatch(/^Count\b/);
+    expect(said({ dotCount: 'x' })).not.toMatch(/Dots/);
+    expect(said({ releaseStart: 'x' })).toMatch(/^Window start\b/);
+    expect(said({ releaseDuration: 'x' })).toMatch(/^Window length\b/);
+    expect(said({ lifecycleMode: 'x' })).toBe('Choose a valid journey end.');
+    expect(said({})).toBe('Crowd updated.');
+    expect(primary.dotCount).toBe(15);
+
+    const a = layer.graph.addNode({ id: 'na', x: 0.2, y: 0.5 });
+    const b = layer.graph.addNode({ id: 'nb', x: 0.8, y: 0.5 });
+    const edge = layer.graph.addEdge({ id: 'ab', sourceId: a.id, targetId: b.id });
+    app._handleSceneOutlineCommand({ action: 'update-edge', layerId: layer.id, edgeId: edge.id, direction: 'one-way', weight: '2' });
+    expect(app.announced.at(-1)).toBe('Path updated.');
+    app._handleSceneOutlineCommand({ action: 'update-edge', layerId: layer.id, edgeId: edge.id, direction: 'x', weight: '2' });
+    expect(app.announced.at(-1)).toBe('Choose a valid path direction.');
+    app._handleSceneOutlineCommand({ action: 'delete-edge', layerId: layer.id, edgeId: edge.id });
+    expect(app.announced.at(-1)).toBe('Path deleted. Undo available.');
+  });
+
   test('keeps extra emitters read-only while committing primary settings once', () => {
     const layer = app.scene.addFlowLayer({ id: 'crowd-a', name: 'Visitors', guideType: 'route' });
     const primary = layer.addEmitter({ id: 'emitter-a', dotCount: 10, seed: 1 });
@@ -572,7 +604,7 @@ describe('scene-outline command adapter', () => {
     app._handleSceneOutlineCommand({ ...primaryCommand, emitterId: extra.id, dotCount: '99' });
     expect(extra.dotCount).toBe(20);
     expect(app.undoSaves).toBe(1);
-    expect(app.announced.at(-1)).toContain('Additional emitters are read-only');
+    expect(app.announced.at(-1)).toBe('A second emitter can be read here, not edited.');
   });
 
   test.each(['transparent', '#abc', '#abcd', '#11223344'])(
