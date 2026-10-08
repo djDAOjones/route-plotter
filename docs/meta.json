@@ -431,12 +431,12 @@
       "format": "esm"
     },
     "src/config/keybindings.js": {
-      "bytes": 14448,
+      "bytes": 14503,
       "imports": [],
       "format": "esm"
     },
     "src/config/helpContent.js": {
-      "bytes": 5279,
+      "bytes": 5435,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -2625,7 +2625,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 107780,
+      "bytes": 108131,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2723,7 +2723,7 @@
       "format": "esm"
     },
     "src/utils/networkBudget.js": {
-      "bytes": 2026,
+      "bytes": 2020,
       "imports": [
         {
           "path": "src/models/FlowLayer.js",
@@ -2739,7 +2739,7 @@
       "format": "esm"
     },
     "src/services/NetworkEditService.js": {
-      "bytes": 40434,
+      "bytes": 40401,
       "imports": [
         {
           "path": "src/utils/snapToAngle.js",
@@ -2797,7 +2797,7 @@
       "format": "esm"
     },
     "src/components/ParamTooltip.js": {
-      "bytes": 28731,
+      "bytes": 32796,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2860,7 +2860,7 @@
       "format": "esm"
     },
     "src/services/HTMLExportService.js": {
-      "bytes": 14122,
+      "bytes": 14130,
       "imports": [
         {
           "path": "src/models/ImageAsset.js",
@@ -2959,7 +2959,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 44751,
+      "bytes": 45437,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3010,6 +3010,11 @@
           "path": "src/examples/index.js",
           "kind": "import-statement",
           "original": "../examples/index.js"
+        },
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "../config/keybindings.js"
         }
       ],
       "format": "esm"
@@ -3051,7 +3056,7 @@
       "format": "esm"
     },
     "src/components/ContextMenu.js": {
-      "bytes": 5769,
+      "bytes": 6357,
       "imports": [],
       "format": "esm"
     },
@@ -3449,7 +3454,7 @@
       "format": "esm"
     },
     "src/app/editorPanel.js": {
-      "bytes": 36062,
+      "bytes": 36923,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3516,7 +3521,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 43154,
+      "bytes": 43678,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3557,7 +3562,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 24984,
+      "bytes": 26814,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3588,7 +3593,7 @@
       "format": "esm"
     },
     "src/utils/sceneSemantics.js": {
-      "bytes": 9888,
+      "bytes": 9976,
       "imports": [
         {
           "path": "src/utils/waypointNaming.js",
@@ -3599,7 +3604,7 @@
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
-      "bytes": 54861,
+      "bytes": 55200,
       "imports": [
         {
           "path": "src/utils/sceneSemantics.js",
@@ -3615,7 +3620,7 @@
       "format": "esm"
     },
     "src/app/sceneOutline.js": {
-      "bytes": 45665,
+      "bytes": 45617,
       "imports": [
         {
           "path": "src/controllers/SceneOutlineController.js",
@@ -3981,13 +3986,13 @@
     }
   },
   "outputs": {
-    ".docs-build-k4K8bj/app.js.map": {
+    ".docs-build-qXOvGu/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3577461
+      "bytes": 3590549
     },
-    ".docs-build-k4K8bj/app.js": {
+    ".docs-build-qXOvGu/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4101,10 +4106,10 @@
           "bytesInOutput": 1297
         },
         "src/config/keybindings.js": {
-          "bytesInOutput": 6182
+          "bytesInOutput": 6237
         },
         "src/config/helpContent.js": {
-          "bytesInOutput": 2446
+          "bytesInOutput": 2575
         },
         "src/utils/sliderScales.js": {
           "bytesInOutput": 856
@@ -4200,7 +4205,7 @@
           "bytesInOutput": 1370
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 41955
+          "bytesInOutput": 42055
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 17968
@@ -4218,10 +4223,10 @@
           "bytesInOutput": 191
         },
         "src/utils/networkBudget.js": {
-          "bytesInOutput": 650
+          "bytesInOutput": 644
         },
         "src/services/NetworkEditService.js": {
-          "bytesInOutput": 17351
+          "bytesInOutput": 17318
         },
         "src/services/AreaEditService.js": {
           "bytesInOutput": 4525
@@ -4236,7 +4241,7 @@
           "bytesInOutput": 2154
         },
         "src/components/ParamTooltip.js": {
-          "bytesInOutput": 6137
+          "bytesInOutput": 6885
         },
         "src/components/Dropdown.js": {
           "bytesInOutput": 2252
@@ -4254,7 +4259,7 @@
           "bytesInOutput": 2653
         },
         "src/services/HTMLExportService.js": {
-          "bytesInOutput": 8220
+          "bytesInOutput": 8228
         },
         "src/app/operationGeneration.js": {
           "bytesInOutput": 702
@@ -4278,13 +4283,13 @@
           "bytesInOutput": 4585
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 18447
+          "bytesInOutput": 18730
         },
         "src/app/wiringBus.js": {
           "bytesInOutput": 6154
         },
         "src/components/ContextMenu.js": {
-          "bytesInOutput": 3100
+          "bytesInOutput": 3342
         },
         "src/app/backgroundLoading.js": {
           "bytesInOutput": 1721
@@ -4329,25 +4334,25 @@
           "bytesInOutput": 4621
         },
         "src/app/editorPanel.js": {
-          "bytesInOutput": 19493
+          "bytesInOutput": 19760
         },
         "src/app/pointer.js": {
           "bytesInOutput": 1871
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 21437
+          "bytesInOutput": 21557
         },
         "src/app/network.js": {
-          "bytesInOutput": 11580
+          "bytesInOutput": 11852
         },
         "src/utils/sceneSemantics.js": {
-          "bytesInOutput": 4300
+          "bytesInOutput": 4321
         },
         "src/controllers/SceneOutlineController.js": {
-          "bytesInOutput": 32631
+          "bytesInOutput": 32746
         },
         "src/app/sceneOutline.js": {
-          "bytesInOutput": 26814
+          "bytesInOutput": 26766
         },
         "src/app/startup.js": {
           "bytesInOutput": 116
@@ -4362,7 +4367,7 @@
           "bytesInOutput": 22984
         }
       },
-      "bytes": 1118295
+      "bytes": 1120568
     }
   }
 }

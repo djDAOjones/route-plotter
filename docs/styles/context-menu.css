@@ -48,6 +48,17 @@
   background: transparent;
 }
 
+/* Why a disabled entry is disabled: a muted line under it, which the entry
+   is described by (UI-06 B-07) — so a keyboard user reads it as a mouse
+   user's title once showed it. */
+.context-menu-item-reason {
+  display: block;
+  padding: 0 var(--space-3) var(--space-2);
+  font-size: var(--type-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-02);
+}
+
 /* Destructive entry (Delete) — colour is reinforced by list position
    and label text, never the only carrier of meaning */
 .context-menu-item.is-danger {

@@ -175,7 +175,6 @@
   font-size:var(--type-caption);
   font-weight:600;
   color:var(--text-03);
-  text-transform:uppercase;
   letter-spacing:0.04em;
 }
 
