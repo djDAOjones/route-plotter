@@ -121,3 +121,4 @@
 - At t = 0 the trunk path draws fully while a rejoined branch does not until revealed (seen once in the walkthrough, 12-*.jpg vs 13-*.jpg); verify whether trunk and branch should match — (from: CROWD-07, 2026-10-08)
 - The owner to confirm PLAN-3's filing-session interpretations and proposed review sequence and method — (from: PLAN-3, 2026-10-08)
 - The exported player could not be run inside the editor's page (its inline script is blocked by the editor's CSP); a pane-side check of its playback needs a served copy — (from: UI-06, 2026-10-08)
+- `npm run check` once ended in an unhandled EnvironmentTeardownError from `tests/waypointListFocus.test.js` (a vitest worker torn down while that suite's console output was still forwarding); the same bytes passed on the rerun and the suite passes alone — a worker-timing flake to pin down — (from: UI-06, 2026-10-08)

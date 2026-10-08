@@ -7,6 +7,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Phase 3 — Design reviews
+
+- DEF-94 — the scene outline's validation errors show their accent bar and red field border again, because the five tokens the stylesheets used without a definition are defined (2026-10-08) — see decisions
+
 ## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
 - DEF-32 — activating a waypoint-list row by click, Enter or Space rebuilds the list once, so focus stays on the selected row instead of falling to the page (2026-10-08) — see decisions

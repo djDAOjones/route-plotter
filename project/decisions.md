@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — REL-709 — v3.2.709 ships UI-06's colour and tokens PR; DEF-94 closes
+
+**Decision:** v3.2.709 is live from deploy commit `6b7f861` (tag `v3.2.709`), released under GATELESS-1 because UI-06's colour and tokens merge (`1bc07cd`, PR #114) changed `styles/` and one line of `src/`; DEF-94 (the outline's error marks) closes with it, since the tokens the stylesheets used are now defined.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.708-1bc07cd`, gate green (127 files, 2,976 tests), dry run, push, Verify and the Pages build and deploy green, 22 of 22 live files SHA-256-identical. Live smoke at 1280×800 with the pane's visibility overridden: title v3.2.709, Open day played 3,002 ms, then to its end at 27,283 ms with no frame queued; MP4 1920×1080 29.3 s `ftypisom` (9.66 MB); HTML (2.04 MB) with its CSP, the project and the live `player.js`; no failed resource or console error. The PR changes no export code and 709 does not end in 0, so no disk save is owed. Codex reviewed the PR in three rounds (one blocking: the primary Play button lost its fill under the icon hover rule; eight real, in the stylesheets and the new test helper), all fixed before the merge. The pane's after-shots are in `reviews/design-review-2026-10-08-shots/after/`.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-08 — PLAN-3 — Phase 3 reviews the GUI and the crowd features; the review half ran read-only ahead of Phase 2's last defects
 
 **Decision:** UI-06 (the app GUI against UI-STANDARDS.md) and CROWD-07 (the crowd features for novices and experts) are Phase 3, after Phase 2 and ahead of W4 and the found defects; breaches of the standards are fixed without asking, judgement calls go to the owner as one question round with screenshots; the review half of both ran on 2026-10-08 against live v3.2.707 (= main a312b55) without touching the repo, because Phase 2's DEF-20, DEF-13 and DEF-32 were in flight in another chat.

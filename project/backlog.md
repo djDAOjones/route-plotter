@@ -90,7 +90,6 @@
 - [ ] DEF-91 — Example background fails silently — since 2026-10-08 — (from: UI-06, 2026-10-08)
 - [ ] DEF-92 — Crowd sliders undo on timer — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-93 — Journey-end hint misadvises — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
-- [ ] DEF-94 — Outline errors lack red mark — since 2026-10-08 — (from: UI-06, 2026-10-08)
 
 ## Icebox
 
