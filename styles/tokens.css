@@ -77,6 +77,12 @@
   --text-03: #595959; /* tertiary/helper */
   --text-04: #FFFFFF; /* inverse */
   --text-05: #3D3D3D; /* muted-but-readable */
+  --text-helper: var(--text-02); /* Carbon text-helper; 10.3:1 on --ui-02 */
+  /* Danger text (Clear All, Delete, the Clear confirm). Derived darker Jubilee
+     Red: 10.9:1 on white, 9.0:1 on --hover-ui, 7.8:1 on --support-error-bg.
+     --support-error itself is 6.4:1 on white, so it stays for borders and
+     bars only (UI-06 B-09). */
+  --text-error: #7A1020;
 
   /* Links: always underlined */
   --link-01: var(--uon-nottingham-blue);  /* AAA on white */
@@ -226,6 +232,14 @@
   --type-caption: var(--text-xs); --lh-caption: var(--line-tight); --w-caption: 400;
   --type-mono: var(--text-sm); --lh-mono: var(--line-tight); --w-mono: 500;
 
+  /* Carbon productive type styles main.css names (UI-06 B-14). body-compact
+     sizes the help screen's rows; the two heading tokens are compatibility
+     definitions — .shortcuts-modal and .splash-instructions use them and no
+     markup carries either class — so no declaration is invalid. */
+  --type-body-compact: var(--text-sm); --lh-body-compact: 1.29;         /* body-compact-01: 14px/18px */
+  --type-heading-02: var(--text-md);   --lh-heading-02: var(--line-base); /* heading-02: 16px/24px, 600 */
+  --type-heading-03: 1.25rem;          --lh-heading-03: 1.4;              /* heading-03: 20px/28px */
+
   /* =========================
      Layout widths (responsive, relative units) - per spec §2
      ========================= */
@@ -365,6 +379,7 @@
   --focus-ring: var(--focus-width) solid var(--focus-outer);
   --focus-ring-offset: var(--focus-offset);
   --touch-target-min: var(--control-lg);
+  --support-01: var(--support-error); /* Carbon v10 name; the outline's error marks use it (DEF-94) */
 }
 
 /* Higher contrast preference: thicken strokes and strengthen borders */
@@ -372,6 +387,7 @@
   :root {
     --map-marker-stroke-width: 3px;
     --map-path-stroke-width: 4px;
+    --border-interactive: #525252; /* 7.8:1 on white: inputs, chip and dot borders, rails (UI-06 B-27) */
     --border-strong: #525252;
   }
 }

@@ -6,6 +6,7 @@ import { SceneOutlineController } from '../src/controllers/SceneOutlineControlle
 import { buildSceneOutlineSnapshot, sceneOutlineKey } from '../src/utils/sceneSemantics.js';
 import { ENTITY_ID_LIMITS } from '../src/utils/entityId.js';
 import { IMAGE_COORDINATES } from '../src/config/constants.js';
+import { borderColourOf, cascade, colourIn, hex, tokensFor } from './helpers/cssTokens.js';
 
 function makeFixture() {
   const major = new Waypoint({
@@ -884,6 +885,43 @@ describe('native scene outline DOM', () => {
     expect(connectForm.elements.direction.value).toBe('two-way');
     expect(connectForm.elements.weight.value).toBe('1');
     expect(document.activeElement).toBe(connectForm.querySelector('[type="submit"]'));
+  });
+
+  test('the duplicate-edge error carries its accent bar and red field borders (DEF-94)', async () => {
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    await openDisclosure(container, 'crowd:crowd-route');
+    await openDisclosure(container, 'network:crowd-route');
+
+    // Connecting two nodes already joined: the message the app emits for it
+    // (src/app/sceneOutline.js, pinned by sceneOutlineApp.test.js).
+    const formKey = 'network:crowd-route:connect';
+    eventBus.emit('scene-outline:error', { formKey, message: 'Those nodes are already connected.' });
+
+    const connectForm = container.querySelector(`form[data-outline-form-key="${formKey}"]`);
+    const alert = connectForm.querySelector('[role="alert"]');
+    expect(alert.classList.contains('scene-outline-error')).toBe(true);
+    expect([...connectForm.elements].filter(element => element.matches('input, select'))
+      .every(element => element.getAttribute('aria-invalid') === 'true')).toBe(true);
+
+    // jsdom applies no stylesheet here and leaves var() unresolved, so the
+    // colours are computed on the rendered elements by the test helper's
+    // cascade over the real sheets: `--support-01` was undefined, and both
+    // marks computed to nothing.
+    const map = tokensFor();
+    const error = hex(colourIn(map.get('--support-error'), map));
+    expect(hex(borderColourOf(alert, 'left'))).toBe(error);
+    for (const field of connectForm.querySelectorAll('[aria-invalid="true"]')) {
+      expect(hex(borderColourOf(field)), field.name).toBe(error);
+    }
+
+    // The Delete action on a node body is `.btn.btn-secondary` too; its
+    // danger border must outrank the button border rules that follow it.
+    await openDisclosure(container, 'nodes:crowd-route');
+    await openDisclosure(container, 'node:crowd-route:node-entry');
+    const remove = container.querySelector('.scene-outline-danger');
+    expect(remove.classList.contains('btn')).toBe(true);
+    expect(hex(borderColourOf(remove))).toBe(error);
+    expect(cascade(remove, ['border', 'border-color']).selector).toBe('.btn.scene-outline-danger');
   });
 
   test('keeps a closed 2,000-node outline bounded and mounts only the focused node body', async () => {
