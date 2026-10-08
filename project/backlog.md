@@ -24,7 +24,6 @@
 
 - [!] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01 — blocked: the owner's word to retire the source-text assertions its new tests cover (GATELESS-1 bars deleting a test)
 - [ ] DEF-20 — Controls out of sync after Open and Clear All · Live defect P1 — since 2026-10-01
-- [ ] DEF-13 — A focused button swallows every shortcut · Accessibility P1 — since 2026-10-01
 - [ ] DEF-32 — Activating a list row loses focus · Accessibility P1 — since 2026-10-01
 - [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01
 - [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01
@@ -76,6 +75,7 @@
 - [ ] DEF-78 — Comet tail retimes crowds — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-79 — Render space moves crowd anchors — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-80 — Player retimes constant-time projects — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
+- [ ] DEF-82 — Dialog heading passes shortcuts — since 2026-10-08 — (from: DEF-13, 2026-10-08)
 
 ## Icebox
 

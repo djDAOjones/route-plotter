@@ -56,7 +56,8 @@
  * Meta, once and held down; the other listeners' sweeps press each without
  * modifiers (the modifiers a handler reads are pinned from its source, and
  * Shift+Tab is pressed in the focus trap). Where a sweep presses keys on the
- * page itself, the dispatcher is suspended (its own `setEnabled`) for the
+ * page itself, or on a control, which since DEF-13 leaves the page's
+ * shortcuts to it, the dispatcher is suspended (its own `setEnabled`) for the
  * keys it takes, so those reach the listener under test alone. A handler
  * compares `event.key` with literals, so a key outside the domain can only
  * reach it through a literal, which the source checks hold to the domain.
@@ -1121,18 +1122,34 @@ describe('what the page shortcuts react to (TST-13)', () => {
     expect(pressing(' ')).toEqual({ changed: { playing: true, said: 'Playing animation' }, prevented: true });
   });
 
-  /** Where a key is pressed. The page runs shortcuts; a control keeps its own keys. */
+  /**
+   * Where a key is pressed. The page runs shortcuts; a field keeps every key,
+   * and a control only its own. The dialog comes last: its trap leaves the
+   * editor behind it inert.
+   */
   const FOCUS = [
     ['the page, after a click on the canvas', () => document.body],
     ['a text field', () => document.getElementById('waypoint-label')],
     ['a slider', () => document.getElementById('dot-size')],
     ['a select', () => document.getElementById('marker-style')],
-    // DEF-13: after a click on any button, the shortcuts stop working
+    // DEF-13: Chromium leaves focus on a button after a click on it.
     ['a transport button', () => document.getElementById('skip-end-btn')],
     // Focused, not activated: where focus goes after a row is activated and
     // the list rebuilds (DEF-32) is not pinned here.
     ['a waypoint list row', () => document.querySelector('#waypoint-list .waypoint-row')],
-    ['a sidebar disclosure', () => document.querySelector('.section-more > summary')]
+    ['a sidebar disclosure', () => document.querySelector('.section-more > summary')],
+    ['a settings section header', () => document.querySelector('[data-section="video"] > .section-header')],
+    ['a skip link', () => document.querySelector('.skip-link')],
+    ['a menu item, its menu open', () => {
+      document.getElementById('export-dropdown-btn').click();
+      return document.getElementById('export-mp4-btn');
+    }],
+    ['a button in an open dialog', async () => {
+      document.body.click(); // closes the menu, as a click elsewhere does
+      document.getElementById('help-btn').click();
+      await vi.waitFor(() => expect(document.activeElement.id).toBe('splash-title'));
+      return document.getElementById('splash-close');
+    }]
   ];
 
   const FOCUS_KEYS = [
@@ -1145,33 +1162,43 @@ describe('what the page shortcuts react to (TST-13)', () => {
   ];
 
   const NOTHING = Object.fromEntries(FOCUS_KEYS.map(([name]) => [name, '—']));
+  const ON_THE_PAGE = {
+    'Ctrl/Cmd+Z': 'history:undo, prevented',
+    'Ctrl/Cmd+S': 'file:save, prevented',
+    Delete: 'waypoint:delete-selected, prevented',
+    '→': 'waypoint:nudge, prevented',
+    Space: 'ui:animation:toggle, prevented',
+    '?': 'help:show-shortcuts, prevented'
+  };
+  // DEF-13: on a control every shortcut runs but Space, its own activation;
+  // until the fix, a focused control ignored them all and left Save to the
+  // browser.
+  const ON_A_CONTROL = { ...ON_THE_PAGE, Space: '—' };
   const WHERE_KEYS_RUN = {
-    'the page, after a click on the canvas': {
-      'Ctrl/Cmd+Z': 'history:undo, prevented',
-      'Ctrl/Cmd+S': 'file:save, prevented',
-      Delete: 'waypoint:delete-selected, prevented',
-      '→': 'waypoint:nudge, prevented',
-      Space: 'ui:animation:toggle, prevented',
-      '?': 'help:show-shortcuts, prevented'
-    },
+    'the page, after a click on the canvas': ON_THE_PAGE,
     'a text field': NOTHING,
     'a slider': NOTHING,
     'a select': NOTHING,
-    // DEF-13: Undo, Save, Delete and the nudge are ignored, and Save is left
-    // to the browser. Space is the button's own activation, rightly.
-    'a transport button': NOTHING,
-    'a waypoint list row': NOTHING,
-    // The disclosure takes Space to open itself.
-    'a sidebar disclosure': { ...NOTHING, Space: '—, prevented' }
+    'a transport button': ON_A_CONTROL,
+    'a waypoint list row': ON_A_CONTROL,
+    // The disclosure and the section header take Space to open themselves.
+    'a sidebar disclosure': { ...ON_A_CONTROL, Space: '—, prevented' },
+    'a settings section header': { ...ON_A_CONTROL, Space: '—, prevented' },
+    'a skip link': ON_A_CONTROL,
+    // A menu keeps the arrows that move through it too.
+    'a menu item, its menu open': { ...ON_A_CONTROL, '→': '—' },
+    // The editor behind a modal dialog is inert: its shortcuts wait.
+    'a button in an open dialog': NOTHING
   };
 
-  test('a shortcut runs from the page, but not from a control — nor, today, from a button (DEF-13)', async () => {
+  test('a shortcut runs from the page and from a control, which keeps only its own keys; never from a field ' +
+    'or a dialog (DEF-13)', async () => {
     const app = await editor();
     const emit = vi.spyOn(app.eventBus, 'emit').mockImplementation(() => {});
     const found = {};
     try {
       for (const [where, target] of FOCUS) {
-        const element = target();
+        const element = await target();
         element.focus();
         if (element !== document.body) expect(document.activeElement, where).toBe(element);
         found[where] = {};
@@ -1186,8 +1213,7 @@ describe('what the page shortcuts react to (TST-13)', () => {
     } finally {
       emit.mockRestore();
     }
-    expect(found, "where a shortcut runs (DEF-13's fix changes the button and row cells, not Space's)")
-      .toEqual(WHERE_KEYS_RUN);
+    expect(found, 'where a shortcut runs').toEqual(WHERE_KEYS_RUN);
   });
 });
 
@@ -1546,10 +1572,11 @@ function keyLog({ held = false } = {}) {
      * Press every key of the domain that `listener` does not compare, on its
      * target (a function where the target is rebuilt): a key that changes
      * `state()` or is taken is a finding, and a row must have none. Where the
-     * key lands on the page itself (`page`, the app), the page's dispatcher
-     * takes its own keys too, so for those it is suspended through its own
-     * `setEnabled`, as the app suspends it while it builds: they reach the
-     * listener under test alone, and the rest meet the page as it is.
+     * key lands on the page itself or on a control (`page`, the app: DEF-13),
+     * the page's dispatcher takes its own keys too, so for those it is
+     * suspended through its own `setEnabled`, as the app suspends it while it
+     * builds: they reach the listener under test alone, and the rest meet the
+     * page as it is.
      */
     sweep(listener, target, state, { page = null, type = 'keydown' } = {}) {
       const { keys = [], anyCase = [] } = KEY_LISTENERS[listener];
@@ -1665,7 +1692,7 @@ const LISTENER_ROWS = [
     title: 'Enter and Space on a settings section header open and close it; every other key does not',
     covers: [KEY_LISTENER.sectionHeader],
     async run(log) {
-      await editor();
+      const app = await editor();
       const section = document.querySelector('.settings-section[data-section="video"]');
       const header = section.querySelector('.section-header');
       header.focus();
@@ -1676,14 +1703,16 @@ const LISTENER_ROWS = [
       const steps = ['a', 'Enter', ' ', 'Tab'].map(key =>
         `${key === ' ' ? 'Space' : key}: ${taken(log.press(KEY_LISTENER.sectionHeader, key, header))}; ${state()}`);
       // Focus alone marks the section last used (SectionController's focusin).
+      // A is the page's own shortcut (it adds a waypoint): since DEF-13 a
+      // focused header leaves it to the page.
       expect([before, ...steps]).toEqual([
         'closed (no class), last used video',
-        'a: left; closed (no class), last used video',
+        'a: taken; closed (no class), last used video',
         'Enter: taken; open, last used video',
         'Space: taken; closed (no class), last used video',
         'Tab: left; closed (no class), last used video'
       ]);
-      log.sweep(KEY_LISTENER.sectionHeader, header, state);
+      log.sweep(KEY_LISTENER.sectionHeader, header, state, { page: app });
     }
   },
 
@@ -1691,15 +1720,15 @@ const LISTENER_ROWS = [
     title: 'Enter and Space on a More disclosure open and close it; every other key does not',
     covers: [KEY_LISTENER.more],
     async run(log) {
-      await editor();
+      const app = await editor();
       const disclosure = document.querySelector('.section-more');
       const summary = disclosure.querySelector('summary');
       summary.focus();
       const state = () => (disclosure.open ? 'open' : 'closed');
       expect(['Enter', ' ', 'a'].map(key =>
         `${key === ' ' ? 'Space' : key}: ${taken(log.press(KEY_LISTENER.more, key, summary))}; ${state()}`))
-        .toEqual(['Enter: taken; open', 'Space: taken; closed', 'a: left; closed']);
-      log.sweep(KEY_LISTENER.more, summary, state);
+        .toEqual(['Enter: taken; open', 'Space: taken; closed', 'a: taken; closed']); // A: the page's (DEF-13)
+      log.sweep(KEY_LISTENER.more, summary, state, { page: app });
     }
   },
 
@@ -1715,7 +1744,7 @@ const LISTENER_ROWS = [
       const selected = () => `selected ${app.waypoints.indexOf(app.selectedWaypoint) + 1}`;
       // Every key but F2 on a row starts nothing and selects nothing.
       log.sweep(KEY_LISTENER.waypointRow, () => row(2),
-        () => `${renaming() ? 'renaming' : 'not renaming'}, ${selected()}`);
+        () => `${renaming() ? 'renaming' : 'not renaming'}, ${selected()}`, { page: app });
       const steps = [];
       let event = log.press(KEY_LISTENER.waypointRow, 'F3', row(2));
       await frame();
@@ -1759,7 +1788,7 @@ const LISTENER_ROWS = [
         `${key === ' ' ? 'Space' : key}: ${taken(log.press(listener, key, target))}; ${state()}`;
       const { menuButton, menu: open, menuAnywhere } = KEY_LISTENER;
       // Every other key on the closed menu's button opens nothing.
-      log.sweep(menuButton, trigger, state);
+      log.sweep(menuButton, trigger, state, { page: app });
       expect([
         step(menuButton, 'Enter'), step(open, 'ArrowDown'), step(open, 'End'), step(open, 'ArrowDown'),
         step(open, 'ArrowUp'), step(open, 'Home'), step(open, 'Escape'), step(menuButton, ' '), step(open, 'Tab'),
@@ -1781,7 +1810,7 @@ const LISTENER_ROWS = [
       expect(app.selectedWaypoint, "the page's Escape cleared the selection").toBeNull();
       // Open again: every other key in the menu, and on the page, leaves it open where it is.
       log.press(menuButton, 'Enter', trigger);
-      log.sweep(open, () => document.activeElement, state);
+      log.sweep(open, () => document.activeElement, state, { page: app });
       log.sweep(menuAnywhere, document.body, state, { page: app });
     }
   },
@@ -1964,11 +1993,12 @@ const LISTENER_ROWS = [
       const afterButton = state();
       field().focus();
       const inTheField = log.press(KEY_LISTENER.outline, 'Escape', field());
-      // Escape anywhere but a field is not the outline's: its button keeps it.
+      // Escape anywhere but a field is not the outline's: on its button the
+      // draft stays, and since DEF-13 the page's own Escape takes the key.
       expect([typed, `Escape on its button: ${taken(onAButton)}; ${afterButton}`,
         `Escape in the field: ${taken(inTheField)}; ${state()}`]).toEqual([
         'x 42, focus the x field',
-        'Escape on its button: left; x 42, focus the x field',
+        'Escape on its button: taken; x 42, focus the x field',
         'Escape in the field: taken; x 50, focus Add waypoint'
       ]);
     }

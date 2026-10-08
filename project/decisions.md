@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — DEF-13 — A focused control keeps only its own keys; every other shortcut runs
+
+**Decision:** DEF-13 lands: `handleKeyDown`'s guard keeps every key in a field (input, textarea, select, contenteditable) and for a control inside a modal dialog, as before; any other focused control (button, link, summary, `role=button`) keeps only Space, a menu item or option also the four arrows; every other shortcut runs and is prevented. DEF-32 merges after it.
+
+**Rationale:** the guard returned early for every key on any button, link, summary or menu item, and Chromium keeps focus on a clicked button, so Delete, the arrows, Undo and Save did nothing after a click and Cmd+S opened the browser's Save dialog (round 2, C2). 8 tests fail on main; every mutant is killed. TST-13's key table moves on purpose: those keys now run from a control, and its listener sweeps set the page's handler aside. The run's calls: an open menu keeps only Space and its arrows (the register's "in-widget arrows"), so Delete and Cmd+S act there; a modal dialog's controls keep every key, as today. Found on main: a dialog's heading passes shortcuts to the editor behind (DEF-82). Digest rules: wcag-2.2-aaa (2.1.1 keyboard; 2.1.2 no trap); nielsen 3 (user control).
+
+**Supersedes:** none
+
+**Deferred:** DEF-82
+
 ## 2026-10-08 — GATELESS-1 — The owner paused chat 12 for the weekly reset, then let it run to his stop time
 
 **Decision:** Chat 12 paused on 6 October and resumed on 7 October with no context line, under the owner's stop time, then stopped; nothing was scheduled to resume it. After the weekly reset the run may launch its items' agents together, one each, within the grant's limit of up to three in flight; gates, merges and releases stay one at a time.
