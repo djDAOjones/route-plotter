@@ -252,6 +252,7 @@ at once: autosave 1, queued render 1, undo saved 1
     scene:semantic-changed {kind: "crowd-deleted", layerId: "ex-uon-crowd"}
     ui:toast {message: "Deleted Visitors — press Ctrl+Z to undo"}
       toast "Deleted Visitors — press Ctrl+Z to undo"
+      said "Deleted Visitors — press Ctrl+Z to undo"
   scene-outline:update {crowds: [], focusKey: "crowds:add", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest ee265f51)
   model:
     ~ runtime.dirty: false -> true

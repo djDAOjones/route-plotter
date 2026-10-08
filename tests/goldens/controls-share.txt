@@ -52,6 +52,7 @@ ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Saving project..."
 ui ~ #app: div inert="" → div
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Saving project…"
 ui ~ #share-disclosure-modal: div aria-describedby="share-disclosure-description" aria-labelledby="share-disclosure-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui - #share-disclosure-modal>div[0]: div class="modal-content"
 ui - #share-disclosure-modal>div[0]>button[0]: button aria-label="Close" class="modal-close-x" data-share-disclosure-close="" title="Close" type="button" :text="×"
@@ -64,3 +65,4 @@ settled:
   download route-project-2026-09-23.zip application/zip 2816 bytes 0419d2e02601
   announced "Project saved"
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Saving project..." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saving project…" → p aria-live="off" class="header-status" role="status" :text="Project saved"

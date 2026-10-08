@@ -68,6 +68,10 @@ ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation reset"
 ui ~ #app: div inert="" → div
+ui ~ #export-mp4-btn: button aria-describedby="export-video-reason" class="dropdown-item" role="menuitem" type="button" :text="Export MP4…" → button aria-describedby="export-video-reason" class="dropdown-item" disabled="" role="menuitem" type="button" :text="Export MP4…"
+ui ~ #export-webm-btn: button aria-describedby="export-video-reason" class="dropdown-item" role="menuitem" type="button" :text="Export WebM…" → button aria-describedby="export-video-reason" class="dropdown-item" disabled="" role="menuitem" type="button" :text="Export WebM…"
+ui ~ #export-video-reason: span → span :text="Export MP4 and WebM need at least 2 waypoints."
+ui ~ #export-html-reason: span :text="Export HTML needs a background image." → span :text="Export HTML needs at least 2 waypoints and a background image."
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #settings-help-placeholder: div (not shown) → div class="waypoint-editor-placeholder" style="display: block;"
 ui + #settings-help-placeholder>div[0]: div class="waypoint-instructions" (and 16 inside, 7ae0c94d)

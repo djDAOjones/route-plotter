@@ -23,7 +23,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, retireApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { ANNOUNCEMENTS, STORAGE } from '../src/config/constants.js';
@@ -118,7 +118,10 @@ async function savedProject() {
   app.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
   app.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
   app.storageService.cancelAutoSave();
-  return app._buildProjectSnapshot();
+  const snapshot = app._buildProjectSnapshot();
+  // Its splash, left open, would take the first Escape a later dialog is sent.
+  retireApp(app);
+  return snapshot;
 }
 
 /**
@@ -165,7 +168,7 @@ async function bootRecording(entries, options) {
   const prototype = Object.getPrototypeOf(probe);
   const store = useStorage(entries, options);
   const { app, announced } = await restart(prototype);
-  return { app, store, announced, prototype };
+  return { app, store, announced, prototype, probe };
 }
 
 /** Record the announcements a booted app makes from now on. */
@@ -179,7 +182,18 @@ const heading = () => document.getElementById('unrestored-notice-text').textCont
 const status = () => document.getElementById('unrestored-notice-status').textContent;
 const clearNote = () => document.getElementById('clear-unrestored-note');
 const announcer = () => document.getElementById('announcer').textContent;
-const discard = () => document.getElementById('unrestored-discard').click();
+const discardModal = () => document.getElementById('discard-confirm-modal');
+/**
+ * Discard, as the author does it: the notice's Discard opens a dialog that
+ * asks once, and its own Discard does it (UI-06 B-23; one click was
+ * irreversible). The record stays until the dialog's Discard.
+ */
+const discard = () => {
+  document.getElementById('unrestored-discard').click();
+  expect(discardModal().style.display).toBe('flex');
+  document.getElementById('discard-confirm').click();
+  expect(discardModal().style.display).toBe('none');
+};
 /**
  * Let what the editor said while starting take its turns, on the real clock,
  * until the live region is idle, so what follows is written to it at once
@@ -307,6 +321,45 @@ describe('a record that cannot be restored (DEF-28)', () => {
     expect(announced()).toEqual([{ message: DISCARDED, priority: 'polite' }]);
     expect(announcer()).toBe(DISCARDED);
   }, 20000); // what starting said plays out first on the real clock
+
+  test('asks before it discards: Cancel, Escape and a click beside the dialog keep the record, and focus goes back to Discard', async () => {
+    allowConsole(LOAD_REFUSED);
+    const record = await refusedRecord();
+    // Seen before, so the splash does not open and hold focus itself; the
+    // probe's splash, still open, is stopped too, or its trap takes the Escape.
+    const { store, app, probe } = await bootRecording({ [AUTOSAVE]: record, [STORAGE.SPLASH_SHOWN_KEY]: 'true' });
+    retireApp(probe);
+    const announced = listen(app);
+    const discardBtn = document.getElementById('unrestored-discard');
+    const dialog = discardModal();
+
+    discardBtn.focus();
+    discardBtn.click();
+    expect(dialog.style.display).toBe('flex');
+    expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(document.getElementById(dialog.getAttribute('aria-labelledby')).textContent)
+      .toBe("Discard the session that couldn't be restored?");
+    expect(document.activeElement).toBe(document.getElementById('discard-cancel'));
+    document.getElementById('discard-cancel').click();
+    expect(dialog.style.display).toBe('none');
+    expect(document.activeElement).toBe(discardBtn);
+    expect(kept(store)).toEqual([record]);
+    expect(notice().hidden).toBe(false);
+
+    discardBtn.click();
+    expect(dialog.style.display).toBe('flex');
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(dialog.style.display).toBe('none');
+    expect(document.activeElement).toBe(discardBtn);
+    expect(kept(store)).toEqual([record]);
+
+    discardBtn.click();
+    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(dialog.style.display).toBe('none');
+    expect(kept(store)).toEqual([record]);
+    expect(notice().hidden).toBe(false);
+    expect(announced().filter(({ message }) => message === DISCARDED)).toEqual([]);
+  });
 
   test('a Discard that leaves another record on offer says so as a message the author must hear; one that leaves none, as a routine confirmation', async () => {
     const { app } = await bootRecording({ [keptKey(1, 'a')]: 'older record', [keptKey(2, 'b')]: 'newer record' });
@@ -754,7 +807,9 @@ describe('Discard and a record that could not be restored (DEF-28)', () => {
     const button = document.getElementById('unrestored-discard');
     button.focus();
 
+    // Through the dialog that asks first (UI-06 B-23): its Discard does it.
     button.click();
+    document.getElementById('discard-confirm').click();
 
     const focused = document.activeElement;
     expect(notice().hidden).toBe(true);
@@ -774,7 +829,9 @@ describe('Discard and a record that could not be restored (DEF-28)', () => {
     const button = document.getElementById('unrestored-discard');
     button.focus();
 
+    // Through the dialog that asks first (UI-06 B-23): its Discard does it.
     button.click();
+    document.getElementById('discard-confirm').click();
 
     expect(notice().hidden).toBe(false);
     expect(document.activeElement).toBe(button);

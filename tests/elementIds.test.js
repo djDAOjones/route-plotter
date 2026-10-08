@@ -175,12 +175,14 @@ const LOOKED_UP = {
   'src/app/camera.js': words('camera-zoom-warning camera-zoom-warning'),
   'src/app/crowds.js': words(`
     add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-add-reason crowd-busyness-graph crowd-busyness-graph
-    crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
+    crowd-busyness-graph
+    crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
     crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-lifecycle-hint
-    crowd-pattern-hint crowd-reroll-btn layers-strip
+    crowd-no-emitter crowd-pattern-hint crowd-reroll-btn crowd-scope layers-strip
   `),
   'src/app/editorPanel.js': words('area-draw-reason waypoint-scope'),
-  'src/app/exporting.js': words('export-dropdown-btn'),
+  // UI-06 B-18: the export items' reason line and its two spans.
+  'src/app/exporting.js': words('export-dropdown-btn export-html-reason export-menu-reason export-video-reason'),
   'src/app/network.js': words(`
     crowd-guide-hint crowd-trace-route-btn crowd-trace-route-reason network-edge-delete network-edge-direction
     network-edge-direction network-edge-hint network-edge-swap network-edge-swap network-edge-weight
@@ -189,7 +191,8 @@ const LOOKED_UP = {
     network-node-type network-node-type network-path-weight-rows network-path-weight-rows
     network-path-weights
   `),
-  'src/app/persistence.js': words('app-title'),
+  // UI-06 B-17: the header's status line and the decorative unsaved mark.
+  'src/app/persistence.js': words('app-status app-title title-indicator'),
   'src/app/privacy.js': words(`
     copy-debug-btn diagnostics-cancel diagnostics-copy diagnostics-copy-issues-address
     diagnostics-description diagnostics-download diagnostics-issues-address diagnostics-issues-note
@@ -199,9 +202,12 @@ const LOOKED_UP = {
     share-disclosure-description share-disclosure-modal share-disclosure-title
   `),
   'src/app/sceneOutline.js': words('scene-outline'),
+  // UI-06 B-16: the canvas area is busy while a background decodes.
+  'src/app/backgroundLoading.js': words('canvas-area'),
+  // UI-06 B-23: the Discard's confirm dialog and its two buttons.
   'src/app/unrestoredAutosave.js': words(`
-    clear-btn clear-unrestored-note unrestored-discard unrestored-download unrestored-notice unrestored-notice
-    unrestored-notice-status unrestored-notice-text
+    clear-btn clear-unrestored-note discard-cancel discard-confirm discard-confirm-modal unrestored-discard
+    unrestored-download unrestored-notice unrestored-notice unrestored-notice-status unrestored-notice-text
   `),
   'src/app/viewport.js': words('zoom-prompt'),
   'src/app/wiringDom.js': words('example-projects-menu waypoint-scope'),

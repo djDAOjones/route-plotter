@@ -375,7 +375,7 @@ export const wiringControllersMixin = {
       }
       this.interactionHandler.branchArmed = waypoint;
       const label = waypoint.name || 'this waypoint';
-      this.announce(`Branching from ${label}. Click where the branch should go.`);
+      // The toast is the announcement (UI-06 J-05): one message, heard once.
       this.eventBus.emit('ui:toast', {
         message: `Branch from ${label} — click where it should go (Esc to cancel)`
       });
@@ -384,7 +384,6 @@ export const wiringControllersMixin = {
     this.eventBus.on('route:branch-cancel', () => {
       if (!this.interactionHandler.branchArmed) return;
       this.interactionHandler.branchArmed = null;
-      this.announce('Branch cancelled.');
       this.eventBus.emit('ui:toast', { message: 'Branch cancelled' });
     });
 
@@ -468,7 +467,6 @@ export const wiringControllersMixin = {
         ? (this.waypointsById.get(next)?.name || 'that waypoint')
         : null;
       const message = next ? `Branch rejoins at ${targetName}` : 'Branch now ends here';
-      this.announce(message);
       this.eventBus.emit('ui:toast', { message });
     });
 
@@ -946,7 +944,8 @@ export const wiringControllersMixin = {
       const { format, resolution } = request && typeof request === 'object' ? request : { format: request };
       if (refuseWhileExporting(this)) return;
       if (!this.previewMode) {
-        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
+        // A tip is help, not status: shown, not announced (UI-06 J-05)
+        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000, null, { announce: false });
       }
       this.exportVideo({ format: format || 'mp4', resolution });
     });
@@ -957,7 +956,7 @@ export const wiringControllersMixin = {
      */
     this.eventBus.on('html:export-request', () => {
       if (!this.previewMode) {
-        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
+        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000, null, { announce: false });
       }
       void this.requestHTMLExport();
     });
@@ -1353,9 +1352,10 @@ export const wiringControllersMixin = {
       this.announce('All waypoints selected');
     });
 
-    // Generic toast request from components (e.g. shift-delete undo hint)
-    this.eventBus.on('ui:toast', ({ message, duration }) => {
-      this.showToast(message, duration);
+    // Generic toast request from components (e.g. shift-delete undo hint);
+    // `priority` is the announcement's (assertive for an error, UI-06 J-05)
+    this.eventBus.on('ui:toast', ({ message, duration, priority }) => {
+      this.showToast(message, duration, null, { priority });
     });
 
     // Announcement request from components (UIController's list reorders):

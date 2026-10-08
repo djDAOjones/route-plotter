@@ -1694,9 +1694,15 @@ const CONTEXTS = [
   },
   {
     name: 'export-menu',
-    about: 'the Export menu open',
+    // A fixture reaches the app through browser recovery, which carries no
+    // background, and Export HTML is disabled without one (UI-06 B-18): the
+    // boot's own default image is loaded first, so the item can be operated.
+    about: 'the Export menu open, with a background, so Export HTML can run',
     roots: ['#export-menu'],
-    enter: clickId('export-dropdown-btn'),
+    enter: async (app) => {
+      await drive(app.loadDefaultImage());
+      clickId('export-dropdown-btn')(app);
+    },
     logs: WEBM_UNSUPPORTED,
   },
   {
@@ -1742,6 +1748,17 @@ const CONTEXTS = [
     about: 'browser recovery given a record it could not restore, so the notice offers it',
     roots: ['#unrestored-notice'],
     enter: recoverUnrestorable,
+    logs: [/Autosave was not restored; current state was left unchanged/],
+  },
+  {
+    // The notice's Discard asks once (UI-06 B-23): the dialog's own controls.
+    name: 'discard',
+    about: 'the notice’s Discard asked to confirm',
+    roots: ['#discard-confirm-modal'],
+    enter: async (app) => {
+      await recoverUnrestorable(app);
+      clickId('unrestored-discard')(app);
+    },
     logs: [/Autosave was not restored; current state was left unchanged/],
   },
   { name: 'share', about: 'Save Project asked to disclose', roots: ['#share-disclosure-modal'], enter: clickId('save-project-btn') },

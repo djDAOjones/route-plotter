@@ -169,7 +169,8 @@ export const playbackMixin = {
     
     // Show after a brief delay so UI settles first
     setTimeout(() => {
-      this.showToast('Tip: Check your sequence in Preview mode before exporting', 8000);
+      // A tip is help, not status: shown, not announced (UI-06 J-05)
+      this.showToast('Tip: Check your sequence in Preview mode before exporting', 8000, null, { announce: false });
       try {
         localStorage.setItem(STORAGE_KEY, 'true');
       } catch (error) {

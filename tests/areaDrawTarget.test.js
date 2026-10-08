@@ -44,11 +44,14 @@ function withStyles() {
  * booted is set up before the instrumentation, outside the claim.
  */
 let toasts = null;
+/** The app's `announce`, watched the same way: a toast is announced once through the queue (UI-06 J-05). */
+let announced = null;
 
 async function openDay() {
   const app = await bootApp();
   await app.ready;
   toasts = vi.spyOn(Object.getPrototypeOf(app), 'showToast');
+  announced = vi.spyOn(Object.getPrototypeOf(app), 'announce');
   withStyles();
   shellRegion = toastRegion();
   // The welcome dialog, open at start, makes the page behind it inert.
@@ -76,6 +79,8 @@ afterEach(() => {
   // The spy is on the class, shared by every app: each test's own
   toasts?.mockRestore();
   toasts = null;
+  announced?.mockRestore();
+  announced = null;
 });
 
 /** A canvas click during the draw, at image coordinates, as the canvas sends it on to the draw. */
@@ -177,8 +182,10 @@ const FADED = /opacity\(\s*0*(\.0*)?%?\s*\)/;
  * The one toast saying so, checked as far as a page can check it without a
  * browser's layout, against a stated list and nothing more:
  * - its own text is the message, and its text includes it;
- * - it is in the app's own live region (the one the page started with),
- *   polite, atomic, relevant to additions;
+ * - it is in the app's own toast region (the one the page started with),
+ *   which is not live (`aria-live="off"`, UI-06 J-05): its words reach a
+ *   screen reader once, through the announcement queue, so the message was
+ *   announced exactly once;
  * - from the toast up to and including `<html>`: no role, nothing `hidden`,
  *   `aria-hidden`, inert or busy, no `aria-live="off"` inside the region,
  *   no `aria-relevant` without additions; and, by the app's stylesheet,
@@ -197,8 +204,9 @@ function expectTold() {
   const [toast] = toasts;
   expect(toast.textContent).toContain(GONE);
   expect(toastRegion()).toBe(shellRegion);
-  expect(toastRegion().getAttribute('aria-live')).toBe('polite');
-  expect(toastRegion().getAttribute('aria-atomic')).toBe('true');
+  // Not a live region: the toast is announced once through the queue (UI-06 J-05).
+  expect(toastRegion().getAttribute('aria-live')).toBe('off');
+  expect(announced.mock.calls.filter(([message]) => message === GONE)).toHaveLength(1);
   expect(toast.classList.contains('is-visible')).toBe(true);
   const colour = getComputedStyle(toast).color;
   expect({ colour, alpha: alphaOf(colour, toast) > 0 }).toEqual({ colour, alpha: true });
@@ -365,20 +373,26 @@ test.each(REMOVALS)('a draw whose waypoint is %s ends, and the author is told on
 
     expect(app.getWaypointById(waypoint.id)).toBeUndefined();
     expect(drawing(app)).toEqual(ENDED);
-    // Told from the next frame to the last moment of its five seconds, past
-    // the action's own announcements (each in turn, the last cleared by four
-    // seconds): as the page's changes are delivered, and every 250 ms.
+    // Told from the next frame to the last moment of its five seconds: as the
+    // page's changes are delivered, and every 250 ms.
     await vi.advanceTimersByTimeAsync(16);
     const watched = watchTold();
     for (let at = 16; at < 4999; at += 250) {
       expectTold();
       await vi.advanceTimersByTimeAsync(Math.min(250, 4999 - at));
     }
-    expect(document.getElementById('announcer').textContent).toBe('');
     expectTold();
     watched();
     await vi.advanceTimersByTimeAsync(1);
     expect(goneToasts().map(toast => toast.classList.contains('is-visible'))).toEqual([false]);
+    // What the action said clears in turn (DEF-45). The delete's undo toast
+    // and this toast are announcements too now (UI-06 J-05), each held for
+    // its time after the action's own, so the region empties within a hold
+    // for each of them past the toast's five seconds.
+    for (let holds = 0; holds < 3 && document.getElementById('announcer').textContent !== ''; holds += 1) {
+      await vi.advanceTimersByTimeAsync(ANNOUNCEMENTS.HOLD_MS);
+    }
+    expect(document.getElementById('announcer').textContent).toBe('');
     // Nothing more is drawn, for it or anything else.
     place(app, 0.2, 0.2);
     expect(drawing(app).vertices).toBe(0);

@@ -345,7 +345,8 @@ test.each([
     expect(app._editRevision).toBe(revision);
     expect(app.storageService._pendingAutoSave).toBe(pending);
     expect(history).not.toHaveBeenCalled();
-    expect(announce).not.toHaveBeenCalled();
+    // Said once: the refusal's toast is its announcement (UI-06 J-05).
+    expect(announce.mock.calls).toEqual([[message, 'polite']]);
   });
   // The recovery the refusal found pending is written when its time comes.
   await new Promise(resolve => setTimeout(resolve, STORAGE.AUTOSAVE_INTERVAL + 100));

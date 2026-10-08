@@ -277,6 +277,8 @@ export const editorPanelMixin = {
     
     // Emit event for SectionController to update UI state
     this.eventBus.emit('waypoint:list-updated', this.waypoints);
+    // The export items follow the route (UI-06 B-18)
+    this.updateExportAvailability?.();
     
     // Delegate to UIController
     if (this.uiController) {

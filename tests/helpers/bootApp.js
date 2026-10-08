@@ -72,7 +72,7 @@ function stopApp(app) {
 }
 
 function deactivateFocusTraps(app) {
-  const traps = [app._splashFocusTrap, app._shareDisclosureTrap, app._diagnosticsTrap,
+  const traps = [app._splashFocusTrap, app._shareDisclosureTrap, app._diagnosticsTrap, app._discardFocusTrap,
     app.uiController?._codecFocusTrap, app.uiController?._clearFocusTrap];
   for (const trap of traps) trap?.deactivate?.();
 }

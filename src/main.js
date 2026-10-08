@@ -79,6 +79,7 @@ import { privacyMixin } from './app/privacy.js';
 import { restoreStartupProject } from './app/startup.js';
 import { setupUnrestoredNotice } from './app/unrestoredAutosave.js';
 import { loadExampleBackground } from './app/backgroundLoading.js';
+import { isMac } from './config/keybindings.js';
 import { clearProject } from './app/projectReset.js';
 import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
 import { boundEntryWaypointIds } from './utils/routeAnchors.js';
@@ -778,14 +779,21 @@ class RoutePlotter {
   }
   
   /**
-   * Show a toast notification that auto-dismisses
+   * Show a toast notification that auto-dismisses. The container is not a
+   * live region: the toast's words are announced once, through the queue,
+   * so nothing is read twice (UI-06 J-05, C-5).
    * @param {string} message - Text to display
    * @param {number} [duration=5000] - Time in ms before auto-dismiss
    * @param {{label: string, onClick: Function}} [action] - Optional offer the
    *   toast carries (LABEL-01). It is only ever an offer: the same action must
    *   remain reachable elsewhere, because a toast fades and can be missed.
+   * @param {{priority?: 'polite'|'assertive', announce?: boolean}} [options] -
+   *   assertive for an error the author must hear; `announce: false` for a
+   *   tip, which is help, not status (UI-STANDARDS: announce status changes),
+   *   so it never competes with what the author must hear (DEF-45)
    */
-  showToast(message, duration = 5000, action = null) {
+  showToast(message, duration = 5000, action = null, { priority = 'polite', announce = true } = {}) {
+    if (announce) this.announce(message, priority);
     const container = this.elements.toastContainer;
     if (!container) return;
     
@@ -855,7 +863,12 @@ class RoutePlotter {
       // Event-driven approach ensures consistent update sequence
       this.eventBus.emit('waypoint:deleted', index);
       
-      this.announce('Waypoint deleted');
+      // The standard delete toast (a crowd's, a node's and a path's sibling),
+      // whichever route asked: it advertises the undo, and its announcement is
+      // the one the author hears (UI-06 J-05, C-5).
+      this.eventBus.emit('ui:toast', {
+        message: `Deleted ${waypoint.name || 'waypoint'} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+      });
     }
   }
   

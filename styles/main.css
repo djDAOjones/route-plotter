@@ -126,6 +126,24 @@ select{
   color:var(--text-01);
 }
 
+/* UI-06 B-17: the save state as text beside the title, at the caption size
+   in --text-02 (10.4:1 on --ui-01); the "●" is its decorative mark, at the
+   title's size so the header keeps its height. */
+.title-indicator{
+  font-size:var(--type-h1);
+  line-height:var(--lh-h1);
+  color:var(--text-02);
+  margin-left:calc(-1 * var(--space-2));
+}
+
+.header-status{
+  margin:0;
+  font-size:var(--type-caption);
+  line-height:var(--lh-caption);
+  color:var(--text-02);
+  white-space:nowrap;
+}
+
 .header-controls{
   display:flex;
   align-items:center;

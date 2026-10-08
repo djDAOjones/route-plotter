@@ -201,7 +201,9 @@ function stringsIn(root) {
   // Prose the app shows: banners, helper lines, reasons, errors, dialogs, toasts.
   const PROSE = ['#network-edit-banner .banner-text', '#network-edit-banner .banner-count', '.section-hint',
     '.scene-outline-hint', '.scene-outline-empty', '[role="alert"]', '.modal-content > p', '.waypoint-card-actions-reason',
-    '.network-path-weight-error', '.context-menu-item-reason', '.toast', '.splash-intro', '.help-section li'];
+    '.network-path-weight-error', '.context-menu-item-reason', '.toast', '.splash-intro', '.help-section li',
+    // UI-06 PR 4: the header's status line, the export menu's reason line, the crowd's empty-state line.
+    '.header-status', '.dropdown-item-reason', '.crowd-no-emitter'];
   for (const node of root.querySelectorAll(PROSE.join(', '))) {
     // Its own sentences: a button, link or address nested in it is read on its own.
     const copy = node.cloneNode(true);

@@ -49,10 +49,10 @@ function announceBrokenAnchors(app, report) {
   const subject = report.broken.length === 1
     ? 'A crowd node'
     : `${report.broken.length} crowd nodes`;
+  // The toast is the announcement (UI-06 J-05): one message, heard once.
   app.eventBus?.emit?.('ui:toast', {
     message: `${subject} lost the waypoint it followed (${layers.join(', ')}) — back at its own position`
   });
-  app.announce?.(`${subject} lost the waypoint it followed and is back at its own position.`);
 }
 
 /**

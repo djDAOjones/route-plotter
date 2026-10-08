@@ -836,7 +836,8 @@ test('a branch end dropped on a minor, its rejoin refused, is back where it was,
   expect(work).toEqual({ built: 1, timed: 1, toasts: 1 });
   expect(end).toMatchObject({ ...start, branchRejoin: 'end' });
   expect({ dirty: app._isDirty, revision: app._editRevision, history: app.undoService.createSnapshot() }).toEqual(before);
-  expect(announced).not.toHaveBeenCalled();
+  // Said once: the refusal's toast is its announcement (UI-06 J-05).
+  expect(announced).toHaveBeenCalledTimes(1);
   expect(saving).not.toHaveBeenCalled();
 
   const saved = await savedProject(app);
@@ -919,7 +920,8 @@ describe.each([
     expect(recorded).toHaveBeenCalledTimes(1);
     expect(saving).toHaveBeenCalledTimes(1);
     expect(app._editRevision - revision).toBe(1);
-    expect(announced.mock.calls).toEqual([[message]]);
+    // The toast is the announcement, at its priority: one message, heard once (UI-06 J-05).
+    expect(announced.mock.calls).toEqual([[message, 'polite']]);
     localStorage.setItem.mockClear();
     app.storageService.flushAutoSave();
     const writes = localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY);

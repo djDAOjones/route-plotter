@@ -84,7 +84,8 @@ test('a full store does not throw from the preview tip, which still shows (DEF-4
 
   expect(() => vi.advanceTimersByTime(1500)).not.toThrow();
 
-  expect(toast).toHaveBeenCalledWith(TIP_TEXT, 8000);
+  // A tip is help, not status: shown, not announced (UI-06 J-05).
+  expect(toast).toHaveBeenCalledWith(TIP_TEXT, 8000, null, { announce: false });
   expect(recordedConsole()).toContainEqual(expect.stringMatching(/Could not remember that the preview tip was seen/));
 });
 
