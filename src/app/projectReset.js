@@ -71,10 +71,9 @@ export function clearProject(app) {
   app.updateTimeDisplay();
   app.updateWaypointList();
 
-  if (app.previewMode) {
-    app.previewMode = false;
-    app.eventBus.emit('mode:changed', { previewMode: false });
-  }
+  // Back to Edit through the one mode setter, so the header switch says so
+  // and the mode's listeners hear it; the event this sent had none (DEF-20).
+  app._setPreviewMode(false);
 
   app.eventBus.emit('app:cleared');
   app.uiController?.updateWaypointEditor(null);

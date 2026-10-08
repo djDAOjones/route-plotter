@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-08 — DEF-20 — After Open, rollback and Clear All, the controls show the project they hold
+
+**Decision:** DEF-20 lands: a load (Open, and a failed Open's rollback, through `syncLoadedProjectControls`) writes the Duration thumb on the slider that exists and the reveal and Angle of View sliders; Clear All leaves Preview through the one mode setter; the 50 ms `isUpdatingSlider` flag, which dropped real Duration input, is deleted.
+
+**Rationale:** the load wrote the Duration thumb only when the removed left slider existed, so after Open the thumb stayed where the last project left it (3,901 under a 12.7 s readout) and one +5 nudge made the duration hundreds of seconds; the reveal and Angle of View sliders were never written; Clear All sent `mode:changed`, which nothing hears, so the switch still said Preview. `angleToSlider` is recovered from `2fb72ff`. 7 tests fail on main; 13 of 14 mutants are killed, the 14th equivalent (the handler skips a missing slider). Thirteen control goldens move on purpose: the Duration thumb reads the fixture's 275 px/s, the Angle of View thumbs follow it, and the Spotlight rows show in the route context. Start-up still leaves the Angle of View and trail thumbs at the markup: outside the item, a wish line, the run's call. Digest rules: nielsen 1 (status visible); house conventions (speed via `ui:slider:update-speed`).
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-07 — TST-11 — Behavioural tests stand beside the source-text assertions; retiring those waits on the owner
 
 **Decision:** TST-11's first round lands: 25 behavioural tests pin every source-text assertion its row names that has behaviour, on the booted editor or by running `build.js` in the SPL-06 harness's copy; the source-text assertions stay unchanged, and the item stays open, `[!]`, until the owner says they may go.
