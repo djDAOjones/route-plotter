@@ -23,3 +23,4 @@
 ## Notes
 
 - 2026-10-08 — Filed from the design reviews' defect candidates on the owner's acceptance of the twelve proposed rows ("Accept all as proposed (Recommended)", 2026-10-08). Found by UI-06's static half; Codex supplied the working repro. UI-06's colour-and-tokens PR (B-14) makes the fix; this row is the record. The priority is the reviewing session's proposal, accepted with the row.
+- 2026-10-08 — Shipped in UI-06's colour and tokens PR (#114, `1bc07cd`, v3.2.709): the five tokens are defined, the duplicate-edge error renders its accent bar and the field its red border, pinned through the cascade in `tests/tokens.test.js` and `tests/sceneOutline.test.js`.
