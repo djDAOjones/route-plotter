@@ -675,14 +675,26 @@ export const crowdsMixin = {
    */
   renameCrowd(layer) {
     if (this.selectedCrowd !== layer) this.eventBus.emit('crowd:selected', layer);
-    const index = this.scene.getFlowLayers().indexOf(layer);
-    const title = this._layersStripEl?.children[index + 1]?.querySelector('.layer-title');
+    const title = this._crowdRowOf(layer)?.querySelector('.layer-title');
     if (title) this._startCrowdRename(layer, title);
   },
 
   /**
+   * A crowd's row in the strip as last built: the rows follow the scene's
+   * order, after the Route row.
+   * @param {FlowLayer} layer
+   * @returns {HTMLButtonElement|null}
+   * @private
+   */
+  _crowdRowOf(layer) {
+    const index = this.scene.getFlowLayers().indexOf(layer);
+    return this._layersStripEl?.children[index + 1]?.querySelector('.layer-row') ?? null;
+  },
+
+  /**
    * Inline-rename a crowd row: swap the title span for an input.
-   * Enter/blur commits, Escape cancels. Renames are undoable.
+   * Enter/blur commits, Escape cancels; Enter and Escape give focus back to
+   * the row. Renames are undoable.
    * @param {FlowLayer} layer
    * @param {HTMLElement} titleEl
    * @private
@@ -698,7 +710,14 @@ export const crowdsMixin = {
     input.select();
 
     let done = false;
-    const commit = () => {
+    // The strip is rebuilt when the field closes, taking the field with it.
+    // Closed from the keyboard, focus goes back to the row it came from; a
+    // blur is the user going somewhere else, and that is left alone.
+    const finish = (fromKeyboard) => {
+      this.updateLayersStrip();
+      if (fromKeyboard) this._crowdRowOf(layer)?.focus();
+    };
+    const commit = (fromKeyboard = false) => {
       if (done) return;
       done = true;
       const name = input.value.trim();
@@ -713,19 +732,19 @@ export const crowdsMixin = {
           this.eventBus.emit('crowd:selected', layer);
         }
       }
-      this.updateLayersStrip();
+      finish(fromKeyboard);
     };
-    const cancel = () => {
+    const cancel = (fromKeyboard = false) => {
       if (done) return;
       done = true;
-      this.updateLayersStrip();
+      finish(fromKeyboard);
     };
 
-    input.addEventListener('blur', commit);
+    input.addEventListener('blur', () => commit(false));
     input.addEventListener('keydown', (e) => {
       e.stopPropagation(); // Keep global shortcuts out of the rename
-      if (e.key === 'Enter') { e.preventDefault(); commit(); }
-      if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+      if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+      if (e.key === 'Escape') { e.preventDefault(); cancel(true); }
     });
   },
 

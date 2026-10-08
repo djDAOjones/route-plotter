@@ -384,20 +384,41 @@ describe('renaming a crowd from its row', () => {
     expect(renaming().closest('li')).toBe(document.querySelector('#layers-strip li:nth-child(2)'));
     expect(document.activeElement).toBe(renaming());
 
-    // Enter keeps the name typed; the row shows it.
+    // Enter keeps the name typed; the row shows it, and has the focus back (Codex round 1).
     renaming().value = 'Visitors';
     renaming().dispatchEvent(key('Enter'));
     expect(first.name).toBe('Visitors');
     expect(renaming()).toBeNull();
     expect(rowOf(first).textContent).toContain('Visitors');
+    expect(document.activeElement).toBe(rowOf(first));
 
-    // On the selected crowd's row: renaming at once, and Escape keeps the old name.
+    // On the selected crowd's row: renaming at once, and Escape keeps the old name, focus back on the row.
     rowOf(first).dispatchEvent(key('F2'));
     expect(renaming().value).toBe('Visitors');
     renaming().value = 'Others';
     renaming().dispatchEvent(key('Escape'));
     expect(first.name).toBe('Visitors');
     expect(renaming()).toBeNull();
+    expect(document.activeElement).toBe(rowOf(first));
+
+    // A second F2 while renaming keeps the field and what was typed.
+    rowOf(first).dispatchEvent(key('F2'));
+    const field = renaming();
+    field.value = 'Typed';
+    field.dispatchEvent(key('F2'));
+    expect(renaming()).toBe(field);
+    expect(field.value).toBe('Typed');
+    field.dispatchEvent(key('Escape'));
+
+    // Committed by leaving the field (the user clicked elsewhere): the name is kept, focus is not moved.
+    rowOf(first).dispatchEvent(key('F2'));
+    renaming().value = 'Guests';
+    renaming().dispatchEvent(new Event('blur'));
+    expect(first.name).toBe('Guests');
+    expect(renaming()).toBeNull();
+    expect(document.activeElement).toBe(document.body);
+    // The name typed is visible in the row that replaced the field.
+    expect(rowOf(first).textContent).toContain('Guests');
 
     // Any other key on the row is left to the page.
     const other = key('Enter');

@@ -1393,9 +1393,14 @@ kbd{
 
 /* UI-06 B-06: a range's readout sits beside its label, in one row, never
    inside the label — inside, it joined the control's accessible name and
-   was read twice. The app shows or hides a whole row by the row. */
+   was read twice. The app shows or hides a whole row by the row.
+   The label is never narrower than its content (its text column, help slot
+   and the slider's 3rem minimum), so its children cannot run under the
+   readout; a readout that does not fit beside the slider — a narrow sidebar,
+   a long unit — wraps under it, at the right. */
 .section-content .range-row{
   display:flex;
+  flex-wrap:wrap;
   align-items:center;
   gap:var(--label-gap);
   margin-bottom:var(--row-gap);
@@ -1407,12 +1412,14 @@ kbd{
 }
 
 .section-content .range-row > label{
-  flex:1;
+  flex:1 1 auto;
+  min-width:min-content;
   margin-bottom:0;
 }
 
 .section-content .range-row > .range-readout{
   flex:0 0 auto;
+  margin-inline-start:auto;
   min-width:2.5rem; /* Consistent value width per spec §I */
   text-align:right;
   font-family:var(--font-mono);

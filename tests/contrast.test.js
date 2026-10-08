@@ -353,18 +353,25 @@ describe('increased contrast preference (B-27)', () => {
     for (const options of [REST, MORE]) {
       const where = options.media ? ' (increased contrast)' : '';
       const tokens = tokensFor(options.media);
-      const track = property => declaration(mainCss, '.timeline-slider::-webkit-slider-runnable-track', property);
+      // A pseudo-element's rules cannot be matched on a mounted element, so
+      // its winning declaration under the mode is read by hand: the mode's
+      // own rule where the block carries one, else the rule at rest (Codex
+      // round 1: read at rest only, a darkened track under the mode passed).
+      const winningOf = (selector, property) => (options.media ?? [])
+        .map(media => declaration(mainCss, selector, property, media)).find(Boolean)
+        ?? declaration(mainCss, selector, property);
+      const track = property => winningOf('.timeline-slider::-webkit-slider-runnable-track', property);
       const surface = colourIn(track('background'), tokens);
       const border = colourIn(track('border'), tokens);
       // The band itself paints nothing: the controls bar shows through it.
       expect(paintOf(rail, ['background', 'background-color'], options).alpha).toBe(0);
       for (const thumb of ['::-webkit-slider-thumb', '::-moz-range-thumb']) {
-        const fill = colourIn(declaration(mainCss, `.timeline-slider${thumb}`, 'background'), tokens);
+        const fill = colourIn(winningOf(`.timeline-slider${thumb}`, 'background'), tokens);
         expectContrast(fill, surface, NON_TEXT, `thumb ${thumb} on the rail${where}`);
       }
       expectContrast(border, surface, NON_TEXT, `rail border on the rail${where}`);
       expectContrast(border, surfaceOf(rail.parentElement, options), NON_TEXT, `rail border on the controls bar${where}`);
-      expect(declaration(mainCss, '.timeline-slider::-moz-range-track', 'background')).toBe(track('background'));
+      expect(winningOf('.timeline-slider::-moz-range-track', 'background')).toBe(track('background'));
     }
   });
 });

@@ -40,6 +40,21 @@ const NODE_TYPE_CYCLE = ['normal', 'entry', 'exit'];
 const SELECTION_OUTER = '#FFFFFF';
 const SELECTION_INNER = '#111111';
 
+/**
+ * The control to give focus to, or, when the card holding it is collapsed
+ * (its content is display:none, so a browser cannot focus it), the card's
+ * header button: the visible control that reveals it. The card is not
+ * opened: leaving the mode is no reason to change the layout the user set.
+ * Decided by the header's `aria-expanded` (jsdom lays nothing out).
+ * @param {HTMLElement} control
+ * @returns {HTMLElement}
+ */
+function visibleFocusTarget(control) {
+  const header = control.closest('.settings-section')?.querySelector('.section-header');
+  if (!header || header.getAttribute('aria-expanded') === 'true') return control;
+  return header;
+}
+
 export class NetworkEditService {
   /**
    * @param {EventBus} eventBus - Application event bus
@@ -210,7 +225,7 @@ export class NetworkEditService {
     this.eventBus.emit('network:edit-mode-changed', { active: false, layer: null });
     this.eventBus.emit('render:request');
     // After the mode change, which re-enables the button that opened the mode.
-    if (returnFocus?.isConnected && !returnFocus.disabled) returnFocus.focus();
+    if (returnFocus?.isConnected && !returnFocus.disabled) visibleFocusTarget(returnFocus).focus();
   }
 
   // ── selection ───────────────────────────────────────────

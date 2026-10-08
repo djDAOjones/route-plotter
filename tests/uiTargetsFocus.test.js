@@ -141,6 +141,78 @@ describe('card headers are native buttons inside their headings (UI-06 B-21)', (
     }
     expect(document.activeElement).toBe(header);
   });
+
+  test('focus alone marks a card last used, and a click marks and toggles it (SectionController, as the old header row pinned)', async () => {
+    await editor();
+    const lastUsed = () => document.querySelector('#settings-sections .settings-section[data-last="true"]')?.dataset.section ?? 'none';
+    const pacing = document.querySelector('[data-section="pacing"] .section-header');
+    const background = document.querySelector('[data-section="background"] .section-header');
+    const open = header => header.getAttribute('aria-expanded') === 'true';
+    expect(lastUsed()).not.toBe('pacing');
+    // Tab onto a header: nothing opens, but the card is where the user is.
+    pacing.focus();
+    expect(lastUsed()).toBe('pacing');
+    const wasOpen = open(pacing);
+    // Activating it (Enter and Space arrive as the button's click) toggles it and keeps it last used.
+    pacing.click();
+    expect(open(pacing)).toBe(!wasOpen);
+    expect(lastUsed()).toBe('pacing');
+    pacing.click();
+    expect(open(pacing)).toBe(wasOpen);
+    // Another header: last used follows the click, and only one card carries it.
+    background.focus();
+    background.click();
+    expect(lastUsed()).toBe('background');
+    expect(document.querySelectorAll('#settings-sections [data-last="true"]').length).toBe(1);
+    // Tab away: the mark stays with the card last used.
+    document.getElementById('scope-route-btn').focus();
+    expect(lastUsed()).toBe('background');
+  });
+});
+
+describe('Done gives focus back to a control that is on screen (UI-06 B-29, Codex round 1)', () => {
+  /** A crowd on its own network, in the shell; the Guide card as it starts, collapsed. */
+  async function drawing() {
+    const app = await editor();
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.8, imgY: 0.5, isMajor: true });
+    app.addCrowd();
+    app.selectedCrowd.setGuideType('graph');
+    app.syncCrowdEditor();
+    const guide = document.querySelector('.settings-section[data-section="guide"]');
+    const header = guide.querySelector('.section-header');
+    const button = document.getElementById('network-edit-btn');
+    expect(button.hidden).toBe(false);
+    return { app, guide, header, button };
+  }
+  const done = () => document.querySelector('#network-edit-banner .banner-done');
+
+  test('with the Guide card collapsed, Done focuses the card\'s header, the visible control that reveals the button, and opens nothing', async () => {
+    const { app, guide, header, button } = await drawing();
+    expect(header.getAttribute('aria-expanded')).toBe('false');
+    app.enterNetworkEditMode();
+    expect(button.disabled).toBe(true);
+    done().focus();
+    done().click();
+    expect(app.networkEditService.active).toBe(false);
+    expect(button.disabled).toBe(false);
+    // The button sits in display:none content: a browser cannot focus it.
+    expect(header.getAttribute('aria-expanded')).toBe('false');
+    expect(guide.classList.contains('expanded')).toBe(false);
+    expect(document.activeElement).toBe(header);
+    expect(document.activeElement.closest('.settings-section')).toBe(guide);
+  });
+
+  test('with the Guide card expanded, Done focuses the Edit network button itself', async () => {
+    const { app, header, button } = await drawing();
+    header.click();
+    expect(header.getAttribute('aria-expanded')).toBe('true');
+    app.enterNetworkEditMode();
+    done().focus();
+    done().click();
+    expect(button.disabled).toBe(false);
+    expect(document.activeElement).toBe(button);
+  });
 });
 
 describe('a card header\'s focus ring is visible, collapsed or expanded (UI-06 B-02)', () => {
@@ -195,6 +267,36 @@ describe('a card header\'s focus ring is visible, collapsed or expanded (UI-06 B
     expect(offset?.important).toBe(true);
     const width = parseFloat(resolveValue(outline.value, tokensFor([FORCED_COLOURS]))) * 16;
     expect(parseFloat(offset.value) + width).toBeLessThanOrEqual(0);
+  });
+});
+
+describe('a readout never overlaps its slider (UI-06 B-06, Codex round 1)', () => {
+  test('the row wraps, the label keeps its content width, and the readout right-aligns under the slider', () => {
+    // A 288px sidebar at 1,200px leaves ~252px for a row; the label's text
+    // column, help slot and 3rem slider need ~208px, and "8 reference px"
+    // ~118px more. With the label free to shrink below its content, its
+    // children ran under the readout. By rule now: the row wraps, the label
+    // is never narrower than its content, and a readout that does not fit
+    // beside the slider goes under it, at the right.
+    const row = mount(fragment('.settings-section[data-section="marker"]'), '.range-row');
+    const label = row.querySelector('label');
+    const readout = row.querySelector('.range-readout');
+    expect(readout.id).toBe('dot-size-value');
+    expect(cascade(row, 'display')?.value).toBe('flex');
+    expect(cascade(row, 'flex-wrap')?.value).toBe('wrap');
+    expect(cascade(label, 'min-width')?.value).toBe('min-content');
+    expect(cascade(label, 'flex')?.value).toBe('1 1 auto');
+    expect(cascade(readout, ['margin-inline-start', 'margin-left', 'margin'])?.value).toBe('auto');
+    expect(cascade(readout, 'flex')?.value).toBe('0 0 auto');
+    // The slider keeps its minimum, which the label's content width includes, and its 44px band.
+    const slider = row.querySelector('input[type="range"]');
+    expect(cascade(slider, 'min-width')?.value).toBe('3rem');
+    expect(winning(slider, 'height')).toBe('2.75rem');
+    // The same at the narrow breakpoints: nothing there lets the label shrink again.
+    for (const media of ['@media (max-width: 80rem)', '@media (max-width: 64rem)', '@media (max-width: 30rem)']) {
+      expect(cascade(label, 'min-width', { media: [media] })?.value, media).toBe('min-content');
+      expect(cascade(row, 'flex-wrap', { media: [media] })?.value, media).toBe('wrap');
+    }
   });
 });
 
