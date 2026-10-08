@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { contextFor } from './setup.js';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, retireApp } from './helpers/bootApp.js';
 import { ANNOUNCEMENTS } from '../src/config/constants.js';
 
 /**
@@ -95,5 +95,92 @@ describe('the whole app boots (TST-01)', () => {
     expect(app.waypoints).toHaveLength(2);
     expect(app.waypoints[0].imgX).toBeCloseTo(0.25);
     await vi.waitFor(() => expect(ctx.calls.length).toBeGreaterThan(0));
+  });
+});
+
+/**
+ * UI-06 — the harness lets a stopped app go, and nothing else. Vitest keeps
+ * every mock it makes, and the canvas recorder's methods are mocks whose
+ * closures reach the canvas, so every app ever booted in a worker stayed
+ * alive, with its page, until the largest files ran out of heap. The
+ * recorder now lets an app's contexts go when `bootApp` stops the app: the
+ * contexts of the canvases its boot made, after the test's assertions, never
+ * one a test holds of its own.
+ */
+describe('the harness lets a stopped app go, and only that (UI-06)', () => {
+  test('an offscreen context held across a second boot keeps its canvas and transcript', async () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillRect(1, 2, 3, 4);
+
+    const first = await bootApp();
+    await first.ready;
+    retireApp(first);
+    const second = await bootApp();
+    await second.ready;
+
+    expect(ctx.canvas).toBe(canvas);
+    expect(ctx.calls).toEqual([['fillRect', 1, 2, 3, 4]]);
+    ctx.fillRect(5, 6, 7, 8);
+    expect(ctx.calls).toHaveLength(2);
+    expect(second.canvas).not.toBe(first.canvas);
+  });
+
+  test('a context made while an app is live, after its boot, is the test’s: retiring the app leaves it', async () => {
+    const app = await bootApp();
+    await app.ready;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillRect(1, 1, 1, 1);
+    retireApp(app);
+
+    expect(ctx.canvas).toBe(canvas);
+    expect(ctx.calls).toEqual([['fillRect', 1, 1, 1, 1]]);
+  });
+
+  test('the hint module’s document listeners, declared the document’s, outlive a stopped app', async () => {
+    // ParamTooltip binds its delegated listeners once per document, in the
+    // first boot; every later app relies on them. The listeners a stopped
+    // app leaves on the document are removed, but not these: they say they
+    // are the document's (`DOCUMENT_LIFETIME`), not an app's.
+    const first = await bootApp();
+    await first.ready;
+    document.getElementById('splash-close').click();
+    retireApp(first);
+    const second = await bootApp();
+    await second.ready;
+    document.getElementById('splash-close').click();
+    // The splash's focus trap lets go a tick after it closes; its own Escape
+    // would otherwise take the key.
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    // A keyboard arrival on a hinted control opens its hint through the
+    // document's focusin listener; Escape, through its keydown listener.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    document.getElementById('animation-speed-right').focus();
+    const tooltip = document.getElementById('param-tooltip');
+    expect(tooltip?.style.display).toBe('block');
+    expect(tooltip.textContent).toMatch(/^Total animation playback time/);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(tooltip.style.display).toBe('none');
+  });
+
+  test('a stopped app’s own context is released: read, it says so; drawn on, it takes nothing', async () => {
+    const app = await bootApp();
+    await app.ready;
+    const ctx = contextFor(app.canvas);
+    expect(ctx.calls.length).toBeGreaterThan(0);
+    retireApp(app);
+
+    // A transcript or canvas read too late fails where it is read.
+    expect(() => ctx.calls).toThrow(/released/);
+    expect(() => ctx.takeCalls()).toThrow(/released/);
+    expect(() => ctx.canvas).toThrow(/released/);
+    // A stopped app's last frame can still land: it is dropped, not thrown
+    // into whatever test runs next.
+    expect(() => ctx.fillRect(0, 0, 1, 1)).not.toThrow();
+    expect(() => { ctx.fillStyle = '#000'; }).not.toThrow();
+    expect(ctx.globalAlpha).toBe(1);
+    expect(() => ctx.createLinearGradient(0, 0, 1, 1).addColorStop(0, '#000')).not.toThrow();
   });
 });

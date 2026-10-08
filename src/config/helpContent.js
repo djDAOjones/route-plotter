@@ -49,7 +49,7 @@ const HELP_SECTIONS = [
       `<strong>${MODIFIER_DISPLAY.meta}+Click</strong> to add a minor waypoint`,
       `<strong>${MODIFIER_DISPLAY.alt}+Click</strong> a major waypoint to start a branch; ` +
         `<strong>${MODIFIER_DISPLAY.alt}+Click</strong> empty map to add a major waypoint without selecting`,
-      `<strong>${MODIFIER_DISPLAY.alt}+${MODIFIER_DISPLAY.meta}+Click</strong> to force-add a minor waypoint`,
+      `<strong>${MODIFIER_DISPLAY.alt}+${MODIFIER_DISPLAY.meta}+Click</strong> to add a minor waypoint without selecting`,
       'Use the <strong>sidebar</strong> to adjust styles and timing'
     ]
   },

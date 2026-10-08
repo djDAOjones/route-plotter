@@ -24,9 +24,26 @@
  * Image titles and example-project names are titles, and are left out.
  */
 
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
 import { bootApp } from './helpers/bootApp.js';
+
+/**
+ * Words the glossary retired (UI-06 §A, §C): none may come back, in a label,
+ * a hint, a banner, an announcement, a toast or a validation message. Each
+ * is a word for a concept the app now names otherwise.
+ */
+const RETIRED_WORDS = [
+  /\bDrawing network\b/, /\bNetwork editing\b/, /\bEditing network\b/, /\bPrimary emitter\b/i,
+  /\bRelease (start|length)\b/, /\bDeterministic seed\b/, /\bconfigured shares?\b/, /\bU-turn\b/i,
+  /\bjunctions?\b/i, /\bimg\/s\b/, /\bimage units\b/, /\bTraffic\b/, /\bInstantaneous\b/, /\bforce-add/,
+  /\bReset to start\b/, /\bedges\b/i, /\b(an|the|this|that|one-way|two-way|connected|each) edges?\b/i,
+  /\bEdge (updated|deleted)\b/, /\bDeleted edge\b/, /\bStored custom network\b/, /\bpersisted\b/i,
+  /\bretained\b/i, /\btiming keyframes?\b/, /\bgeometry points\b/, /\bSegment speed\b/, /\bOutgoing leg speed\b/,
+  /\bbend points?\b/i, /\bClear all waypoints\b/, /\bhide controls\b/, /\bCollect at exit\b/, /\bRespawn at entry\b/,
+  /\bLifecycle\b/, /\bvalid lifecycle\b/, /\bMulti-emitter\b/, /\bone connection\b/, /\bstart node\b/,
+  /\bSpotlight Feather\b/, /\bView Dropoff\b/, /\bAngle of View\b/, /\bMarker Mode\b/, /\bWait Time\b/,
+];
 
 /** Proper nouns, products, formats and keys that keep their capital. */
 const ALLOWED_WORDS = new Set([
@@ -36,7 +53,7 @@ const ALLOWED_WORDS = new Set([
 ]);
 
 /** Runs of capitalised words that are names, not Title Case. */
-const ALLOWED_PHRASES = new Set(['Route Plotter', 'Nervous System', 'PARM Aerial', 'UoN Map', 'Okabe-Ito']);
+const ALLOWED_PHRASES = new Set(['Route Plotter', 'Nervous System', 'PARM Aerial', 'UoN Map', 'Okabe-Ito', 'GitHub Issues']);
 
 /** Entity names the outline and the list number: "Crowd 1", "Node 2", "Waypoint 1·B1". */
 const ENTITY_WORDS = new Set(['Crowd', 'Node', 'Waypoint', 'Emitter', 'Path', 'Bend', 'Handle', 'Vertex']);
@@ -95,7 +112,7 @@ function hintFault(text) {
   };
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
-    const neutral = index === 0 || endsSegment(tokens[index - 1]);
+    const neutral = index === 0 || endsSegment(tokens[index - 1]) || ALLOWED_WORDS.has(bare(token));
     if (!neutral && isCapitalisedWord(token)) {
       run.push(bare(token));
       continue;
@@ -105,6 +122,17 @@ function hintFault(text) {
     run = [];
   }
   return check();
+}
+
+/** What is wrong with a sentence of prose (a banner, an announcement, a toast, a message), or null. */
+function proseFault(text) {
+  return hintFault(text);
+}
+
+/** The retired word `text` carries, or null. */
+function retiredWord(text) {
+  const hit = RETIRED_WORDS.find(pattern => pattern.test(text));
+  return hit ? `retired word ${hit.source.replace(/\\b/g, '')} in "${text.slice(0, 70)}"` : null;
 }
 
 /**
@@ -162,6 +190,16 @@ function stringsIn(root) {
   }
   for (const tip of root.querySelectorAll('[data-tip]')) add('hint', tip.getAttribute('data-tip'), true);
   for (const tip of root.querySelectorAll('[data-label-tip]')) add('hint', tip.getAttribute('data-label-tip'), true);
+  // Prose the app shows: banners, helper lines, reasons, errors, dialogs, toasts.
+  const PROSE = ['#network-edit-banner .banner-text', '#network-edit-banner .banner-count', '.section-hint',
+    '.scene-outline-hint', '.scene-outline-empty', '[role="alert"]', '.modal-content > p', '.waypoint-card-actions-reason',
+    '.network-path-weight-error', '.context-menu-item-reason', '.toast', '.splash-intro', '.help-section li'];
+  for (const node of root.querySelectorAll(PROSE.join(', '))) {
+    // Its own sentences: a button, link or address nested in it is read on its own.
+    const copy = node.cloneNode(true);
+    copy.querySelectorAll('button, a, code').forEach(nested => nested.remove());
+    add('prose', visibleText(copy), 'prose');
+  }
   return found;
 }
 
@@ -169,7 +207,7 @@ function stringsIn(root) {
 function faultsIn(strings) {
   return strings
     .map(({ what, text, hint }) => {
-      const fault = hint ? hintFault(text) : labelFault(text);
+      const fault = (hint === 'prose' ? proseFault(text) : hint ? hintFault(text) : labelFault(text)) ?? retiredWord(text);
       return fault ? `${what}: ${fault}` : null;
     })
     .filter(Boolean);
@@ -195,6 +233,11 @@ async function openWholeOutline(container) {
 async function populatedApp() {
   const app = await bootApp();
   await app.ready;
+  // What the app says, as it says it: announcements and toasts.
+  const announced = [];
+  const toasts = [];
+  vi.spyOn(app, 'announce').mockImplementation((message) => { announced.push(message); });
+  app.eventBus.on('ui:toast', ({ message }) => toasts.push(message));
   // The splash's focus trap outlives the boot and would take a later Escape.
   document.getElementById('splash-close').click();
 
@@ -210,24 +253,50 @@ async function populatedApp() {
   app.updateGuideCard();
   document.getElementById('crowd-busyness-add').click();
   const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
-  for (const y of [0.2, 0.8]) {
+  for (const y of [0.2, 0.5, 0.8]) {
     const exit = layer.graph.addNode({ x: 0.9, y, type: 'exit' });
     layer.graph.addEdge({ sourceId: junction.id, targetId: exit.id, direction: 'one-way' });
   }
-  app.networkEditService.enter(layer);
+  // Entered as an author does, from its button, so it is announced.
+  app.enterNetworkEditMode();
+  // A path deleted from its card (its toast), then the junction with its two
+  // remaining paths inspected, so the path-weight rows are drawn.
+  app.networkEditService.selectEdge(layer.graph.getEdges()[2]);
+  app._deleteNetworkSelection('edge');
   app.networkEditService.selectNode(junction);
   app.syncNetworkCards();
   app._refreshSceneOutline();
   await Promise.resolve();
   await openWholeOutline(document.getElementById('scene-outline'));
-  return app;
+
+  // Messages: a weight that is not one, an outline field that is not one, an
+  // outline apply, a skip to the start.
+  const weight = document.querySelector('.network-path-weight-row input');
+  weight.value = 'abc';
+  weight.dispatchEvent(new Event('input', { bubbles: true }));
+  const emitter = layer.emitters[0];
+  const emitterForm = document.querySelector('#scene-outline form[data-outline-action="update-emitter"]');
+  const command = {
+    action: 'update-emitter', layerId: layer.id, emitterId: emitter.id, outlineFormKey: emitterForm?.dataset.outlineFormKey,
+    dotCount: '15', releaseStart: '10', releaseDuration: '70', onsetVariance: '20', intensityRamp: '-25',
+    speed: '0.2', speedVariance: '30', dotSize: '1.5', wobble: '40', dotColor: '#0072B2', lifecycleMode: 'loop',
+  };
+  // The apply first (its announcement), then the error, which stays in view.
+  app._handleSceneOutlineCommand({ ...command, outlineFormKey: undefined });
+  await Promise.resolve();
+  app._handleSceneOutlineCommand({ ...command, dotCount: 'x' });
+  app.skipToStart();
+  await Promise.resolve();
+  return { app, announced, toasts };
 }
 
 describe('every word the app shows is sentence case (UI-06 B-15)', () => {
-  test('the shell, with the strings the app builds as it is used', async () => {
-    const app = await populatedApp();
+  test('the shell, with the strings the app builds as it is used, and what it says meanwhile', async () => {
+    const { app, announced, toasts } = await populatedApp();
     try {
       const strings = stringsIn(document.body);
+      for (const message of announced) strings.push({ what: 'announcement', text: message, hint: 'prose' });
+      for (const message of toasts) strings.push({ what: 'toast', text: message, hint: 'prose' });
       // Vacuous unless the shell and the built rows were there to read.
       const whats = Object.fromEntries(['label', 'option', 'button', 'summary', 'hint', 'help row', 'h2']
         .map(what => [what, strings.filter(string => string.what === what).length]));
@@ -240,6 +309,17 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
       expect(document.getElementById('network-edit-banner')).not.toBeNull();
       expect(document.querySelectorAll('.network-path-weight-row').length).toBe(2);
       expect(document.querySelectorAll('#waypoint-list .waypoint-add-btn').length).toBe(1);
+      // The prose was there to read: the banner's words, the weight error, the
+      // outline's error, and what was said.
+      const prose = strings.filter(string => string.hint === 'prose').map(string => string.text);
+      expect(prose.some(text => /click places a linked node/.test(text))).toBe(true);
+      expect(prose.some(text => /^Enter a weight of 0\.01 or more/.test(text))).toBe(true);
+      expect(prose.some(text => /^Count\b/.test(text))).toBe(true);
+      expect(announced).toContain('Crowd updated.');
+      expect(announced.some(text => /^Editing the network/.test(text))).toBe(true);
+      expect(announced).toContain('Skipped to start');
+      expect(toasts.some(text => /^Deleted path/.test(text))).toBe(true);
+      expect(strings.filter(string => string.what === 'prose').length).toBeGreaterThan(40);
 
       expect(faultsIn(strings)).toEqual([]);
     } finally {
@@ -276,5 +356,14 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
     expect(hintFault('Left (Earlier) sets more dots off; Even favours neither')).toBeNull();
     expect(hintFault('1920×1080 (16:9 HD)')).toBeNull();
     expect(hintFault('Create animated routes with Route Plotter')).toBeNull();
+    // Prose: sentence case, and none of the words the glossary retired.
+    expect(proseFault('Network editing — click the map to place linked nodes.')).toBeNull();
+    expect(retiredWord('Network editing — click the map to place linked nodes.')).toMatch(/retired word Network editing/);
+    expect(retiredWord('Deleted edge — press Ctrl+Z to undo')).toMatch(/retired word/);
+    expect(retiredWord('Primary emitter updated.')).toMatch(/retired word/);
+    expect(retiredWord('Release start must be a number')).toMatch(/retired word/);
+    expect(retiredWord('0% is the image’s left edge, 100% its right edge')).toBeNull();
+    expect(retiredWord('Deleted path — press Ctrl+Z to undo')).toBeNull();
+    expect(retiredWord('Editing the network — click the map to place linked nodes.')).toBeNull();
   });
 });

@@ -1050,7 +1050,11 @@ export function eventReads(lexed, fn, index = 0, seen = new Set()) {
 }
 
 const KEY_EVENT_TYPES = ['keydown', 'keyup', 'keypress'];
-const LISTENER_FLAGS = ['capture', 'once', 'passive'];
+// `documentLifetime` is the app's own flag, not the platform's: a listener
+// that says it is the document's, not an app's (ParamTooltip's delegated
+// listeners), which the boot harness leaves in place when it stops an app
+// (tests/helpers/bootApp.js). A browser ignores it; the inventory shows it.
+const LISTENER_FLAGS = ['capture', 'once', 'passive', 'documentLifetime'];
 /** A key event type as a word of a text. */
 const KEY_EVENT_WORDS = /(?<![\w$])key(?:down|up|press)(?![\w$])/g;
 /** A key handler set as a property or an attribute, or an accesskey, in any case. */
@@ -1058,8 +1062,9 @@ const KEY_HANDLER_NAMES = /(?<![\w$])(?:onkey(?:down|up|press)|accesskey)(?![\w$
 
 /**
  * The flags a listener's options set, from their text: none, `true` for
- * capture, or an object of literal `capture`, `once` and `passive` flags.
- * Null for any other options, which the scan cannot read.
+ * capture, or an object of literal `capture`, `once`, `passive` and
+ * `documentLifetime` flags. Null for any other options, which the scan cannot
+ * read.
  */
 function listenerFlags(options) {
   if (options === undefined || options === 'false') return [];
@@ -1068,7 +1073,7 @@ function listenerFlags(options) {
   if (!object) return null;
   const set = {};
   for (const entry of object[1].split(',').map(each => each.trim()).filter(Boolean)) {
-    const flag = /^(capture|once|passive)\s*:\s*(true|false)$/.exec(entry);
+    const flag = /^(capture|once|passive|documentLifetime)\s*:\s*(true|false)$/.exec(entry);
     if (!flag) return null;
     set[flag[1]] = flag[2] === 'true'; // as at run time, a later entry wins
   }

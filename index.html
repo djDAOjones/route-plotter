@@ -81,8 +81,8 @@
           </div>
         </div>
         <!-- Support (ghost style per spec) -->
-        <button id="report-bug-btn" class="btn btn-ghost" type="button" title="Preview diagnostics and report a bug">Report a bug</button>
-        <button id="help-btn" class="btn btn-ghost" title="Show help and keyboard shortcuts">Help</button>
+        <button id="report-bug-btn" class="btn btn-ghost" type="button" data-tip="Preview diagnostics and report a bug">Report a bug</button>
+        <button id="help-btn" class="btn btn-ghost" data-tip="Show help and keyboard shortcuts">Help</button>
       </div>
     </header>
 
@@ -530,7 +530,9 @@
               
               <!-- Draw Area button (shown when draw shape selected) -->
               <div id="area-draw-controls" style="display: none;">
-                <button id="area-draw-btn" class="btn btn-secondary" style="width:100%;">Draw area</button>
+                <button id="area-draw-btn" class="btn btn-secondary" style="width:100%;" aria-describedby="area-draw-reason">Draw area</button>
+                <!-- UI-06 B-07: why it is disabled (more than one waypoint selected), read as its description -->
+                <p id="area-draw-reason" class="section-hint" hidden></p>
               </div>
               
               <!-- Circle size slider (shown when circle selected) -->
@@ -946,8 +948,8 @@
                 <div class="btn-group-inline">
                   <button id="preset-native" class="btn btn-secondary btn-small" data-tip="Use loaded image dimensions">Native</button>
                   <button id="preset-16-9" class="btn btn-secondary btn-small" data-tip="1920×1080 (16:9 HD)">16:9</button>
-                  <button id="preset-1-1" class="btn btn-secondary btn-small" data-tip="1080×1080 (Square)">1:1</button>
-                  <button id="preset-9-16" class="btn btn-secondary btn-small" data-tip="1080×1920 (Portrait)">9:16</button>
+                  <button id="preset-1-1" class="btn btn-secondary btn-small" data-tip="1080×1080 (square)">1:1</button>
+                  <button id="preset-9-16" class="btn btn-secondary btn-small" data-tip="1080×1920 (portrait)">9:16</button>
                 </div>
               </div>
               
@@ -1008,8 +1010,10 @@
               </label>
               <button id="network-edit-btn" class="btn btn-secondary" type="button" hidden
                       data-tip="Draw the network this crowd walks: nodes joined by paths">Edit network</button>
-              <button id="crowd-trace-route-btn" class="btn btn-secondary" type="button" hidden
+              <button id="crowd-trace-route-btn" class="btn btn-secondary" type="button" hidden aria-describedby="crowd-trace-route-reason"
                       data-tip="Copy the route into this crowd's network, so its dots follow the same shape and can branch where the route branches">Trace route into network</button>
+              <!-- UI-06 B-07: why it is disabled (no route to trace), read as its description -->
+              <p id="crowd-trace-route-reason" class="section-hint" hidden></p>
               <p class="section-hint" id="crowd-guide-hint">Dots follow your route. Custom network lets you draw paths of their own.</p>
             </div>
           </div>
@@ -1095,9 +1099,11 @@
                     <svg id="crowd-busyness-graph" class="crowd-busyness-graph" viewBox="0 0 300 140" role="img" aria-label="Even busyness across the release window"></svg>
                     <div id="crowd-busyness-handles" class="crowd-busyness-handles" aria-label="Busyness handles"></div>
                     <div class="crowd-busyness-actions">
-                      <button id="crowd-busyness-add" class="btn btn-secondary" type="button">Add handle</button>
+                      <button id="crowd-busyness-add" class="btn btn-secondary" type="button" aria-describedby="crowd-busyness-add-reason" data-tip="Add a handle in the widest span">Add handle</button>
                       <button id="crowd-busyness-reset" class="btn btn-ghost" type="button">Reset to even</button>
                     </div>
+                    <!-- UI-06 B-07: why Add handle is disabled (the handle limit), read as its description -->
+                    <p id="crowd-busyness-add-reason" class="section-hint" hidden></p>
                   </div>
 
                   <div class="crowd-pattern-controls" role="group" aria-labelledby="crowd-seed-label" aria-describedby="crowd-pattern-hint">

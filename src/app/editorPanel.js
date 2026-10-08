@@ -568,9 +568,13 @@ export const editorPanelMixin = {
     const isMulti = targets.length > 1;
     if (this.elements.areaDrawBtn) {
       this.elements.areaDrawBtn.disabled = isMulti;
-      this.elements.areaDrawBtn.title = isMulti
-        ? 'Draw an area with one waypoint selected'
-        : '';
+      // Disabled, it cannot be focused: its reason is a line under it that it
+      // is described by, not a title only a pointer reaches (UI-06 B-07).
+      const reason = document.getElementById('area-draw-reason');
+      if (reason) {
+        reason.textContent = isMulti ? 'Draw an area with one waypoint selected.' : '';
+        reason.hidden = !isMulti;
+      }
     }
   },
   

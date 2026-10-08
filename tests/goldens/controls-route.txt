@@ -52,7 +52,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
 ui ~ #app: div → div inert=""
 ui ~ #splash: div (not shown) → div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;"
-ui + #splash>div[0]: div class="splash-content" (and 149 inside, 061af8bf)
+ui + #splash>div[0]: div class="splash-content" (and 149 inside, 97cedb13)
 
 ## #scope-route-btn · disabled, not operated
 
@@ -73,7 +73,7 @@ ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section=
 ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 81 inside, 647f3ad8)
 ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, 4d2a6e87)
 ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, aa3aa619)
-ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 178 inside, 126956b2)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 179 inside, 667d0650)
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -82,7 +82,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 
 ## #route-scope>div[0]>div[0] · click
 app ~ focus: "body" → "#route-scope>div[0]>div[0]"
@@ -1132,9 +1132,9 @@ ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="sta
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
-ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 19 inside, c444ee40)
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 20 inside, 09183582)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 70 inside, 788d231f)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 108 inside, a914203e)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 109 inside, 081b4714)
 ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 31 inside, ed9e46ac)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
@@ -1145,7 +1145,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 
 ## #layers-strip>li[1]>button[0] · double-click
 emit crowd:selected layer[0]
@@ -1158,9 +1158,9 @@ ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="sta
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
-ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 19 inside, c444ee40)
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 20 inside, 09183582)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 70 inside, 788d231f)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 108 inside, a914203e)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 109 inside, 081b4714)
 ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 31 inside, ed9e46ac)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
@@ -1172,7 +1172,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 ui - #layers-strip>li[1]>button[0]>span[1]: span class="layer-title" :text="Visitors"
 
 ## #layers-strip>li[1]>button[0] · double-click, type "Renamed", click away
@@ -1190,9 +1190,9 @@ ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="sta
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
-ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 19 inside, c444ee40)
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 20 inside, 09183582)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 70 inside, 788d231f)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 108 inside, a914203e)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 109 inside, 081b4714)
 ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 31 inside, ed9e46ac)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
@@ -1206,7 +1206,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, 60ef235c]
 
@@ -1285,9 +1285,9 @@ ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="sta
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
-ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 19 inside, f16d3151)
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 20 inside, 9df179b7)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 70 inside, e79020fe)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 108 inside, ef903267)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 109 inside, 7faa6531)
 ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 31 inside, bd46ca5f)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
@@ -1306,7 +1306,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10191 chars, 6de064ba]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Crowd 1 added — dots follow the route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -1763,7 +1763,7 @@ ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section=
 ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 81 inside, 647f3ad8)
 ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, 4d2a6e87)
 ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, aa3aa619)
-ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 178 inside, 126956b2)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 179 inside, 667d0650)
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -1772,7 +1772,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[1]>button[0]"
 
@@ -1791,7 +1791,7 @@ ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section=
 ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 81 inside, 647f3ad8)
 ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, 4d2a6e87)
 ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, aa3aa619)
-ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 178 inside, 126956b2)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 179 inside, 667d0650)
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -1800,7 +1800,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[1]>button[0]>input[2]"
   app ~ focusedText: null → [0,8,"none"]
@@ -1825,7 +1825,7 @@ ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section=
 ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 81 inside, 647f3ad8)
 ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, 4d2a6e87)
 ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, aa3aa619)
-ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 178 inside, 126956b2)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 179 inside, 667d0650)
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -1838,7 +1838,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   app ~ focus: "body" → "#waypoint-list>li[1]>button[0]"
@@ -1859,7 +1859,7 @@ ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section=
 ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 81 inside, 647f3ad8)
 ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, 4d2a6e87)
 ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, aa3aa619)
-ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 178 inside, 126956b2)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 179 inside, 667d0650)
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -1868,7 +1868,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[1]>button[0]"
 
@@ -1886,7 +1886,7 @@ ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section=
 ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 81 inside, 647f3ad8)
 ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, 4d2a6e87)
 ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, aa3aa619)
-ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 178 inside, 126956b2)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 179 inside, 667d0650)
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -1895,7 +1895,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[1]>button[0]"
 
@@ -1913,7 +1913,7 @@ ui + #waypoint-scope>div[0]: div class="settings-section expanded" data-section=
 ui + #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 81 inside, 647f3ad8)
 ui + #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 133 inside, 4d2a6e87)
 ui + #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 100 inside, aa3aa619)
-ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 178 inside, 126956b2)
+ui + #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 179 inside, 667d0650)
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
@@ -1922,7 +1922,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[1]>button[0]"
 
@@ -2252,7 +2252,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[2]>button[0]"
 
@@ -2280,7 +2280,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[2]>button[0]>input[2]"
   app ~ focusedText: null → [0,8,"none"]
@@ -2316,7 +2316,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   app ~ focus: "body" → "#waypoint-list>li[2]>button[0]"
@@ -2346,7 +2346,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[2]>button[0]"
 
@@ -2373,7 +2373,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[2]>button[0]"
 
@@ -2400,7 +2400,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[2]>button[0]"
 
@@ -2838,7 +2838,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[3]>button[0]"
 
@@ -2866,7 +2866,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[3]>button[0]>input[2]"
   app ~ focusedText: null → [0,8,"none"]
@@ -2904,7 +2904,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   app ~ focus: "body" → "#waypoint-list>li[3]>button[0]"
@@ -2934,7 +2934,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[3]>button[0]"
 
@@ -2961,7 +2961,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[3]>button[0]"
 
@@ -2988,7 +2988,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[3]>button[0]"
 
@@ -3676,7 +3676,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
 
@@ -3704,7 +3704,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[4]>button[0]>input[2]"
   app ~ focusedText: null → [0,8,"none"]
@@ -3742,7 +3742,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
@@ -3772,7 +3772,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
 
@@ -3799,7 +3799,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
 
@@ -3826,7 +3826,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
 
@@ -4095,7 +4095,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[5]>button[0]"
 
@@ -4123,7 +4123,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[5]>button[0]>input[2]"
   app ~ focusedText: null → [0,8,"none"]
@@ -4159,7 +4159,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   app ~ focus: "body" → "#waypoint-list>li[5]>button[0]"
@@ -4189,7 +4189,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[5]>button[0]"
 
@@ -4216,7 +4216,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[5]>button[0]"
 
@@ -4243,7 +4243,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[5]>button[0]"
 
@@ -4640,7 +4640,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[6]>button[0]"
 
@@ -4669,7 +4669,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[6]>button[0]>input[2]"
   app ~ focusedText: null → [0,8,"none"]
@@ -4708,7 +4708,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   app ~ focus: "body" → "#waypoint-list>li[6]>button[0]"
@@ -4739,7 +4739,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[6]>button[0]"
 
@@ -4767,7 +4767,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[6]>button[0]"
 
@@ -4795,7 +4795,7 @@ ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui - #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" (and 74 inside, 72b1cdaa)
 ui - #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" (and 26 inside, 6f0d061d)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 98892f85)
+ui - #route-scope>div[5]: div class="settings-section expanded" data-section="video" (and 62 inside, 5ebae2c5)
 settled:
   app ~ focus: "body" → "#waypoint-list>li[6]>button[0]"
 

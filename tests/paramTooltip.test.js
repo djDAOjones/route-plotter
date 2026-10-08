@@ -1510,7 +1510,8 @@ describe('UI-06: a button carries its own hint, reachable by keyboard', () => {
       expect(titled).toEqual([]);
       // The controls the review listed as title-only help all carry a hint now.
       for (const id of ['label-auto-position', 'preset-native', 'preset-16-9', 'preset-1-1', 'preset-9-16',
-        'network-edit-btn', 'crowd-trace-route-btn', 'network-edge-swap', 'add-crowd-btn', 'crowd-busyness-add']) {
+        'network-edit-btn', 'crowd-trace-route-btn', 'network-edge-swap', 'add-crowd-btn', 'crowd-busyness-add',
+        'help-btn', 'report-bug-btn']) {
         const control = document.getElementById(id);
         expect(control.getAttribute('data-tip'), `#${id}'s hint`).toMatch(/\w/);
         expect(describedText(control), `#${id} is described by its hint`).toContain(control.getAttribute('data-tip'));
@@ -1529,5 +1530,42 @@ describe('UI-06: a button carries its own hint, reachable by keyboard', () => {
     } finally {
       app.interactionHandler.destroy();
     }
+  });
+});
+
+/**
+ * UI-06 (Codex round 1) — a button's own hint draws no "?", so it must get no
+ * slot for one: the rule that reserves a 44px trailing slot after a wired
+ * hint's label text must reach label and legend hosts only. It reached every
+ * `[data-tip-desc]`, so the presets, the crowd rows and the menu items gained
+ * a trailing margin for a trigger they never get.
+ */
+describe('UI-06: a button’s own hint reserves no trigger slot', () => {
+  test('the slot rule reaches label and legend hosts, never a plain button', () => {
+    mountShell();
+    attachSwatchPickers();
+    initParamTooltips();
+    loadStylesheets();
+    const slotRules = loadedSelectors().filter(selector => /data-tip-desc/.test(selector));
+    expect(slotRules.length).toBeGreaterThan(0);
+
+    const button = document.getElementById('label-auto-position');
+    expect(button.hasAttribute('data-tip-desc')).toBe(true);
+    expect(slotRules.filter(selector => button.matches(selector))).toEqual([]);
+    const menuItem = document.querySelector('#example-projects-menu [data-tip-desc], #add-crowd-btn[data-tip-desc]');
+    if (menuItem) expect(slotRules.filter(selector => menuItem.matches(selector))).toEqual([]);
+
+    // The hosts that do get a "?": a span in a label, a label that is the
+    // hint itself, a span in a picker's legend.
+    const spanInLabel = document.getElementById('dot-size').closest('label').querySelector('[data-tip]');
+    const labelItself = document.querySelector('label[for="camera-zoom"]');
+    const spanInLegend = document.querySelector('fieldset.swatch-fieldset legend [data-tip]');
+    for (const host of [spanInLabel, labelItself, spanInLegend]) {
+      expect(host.hasAttribute('data-tip-desc')).toBe(true);
+      expect(slotRules.some(selector => host.matches(selector)), `${host.textContent.trim()} gets its slot`).toBe(true);
+    }
+    // And the slot is still the trigger's 44px.
+    const css = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
+    expect(css).toMatch(/data-tip-desc[^{]*\{[^}]*margin-inline-end:var\(--touch-target-min\)/);
   });
 });

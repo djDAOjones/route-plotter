@@ -16,14 +16,14 @@ ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 74 inside, 35b9fbe3)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 26 inside, aa372eb9)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 80fa3088)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 4505c3c8)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
 ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 80 inside, 7422a963)
 ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" (and 81 inside, 1b322307)
 ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 133 inside, 70440c2a)
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 100 inside, a293ddf8)
-ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 178 inside, ea017491)
+ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 179 inside, 724b2547)
 
 ## #scope-prev-btn · click
 emit waypoint:deselected
@@ -41,14 +41,14 @@ ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 74 inside, 35b9fbe3)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 26 inside, aa372eb9)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 80fa3088)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 4505c3c8)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
 ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 80 inside, 7422a963)
 ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" (and 81 inside, 1b322307)
 ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 133 inside, 70440c2a)
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 100 inside, a293ddf8)
-ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 178 inside, ea017491)
+ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 179 inside, 724b2547)
 
 ## #scope-next-btn · click
 emit waypoint:selected waypoint[1]
@@ -148,7 +148,8 @@ ui - #section-leg-content>div[0]>button[8]>span[0]: span aria-hidden="true" clas
 ui - #segment-speed-control>span[0]: span data-tip-desc="waypoint-segment-speed-tip" data-tip="How fast the path head travels this leg: 2.0x takes half the time, 0.5x twice as long" style="anchor-name: --waypoint-segment-speed-tip;" :text="Leg speed"
 ui - #waypoint-segment-speed: input aria-describedby="waypoint-segment-speed-value waypoint-segment-speed-tip" aria-valuetext="2.5x" max="1000" min="0" step="1" type="range" value="500" :value="699"
 ui - #waypoint-segment-speed-value: span :text="2.5x"
-ui - #area-draw-btn: button class="btn btn-secondary" style="width: 100%;" title="" :text="Draw area"
+ui - #area-draw-btn: button aria-describedby="area-draw-reason" class="btn btn-secondary" style="width: 100%;" :text="Draw area"
+ui - #area-draw-reason: p (not shown)
 
 ## #section-marker-content>div[9]>button[1] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}

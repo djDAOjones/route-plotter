@@ -166,7 +166,8 @@ function describeValue(value) {
     // A canvas drawn from is drawn as it is now: a size given to it through
     // its attributes, not yet recorded, is recorded before this call
     // (`trackCanvasSize`).
-    canvasContexts.get(value)?.settle();
+    const drawn = canvasContexts.get(value);
+    if (drawn && !releasedContexts.has(drawn)) drawn.settle();
     const id = contextIdFor(value);
     return id === null ? '[canvas]' : `[canvas #${id}]`;
   }
@@ -207,8 +208,9 @@ function recordCallOrder(enabled) {
 function takeOrderedCalls() {
   for (const held of sizedCanvases) {
     const canvas = held.deref();
-    if (canvas) canvasContexts.get(canvas)?.settle();
-    else sizedCanvases.delete(held);
+    const context = canvas ? canvasContexts.get(canvas) : null;
+    if (context && !releasedContexts.has(context)) context.settle();
+    else if (!canvas || releasedContexts.has(context)) sizedCanvases.delete(held);
   }
   return orderedCalls.splice(0, orderedCalls.length);
 }
@@ -390,14 +392,43 @@ function createRecordingContext(canvas) {
    * the watcher `settle` holds, every canvas ever given a context stayed
    * alive, with the whole page and app around it — about 12 MB a boot, until
    * the largest files ran out of worker heap (UI-06). `bootApp` releases the
-   * contexts of the shell it replaces; nothing reads a stopped app's canvas.
+   * contexts of the app it stops (`recorderOwnership`), after the test's
+   * assertions. Reading a released context — its transcript or its canvas —
+   * throws, so a transcript read too late fails where it is read rather than
+   * reading empty. Drawing on one is dropped quietly: a stopped app's last
+   * frame can still land (a frame scheduled under one clock, cancelled under
+   * another), and throwing into that timer would fail whatever test runs
+   * next for a stale app's sake.
    */
   context.release = () => {
     settle = () => {};
-    context.canvas = null;
     calls.length = 0;
     stack.length = 0;
     drawingState = null;
+    releasedContexts.add(context);
+    const released = () => {
+      throw new Error("This canvas's recording context was released with its app when bootApp stopped it " +
+        '(UI-06): read its transcript before the app is retired, or make the canvas before the boot so it is the test’s own');
+    };
+    const quietly = (key) => (...args) => (
+      key === 'createLinearGradient' || key === 'createRadialGradient'
+        ? { __recorderId: '[released]', addColorStop: () => undefined }
+        : CONTEXT_METHOD_RESULTS[key]?.(...args)
+    );
+    for (const key of Object.keys(context)) {
+      const descriptor = Object.getOwnPropertyDescriptor(context, key);
+      if (key === 'calls' || key === 'takeCalls' || key === 'canvas') {
+        Object.defineProperty(context, key, { configurable: true, enumerable: false, get: released, set: released });
+      } else if (typeof descriptor.value === 'function') {
+        Object.defineProperty(context, key, { configurable: true, enumerable: false, writable: true, value: quietly(key) });
+      } else if (descriptor.get) {
+        Object.defineProperty(context, key, {
+          configurable: true, enumerable: false, get: () => CONTEXT_STYLE_DEFAULTS[key], set: () => undefined,
+        });
+      } else {
+        Object.defineProperty(context, key, { configurable: true, enumerable: false, writable: true, value: descriptor.value });
+      }
+    }
   };
 
   return context;
@@ -405,19 +436,32 @@ function createRecordingContext(canvas) {
 
 const canvasContexts = new WeakMap();
 
+/** The contexts let go of (see `release`): nothing settles or reads them again. */
+const releasedContexts = new WeakSet();
+
 /**
- * Every context made since the last release, for `bootApp` to release once
- * their canvases are off the page (see `release` above). Held strongly only
- * until then.
+ * Whose a context is. `bootApp` names the boot it is making as the owner from
+ * before the shell is parsed until the app is ready, so the contexts of the
+ * canvases that boot makes (the page's, the vector layer's) are that boot's,
+ * and `bootApp` releases them when it stops the app — after the test's
+ * assertions, never for another boot. A context made at any other time, a
+ * canvas a test makes for itself, has no owner and is never released.
  */
-const unreleasedContexts = new Set();
-globalThis.__releaseRecordingContexts = () => {
-  for (const context of unreleasedContexts) {
-    if (context.canvas?.isConnected) continue;
-    context.release();
-    unreleasedContexts.delete(context);
-  }
-};
+let recorderOwner = null;
+/** @type {WeakMap<object, Set<object>>} owner → its contexts, until released */
+const contextsByOwner = new WeakMap();
+const recorderOwnership = Object.freeze({
+  begin(owner) {
+    recorderOwner = owner;
+  },
+  end(owner) {
+    if (recorderOwner === owner) recorderOwner = null;
+  },
+  release(owner) {
+    for (const context of contextsByOwner.get(owner) ?? []) context.release();
+    contextsByOwner.delete(owner);
+  },
+});
 
 /**
  * Every canvas given a recording context, held weakly so that a canvas
@@ -505,7 +549,11 @@ if (hasDom) HTMLCanvasElement.prototype.getContext = vi.fn(function getContext()
     context = createRecordingContext(this);
     canvasContexts.set(this, context);
     trackCanvasSize(this, context);
-    unreleasedContexts.add(context);
+    if (recorderOwner) {
+      let owned = contextsByOwner.get(recorderOwner);
+      if (!owned) contextsByOwner.set(recorderOwner, owned = new Set());
+      owned.add(context);
+    }
   }
   return context;
 });
@@ -555,6 +603,7 @@ export {
   contextFor,
   contextIdFor,
   recordCallOrder,
+  recorderOwnership,
   takeOrderedCalls
 };
 

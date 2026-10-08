@@ -92,9 +92,9 @@ ui + #toast-container>div[0]: div class="toast" :text="Deleted path — press Ct
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Path · one-way" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
-ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 19 inside, ae9a9173)
+ui + #crowd-scope>div[0]: div class="settings-section" data-section="guide" (and 20 inside, 2c7797c9)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="dots" (and 70 inside, 788d231f)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 108 inside, a914203e)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="release" (and 109 inside, 081b4714)
 ui + #crowd-scope>div[3]: div class="settings-section" data-section="motion" (and 31 inside, ed9e46ac)
 ui ~ #edge-scope: div class="scope-group" → div (not shown)
 ui - #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" (and 25 inside, abb1324b)

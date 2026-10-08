@@ -154,6 +154,17 @@ const hosts = new WeakSet();
 const TRIGGER_CLASS = 'param-hint-trigger';
 
 /**
+ * Options for the delegated listeners below, saying they are the document's,
+ * not an app's: bound once per document (`boundDocuments`), they serve every
+ * app the document boots and hold none. A test harness that takes an app's
+ * own document listeners off the page when it stops the app leaves listeners
+ * that say so (tests/helpers/bootApp.js). A browser reads only the options it
+ * knows, so the flag is inert there.
+ */
+export const DOCUMENT_LIFETIME = Object.freeze({ documentLifetime: true });
+const CAPTURING_DOCUMENT_LIFETIME = Object.freeze({ documentLifetime: true, capture: true });
+
+/**
  * Create the shared tooltip DOM element (called once).
  * @returns {HTMLElement}
  */
@@ -746,18 +757,18 @@ export function initParamTooltips() {
     if (activeTip && (openedBy === 'hover' || !tooltipEl?.contains(e.target))) {
       hideTooltip();
     }
-  });
+  }, DOCUMENT_LIFETIME);
 
   // Hover is a mouse's alone. A touch or pen tap arrives as a click, which
   // the handler above already answers; arming a hover open as well would
   // change what a tap does.
   document.addEventListener('pointerover', (e) => {
     if (e.pointerType === 'mouse') followPointer(e.target);
-  });
+  }, DOCUMENT_LIFETIME);
   // Off the page entirely: no pointerover follows to say where it went.
   document.addEventListener('pointerout', (e) => {
     if (e.pointerType === 'mouse' && !e.relatedTarget) followPointer(null);
-  });
+  }, DOCUMENT_LIFETIME);
 
   // Keyboard arrival on a trigger, or on the control a hint describes,
   // reveals the hint.
@@ -766,7 +777,7 @@ export function initParamTooltips() {
     if (!at || escapeDismissed === at.holder) return;
     if (!isKeyboardFocus(e.target)) return;
     showTooltip(at.tip, 'focus');
-  });
+  }, DOCUMENT_LIFETIME);
 
   document.addEventListener('focusout', (e) => {
     const at = hintAt(e.target);
@@ -777,7 +788,7 @@ export function initParamTooltips() {
     if (activeTip && openedBy !== 'hover' && at.tip === activeTip) {
       closeTooltip();
     }
-  });
+  }, DOCUMENT_LIFETIME);
 
   // Escape closes, and keeps it closed while focus stays on that trigger or
   // control. Capture phase: a control's own Escape handler (the scene outline
@@ -791,7 +802,9 @@ export function initParamTooltips() {
     e.preventDefault();
     hideTooltip();
     escapeDismissed = holders.find(holder => holder?.contains(document.activeElement)) ?? escapeDismissed;
-  }, true);
+    // Written out: the key-listener inventory (tests/keyTable.test.js) reads a
+    // literal's options, not a named constant's.
+  }, { capture: true, documentLifetime: true });
 
   // Dismiss on scroll or resize (tooltip position would be stale). A pending
   // hover open goes too: what is under the pointer has moved.
@@ -799,6 +812,6 @@ export function initParamTooltips() {
     cancelHoverOpen();
     if (activeTip) hideTooltip();
   };
-  document.addEventListener('scroll', dismissOnScroll, true); // capture phase for nested scrollers
-  window.addEventListener('resize', dismissOnScroll);
+  document.addEventListener('scroll', dismissOnScroll, CAPTURING_DOCUMENT_LIFETIME); // capture: nested scrollers
+  window.addEventListener('resize', dismissOnScroll, DOCUMENT_LIFETIME);
 }

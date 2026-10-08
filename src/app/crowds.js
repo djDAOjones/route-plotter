@@ -979,9 +979,15 @@ export const crowdsMixin = {
     });
 
     const add = document.getElementById('crowd-busyness-add');
+    const addReason = document.getElementById('crowd-busyness-add-reason');
     if (add) {
       add.disabled = handles.length >= MAX_BUSYNESS_HANDLES;
-      add.setAttribute('data-tip', add.disabled ? `Maximum ${MAX_BUSYNESS_HANDLES} handles` : 'Add a handle in the widest span');
+      // Disabled, it cannot be focused, so its hint cannot be reached: the
+      // reason is a line under the row that it is described by (UI-06 B-07).
+      if (addReason) {
+        addReason.textContent = add.disabled ? `Maximum ${MAX_BUSYNESS_HANDLES} handles.` : '';
+        addReason.hidden = !add.disabled;
+      }
     }
     const reset = document.getElementById('crowd-busyness-reset');
     if (reset) {

@@ -99,7 +99,7 @@ at once: autosave 1, queued render 1, undo saved 1
     undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}
     · autosave
     · queued render
-    said "Primary emitter updated."
+    said "Crowd updated."
   scene-outline:update {crowds: [{…}], focusKey: "emitter:ex-uon-crowd:ex-uon-emitter:apply", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest c1884ecf)
   model:
     ~ runtime.dirty: false -> true

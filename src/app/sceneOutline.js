@@ -613,11 +613,11 @@ export const sceneOutlineMixin = {
     const emitter = layer.getEmitter(command.emitterId);
     if (!emitter) throw new Error('That emitter no longer exists.');
     if (layer.emitters[0] !== emitter) {
-      throw new Error('Additional emitters are read-only until multi-emitter controls are designed.');
+      throw new Error('A second emitter can be read here, not edited.');
     }
-    if (!LIFECYCLE_MODES.has(command.lifecycleMode)) throw new Error('Choose a valid lifecycle.');
+    if (!LIFECYCLE_MODES.has(command.lifecycleMode)) throw new Error('Choose a valid journey end.');
     assertSafeStoredColor(command.dotColor, 'emitter dot colour', { allowTransparent: true });
-    const dotCount = positiveInteger(command.dotCount, 'Dots', EMITTER_LIMITS.MAX_DOT_COUNT);
+    const dotCount = positiveInteger(command.dotCount, 'Count', EMITTER_LIMITS.MAX_DOT_COUNT);
     const totalDots = this.scene.getFlowLayers().reduce((sum, candidate) =>
       sum + candidate.emitters.reduce((layerSum, item) => layerSum + item.dotCount, 0), 0
     ) - emitter.dotCount + dotCount;
@@ -626,8 +626,8 @@ export const sceneOutlineMixin = {
     }
     const updates = {
       dotCount,
-      releaseStart: percentDraft(command, 'releaseStart', 'Release start'),
-      releaseDuration: percentDraft(command, 'releaseDuration', 'Release length'),
+      releaseStart: percentDraft(command, 'releaseStart', 'Window start'),
+      releaseDuration: percentDraft(command, 'releaseDuration', 'Window length'),
       onsetVariance: percentDraft(command, 'onsetVariance', 'Release timing'),
       intensityRamp: originalCanonical(command, 'intensityRamp')
         ?? numberBetween(command.intensityRamp, 'Release bias', -100, 100) / 100,
@@ -648,7 +648,7 @@ export const sceneOutlineMixin = {
     this.queueRender();
     const key = sceneOutlineKey('emitter', layer.id, emitter.id);
     this._queueSceneOutlineRefresh(`${key}:apply`);
-    this.announce('Primary emitter updated.');
+    this.announce('Crowd updated.');
   },
 
   _outlineAddNode(command) {
@@ -767,7 +767,7 @@ export const sceneOutlineMixin = {
     }
     const key = sceneOutlineKey('edge', layer.id, edge.id);
     this._queueSceneOutlineRefresh(`${key}:apply`);
-    this.announce('Edge updated.');
+    this.announce('Path updated.');
   },
 
   _outlineDeleteEdge(command) {
@@ -786,7 +786,7 @@ export const sceneOutlineMixin = {
       ? sceneOutlineKey('crowd', layer.id)
       : previousOutlineSelection;
     this._queueSceneOutlineRefresh(`${sceneOutlineKey('network', layer.id)}:summary`);
-    this.announce('Edge deleted. Undo available.');
+    this.announce('Path deleted. Undo available.');
   },
 
   _outlineAddControl(command) {

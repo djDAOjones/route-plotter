@@ -23,6 +23,60 @@ import { describe, test, expect } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 
 const CONTROLS = 'button, [role="button"], [role="menuitem"], [role="switch"], a[href], input[type="button"], input[type="submit"]';
+const FIELDS = 'input:not([type="hidden"]):not([type="file"]):not([type="button"]):not([type="submit"]), select, textarea';
+
+/** The words an element's `aria-labelledby` resolves to, or null without one. */
+function labelledByText(element) {
+  const ids = (element.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean);
+  if (ids.length === 0) return null;
+  return ids.map(id => document.getElementById(id)?.textContent.replace(/\s+/g, ' ').trim() ?? `[no #${id}]`).join(' ');
+}
+
+/**
+ * A field's visible label: the words of its first `<label>` — the hint span
+ * that carries them, or the label's own text; never the readout or the unit
+ * that follows the field, which a browser does not read as its name either.
+ */
+function fieldLabelText(field) {
+  const label = field.labels?.[0];
+  if (!label) return '';
+  const direct = [...label.childNodes].filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.data)
+    .join(' ').replace(/\s+/g, ' ').trim();
+  if (direct) return direct;
+  const span = label.querySelector(':scope > span[data-tip], :scope > span:not([id])');
+  return span ? visibleWords(span) : '';
+}
+
+/**
+ * Fields and labelled-by controls: a field named by `aria-label` or
+ * `aria-labelledby` must still start with the words its `<label>` shows; a
+ * control named by `aria-labelledby` must start with the words it shows.
+ */
+function nameFaults(root) {
+  const faults = [];
+  let checked = 0;
+  for (const field of root.querySelectorAll(FIELDS)) {
+    const shown = fieldLabelText(field);
+    if (!/[a-zA-Z]/.test(shown)) continue;
+    const name = field.getAttribute('aria-label') ?? labelledByText(field);
+    if (name === null) continue;
+    checked += 1;
+    if (!name.toLowerCase().startsWith(shown.toLowerCase())) {
+      faults.push(`${field.id ? `#${field.id}` : field.name}: labelled "${shown}", named "${name}"`);
+    }
+  }
+  for (const control of root.querySelectorAll(CONTROLS)) {
+    const name = labelledByText(control);
+    if (name === null) continue;
+    const words = visibleWords(control);
+    if (!/[a-zA-Z]/.test(words)) continue;
+    checked += 1;
+    if (!name.toLowerCase().startsWith(words.toLowerCase())) {
+      faults.push(`${control.id ? `#${control.id}` : control.className}: shows "${words}", labelled by "${name}"`);
+    }
+  }
+  return { faults, checked };
+}
 
 /** The words a control shows: its text without hidden and screen-reader-only parts. */
 function visibleWords(control) {
@@ -79,6 +133,49 @@ describe('a control’s visible words start its accessible name (UI-06 B-04)', (
       const { faults, checked } = labelFaults(document.body);
       expect(checked).toBeGreaterThan(0);
       expect(faults).toEqual([]);
+
+      // Fields named by aria-label or aria-labelledby, and controls labelled
+      // by another element (the path-weight rows of a node with two paths
+      // leaving it), start with their words too.
+      const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
+      for (const y of [0.2, 0.8]) {
+        const exit = layer.graph.addNode({ x: 0.9, y, type: 'exit' });
+        layer.graph.addEdge({ sourceId: junction.id, targetId: exit.id, direction: 'one-way' });
+      }
+      app.networkEditService.selectNode(junction);
+      app.syncNetworkCards();
+      await Promise.resolve();
+      expect(document.querySelectorAll('.network-path-weight-row input').length).toBe(2);
+      const names = nameFaults(document.body);
+      expect(names.checked).toBeGreaterThan(2);
+      expect(names.faults).toEqual([]);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+
+  test('a disabled Draw area says why in a line it is described by, with no title (UI-06 B-07)', async () => {
+    const app = await bootApp();
+    try {
+      await app.ready;
+      document.getElementById('splash-close').click();
+      app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+      app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
+      const [first, second] = app.waypoints;
+      app.eventBus.emit('waypoint:multi-selected', { waypoints: [first, second], primary: first });
+
+      const draw = document.getElementById('area-draw-btn');
+      const reason = document.getElementById('area-draw-reason');
+      expect(draw.disabled).toBe(true);
+      expect(draw.hasAttribute('title')).toBe(false);
+      expect(reason.hidden).toBe(false);
+      expect(reason.textContent).toBe('Draw an area with one waypoint selected.');
+      expect(describedText(draw)).toEqual(['Draw an area with one waypoint selected.']);
+
+      app.eventBus.emit('waypoint:selected', first);
+      expect(draw.disabled).toBe(false);
+      expect(reason.hidden).toBe(true);
+      expect(reason.textContent).toBe('');
     } finally {
       app.interactionHandler.destroy();
     }

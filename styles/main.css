@@ -743,8 +743,10 @@ kbd{
    neighbouring row or control. The trigger is a sibling of the label, not a
    child (a button inside a label is invalid and joins the control's name),
    so CSS anchor positioning draws it in that slot: the anchor's name is set
-   inline by ParamTooltip.js, one per hint. */
-[data-tip-desc]{
+   inline by ParamTooltip.js, one per hint. Only a label's or a legend's hint
+   gets a trigger: a button's own hint (UI-06) draws none, and takes no slot.
+   `:where()` keeps the selector's specificity as it was. */
+[data-tip-desc]:where(label, label *, legend *){
   display:flex;
   align-items:center;
   min-height:var(--touch-target-min);
@@ -1650,7 +1652,6 @@ kbd{
   font-weight:var(--w-label);
   color:var(--text-01);
   margin-bottom:var(--space-4);
-  text-transform:uppercase;
   letter-spacing:var(--ls-label);
 }
 
@@ -2252,12 +2253,22 @@ kbd{
   margin:0;
 }
 
+/* The row's label wraps the name alone, beside the field rather than around
+   it, so the readout and the error are its siblings and outside the label
+   (UI-06 B-30); it lays out as its name did as a bare grid cell. */
+.section-content .network-path-weight-row > label{
+  display:contents;
+  margin:0;
+}
+
 .section-content .network-path-weight-row .network-path-weight-name{
   min-width:0;
   flex:none;
   color:var(--text-01);
   font-size:var(--type-caption);
   font-weight:500;
+  font-family:inherit;
+  text-align:left;
 }
 
 .section-content .network-path-weight-row input[type="number"]{

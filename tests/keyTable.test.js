@@ -448,7 +448,7 @@ const HELP_ROWS = {
     ['addWaypoint', 'Click', 'Add waypoint'],
     ['addMinorWaypoint', `${META_TEXT}+Click`, 'Add minor waypoint'],
     ['forceAddWaypoint', `${ALT_TEXT}+Click`, 'Start a branch from a major waypoint; on empty map, add a major without selecting'],
-    ['forceAddMinorWaypoint', `${META_TEXT}+${ALT_TEXT}+Click`, 'Force add minor (bypass selection)'],
+    ['forceAddMinorWaypoint', `${META_TEXT}+${ALT_TEXT}+Click`, 'Add a minor waypoint without selecting'],
     ['deleteWaypoint', `${SHIFT_TEXT}+Click`, 'Delete waypoint'],
     ['selectWaypoint', 'Click', 'Select waypoint'],
     ['moveWaypoint', 'Drag', 'Move waypoint'],
@@ -518,7 +518,7 @@ const HELP_PROSE = {
     // UI-06 (wish-list 62): Alt-click on a waypoint starts a branch (ROUTE-01c); force-add is the empty-map case.
     [`${ALT_TEXT}+Click a major waypoint to start a branch; ${ALT_TEXT}+Click empty map to add a major waypoint ` +
       'without selecting', 'forceAddWaypoint'],
-    [`${ALT_TEXT}+${META_TEXT}+Click to force-add a minor waypoint`, 'forceAddMinorWaypoint']],
+    [`${ALT_TEXT}+${META_TEXT}+Click to add a minor waypoint without selecting`, 'forceAddMinorWaypoint']],
   'Preview and export': [['Space to play/pause the animation', 'playPause']],
   'Quick Start': [['Click Add waypoint', 'addWaypoint'], ['Drag Move waypoint', 'moveWaypoint'],
     [`${SHIFT_TEXT}+Click Delete`, 'deleteWaypoint'], ['Space Play/pause', 'playPause']]
@@ -1490,7 +1490,8 @@ const KEY_LISTENER = {
   menuButton: 'src/components/Dropdown.js: trigger keydown',
   menu: 'src/components/Dropdown.js: menu keydown',
   menuAnywhere: 'src/components/Dropdown.js: document keydown',
-  hint: 'src/components/ParamTooltip.js: document keydown (capture)',
+  // UI-06: declared the document's, not an app's (bootApp leaves it when it stops an app)
+  hint: 'src/components/ParamTooltip.js: document keydown (capture, documentLifetime)',
   outline: 'src/controllers/SceneOutlineController.js: this.container keydown',
   sectionHeader: 'src/controllers/SectionController.js: header keydown',
   more: 'src/controllers/SectionController.js: summary keydown',

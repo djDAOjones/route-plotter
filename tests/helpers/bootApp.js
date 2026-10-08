@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, vi } from 'vitest';
+import { recorderOwnership } from '../setup.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -63,31 +64,80 @@ function stopApp(app) {
   attempt(() => app.storageService?.cancelAutoSave?.());
   attempt(() => app.eventBus?.removeAllListeners?.());
   attempt(() => releasePageListeners(app));
+  // A dialog's focus trap listens on the window and the document while the
+  // dialog is open (added as it shows, so not among the boot's own listeners
+  // above): a splash a test never closed would take every later test's
+  // Escape. Once start-up has settled, since the splash shows during it.
+  attempt(() => onceSettled(app, () => deactivateFocusTraps(app)));
+  attempt(() => releaseRecordingContexts(app));
   return failures;
+}
+
+function deactivateFocusTraps(app) {
+  const traps = [app._splashFocusTrap, app._shareDisclosureTrap, app._diagnosticsTrap,
+    app.uiController?._codecFocusTrap, app.uiController?._clearFocusTrap];
+  for (const trap of traps) trap?.deactivate?.();
+}
+
+/**
+ * The boot each app came from, for the canvas recorder (tests/setup.js): the
+ * contexts of the canvases a boot makes are the app's, and go when it is
+ * stopped — after the test's assertions. A canvas a test makes for itself,
+ * before the boot or once the app is ready, is the test's and stays.
+ * @type {WeakMap<object, object>}
+ */
+const bootOf = new WeakMap();
+/** The apps whose `ready` has settled: a stopped one is released at once. */
+const settled = new WeakSet();
+
+/**
+ * Run `step` for a stopped app at once when its start-up has settled, else
+ * once it has: a start-up still in flight (a test that did not await
+ * `ready`) is left to finish — drawing against a live canvas, showing and
+ * trapping its splash — rather than throwing into the next test's console or
+ * leaving a trap it had not yet set.
+ */
+function onceSettled(app, step) {
+  if (settled.has(app)) step();
+  else Promise.resolve(app.ready).then(step, step);
+}
+
+/** Release a stopped app's contexts (see `onceSettled`). */
+function releaseRecordingContexts(app) {
+  const boot = bootOf.get(app);
+  if (!boot) return;
+  bootOf.delete(app);
+  onceSettled(app, () => {
+    recorderOwnership.end(boot);
+    recorderOwnership.release(boot);
+  });
 }
 
 /**
  * The listeners a boot puts on the document and the window for the app (a
  * resize, a click, a keydown, a storage event: each closes over the app), by
- * app. With the canvas recorder letting a replaced shell go, these were what
- * still kept a stopped app alive, so a file that boots an app per test held
- * every one until it ended and the largest ran out of worker heap (UI-06).
- * Only what the synchronous boot registers is recorded, so a test's own spies
- * on `addEventListener` are never caught up in it; and a module that binds
- * its delegated listeners once per document (ParamTooltip, which serves every
- * app the document boots) keeps them: they hold no app.
+ * app. With the canvas recorder letting a stopped app's contexts go, these
+ * were what still kept the app alive, so a file that boots an app per test
+ * held every one until it ended and the largest ran out of worker heap
+ * (UI-06). Only what the synchronous boot registers is recorded, so a test's
+ * own spies on `addEventListener` are never caught up in it. A listener that
+ * is the document's rather than an app's says so in its options
+ * (`documentLifetime: true`, ParamTooltip's `DOCUMENT_LIFETIME`): bound once
+ * per document, it serves every app the document boots and holds none, so
+ * it is left in place.
  * @type {WeakMap<object, Array<[EventTarget, string, EventListenerOrEventListenerObject, *]>>}
  */
 const pageListeners = new WeakMap();
-const KEPT_FOR_THE_DOCUMENT = ['ParamTooltip.js'];
+
+/** Whether listener options declare the listener the document's, not an app's. */
+const forTheDocument = options => Boolean(options && typeof options === 'object' && options.documentLifetime);
 
 function recordPageListeners(boot) {
   const added = [];
   const originals = [document, window].map(target => [target, target.addEventListener]);
   for (const [target, original] of originals) {
     target.addEventListener = function recordedAddEventListener(type, listener, options) {
-      const stack = new Error().stack ?? '';
-      if (!KEPT_FOR_THE_DOCUMENT.some(file => stack.includes(file))) added.push([target, type, listener, options]);
+      if (!forTheDocument(options)) added.push([target, type, listener, options]);
       return original.call(this, type, listener, options);
     };
   }
@@ -194,28 +244,40 @@ function entryModule() {
 }
 
 export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
-  document.body.innerHTML = shellBody;
-  // The shell just replaced, and every canvas off the page with it, is let
-  // go of by the canvas recorder (tests/setup.js), or Vitest's mocks would
-  // keep it, and the app around it, for the worker's life.
-  globalThis.__releaseRecordingContexts?.();
-  installBrowserStubs({ ...DEFAULT_VIEWPORT, ...viewport });
+  // Every canvas context made from here until the app is ready is this
+  // boot's, to be released when the app is stopped (tests/setup.js).
+  const boot = { startedAt: Date.now() };
+  recorderOwnership.begin(boot);
+  try {
+    document.body.innerHTML = shellBody;
+    installBrowserStubs({ ...DEFAULT_VIEWPORT, ...viewport });
 
-  delete window.app;
-  // Imported once per worker on purpose: a fresh import would register another
-  // DOMContentLoaded listener, and the next boot would build an app per
-  // listener, leaving untracked apps running.
-  await entryModule();
-  recordPageListeners(() => document.dispatchEvent(new Event('DOMContentLoaded')));
+    delete window.app;
+    // Imported once per worker on purpose: a fresh import would register another
+    // DOMContentLoaded listener, and the next boot would build an app per
+    // listener, leaving untracked apps running.
+    await entryModule();
+    recordPageListeners(() => document.dispatchEvent(new Event('DOMContentLoaded')));
 
-  const app = window.app;
-  if (!app) throw new Error('The app did not boot: window.app is unset');
-  booted.add(app);
+    const app = window.app;
+    if (!app) throw new Error('The app did not boot: window.app is unset');
+    booted.add(app);
+    bootOf.set(app, boot);
+    // Ready, the boot is over: a canvas made from then on is the test's.
+    const over = () => {
+      settled.add(app);
+      recorderOwnership.end(boot);
+    };
+    Promise.resolve(app.ready).then(over, over);
 
-  // The bus swallows listener errors by design (ISO-02), which in a test means
-  // a broken handler passes silently. Here they are failures.
-  app.eventBus.onListenerError = (error, { eventName }) => {
-    throw new Error(`Listener for "${eventName}" threw: ${error.message}`, { cause: error });
-  };
-  return app;
+    // The bus swallows listener errors by design (ISO-02), which in a test means
+    // a broken handler passes silently. Here they are failures.
+    app.eventBus.onListenerError = (error, { eventName }) => {
+      throw new Error(`Listener for "${eventName}" threw: ${error.message}`, { cause: error });
+    };
+    return app;
+  } catch (error) {
+    recorderOwnership.end(boot);
+    throw error;
+  }
 }

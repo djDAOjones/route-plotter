@@ -70,7 +70,7 @@ const DEFAULT_BINDINGS = {
       key: 'click',
       modifiers: ['alt', 'meta'], // Alt+Cmd/Ctrl+Click
       action: 'waypoint:force-add-minor',
-      description: 'Force add minor (bypass selection)',
+      description: 'Add a minor waypoint without selecting',
       category: 'waypoint'
     },
     deleteWaypoint: {

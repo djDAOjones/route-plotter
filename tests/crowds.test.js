@@ -22,6 +22,7 @@ import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import { PathCalculator } from '../src/services/PathCalculator.js';
 import { dotsReachingJourneyEnd } from '../src/utils/crowdArrival.js';
 import { ANIMATION } from '../src/config/constants.js';
+import { MAX_BUSYNESS_HANDLES } from '../src/utils/busynessEnvelope.js';
 import { bootApp } from './helpers/bootApp.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 
@@ -39,7 +40,9 @@ function makeApp({ hasRoute = true } = {}) {
     <output id="crowd-busyness-summary"></output>
     <svg id="crowd-busyness-graph" viewBox="0 0 300 140"></svg>
     <div id="crowd-busyness-handles"></div>
-    <button id="crowd-busyness-add" type="button">Add handle</button>
+    <button id="crowd-busyness-add" type="button" aria-describedby="crowd-busyness-add-reason"
+            data-tip="Add a handle in the widest span">Add handle</button>
+    <p id="crowd-busyness-add-reason" hidden></p>
     <button id="crowd-busyness-reset" type="button">Reset to even</button>
   `;
   const app = {
@@ -250,6 +253,27 @@ describe('layers strip', () => {
     app.eventBus.emit('waypoint:list-updated', app.waypoints);
     expect(button.disabled).toBe(false);
     expect(button.getAttribute('data-tip')).toMatch(/follows the route/);
+  });
+});
+
+describe('Add handle at the limit (UI-06 B-07)', () => {
+  test('disabled, it says why in a line it is described by, with no title; enabled, the line is empty', () => {
+    const app = makeApp({ hasRoute: false });
+    app.addCrowd({ enterNetworkEditor: false });
+    const add = document.getElementById('crowd-busyness-add');
+    const reason = document.getElementById('crowd-busyness-add-reason');
+    expect(add.disabled).toBe(false);
+    expect(reason.hidden).toBe(true);
+    expect(reason.textContent).toBe('');
+
+    for (let guard = 0; guard < 20 && !add.disabled; guard += 1) add.click();
+    expect(app.selectedCrowd.emitters[0].busynessEnvelope).toHaveLength(MAX_BUSYNESS_HANDLES);
+    expect(add.disabled).toBe(true);
+    expect(reason.hidden).toBe(false);
+    expect(reason.textContent).toBe(`Maximum ${MAX_BUSYNESS_HANDLES} handles.`);
+    expect(add.getAttribute('aria-describedby').split(/\s+/)).toContain('crowd-busyness-add-reason');
+    expect(add.hasAttribute('title')).toBe(false);
+    expect(add.getAttribute('data-tip')).toBe('Add a handle in the widest span');
   });
 });
 

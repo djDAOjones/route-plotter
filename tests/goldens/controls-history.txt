@@ -28,7 +28,7 @@ ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pa
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 74 inside, 35b9fbe3)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 26 inside, aa372eb9)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 26 inside, d3f64abf)
-ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 80fa3088)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 4505c3c8)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
 ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 80 inside, 734df5c0)

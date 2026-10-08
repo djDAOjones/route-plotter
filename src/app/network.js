@@ -51,6 +51,11 @@ function weightMessage(edge) {
   return `Enter a weight of 0.01 or more; the path keeps ${formatWeight(edge.weight)} until you do.`;
 }
 
+/** A weight off the field's step (1.001 on steps of 0.01): the increment, and what the path keeps. */
+function weightStepMessage(edge) {
+  return `Use steps of 0.01, from 0.01 up; the path keeps ${formatWeight(edge.weight)} until you do.`;
+}
+
 export const networkMixin = {
 
   /**
@@ -400,9 +405,13 @@ export const networkMixin = {
       const hasRoute = (this.waypoints?.length || 0) >= 2;
       this._traceRouteBtn.hidden = !graphGuided;
       this._traceRouteBtn.disabled = !hasRoute;
-      this._traceRouteBtn.setAttribute('data-tip', hasRoute
-        ? 'Copy the route into this crowd\u2019s network, so its dots follow the same shape and can branch where the route branches'
-        : 'Add at least two route waypoints first');
+      // Disabled, it cannot be focused, so its hint cannot be reached: the
+      // reason is a line under it that it is described by (UI-06 B-07).
+      const reason = document.getElementById('crowd-trace-route-reason');
+      if (reason) {
+        reason.textContent = hasRoute ? '' : 'Add at least two route waypoints first.';
+        reason.hidden = hasRoute;
+      }
     }
     if (this._guideHintEl && layer) {
       if (layer.guideType !== 'graph') {
@@ -495,15 +504,22 @@ export const networkMixin = {
       const outputId = `${inputId}-value`;
       const errorId = `${inputId}-error`;
 
-      const row = document.createElement('label');
+      const row = document.createElement('div');
       row.className = 'network-path-weight-row';
       row.dataset.edgeId = departure.edge.id;
 
+      // The label wraps the name alone and names the field by `for` (and the
+      // field says so by `aria-labelledby`), so the readout and the error are
+      // the label's siblings, outside it: inside, they would join the name
+      // (UI-STANDARDS; UI-06 B-30).
+      const label = document.createElement('label');
+      label.htmlFor = inputId;
       const name = document.createElement('span');
       name.id = nameId;
       name.className = 'network-path-weight-name';
       name.textContent = `Path ${index + 1} to ${NODE_TYPE_LABELS[type]} ${ordinal}`;
       name.setAttribute('data-tip', PATH_WEIGHT_HINT);
+      label.appendChild(name);
 
       const input = document.createElement('input');
       input.id = inputId;
@@ -542,6 +558,12 @@ export const networkMixin = {
           setInvalid(weightMessage(departure.edge));
           return;
         }
+        // A weight off the step (1.001) is a native validity error the field
+        // would otherwise swallow into the model: refused, with the increment.
+        if (input.validity.stepMismatch) {
+          setInvalid(weightStepMessage(departure.edge));
+          return;
+        }
         setValid();
         departure.edge.setWeight(weight);
         this._updateNodePathWeightReadouts(node.id);
@@ -554,7 +576,7 @@ export const networkMixin = {
       output.className = 'network-path-weight-value';
       output.setAttribute('for', inputId);
 
-      row.append(name, input, output, error);
+      row.append(label, input, output, error);
       rowsEl.appendChild(row);
     });
 

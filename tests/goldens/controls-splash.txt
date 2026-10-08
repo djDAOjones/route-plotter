@@ -7,7 +7,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
-ui - #splash>div[0]: div class="splash-content" (and 149 inside, 409cbe28)
+ui - #splash>div[0]: div class="splash-content" (and 149 inside, f9a94238)
 
 ## #splash-close-x · click
 app ~ focus: "#splash-title" → "body"
@@ -16,7 +16,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
-ui - #splash>div[0]: div class="splash-content" (and 149 inside, 409cbe28)
+ui - #splash>div[0]: div class="splash-content" (and 149 inside, f9a94238)
 
 ## #splash-help>div[0]>details[2]>summary[0] · click
 app ~ focus: "#splash-title" → "#splash-help>div[0]>details[2]>summary[0]"
@@ -29,7 +29,7 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
-ui - #splash>div[0]: div class="splash-content" (and 149 inside, 409cbe28)
+ui - #splash>div[0]: div class="splash-content" (and 149 inside, f9a94238)
 
 ## #splash-dont-show · click
 app ~ focus: "#splash-title" → "#splash-dont-show"
