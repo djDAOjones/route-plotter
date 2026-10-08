@@ -1936,6 +1936,21 @@ export class UIController {
         }
       });
 
+      // The page's keys that act on the selected waypoint (delete, nudge,
+      // convert, duplicate) run from a row, or its buttons, only when the
+      // row's own waypoint is selected: from any other row they would act on
+      // a waypoint the focused row does not name, so the row keeps them and
+      // nothing happens (DEF-13). With nothing selected they act on nothing,
+      // and pass. The rename field stops its own keys first.
+      item.addEventListener('keydown', (e) => {
+        if (!this.selectedWaypoint && this.selectedWaypoints.size === 0) return;
+        if (this.selectedWaypoints.has(waypoint) || waypoint === this.selectedWaypoint) return;
+        if (['Delete', 'Backspace', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 't', 'T'].includes(e.key) ||
+            ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D'))) {
+          e.preventDefault();
+        }
+      });
+
       // Delete button
       delBtn.addEventListener('click', (e) => {
         e.stopPropagation();

@@ -1135,8 +1135,11 @@ describe('what the page shortcuts react to (TST-13)', () => {
     // DEF-13: Chromium leaves focus on a button after a click on it.
     ['a transport button', () => document.getElementById('skip-end-btn')],
     // Focused, not activated: where focus goes after a row is activated and
-    // the list rebuilds (DEF-32) is not pinned here.
-    ['a waypoint list row', () => document.querySelector('#waypoint-list .waypoint-row')],
+    // the list rebuilds (DEF-32) is not pinned here. The list's first row is
+    // its Add Waypoint button; the middle waypoint is the selected one.
+    ['the Add Waypoint row', () => document.querySelector('#waypoint-list .waypoint-row')],
+    ["the selected waypoint's row", () => document.querySelector('[data-route-index="1"] > .waypoint-row')],
+    ["another waypoint's row", () => document.querySelector('[data-route-index="0"] > .waypoint-row')],
     ['a sidebar disclosure', () => document.querySelector('.section-more > summary')],
     ['a settings section header', () => document.querySelector('[data-section="video"] > .section-header')],
     ['a skip link', () => document.querySelector('.skip-link')],
@@ -1180,7 +1183,11 @@ describe('what the page shortcuts react to (TST-13)', () => {
     'a slider': NOTHING,
     'a select': NOTHING,
     'a transport button': ON_A_CONTROL,
-    'a waypoint list row': ON_A_CONTROL,
+    'the Add Waypoint row': ON_A_CONTROL,
+    "the selected waypoint's row": ON_A_CONTROL,
+    // Delete and the nudge would act on the selected waypoint, which this
+    // row does not name: the row keeps them.
+    "another waypoint's row": { ...ON_A_CONTROL, Delete: '—, prevented', '→': '—, prevented' },
     // The disclosure and the section header take Space to open themselves.
     'a sidebar disclosure': { ...ON_A_CONTROL, Space: '—, prevented' },
     'a settings section header': { ...ON_A_CONTROL, Space: '—, prevented' },
@@ -1214,6 +1221,62 @@ describe('what the page shortcuts react to (TST-13)', () => {
       emit.mockRestore();
     }
     expect(found, 'where a shortcut runs').toEqual(WHERE_KEYS_RUN);
+  });
+
+  test('from a focused control a shortcut changes the editor as from the page; from a row, only for its own ' +
+    'waypoint; and an open hint keeps its Escape (DEF-13)', async () => {
+    const app = await editor();
+    const row = index =>
+      document.querySelector(`#waypoint-list .waypoint-item[data-route-index="${index}"] .waypoint-row`);
+    const hint = () => document.getElementById('param-tooltip');
+    const steps = [];
+    // Delivered, not recorded: what each key changes is read from the editor.
+    const at = (name, element, key, modifiers = []) => {
+      element.focus();
+      const [asTyped, flags] = typed(key, modifiers);
+      const { changed, prevented } = observe(app, () => press(asTyped, flags, element));
+      steps.push([name, changed, prevented ? 'prevented' : 'left', `focus ${focusName()}`]);
+    };
+    const skipEnd = document.getElementById('skip-end-btn');
+    at('→ on Skip to end', skipEnd, 'ArrowRight');
+    at('Delete on Skip to end', skipEnd, 'Delete');
+    at('Ctrl/Cmd+Z on Skip to end', skipEnd, 'z', ['meta']);
+    // Codex's case (DEF-13 r1): waypoint 2 selected, focus moved to row 1 without activating it.
+    app.eventBus.emit('waypoint:selected', app.waypoints[1]);
+    at('Delete on row 1', row(0), 'Delete');
+    at('→ on row 1', row(0), 'ArrowRight');
+    at('End on row 1', row(0), 'End');
+    // The selected row: DEF-32 leaves focus there after a row is activated.
+    at('→ on row 2', row(1), 'ArrowRight');
+    at('Delete on row 2', row(1), 'Delete');
+    // An open hint on its focused "?": Escape closes it and leaves the selection.
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    const trigger = document.querySelector('.param-hint-trigger[aria-describedby="waypoint-pause-time-tip"]');
+    trigger.focus();
+    trigger.click();
+    steps.push(['hint', hint()?.style.display === 'block' ? 'showing' : 'hidden']);
+    at('Escape on the hint\'s "?"', trigger, 'Escape');
+    steps.push(['hint', hint()?.style.display === 'block' ? 'showing' : 'hidden']);
+    const ROUTE = [FIRST, MIDDLE, LAST];
+    const NUDGED = [FIRST, 'major 0.505,0.5', LAST];
+    expect(steps).toEqual([
+      ['→ on Skip to end', { route: NUDGED }, 'prevented', 'focus #skip-end-btn'],
+      ['Delete on Skip to end', { route: [FIRST, LAST], selected: [], primary: null, said: 'Waypoint deleted' },
+        'prevented', 'focus #skip-end-btn'],
+      // Undo restores the route; the selection it restores is undo's own (not DEF-13's).
+      ['Ctrl/Cmd+Z on Skip to end', { route: ROUTE, selected: ['#2 major 0.75,0.5'], primary: '#2 major 0.75,0.5',
+        said: 'Undo' }, 'prevented', 'focus #skip-end-btn'],
+      ['Delete on row 1', {}, 'prevented', 'focus ≡Waypoint 1'],
+      ['→ on row 1', {}, 'prevented', 'focus ≡Waypoint 1'],
+      ['End on row 1', { progress: 1 }, 'prevented', 'focus ≡Waypoint 1'],
+      ['→ on row 2', { route: NUDGED }, 'prevented', 'focus ≡Waypoint 2'],
+      // The row goes with its waypoint, and focus falls to the page (with DEF-32).
+      ['Delete on row 2', { route: [FIRST, LAST], selected: [], primary: null, said: 'Waypoint deleted' },
+        'prevented', 'focus the page'],
+      ['hint', 'showing'],
+      ['Escape on the hint\'s "?"', {}, 'prevented', 'focus Help: Wait Time'],
+      ['hint', 'hidden']
+    ]);
   });
 });
 
@@ -1431,6 +1494,7 @@ const KEY_LISTENER = {
   more: 'src/controllers/SectionController.js: summary keydown',
   waypointRename: 'src/controllers/UIController.js: input keydown',
   waypointRow: 'src/controllers/UIController.js: rowBtn keydown',
+  waypointItem: 'src/controllers/UIController.js: item keydown',
   dispatcher: 'src/handlers/InteractionHandler.js: document keydown #1',
   cursorDown: 'src/handlers/InteractionHandler.js: document keydown #2',
   cursorUp: 'src/handlers/InteractionHandler.js: document keyup',
@@ -1483,8 +1547,8 @@ const KEY_LISTENERS = {
     what: 'Escape anywhere closes an open menu',
     keys: ['Escape'], reads: [] },
   [KEY_LISTENER.hint]: {
-    what: 'Escape hides an open hint, and keeps it hidden while focus stays',
-    keys: ['Escape'], reads: [],
+    what: 'Escape hides an open hint, and keeps it hidden while focus stays; the page leaves that Escape alone',
+    keys: ['Escape'], reads: ['preventDefault'],
     pinnedBy: { 'tests/paramTooltip.test.js': ['Escape'] } },
   [KEY_LISTENER.outline]: {
     what: 'Escape in a scene outline field drops the draft and resets its form',
@@ -1505,6 +1569,11 @@ const KEY_LISTENERS = {
     what: 'F2 on a waypoint row selects it and starts its rename; the selection reads Shift and Ctrl/Cmd, ' +
       'as a click on the row does',
     keys: ['F2'], reads: ['ctrlKey', 'metaKey', 'preventDefault', 'shiftKey'] },
+  [KEY_LISTENER.waypointItem]: {
+    what: "a waypoint row and its buttons keep the page's keys that act on the selected waypoint (Delete, " +
+      'Backspace, the arrows, T, Ctrl/Cmd+D) unless the row\'s own waypoint is selected (DEF-13)',
+    keys: ['ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'Backspace', 'D', 'Delete', 'T', 'd', 't'],
+    reads: ['ctrlKey', 'metaKey', 'preventDefault'] },
   [KEY_LISTENER.dispatcher]: {
     what: "the page's shortcut dispatcher, which lower-cases each key before it compares",
     anyCase: [...new Set(DISPATCH.map(([key]) => key))],
@@ -1742,9 +1811,14 @@ const LISTENER_ROWS = [
       const renaming = () => document.querySelector('#waypoint-list .waypoint-rename-input');
       const names = () => app.waypoints.map(wp => wp.name || '—').join(', ');
       const selected = () => `selected ${app.waypoints.indexOf(app.selectedWaypoint) + 1}`;
-      // Every key but F2 on a row starts nothing and selects nothing.
+      // Every key but F2 on a row starts nothing and selects nothing. With
+      // nothing selected, the row's own hold on the keys that act on the
+      // selection (KEY_LISTENER.waypointItem, its own row) lets them pass, so
+      // the sweep meets this listener alone.
+      app.eventBus.emit('waypoint:deselected');
       log.sweep(KEY_LISTENER.waypointRow, () => row(2),
         () => `${renaming() ? 'renaming' : 'not renaming'}, ${selected()}`, { page: app });
+      app.eventBus.emit('waypoint:selected', app.waypoints[1]);
       const steps = [];
       let event = log.press(KEY_LISTENER.waypointRow, 'F3', row(2));
       await frame();
@@ -1769,6 +1843,63 @@ const LISTENER_ROWS = [
         'F2 on row 3: taken; renaming "", focus Rename Waypoint 3',
         'Enter: taken; done; names —, —, Lab',
         'F2, then Escape: taken; done; names —, —, Lab, selected row 3'
+      ]);
+    }
+  },
+
+  {
+    title: "a waypoint row keeps the keys that act on the selection unless its own waypoint is selected (DEF-13)",
+    covers: [KEY_LISTENER.waypointItem],
+    async run(log) {
+      const app = await editor();
+      const item = index => document.querySelector(`#waypoint-list .waypoint-item[data-route-index="${index}"]`);
+      const row = index => item(index).querySelector('.waypoint-row');
+      const selection = () => `route ${app.waypoints.map(describeWaypoint).join(' ')}; selected ` +
+        `${app.selectedWaypoints.map(wp => app.waypoints.indexOf(wp) + 1).join(' ') || 'none'}`;
+      const state = () => `${selection()}; focus ${focusName()}`;
+      const step = (name, target, key, flags = {}) => {
+        target.focus();
+        return `${name}: ${taken(log.press(KEY_LISTENER.waypointItem, key, target, flags))}; ${state()}`;
+      };
+      const cmd = chord(['meta']);
+      // Codex's case (DEF-13 r1): waypoint 2 selected, focus moved to row 1 without activating it.
+      const steps = [`start: ${selection()}`];
+      for (const key of ['Delete', 'Backspace', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 't', 'T']) {
+        steps.push(step(`${key} on row 1`, row(0), key));
+      }
+      steps.push(step('Ctrl/Cmd+D on row 1', row(0), 'd', cmd));
+      steps.push(step('Ctrl/Cmd+Shift+D on row 1', row(0), 'D', { ...cmd, shiftKey: true }));
+      steps.push(step('d on row 1', row(0), 'd'));
+      steps.push(step("Delete on row 1's ×", item(0).querySelector('.waypoint-delete'), 'Delete'));
+      // Every other key is not this listener's: swept on row 1's ×, which
+      // hears them too, where the row's F2 (its own listener) does not.
+      log.sweep(KEY_LISTENER.waypointItem, () => item(0).querySelector('.waypoint-delete'), state, { page: app });
+      // From the selected row they act on its waypoint.
+      steps.push(step('ArrowRight on row 2', row(1), 'ArrowRight'));
+      steps.push(step('t on row 2', row(1), 't'));
+      steps.push(step('Delete on row 2', row(1), 'Delete'));
+      // With nothing selected they act on nothing, and pass.
+      steps.push(step('Delete on row 1, nothing selected', row(0), 'Delete'));
+      // A row in a selection of several, not its primary, is selected too.
+      app.eventBus.emit('waypoint:multi-selected', { waypoints: [...app.waypoints], primary: app.waypoints[0] });
+      steps.push(step('ArrowRight on row 2, both selected', row(1), 'ArrowRight'));
+      const ROUTE = 'route major 0.25,0.5 major 0.5,0.5 major 0.75,0.5';
+      const kept = name => `${name} on row 1: taken; ${ROUTE}; selected 2; focus ≡Waypoint 1`;
+      expect(steps).toEqual([
+        `start: ${ROUTE}; selected 2`,
+        ...['Delete', 'Backspace', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 't', 'T', 'Ctrl/Cmd+D',
+          'Ctrl/Cmd+Shift+D'].map(kept),
+        `d on row 1: left; ${ROUTE}; selected 2; focus ≡Waypoint 1`,
+        `Delete on row 1's ×: taken; ${ROUTE}; selected 2; focus Delete Waypoint 1`,
+        'ArrowRight on row 2: taken; route major 0.25,0.5 major 0.505,0.5 major 0.75,0.5; selected 2; ' +
+          'focus ≡Waypoint 2',
+        // The list rebuilds for the new type, and focus falls to the page (with DEF-32).
+        't on row 2: taken; route major 0.25,0.5 minor 0.505,0.5 major 0.75,0.5; selected 2; focus the page',
+        'Delete on row 2: taken; route major 0.25,0.5 major 0.75,0.5; selected none; focus the page',
+        'Delete on row 1, nothing selected: left; route major 0.25,0.5 major 0.75,0.5; selected none; ' +
+          'focus ≡Waypoint 1',
+        'ArrowRight on row 2, both selected: taken; route major 0.255,0.5 major 0.755,0.5; selected 1 2; ' +
+          'focus ≡Waypoint 2'
       ]);
     }
   },
@@ -1967,9 +2098,12 @@ const LISTENER_ROWS = [
       const shown = state();
       log.sweep(KEY_LISTENER.hint, document.body, state, { page: app });
       const event = log.press(KEY_LISTENER.hint, 'Escape', document.body);
-      // The page's own Escape takes the key too: it clears the selection.
-      expect([shown, `Escape: ${taken(event)}; ${state()}`])
-        .toEqual(['showing "How long the path head waits at this waypoint before moving on"', 'Escape: taken; hidden']);
+      const selected = app.selectedWaypoint ? describeWaypoint(app.selectedWaypoint) : 'none';
+      // Closing the hint uses the key up: the page's own Escape no longer
+      // also clears the selection (DEF-13; until then it did).
+      expect([shown, `Escape: ${taken(event)}; ${state()}; selected ${selected}`])
+        .toEqual(['showing "How long the path head waits at this waypoint before moving on"',
+          'Escape: taken; hidden; selected major 0.5,0.5']);
     }
   },
 
