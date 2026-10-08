@@ -447,7 +447,7 @@
       "format": "esm"
     },
     "src/utils/sliderScales.js": {
-      "bytes": 5030,
+      "bytes": 6171,
       "imports": [],
       "format": "esm"
     },
@@ -2625,7 +2625,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 105022,
+      "bytes": 107780,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2676,7 +2676,7 @@
       "format": "esm"
     },
     "src/handlers/InteractionHandler.js": {
-      "bytes": 41105,
+      "bytes": 41764,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2797,7 +2797,7 @@
       "format": "esm"
     },
     "src/components/ParamTooltip.js": {
-      "bytes": 28583,
+      "bytes": 28731,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3176,7 +3176,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 59253,
+      "bytes": 59694,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3677,7 +3677,7 @@
       "format": "esm"
     },
     "src/app/projectReset.js": {
-      "bytes": 4683,
+      "bytes": 4923,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
@@ -3981,13 +3981,13 @@
     }
   },
   "outputs": {
-    ".docs-build-7jTOLc/app.js.map": {
+    ".docs-build-N6EqYu/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3570236
+      "bytes": 3577305
     },
-    ".docs-build-7jTOLc/app.js": {
+    ".docs-build-N6EqYu/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4107,7 +4107,7 @@
           "bytesInOutput": 2446
         },
         "src/utils/sliderScales.js": {
-          "bytesInOutput": 657
+          "bytesInOutput": 856
         },
         "src/utils/focusTrap.js": {
           "bytesInOutput": 2060
@@ -4200,10 +4200,10 @@
           "bytesInOutput": 1370
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 41002
+          "bytesInOutput": 41955
         },
         "src/handlers/InteractionHandler.js": {
-          "bytesInOutput": 17799
+          "bytesInOutput": 17968
         },
         "src/services/UndoService.js": {
           "bytesInOutput": 2379
@@ -4236,7 +4236,7 @@
           "bytesInOutput": 2154
         },
         "src/components/ParamTooltip.js": {
-          "bytesInOutput": 6118
+          "bytesInOutput": 6137
         },
         "src/components/Dropdown.js": {
           "bytesInOutput": 2252
@@ -4305,7 +4305,7 @@
           "bytesInOutput": 10101
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 29841
+          "bytesInOutput": 29961
         },
         "src/app/exporting.js": {
           "bytesInOutput": 5588
@@ -4353,7 +4353,7 @@
           "bytesInOutput": 116
         },
         "src/app/projectReset.js": {
-          "bytesInOutput": 2193
+          "bytesInOutput": 2132
         },
         "src/utils/announcementQueue.js": {
           "bytesInOutput": 686
@@ -4362,7 +4362,7 @@
           "bytesInOutput": 22984
         }
       },
-      "bytes": 1116804
+      "bytes": 1118203
     }
   }
 }
