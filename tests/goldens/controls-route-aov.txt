@@ -14,8 +14,8 @@ app ~ focus: "body" → "#aov-angle"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
-ui ~ #aov-angle: input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="60°" max="1000" min="0" step="1" type="range" value="500" :value="500" → input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="48°" max="1000" min="0" step="1" type="range" value="500" :value="333"
-ui ~ #aov-angle-value: span :text="60°" → span :text="48°"
+ui ~ #aov-angle: input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="95°" max="1000" min="0" step="1" type="range" value="500" :value="621" → input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="48°" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #aov-angle-value: span :text="95°" → span :text="48°"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9712 chars, b03d57fe]
 
@@ -33,8 +33,8 @@ app ~ focus: "body" → "#aov-distance"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
-ui ~ #aov-distance: input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="10%" max="1000" min="0" step="1" type="range" value="500" :value="500" → input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="4.6%" max="1000" min="0" step="1" type="range" value="500" :value="333"
-ui ~ #aov-distance-value: span :text="10%" → span :text="4.6%"
+ui ~ #aov-distance: input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="66%" max="1000" min="0" step="1" type="range" value="500" :value="910" → input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="4.6%" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #aov-distance-value: span :text="66%" → span :text="4.6%"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9711 chars, b6f17f1b]
 
@@ -52,8 +52,8 @@ app ~ focus: "body" → "#aov-dropoff"
 storage ~ routePlotter_lastSection: "video" → "reveal"
 ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
-ui ~ #aov-dropoff: input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="25%" max="1000" min="0" step="1" type="range" value="500" :value="500" → input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="34%" max="1000" min="0" step="1" type="range" value="500" :value="333"
-ui ~ #aov-dropoff-value: span :text="25%" → span :text="34%"
+ui ~ #aov-dropoff: input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="23%" max="1000" min="0" step="1" type="range" value="500" :value="230" → input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="34%" max="1000" min="0" step="1" type="range" value="500" :value="333"
+ui ~ #aov-dropoff-value: span :text="23%" → span :text="34%"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9713 chars, f40485d9]
 

@@ -83,9 +83,8 @@ const MISSING_ELEMENTS = {
       'skips its label (persistence.js). A project saved as Fill still opens as Fill, but nothing in the ' +
       'shell can switch it: background:mode-change has no other sender' },
   animationSpeed: { id: 'animation-speed',
-    without: "the left Duration slider was removed: UIController's listener and sync skip it with ?., and " +
-      'project load guards its speed-slider sync on this element, so it never emits ui:slider:update-speed ' +
-      'and the right Duration thumb keeps its old place after Open (DEF-20)' },
+    without: "the left Duration slider was removed: UIController's listener and sync skip it with ?.; project " +
+      'load syncs the right one, #animation-speed-right, since DEF-20' },
   animationSpeedValue: { id: 'animation-speed-value',
     without: 'every write is guarded (main.js init, pathTiming.js); the right readout, ' +
       '#animation-speed-value-right, is the one on screen' },

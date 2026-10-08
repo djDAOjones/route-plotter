@@ -6,7 +6,7 @@
 import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT, PATH_VISIBILITY, BACKGROUND_VISIBILITY } from '../config/constants.js';
 import { getInlineHelpHTML, getSplashHelpHTML } from '../config/helpContent.js';
 import {
-  bipolarSliderToLog2Value, formatUIValue, log2ValueToSlider, sliderToAngle, sliderToLog2Value,
+  angleToSlider, bipolarSliderToLog2Value, formatUIValue, log2ValueToSlider, sliderToAngle, sliderToLog2Value,
 } from '../utils/sliderScales.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
 import { VideoExporter } from '../services/VideoExporter.js';
@@ -835,20 +835,15 @@ export class UIController {
     });
     
     /**
-     * Animation speed slider with feedback loop prevention
-     * Uses multiple checks to distinguish between user input and programmatic updates
-     * to avoid circular event chains when slider value is set by code
+     * Animation speed slider. Only a user's move fires `input`: the app moves
+     * the thumb only by setting `.value` (`ui:slider:update-speed`, below),
+     * which fires no event, so there is no feedback loop to guard against.
+     * The 50 ms flag that had guarded it dropped real input after each sync
+     * instead (DEF-20).
      */
-    let isUpdatingSlider = false;
-    
     // Helper to handle speed slider input (shared by both sliders)
     const handleSpeedSliderInput = (e) => {
       const currentValue = parseInt(e.target.value);
-      
-      // Check if this is a programmatic change
-      if (isUpdatingSlider) {
-        return;
-      }
       
       // Apply logarithmic curve for perceptually uniform speed control
       const speed = sliderToSpeed(currentValue);
@@ -883,7 +878,6 @@ export class UIController {
     
     /**
      * Listen for programmatic slider updates from other parts of the app
-     * Temporarily sets flag to prevent the input event from firing
      * Rounds speed to nearest step value (5) to prevent snap-back
      * @param {number} speed - The speed value to set on the slider
      */
@@ -891,15 +885,9 @@ export class UIController {
       // Convert speed back to slider position using inverse log curve
       const sliderValue = speedToSlider(speed);
       
-      // Set protection and update both sliders
-      isUpdatingSlider = true;
+      // Update both sliders (setting .value fires no input event)
       if (this.elements.animationSpeed) this.elements.animationSpeed.value = sliderValue;
       if (this.elements.animationSpeedRight) this.elements.animationSpeedRight.value = sliderValue;
-      
-      // Clear protection after brief delay to ensure queued events are blocked
-      setTimeout(() => { 
-        isUpdatingSlider = false;
-      }, 50);
     });
     
     // Clear button — destructive confirmation uses the shared modal focus
@@ -1310,6 +1298,32 @@ export class UIController {
     if (spotlightControls) spotlightControls.style.display = isSpotlight ? 'block' : 'none';
     if (aovControls) aovControls.style.display = isAOV ? 'block' : 'none';
     this.updateRevealTrailVisibility(mode);
+  }
+
+  /**
+   * DEF-20 — put the Angle of View sliders where the loaded project says they
+   * are, each by the inverse of its own handler's scale. Nothing wrote them, so
+   * after Open their thumbs kept their earlier places, and the first touch
+   * jumped the setting to what the thumb meant.
+   * @param {Object} motionSettings - The project's motion settings
+   */
+  syncAngleOfViewControls(motionSettings) {
+    const { aovAngle: angle, aovDistance: distance, aovDropoff: dropoff } = motionSettings;
+    if (this.elements.aovAngle && Number.isFinite(angle)) {
+      this.elements.aovAngle.value = String(angleToSlider(angle, MOTION.AOV_ANGLE_MIN, MOTION.AOV_ANGLE_MAX));
+      setRangeReadout(this.elements.aovAngle, this.elements.aovAngleValue, formatUIValue(angle, '°'));
+    }
+    if (this.elements.aovDistance && Number.isFinite(distance)) {
+      this.elements.aovDistance.value = String(log2ValueToSlider(
+        distance, MOTION.AOV_DISTANCE_MIN, MOTION.AOV_DISTANCE_MAX));
+      setRangeReadout(this.elements.aovDistance, this.elements.aovDistanceValue, formatUIValue(distance, '%'));
+    }
+    if (this.elements.aovDropoff && Number.isFinite(dropoff)) {
+      // The handler's linear 0–1000 → 0–AOV_DROPOFF_MAX, inverted and kept on the track.
+      const position = Math.round((dropoff / MOTION.AOV_DROPOFF_MAX) * 1000);
+      this.elements.aovDropoff.value = String(Math.min(1000, Math.max(0, position)));
+      setRangeReadout(this.elements.aovDropoff, this.elements.aovDropoffValue, formatUIValue(dropoff, '%'));
+    }
   }
   
   /**

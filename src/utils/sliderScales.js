@@ -135,3 +135,38 @@ export function sliderToAngle(sliderValue, min, max) {
   // Map to angle range
   return min + normalized * (max - min);
 }
+
+/**
+ * Convert angle back to slider position (0-1000)
+ * Inverse of sliderToAngle. Recovered from MotionVisibilityService at 2fb72ff,
+ * where SPL-01 had deleted it as uncalled: loading a project needs it to put
+ * the View Angle thumb where the project's angle is (DEF-20).
+ *
+ * @param {number} angle - Angle in degrees
+ * @param {number} min - Minimum angle in degrees
+ * @param {number} max - Maximum angle in degrees
+ * @returns {number} Slider position (0-1000)
+ */
+export function angleToSlider(angle, min, max) {
+  if (angle <= min) return 0;
+  if (angle >= max) return 1000;
+
+  // Normalize angle to 0-1 in curved space
+  const maxCurved = 1 + 1/3;
+  const normalized = (angle - min) / (max - min);
+  const curved = normalized * maxCurved;
+
+  // Solve t + t³/3 = curved for t using Newton-Raphson
+  // f(t) = t + t³/3 - curved
+  // f'(t) = 1 + t²
+  let t = normalized; // Initial guess
+  for (let i = 0; i < 5; i++) {
+    const f = t + (t * t * t) / 3 - curved;
+    const fPrime = 1 + t * t;
+    t = t - f / fPrime;
+  }
+
+  // Clamp and convert to slider range
+  t = Math.max(0, Math.min(1, t));
+  return Math.round(t * 1000);
+}

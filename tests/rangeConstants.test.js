@@ -473,9 +473,11 @@ const DISAGREEMENTS = {
     why: 'nothing writes the thumb until a project loads; its readout markup says 15%, the model means 5.0% ' +
       'as the readout prints it' },
   'aov-angle value': { html: 500, means: 73.7188, code: 60, codePosition: 416, source: 'MOTION.AOV_ANGLE_DEFAULT',
-    why: 'nothing writes the Angle of view sliders (DEF-20): the readout says 60°, the thumb means 74°' },
+    why: 'start-up does not write the Angle of view sliders (a load does, since DEF-20): the readout says 60°, ' +
+      'the thumb means 74°' },
   'aov-distance value': { html: 500, means: 10, code: 25, codePosition: 699, source: 'MOTION.AOV_DISTANCE_DEFAULT',
-    why: "nothing writes the Angle of view sliders (DEF-20): thumb and readout say 10%, the project's setting is 25%" }
+    why: 'start-up does not write the Angle of view sliders (a load does, since DEF-20): thumb and readout say ' +
+      "10%, the project's setting is 25%" }
 };
 
 // ---------------------------------------------------------------------------
@@ -563,8 +565,9 @@ function writersOf(writes) {
  * markup's `value` until something else writes it.
  */
 const NOT_WRITTEN_ON_A_NEW_PROJECT = {
-  'aov-angle': 'nothing in src/ writes the Angle of view sliders: their thumbs keep the markup (DEF-20)',
-  'aov-distance': 'as aov-angle (DEF-20)',
+  'aov-angle': 'start-up does not write the Angle of view sliders (a load does, since DEF-20): their thumbs keep ' +
+    'the markup',
+  'aov-distance': 'as aov-angle',
   'aov-dropoff': 'as aov-angle; its markup happens to mean the default, MOTION.AOV_DROPOFF_DEFAULT',
   'background-zoom': 'written only when a project loads (persistence.js)',
   'bg-overlay': 'written only when a project loads (persistence.js)',
@@ -578,13 +581,11 @@ const NOT_WRITTEN_ON_A_NEW_PROJECT = {
     'or seeks'
 };
 
-/** The fields the limits flow leaves alone, and why. */
-const NOT_WRITTEN_AT_THE_LIMITS = {
-  'aov-angle': 'nothing in src/ writes the Angle of view sliders, not even a load: the project holds 95°, the ' +
-    'thumb keeps the markup (DEF-20)',
-  'aov-distance': 'as aov-angle (DEF-20)',
-  'aov-dropoff': 'as aov-angle (DEF-20)'
-};
+/**
+ * The fields the limits flow leaves alone, and why: none. The load writes
+ * the Angle of view sliders too, since DEF-20.
+ */
+const NOT_WRITTEN_AT_THE_LIMITS = {};
 
 /**
  * The modules each flow's writes came from (the first `src/` frame on the
@@ -623,9 +624,11 @@ const WRITERS_AT_THE_LIMITS = {
   'src/app/playback.js': ['timeline-slider'],
   'src/app/undoRedo.js': ['graphics-scale', 'head-rotation-offset', 'hold-at-end', 'path-glow-intensity',
     'path-head-size'],
-  // Nothing here is typed, so the frame-rate and size handlers do not write.
-  'src/controllers/UIController.js': WRITERS_ON_A_NEW_PROJECT['src/controllers/UIController.js']
-    .filter(id => !['export-frame-rate', 'export-res-x', 'export-res-y'].includes(id))
+  // Nothing here is typed, so the frame-rate and size handlers do not write;
+  // the load writes the Angle of view sliders (DEF-20).
+  'src/controllers/UIController.js': [...WRITERS_ON_A_NEW_PROJECT['src/controllers/UIController.js']
+    .filter(id => !['export-frame-rate', 'export-res-x', 'export-res-y'].includes(id)),
+  'aov-angle', 'aov-distance', 'aov-dropoff'].sort()
 };
 
 /**
@@ -710,9 +713,8 @@ const LIMIT_EDGES = (() => {
  * a field's steps, or are written in another unit, as each says.
  */
 const LIMIT_MISFITS = {
-  'animation-speed-right 1445': 'not written by the load: it never syncs this slider, because it guards ' +
-    'on the missing ' +
-    '#animation-speed (DEF-20), so a 10,000 px/s project keeps start-up\'s off-step 1445',
+  'animation-speed-right 1445': "start-up's write, off the field's 5-step grid as on a new project; the load " +
+    'then writes 1, the end of the slider, which 10,000 px/s is past (its curve stops at 4,000 px/s)',
   'area-fade-in 1250': "between the field's 100 ms steps; a browser moves the thumb to 1,300",
   'area-fade-out 1750': "between the field's 100 ms steps; a browser moves the thumb to 1,800",
   'background-zoom 1000': 'load accepts up to 1,000%; the field stops at 400%',
@@ -1015,10 +1017,6 @@ describe('index.html ranges against the code (TST-13)', () => {
         found[id] = {};
         expected[id] = {};
         for (const position of positionsOf(id)) {
-          // The Duration slider's handler ignores input for 50 ms after the
-          // app moves its thumb (isUpdatingSlider, UIController.js), as
-          // start-up does; a user's drag comes later than that.
-          if (id === 'animation-speed-right') await new Promise(resolve => setTimeout(resolve, 60));
           setAsUser(id, position);
           found[id][position] = precise(read(app, sent));
           expected[id][position] = precise(toModel(position));
