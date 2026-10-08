@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.710</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.710">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.710">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.710">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.710">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.710">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.710">
+  <title>Route Plotter v3.2.711</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.711">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.711">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.711">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.711">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.711">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.711">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -110,7 +110,7 @@
              with prev/next stepping through Route → Waypoint 1 → … → last -->
         <div class="sidebar-header sidebar-header-compact">
           <div id="scope-chip" class="scope-chip" data-scope="route">
-            <button id="scope-route-btn" class="scope-route-btn" type="button" disabled>Route</button>
+            <button id="scope-route-btn" class="scope-route-btn" type="button" aria-current="true">Route</button>
             <button id="scope-prev-btn" class="scope-nav-btn" type="button" aria-label="Edit previous waypoint" disabled><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 2L3.5 6L7.5 10"/></svg></button>
             <span id="scope-chip-text" class="scope-chip-text" role="status" aria-live="polite">Editing · Route</span>
             <button id="scope-next-btn" class="scope-nav-btn" type="button" aria-label="Edit next waypoint" disabled><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2L8.5 6L4.5 10"/></svg></button>
@@ -135,10 +135,9 @@
                MARKER SECTION
                ============================================================ -->
           <div class="settings-section" data-section="marker">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-marker-content">
-              <h2 class="section-title">Marker</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-marker-content">Marker<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-marker-content" class="section-content">
               <!-- Colour (Okabe-Ito swatch picker) -->
               <input type="hidden" id="dot-color" value="#D55E00">
@@ -176,11 +175,13 @@
               </div>
               
               <!-- Size (was Marker Size) -->
-              <label for="dot-size">
-                <span data-tip="Waypoint marker diameter in project reference pixels; exports scale from the reference short edge">Size</span>
-                <input type="range" id="dot-size" min="4" max="16" value="8" step="1" aria-describedby="dot-size-value" aria-valuetext="8 reference px">
-                <span id="dot-size-value">8 reference px</span>
-              </label>
+              <div class="range-row">
+                <label for="dot-size">
+                  <span data-tip="Waypoint marker diameter in project reference pixels; exports scale from the reference short edge">Size</span>
+                  <input type="range" id="dot-size" min="4" max="16" value="8" step="1" aria-describedby="dot-size-value" aria-valuetext="8 reference px">
+                </label>
+                <span id="dot-size-value" class="range-readout">8 reference px</span>
+              </div>
 
               <div class="waypoint-card-actions" role="group" aria-label="Marker actions">
                 <button type="button" class="btn btn-secondary" data-card-action="reset" data-card="marker" aria-describedby="marker-actions-context marker-reset-reason">Reset</button>
@@ -197,10 +198,9 @@
                this waypoint: beacon effect, wait, camera zoom
                ============================================================ -->
           <div class="settings-section" data-section="on-arrival">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-on-arrival-content">
-              <h2 class="section-title">On arrival</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-on-arrival-content">On arrival<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-on-arrival-content" class="section-content">
               <div class="section-primary">
               <!-- Beacon Effect -->
@@ -217,11 +217,13 @@
               </label>
 
               <!-- Wait Time -->
-              <label id="pause-time-control" for="waypoint-pause-time">
-                <span data-tip="How long the path head waits at this waypoint before moving on">Wait time</span>
-                <input type="range" id="waypoint-pause-time" min="0" max="1000" value="500" step="1" aria-describedby="waypoint-pause-time-value" aria-valuetext="1.5s">
-                <span id="waypoint-pause-time-value">1.5s</span>
-              </label>
+              <div class="range-row" id="pause-time-control">
+                <label for="waypoint-pause-time">
+                  <span data-tip="How long the path head waits at this waypoint before moving on">Wait time</span>
+                  <input type="range" id="waypoint-pause-time" min="0" max="1000" value="500" step="1" aria-describedby="waypoint-pause-time-value" aria-valuetext="1.5s">
+                </label>
+                <span id="waypoint-pause-time-value" class="range-readout">1.5s</span>
+              </div>
 
               <!-- Camera zoom (moved from the former Camera section; ids kept
                    for camera.js visibility toggling and wiring) -->
@@ -277,16 +279,20 @@
 
                   <!-- Ripple-specific controls (hidden unless ripple selected) -->
                   <div id="ripple-controls" style="display: none;">
-                    <label for="ripple-thickness">
-                      <span data-tip="Line thickness of the ripple rings">Thickness</span>
-                      <input type="range" id="ripple-thickness" min="1" max="10" value="2" step="0.5" aria-describedby="ripple-thickness-value" aria-valuetext="2 reference px">
-                      <span id="ripple-thickness-value">2 reference px</span>
-                    </label>
-                    <label for="ripple-max-scale">
-                      <span data-tip="Maximum expansion radius of the ripple effect">Size</span>
-                      <input type="range" id="ripple-max-scale" min="500" max="4000" value="1000" step="100" aria-describedby="ripple-max-scale-value" aria-valuetext="1000%">
-                      <span id="ripple-max-scale-value">1000%</span>
-                    </label>
+                    <div class="range-row">
+                      <label for="ripple-thickness">
+                        <span data-tip="Line thickness of the ripple rings">Thickness</span>
+                        <input type="range" id="ripple-thickness" min="1" max="10" value="2" step="0.5" aria-describedby="ripple-thickness-value" aria-valuetext="2 reference px">
+                      </label>
+                      <span id="ripple-thickness-value" class="range-readout">2 reference px</span>
+                    </div>
+                    <div class="range-row">
+                      <label for="ripple-max-scale">
+                        <span data-tip="Maximum expansion radius of the ripple effect">Size</span>
+                        <input type="range" id="ripple-max-scale" min="500" max="4000" value="1000" step="100" aria-describedby="ripple-max-scale-value" aria-valuetext="1000%">
+                      </label>
+                      <span id="ripple-max-scale-value" class="range-readout">1000%</span>
+                    </div>
                     <label class="checkbox-label" for="ripple-wait">
                       <input type="checkbox" id="ripple-wait" checked>
                       <span data-tip="Sets Wait time to how long the ripple lasts, so the path head waits until its last ring has finished">Wait during ripple</span>
@@ -296,16 +302,20 @@
                   <!-- Pulse-specific controls (hidden unless pulse selected) -->
                   <div id="pulse-controls" class="beacon-sub-controls" role="group" aria-labelledby="pulse-controls-label" style="display: none;">
                     <span id="pulse-controls-label" class="sub-controls-label">Pulse settings</span>
-                    <label for="pulse-amplitude">
-                      <span data-tip="How much the marker grows and shrinks during pulse">Amplitude</span>
-                      <input type="range" id="pulse-amplitude" min="0" max="3" value="1" step="0.1" aria-describedby="pulse-amplitude-value" aria-valuetext="1.0">
-                      <span id="pulse-amplitude-value">1.0</span>
-                    </label>
-                    <label for="pulse-cycle-speed">
-                      <span data-tip="Duration of one complete pulse cycle">Cycle duration</span>
-                      <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value" aria-valuetext="4s">
-                      <span id="pulse-cycle-speed-value">4s</span>
-                    </label>
+                    <div class="range-row">
+                      <label for="pulse-amplitude">
+                        <span data-tip="How much the marker grows and shrinks during pulse">Amplitude</span>
+                        <input type="range" id="pulse-amplitude" min="0" max="3" value="1" step="0.1" aria-describedby="pulse-amplitude-value" aria-valuetext="1.0">
+                      </label>
+                      <span id="pulse-amplitude-value" class="range-readout">1.0</span>
+                    </div>
+                    <div class="range-row">
+                      <label for="pulse-cycle-speed">
+                        <span data-tip="Duration of one complete pulse cycle">Cycle duration</span>
+                        <input type="range" id="pulse-cycle-speed" min="1" max="10" value="4" step="0.5" aria-describedby="pulse-cycle-speed-value" aria-valuetext="4s">
+                      </label>
+                      <span id="pulse-cycle-speed-value" class="range-readout">4s</span>
+                    </div>
                   </div>
                 </div>
               </details>
@@ -323,10 +333,9 @@
                LABEL SECTION
                ============================================================ -->
           <div class="settings-section" data-section="label">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-label-content">
-              <h2 class="section-title">Label</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-label-content">Label<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-label-content" class="section-content">
               <div class="section-primary">
               <!-- Text Input -->
@@ -347,11 +356,13 @@
               </label>
               
               <!-- Text size is stored and rendered in reference pixels -->
-              <label for="label-size">
-                <span data-tip="Font size in project reference pixels. The editor keeps rendered labels between 14 and 72 screen pixels for legibility; exports use the exact scale">Size</span>
-                <input type="range" id="label-size" min="16" max="48" value="16" step="1" aria-describedby="label-size-value" aria-valuetext="16 reference px">
-                <span id="label-size-value">16 reference px</span>
-              </label>
+              <div class="range-row">
+                <label for="label-size">
+                  <span data-tip="Font size in project reference pixels. The editor keeps rendered labels between 14 and 72 screen pixels for legibility; exports use the exact scale">Size</span>
+                  <input type="range" id="label-size" min="16" max="48" value="16" step="1" aria-describedby="label-size-value" aria-valuetext="16 reference px">
+                </label>
+                <span id="label-size-value" class="range-readout">16 reference px</span>
+              </div>
 
               <!-- LABEL-01: promoted out of More. It is the shortest route to a
                    readable label, so burying it made the whole feature invisible. -->
@@ -384,33 +395,41 @@
                    data-allow-custom="true">
               </div>
 
-              <label for="label-bg-opacity">
-                <span data-tip="Opacity of the background behind the label text">Background opacity</span>
-                <input type="range" id="label-bg-opacity" min="0" max="100" value="85" step="1"
-                       aria-describedby="label-bg-opacity-value" aria-valuetext="85%">
-                <span id="label-bg-opacity-value">85%</span>
-              </label>
+              <div class="range-row">
+                <label for="label-bg-opacity">
+                  <span data-tip="Opacity of the background behind the label text">Background opacity</span>
+                  <input type="range" id="label-bg-opacity" min="0" max="100" value="85" step="1"
+                         aria-describedby="label-bg-opacity-value" aria-valuetext="85%">
+                </label>
+                <span id="label-bg-opacity-value" class="range-readout">85%</span>
+              </div>
               
               <!-- Text Width (for wrapping) -->
-              <label for="label-width">
-                <span data-tip="Maximum width before text wraps to a new line">Text area width</span>
-                <input type="range" id="label-width" min="5" max="50" value="15" step="1" aria-describedby="label-width-value" aria-valuetext="15%">
-                <span id="label-width-value">15%</span>
-              </label>
+              <div class="range-row">
+                <label for="label-width">
+                  <span data-tip="Maximum width before text wraps to a new line">Text area width</span>
+                  <input type="range" id="label-width" min="5" max="50" value="15" step="1" aria-describedby="label-width-value" aria-valuetext="15%">
+                </label>
+                <span id="label-width-value" class="range-readout">15%</span>
+              </div>
               
               <!-- Position X Offset -->
-              <label for="label-offset-x">
-                <span data-tip="How far the label sits left (negative) or right (positive) of the waypoint, as a percentage of the canvas width">Horizontal position</span>
-                <input type="range" id="label-offset-x" min="-50" max="50" value="0" step="1" aria-describedby="label-offset-x-value" aria-valuetext="0%">
-                <span id="label-offset-x-value">0%</span>
-              </label>
+              <div class="range-row">
+                <label for="label-offset-x">
+                  <span data-tip="How far the label sits left (negative) or right (positive) of the waypoint, as a percentage of the canvas width">Horizontal position</span>
+                  <input type="range" id="label-offset-x" min="-50" max="50" value="0" step="1" aria-describedby="label-offset-x-value" aria-valuetext="0%">
+                </label>
+                <span id="label-offset-x-value" class="range-readout">0%</span>
+              </div>
               
               <!-- Position Y Offset -->
-              <label for="label-offset-y">
-                <span data-tip="How far the label sits above (negative) or below (positive) the waypoint, as a percentage of the canvas height">Vertical position</span>
-                <input type="range" id="label-offset-y" min="-50" max="50" value="-5" step="1" aria-describedby="label-offset-y-value" aria-valuetext="-5%">
-                <span id="label-offset-y-value">-5%</span>
-              </label>
+              <div class="range-row">
+                <label for="label-offset-y">
+                  <span data-tip="How far the label sits above (negative) or below (positive) the waypoint, as a percentage of the canvas height">Vertical position</span>
+                  <input type="range" id="label-offset-y" min="-50" max="50" value="-5" step="1" aria-describedby="label-offset-y-value" aria-valuetext="-5%">
+                </label>
+                <span id="label-offset-y-value" class="range-readout">-5%</span>
+              </div>
               
                 </div>
               </details>
@@ -430,10 +449,9 @@
                so the segment-ownership rule is named in the header.
                ============================================================ -->
           <div class="settings-section" data-section="leg">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-leg-content">
-              <h2 class="section-title" id="leg-section-title">Leg</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-leg-content"><span id="leg-section-title">Leg</span><span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-leg-content" class="section-content">
               <div class="section-primary">
               <!-- Colour (Okabe-Ito swatch picker) -->
@@ -447,11 +465,13 @@
               </div>
 
               <!-- Thickness - increased range to 4x with log scale -->
-              <label for="segment-width">
-                <span data-tip="Path-line width in project reference pixels; exports scale from the reference short edge">Thickness</span>
-                <input type="range" id="segment-width" min="0" max="1000" value="333" step="1" aria-describedby="segment-width-value" aria-valuetext="3.0 reference px">
-                <span id="segment-width-value">3.0 reference px</span>
-              </label>
+              <div class="range-row">
+                <label for="segment-width">
+                  <span data-tip="Path-line width in project reference pixels; exports scale from the reference short edge">Thickness</span>
+                  <input type="range" id="segment-width" min="0" max="1000" value="333" step="1" aria-describedby="segment-width-value" aria-valuetext="3.0 reference px">
+                </label>
+                <span id="segment-width-value" class="range-readout">3.0 reference px</span>
+              </div>
               
               <!-- Shape (was Path Shape) -->
               <label for="path-shape">
@@ -464,11 +484,13 @@
               </label>
 
               <!-- Segment Speed -->
-              <label id="segment-speed-control" for="waypoint-segment-speed">
-                <span data-tip="How fast the path head travels this leg: 2.0x takes half the time, 0.5x twice as long">Leg speed</span>
-                <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1" aria-describedby="waypoint-segment-speed-value" aria-valuetext="1.0x">
-                <span id="waypoint-segment-speed-value">1.0x</span>
-              </label>
+              <div class="range-row" id="segment-speed-control">
+                <label for="waypoint-segment-speed">
+                  <span data-tip="How fast the path head travels this leg: 2.0x takes half the time, 0.5x twice as long">Leg speed</span>
+                  <input type="range" id="waypoint-segment-speed" min="0" max="1000" value="500" step="1" aria-describedby="waypoint-segment-speed-value" aria-valuetext="1.0x">
+                </label>
+                <span id="waypoint-segment-speed-value" class="range-readout">1.0x</span>
+              </div>
               </div>
 
               <details class="section-more">
@@ -477,16 +499,20 @@
               
               <!-- Shape Parameters (shown for squiggle/randomised) -->
               <div id="shape-params-controls" style="display: none;">
-                <label for="shape-amplitude">
-                  <span data-tip="How far the Squiggle or Randomised line swings to each side, as a percentage of the image size">Amplitude</span>
-                  <input type="range" id="shape-amplitude" min="1" max="50" value="10" step="1" aria-describedby="shape-amplitude-value" aria-valuetext="2%">
-                  <span id="shape-amplitude-value">2%</span>
-                </label>
-                <label for="shape-frequency">
-                  <span data-tip="Number of squiggle waves per path segment">Frequency</span>
-                  <input type="range" id="shape-frequency" min="1" max="20" value="5" step="1" aria-describedby="shape-frequency-value" aria-valuetext="5">
-                  <span id="shape-frequency-value">5</span>
-                </label>
+                <div class="range-row">
+                  <label for="shape-amplitude">
+                    <span data-tip="How far the Squiggle or Randomised line swings to each side, as a percentage of the image size">Amplitude</span>
+                    <input type="range" id="shape-amplitude" min="1" max="50" value="10" step="1" aria-describedby="shape-amplitude-value" aria-valuetext="2%">
+                  </label>
+                  <span id="shape-amplitude-value" class="range-readout">2%</span>
+                </div>
+                <div class="range-row">
+                  <label for="shape-frequency">
+                    <span data-tip="Number of squiggle waves per path segment">Frequency</span>
+                    <input type="range" id="shape-frequency" min="1" max="20" value="5" step="1" aria-describedby="shape-frequency-value" aria-valuetext="5">
+                  </label>
+                  <span id="shape-frequency-value" class="range-readout">5</span>
+                </div>
               </div>
               
               <!-- Style (was Path Style) -->
@@ -514,10 +540,9 @@
                AREA HIGHLIGHT SECTION (per-waypoint overlay regions)
                ============================================================ -->
           <div class="settings-section" data-section="area-highlight">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-area-highlight-content">
-              <h2 class="section-title">Area</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-area-highlight-content">Area<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-area-highlight-content" class="section-content">
               <div class="section-primary">
               <!-- Shape type -->
@@ -540,25 +565,31 @@
               
               <!-- Circle size slider (shown when circle selected) -->
               <div id="area-circle-controls" style="display: none;">
-                <label for="area-circle-radius">
-                  <span data-tip="Radius of the circular highlight area">Size</span>
-                  <input type="range" id="area-circle-radius" min="0" max="1000" value="100" step="1" aria-describedby="area-circle-radius-value" aria-valuetext="5%">
-                  <span id="area-circle-radius-value">5%</span>
-                </label>
+                <div class="range-row">
+                  <label for="area-circle-radius">
+                    <span data-tip="Radius of the circular highlight area">Size</span>
+                    <input type="range" id="area-circle-radius" min="0" max="1000" value="100" step="1" aria-describedby="area-circle-radius-value" aria-valuetext="5%">
+                  </label>
+                  <span id="area-circle-radius-value" class="range-readout">5%</span>
+                </div>
               </div>
               
               <!-- Rectangle size sliders (shown when rectangle selected) -->
               <div id="area-rect-controls" style="display: none;">
-                <label for="area-rect-width">
-                  <span data-tip="Width of the rectangular highlight area">Width</span>
-                  <input type="range" id="area-rect-width" min="0" max="1000" value="125" step="1" aria-describedby="area-rect-width-value" aria-valuetext="10%">
-                  <span id="area-rect-width-value">10%</span>
-                </label>
-                <label for="area-rect-height">
-                  <span data-tip="Height of the rectangular highlight area">Height</span>
-                  <input type="range" id="area-rect-height" min="0" max="1000" value="125" step="1" aria-describedby="area-rect-height-value" aria-valuetext="10%">
-                  <span id="area-rect-height-value">10%</span>
-                </label>
+                <div class="range-row">
+                  <label for="area-rect-width">
+                    <span data-tip="Width of the rectangular highlight area">Width</span>
+                    <input type="range" id="area-rect-width" min="0" max="1000" value="125" step="1" aria-describedby="area-rect-width-value" aria-valuetext="10%">
+                  </label>
+                  <span id="area-rect-width-value" class="range-readout">10%</span>
+                </div>
+                <div class="range-row">
+                  <label for="area-rect-height">
+                    <span data-tip="Height of the rectangular highlight area">Height</span>
+                    <input type="range" id="area-rect-height" min="0" max="1000" value="125" step="1" aria-describedby="area-rect-height-value" aria-valuetext="10%">
+                  </label>
+                  <span id="area-rect-height-value" class="range-readout">10%</span>
+                </div>
               </div>
 
               <!-- Delete Area button -->
@@ -583,11 +614,13 @@
                 </div>
                 
                 <!-- Fill Opacity -->
-                <label for="area-fill-opacity">
-                  <span data-tip="Opacity of the area fill. Set to 0% to show only the border">Fill opacity</span>
-                  <input type="range" id="area-fill-opacity" min="0" max="100" value="30" step="1" aria-describedby="area-fill-opacity-value" aria-valuetext="30%">
-                  <span id="area-fill-opacity-value">30%</span>
-                </label>
+                <div class="range-row">
+                  <label for="area-fill-opacity">
+                    <span data-tip="Opacity of the area fill. Set to 0% to show only the border">Fill opacity</span>
+                    <input type="range" id="area-fill-opacity" min="0" max="100" value="30" step="1" aria-describedby="area-fill-opacity-value" aria-valuetext="30%">
+                  </label>
+                  <span id="area-fill-opacity-value" class="range-readout">30%</span>
+                </div>
               </div>
               
               <!-- Border controls -->
@@ -614,11 +647,13 @@
                 </label>
                 
                 <!-- Border Width -->
-                <label for="area-border-width">
-                  <span data-tip="Thickness of the area border in project reference pixels">Border width</span>
-                  <input type="range" id="area-border-width" min="1" max="10" value="2" step="1" aria-describedby="area-border-width-value" aria-valuetext="2 reference px">
-                  <span id="area-border-width-value">2 reference px</span>
-                </label>
+                <div class="range-row">
+                  <label for="area-border-width">
+                    <span data-tip="Thickness of the area border in project reference pixels">Border width</span>
+                    <input type="range" id="area-border-width" min="1" max="10" value="2" step="1" aria-describedby="area-border-width-value" aria-valuetext="2 reference px">
+                  </label>
+                  <span id="area-border-width-value" class="range-readout">2 reference px</span>
+                </div>
               </div>
               
               <!-- Visibility mode -->
@@ -635,18 +670,22 @@
                 </label>
                 
                 <!-- Fade In -->
-                <label for="area-fade-in">
-                  <span data-tip="Duration of the fade-in animation when the area appears">Fade in</span>
-                  <input type="range" id="area-fade-in" min="0" max="10000" value="500" step="100" aria-describedby="area-fade-in-value" aria-valuetext="0.5s">
-                  <span id="area-fade-in-value">0.5s</span>
-                </label>
+                <div class="range-row">
+                  <label for="area-fade-in">
+                    <span data-tip="Duration of the fade-in animation when the area appears">Fade in</span>
+                    <input type="range" id="area-fade-in" min="0" max="10000" value="500" step="100" aria-describedby="area-fade-in-value" aria-valuetext="0.5s">
+                  </label>
+                  <span id="area-fade-in-value" class="range-readout">0.5s</span>
+                </div>
                 
                 <!-- Fade Out -->
-                <label for="area-fade-out">
-                  <span data-tip="Duration of the fade-out animation when the area disappears">Fade out</span>
-                  <input type="range" id="area-fade-out" min="0" max="10000" value="500" step="100" aria-describedby="area-fade-out-value" aria-valuetext="0.5s">
-                  <span id="area-fade-out-value">0.5s</span>
-                </label>
+                <div class="range-row">
+                  <label for="area-fade-out">
+                    <span data-tip="Duration of the fade-out animation when the area disappears">Fade out</span>
+                    <input type="range" id="area-fade-out" min="0" max="10000" value="500" step="100" aria-describedby="area-fade-out-value" aria-valuetext="0.5s">
+                  </label>
+                  <span id="area-fade-out-value" class="range-readout">0.5s</span>
+                </div>
               </div>
               
                 </div>
@@ -667,10 +706,9 @@
                HEAD SECTION — the animated path head (route-global)
                ============================================================ -->
           <div class="settings-section" data-section="head">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-head-content">
-              <h2 class="section-title">Head</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-head-content">Head<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-head-content" class="section-content">
               <!-- Head Colour removed per spec - enforced black head with white stroke -->
               <input type="hidden" id="path-head-color" value="#111111">
@@ -707,19 +745,23 @@
                     <option value="fixed">Fixed</option>
                   </select>
                 </label>
-                <label id="head-rotation-offset-control" for="head-rotation-offset">
-                  <span data-tip="Turns the image by this many degrees on top of Rotation: clockwise above 0°, anticlockwise below">Offset</span>
-                  <input type="range" id="head-rotation-offset" min="-180" max="180" value="0" step="5" aria-describedby="head-rotation-offset-value" aria-valuetext="0°">
-                  <span id="head-rotation-offset-value">0°</span>
-                </label>
+                <div class="range-row" id="head-rotation-offset-control">
+                  <label for="head-rotation-offset">
+                    <span data-tip="Turns the image by this many degrees on top of Rotation: clockwise above 0°, anticlockwise below">Offset</span>
+                    <input type="range" id="head-rotation-offset" min="-180" max="180" value="0" step="5" aria-describedby="head-rotation-offset-value" aria-valuetext="0°">
+                  </label>
+                  <span id="head-rotation-offset-value" class="range-readout">0°</span>
+                </div>
               </div>
 
               <!-- Head Size -->
-              <label for="path-head-size">
-                <span data-tip="Path-head size in project reference pixels; exports scale from the reference short edge">Size</span>
-                <input type="range" id="path-head-size" min="4" max="24" value="8" step="1" aria-describedby="path-head-size-value" aria-valuetext="8 reference px">
-                <span id="path-head-size-value">8 reference px</span>
-              </label>
+              <div class="range-row">
+                <label for="path-head-size">
+                  <span data-tip="Path-head size in project reference pixels; exports scale from the reference short edge">Size</span>
+                  <input type="range" id="path-head-size" min="4" max="24" value="8" step="1" aria-describedby="path-head-size-value" aria-valuetext="8 reference px">
+                </label>
+                <span id="path-head-size-value" class="range-readout">8 reference px</span>
+              </div>
             </div>
           </div>
 
@@ -728,33 +770,38 @@
                moved from the right sidebar's duration block)
                ============================================================ -->
           <div class="settings-section" data-section="pacing">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-pacing-content">
-              <h2 class="section-title">Pacing</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-pacing-content">Pacing<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-pacing-content" class="section-content">
-              <label id="speed-control-right" class="sidebar-control-row" for="animation-speed-right">
-                <span data-tip="Total animation playback time. Changing it speeds up or slows down every leg alike. The end waits for crowds and beacons that are still finishing">Duration</span>
-                <input type="range" id="animation-speed-right" min="1" max="4000" step="5" aria-describedby="animation-speed-value-right pacing-duration-breakdown" aria-valuetext="10s">
-                <span id="animation-speed-value-right" class="slider-value">10s</span>
-              </label>
+              <div class="range-row" id="speed-control-right">
+                <label class="sidebar-control-row" for="animation-speed-right">
+                  <span data-tip="Total animation playback time. Changing it speeds up or slows down every leg alike. The end waits for crowds and beacons that are still finishing">Duration</span>
+                  <input type="range" id="animation-speed-right" min="1" max="4000" step="5" aria-describedby="animation-speed-value-right pacing-duration-breakdown" aria-valuetext="10s">
+                </label>
+                <span id="animation-speed-value-right" class="range-readout slider-value">10s</span>
+              </div>
               <p id="pacing-duration-breakdown" class="section-hint" hidden></p>
               <p id="pacing-comet-hint" class="section-hint" hidden>
                 In Preview, a non-zero Comet trail extends Duration while the tail clears after the route head reaches the end.
               </p>
               <!-- Hold at end (CROWD-06): added to Duration after everything that finishes has finished -->
-              <label class="sidebar-control-row" for="hold-at-end">
-                <span data-tip="Keeps the animation going after everything that finishes has finished: looping crowds keep moving and the final frame holds">Hold at end</span>
-                <input type="range" id="hold-at-end" class="range-hit-target" min="0" max="10000" value="2000" step="100" aria-describedby="hold-at-end-value" aria-valuetext="2s">
-                <span id="hold-at-end-value" class="slider-value">2s</span>
-              </label>
+              <div class="range-row">
+                <label class="sidebar-control-row" for="hold-at-end">
+                  <span data-tip="Keeps the animation going after everything that finishes has finished: looping crowds keep moving and the final frame holds">Hold at end</span>
+                  <input type="range" id="hold-at-end" min="0" max="10000" value="2000" step="100" aria-describedby="hold-at-end-value" aria-valuetext="2s">
+                </label>
+                <span id="hold-at-end-value" class="range-readout slider-value">2s</span>
+              </div>
               <!-- Graphics Scale — global multiplier for all vector element sizes -->
               <div id="graphics-scale-control" style="margin-top:0.5rem;">
-                <label class="sidebar-control-row" for="graphics-scale">
-                  <span id="graphics-scale-label" data-tip="Scales all graphics (paths, markers, labels, beacons) uniformly. Adjust individual sizes first, then fine-tune overall scale">Scale</span>
-                  <input type="range" id="graphics-scale" min="-200" max="200" value="0" step="1" aria-describedby="graphics-scale-value" aria-valuetext="1×">
-                  <span id="graphics-scale-value" class="slider-value">1×</span>
-                </label>
+                <div class="range-row">
+                  <label class="sidebar-control-row" for="graphics-scale">
+                    <span id="graphics-scale-label" data-tip="Scales all graphics (paths, markers, labels, beacons) uniformly. Adjust individual sizes first, then fine-tune overall scale">Scale</span>
+                    <input type="range" id="graphics-scale" min="-200" max="200" value="0" step="1" aria-describedby="graphics-scale-value" aria-valuetext="1×">
+                  </label>
+                  <span id="graphics-scale-value" class="range-readout slider-value">1×</span>
+                </div>
               </div>
             </div>
           </div>
@@ -763,10 +810,9 @@
                REVEAL SECTION (was Animation) — the three visibility modes
                ============================================================ -->
           <div class="settings-section" data-section="reveal">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-reveal-content">
-              <h2 class="section-title">Reveal</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-reveal-content">Reveal<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-reveal-content" class="section-content">
               <div class="section-primary">
               <!-- Marker Mode (renamed from Waypoint Mode per spec) -->
@@ -811,49 +857,63 @@
                 <summary>More</summary>
                 <div class="section-more-content">
               <!-- Trail Size (for instantaneous/comet mode) - hidden unless comet selected -->
-              <label id="path-trail-control" for="path-trail" style="display: none;">
-                <span data-tip="Length of the visible path trail in comet mode">Trail size</span>
-                <input type="range" id="path-trail" min="0" max="1000" value="590" step="1" aria-describedby="path-trail-value" aria-valuetext="15%">
-                <span id="path-trail-value">15%</span>
-              </label>
+              <div class="range-row" id="path-trail-control" style="display: none;">
+                <label for="path-trail">
+                  <span data-tip="Length of the visible path trail in comet mode">Trail size</span>
+                  <input type="range" id="path-trail" min="0" max="1000" value="590" step="1" aria-describedby="path-trail-value" aria-valuetext="15%">
+                </label>
+                <span id="path-trail-value" class="range-readout">15%</span>
+              </div>
               
               <!-- Spotlight Settings (only shown when background = spotlight or spotlight-reveal) -->
               <div id="spotlight-controls" style="display:none;">
-                <label for="reveal-size">
-                  <span data-tip="Radius of the visible area around the path head">Spotlight size</span>
-                  <input type="range" id="reveal-size" min="0" max="1000" value="500" step="1" aria-describedby="reveal-size-value" aria-valuetext="10%">
-                  <span id="reveal-size-value">10%</span>
-                </label>
-                <label for="reveal-feather">
-                  <span data-tip="Softness of the spotlight edge">Edge softness</span>
-                  <input type="range" id="reveal-feather" min="0" max="1000" value="500" step="1" aria-describedby="reveal-feather-value" aria-valuetext="25%">
-                  <span id="reveal-feather-value">25%</span>
-                </label>
-                <label for="reveal-trail" id="reveal-trail-control" hidden>
-                  <span data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades">Reveal trail</span>
-                  <input type="range" id="reveal-trail" min="0" max="1000" value="1000" step="1"
-                         aria-describedby="reveal-trail-value" aria-valuetext="Whole path">
-                  <span id="reveal-trail-value">Whole path</span>
-                </label>
+                <div class="range-row">
+                  <label for="reveal-size">
+                    <span data-tip="Radius of the visible area around the path head">Spotlight size</span>
+                    <input type="range" id="reveal-size" min="0" max="1000" value="500" step="1" aria-describedby="reveal-size-value" aria-valuetext="10%">
+                  </label>
+                  <span id="reveal-size-value" class="range-readout">10%</span>
+                </div>
+                <div class="range-row">
+                  <label for="reveal-feather">
+                    <span data-tip="Softness of the spotlight edge">Edge softness</span>
+                    <input type="range" id="reveal-feather" min="0" max="1000" value="500" step="1" aria-describedby="reveal-feather-value" aria-valuetext="25%">
+                  </label>
+                  <span id="reveal-feather-value" class="range-readout">25%</span>
+                </div>
+                <div class="range-row" id="reveal-trail-control" hidden>
+                  <label for="reveal-trail">
+                    <span data-tip="How much of the path behind the head stays revealed before the reveal fades out. At the top of the range it never fades">Reveal trail</span>
+                    <input type="range" id="reveal-trail" min="0" max="1000" value="1000" step="1"
+                           aria-describedby="reveal-trail-value" aria-valuetext="Whole path">
+                  </label>
+                  <span id="reveal-trail-value" class="range-readout">Whole path</span>
+                </div>
               </div>
               
               <!-- Angle of View Settings (only shown when background = angle-of-view or angle-of-view-reveal) -->
               <div id="aov-controls" style="display:none;">
-                <label for="aov-angle">
-                  <span data-tip="Width of the angle-of-view cone in degrees">View angle</span>
-                  <input type="range" id="aov-angle" min="0" max="1000" value="500" step="1" aria-describedby="aov-angle-value" aria-valuetext="60°">
-                  <span id="aov-angle-value">60°</span>
-                </label>
-                <label for="aov-distance">
-                  <span data-tip="How far the view cone extends from the path head">View distance</span>
-                  <input type="range" id="aov-distance" min="0" max="1000" value="500" step="1" aria-describedby="aov-distance-value" aria-valuetext="10%">
-                  <span id="aov-distance-value">10%</span>
-                </label>
-                <label for="aov-dropoff">
-                  <span data-tip="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head">Fade towards the far end</span>
-                  <input type="range" id="aov-dropoff" min="0" max="1000" value="500" step="1" aria-describedby="aov-dropoff-value" aria-valuetext="25%">
-                  <span id="aov-dropoff-value">25%</span>
-                </label>
+                <div class="range-row">
+                  <label for="aov-angle">
+                    <span data-tip="Width of the angle-of-view cone in degrees">View angle</span>
+                    <input type="range" id="aov-angle" min="0" max="1000" value="500" step="1" aria-describedby="aov-angle-value" aria-valuetext="60°">
+                  </label>
+                  <span id="aov-angle-value" class="range-readout">60°</span>
+                </div>
+                <div class="range-row">
+                  <label for="aov-distance">
+                    <span data-tip="How far the view cone extends from the path head">View distance</span>
+                    <input type="range" id="aov-distance" min="0" max="1000" value="500" step="1" aria-describedby="aov-distance-value" aria-valuetext="10%">
+                  </label>
+                  <span id="aov-distance-value" class="range-readout">10%</span>
+                </div>
+                <div class="range-row">
+                  <label for="aov-dropoff">
+                    <span data-tip="How much of the view cone fades out towards its far end: 0% gives a hard edge, 100% fades all the way from the path head">Fade towards the far end</span>
+                    <input type="range" id="aov-dropoff" min="0" max="1000" value="500" step="1" aria-describedby="aov-dropoff-value" aria-valuetext="25%">
+                  </label>
+                  <span id="aov-dropoff-value" class="range-readout">25%</span>
+                </div>
               </div>
                 </div>
               </details>
@@ -865,10 +925,9 @@
                moved from the right sidebar's duration block)
                ============================================================ -->
           <div class="settings-section" data-section="path-emphasis">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-path-emphasis-content">
-              <h2 class="section-title">Path emphasis</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-path-emphasis-content">Path emphasis<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-path-emphasis-content" class="section-content">
               <fieldset class="path-emphasis" aria-label="Path emphasis">
                 <label class="checkbox-label" for="path-casing-toggle">
@@ -879,11 +938,13 @@
                   <input type="checkbox" id="path-glow-toggle">
                   <span data-tip="Show a soft coloured halo around the path (distinct from the beacon glow effect)">Path glow</span>
                 </label>
-                <label class="sidebar-control-row" for="path-glow-intensity">
-                  <span data-tip="How far the path glow spreads outward from the path">Glow intensity</span>
-                  <input type="range" id="path-glow-intensity" min="0" max="100" value="50" step="1" disabled aria-describedby="path-glow-value" aria-valuetext="50%">
-                  <span id="path-glow-value" class="slider-value">50%</span>
-                </label>
+                <div class="range-row">
+                  <label class="sidebar-control-row" for="path-glow-intensity">
+                    <span data-tip="How far the path glow spreads outward from the path">Glow intensity</span>
+                    <input type="range" id="path-glow-intensity" min="0" max="100" value="50" step="1" disabled aria-describedby="path-glow-value" aria-valuetext="50%">
+                  </label>
+                  <span id="path-glow-value" class="range-readout slider-value">50%</span>
+                </div>
               </fieldset>
             </div>
           </div>
@@ -892,24 +953,27 @@
                BACKGROUND SECTION (per spec §4.2)
                ============================================================ -->
           <div class="settings-section" data-section="background">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-background-content">
-              <h2 class="section-title">Background</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-background-content">Background<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-background-content" class="section-content">
               <!-- Darken/lighten overlay - log2 scaled for fine control near 0 -->
-              <label for="bg-overlay">
-                <span data-tip="Adds a black (left) or white (right) overlay; rendered opacity is capped at 60%">Darken / lighten</span>
-                <input type="range" id="bg-overlay" min="-1000" max="1000" step="1" value="0" aria-describedby="bg-overlay-value" aria-valuetext="None">
-                <span id="bg-overlay-value">None</span>
-              </label>
+              <div class="range-row">
+                <label for="bg-overlay">
+                  <span data-tip="Adds a black (left) or white (right) overlay; rendered opacity is capped at 60%">Darken / lighten</span>
+                  <input type="range" id="bg-overlay" min="-1000" max="1000" step="1" value="0" aria-describedby="bg-overlay-value" aria-valuetext="None">
+                </label>
+                <span id="bg-overlay-value" class="range-readout">None</span>
+              </div>
 
               <!-- Zoom -->
-              <label class="control-row-inline" for="background-zoom">
-                <span data-tip="Scale of the background image">Zoom</span>
-                <input type="range" id="background-zoom" min="50" max="400" step="1" value="100" style="flex: 1;" aria-describedby="background-zoom-value" aria-valuetext="100%">
-                <span id="background-zoom-value">100%</span>
-              </label>
+              <div class="range-row">
+                <label class="control-row-inline" for="background-zoom">
+                  <span data-tip="Scale of the background image">Zoom</span>
+                  <input type="range" id="background-zoom" min="50" max="400" step="1" value="100" style="flex: 1;" aria-describedby="background-zoom-value" aria-valuetext="100%">
+                </label>
+                <span id="background-zoom-value" class="range-readout">100%</span>
+              </div>
 
               <!-- Upload -->
               <div class="upload-row">
@@ -927,10 +991,9 @@
                header action; this card holds the settings)
                ============================================================ -->
           <div class="settings-section" data-section="video">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-video-content">
-              <h2 class="section-title">Video settings</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-video-content">Video settings<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-video-content" class="section-content">
               <div class="section-primary">
               <!-- Resolution Controls - vertical block per spec §L -->
@@ -999,10 +1062,9 @@
 
           <!-- GUIDE: what the dots follow -->
           <div class="settings-section" data-section="guide">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-guide-content">
-              <h2 class="section-title">Guide</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-guide-content">Guide<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-guide-content" class="section-content">
               <label for="crowd-guide-type">
                 <span data-tip="What the dots travel along">Guide</span>
@@ -1023,10 +1085,9 @@
 
           <!-- DOTS: what each dot looks like -->
           <div class="settings-section" data-section="dots">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-dots-content">
-              <h2 class="section-title">Dots</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-dots-content">Dots<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-dots-content" class="section-content">
               <input type="hidden" id="crowd-dot-color" value="#56B4E9">
               <div class="swatch-picker"
@@ -1037,61 +1098,74 @@
                    data-allow-custom="false">
               </div>
 
-              <label for="crowd-dot-size">
-                <span data-tip="Dot size factor, scaled with the image like other elements">Size</span>
-                <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5" aria-describedby="crowd-dot-size-value" aria-valuetext="0.40×">
-                <span id="crowd-dot-size-value">0.40×</span>
-              </label>
+              <div class="range-row">
+                <label for="crowd-dot-size">
+                  <span data-tip="Dot size factor, scaled with the image like other elements">Size</span>
+                  <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5" aria-describedby="crowd-dot-size-value" aria-valuetext="0.40×">
+                </label>
+                <span id="crowd-dot-size-value" class="range-readout">0.40×</span>
+              </div>
 
-              <label for="crowd-wobble">
-                <span data-tip="Sideways walking variation as dots travel — 0% follows the line exactly">Walking variation</span>
-                <input type="range" id="crowd-wobble" min="0" max="100" value="0" step="1" aria-describedby="crowd-wobble-value" aria-valuetext="0%">
-                <span id="crowd-wobble-value">0%</span>
-              </label>
+              <div class="range-row">
+                <label for="crowd-wobble">
+                  <span data-tip="Sideways walking variation as dots travel — 0% follows the line exactly">Walking variation</span>
+                  <input type="range" id="crowd-wobble" min="0" max="100" value="0" step="1" aria-describedby="crowd-wobble-value" aria-valuetext="0%">
+                </label>
+                <span id="crowd-wobble-value" class="range-readout">0%</span>
+              </div>
             </div>
           </div>
 
           <!-- RELEASE: how many dots, and when they set off -->
           <div class="settings-section" data-section="release">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-release-content">
-              <h2 class="section-title">Release</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-release-content">Release<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-release-content" class="section-content">
               <div class="section-primary">
-              <label for="crowd-count">
-                <span data-tip="Total dots released across the window">Count</span>
-                <input type="range" id="crowd-count" min="1" max="500" value="50" step="1" aria-describedby="crowd-count-value" aria-valuetext="50">
-                <span id="crowd-count-value">50</span>
-              </label>
+              <div class="range-row">
+                <label for="crowd-count">
+                  <span data-tip="Total dots released across the window">Count</span>
+                  <input type="range" id="crowd-count" min="1" max="500" value="50" step="1" aria-describedby="crowd-count-value" aria-valuetext="50">
+                </label>
+                <span id="crowd-count-value" class="range-readout">50</span>
+              </div>
 
-              <label for="crowd-release-start">
-                <span data-tip="When the first dots set off, as a position in the timeline">Window start</span>
-                <input type="range" id="crowd-release-start" min="0" max="100" value="0" step="1" aria-describedby="crowd-release-start-value" aria-valuetext="0%">
-                <span id="crowd-release-start-value">0%</span>
-              </label>
+              <div class="range-row">
+                <label for="crowd-release-start">
+                  <span data-tip="When the first dots set off, as a position in the timeline">Window start</span>
+                  <input type="range" id="crowd-release-start" min="0" max="100" value="0" step="1" aria-describedby="crowd-release-start-value" aria-valuetext="0%">
+                </label>
+                <span id="crowd-release-start-value" class="range-readout">0%</span>
+              </div>
 
-              <label for="crowd-release-duration">
-                <span data-tip="How much of the timeline the release is spread across">Window length</span>
-                <input type="range" id="crowd-release-duration" min="0" max="100" value="100" step="1" aria-describedby="crowd-release-duration-value" aria-valuetext="100%">
-                <span id="crowd-release-duration-value">100%</span>
-              </label>
+              <div class="range-row">
+                <label for="crowd-release-duration">
+                  <span data-tip="How much of the timeline the release is spread across">Window length</span>
+                  <input type="range" id="crowd-release-duration" min="0" max="100" value="100" step="1" aria-describedby="crowd-release-duration-value" aria-valuetext="100%">
+                </label>
+                <span id="crowd-release-duration-value" class="range-readout">100%</span>
+              </div>
               </div>
 
               <details class="section-more">
                 <summary>More</summary>
                 <div class="section-more-content">
-                  <label class="crowd-variation-control" for="crowd-onset-variance">
-                    <span data-tip="How unevenly individual dots set off within the release window">Release timing</span>
-                    <input type="range" id="crowd-onset-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-onset-variance-value" aria-valuetext="20% uneven">
-                    <span id="crowd-onset-variance-value">20% uneven</span>
-                  </label>
+                  <div class="range-row">
+                    <label class="crowd-variation-control" for="crowd-onset-variance">
+                      <span data-tip="How unevenly individual dots set off within the release window">Release timing</span>
+                      <input type="range" id="crowd-onset-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-onset-variance-value" aria-valuetext="20% uneven">
+                    </label>
+                    <span id="crowd-onset-variance-value" class="range-readout">20% uneven</span>
+                  </div>
 
-                  <label class="crowd-variation-control" for="crowd-intensity-ramp">
-                    <span data-tip="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither">Release bias</span>
-                    <input type="range" id="crowd-intensity-ramp" min="-100" max="100" value="0" step="1" aria-describedby="crowd-intensity-ramp-value" aria-valuetext="Even">
-                    <span id="crowd-intensity-ramp-value">Even</span>
-                  </label>
+                  <div class="range-row">
+                    <label class="crowd-variation-control" for="crowd-intensity-ramp">
+                      <span data-tip="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither">Release bias</span>
+                      <input type="range" id="crowd-intensity-ramp" min="-100" max="100" value="0" step="1" aria-describedby="crowd-intensity-ramp-value" aria-valuetext="Even">
+                    </label>
+                    <span id="crowd-intensity-ramp-value" class="range-readout">Even</span>
+                  </div>
 
                   <div class="crowd-busyness-editor" role="group" aria-labelledby="crowd-busyness-label" aria-describedby="crowd-busyness-hint">
                     <div class="crowd-busyness-heading">
@@ -1124,22 +1198,25 @@
 
           <!-- MOTION: how the dots travel -->
           <div class="settings-section" data-section="motion">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-motion-content">
-              <h2 class="section-title">Motion</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-motion-content">Motion<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-motion-content" class="section-content">
-              <label for="crowd-speed">
-                <span data-tip="Dot travel speed in image lengths per second: 1 is the image's width across or its height down">Speed</span>
-                <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1" aria-describedby="crowd-speed-value" aria-valuetext="0.15 image lengths/s">
-                <span id="crowd-speed-value">0.15 image lengths/s</span>
-              </label>
+              <div class="range-row">
+                <label for="crowd-speed">
+                  <span data-tip="Dot travel speed in image lengths per second: 1 is the image's width across or its height down">Speed</span>
+                  <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1" aria-describedby="crowd-speed-value" aria-valuetext="0.15 image lengths/s">
+                </label>
+                <span id="crowd-speed-value" class="range-readout">0.15 image lengths/s</span>
+              </div>
 
-              <label for="crowd-speed-variance">
-                <span data-tip="Per-dot pace variation — 0% moves every dot at the same speed">Pace variation</span>
-                <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-speed-variance-value" aria-valuetext="20%">
-                <span id="crowd-speed-variance-value">20%</span>
-              </label>
+              <div class="range-row">
+                <label for="crowd-speed-variance">
+                  <span data-tip="Per-dot pace variation — 0% moves every dot at the same speed">Pace variation</span>
+                  <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-speed-variance-value" aria-valuetext="20%">
+                </label>
+                <span id="crowd-speed-variance-value" class="range-readout">20%</span>
+              </div>
 
               <label for="crowd-lifecycle">
                 <span data-tip="What a dot does when it reaches the end of its journey">At journey end</span>
@@ -1164,10 +1241,9 @@
           <div id="node-scope" class="scope-group" hidden>
 
           <div class="settings-section" data-section="node">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-node-content">
-              <h2 class="section-title">Node</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-node-content">Node<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-node-content" class="section-content">
               <label for="network-node-type">
                 <span data-tip="Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or end them where no path leads out. With no exit, journeys end at nodes with one path; with no entry, dots set off from any node they can leave">Type</span>
@@ -1199,10 +1275,9 @@
           <div id="edge-scope" class="scope-group" hidden>
 
           <div class="settings-section" data-section="edge">
-            <div class="section-header" tabindex="0" role="button" aria-expanded="false" aria-controls="section-edge-content">
-              <h2 class="section-title">Path</h2>
-              <span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span>
-            </div>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-edge-content">Path<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
             <div id="section-edge-content" class="section-content">
               <label for="network-edge-direction">
                 <span data-tip="Two-way paths carry dots in both directions; one-way paths only from the node the path leaves">Direction</span>
@@ -1214,11 +1289,13 @@
               <button id="network-edge-swap" class="btn btn-secondary" type="button" hidden
                       data-tip="Reverse which way this one-way path carries dots">Swap direction</button>
 
-              <label for="network-edge-weight">
-                <span data-tip="How strongly dots prefer this path where paths meet, shown as the share of departures that take it">Share</span>
-                <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1" aria-describedby="network-edge-weight-value" aria-valuetext="100% of departures">
-                <span id="network-edge-weight-value">100% of departures</span>
-              </label>
+              <div class="range-row">
+                <label for="network-edge-weight">
+                  <span data-tip="How strongly dots prefer this path where paths meet, shown as the share of departures that take it">Share</span>
+                  <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1" aria-describedby="network-edge-weight-value" aria-valuetext="100% of departures">
+                </label>
+                <span id="network-edge-weight-value" class="range-readout">100% of departures</span>
+              </div>
               <p id="network-edge-hint" class="section-hint">
                 Share of the dots leaving each end. Use Direction and Share to edit this path, or Delete path to
                 remove it. Choose Edit network to bend paths.
@@ -1246,8 +1323,9 @@
           </div>
           
           <div class="timeline">
+            <label class="timeline-label" for="timeline-slider">Timeline</label>
             <span id="current-time" class="time">0:00</span>
-            <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="1000" value="0" step="1" aria-label="Timeline position" aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:00">
+            <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="1000" value="0" step="1" aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:00">
             <span id="total-time" class="time">0:00</span>
           </div>
         </div>
@@ -1382,6 +1460,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.710"></script>
+  <script src="app.js?v=3.2.711"></script>
 </body>
 </html>

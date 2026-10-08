@@ -2625,7 +2625,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 108131,
+      "bytes": 108769,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2697,7 +2697,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 17946,
+      "bytes": 17819,
       "imports": [],
       "format": "esm"
     },
@@ -2739,7 +2739,7 @@
       "format": "esm"
     },
     "src/services/NetworkEditService.js": {
-      "bytes": 40401,
+      "bytes": 42120,
       "imports": [
         {
           "path": "src/utils/snapToAngle.js",
@@ -2797,7 +2797,7 @@
       "format": "esm"
     },
     "src/components/ParamTooltip.js": {
-      "bytes": 32796,
+      "bytes": 33282,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3521,7 +3521,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 43678,
+      "bytes": 46487,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3562,7 +3562,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 26814,
+      "bytes": 26884,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3986,13 +3986,13 @@
     }
   },
   "outputs": {
-    ".docs-build-qXOvGu/app.js.map": {
+    ".docs-build-pNMVvh/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3590549
+      "bytes": 3597857
     },
-    ".docs-build-qXOvGu/app.js": {
+    ".docs-build-pNMVvh/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4205,7 +4205,7 @@
           "bytesInOutput": 1370
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 42055
+          "bytesInOutput": 42234
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 17968
@@ -4214,7 +4214,7 @@
           "bytesInOutput": 2379
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 7113
+          "bytesInOutput": 6974
         },
         "src/services/AreaDrawingService.js": {
           "bytesInOutput": 5275
@@ -4226,7 +4226,7 @@
           "bytesInOutput": 644
         },
         "src/services/NetworkEditService.js": {
-          "bytesInOutput": 17318
+          "bytesInOutput": 17771
         },
         "src/services/AreaEditService.js": {
           "bytesInOutput": 4525
@@ -4241,7 +4241,7 @@
           "bytesInOutput": 2154
         },
         "src/components/ParamTooltip.js": {
-          "bytesInOutput": 6885
+          "bytesInOutput": 6999
         },
         "src/components/Dropdown.js": {
           "bytesInOutput": 2252
@@ -4340,10 +4340,10 @@
           "bytesInOutput": 1871
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 21557
+          "bytesInOutput": 22380
         },
         "src/app/network.js": {
-          "bytesInOutput": 11852
+          "bytesInOutput": 11908
         },
         "src/utils/sceneSemantics.js": {
           "bytesInOutput": 4321
@@ -4367,7 +4367,7 @@
           "bytesInOutput": 22984
         }
       },
-      "bytes": 1120568
+      "bytes": 1122054
     }
   }
 }
