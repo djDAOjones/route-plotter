@@ -2293,7 +2293,7 @@ kbd{
 .section-content .network-path-weight-row .network-path-weight-error{
   grid-column:1 / -1;
   min-width:0;
-  color:var(--support-error);
+  color:var(--text-error);
   font-size:var(--type-caption);
   line-height:var(--lh-caption);
 }
