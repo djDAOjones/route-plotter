@@ -25,15 +25,16 @@
  * cards with a line that says so.
  */
 
-import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
+import { callsOf, lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { isMac } from '../src/config/keybindings.js';
+import { ImageAsset } from '../src/models/ImageAsset.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -44,6 +45,38 @@ const status = () => id('app-status').textContent;
 /** The text an element is described by, through every token of its `aria-describedby`. */
 const describedBy = element => (element.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)
   .map(token => id(token)?.textContent ?? `<missing ${token}>`).join(' ').trim();
+
+/** What `alert`, `confirm` and `prompt` are reached through: the page's global object, by any of its names. */
+const GLOBAL_OBJECTS = new Set(['window', 'globalThis', 'self']);
+
+/**
+ * Every native dialog a file reaches (UI-06 B-18; Codex r1 found the regex scan
+ * missed `globalThis.alert(…)` and `window['alert'](…)`, and could misread a
+ * string as a comment): `alert`, `confirm` or `prompt` called bare, or called
+ * or taken as a member of the global object (`window.alert.call(…)`, `const say
+ * = globalThis.alert`), computed or spelled with an escape. Read as code by
+ * the lexer `elementIds` uses, so a comment, a string, a template or a regular
+ * expression is never a call; a name the file declares and uses as its own
+ * (`prompt.classList`) is not one either. A bare call is counted whatever
+ * declares it: `src/` has no function of these names.
+ * @returns {string[]} `line: receiver.name` with `()` where it is called
+ */
+function nativeDialogsIn(lexed) {
+  const found = [];
+  for (const name of ['alert', 'confirm', 'prompt']) {
+    const { calls, others } = callsOf(lexed, name);
+    const mentions = [...calls.map(call => [call.index, true]), ...others.map(index => [index, false])];
+    for (const [index, called] of mentions) {
+      // `.name`, `?.name` or `['name']` is a member of what stands before it; anything else is the bare name.
+      const before = lexed.code.slice(0, index).trimEnd();
+      const member = before.endsWith('.') || (before.endsWith('[') && lexed.kind[index] === 's');
+      const receiver = member ? /([A-Za-z_$][\w$]*)\s*(?:\?\.|\.|\[)$/.exec(before)?.[1] ?? '?' : '';
+      const reached = member ? GLOBAL_OBJECTS.has(receiver) : called && lexed.kind[index] === 'c';
+      if (reached) found.push([index, `${lineAt(lexed.source, index)}: ${member ? `${receiver}.` : ''}${name}${called ? '()' : ''}`]);
+    }
+  }
+  return found.sort(([a], [b]) => a - b).map(([, text]) => text);
+}
 
 async function editor() {
   const app = await bootApp();
@@ -234,6 +267,33 @@ describe('export validation (UI-06 B-18)', () => {
     expect(describedBy(html)).toBe('Export HTML needs at least 2 waypoints and a background image.');
   });
 
+  test('the Export menu opens on its first item that can run, never on a disabled one (Codex r1)', async () => {
+    const app = await editor();
+    const toggle = id('export-dropdown-btn');
+    const key = (target, name) => target.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }));
+    expect(app.waypoints).toHaveLength(0);
+    expect([id('export-mp4-btn'), id('export-webm-btn'), id('export-html-btn')].map(item => item.disabled))
+      .toEqual([true, true, true]);
+
+    // Clicked open, and opened by the keyboard.
+    toggle.focus();
+    toggle.click();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(document.activeElement).toBe(id('download-debug-btn'));
+    key(document.activeElement, 'Escape');
+    expect(document.activeElement).toBe(toggle);
+    key(toggle, 'ArrowDown');
+    expect(document.activeElement).toBe(id('download-debug-btn'));
+    key(document.activeElement, 'Escape');
+
+    // Once the route has two waypoints, the first item can run, and is where it opens.
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
+    key(toggle, 'Enter');
+    expect(document.activeElement).toBe(id('export-mp4-btn'));
+    key(document.activeElement, 'Escape');
+  });
+
   test('a refused or failed export is a toast the author must hear, never an alert', async () => {
     const app = await editor();
     const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -256,22 +316,43 @@ describe('export validation (UI-06 B-18)', () => {
     expect(alert).not.toHaveBeenCalled();
   });
 
-  test('no call to alert is left in src', () => {
-    const files = [];
-    const walk = folder => {
-      for (const entry of readdirSync(folder, { withFileTypes: true })) {
-        const path = join(folder, entry.name);
-        if (entry.isDirectory()) walk(path);
-        else if (entry.name.endsWith('.js')) files.push(path);
-      }
-    };
-    walk(join(repoRoot, 'src'));
+  test('no call to alert, confirm or prompt is left in src, however it is reached (Codex r1)', () => {
+    const files = lexedFiles(repoRoot, 'src');
     expect(files.length).toBeGreaterThan(50);
-    const calls = files.flatMap(path => {
-      const code = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/[^\n]*/g, '$1');
-      return [...code.matchAll(/(?:^|[^.\w$])(?:window\.)?alert\s*\(/g)].map(() => path.slice(repoRoot.length + 1));
-    });
-    expect(calls).toEqual([]);
+    expect(files.flatMap(({ file, lexed }) => nativeDialogsIn(lexed).map(found => `${file}:${found}`))).toEqual([]);
+  });
+
+  test('the scan reads code, not text: every way of reaching a native dialog is found, a mention in a comment or a string is not', () => {
+    const found = source => nativeDialogsIn(lex(source));
+    expect(found([
+      "alert('a');",
+      "window.alert('b');",
+      "globalThis.confirm('c');",
+      "self.prompt('d');",
+      "window['alert']('e');",
+      'globalThis["confirm"]?.(\'f\');',
+      "window.alert.call(window, 'g');",
+      'const say = globalThis.alert; say(\'h\');',
+      'window',
+      "  .prompt('i');",
+      "return alert('j');",
+      "window.al\\u0065rt('k');",
+    ].join('\n'))).toEqual([
+      '1: alert()', '2: window.alert()', '3: globalThis.confirm()', '4: self.prompt()', '5: window.alert()',
+      '6: globalThis.confirm()', '7: window.alert', '8: globalThis.alert', '10: window.prompt()', '11: alert()',
+      '12: window.alert()',
+    ]);
+    expect(found([
+      "// alert('a') in a comment",
+      "/* window.confirm('b') */",
+      'const text = "alert(\'c\') // prompt(";',
+      "const template = `window.alert('d')`;",
+      "const role = 'alert';",
+      "let prompt = document.getElementById('zoom-prompt');",
+      "prompt.classList.add('visible');",
+      "dialog.confirm(choice);",
+      "const pattern = /alert\\(/;",
+    ].join('\n'))).toEqual([]);
   });
 });
 
@@ -330,6 +411,91 @@ describe('a background that fails to load (UI-06 B-16, DEF-91)', () => {
     expect(await app.loadExampleImage('images/Missing.png')).toBe(false);
 
     expect(toasts).toEqual([{ message: 'Background not loaded: the file could not be fetched (HTTP 404)', priority: 'assertive' }]);
+  });
+
+  /**
+   * Uploads whose files are read only when told: each `upload()` starts one,
+   * and `settle(n)` lets the n-th go (it is refused, as a file that fails is).
+   */
+  function heldUploads(app) {
+    const held = [];
+    vi.spyOn(app, 'loadImageFileAsset').mockImplementation(() => new Promise((_, reject) => held.push(reject)));
+    return {
+      upload: name => loadBackgroundFile(app, new File([PIXEL_PNG], name, { type: 'image/png' })),
+      settle: index => held[index](new Error('Failed to load image: held')),
+    };
+  }
+  const busy = () => id('canvas-area').getAttribute('aria-busy');
+
+  test.each([
+    ['Clear all', app => app.eventBus.emit('waypoints:clear-all')],
+    ['an opened project', async (app) => {
+      // The shipped archive, as the site serves it from the build output.
+      const serveRepository = globalThis.fetch;
+      globalThis.fetch = vi.fn(input => serveRepository(String(input).replace(/^examples\//, 'docs/examples/')));
+      expect(await app.loadExampleProject('uon-open-day')).toBe(true);
+    }],
+  ])('an upload that %s supersedes leaves the canvas area not busy; one started after it owns the flag (Codex r1)', async (_, supersede) => {
+    const app = await editor();
+    allowConsole(/Background upload rejected/);
+    const { toasts } = listen(app);
+    const { upload, settle } = heldUploads(app);
+
+    const superseded = upload('first.png');
+    expect(busy()).toBe('true');
+    await supersede(app);
+    // Nothing it decodes can commit now, so nothing is loading.
+    expect(busy()).toBe('false');
+
+    const newer = upload('second.png');
+    expect(busy()).toBe('true');
+    settle(0);
+    expect(await superseded).toBe(false);
+    expect(busy()).toBe('true');
+    settle(1);
+    expect(await newer).toBe(false);
+    expect(busy()).toBe('false');
+    // Only the request still current says why it failed.
+    expect(toasts.map(toast => toast.message)).toEqual(['Background not loaded: unsupported file. Use PNG, JPEG or WebP']);
+  });
+
+  test('two uploads that overlap keep the canvas area busy until the newer one settles', async () => {
+    const app = await editor();
+    allowConsole(/Background upload rejected/);
+    const { upload, settle } = heldUploads(app);
+
+    const older = upload('older.png');
+    const newer = upload('newer.png');
+    expect(busy()).toBe('true');
+    settle(0);
+    expect(await older).toBe(false);
+    expect(busy()).toBe('true');
+    settle(1);
+    expect(await newer).toBe(false);
+    expect(busy()).toBe('false');
+  });
+
+  test('a file read that is aborted settles as a failure the author hears, and the canvas area is not left busy (Codex r1)', async () => {
+    const app = await editor();
+    allowConsole(/Background upload rejected/);
+    const { toasts } = listen(app);
+    vi.stubGlobal('FileReader', class {
+      readAsDataURL() {
+        setTimeout(() => this.onabort?.(new Event('abort')), 0);
+      }
+    });
+    const within = (promise, ms = 1000) => Promise.race([
+      promise.then(value => ({ value }), error => ({ error: error.message })),
+      new Promise(resolve => setTimeout(() => resolve('never settled'), ms)),
+    ]);
+    const file = () => new File([PIXEL_PNG], 'photo.png', { type: 'image/png' });
+
+    expect(await within(ImageAsset.fromFile(file()))).toEqual({ error: 'File reading was stopped: photo.png' });
+    const loading = loadBackgroundFile(app, file());
+    expect(busy()).toBe('true');
+    expect(await within(loading)).toEqual({ value: false });
+    expect(busy()).toBe('false');
+    expect(toasts).toEqual([{ message: 'Background not loaded: file reading was stopped: photo.png', priority: 'assertive' }]);
   });
 });
 

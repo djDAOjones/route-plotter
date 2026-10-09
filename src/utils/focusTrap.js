@@ -1,9 +1,64 @@
 /**
  * Focus Trap Utility - MOD-02
  * Traps focus within a modal dialog for accessibility.
+ *
+ * Open dialogs stack (UI-06, Codex r1). A dialog can open over another — a
+ * codec probe that answers while Discard's dialog asks — and every active
+ * trap listens on the window and the document, so only the top one acts: it
+ * takes focus, Tab and Escape, and when it closes the one below resumes, its
+ * own focus return intact. Two traps that each pulled focus into their own
+ * dialog handed it back and forth until the stack overflowed. `inert`
+ * follows the stack: everything but the top dialog is inert while any is
+ * open, except the live region announcements are written to, and once the
+ * last closes every element is as it was before the first opened.
  * 
  * @module utils/focusTrap
  */
+
+/** The active traps, the one opened last on top. */
+const openTraps = [];
+
+/**
+ * Each element's `inert` as it was before the first open trap changed it, so
+ * the last to close restores exactly that.
+ * @type {Map<Element, boolean>}
+ */
+const inertBefore = new Map();
+
+/**
+ * The editor's live region (DEF-45): never inert, so what is announced while
+ * a dialog is open is still heard.
+ */
+const NEVER_INERT = '#announcer';
+
+/** The trap on top: the last opened whose dialog is still in the page. */
+function topTrap() {
+  for (let index = openTraps.length - 1; index >= 0; index -= 1) {
+    if (openTraps[index].modal.isConnected) return openTraps[index];
+  }
+  return null;
+}
+
+/**
+ * Make every child of the body inert but the top dialog and the live region;
+ * with no dialog open, put back what each was before the first opened.
+ */
+function syncInert() {
+  const top = topTrap();
+  if (!top) {
+    for (const [element, wasInert] of inertBefore) {
+      if (element.hasAttribute('inert') !== wasInert) element.toggleAttribute('inert', wasInert);
+    }
+    inertBefore.clear();
+    return;
+  }
+  for (const element of document.body.children) {
+    if (element.matches(NEVER_INERT)) continue;
+    if (!inertBefore.has(element)) inertBefore.set(element, element.hasAttribute('inert'));
+    const inert = element !== top.modal;
+    if (element.hasAttribute('inert') !== inert) element.toggleAttribute('inert', inert);
+  }
+}
 
 /**
  * Create a focus trap for a modal element.
@@ -25,7 +80,6 @@ export function createFocusTrap(modal) {
   let isActive = false;
   let temporaryFocusTarget = null;
   let previousTabindex = null;
-  let inertSiblings = [];
 
   const getFocusableElements = () => [...modal.querySelectorAll(FOCUSABLE_SELECTORS)]
     .filter(element => {
@@ -65,26 +119,17 @@ export function createFocusTrap(modal) {
     modal.focus();
   };
 
-  const makeBackgroundInert = () => {
-    inertSiblings = [...document.body.children]
-      .filter(element => element !== modal)
-      .map(element => ({ element, wasInert: element.hasAttribute('inert') }));
-    inertSiblings.forEach(({ element }) => element.setAttribute('inert', ''));
-  };
+  /** This trap's place in the stack. */
+  const trap = { modal, focusInitialElement: () => focusInitialElement() };
+  const isOnTop = () => topTrap() === trap;
 
-  const restoreBackground = () => {
-    inertSiblings.forEach(({ element, wasInert }) => {
-      if (!wasInert) element.removeAttribute('inert');
-    });
-    inertSiblings = [];
-  };
-  
   /**
    * Handle keydown events for focus trapping
    * @param {KeyboardEvent} e 
    */
   function handleKeyDown(e) {
-    if (!isActive) return;
+    // A dialog beneath another leaves its keys to the one on top.
+    if (!isActive || !isOnTop()) return;
     
     // ESC closes modal (unless it's a destructive confirm - handled by caller)
     if (e.key === 'Escape') {
@@ -136,7 +181,9 @@ export function createFocusTrap(modal) {
   }
 
   function handleFocusIn(e) {
-    if (!isActive || modal.contains(e.target)) return;
+    // Only the top dialog takes focus back: two that each did would hand it to
+    // each other until the stack overflowed.
+    if (!isActive || !isOnTop() || modal.contains(e.target)) return;
     focusInitialElement();
   }
   
@@ -151,10 +198,12 @@ export function createFocusTrap(modal) {
     // when the dialog closes instead of restoring to that hidden item.
     previouslyFocused = returnFocus || document.activeElement;
     isActive = true;
+    openTraps.push(trap);
 
     // Inert background content enforces the aria-modal promise for pointer,
-    // keyboard, and assistive-technology users while the dialog is open.
-    makeBackgroundInert();
+    // keyboard, and assistive-technology users while the dialog is open; a
+    // dialog this one opens over is background now too.
+    syncInert();
     window.addEventListener('keydown', handleKeyDown, true);
     document.addEventListener('focusin', handleFocusIn, true);
     focusInitialElement(initialFocus);
@@ -166,10 +215,14 @@ export function createFocusTrap(modal) {
   function deactivate() {
     if (!isActive) return;
     
+    // Closed beneath another dialog, this one leaves the top one as it is:
+    // its focus, and what it makes inert.
+    const wasOnTop = isOnTop();
     isActive = false;
+    openTraps.splice(openTraps.indexOf(trap), 1);
     window.removeEventListener('keydown', handleKeyDown, true);
     document.removeEventListener('focusin', handleFocusIn, true);
-    restoreBackground();
+    syncInert();
 
     if (temporaryFocusTarget) {
       if (previousTabindex === null) {
@@ -181,9 +234,14 @@ export function createFocusTrap(modal) {
       previousTabindex = null;
     }
 
-    // Restore focus to previously focused element
-    if (previouslyFocused?.isConnected && previouslyFocused.focus) {
-      previouslyFocused.focus();
+    // Restore focus to previously focused element; the dialog beneath, if
+    // any, resumes, and focus that did not come back into it goes to its start.
+    if (wasOnTop) {
+      if (previouslyFocused?.isConnected && previouslyFocused.focus) {
+        previouslyFocused.focus();
+      }
+      const below = topTrap();
+      if (below && !below.modal.contains(document.activeElement)) below.focusInitialElement();
     }
     previouslyFocused = null;
   }

@@ -27,6 +27,7 @@ import {
   beginAsyncProjectOperation,
   isAsyncProjectOperationCurrent,
 } from './operationGeneration.js';
+import { releaseBackgroundBusy } from './backgroundLoading.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
 import { assertPersistedEntityId, ENTITY_ID_LIMITS } from '../utils/entityId.js';
 import { isImageCoordinateInRange } from '../utils/imageCoordinates.js';
@@ -1164,6 +1165,8 @@ export const persistenceMixin = {
    */
   async loadProject(file) {
     const operation = beginAsyncProjectOperation(this, 'project-load', { replaceProject: true });
+    // No background request made for the project this replaces can commit now.
+    releaseBackgroundBusy();
     try {
       this.announce('Loading project...');
       if (!this._openingLabel) this._beginOpening?.('project');

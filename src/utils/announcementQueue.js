@@ -23,7 +23,10 @@
  *   the message showing. The region is assertive only while it shows one.
  * - A message identical to the one it would follow is merged into it: the
  *   region already says it, or will next, and the same text written again is
- *   not read again. The merged message keeps the stronger protection.
+ *   not read again. The merged message keeps the stronger protection, and the
+ *   higher priority: a waiting copy an assertive request merges into becomes
+ *   assertive and moves ahead of the polite messages waiting (UI-06, Codex
+ *   r1). The message showing keeps its hold.
  * - A message the author must hear whose text already waits, anywhere in the
  *   queue, is merged into that waiting copy instead: the copy is written after
  *   this request, so it tells the author what this one would. So the same
@@ -101,6 +104,12 @@ export function createAnnouncementQueue(region) {
       const same = copy ?? (before.message === message ? before : undefined);
       if (same) {
         same.kept ||= entry.kept;
+        if (same !== showing && priority === 'assertive' && same.priority !== 'assertive') {
+          waiting.splice(waiting.indexOf(same), 1);
+          same.priority = 'assertive';
+          const ahead = waiting.findIndex(each => each.priority !== 'assertive');
+          waiting.splice(ahead === -1 ? waiting.length : ahead, 0, same);
+        }
         return;
       }
       waiting.splice(at, 0, entry);

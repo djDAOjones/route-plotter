@@ -57,6 +57,17 @@ function setCanvasBusy(busy) {
 }
 
 /**
+ * A project replacement (Open, Clear) supersedes every background request
+ * made for the project it replaces: none of them can commit now, so the
+ * canvas area is not busy for them (UI-06 B-16, Codex r1). A request started
+ * after it sets the flag again and owns it; one it superseded, settling
+ * later, is no longer current and leaves the flag alone.
+ */
+export function releaseBackgroundBusy() {
+  setCanvasBusy(false);
+}
+
+/**
  * Validate/decode a user-selected background off to the side, then commit it
  * only if no newer background request or project replacement superseded it.
  */

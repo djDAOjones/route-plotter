@@ -1,4 +1,5 @@
 import { invalidateProjectOperations } from './operationGeneration.js';
+import { releaseBackgroundBusy } from './backgroundLoading.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { isBuiltInPathHeadStyle } from '../utils/pathHeadPresets.js';
 import { discardForClearAll } from './unrestoredAutosave.js';
@@ -15,6 +16,7 @@ export function clearProject(app) {
   // decode or Open Project operation started against the prior baseline is
   // no longer allowed to commit when it eventually resolves.
   invalidateProjectOperations(app);
+  releaseBackgroundBusy();
   app._editRevision += 1;
   app.waypoints = [];
   app.waypointsById.clear();

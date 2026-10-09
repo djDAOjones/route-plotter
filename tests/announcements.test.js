@@ -550,6 +550,42 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     expect(region.textContent).toBe('  Waypoint moved \n');
   });
 
+  test('an assertive message merged into the same text waiting politely promotes it ahead of the polite messages; the one showing keeps its hold (UI-06, Codex r1)', async () => {
+    vi.useFakeTimers(FAKE_CLOCK);
+    const region = document.createElement('div');
+    const queue = createAnnouncementQueue(region);
+    const state = () => [region.textContent, region.getAttribute('aria-live')];
+
+    const turns = async (count) => {
+      const seen = [state()];
+      for (let turn = 0; turn < count; turn += 1) {
+        await vi.advanceTimersByTimeAsync(HOLD);
+        seen.push(state());
+      }
+      return seen;
+    };
+
+    queue.announce('Saving project...');
+    queue.announce('Waypoint moved');
+    queue.announce('Export failed: the encoder stopped.');
+    // The error said again, as an error: it waits once, as the error it is.
+    queue.announce('Export failed: the encoder stopped.', 'assertive');
+    expect(await turns(3)).toEqual([
+      ['Saving project...', 'polite'],
+      ['Export failed: the encoder stopped.', 'assertive'],
+      ['Waypoint moved', 'polite'],
+      ['', 'polite'],
+    ]);
+
+    // The text showing, said again assertively, is neither cut short nor said again.
+    queue.announce('Export failed: the encoder stopped.');
+    queue.announce('Export failed: the encoder stopped.', 'assertive');
+    expect(await turns(1)).toEqual([
+      ['Export failed: the encoder stopped.', 'polite'],
+      ['', 'polite'],
+    ]);
+  });
+
   test('a queue without a live region announces nothing, and does not throw', () => {
     const queue = createAnnouncementQueue(null);
     expect(() => queue.announce('Waypoint moved')).not.toThrow();

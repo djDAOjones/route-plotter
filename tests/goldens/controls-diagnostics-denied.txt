@@ -4,7 +4,6 @@
 app ~ focus: "#diagnostics-title" → "#report-bug-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 4f39d163)
@@ -13,7 +12,6 @@ ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-conte
 app ~ focus: "#diagnostics-title" → "#report-bug-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 4f39d163)
@@ -32,7 +30,6 @@ ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="
 app ~ focus: "#diagnostics-title" → "#report-bug-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 4f39d163)
@@ -40,10 +37,10 @@ ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-conte
 ## #diagnostics-copy · click
 announced "Diagnostics copy failed"
 app ~ focus: "#diagnostics-title" → "#diagnostics-copy"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" :text="Diagnostics copy failed"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Diagnostics copy failed"
 ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="status" → p aria-live="polite" class="diagnostics-status" role="status" :text="Copy failed. You can select the preview text manually."
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" :text="Diagnostics copy failed" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Diagnostics copy failed" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #diagnostics-download · click
 download route-plotter-diagnostics-2026-09-23T09-01-00.json application/json;charset=utf-8 479 bytes e2bd7ac6ea04

@@ -29,6 +29,7 @@ import { LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { ANNOUNCEMENTS, STORAGE } from '../src/config/constants.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { StorageService } from '../src/services/StorageService.js';
+import { VideoExporter } from '../src/services/VideoExporter.js';
 import { keepUnrestoredAutosave, keptEarlierNote } from '../src/app/unrestoredAutosave.js';
 
 const AUTOSAVE = STORAGE.AUTOSAVE_KEY;
@@ -143,22 +144,34 @@ async function olderRecord(name) {
 }
 
 /**
+ * Close the splash, if the start opened it, as the author must before using
+ * the editor: it is modal, and jsdom lets a script's click through the inert
+ * page a browser would refuse (UI-06, Codex r1).
+ */
+function closeSplash() {
+  if (document.getElementById('splash').style.display !== 'none') document.getElementById('splash-close').click();
+}
+
+/**
  * Start the app over the storage as it stands, recording every announcement,
  * including those made while starting. The app class is not exported, so an
- * app booted earlier lends its prototype.
+ * app booted earlier lends its prototype. The author then closes the splash.
  */
 async function restart(prototype) {
   const announce = vi.spyOn(prototype, 'announce');
+  let started;
   try {
     const app = await bootApp();
     await app.ready;
-    return {
+    started = {
       app,
       announced: announce.mock.calls.map(([message, priority = 'polite']) => ({ message, priority })),
     };
   } finally {
     announce.mockRestore();
   }
+  closeSplash();
+  return started;
 }
 
 /** Boot over a browser storage holding `entries`, recording announcements. */
@@ -189,6 +202,7 @@ const discardModal = () => document.getElementById('discard-confirm-modal');
  * irreversible). The record stays until the dialog's Discard.
  */
 const discard = () => {
+  closeSplash();
   document.getElementById('unrestored-discard').click();
   expect(discardModal().style.display).toBe('flex');
   document.getElementById('discard-confirm').click();
@@ -202,6 +216,7 @@ const discard = () => {
 const quiet = () => vi.waitFor(() => expect(announcer()).toBe(''), { timeout: 4 * ANNOUNCEMENTS.HOLD_MS, interval: 50 });
 /** Clear All's dialog opened and cancelled: the notice reads the store again. */
 function refresh() {
+  closeSplash();
   document.getElementById('clear-btn').click();
   document.getElementById('clear-cancel').click();
 }
@@ -215,6 +230,7 @@ function editAndSave(app) {
 
 /** What the notice's Download it hands the browser: the blob, then the file name. */
 function download() {
+  closeSplash();
   const handed = [];
   const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
     handed.push(blob);
@@ -359,6 +375,81 @@ describe('a record that cannot be restored (DEF-28)', () => {
     expect(kept(store)).toEqual([record]);
     expect(notice().hidden).toBe(false);
     expect(announced().filter(({ message }) => message === DISCARDED)).toEqual([]);
+  });
+
+  test('pending codec probe resolves over Discard; only the top dialog receives focus, Tab and Escape; closing restores the lower dialog', async () => {
+    // A browser lets this happen (UI-06, Codex r1): Export MP4 asks the codec
+    // first, and the author opens Discard's dialog before it answers. The
+    // codec dialog then opens over it, and the two traps handed focus back
+    // and forth until the stack overflowed.
+    const { app, store } = await bootRecording({ [keptKey(1, 'a')]: 'kept', [STORAGE.SPLASH_SHOWN_KEY]: 'true' });
+    app.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
+    let answer;
+    vi.spyOn(VideoExporter, '_testWebCodecsConfig')
+      .mockImplementationOnce(() => new Promise((resolve) => { answer = resolve; }))
+      .mockResolvedValueOnce(null);
+    const byId = id => document.getElementById(id);
+    const discardDialog = discardModal();
+    const codecDialog = byId('codec-unsupported-modal');
+    const inert = id => byId(id).hasAttribute('inert');
+    const press = (key, flags = {}) => document.activeElement.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...flags }));
+    // jsdom reports a listener's error on the window, not to the caller.
+    const listenerErrors = [];
+    const onError = (event) => {
+      listenerErrors.push(event.error ?? event.message);
+      event.preventDefault();
+    };
+    window.addEventListener('error', onError);
+    try {
+      byId('export-mp4-btn').click();
+      expect(VideoExporter._testWebCodecsConfig).toHaveBeenCalledTimes(1);
+      const discardBtn = byId('unrestored-discard');
+      discardBtn.focus();
+      discardBtn.click();
+      expect(document.activeElement).toBe(byId('discard-cancel'));
+
+      // The probe answers: no H.264 at either size, so the codec dialog opens on top.
+      answer(null);
+      await vi.waitFor(() => expect(codecDialog.style.display).toBe('flex'));
+      expect(document.activeElement).toBe(byId('modal-title-codec'));
+      expect([inert('codec-unsupported-modal'), inert('discard-confirm-modal'), inert('app'), inert('announcer')])
+        .toEqual([false, true, true, false]);
+
+      // Focus sent to the dialog beneath comes back to the top one.
+      byId('discard-confirm').focus();
+      expect(codecDialog.contains(document.activeElement)).toBe(true);
+      // Tab and Shift+Tab wrap within the top dialog.
+      press('Tab');
+      expect(document.activeElement).toBe(codecDialog.querySelector('[data-modal-close]'));
+      press('Tab', { shiftKey: true });
+      expect(document.activeElement).toBe(byId('codec-webm'));
+      press('Tab');
+      expect(document.activeElement).toBe(codecDialog.querySelector('[data-modal-close]'));
+
+      // Escape closes the top dialog only; the one beneath resumes as it was.
+      press('Escape');
+      expect(codecDialog.style.display).toBe('none');
+      expect(discardDialog.style.display).toBe('flex');
+      expect(document.activeElement).toBe(byId('discard-cancel'));
+      expect([inert('codec-unsupported-modal'), inert('discard-confirm-modal'), inert('app'), inert('announcer')])
+        .toEqual([true, false, true, false]);
+      byId('discard-confirm').focus();
+      press('Tab');
+      expect(document.activeElement).toBe(byId('discard-cancel'));
+
+      // And its own Escape keeps the record, and gives focus back to Discard.
+      press('Escape');
+      expect(discardDialog.style.display).toBe('none');
+      expect(document.activeElement).toBe(discardBtn);
+      expect([inert('codec-unsupported-modal'), inert('discard-confirm-modal'), inert('app'), inert('announcer')])
+        .toEqual([false, false, false, false]);
+      expect(kept(store)).toEqual(['kept']);
+    } finally {
+      window.removeEventListener('error', onError);
+    }
+    expect(listenerErrors).toEqual([]);
   });
 
   test('a Discard that leaves another record on offer says so as a message the author must hear; one that leaves none, as a routine confirmation', async () => {
@@ -1391,6 +1482,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     const store = useStorage({}, { quotaFor: [key => isKept(key) && !room.forCopies], ...options });
     const app = await bootApp();
     await app.ready;
+    closeSplash();
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to load from localStorage/);
     const decoding = holdDecoding();

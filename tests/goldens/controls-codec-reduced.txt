@@ -4,7 +4,6 @@
 app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #codec-unsupported-modal: div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui - #codec-unsupported-modal>div[0]: div class="modal-content"
@@ -20,7 +19,6 @@ ui - #codec-webm: button class="btn btn-primary" :text="Export WebM at 7680×432
 app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #codec-unsupported-modal: div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui - #codec-unsupported-modal>div[0]: div class="modal-content"
@@ -36,7 +34,6 @@ ui - #codec-webm: button class="btn btn-primary" :text="Export WebM at 7680×432
 app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #codec-unsupported-modal: div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui - #codec-unsupported-modal>div[0]: div class="modal-content"
@@ -60,7 +57,7 @@ model ~ exportSettings.resolutionY: 4320 → 2250
 app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel"
 ui ~ #app: div inert="" → div
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Export failed"
 ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
@@ -95,7 +92,7 @@ announced "Starting video export — press Esc to cancel"
 app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel"
 ui ~ #app: div inert="" → div
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Export failed"
 ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"

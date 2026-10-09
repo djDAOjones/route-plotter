@@ -270,6 +270,12 @@ function entryModule() {
 }
 
 export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
+  // An app booted earlier in this test lets its dialogs go before its shell
+  // is replaced: detached, its splash's trap still listened on the window and
+  // the document and took the Escape meant for this app's dialog (UI-06,
+  // Codex r1). It is not stopped: a test may keep it beside this one (an
+  // editor drawn beside its exported player), until the test ends.
+  for (const earlier of booted) onceSettled(earlier, () => deactivateFocusTraps(earlier));
   document.body.innerHTML = shellBody;
   // The shell this boot parsed: what is in it is the app's (`canvasesOf`).
   const shell = [...document.body.children];
