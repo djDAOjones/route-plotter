@@ -21,14 +21,16 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { setTimeout as realDelay } from 'node:timers/promises';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, retireApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { ANNOUNCEMENTS, STORAGE } from '../src/config/constants.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { StorageService } from '../src/services/StorageService.js';
+import { VideoExporter } from '../src/services/VideoExporter.js';
 import { keepUnrestoredAutosave, keptEarlierNote } from '../src/app/unrestoredAutosave.js';
 
 const AUTOSAVE = STORAGE.AUTOSAVE_KEY;
@@ -97,6 +99,18 @@ function useStorage(entries = {}, { quotaFor = [], capacity = Infinity, removalF
   return store;
 }
 
+/**
+ * Boot the app with the start's tip seen, over the storage the test set up:
+ * every other key reads as that storage has it, and nothing is written to it.
+ * The tip waits 1.5 s on the real clock from the boot, and these tests pin
+ * what is said and stored across real waits (UI-06, Codex r2). The probe's
+ * boot is one of these.
+ */
+function boot() {
+  localStorage.getItem.mockImplementation(tipSeen(localStorage.getItem.getMockImplementation()));
+  return bootApp();
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   localStorage.getItem.mockImplementation(() => null);
@@ -113,12 +127,15 @@ function kept(store) {
 
 /** A saved project, as a booted app writes it. */
 async function savedProject() {
-  const app = await bootApp();
+  const app = await boot();
   await app.ready;
   app.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
   app.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
   app.storageService.cancelAutoSave();
-  return app._buildProjectSnapshot();
+  const snapshot = app._buildProjectSnapshot();
+  // Its splash, left open, would take the first Escape a later dialog is sent.
+  retireApp(app);
+  return snapshot;
 }
 
 /**
@@ -140,32 +157,44 @@ async function olderRecord(name) {
 }
 
 /**
+ * Close the splash, if the start opened it, as the author must before using
+ * the editor: it is modal, and jsdom lets a script's click through the inert
+ * page a browser would refuse (UI-06, Codex r1).
+ */
+function closeSplash() {
+  if (document.getElementById('splash').style.display !== 'none') document.getElementById('splash-close').click();
+}
+
+/**
  * Start the app over the storage as it stands, recording every announcement,
  * including those made while starting. The app class is not exported, so an
- * app booted earlier lends its prototype.
+ * app booted earlier lends its prototype. The author then closes the splash.
  */
 async function restart(prototype) {
   const announce = vi.spyOn(prototype, 'announce');
+  let started;
   try {
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
-    return {
+    started = {
       app,
       announced: announce.mock.calls.map(([message, priority = 'polite']) => ({ message, priority })),
     };
   } finally {
     announce.mockRestore();
   }
+  closeSplash();
+  return started;
 }
 
 /** Boot over a browser storage holding `entries`, recording announcements. */
 async function bootRecording(entries, options) {
-  const probe = await bootApp();
+  const probe = await boot();
   await probe.ready;
   const prototype = Object.getPrototypeOf(probe);
   const store = useStorage(entries, options);
   const { app, announced } = await restart(prototype);
-  return { app, store, announced, prototype };
+  return { app, store, announced, prototype, probe };
 }
 
 /** Record the announcements a booted app makes from now on. */
@@ -179,7 +208,19 @@ const heading = () => document.getElementById('unrestored-notice-text').textCont
 const status = () => document.getElementById('unrestored-notice-status').textContent;
 const clearNote = () => document.getElementById('clear-unrestored-note');
 const announcer = () => document.getElementById('announcer').textContent;
-const discard = () => document.getElementById('unrestored-discard').click();
+const discardModal = () => document.getElementById('discard-confirm-modal');
+/**
+ * Discard, as the author does it: the notice's Discard opens a dialog that
+ * asks once, and its own Discard does it (UI-06 B-23; one click was
+ * irreversible). The record stays until the dialog's Discard.
+ */
+const discard = () => {
+  closeSplash();
+  document.getElementById('unrestored-discard').click();
+  expect(discardModal().style.display).toBe('flex');
+  document.getElementById('discard-confirm').click();
+  expect(discardModal().style.display).toBe('none');
+};
 /**
  * Let what the editor said while starting take its turns, on the real clock,
  * until the live region is idle, so what follows is written to it at once
@@ -188,6 +229,7 @@ const discard = () => document.getElementById('unrestored-discard').click();
 const quiet = () => vi.waitFor(() => expect(announcer()).toBe(''), { timeout: 4 * ANNOUNCEMENTS.HOLD_MS, interval: 50 });
 /** Clear All's dialog opened and cancelled: the notice reads the store again. */
 function refresh() {
+  closeSplash();
   document.getElementById('clear-btn').click();
   document.getElementById('clear-cancel').click();
 }
@@ -201,6 +243,7 @@ function editAndSave(app) {
 
 /** What the notice's Download it hands the browser: the blob, then the file name. */
 function download() {
+  closeSplash();
   const handed = [];
   const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
     handed.push(blob);
@@ -296,7 +339,9 @@ describe('a record that cannot be restored (DEF-28)', () => {
 
   test('goes when the author discards it, and the announcement says so', async () => {
     allowConsole(LOAD_REFUSED);
-    const { store, app } = await bootRecording({ [AUTOSAVE]: await refusedRecord() });
+    // The start's tip seen before: it is read again since the owner's answer
+    // (2026-10-09), after what starting said, on the real clock this waits on.
+    const { store, app } = await bootRecording({ [AUTOSAVE]: await refusedRecord(), ...TIP_SEEN });
     const announced = listen(app);
     await quiet();
 
@@ -307,6 +352,120 @@ describe('a record that cannot be restored (DEF-28)', () => {
     expect(announced()).toEqual([{ message: DISCARDED, priority: 'polite' }]);
     expect(announcer()).toBe(DISCARDED);
   }, 20000); // what starting said plays out first on the real clock
+
+  test('asks before it discards: Cancel, Escape and a click beside the dialog keep the record, and focus goes back to Discard', async () => {
+    allowConsole(LOAD_REFUSED);
+    const record = await refusedRecord();
+    // Seen before, so the splash does not open and hold focus itself; the
+    // probe's splash, still open, is stopped too, or its trap takes the Escape.
+    const { store, app, probe } = await bootRecording({ [AUTOSAVE]: record, [STORAGE.SPLASH_SHOWN_KEY]: 'true' });
+    retireApp(probe);
+    const announced = listen(app);
+    const discardBtn = document.getElementById('unrestored-discard');
+    const dialog = discardModal();
+
+    discardBtn.focus();
+    discardBtn.click();
+    expect(dialog.style.display).toBe('flex');
+    expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(document.getElementById(dialog.getAttribute('aria-labelledby')).textContent)
+      .toBe("Discard the session that couldn't be restored?");
+    expect(document.activeElement).toBe(document.getElementById('discard-cancel'));
+    document.getElementById('discard-cancel').click();
+    expect(dialog.style.display).toBe('none');
+    expect(document.activeElement).toBe(discardBtn);
+    expect(kept(store)).toEqual([record]);
+    expect(notice().hidden).toBe(false);
+
+    discardBtn.click();
+    expect(dialog.style.display).toBe('flex');
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(dialog.style.display).toBe('none');
+    expect(document.activeElement).toBe(discardBtn);
+    expect(kept(store)).toEqual([record]);
+
+    discardBtn.click();
+    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(dialog.style.display).toBe('none');
+    expect(kept(store)).toEqual([record]);
+    expect(notice().hidden).toBe(false);
+    expect(announced().filter(({ message }) => message === DISCARDED)).toEqual([]);
+  });
+
+  test('pending codec probe resolves over Discard; only the top dialog receives focus, Tab and Escape; closing restores the lower dialog', async () => {
+    // A browser lets this happen (UI-06, Codex r1): Export MP4 asks the codec
+    // first, and the author opens Discard's dialog before it answers. The
+    // codec dialog then opens over it, and the two traps handed focus back
+    // and forth until the stack overflowed.
+    const { app, store } = await bootRecording({ [keptKey(1, 'a')]: 'kept', [STORAGE.SPLASH_SHOWN_KEY]: 'true' });
+    app.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
+    let answer;
+    vi.spyOn(VideoExporter, '_testWebCodecsConfig')
+      .mockImplementationOnce(() => new Promise((resolve) => { answer = resolve; }))
+      .mockResolvedValueOnce(null);
+    const byId = id => document.getElementById(id);
+    const discardDialog = discardModal();
+    const codecDialog = byId('codec-unsupported-modal');
+    const inert = id => byId(id).hasAttribute('inert');
+    const press = (key, flags = {}) => document.activeElement.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...flags }));
+    // jsdom reports a listener's error on the window, not to the caller.
+    const listenerErrors = [];
+    const onError = (event) => {
+      listenerErrors.push(event.error ?? event.message);
+      event.preventDefault();
+    };
+    window.addEventListener('error', onError);
+    try {
+      byId('export-mp4-btn').click();
+      expect(VideoExporter._testWebCodecsConfig).toHaveBeenCalledTimes(1);
+      const discardBtn = byId('unrestored-discard');
+      discardBtn.focus();
+      discardBtn.click();
+      expect(document.activeElement).toBe(byId('discard-cancel'));
+
+      // The probe answers: no H.264 at either size, so the codec dialog opens on top.
+      answer(null);
+      await vi.waitFor(() => expect(codecDialog.style.display).toBe('flex'));
+      expect(document.activeElement).toBe(byId('modal-title-codec'));
+      expect([inert('codec-unsupported-modal'), inert('discard-confirm-modal'), inert('app'), inert('announcer')])
+        .toEqual([false, true, true, false]);
+
+      // Focus sent to the dialog beneath comes back to the top one.
+      byId('discard-confirm').focus();
+      expect(codecDialog.contains(document.activeElement)).toBe(true);
+      // Tab and Shift+Tab wrap within the top dialog.
+      press('Tab');
+      expect(document.activeElement).toBe(codecDialog.querySelector('[data-modal-close]'));
+      press('Tab', { shiftKey: true });
+      expect(document.activeElement).toBe(byId('codec-webm'));
+      press('Tab');
+      expect(document.activeElement).toBe(codecDialog.querySelector('[data-modal-close]'));
+
+      // Escape closes the top dialog only; the one beneath resumes as it was.
+      press('Escape');
+      expect(codecDialog.style.display).toBe('none');
+      expect(discardDialog.style.display).toBe('flex');
+      expect(document.activeElement).toBe(byId('discard-cancel'));
+      expect([inert('codec-unsupported-modal'), inert('discard-confirm-modal'), inert('app'), inert('announcer')])
+        .toEqual([true, false, true, false]);
+      byId('discard-confirm').focus();
+      press('Tab');
+      expect(document.activeElement).toBe(byId('discard-cancel'));
+
+      // And its own Escape keeps the record, and gives focus back to Discard.
+      press('Escape');
+      expect(discardDialog.style.display).toBe('none');
+      expect(document.activeElement).toBe(discardBtn);
+      expect([inert('codec-unsupported-modal'), inert('discard-confirm-modal'), inert('app'), inert('announcer')])
+        .toEqual([false, false, false, false]);
+      expect(kept(store)).toEqual(['kept']);
+    } finally {
+      window.removeEventListener('error', onError);
+    }
+    expect(listenerErrors).toEqual([]);
+  });
 
   test('a Discard that leaves another record on offer says so as a message the author must hear; one that leaves none, as a routine confirmation', async () => {
     const { app } = await bootRecording({ [keptKey(1, 'a')]: 'older record', [keptKey(2, 'b')]: 'newer record' });
@@ -333,7 +492,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
     // back, so nothing was restored, and the record is kept like any other.
     const record = JSON.stringify(await savedProject(), null, 2);
     const store = useStorage();
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED);
@@ -354,7 +513,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
   test('is not kept when the project restored and only what follows the commit failed', async () => {
     const record = JSON.stringify(await savedProject());
     const store = useStorage();
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(/Restoring the autosave did not finish after it was loaded/);
@@ -370,7 +529,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
   test('is the record that was read, even if another tab writes the key while it restores', async () => {
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const store = useStorage();
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED);
@@ -389,7 +548,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
   test('is kept although the recovery key cannot be read again: the copy is made, and the key left alone', async () => {
     const record = await refusedRecord();
     const store = useStorage();
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, /Failed to load from localStorage \(routePlotter_autosave\)/);
@@ -584,7 +743,7 @@ describe('a record no copy of which fits (DEF-28)', () => {
   test('is still held, and offered, not tried again, at the next start', async () => {
     const record = JSON.stringify(await savedProject(), null, 2);
     const store = useStorage({}, { quotaFor: [isKept] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     const prototype = Object.getPrototypeOf(app);
     store.set(AUTOSAVE, record);
@@ -608,7 +767,7 @@ describe('a record no copy of which fits (DEF-28)', () => {
   test('is offered for download, and not called kept, when no copy fits and another tab writes the key while it restores', async () => {
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const store = useStorage({}, { quotaFor: [isKept] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED);
@@ -635,7 +794,7 @@ describe('a record no copy of which fits (DEF-28)', () => {
     // It may still be there, so it is treated as there: held, not given up.
     const record = await refusedRecord();
     const store = useStorage({}, { quotaFor: [isKept] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to load from localStorage \(routePlotter_autosave\)/);
@@ -754,7 +913,9 @@ describe('Discard and a record that could not be restored (DEF-28)', () => {
     const button = document.getElementById('unrestored-discard');
     button.focus();
 
+    // Through the dialog that asks first (UI-06 B-23): its Discard does it.
     button.click();
+    document.getElementById('discard-confirm').click();
 
     const focused = document.activeElement;
     expect(notice().hidden).toBe(true);
@@ -774,7 +935,9 @@ describe('Discard and a record that could not be restored (DEF-28)', () => {
     const button = document.getElementById('unrestored-discard');
     button.focus();
 
+    // Through the dialog that asks first (UI-06 B-23): its Discard does it.
     button.click();
+    document.getElementById('discard-confirm').click();
 
     expect(notice().hidden).toBe(false);
     expect(document.activeElement).toBe(button);
@@ -1143,7 +1306,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const unreadable = { now: false };
     const store = useStorage({}, { ...noCopies, readFails: [key => key === AUTOSAVE && unreadable.now] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to load from localStorage \(routePlotter_autosave\)/);
@@ -1273,7 +1436,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const room = { forCopies: false };
     const store = useStorage({}, { quotaFor: [key => isKept(key) && !room.forCopies] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED);
@@ -1332,8 +1495,9 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const room = { forCopies: false };
     const store = useStorage({}, { quotaFor: [key => isKept(key) && !room.forCopies], ...options });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
+    closeSplash();
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to load from localStorage/);
     const decoding = holdDecoding();
@@ -1499,7 +1663,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
 
   test.each(['Discard', 'Clear All'])('a restore still in progress does not keep again a record the author chose to discard in another tab meanwhile (%s)', async (choice) => {
     const { app, store, record } = await discardedElsewhereDuringRestore(choice, async (text, storage) => {
-      const booted = await bootApp();
+      const booted = await boot();
       await booted.ready;
       storage.set(AUTOSAVE, text);
       const decoding = holdDecoding();
@@ -1527,7 +1691,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
           resolveReached();
         }));
       });
-      const booted = await bootApp();
+      const booted = await boot();
       return { app: booted, restoring: booted.ready, decoding: { reached, fail: () => fail(new Error('the background could not be decoded')) } };
     });
 
@@ -1631,7 +1795,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const unreadable = { key: null };
     const store = useStorage({}, { readFails: [key => key === unreadable.key] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, /Failed to load from localStorage \(routePlotter_keptAutosave:/);
@@ -1680,7 +1844,7 @@ describe('another tab during this start’s restore, and what Clear All says it 
         resolveReached();
       }));
     });
-    const app = await bootApp();
+    const app = await boot();
     const heard = listen(app);
     await reached;
     return { app, store, heard, fail: () => fail(new Error('the background could not be decoded')) };
@@ -1823,7 +1987,7 @@ describe('another tab during this start’s restore, and what Clear All says it 
     const record = await recordWithBackground();
     const faults = { search: false, read: null };
     const store = useStorage({}, { searchFails: () => faults.search, readFails: [key => key === faults.read] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, /Failed to search localStorage/, /Failed to load from localStorage/);
@@ -1849,7 +2013,7 @@ describe('another tab during this start’s restore, and what Clear All says it 
     const record = await recordWithBackground();
     const faults = { search: false, remove: null, read: null };
     const store = useStorage({}, { searchFails: () => faults.search, removalFails: [key => key === faults.remove], readFails: [key => key === faults.read] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, /Failed to search localStorage/, /Failed to load from localStorage/, /Failed to remove from localStorage/);
@@ -2231,7 +2395,7 @@ describe('another tab during this start’s restore, and what Clear All says it 
         resolveReached();
       }));
     });
-    const app = await bootApp();
+    const app = await boot();
     const heard = listen(app);
     await reached;
     expect(status()).toBe(KEPT);
@@ -2885,4 +3049,15 @@ describe('Codex’s round-9 cases: faults while records are known', () => {
     editAndSave(app);
     expect(store.has(AUTOSAVE)).toBe(true);
   });
+});
+
+test('every app these tests boot, the probe included, has the start\'s tip seen over the test\'s own storage: on the real clock, it never lands in one (UI-06, Codex r2)', async () => {
+  // The tip waits 1.5 s on the real clock from each boot (`_showPreviewTipToast`).
+  const record = JSON.stringify(await savedProject());
+  const { store, prototype } = await bootRecording({ [AUTOSAVE]: record });
+  const shown = vi.spyOn(prototype, 'showToast');
+  await realDelay(1600);
+  expect(shown.mock.calls.map(([message]) => message).filter(message => /^Tip: /.test(message))).toEqual([]);
+  // The store is the test's own: the tip's flag is read as seen, never written into it.
+  expect([...store.keys()].filter(key => /previewTip/.test(key))).toEqual([]);
 });

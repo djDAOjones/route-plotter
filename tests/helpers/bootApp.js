@@ -72,7 +72,7 @@ function stopApp(app) {
 }
 
 function deactivateFocusTraps(app) {
-  const traps = [app._splashFocusTrap, app._shareDisclosureTrap, app._diagnosticsTrap,
+  const traps = [app._splashFocusTrap, app._shareDisclosureTrap, app._diagnosticsTrap, app._discardFocusTrap,
     app.uiController?._codecFocusTrap, app.uiController?._clearFocusTrap];
   for (const trap of traps) trap?.deactivate?.();
 }
@@ -270,6 +270,12 @@ function entryModule() {
 }
 
 export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
+  // An app booted earlier in this test lets its dialogs go before its shell
+  // is replaced: detached, its splash's trap still listened on the window and
+  // the document and took the Escape meant for this app's dialog (UI-06,
+  // Codex r1). It is not stopped: a test may keep it beside this one (an
+  // editor drawn beside its exported player), until the test ends.
+  for (const earlier of booted) onceSettled(earlier, () => deactivateFocusTraps(earlier));
   document.body.innerHTML = shellBody;
   // The shell this boot parsed: what is in it is the app's (`canvasesOf`).
   const shell = [...document.body.children];
@@ -295,4 +301,20 @@ export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
     throw new Error(`Listener for "${eventName}" threw: ${error.message}`, { cause: error });
   };
   return app;
+}
+
+/**
+ * `localStorage.getItem` for a browser that has shown the start's preview tip
+ * and, for every other key, reads as `read` does: by default, nothing. The tip
+ * waits 1.5 s on the real clock from the boot (`_showPreviewTipToast`), so in
+ * a test that boots on the real clock and then pins what is announced or
+ * shown as a toast, a slow runner had it land in the middle (UI-06, CI on
+ * 882123d). Such a test boots with it seen; the tests of the tip do not. A
+ * test with storage of its own passes that storage's reader, which is left
+ * as it is (Codex r2).
+ * @param {(key: string) => (string|null)} [read]
+ * @returns {(key: string) => (string|null)}
+ */
+export function tipSeen(read = () => null) {
+  return key => (key === 'routePlotter_previewTipDismissed' ? 'true' : read(key));
 }

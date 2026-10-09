@@ -4,22 +4,26 @@
 model ~ styles.pathGlow.intensity: 0.65 → 0.33
 app ~ focus: "body" → "#path-glow-intensity"
 storage ~ routePlotter_lastSection: "video" → "path-emphasis"
-ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" → div class="settings-section expanded" data-last="true" data-section="path-emphasis"
 ui ~ #path-glow-intensity: input aria-describedby="path-glow-value path-glow-intensity-tip" aria-valuetext="65%" max="100" min="0" step="1" type="range" value="50" :value="65" → input aria-describedby="path-glow-value path-glow-intensity-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="50" :value="33"
 ui ~ #path-glow-value: span class="range-readout slider-value" :text="65%" → span class="range-readout slider-value" :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, de1e0b98] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, a36d834f]
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
 ## #path-glow-intensity · double-click
 model ~ styles.pathGlow.intensity: 0.65 → 0.5
 app ~ focus: "body" → "#path-glow-intensity"
 storage ~ routePlotter_lastSection: "video" → "path-emphasis"
-ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" → div class="settings-section expanded" data-last="true" data-section="path-emphasis"
 ui ~ #path-glow-intensity: input aria-describedby="path-glow-value path-glow-intensity-tip" aria-valuetext="65%" max="100" min="0" step="1" type="range" value="50" :value="65" → input aria-describedby="path-glow-value path-glow-intensity-tip" aria-valuetext="50%" max="100" min="0" step="1" type="range" value="50" :value="50"
 ui ~ #path-glow-value: span class="range-readout slider-value" :text="65%" → span class="range-readout slider-value" :text="50%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, de1e0b98] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, fc276e16]
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"

@@ -79,6 +79,7 @@ import { privacyMixin } from './app/privacy.js';
 import { restoreStartupProject } from './app/startup.js';
 import { setupUnrestoredNotice } from './app/unrestoredAutosave.js';
 import { loadExampleBackground } from './app/backgroundLoading.js';
+import { isMac } from './config/keybindings.js';
 import { clearProject } from './app/projectReset.js';
 import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
 import { boundEntryWaypointIds } from './utils/routeAnchors.js';
@@ -778,14 +779,22 @@ class RoutePlotter {
   }
   
   /**
-   * Show a toast notification that auto-dismisses
+   * Show a toast notification that auto-dismisses. The container is not a
+   * live region: the toast's words are announced once, through the queue,
+   * so nothing is read twice (UI-06 J-05, C-5).
    * @param {string} message - Text to display
    * @param {number} [duration=5000] - Time in ms before auto-dismiss
    * @param {{label: string, onClick: Function}} [action] - Optional offer the
    *   toast carries (LABEL-01). It is only ever an offer: the same action must
    *   remain reachable elsewhere, because a toast fades and can be missed.
+   * @param {{priority?: 'polite'|'assertive', whenIdle?: boolean}} [options] -
+   *   assertive for an error the author must hear; `whenIdle` for the start's
+   *   tip, read once nothing else shows or waits, so it never cuts in on what
+   *   the author must hear (DEF-45; the owner, 2026-10-09)
    */
-  showToast(message, duration = 5000, action = null) {
+  showToast(message, duration = 5000, action = null, { priority = 'polite', whenIdle = false } = {}) {
+    if (whenIdle) this.announce(message, priority, { whenIdle });
+    else this.announce(message, priority);
     const container = this.elements.toastContainer;
     if (!container) return;
     
@@ -855,7 +864,12 @@ class RoutePlotter {
       // Event-driven approach ensures consistent update sequence
       this.eventBus.emit('waypoint:deleted', index);
       
-      this.announce('Waypoint deleted');
+      // The standard delete toast (a crowd's, a node's and a path's sibling),
+      // whichever route asked: it advertises the undo, and its announcement is
+      // the one the author hears (UI-06 J-05, C-5).
+      this.eventBus.emit('ui:toast', {
+        message: `Deleted ${waypoint.name || 'waypoint'} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+      });
     }
   }
   
@@ -893,11 +907,21 @@ class RoutePlotter {
    * another is not lost (DEF-45; the rules are in utils/announcementQueue.js).
    * @param {string} message
    * @param {'polite'|'assertive'} [priority='polite'] - Assertive waits ahead of polite messages
-   * @param {{essential?: boolean}} [options] - essential: the author must hear it, so a burst
-   *   of routine messages never displaces it
+   * @param {{essential?: boolean, whenIdle?: boolean, key?: *}} [options] - essential: the author
+   *   must hear it, so a burst of routine messages never displaces it; key: whose it is, so
+   *   `withdrawAnnouncements` can take it out while it waits
    */
   announce(message, priority = 'polite', options) {
     this._announcements.announce(message, priority, options);
+  }
+
+  /**
+   * Take the messages announced under `key` that still wait out of the queue
+   * (an export's progress once it has ended: UI-06, Codex r2).
+   * @param {*} key - The `key` they were announced with
+   */
+  withdrawAnnouncements(key) {
+    this._announcements.withdraw(key);
   }
   
   /**

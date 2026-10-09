@@ -86,8 +86,11 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { ANNOUNCEMENTS } from '../src/config/constants.js';
 import { formatBinding, getDefaultBindings, isMac, MODIFIER_DISPLAY } from '../src/config/keybindings.js';
+
+/** The standard delete toast, raised by every waypoint delete (UI-06 J-05). */
+const DELETE_TOAST = `Deleted waypoint — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`;
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { CANDIDATE_KEYS, NAMED_KEYS, PRINTABLE_KEYS } from './helpers/keyDomain.js';
 import { keyListenersIn, lex, lexedFiles } from './helpers/sourceScan.js';
 
@@ -106,6 +109,9 @@ const flashedSections = [];
 const DIALOGS = [['share-disclosure-modal', 'share-disclosure-cancel'], ['splash', 'splash-close']];
 
 afterEach(async () => {
+  // `clearMocks` keeps an implementation: the tip that `editor()` marks seen would
+  // otherwise be read by every boot after it (UI-06, Codex r2).
+  localStorage.getItem.mockImplementation(() => null);
   // An open dialog keeps its focus trap on `window`, where it would take the
   // next test's Tab and Escape: close it as a user would.
   for (const [dialog, close] of DIALOGS) {
@@ -142,6 +148,8 @@ const START = [FIRST, MIDDLE, LAST];
  * the key or click under test goes through the DOM.
  */
 async function editor({ selected = 1, progress = 0.5 } = {}) {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   running.push(app);
   await app.ready;
@@ -657,7 +665,8 @@ describe("Help's key table (TST-13)", () => {
       primary: '#3 major 0.52,0.52',
       said: 'Waypoint duplicated'
     },
-    deleteSelected: { route: [FIRST, LAST], selected: [], primary: null, said: 'Waypoint deleted' },
+    // The delete's toast advertises undo, whichever route asks, and is what is heard (UI-06 J-05).
+    deleteSelected: { route: [FIRST, LAST], selected: [], primary: null, toasts: [DELETE_TOAST], said: DELETE_TOAST },
     deselectWaypoint: { selected: [], primary: null, said: 'Selection cleared' },
     selectAllWaypoints: {
       selected: ['#0 major 0.25,0.5', '#1 major 0.5,0.5', '#2 major 0.75,0.5'],
@@ -730,8 +739,8 @@ describe("Help's key table (TST-13)", () => {
   const undocumented = why => ({ undocumented: why });
   const DELETED_FIRST = {
     route: [MIDDLE, LAST],
-    toasts: [`Deleted waypoint — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`],
-    said: 'Waypoint deleted'
+    toasts: [DELETE_TOAST],
+    said: DELETE_TOAST // the toast's announcement is the one heard (UI-06 J-05)
   };
 
   /**
@@ -771,7 +780,8 @@ describe("Help's key table (TST-13)", () => {
       {
         branchFrom: '#0 major 0.25,0.5',
         toasts: ['Branch from this waypoint — click where it should go (Esc to cancel)'],
-        said: 'Branching from this waypoint. Click where the branch should go.'
+        // The toast is the announcement: one message, heard once (UI-06 J-05).
+        said: 'Branch from this waypoint — click where it should go (Esc to cancel)'
       }],
     ['a waypoint', ['meta'],
       undocumented('adds the waypoint to the multi-selection, or takes it out; Help calls Cmd/Ctrl-click ' +
@@ -1101,8 +1111,9 @@ describe('what the page shortcuts react to (TST-13)', () => {
     expect(app.interactionHandler.branchArmed).toBe(app.waypoints[0]);
 
     // Undocumented in Help; the branch toast says "Esc to cancel".
+    // The toast is the announcement: one message, heard once (UI-06 J-05).
     expect(observe(app, () => press('Escape')).changed)
-      .toEqual({ branchFrom: null, toasts: ['Branch cancelled'], said: 'Branch cancelled.' });
+      .toEqual({ branchFrom: null, toasts: ['Branch cancelled'], said: 'Branch cancelled' });
     expect(observe(app, () => press('Escape')).changed)
       .toEqual({ selected: [], primary: null, said: 'Selection cleared' });
   });
@@ -1264,7 +1275,8 @@ describe('what the page shortcuts react to (TST-13)', () => {
     const NUDGED = [FIRST, 'major 0.505,0.5', LAST];
     expect(steps).toEqual([
       ['→ on Skip to end', { route: NUDGED }, 'prevented', 'focus #skip-end-btn'],
-      ['Delete on Skip to end', { route: [FIRST, LAST], selected: [], primary: null, said: 'Waypoint deleted' },
+      // The delete's toast advertises undo, whichever route asks, and is what is heard (UI-06 J-05).
+      ['Delete on Skip to end', { route: [FIRST, LAST], selected: [], primary: null, toasts: [DELETE_TOAST], said: DELETE_TOAST },
         'prevented', 'focus #skip-end-btn'],
       // Undo restores the route; the selection it restores is undo's own (not DEF-13's).
       ['Ctrl/Cmd+Z on Skip to end', { route: ROUTE, selected: ['#2 major 0.75,0.5'], primary: '#2 major 0.75,0.5',
@@ -1274,7 +1286,7 @@ describe('what the page shortcuts react to (TST-13)', () => {
       ['End on row 1', { progress: 1 }, 'prevented', 'focus ≡Waypoint 1'],
       ['→ on row 2', { route: NUDGED }, 'prevented', 'focus ≡Waypoint 2'],
       // The row goes with its waypoint, and focus falls to the page (with DEF-32).
-      ['Delete on row 2', { route: [FIRST, LAST], selected: [], primary: null, said: 'Waypoint deleted' },
+      ['Delete on row 2', { route: [FIRST, LAST], selected: [], primary: null, toasts: [DELETE_TOAST], said: DELETE_TOAST },
         'prevented', 'focus the page'],
       ['hint', 'showing'],
       ['Escape on the hint\'s "?"', {}, 'prevented', 'focus Help: Wait time'],
@@ -2170,7 +2182,9 @@ const LISTENER_ROWS = [
         'Tab: taken; open, focus #splash-close-x',
         'Shift+Tab: taken; open, focus licences and third-party notices (opens in a new tab)',
         'Tab: taken; open, focus #splash-close-x',
-        'Escape: taken; closed, focus #splash-close-x'
+        // Not left in the closed dialog (Codex r2): nothing had focus when
+        // it opened, and nothing has it now.
+        'Escape: taken; closed, focus the page'
       ]);
     }
   }
@@ -2610,4 +2624,13 @@ describe('every key listener the app adds (TST-13)', () => {
       expect(log.swept(listener), `the row swept every other key past ${listener}`).toBe(true);
     }
   });
+});
+
+/**
+ * The tests above mark the start's tip seen before their boots; `clearMocks`
+ * keeps that implementation, so without a reset every later boot read it too,
+ * seen or unseen by test order (UI-06, Codex r2).
+ */
+test('no test inherits another\'s storage: a boot that does not mark the start\'s tip finds it unseen (Codex r2)', () => {
+  expect(localStorage.getItem('routePlotter_previewTipDismissed')).toBeNull();
 });

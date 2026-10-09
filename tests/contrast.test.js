@@ -220,6 +220,21 @@ describe('the shortcut chip in the File menu (B-10)', () => {
   });
 });
 
+describe('the header status line (UI-06 B-17)', () => {
+  test('its text reads at 7:1 on the header, in every state it shows', () => {
+    for (const text of ['Unsaved changes', 'Saved to browser recovery', 'Exporting MP4 42% · Esc to cancel', 'Export complete']) {
+      const line = mount(`<header class="header"><h1 class="header-title">Route Plotter</h1><p class="header-status" role="status">${text}</p></header>`, '.header-status');
+      expectText(line, REST, `status line "${text}"`);
+      document.body.innerHTML = '';
+    }
+  });
+
+  test('the unsaved mark beside the title is decorative, so its contrast is not relied on, and the title itself reads at 7:1', () => {
+    const title = mount('<header class="header"><h1 class="header-title">Route Plotter</h1><span class="title-indicator" aria-hidden="true">●</span></header>', '.header-title');
+    expectText(title, REST, 'header title');
+  });
+});
+
 describe('a hidden crowd row in Layers (B-11)', () => {
   test('the title is not faded below legibility: it is a live, selectable row', () => {
     const title = mount(LAYERS({ hidden: true }), '.layer-hidden .layer-title');

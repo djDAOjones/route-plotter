@@ -19,7 +19,7 @@ settled:
   model + imageAssets[2].height: 100
   model + imageAssets[2].mimeType: "image/png"
   model + imageAssets[2].size: 68
-  ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+  ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
   ui ~ #head-filename: p :text="asset-extras-head.png" → p :text="picked.png"
 
 ## #custom-head-controls>button[1] · click
@@ -33,12 +33,14 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 model ~ styles.pathHead.rotationMode: "auto" → "fixed"
 app ~ focus: "body" → "#head-rotation-mode"
 storage ~ routePlotter_lastSection: "video" → "head"
-ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="head" → div class="settings-section expanded" data-last="true" data-section="head"
 ui ~ #head-rotation-mode: select aria-describedby="head-rotation-mode-tip" :value="auto" → select aria-describedby="head-rotation-mode-tip" :value="fixed"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9693 chars, f9222721] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9694 chars, 266af394]
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
 ## #head-rotation-offset-control>button[0] · click
 app ~ focus: "body" → "#head-rotation-offset-control>button[0]"
@@ -51,12 +53,14 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 model ~ styles.pathHead.rotationOffset: 45 → -60
 app ~ focus: "body" → "#head-rotation-offset"
 storage ~ routePlotter_lastSection: "video" → "head"
-ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="head" → div class="settings-section expanded" data-last="true" data-section="head"
 ui ~ #head-rotation-offset: input aria-describedby="head-rotation-offset-value head-rotation-offset-tip" aria-valuetext="45°" max="180" min="-180" step="5" type="range" value="0" :value="45" → input aria-describedby="head-rotation-offset-value head-rotation-offset-tip" aria-valuetext="-60°" max="180" min="-180" step="5" type="range" value="0" :value="-60"
 ui ~ #head-rotation-offset-value: span class="range-readout" :text="45°" → span class="range-readout" :text="-60°"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9693 chars, f9222721] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9694 chars, db512365]
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
 ## #path-glow-intensity · disabled, not operated

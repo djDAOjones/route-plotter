@@ -225,7 +225,8 @@ describe('one Pointer Events path', () => {
     hitHarness.bus.clear();
     pointerTap(hitHarness.handler, { shiftKey: true, clientX: 200, clientY: 160 });
     expect(hitHarness.bus.events('waypoint:delete')).toHaveLength(1);
-    expect(hitHarness.bus.events('ui:toast')).toHaveLength(1);
+    // The delete raises the undo toast itself, whichever route asks (UI-06 J-05): the handler no longer does.
+    expect(hitHarness.bus.events('ui:toast')).toHaveLength(0);
 
     const emptyHarness = makeHarness();
     pointerTap(emptyHarness.handler, { altKey: true, clientX: 300, clientY: 240 });

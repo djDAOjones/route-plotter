@@ -401,7 +401,9 @@ export class SectionController {
       const section = this._sectionsByName.get(sectionName) ||
         document.querySelector(`.settings-section[data-section="${sectionName}"]`);
       if (!section) return;
-      section.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      // A smooth scroll is motion: an author who asked for less gets none (UI-06 B-22).
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+      section.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
       // Restart the animation if it's already running
       section.classList.remove('section-flash');
       void section.offsetWidth;

@@ -4,52 +4,65 @@
 app ~ focus: "#diagnostics-title" → "#report-bug-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 4f39d163)
+ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, e511cdd8)
 
 ## #diagnostics-modal>div[0]>button[0] · click
 app ~ focus: "#diagnostics-title" → "#report-bug-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 4f39d163)
+ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, e511cdd8)
 
 ## #diagnostics-open-security · click
+announced "Private vulnerability reporting was requested in a new tab. Diagnostics were not sent."
 app ~ focus: "#diagnostics-title" → "#diagnostics-open-security"
-ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="status" → p aria-live="polite" class="diagnostics-status" role="status" :text="Private vulnerability reporting was requested in a new tab. Diagnostics were not sent."
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Private vulnerability reporting was requested in a new tab. Diagnostics were not sent."
+ui ~ #diagnostics-status: p aria-live="off" class="diagnostics-status" role="status" → p aria-live="off" class="diagnostics-status" role="status" :text="Private vulnerability reporting was requested in a new tab. Diagnostics were not sent."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Private vulnerability reporting was requested in a new tab. Diagnostics were not sent." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #diagnostics-preview · read-only, not operated
 
 ## #diagnostics-copy-issues-address · click
+announced "Address copy failed. Select the GitHub Issues address shown above; diagnostics were not copied or sent."
 app ~ focus: "#diagnostics-title" → "#diagnostics-copy-issues-address"
-ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="status" → p aria-live="polite" class="diagnostics-status" role="status" :text="Address copy failed. Select the GitHub Issues address shown above; diagnostics were not copied or sent."
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Address copy failed. Select the GitHub Issues address shown above; diagnostics were not copied or sent."
+ui ~ #diagnostics-status: p aria-live="off" class="diagnostics-status" role="status" → p aria-live="off" class="diagnostics-status" role="status" :text="Address copy failed. Select the GitHub Issues address shown above; diagnostics were not copied or sent."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Address copy failed. Select the GitHub Issues address shown above; diagnostics were not copied or sent." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #diagnostics-cancel · click
 app ~ focus: "#diagnostics-title" → "#report-bug-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 4f39d163)
+ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, e511cdd8)
 
 ## #diagnostics-copy · click
 announced "Diagnostics copy failed"
 app ~ focus: "#diagnostics-title" → "#diagnostics-copy"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" :text="Diagnostics copy failed"
-ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="status" → p aria-live="polite" class="diagnostics-status" role="status" :text="Copy failed. You can select the preview text manually."
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Diagnostics copy failed"
+ui ~ #diagnostics-status: p aria-live="off" class="diagnostics-status" role="status" → p aria-live="off" class="diagnostics-status" role="status" :text="Copy failed. You can select the preview text manually."
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status" :text="Diagnostics copy failed" → div aria-atomic="true" aria-live="polite" class="sr-only" inert="" role="status"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Diagnostics copy failed" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #diagnostics-download · click
-download route-plotter-diagnostics-2026-09-23T09-01-00.json application/json;charset=utf-8 479 bytes e2bd7ac6ea04
+download route-plotter-diagnostics-2026-09-23T09-01-00.json application/json;charset=utf-8 479 bytes b63e553279a5
+announced "Diagnostics downloaded. Nothing was sent."
 app ~ focus: "#diagnostics-title" → "#diagnostics-download"
-ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="status" → p aria-live="polite" class="diagnostics-status" role="status" :text="Diagnostics downloaded. Nothing was sent."
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Diagnostics downloaded. Nothing was sent."
+ui ~ #diagnostics-status: p aria-live="off" class="diagnostics-status" role="status" → p aria-live="off" class="diagnostics-status" role="status" :text="Diagnostics downloaded. Nothing was sent."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Diagnostics downloaded. Nothing was sent." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #diagnostics-open-issues · click
+announced "GitHub Issues was requested in a new tab. Diagnostics were not sent."
 app ~ focus: "#diagnostics-title" → "#diagnostics-open-issues"
-ui ~ #diagnostics-status: p aria-live="polite" class="diagnostics-status" role="status" → p aria-live="polite" class="diagnostics-status" role="status" :text="GitHub Issues was requested in a new tab. Diagnostics were not sent."
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="GitHub Issues was requested in a new tab. Diagnostics were not sent."
+ui ~ #diagnostics-status: p aria-live="off" class="diagnostics-status" role="status" → p aria-live="off" class="diagnostics-status" role="status" :text="GitHub Issues was requested in a new tab. Diagnostics were not sent."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="GitHub Issues was requested in a new tab. Diagnostics were not sent." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

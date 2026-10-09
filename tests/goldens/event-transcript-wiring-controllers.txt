@@ -1137,9 +1137,9 @@ undo, performed on the entry it saved, then redone:
 fixture: open day
 at once: nothing counted
   route:branch-arm {waypoint: wp(ex-uon-1)}
-    said "Branching from Main entrance. Click where the branch should go."
     ui:toast {message: "Branch from Main entrance — click where …(68 chars)"}  (digest a51ed99b)
       toast "Branch from Main entrance — click where it should go (Esc to cancel)"
+      said "Branch from Main entrance — click where it should go (Esc to cancel)"
   model:
     ~ runtime.branchArmed: null -> "ex-uon-1"
   selection: none (unchanged)
@@ -1157,6 +1157,7 @@ at once: nothing counted
   route:branch-arm {waypoint: wp(ex-uon-2a)}
     ui:toast {message: "Branch from a major waypoint — minors only shape a leg"}
       toast "Branch from a major waypoint — minors only shape a leg"
+      said "Branch from a major waypoint — minors only shape a leg"
   model:
     (unchanged)
   selection: none (unchanged)
@@ -1173,9 +1174,9 @@ fixture: open day
 given: a branch armed at ex-uon-1
 at once: nothing counted
   route:branch-cancel
-    said "Branch cancelled."
     ui:toast {message: "Branch cancelled"}
       toast "Branch cancelled"
+      said "Branch cancelled"
   model:
     ~ runtime.branchArmed: "ex-uon-1" -> null
   selection: none (unchanged)
@@ -1317,9 +1318,9 @@ at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · autosave
     · queued render
-    said "Branch now ends here"
     ui:toast {message: "Branch now ends here"}
       toast "Branch now ends here"
+      said "Branch now ends here"
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 998eaf9a)
   model:
     ~ runtime.dirty: false -> true
@@ -1528,12 +1529,14 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · path
       ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}  (digest 795495d6)
         toast "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
-      said "A crowd node lost the waypoint it followed and is back at its own position."
+        said "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
       · queued render
       waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · autosave
       · queued render
-    said "Waypoint deleted"
+    ui:toast {message: "Deleted Main entrance — press Ctrl+Z to undo"}
+      toast "Deleted Main entrance — press Ctrl+Z to undo"
+      said "Deleted Main entrance — press Ctrl+Z to undo"
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 62c6320f)
   model:
     ~ runtime.dirty: false -> true
@@ -1578,12 +1581,14 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · path
       ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}  (digest 795495d6)
         toast "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
-      said "A crowd node lost the waypoint it followed and is back at its own position."
+        said "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
       · queued render
       waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · autosave
       · queued render
-    said "Waypoint deleted"
+    ui:toast {message: "Deleted Main entrance — press Ctrl+Z to undo"}
+      toast "Deleted Main entrance — press Ctrl+Z to undo"
+      said "Deleted Main entrance — press Ctrl+Z to undo"
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 62c6320f)
   model:
     ~ runtime.dirty: false -> true
@@ -1627,7 +1632,9 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · autosave
       · queued render
-    said "Waypoint deleted"
+    ui:toast {message: "Deleted waypoint — press Ctrl+Z to undo"}
+      toast "Deleted waypoint — press Ctrl+Z to undo"
+      said "Deleted waypoint — press Ctrl+Z to undo"
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 79f5c75f)
   model:
     ~ runtime.dirty: false -> true
@@ -1669,7 +1676,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       · path
       ui:toast {message: "A crowd node lost the waypoint it follow…(80 chars)"}  (digest 795495d6)
         toast "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
-      said "A crowd node lost the waypoint it followed and is back at its own position."
+        said "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
       · queued render
       waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · autosave
@@ -2526,6 +2533,7 @@ given: the format at its default, MP4; the app's whole exportVideo replaced, sin
 at once: nothing counted
   video:export-request "webm"
     toast "Tip: Switch to Preview mode to see exactly how the export will look" for 6000 ms
+    said "Tip: Switch to Preview mode to see exactly how the export will look"
     exportVideo called (replaced) with [{"format":"webm"}]; entry settings: format "mp4", 30 fps, 1920x1080, path only false, in Edit
   model:
     (unchanged)
@@ -2543,6 +2551,7 @@ fixture: open day
 at once: nothing counted
   html:export-request
     toast "Tip: Switch to Preview mode to see exactly how the export will look" for 6000 ms
+    said "Tip: Switch to Preview mode to see exactly how the export will look"
   model:
     ~ runtime.ui.shareDisclosure: "closed" -> "Export standalone HTML?"
   selection: none (unchanged)
@@ -3489,6 +3498,7 @@ fixture: open day
 at once: nothing counted
   ui:toast {duration: 3000, message: "Shift-click deletes; Ctrl+Z brings it back"}
     toast "Shift-click deletes; Ctrl+Z brings it back" for 3000 ms
+    said "Shift-click deletes; Ctrl+Z brings it back"
   model:
     (unchanged)
   selection: none (unchanged)

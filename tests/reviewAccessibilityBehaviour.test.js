@@ -19,7 +19,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MOTION } from '../src/config/constants.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { bipolarSliderToLog2Value } from '../src/utils/sliderScales.js';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole, recordedConsole } from './helpers/consoleGuard.js';
 import { localStorageMock } from './setup.js';
 
@@ -71,6 +71,8 @@ afterEach(async () => {
 
 /** The editor a user meets: booted, Help closed, its example background in. */
 async function editor() {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorageMock.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   running.push(app);
   await app.ready;

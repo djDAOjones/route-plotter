@@ -49,8 +49,9 @@ function openDropdownMenu(dropdown) {
     trigger.setAttribute('aria-expanded', 'true');
     openDropdown = dropdown;
     
-    // Focus first menu item
-    const firstItem = menu.querySelector('[role="menuitem"]');
+    // Focus the first item that can run: a disabled one is skipped, as the
+    // arrow keys skip it (UI-06 B-18, Codex r1)
+    const firstItem = menu.querySelector('[role="menuitem"]:not([disabled])');
     if (firstItem) {
       firstItem.focus();
     }

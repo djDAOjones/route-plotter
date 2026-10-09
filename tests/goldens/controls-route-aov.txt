@@ -12,12 +12,14 @@ emit motion:aov-angle-change 47.35769
 model ~ motionSettings.aovAngle: 95 → 47.35769
 app ~ focus: "body" → "#aov-angle"
 storage ~ routePlotter_lastSection: "video" → "reveal"
-ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
 ui ~ #aov-angle: input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="95°" max="1000" min="0" step="1" type="range" value="500" :value="621" → input aria-describedby="aov-angle-value aov-angle-tip" aria-valuetext="48°" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #aov-angle-value: span class="range-readout" :text="95°" → span class="range-readout" :text="48°"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9712 chars, b03d57fe]
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
 ## #aov-controls>div[1]>button[0] · click
 app ~ focus: "body" → "#aov-controls>div[1]>button[0]"
@@ -31,12 +33,14 @@ emit motion:aov-distance-change 4.634469
 model ~ motionSettings.aovDistance: 66 → 4.634469
 app ~ focus: "body" → "#aov-distance"
 storage ~ routePlotter_lastSection: "video" → "reveal"
-ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
 ui ~ #aov-distance: input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="66%" max="1000" min="0" step="1" type="range" value="500" :value="910" → input aria-describedby="aov-distance-value aov-distance-tip" aria-valuetext="4.6%" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #aov-distance-value: span class="range-readout" :text="66%" → span class="range-readout" :text="4.6%"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9711 chars, b6f17f1b]
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
 ## #aov-controls>div[2]>button[0] · click
 app ~ focus: "body" → "#aov-controls>div[2]>button[0]"
@@ -50,11 +54,13 @@ emit motion:aov-dropoff-change 33.3
 model ~ motionSettings.aovDropoff: 23 → 33.3
 app ~ focus: "body" → "#aov-dropoff"
 storage ~ routePlotter_lastSection: "video" → "reveal"
-ui ~ #app-title: h1 class="header-title" title="Version 0.0.0-test" :text="Route Plotter" → h1 class="header-title" title="Version 0.0.0-test · Unsaved changes" :text="Route Plotter ●"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section expanded" data-last="true" data-section="reveal"
 ui ~ #aov-dropoff: input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="23%" max="1000" min="0" step="1" type="range" value="500" :value="230" → input aria-describedby="aov-dropoff-value aov-dropoff-tip" aria-valuetext="34%" max="1000" min="0" step="1" type="range" value="500" :value="333"
 ui ~ #aov-dropoff-value: span class="range-readout" :text="23%" → span class="range-readout" :text="34%"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, 93ba2b43] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9713 chars, f40485d9]
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
 ## #path-glow-intensity · disabled, not operated

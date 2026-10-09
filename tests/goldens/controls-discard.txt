@@ -1,0 +1,51 @@
+# discard: the notice’s Discard asked to confirm
+
+## #discard-confirm-modal · click
+app ~ focus: "#discard-cancel" → "#unrestored-discard"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #app: div inert="" → div
+ui ~ #discard-confirm-modal: div aria-describedby="modal-text-discard" aria-labelledby="modal-title-discard" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #discard-confirm-modal>div[0]: div class="modal-content"
+ui - #modal-title-discard: h3 :text="Discard the session that couldn't be restored?"
+ui - #modal-text-discard: p :text="It will be gone from this browser. Download a copy first if you want to keep it."
+ui - #discard-confirm-modal>div[0]>div[2]: div class="modal-buttons"
+ui - #discard-cancel: button class="btn btn-secondary" type="button" :text="Cancel"
+ui - #discard-confirm: button class="btn btn-danger" type="button" :text="Discard"
+
+## #discard-cancel · click
+app ~ focus: "#discard-cancel" → "#unrestored-discard"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #app: div inert="" → div
+ui ~ #discard-confirm-modal: div aria-describedby="modal-text-discard" aria-labelledby="modal-title-discard" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #discard-confirm-modal>div[0]: div class="modal-content"
+ui - #modal-title-discard: h3 :text="Discard the session that couldn't be restored?"
+ui - #modal-text-discard: p :text="It will be gone from this browser. Download a copy first if you want to keep it."
+ui - #discard-confirm-modal>div[0]>div[2]: div class="modal-buttons"
+ui - #discard-cancel: button class="btn btn-secondary" type="button" :text="Cancel"
+ui - #discard-confirm: button class="btn btn-danger" type="button" :text="Discard"
+
+## #discard-confirm · click
+announced "The session that couldn't be restored was discarded."
+app ~ focus: "#discard-cancel" → "#scope-route-btn"
+storage - routePlotter_keptAutosave:1790154010502-{1}: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.6"
+ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
+ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="The session that couldn't be restored was discarded."
+ui ~ #app: div inert="" → div
+ui ~ #unrestored-notice: div aria-describedby="unrestored-notice-status" aria-labelledby="unrestored-notice-text" class="unrestored-notice" role="region" → div (not shown)
+ui ~ #discard-confirm-modal: div aria-describedby="modal-text-discard" aria-labelledby="modal-title-discard" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
+ui - #unrestored-notice-text: p class="unrestored-notice-title" :text="Your previous session couldn't be restored."
+ui - #unrestored-notice-status: p :text="Kept until you discard it. You can download a copy."
+ui - #unrestored-notice>div[2]: div class="unrestored-notice-actions"
+ui - #unrestored-download: button class="btn btn-secondary" type="button" :text="Download it"
+ui - #unrestored-discard: button class="btn btn-secondary" type="button" :text="Discard"
+ui - #discard-confirm-modal>div[0]: div class="modal-content"
+ui - #modal-title-discard: h3 :text="Discard the session that couldn't be restored?"
+ui - #modal-text-discard: p :text="It will be gone from this browser. Download a copy first if you want to keep it."
+ui - #discard-confirm-modal>div[0]>div[2]: div class="modal-buttons"
+ui - #discard-cancel: button class="btn btn-secondary" type="button" :text="Cancel"
+ui - #discard-confirm: button class="btn btn-danger" type="button" :text="Discard"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="The session that couldn't be restored was discarded." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

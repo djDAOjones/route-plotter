@@ -27,6 +27,7 @@ import {
   beginAsyncProjectOperation,
   isAsyncProjectOperationCurrent,
 } from './operationGeneration.js';
+import { releaseBackgroundBusy } from './backgroundLoading.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
 import { assertPersistedEntityId, ENTITY_ID_LIMITS } from '../utils/entityId.js';
 import { isImageCoordinateInRange } from '../utils/imageCoordinates.js';
@@ -710,12 +711,65 @@ function replaceImmediateRecovery(app) {
 }
 
 function reportAutosaveFailure(app) {
+  app.setStatus?.(STATUS_RECOVERY_FAILED);
+  // A failure ends no episode: "Saved to browser recovery", once heard, is
+  // not heard again until the next open or save (the owner, 2026-10-09;
+  // Codex r2). The failure itself is announced below, once.
+  statusEpisode(app).failed = true;
   if (app._autosaveFailureWarningShown) return;
   app._autosaveFailureWarningShown = true;
   // A kept record that could not be restored may be what stops the write
   // (DEF-28): it stays, and the report says what the author can do.
   app.announce('Auto-save failed. Save a project file to keep your work.' + recoveryFailureGuidance(app),
     'polite', RECOVERY_NOTICE);
+}
+
+/**
+ * The header's status line (UI-06 B-17): the save state as text, beside the
+ * title, where the "●" was the only sign. Recovery is said as recovery, never
+ * as "saved": the only save is the project file (Codex).
+ */
+const STATUS_UNSAVED = 'Unsaved changes';
+const STATUS_RECOVERED = 'Saved to browser recovery';
+const STATUS_RECOVERY_FAILED = 'Browser recovery failed';
+
+/**
+ * What of the status line is spoken (the owner, 2026-10-09: "Speak changes,
+ * not repeats"): through the one announcer, politely, "Unsaved changes" the
+ * first time an opened, saved, cleared or freshly started project changes,
+ * and "Saved to browser recovery" the first time recovery saves after that;
+ * then nothing until the next episode. A recovery write that fails is
+ * announced once (`reportAutosaveFailure`); recovery working again is heard
+ * only if "Saved to browser recovery" has not been yet in the episode (Codex
+ * r2). The line itself is not live (`aria-live="off"`) and shows each.
+ * @param {Object} app
+ * @returns {{unsaved: boolean, recovered: boolean, failed: boolean}} This episode's state
+ */
+function statusEpisode(app) {
+  app._statusEpisode ??= { unsaved: false, recovered: false, failed: false };
+  return app._statusEpisode;
+}
+
+/** An open, a save, Clear all or a restored start begins a new episode. */
+export function beginStatusEpisode(app) {
+  app._statusEpisode = { unsaved: false, recovered: false, failed: false };
+}
+
+/** The first change of an episode is heard. */
+function speakUnsaved(app) {
+  const episode = statusEpisode(app);
+  if (episode.unsaved) return;
+  episode.unsaved = true;
+  app.announce?.(STATUS_UNSAVED);
+}
+
+/** The episode's first recovery save after a change, or after a failed one, is heard. */
+function speakRecovered(app) {
+  const episode = statusEpisode(app);
+  if (episode.recovered || !(episode.unsaved || episode.failed)) return;
+  episode.recovered = true;
+  episode.failed = false;
+  app.announce?.(STATUS_RECOVERED);
 }
 
 /**
@@ -737,8 +791,13 @@ function writeRecovery(app) {
     // StorageService reports the outcome of the actual delayed write. A
     // quota/security failure must never be presented or cached as success.
     const result = app.storageService.autoSave(prepared.snapshot, outcome => {
-      if (outcome?.ok) app._autosaveFailureWarningShown = false;
-      else reportAutosaveFailure(app);
+      if (outcome?.ok) {
+        app._autosaveFailureWarningShown = false;
+        app.setStatus?.(STATUS_RECOVERED);
+        speakRecovered(app);
+      } else {
+        reportAutosaveFailure(app);
+      }
     });
     if (result?.ok === false) reportAutosaveFailure(app);
     return result;
@@ -1043,6 +1102,8 @@ function completeProjectReplacement(app) {
   app._autosaveAssetWarningShown = false;
   app._autosaveBackgroundWarningShown = false;
   app._autosaveFailureWarningShown = false;
+  // And its first change is heard (UI-06 B-17).
+  beginStatusEpisode(app);
 
   // These cancellations happen only after every operation that can reject the
   // commit. A failed load therefore retains pending autosave and undo work.
@@ -1064,6 +1125,7 @@ export const persistenceMixin = {
     const saveGeneration = this._projectGeneration || 0;
     try {
       this.announce('Saving project...');
+      this.setStatus?.('Saving project…');
       
       // ZIP assets are archived separately; the canonical model builder owns
       // every other field so explicit save, recovery and HTML export cannot
@@ -1093,13 +1155,17 @@ export const persistenceMixin = {
       if (unchanged) {
         this._isDirty = false;
         this.updateTitleIndicator?.();
+        this.setStatus?.('Project saved');
         this.announce('Project saved');
+        beginStatusEpisode(this);
       } else if (sameProject) {
+        this.setStatus?.(STATUS_UNSAVED);
         this.announce('Project file saved; newer changes remain unsaved.');
       }
       console.log(`📦 Project saved: ${filename}`);
     } catch (err) {
       console.error('Failed to save project:', err);
+      this.setStatus?.('Failed to save project');
       this.announce(`Failed to save project: ${err.message}`);
     }
   },
@@ -1122,6 +1188,7 @@ export const persistenceMixin = {
     }
     try {
       this.announce(`Opening ${example.name}…`);
+      this._beginOpening?.(example.name);
       const response = await fetch(`examples/${example.id}.zip`, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const blob = await response.blob();
@@ -1132,8 +1199,9 @@ export const persistenceMixin = {
       return await this.loadProject(file);
     } catch (err) {
       console.error('Failed to open example project:', err);
-      this.announce(`Could not open ${example.name}: ${err.message}`);
-      this.eventBus.emit('ui:toast', { message: `Could not open ${example.name}` });
+      // One message, with the reason, heard once as the toast it is (UI-06 J-05).
+      this._endOpening?.(`Could not open ${example.name}`);
+      this.eventBus.emit('ui:toast', { message: `Could not open ${example.name}: ${err.message}`, priority: 'assertive' });
       return false;
     }
   },
@@ -1144,8 +1212,11 @@ export const persistenceMixin = {
    */
   async loadProject(file) {
     const operation = beginAsyncProjectOperation(this, 'project-load', { replaceProject: true });
+    // No background request made for the project this replaces can commit now.
+    releaseBackgroundBusy();
     try {
       this.announce('Loading project...');
+      if (!this._openingLabel) this._beginOpening?.('project');
       
       // ZIP and bitmap work returns detached objects. Only the synchronous
       // commit below can replace live project state.
@@ -1166,6 +1237,7 @@ export const persistenceMixin = {
       const recovery = replaceImmediateRecovery(this);
       const recoveryUnavailable = recovery.attempted && !recovery.saved;
       
+      this._endOpening?.(recoveryUnavailable ? STATUS_RECOVERY_FAILED : STATUS_RECOVERED);
       if (recoveryUnavailable) {
         this.announce('Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.'
           + recoveryFailureGuidance(this), 'polite', RECOVERY_NOTICE);
@@ -1177,6 +1249,7 @@ export const persistenceMixin = {
     } catch (err) {
       if (!isAsyncProjectOperationCurrent(this, operation)) return false;
       console.error('Failed to load project:', err);
+      this._endOpening?.(`Could not open ${this._openingLabel || 'project'}`);
       this.announce('Failed to load project: ' + err.message);
       return false;
     }
@@ -1188,6 +1261,10 @@ export const persistenceMixin = {
    */
   markDirty() {
     advanceEditRevision(this);
+    // Each edit is unsaved until the recovery write lands (UI-06 B-17); the
+    // first of an episode is heard.
+    this.setStatus?.(STATUS_UNSAVED);
+    speakUnsaved(this);
     if (!this._isDirty) {
       this._isDirty = true;
       this.updateTitleIndicator();
@@ -1205,16 +1282,52 @@ export const persistenceMixin = {
   },
   
   /**
-   * Update the title to show/hide unsaved changes indicator
-   * Per UI spec §2.1: "Route Plotter v3.1.9 ●" when dirty
+   * Show or hide the unsaved-changes mark, and keep the status line true to
+   * the dirty flag (UI-06 B-17). The title is the app's name alone; the "●"
+   * beside it is decorative, and the status text carries the meaning: it
+   * cannot say "Unsaved changes" of a clean project, and a project made dirty
+   * by a rollback says so.
    */
   updateTitleIndicator() {
     const titleEl = document.getElementById('app-title');
     if (!titleEl) return;
-    
-    const baseTitle = 'Route Plotter';
-    titleEl.textContent = this._isDirty ? `${baseTitle} ●` : baseTitle;
-    titleEl.title = this._isDirty ? `Version ${APP_VERSION} · Unsaved changes` : `Version ${APP_VERSION}`;
+    titleEl.textContent = 'Route Plotter';
+    titleEl.title = `Version ${APP_VERSION}`;
+    const glyph = document.getElementById('title-indicator');
+    if (glyph) glyph.hidden = !this._isDirty;
+    if (!this._isDirty && this._status === STATUS_UNSAVED) this.setStatus?.('');
+    if (this._isDirty && !this._status) this.setStatus?.(STATUS_UNSAVED);
+  },
+
+  /**
+   * Write the header's status line (UI-06 B-17): the save or recovery state,
+   * or what the app is doing (opening, saving, exporting). Not a live region:
+   * what the author must hear is announced by the path that sets it. Called
+   * optionally throughout: a host that borrows one method of this mixin
+   * alone (the persistence tests bind a bare object) has no status line.
+   * @param {string} text
+   */
+  setStatus(text) {
+    this._status = text;
+    const line = document.getElementById('app-status');
+    if (line) line.textContent = text;
+  },
+
+  /**
+   * Say what is being opened, by the name the author chose it by, until
+   * `_endOpening` says how it went.
+   * @param {string} label
+   * @private
+   */
+  _beginOpening(label) {
+    this._openingLabel = label;
+    this.setStatus?.(`Opening ${label}…`);
+  },
+
+  /** @private */
+  _endOpening(text) {
+    this._openingLabel = null;
+    this.setStatus?.(text);
   },
 
   /**

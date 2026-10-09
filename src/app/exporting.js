@@ -29,25 +29,45 @@ export function refuseWhileExporting(app) {
 
 /**
  * Disable the export controls (the menu's toggle, MP4, WebM, HTML) while an
- * export is the app's; `release()`, when it has let go, enables them and
- * gives the toggle its text back, whatever part of the clean-up failed
- * (DEF-46). A module helper, so a host that borrows `exportVideo` alone
- * keeps it.
+ * export is the app's; `release()`, when it has let go, enables the toggle
+ * and gives each item back the state the project allows it, whatever part of
+ * the clean-up failed (DEF-46). The toggle keeps its words throughout: the
+ * export's progress is the status line's (UI-06 J-18). A module helper, so a
+ * host that borrows `exportVideo` alone keeps it.
  * @param {Object} app
- * @returns {{menu: HTMLElement|null, release: function(): void}}
+ * @returns {{release: function(): void}}
  */
 function holdExportControls(app) {
   const menu = document.getElementById('export-dropdown-btn');
   const buttons = [menu, app.elements?.exportMp4Btn, app.elements?.exportWebmBtn, app.elements?.exportHtmlBtn].filter(Boolean);
-  const text = menu?.textContent;
   for (const button of buttons) button.disabled = true;
   return {
-    menu,
     release() {
-      for (const button of buttons) button.disabled = false;
-      if (menu) menu.textContent = text;
+      if (menu) menu.disabled = false;
+      if (app.updateExportAvailability) app.updateExportAvailability();
+      else for (const button of buttons) button.disabled = false;
     },
   };
+}
+
+/**
+ * Tell the author an export was refused or failed: a toast the author must
+ * hear, where a browser dialog stood (UI-06 B-18). The status line says so too.
+ * @param {Object} app
+ * @param {string} message
+ * @param {string} [status]
+ */
+function refuseExport(app, message, status = 'Export not started') {
+  app.setStatus?.(status);
+  app.eventBus.emit('ui:toast', { message, priority: 'assertive' });
+}
+
+const VIDEO_REASON = 'Export MP4 and WebM need at least 2 waypoints.';
+const FORMAT_LABELS = { mp4: 'MP4', webm: 'WebM' };
+
+/** Write a reason span's words: the author is reading them. */
+function setReason(span, text) {
+  if (span) span.textContent = text;
 }
 
 export const exportingMixin = {
@@ -157,9 +177,10 @@ export const exportingMixin = {
       if (resolution) this.eventBus.emit('video:resolution-change', resolution);
       if (format) this.exportSettings.format = format;
 
-      // Validate we have something to export
+      // Validate we have something to export (the items are disabled meanwhile;
+      // a request by another route is refused the same way, UI-06 B-18)
       if (this.waypoints.length < 2) {
-        alert('Please add at least 2 waypoints before exporting.');
+        refuseExport(this, VIDEO_REASON);
         return;
       }
 
@@ -168,8 +189,27 @@ export const exportingMixin = {
         this.videoExporter = new VideoExporter(this.canvas, this.eventBus);
       }
 
-      // Show progress on the menu's toggle
-      if (controls.menu) controls.menu.textContent = 'Exporting... 0%';
+      // Progress goes to the status line, an enabled element in the header,
+      // never into the disabled toggle (UI-06 J-18)
+      const label = FORMAT_LABELS[this.exportSettings.format] ?? String(this.exportSettings.format ?? '').toUpperCase();
+      let percent = 0;
+      const showProgress = () => this.setStatus?.(`Exporting ${label} ${percent}% · Esc to cancel`);
+      showProgress();
+      // Heard at 25, 50 and 75 %, once each, in the line's words (the owner,
+      // 2026-10-09); progress that jumps is heard at the furthest mark passed.
+      // It is this export's: what of it still waits is withdrawn when the
+      // export ends, however it ends, so none is read after (Codex r2).
+      let spokenMark = 0;
+      const progressKey = Symbol('this export\'s progress');
+      const speakProgress = () => {
+        const mark = VIDEO_EXPORT.SPOKEN_PROGRESS.filter(each => percent >= each).at(-1) ?? 0;
+        if (mark <= spokenMark) return;
+        spokenMark = mark;
+        this.announce(`Exporting ${label} ${mark}%`, 'polite', { key: progressKey });
+      };
+      // Before the end is said, so the end never waits behind, or pushes out a
+      // message for, progress that is over.
+      const endProgress = () => this.withdrawAnnouncements?.(progressKey);
 
       // Capture-phase Escape handler — cancels export and blocks other keydown listeners
       const onEscapeKey = (e) => {
@@ -183,11 +223,11 @@ export const exportingMixin = {
       };
       // Visibility-aware pause/resume (MediaRecorder fallback only)
       const onExportPaused = () => {
-        if (controls.menu) controls.menu.textContent = 'Export paused — return to tab';
+        this.setStatus?.('Export paused — return to this tab');
         this.announce('Video export paused. Return to this tab to resume.');
       };
       const onExportResumed = () => {
-        if (controls.menu) controls.menu.textContent = 'Exporting...';
+        showProgress();
         this.announce('Video export resumed');
       };
 
@@ -214,7 +254,7 @@ export const exportingMixin = {
         this._setPreviewMode(true);
         let duration = this.invalidateAnimationTiming();
         if (duration <= 0) {
-          alert('Animation duration is zero. Please check your waypoints.');
+          refuseExport(this, 'Nothing to export: the animation has no duration.');
           return;
         }
 
@@ -250,23 +290,28 @@ export const exportingMixin = {
           },
 
           // Progress callback
-          onProgress: (percent) => {
-            if (controls.menu) controls.menu.textContent = `Exporting... ${percent}% · Esc to cancel`;
+          onProgress: (done) => {
+            percent = done;
+            showProgress();
+            speakProgress();
           }
         });
 
         // Download the video
         VideoExporter.downloadBlob(blob);
+        endProgress();
+        this.setStatus?.('Export complete');
         this.announce('Video export complete');
 
       } catch (error) {
+        endProgress();
         if (error.message === 'Export cancelled') {
           console.log('🛑 [Export] Cancelled by user');
+          this.setStatus?.('Export cancelled');
           this.announce('Video export cancelled');
         } else {
           console.error('Video export failed:', error);
-          alert(`Export failed: ${error.message}`);
-          this.announce('Video export failed');
+          refuseExport(this, `Export failed: ${error.message}`, 'Export failed');
         }
 
       } finally {
@@ -315,28 +360,29 @@ export const exportingMixin = {
    * Creates an interactive player with embedded background and path data
    */
   async exportHTML() {
-    // Validate we have something to export
+    // Validate we have something to export (the item is disabled meanwhile;
+    // a request by another route is refused the same way, UI-06 B-18)
     if (this.waypoints.length < 2) {
-      alert('Please add at least 2 waypoints before exporting.');
+      refuseExport(this, 'Export HTML needs at least 2 waypoints.');
       return;
     }
     
     if (!this.background.image) {
-      alert('Please add a background image before exporting HTML.');
+      refuseExport(this, 'Export HTML needs a background image.');
       return;
     }
     
     const duration = this.animationEngine.state.duration;
     if (duration <= 0) {
-      alert('Animation duration is zero. Please check your waypoints.');
+      refuseExport(this, 'Nothing to export: the animation has no duration.');
       return;
     }
     
-    // Update button to show progress
+    // The item is disabled while it works; the progress is the status
+    // line's, not words written into a closed menu (UI-06 J-07, J-18)
     const exportBtn = this.elements.exportHtmlBtn;
-    const originalText = exportBtn.textContent;
-    exportBtn.disabled = true;
-    exportBtn.textContent = 'Exporting...';
+    if (exportBtn) exportBtn.disabled = true;
+    this.setStatus?.('Exporting HTML…');
     
     this.announce('Starting HTML export');
     
@@ -372,18 +418,41 @@ export const exportingMixin = {
       
       const actualSize = (blob.size / 1024).toFixed(1);
       console.log(`✅ HTML export complete: ${actualSize} KB`);
+      this.setStatus?.('Export complete');
       this.announce(`HTML export complete (${actualSize} KB)`);
       
     } catch (error) {
       console.error('HTML export failed:', error);
-      alert(`Export failed: ${error.message}`);
-      this.announce('HTML export failed');
+      refuseExport(this, `Export failed: ${error.message}`, 'Export failed');
       
     } finally {
-      // Restore button state
-      exportBtn.disabled = false;
-      exportBtn.textContent = originalText;
+      // The item gets back the state the project allows it
+      this.updateExportAvailability();
     }
+  },
+
+  /**
+   * Disable the export items that cannot work, each described by a reason
+   * line under them (UI-06 B-18): MP4 and WebM need a route of two; HTML a
+   * background as well. Called on every route change and background change,
+   * and once an export has let the controls go. The names never change with
+   * the state (J-21): the reason is the description.
+   */
+  updateExportAvailability() {
+    const { exportMp4Btn, exportWebmBtn, exportHtmlBtn } = this.elements ?? {};
+    const few = this.waypoints.length < 2;
+    const noBackground = !this.background?.image;
+    const running = Boolean(this._videoExportRunning);
+    for (const item of [exportMp4Btn, exportWebmBtn]) if (item) item.disabled = running || few;
+    if (exportHtmlBtn) exportHtmlBtn.disabled = running || few || noBackground;
+    const videoReason = document.getElementById('export-video-reason');
+    const htmlReason = document.getElementById('export-html-reason');
+    setReason(videoReason, few ? VIDEO_REASON : '');
+    setReason(htmlReason, few && noBackground ? 'Export HTML needs at least 2 waypoints and a background image.'
+      : few ? 'Export HTML needs at least 2 waypoints.'
+        : noBackground ? 'Export HTML needs a background image.' : '');
+    const line = document.getElementById('export-menu-reason');
+    if (line) line.hidden = !(videoReason?.textContent || htmlReason?.textContent);
   },
   
   /**

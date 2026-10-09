@@ -201,6 +201,8 @@ export class ImageAsset {
       const reader = new FileReader();
       reader.onload = event => resolve(event.target.result);
       reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+      // An aborted read fires neither load nor error: it settles as a failure too.
+      reader.onabort = () => reject(new Error(`File reading was stopped: ${file.name}`));
       reader.readAsDataURL(file);
     });
 

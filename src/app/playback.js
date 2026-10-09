@@ -169,12 +169,19 @@ export const playbackMixin = {
     
     // Show after a brief delay so UI settles first
     setTimeout(() => {
-      this.showToast('Tip: Check your sequence in Preview mode before exporting', 8000);
-      try {
-        localStorage.setItem(STORAGE_KEY, 'true');
-      } catch (error) {
-        console.warn('Could not remember that the preview tip was seen:', error);
-      }
+      const show = () => {
+        // Read politely, after what start-up says it restored and whatever
+        // else waits, so it never cuts in (UI-06; the owner, 2026-10-09)
+        this.showToast('Tip: Check your sequence in Preview mode before exporting', 8000, null, { whenIdle: true });
+        try {
+          localStorage.setItem(STORAGE_KEY, 'true');
+        } catch (error) {
+          console.warn('Could not remember that the preview tip was seen:', error);
+        }
+      };
+      // Not before start-up has finished saying what it restored (DEF-45).
+      if (this.ready) this.ready.then(show);
+      else show();
     }, 1500);
   },
   

@@ -820,8 +820,8 @@ export const crowdsMixin = {
     this.queueRender();
     this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-network-traced', layerId: layer.id });
 
+    // The toast is the announcement (UI-06 J-05): one message, heard once.
     const message = `Traced the route into ${layer.name} — ${applied.nodes} nodes, ${applied.edges} paths`;
-    this.announce(message);
     this.eventBus.emit('ui:toast', { message });
     return true;
   },
@@ -873,6 +873,7 @@ export const crowdsMixin = {
     set('crowd-guide-type', layer.guideType);
     this.updateGuideCard?.(); // Network mixin's Edit-network button + hint
     this._syncCrowdLifecycleHint(); // Before the emitter guard: no dots, no hint
+    this._syncCrowdEmptyState(Boolean(em)); // The cards say why they are off (UI-06 B-31)
     if (!em) return;
 
     set('crowd-dot-color', em.dotColor);
@@ -914,6 +915,42 @@ export const crowdsMixin = {
 
     // Chip text follows crowd selection/name via the UIController's own
     // crowd listeners; nothing to do here beyond the controls.
+  },
+
+  /**
+   * A crowd with no emitter has nothing for the Dots, Release and Motion
+   * cards to edit (UI-06 B-31): they are disabled under a line that says so,
+   * which their headers are described by, and the previous crowd's values are
+   * cleared from the parts that are built, not set. Their hints' "?" triggers
+   * stay enabled, so what each control does can still be read (Codex r3), as
+   * a disabled control keeps its help (ParamTooltip.js). A crowd with an
+   * emitter has them back; the busyness editor then sets its own buttons'
+   * state.
+   * @param {boolean} hasEmitter
+   * @private
+   */
+  _syncCrowdEmptyState(hasEmitter) {
+    const line = document.getElementById('crowd-no-emitter');
+    if (line) line.hidden = hasEmitter;
+    const scope = document.getElementById('crowd-scope');
+    for (const name of ['dots', 'release', 'motion']) {
+      const section = scope?.querySelector(`.settings-section[data-section="${name}"]`);
+      if (!section) continue;
+      const header = section.querySelector('.section-header');
+      if (hasEmitter) header?.removeAttribute('aria-describedby');
+      else header?.setAttribute('aria-describedby', 'crowd-no-emitter');
+      for (const control of section.querySelectorAll('.section-content input, .section-content select, .section-content button:not(.param-hint-trigger)')) {
+        control.disabled = !hasEmitter;
+      }
+      // The swatches' own fieldset too, so they look it (the lead's pane
+      // finding, round 2): .swatch-fieldset:disabled is what greys them.
+      for (const fieldset of section.querySelectorAll('.section-content .swatch-fieldset')) {
+        fieldset.disabled = !hasEmitter;
+      }
+    }
+    if (hasEmitter) return;
+    document.getElementById('crowd-busyness-graph')?.replaceChildren();
+    document.getElementById('crowd-busyness-handles')?.replaceChildren();
   },
 
   /**

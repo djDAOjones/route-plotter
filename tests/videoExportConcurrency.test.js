@@ -20,8 +20,9 @@
  * given back as a dialog closes, a size or mode change) is refused too.
  */
 
+import { setTimeout as realDelay } from 'node:timers/promises';
 import { afterEach, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
@@ -40,13 +41,18 @@ afterEach(() => {
  * it finish. Each frame it asks for records how it was drawn.
  */
 async function exportingApp() {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   await app.ready;
   // The welcome dialog's focus trap would take the Escape a test presses.
   document.getElementById('splash-close').click();
   expect(await loadSnapshot(app, authoredExtrasProject())).toBe(true);
   vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+  // No export opens a browser dialog (UI-06 B-18): what the author is told is a toast.
   vi.stubGlobal('alert', vi.fn());
+  const told = [];
+  app.eventBus.on('ui:toast', toast => told.push(toast));
   const frames = [];
   let started;
   let hold = null;
@@ -84,12 +90,25 @@ async function exportingApp() {
       }
     },
   };
-  return { app, frames, running, finish: () => hold?.resolve() };
+  return { app, frames, running, told, finish: () => hold?.resolve() };
 }
+
+/** The toast a video export refused for its route is (UI-06 B-18). */
+const VIDEO_REFUSED = { message: 'Export MP4 and WebM need at least 2 waypoints.', priority: 'assertive' };
 
 /** Whether each export control is disabled: MP4, WebM, HTML and the menu. */
 const exportButtons = () => ['export-mp4-btn', 'export-webm-btn', 'export-html-btn', 'export-dropdown-btn']
   .map(id => document.getElementById(id).disabled);
+/**
+ * The controls free of an export: the state the project allows each (UI-06
+ * B-18). The authored-extras project has no background, so Export HTML stays
+ * disabled, with its reason, however the export ended.
+ */
+const FREE = [false, false, true, false];
+/** The controls free of an export for a project that has a background: every item. */
+const ALL_FREE = [false, false, false, false];
+/** The header's status line, where an export's progress goes (UI-06 J-18). */
+const statusLine = () => document.getElementById('app-status').textContent;
 
 const codecDialogShown = () => document.getElementById('codec-unsupported-modal').style.display === 'flex';
 
@@ -135,14 +154,17 @@ test('a second export asked for while one runs is refused before it touches anyt
   await running;
   const size = { width: app.canvas.width, height: app.canvas.height };
   expect(size).toEqual({ width: app.exportSettings.resolutionX, height: app.exportSettings.resolutionY });
+  // The progress is the status line's; the toggle keeps its words (UI-06 J-18).
   const progress = document.getElementById('export-dropdown-btn');
-  expect(progress.textContent).toBe('Exporting... 10% · Esc to cancel');
+  expect(statusLine()).toBe('Exporting MP4 10% · Esc to cancel');
+  expect(progress.textContent).toBe(label);
   const unchanged = watchRunningExport(app);
 
   await app.exportVideo();
 
   unchanged();
-  expect(progress.textContent).toBe('Exporting... 10% · Esc to cancel');
+  expect(statusLine()).toBe('Exporting MP4 10% · Esc to cancel');
+  expect(progress.textContent).toBe(label);
   expect(app._isExportMode).toBe(true);
   expect({ width: app.canvas.width, height: app.canvas.height }).toEqual(size);
   expect(exportButtons()).toEqual([true, true, true, true]);
@@ -154,9 +176,9 @@ test('a second export asked for while one runs is refused before it touches anyt
   expect(frames).toEqual(Array(3).fill({ exportMode: true, ...size, background: 'hidden' }));
   expect(announce).toHaveBeenLastCalledWith('Video export complete');
   expect(app._isExportMode).toBe(false);
-  expect(exportButtons()).toEqual([false, false, false, false]);
-  // The menu shows its own label again
+  expect(exportButtons()).toEqual(FREE);
   expect(progress.textContent).toBe(label);
+  expect(statusLine()).toBe('Export complete');
 
   // And the next export, asked for once this one has ended, runs.
   const next = app.exportVideo();
@@ -376,22 +398,31 @@ test('an MP4 probe still out when an export starts another way asks for nothing 
 });
 
 test.each([
-  ['WebM is chosen', () => document.getElementById('export-webm-btn').click()],
-  ['WebM is asked for through the bus', app => app.eventBus.emit('video:export-request', 'webm')],
-  ['an export is asked for directly', app => { void app.exportVideo(); }],
-])('an MP4 probe still out when %s asks for nothing, though that export could not start', async (_, request) => {
-  const { app } = await exportingApp();
-  expect(await loadSnapshot(app, { coordVersion: 9, waypoints: [{ id: 'only', imgX: 0.5, imgY: 0.5, isMajor: true }] })).toBe(true);
+  // The WebM item is disabled for a route of one (UI-06 B-18), so its click
+  // is no request at all: the probe stays the latest, and its answer asks for
+  // the export, which is refused once. A request by another route is refused
+  // at once, and the probe's answer then asks for nothing.
+  ['WebM is chosen', () => document.getElementById('export-webm-btn').click(), 0],
+  ['WebM is asked for through the bus', app => app.eventBus.emit('video:export-request', 'webm'), 1],
+  ['an export is asked for directly', app => { void app.exportVideo(); }, 1],
+])('an MP4 probe still out when %s asks for nothing, though that export could not start', async (_, request, refusedAtOnce) => {
+  const { app, told } = await exportingApp();
   let answer;
   vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockImplementationOnce(() => new Promise((resolve) => { answer = resolve; }));
+  const refused = () => told.filter(toast => toast.message === VIDEO_REFUSED.message);
 
   document.getElementById('export-mp4-btn').click();
+  // The route loses all but one waypoint while the probe is out (the items
+  // are disabled from here, UI-06 B-18; the snapshot of one the test loaded
+  // before would have disabled Export MP4 too, and started no probe).
+  while (app.waypoints.length > 1) app.eventBus.emit('waypoint:delete', app.waypoints.at(-1));
   request(app);
-  expect(alert).toHaveBeenCalledTimes(1);
+  expect(refused()).toHaveLength(refusedAtOnce);
   answer({ codec: 'avc1' });
   await answered();
 
-  expect(alert).toHaveBeenCalledTimes(1);
+  expect(refused()).toEqual([VIDEO_REFUSED]);
+  expect(alert).not.toHaveBeenCalled();
 });
 
 /** Every way to put a codec dialog away without choosing. */
@@ -537,7 +568,7 @@ test('an export request whose notice to the export controls throws holds no expo
   await expect(app.exportVideo()).rejects.toThrow('the notice failed');
 
   expect(app._videoExportRunning).toBeFalsy();
-  expect(exportButtons()).toEqual([false, false, false, false]);
+  expect(exportButtons()).toEqual(FREE);
   const next = app.exportVideo();
   await vi.waitFor(() => expect(frames).toHaveLength(1));
   finish();
@@ -645,7 +676,7 @@ test('Escape cancels a running export, which puts everything back, and the next 
   expect(announce).toHaveBeenLastCalledWith('Video export cancelled');
   expect(alert).not.toHaveBeenCalled();
   expect(app._isExportMode).toBe(false);
-  expect(exportButtons()).toEqual([false, false, false, false]);
+  expect(exportButtons()).toEqual(FREE);
   const next = app.exportVideo();
   await vi.waitFor(() => expect(frames).toHaveLength(2));
   finish();
@@ -662,18 +693,20 @@ test.each([
   }],
   ['its route has no duration', (app) => {
     const timing = vi.spyOn(app, 'invalidateAnimationTiming').mockReturnValue(0);
-    return { message: 'Animation duration is zero. Please check your waypoints.', undo: () => timing.mockRestore() };
+    return { message: 'Nothing to export: the animation has no duration.', undo: () => timing.mockRestore() };
   }],
 ])('an export that ends early because %s leaves the next one free to run', async (_, arrange) => {
-  const { app, frames, finish } = await exportingApp();
+  const { app, frames, told, finish } = await exportingApp();
   const { message, undo } = arrange(app);
 
   await app.exportVideo();
 
-  expect(alert).toHaveBeenLastCalledWith(message);
+  // Told as a toast the author must hear, not a browser dialog (UI-06 B-18).
+  expect(told.at(-1)).toEqual({ message, priority: 'assertive' });
+  expect(alert).not.toHaveBeenCalled();
   // (An export with no duration never enters export mode.)
   expect(Boolean(app._isExportMode)).toBe(false);
-  expect(exportButtons()).toEqual([false, false, false, false]);
+  expect(exportButtons()).toEqual(FREE);
   expectTransportFree(app);
   undo();
   const next = app.exportVideo();
@@ -723,7 +756,7 @@ test('an export asked for from focus given back as another export closes a codec
   expect(nested).toHaveLength(1);
   expect(encode).toHaveBeenCalledTimes(1);
   expect(frames).toEqual(Array(3).fill({ exportMode: true, width: 3840, height: 2160, background: 'hidden' }));
-  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
+  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, FREE]);
 });
 
 test('a request through the bus from focus given back as an export starts, in Edit, is refused before it shows its tip about Preview', async () => {
@@ -786,7 +819,7 @@ test('an export asked for while another is cleaned up, as the mode it began in i
   expect(nested).toHaveLength(1);
   expect(encode).toHaveBeenCalledTimes(1);
   expect(frames).toHaveLength(3);
-  expect([app.previewMode, app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, false, [false, false, false, false]]);
+  expect([app.previewMode, app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, false, FREE]);
 });
 
 test('Export MP4 clicked while its codec dialog is open, whose closing lets another export start first, asks for nothing, not even a probe', async () => {
@@ -810,7 +843,7 @@ test('Export MP4 clicked while its codec dialog is open, whose closing lets anot
 });
 
 test('Export MP4 clicked while its codec dialog is open, whose closing asks for an export that cannot start, asks for nothing, not even a probe', async () => {
-  const { app } = await openDialog(DIALOGS[1][1]);
+  const { app, told } = await openDialog(DIALOGS[1][1]);
   const encode = vi.spyOn(app.videoExporter, 'export');
   // As the dialog closes, a request finds one waypoint left, and is refused
   // for it: the click, asked for before it, is no longer the latest
@@ -826,7 +859,9 @@ test('Export MP4 clicked while its codec dialog is open, whose closing asks for 
   await answered();
 
   expect(nested).toHaveLength(1);
-  expect(alert).toHaveBeenCalledWith('Please add at least 2 waypoints before exporting.');
+  // Refused as a toast the author must hear, not a browser dialog (UI-06 B-18).
+  expect(told).toContainEqual(VIDEO_REFUSED);
+  expect(alert).not.toHaveBeenCalled();
   expect(VideoExporter._testWebCodecsConfig.mock.calls.length, 'a probe for a click a later request superseded').toBe(probed);
   expect(encode).not.toHaveBeenCalled();
   expect([app._videoExportRunning, codecDialogShown()]).toEqual([false, false]);
@@ -930,7 +965,8 @@ test.each([
     await first;
   }
 
-  expect([app._videoExportRunning, exportButtons()]).toEqual([false, [false, false, false, false]]);
+  // This project was given a background, so Export HTML is free too (UI-06 B-18).
+  expect([app._videoExportRunning, exportButtons()]).toEqual([false, ALL_FREE]);
   expect(document.getElementById('export-dropdown-btn').textContent).toBe(label);
   expect(app.background.image).toBe(image);
   expect(app.animationEngine.state.captureTransportState()).toEqual(transport);
@@ -999,7 +1035,7 @@ test.each([
 
   expect(nested).toHaveLength(1);
   expect(encode).toHaveBeenCalledTimes(1);
-  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
+  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, FREE]);
 });
 
 test('an export whose clean-up fails at two steps reports both, puts back the rest, and Export MP4 then exports MP4', async () => {
@@ -1016,7 +1052,7 @@ test('an export whose clean-up fails at two steps reports both, puts back the re
 
   expect(error).toBeInstanceOf(AggregateError);
   expect(error.errors).toEqual([exitFailed, redrawFailed]);
-  expect([app._videoExportRunning, exportButtons()]).toEqual([false, [false, false, false, false]]);
+  expect([app._videoExportRunning, exportButtons()]).toEqual([false, FREE]);
   const encode = vi.spyOn(app.videoExporter, 'export');
   const probe = vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue({ codec: 'avc1' });
   const drawn = frames.length;
@@ -1075,21 +1111,23 @@ test.each([
   expect(listening()).toEqual(before);
   expect(app.animationEngine.state.captureTransportState()).toEqual(transport);
   expectTransportFree(app);
-  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
+  // This project was given a background, so Export HTML is free too (UI-06 B-18).
+  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, ALL_FREE]);
 });
 
 test('after an MP4 export whose encoder failed, the next click on Export MP4 asks the encoder again and exports MP4', async () => {
   // Through the button both times: a WebM export, or one started directly,
   // in between would free a controller the failure had left holding
-  const { app, frames, finish } = await exportingApp();
+  const { app, frames, told, finish } = await exportingApp();
   allowConsole(/Video export failed/);
   const probe = vi.spyOn(VideoExporter, '_testWebCodecsConfig').mockResolvedValue({ codec: 'avc1' });
   const encode = vi.spyOn(app.videoExporter, 'export').mockRejectedValueOnce(new Error('the encoder failed'));
 
   document.getElementById('export-mp4-btn').click();
-  await vi.waitFor(() => expect(alert).toHaveBeenLastCalledWith('Export failed: the encoder failed'));
+  // Told as a toast the author must hear, not a browser dialog (UI-06 B-18).
+  await vi.waitFor(() => expect(told.at(-1)).toEqual({ message: 'Export failed: the encoder failed', priority: 'assertive' }));
   await vi.waitFor(() => expect(app._videoExportRunning).toBe(false));
-  expect(exportButtons()).toEqual([false, false, false, false]);
+  expect(exportButtons()).toEqual(FREE);
   const [probes, drawn] = [probe.mock.calls.length, frames.length];
 
   document.getElementById('export-mp4-btn').click();
@@ -1125,21 +1163,25 @@ test.each([
     expect(app.animationEngine.state.captureTransportState()).toEqual(transport);
     expectTransportFree(app);
   }
-  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, [false, false, false, false]]);
+  expect([app._videoExportRunning, app._isExportMode, exportButtons()]).toEqual([false, false, FREE]);
 });
 
-test('an export paused and resumed says so, each in turn, and shows it on its menu', async () => {
+test('an export paused and resumed says so, each in turn, and shows it in the status line, never on its menu', async () => {
   const { app, running, finish } = await exportingApp();
   const said = vi.spyOn(app, 'announce');
   const menu = document.getElementById('export-dropdown-btn');
+  const label = menu.textContent;
   const done = app.exportVideo();
   await running;
 
+  // The status line carries the state; the toggle keeps its words (UI-06 J-18).
   app.eventBus.emit('video:export-paused');
-  expect(menu.textContent).toBe('Export paused — return to tab');
+  expect(statusLine()).toBe('Export paused — return to this tab');
+  expect(menu.textContent).toBe(label);
   expect(said).toHaveBeenLastCalledWith('Video export paused. Return to this tab to resume.');
   app.eventBus.emit('video:export-resumed');
-  expect(menu.textContent).toBe('Exporting...');
+  expect(statusLine()).toBe('Exporting MP4 10% · Esc to cancel');
+  expect(menu.textContent).toBe(label);
   expect(said).toHaveBeenLastCalledWith('Video export resumed');
   finish();
   await done;
@@ -1265,4 +1307,13 @@ test.each(['full', 'reduced'].flatMap(stage => ['can', 'cannot'].map(answer => [
   expect(observed).toEqual({ probes: 0, shown: false, inert: false, encodings: 1 });
   expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['webm', 'mp4']);
   expect(frames).toHaveLength(6);
+});
+
+test('an app booted for these tests has the start\'s tip seen: on the real clock, it never lands in one (UI-06, Codex r2)', async () => {
+  // The tip waits 1.5 s on the real clock from the boot (`_showPreviewTipToast`);
+  // a test that pins what is shown or said must not outlast it unmarked.
+  const { app } = await exportingApp();
+  const shown = vi.spyOn(app, 'showToast');
+  await realDelay(1600);
+  expect(shown.mock.calls.map(([message]) => message).filter(message => /^Tip: /.test(message))).toEqual([]);
 });

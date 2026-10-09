@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { contextFor } from './setup.js';
-import { bootApp, retireApp } from './helpers/bootApp.js';
+import { bootApp, retireApp, tipSeen } from './helpers/bootApp.js';
 import { ANNOUNCEMENTS } from '../src/config/constants.js';
 
 /**
@@ -55,6 +55,8 @@ describe('the whole app boots (TST-01)', () => {
     // The startup pause replaced "Previous session restored" a few
     // milliseconds after it was announced. Announcements are recorded, not
     // read back, because the live region clears itself after two seconds.
+    // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+    localStorage.getItem.mockImplementation(tipSeen());
     const first = await bootApp();
     await first.ready;
     first.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
@@ -188,6 +190,24 @@ describe('the harness lets a stopped app go, and only that (UI-06)', () => {
     expect(tooltip.textContent).toMatch(/^Total animation playback time/);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(tooltip.style.display).toBe('none');
+  });
+
+  test('a second boot in one test leaves no live trap from the first: its splash cannot take the next Escape (UI-06, Codex r1)', async () => {
+    // Each boot replaces the shell. An app booted before it, its splash
+    // still open, kept its trap's listeners on the window and the document,
+    // detached from any dialog the author can see, and took the Escape meant
+    // for the dialog in front of them.
+    const first = await bootApp();
+    await first.ready;
+    await vi.waitFor(() => expect(first._splashFocusTrap.isActive).toBe(true));
+    const second = await bootApp();
+    await second.ready;
+    await vi.waitFor(() => expect(second._splashFocusTrap.isActive).toBe(true));
+
+    expect(first._splashFocusTrap.isActive).toBe(false);
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    expect(document.getElementById('splash').style.display).toBe('none');
+    expect(second._splashFocusTrap.isActive).toBe(false);
   });
 
   test('a stopped app’s own context is released: read, drawn on or restyled, it says so', async () => {

@@ -660,13 +660,10 @@ export class InteractionHandler {
     this.eventBus.emit('waypoint:check-at-position', { x, y }, (waypoint) => {
       if (waypoint) {
         // Shift+click on waypoint: delete it. Stays instant by decision
-        // 2026-08-18 — the toast advertises undo instead of a confirm
+        // 2026-08-18 — the delete's own toast advertises undo instead of a
+        // confirm (raised by the delete, whichever route asks: UI-06 J-05)
         if (isShiftClick) {
-          const label = waypoint.name || 'waypoint';
           this.eventBus.emit('waypoint:delete', waypoint);
-          this.eventBus.emit('ui:toast', {
-            message: `Deleted ${label} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
-          });
         } else if (isMetaClick) {
           // Cmd/Ctrl+click on a waypoint: toggle it in or out of the
           // multi-selection (on empty canvas the same modifier still

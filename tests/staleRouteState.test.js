@@ -14,8 +14,8 @@
  * in either timing mode.
  */
 
-import { describe, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { buildExampleProjects } from '../src/examples/index.js';
@@ -24,6 +24,12 @@ import { ANIMATION, STORAGE } from '../src/config/constants.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 
 const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+
+afterEach(() => {
+  // `clearMocks` keeps an implementation: the tip that `opened()` marks seen would
+  // otherwise be read by every boot after it (UI-06, Codex r2).
+  localStorage.getItem.mockImplementation(() => null);
+});
 
 /**
  * The open day example, branched, with a grow beacon on one waypoint, and the
@@ -435,6 +441,8 @@ const threeStops = ({ pausing = true } = {}) => authoredConstantTime([
 
 /** An app with `project` open, in Preview or Edit. */
 async function opened(project, { preview = true } = {}) {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   await app.ready;
   expect(await loadSnapshot(app, project)).toBe(true);
@@ -836,7 +844,8 @@ test('a branch end dropped on a minor, its rejoin refused, is back where it was,
   expect(work).toEqual({ built: 1, timed: 1, toasts: 1 });
   expect(end).toMatchObject({ ...start, branchRejoin: 'end' });
   expect({ dirty: app._isDirty, revision: app._editRevision, history: app.undoService.createSnapshot() }).toEqual(before);
-  expect(announced).not.toHaveBeenCalled();
+  // Said once: the refusal's toast is its announcement (UI-06 J-05).
+  expect(announced).toHaveBeenCalledTimes(1);
   expect(saving).not.toHaveBeenCalled();
 
   const saved = await savedProject(app);
@@ -919,7 +928,9 @@ describe.each([
     expect(recorded).toHaveBeenCalledTimes(1);
     expect(saving).toHaveBeenCalledTimes(1);
     expect(app._editRevision - revision).toBe(1);
-    expect(announced.mock.calls).toEqual([[message]]);
+    // The toast is the announcement, at its priority: one message, heard once (UI-06 J-05);
+    // before it, the opened project's first change, heard once (the owner, 2026-10-09).
+    expect(announced.mock.calls).toEqual([['Unsaved changes'], [message, 'polite']]);
     localStorage.setItem.mockClear();
     app.storageService.flushAutoSave();
     const writes = localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY);
@@ -1293,4 +1304,13 @@ test.each(['Preview', 'Edit'].flatMap(mode => ['made', 'cleared'].flatMap(action
   for (const [where, snapshot] of [['recovery', recovery], ['the saved file', saved]]) {
     expect(await reopenedDuration(snapshot), `${where}, reopened`).toBeCloseTo(expected, 6);
   }
+});
+
+/**
+ * The tests above mark the start's tip seen before their boots; `clearMocks`
+ * keeps that implementation, so without a reset every later boot read it too,
+ * seen or unseen by test order (UI-06, Codex r2).
+ */
+test('no test inherits another\'s storage: a boot that does not mark the start\'s tip finds it unseen (Codex r2)', () => {
+  expect(localStorage.getItem('routePlotter_previewTipDismissed')).toBeNull();
 });

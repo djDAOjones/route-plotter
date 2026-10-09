@@ -25,14 +25,16 @@
  * whether a screen reader speaks it needs a real one.
  */
 
+import { setTimeout as realDelay } from 'node:timers/promises';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { ANNOUNCEMENTS, STORAGE } from '../src/config/constants.js';
 import { EventBus } from '../src/core/EventBus.js';
 import { UIController } from '../src/controllers/UIController.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { createAnnouncementQueue } from '../src/utils/announcementQueue.js';
+import { VideoExporter } from '../src/services/VideoExporter.js';
 
 const HOLD = ANNOUNCEMENTS.HOLD_MS;
 const PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
@@ -40,6 +42,7 @@ const BACKGROUND_WARNING = 'Browser recovery excludes the background. Save a pro
 const IMAGES_WARNING = 'Browser recovery excludes custom images. Save a project file to preserve them.';
 const BOTH_WARNING = 'Browser recovery excludes the background and custom images. Save a project file to preserve them.';
 const AUTOSAVE_FAILED = 'Auto-save failed. Save a project file to keep your work.';
+const BOOT_TIP = 'Tip: Check your sequence in Preview mode before exporting';
 
 // The queue's timers and the history's stamps; everything else runs as booted.
 const FAKE_CLOCK = { toFake: ['setTimeout', 'clearTimeout', 'Date'] };
@@ -98,6 +101,8 @@ async function settle(promise) {
 
 /** A booted app with nothing announced (DEF-33), on the fake clock from here. */
 async function bootIdleApp() {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   await app.ready;
   vi.useFakeTimers(FAKE_CLOCK);
@@ -169,14 +174,18 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     expect(app.background.image).toBeTruthy();
     await playOut();
 
+    // The start's tip follows, once both have had their time (the owner, 2026-10-09).
     expect(since(shown)).toEqual([
       [0, BACKGROUND_WARNING],
       [HOLD, 'Previous session restored'],
-      [2 * HOLD, ''],
+      [2 * HOLD, BOOT_TIP],
+      [3 * HOLD, ''],
     ]);
   });
 
   test('opening a project whose recovery leaves out its background shows the warning, then "Project loaded", each for its time', async () => {
+    // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+    localStorage.getItem.mockImplementation(tipSeen());
     const app = await bootApp();
     await app.ready;
     const project = app._buildProjectSnapshot({ includeAssets: false });
@@ -193,6 +202,20 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     expect(since(shown).map(([at]) => at)).toEqual(shown.map((_, turn) => turn * HOLD));
     // and the warning is written before "Project loaded" instead of under it.
     expect(shown.slice(-3).map(([, text]) => text)).toEqual([BACKGROUND_WARNING, 'Project loaded', '']);
+  });
+
+  test('an app booted idle stays idle once the start\'s tip would be due: the tip, on the real clock, never lands in a test (UI-06, CI on 882123d)', async () => {
+    // The tip waits 1.5 s on the real clock from the boot (`_showPreviewTipToast`).
+    // A slow runner let a test outlast it, and the tip was read in the middle of
+    // what the test pinned. The one real wait in this file: just past it.
+    await bootIdleApp();
+    const { region, shown } = recordRegion();
+
+    await realDelay(1600);
+    await playOut();
+
+    expect(shown).toEqual([]);
+    expect(region.textContent).toBe('');
   });
 
   test('an earlier message’s clear does not blank a later one early', async () => {
@@ -550,6 +573,105 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     expect(region.textContent).toBe('  Waypoint moved \n');
   });
 
+  test('an assertive message merged into the same text waiting politely promotes it ahead of the polite messages; the one showing keeps its hold (UI-06, Codex r1)', async () => {
+    vi.useFakeTimers(FAKE_CLOCK);
+    const region = document.createElement('div');
+    const queue = createAnnouncementQueue(region);
+    const state = () => [region.textContent, region.getAttribute('aria-live')];
+
+    const turns = async (count) => {
+      const seen = [state()];
+      for (let turn = 0; turn < count; turn += 1) {
+        await vi.advanceTimersByTimeAsync(HOLD);
+        seen.push(state());
+      }
+      return seen;
+    };
+
+    queue.announce('Saving project...');
+    queue.announce('Waypoint moved');
+    queue.announce('Export failed: the encoder stopped.');
+    // The error said again, as an error: it waits once, as the error it is.
+    queue.announce('Export failed: the encoder stopped.', 'assertive');
+    expect(await turns(3)).toEqual([
+      ['Saving project...', 'polite'],
+      ['Export failed: the encoder stopped.', 'assertive'],
+      ['Waypoint moved', 'polite'],
+      ['', 'polite'],
+    ]);
+
+    // The text showing, said again assertively, is neither cut short nor said again.
+    queue.announce('Export failed: the encoder stopped.');
+    queue.announce('Export failed: the encoder stopped.', 'assertive');
+    expect(await turns(1)).toEqual([
+      ['Export failed: the encoder stopped.', 'polite'],
+      ['', 'polite'],
+    ]);
+  });
+
+  test('a message marked whenIdle waits until nothing else shows or waits: it cuts nothing short, displaces nothing, and later messages go ahead of it (UI-06; the owner, 2026-10-09)', async () => {
+    vi.useFakeTimers(FAKE_CLOCK);
+    const region = document.createElement('div');
+    const queue = createAnnouncementQueue(region);
+    const seen = [];
+    const turns = async (count) => {
+      for (let turn = 0; turn < count; turn += 1) {
+        seen.push(region.textContent);
+        await vi.advanceTimersByTimeAsync(HOLD);
+      }
+      seen.push(region.textContent);
+    };
+
+    queue.announce('Previous session restored', 'polite', { essential: true });
+    queue.announce('A tip', 'polite', { whenIdle: true });
+    // A burst past the cap of routine messages: the tip is not one of them.
+    for (const message of ['Playing animation', 'Animation paused', 'Undo']) queue.announce(message);
+    await turns(5);
+    expect(seen).toEqual(['Previous session restored', 'Playing animation', 'Animation paused', 'Undo', 'A tip', '']);
+
+    // With nothing showing, it is written at once.
+    seen.length = 0;
+    queue.announce('Another tip', 'polite', { whenIdle: true });
+    await turns(1);
+    expect(seen).toEqual(['Another tip', '']);
+  });
+
+  test('messages announced under a key are withdrawn together while they wait; the one showing keeps its hold, and nothing else moves (UI-06, Codex r2)', async () => {
+    vi.useFakeTimers(FAKE_CLOCK);
+    const region = document.createElement('div');
+    const queue = createAnnouncementQueue(region);
+    const seen = [];
+    const turns = async (count) => {
+      for (let turn = 0; turn < count; turn += 1) {
+        seen.push(region.textContent);
+        await vi.advanceTimersByTimeAsync(HOLD);
+      }
+      seen.push(region.textContent);
+    };
+    const thisExport = Symbol('this export');
+    const another = Symbol('another export');
+
+    queue.announce('Starting video export — press Esc to cancel');
+    queue.announce('Exporting MP4 25%', 'polite', { key: thisExport });
+    queue.announce('Waypoint moved');
+    queue.announce('Exporting MP4 50%', 'polite', { key: thisExport });
+    queue.withdraw(thisExport);
+    queue.announce('Exporting WebM 25%', 'polite', { key: another });
+    queue.announce('Video export cancelled');
+    await turns(4);
+    expect(seen).toEqual(['Starting video export — press Esc to cancel', 'Waypoint moved', 'Exporting WebM 25%', 'Video export cancelled', '']);
+
+    // What is showing was written already: it is not withdrawn. A keyed
+    // message another caller asked for too is no longer the key's alone.
+    seen.length = 0;
+    queue.announce('Exporting MP4 75%', 'polite', { key: thisExport });
+    queue.announce('Saving project...', 'polite', { key: thisExport });
+    queue.announce('Saving project...');
+    queue.withdraw(thisExport);
+    await turns(2);
+    expect(seen).toEqual(['Exporting MP4 75%', 'Saving project...', '']);
+  });
+
   test('a queue without a live region announces nothing, and does not throw', () => {
     const queue = createAnnouncementQueue(null);
     expect(() => queue.announce('Waypoint moved')).not.toThrow();
@@ -663,13 +785,45 @@ describe('what browser recovery did or could not do reaches the region, whatever
     press(app, 'play', 'pause', 'play', 'pause');
     await playOut();
 
+    // The start's tip follows all of it, and displaces none of it (the owner, 2026-10-09).
     expect(since(shown)).toEqual([
       [0, BACKGROUND_WARNING],
       [HOLD, outcome],
       [2 * HOLD, 'Animation paused'],
       [3 * HOLD, 'Playing animation'],
       [4 * HOLD, 'Animation paused'],
-      [5 * HOLD, ''],
+      [5 * HOLD, BOOT_TIP],
+      [6 * HOLD, ''],
+    ]);
+  });
+
+  test('the boot tip is spoken after the start-up recovery messages, however long the restore takes, and displaces none of them (UI-06; the owner, 2026-10-09)', async () => {
+    const legacy = await legacyRecoveryPoint();
+    // The restore's background decodes only when told: after the tip's 1.5 s.
+    const decode = ImageAsset.decodeDataURL;
+    let release = null;
+    vi.spyOn(ImageAsset, 'decodeDataURL').mockImplementationOnce((...args) => new Promise((resolve) => {
+      release = () => resolve(decode.apply(ImageAsset, args));
+    }));
+    const app = await bootRestoring(legacy);
+    const { shown } = recordRegion();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(release).toEqual(expect.any(Function));
+    expect(shown).toEqual([]);
+    release();
+    expect(await settle(app.ready)).toBe(true);
+    // The author plays and pauses at once, as in the restore above.
+    press(app, 'play', 'pause', 'play', 'pause');
+    await playOut();
+
+    expect(since(shown)).toEqual([
+      [0, BACKGROUND_WARNING],
+      [HOLD, 'Previous session restored'],
+      [2 * HOLD, 'Animation paused'],
+      [3 * HOLD, 'Playing animation'],
+      [4 * HOLD, 'Animation paused'],
+      [5 * HOLD, BOOT_TIP],
+      [6 * HOLD, ''],
     ]);
   });
 
@@ -773,6 +927,42 @@ describe('what browser recovery did or could not do reaches the region, whatever
     expect(clearedAt - stopped).toBeLessThanOrEqual((1 + ANNOUNCEMENTS.MAX_WAITING + 1) * HOLD);
   });
 
+  test('the start\'s tip arriving during twelve Site walk openings is read after the last one\'s warning, and the region clears one hold later (UI-06; the owner, 2026-10-09)', async () => {
+    // Tips are "queued after the start-up recovery messages so they never cut
+    // in" (the owner): one shown in the middle of the burst waits for the end.
+    const app = await bootIdleApp();
+    const serveRepository = globalThis.fetch;
+    globalThis.fetch = vi.fn(input => serveRepository(String(input).replace(/^examples\//, 'docs/examples/')));
+    const opening = vi.spyOn(app, 'loadExampleProject');
+    const siteWalk = [...document.querySelectorAll('#example-projects-menu button')]
+      .find(item => item.textContent === 'Site walk');
+    const { shown } = recordRegion();
+
+    for (let click = 0; click < 12; click += 1) {
+      if (click) await vi.advanceTimersByTimeAsync(1000);
+      // Shown as `_showPreviewTipToast` shows it, on the test's clock.
+      if (click === 6) app.showToast(BOOT_TIP, 8000, null, { whenIdle: true });
+      siteWalk.click();
+      expect(await settle(opening.mock.results.at(-1).value)).toBe(true);
+    }
+    const stopped = Date.now();
+    await playOut();
+
+    // The warning still waits once for all the openings, and is read after the last;
+    const warnings = shown.filter(([, text]) => text === BACKGROUND_WARNING).map(([at]) => at);
+    expect(warnings.filter(at => at > stopped)).toHaveLength(1);
+    // the tip is read once, after it, last;
+    const tips = shown.filter(([, text]) => text === BOOT_TIP).map(([at]) => at);
+    expect(tips).toHaveLength(1);
+    expect(tips[0]).toBeGreaterThan(warnings.at(-1));
+    expect(shown.at(-2)[1]).toBe(BOOT_TIP);
+    // and the region is clear within a hold for the message showing, one for
+    // each that may wait, and one for the tip.
+    const [clearedAt, cleared] = shown.at(-1);
+    expect(cleared).toBe('');
+    expect(clearedAt - stopped).toBeLessThanOrEqual((1 + ANNOUNCEMENTS.MAX_WAITING + 1 + 1) * HOLD);
+  });
+
   test('Clear All\'s warning that recovery could not be cleared is shown though a burst of routine messages follows it', async () => {
     const app = await bootIdleApp();
     vi.spyOn(app.storageService, 'clearAutoSave').mockReturnValue(false);
@@ -795,5 +985,59 @@ describe('what browser recovery did or could not do reaches the region, whatever
       [4 * HOLD, 'Waypoint duplicated'],
       [5 * HOLD, ''],
     ]);
+  });
+});
+
+/**
+ * Codex r2: an export's spoken progress (25, 50 and 75 %) waits its turn like
+ * any message, and outlived the export: cancelled while the start's message
+ * still held the region, the queue went on to read "25%" and "50%" before
+ * "Video export cancelled". Progress belongs to its export; when the export
+ * ends, however it ends, what of it still waits is withdrawn.
+ */
+describe('an export\'s progress belongs to it (UI-06 J-18, Codex r2)', () => {
+  const START = 'Starting video export — press Esc to cancel';
+
+  test.each([
+    ['is cancelled with Escape', 'Video export cancelled', (reject) => {
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      expect(reject).toHaveBeenCalledOnce();
+    }],
+    ['fails', 'Export failed: the encoder failed', reject => reject(new Error('the encoder failed'))],
+    ['finishes', 'Video export complete', (reject, resolve) => resolve(new Blob(['video']))],
+  ])('an export that %s while its first two marks wait behind the start: neither is written, and its end is', async (_, end, finish) => {
+    const app = await bootIdleApp();
+    document.getElementById('splash-close').click();
+    app.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
+    await playOut();
+    allowConsole(/Video export failed/);
+    vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+    const announce = vi.spyOn(app, 'announce');
+    let pending;
+    const reject = vi.fn(error => pending.reject(error));
+    app.videoExporter = {
+      export: ({ onProgress }) => new Promise((resolve, rejectExport) => {
+        pending = { resolve, reject: rejectExport };
+        onProgress(25);
+        onProgress(50);
+      }),
+      cancel: () => reject(new Error('Export cancelled')),
+    };
+    const { region, shown } = recordRegion();
+
+    const exported = app.exportVideo({ format: 'mp4' });
+    await vi.advanceTimersByTimeAsync(0);
+    // Both were said, and wait behind the start, which still holds the region.
+    expect(announce.mock.calls.map(([message]) => message)).toEqual(expect.arrayContaining(['Exporting MP4 25%', 'Exporting MP4 50%']));
+    expect(region.textContent).toBe(START);
+
+    finish(reject, value => pending.resolve(value));
+    await settle(exported);
+    await playOut();
+
+    const written = shown.map(([, text]) => text);
+    expect(written.filter(text => /^Exporting /.test(text))).toEqual([]);
+    expect(written.slice(written.indexOf(START))).toEqual([START, end, '']);
   });
 });

@@ -305,9 +305,9 @@ at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · autosave
       · queued render
-      said "Branch now ends here"
       ui:toast {message: "Branch now ends here"}
         toast "Branch now ends here"
+        said "Branch now ends here"
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-b1"}  (digest 2ed93789)
   model:
     ~ runtime.dirty: false -> true

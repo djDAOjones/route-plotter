@@ -22,6 +22,7 @@
  */
 import { downloadText } from './privacy.js';
 import { STORAGE } from '../config/constants.js';
+import { createFocusTrap } from '../utils/focusTrap.js';
 
 const HEADING = {
   now: "Your previous session couldn't be restored.",
@@ -424,7 +425,22 @@ export function setupUnrestoredNotice(app) {
     if (!offer) return;
     downloadText(offer.text, 'application/json', 'route-plotter-unrestored-session.json');
   });
-  document.getElementById('unrestored-discard')?.addEventListener('click', () => {
+  // Discarding is irreversible, so it asks once (UI-06 B-23): the Clear
+  // dialog's pattern — safe initial focus on Cancel, inert background,
+  // Escape, and focus back on Discard. The discard itself runs only from
+  // the dialog's own Discard.
+  const discardBtn = document.getElementById('unrestored-discard');
+  const discardModal = document.getElementById('discard-confirm-modal');
+  const discardConfirmBtn = document.getElementById('discard-confirm');
+  const discardCancelBtn = document.getElementById('discard-cancel');
+  const discardTrap = discardModal ? createFocusTrap(discardModal) : null;
+  app._discardFocusTrap = discardTrap;
+  const closeDiscardModal = () => {
+    if (!discardModal) return;
+    discardModal.style.display = 'none';
+    discardTrap?.deactivate();
+  };
+  const discardNow = () => {
     const [offer] = offersOf(app);
     if (!offer) return;
     const started = thisStart(app);
@@ -455,7 +471,25 @@ export function setupUnrestoredNotice(app) {
     // offered at the start, so that is heard whatever follows (DEF-45).
     if (next) app.announce(`${DISCARDED} ${messageFor(next)}`, 'polite', { essential: true });
     else app.announce(DISCARDED);
+  };
+  discardBtn?.addEventListener('click', () => {
+    if (!offersOf(app)[0]) return;
+    if (!discardModal) {
+      discardNow();
+      return;
+    }
+    discardModal.style.display = 'flex';
+    discardTrap?.activate(discardCancelBtn, discardBtn);
   });
+  discardConfirmBtn?.addEventListener('click', () => {
+    closeDiscardModal();
+    discardNow();
+  });
+  discardCancelBtn?.addEventListener('click', closeDiscardModal);
+  discardModal?.addEventListener('click', (event) => {
+    if (event.target === discardModal) closeDiscardModal();
+  });
+  discardModal?.addEventListener('focustrap:escape', closeDiscardModal);
   // Clear All's dialog says how many it would discard, as the store has it now.
   document.getElementById('clear-btn')?.addEventListener('click', () => showOffers(app));
   // Another tab of the app may keep, hold or discard a record meanwhile.
