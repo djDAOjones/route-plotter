@@ -8,8 +8,11 @@
  * dots array each frame (deterministic-timeline mandate).
  */
 
-/** Dot radius in reference pixels at dotSize = 1 (see scaleSizeClamped). */
-const DOT_BASE_RADIUS_PX = 10;
+/**
+ * Dot radius in reference pixels at dotSize = 1 (see scaleSizeClamped). The
+ * crowd's Size readout is the diameter this draws (uiReadouts.js).
+ */
+export const DOT_BASE_RADIUS_PX = 10;
 
 export class DotRenderer {
   /**

@@ -399,3 +399,101 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
     expect(retiredWord('Editing the network — click the map to place linked nodes.')).toBeNull();
   });
 });
+
+/**
+ * CROWD-07 F8 — the crowd's words, one per concept, wherever the author reads
+ * them. PR 1 applied the glossary; what is pinned here is what it left as
+ * prose or as two lists that could drift: the outline's "At journey end"
+ * options against the card's (one select definition each), the Guide
+ * helper's count of paths, and the strings this PR adds to Crowd scope (the
+ * Size readout, the "At journey end" hint, the Guide's journey line), held to
+ * the sentence-case rule and the retired words.
+ */
+describe('the crowd’s words agree (CROWD-07 F8)', () => {
+  async function crowdApp() {
+    const app = await bootApp();
+    await app.ready;
+    document.getElementById('splash-close').click();
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
+    app.addCrowd({ enterNetworkEditor: false });
+    return app;
+  }
+
+  test('the outline’s "At journey end" options are the card’s, value for value', async () => {
+    const app = await crowdApp();
+    try {
+      const card = [...document.querySelectorAll('#crowd-lifecycle option')]
+        .map(option => [option.value, visibleText(option)]);
+      app._refreshSceneOutline();
+      await Promise.resolve();
+      await openWholeOutline(document.getElementById('scene-outline'));
+      const selects = [...document.querySelectorAll('#scene-outline select[name="lifecycleMode"]')];
+      expect(selects).toHaveLength(1);
+      const outline = [...selects[0].options].map(option => [option.value, visibleText(option)]);
+
+      expect(card.map(([value]) => value).sort()).toEqual(['collect', 'disappear', 'loop', 'respawn']);
+      expect(outline.map(([value]) => value).sort()).toEqual(card.map(([value]) => value).sort());
+      expect(Object.fromEntries(outline)).toEqual(Object.fromEntries(card));
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+
+  // One description for one control wherever it appears (the owner, 2026-10-09):
+  // the outline's field says what the Motion card's F6 hint says, word for word.
+  test('the outline’s "At journey end" hint is the card’s, word for word', async () => {
+    const app = await crowdApp();
+    try {
+      const card = document.querySelector('label[for="crowd-lifecycle"] [data-tip]').getAttribute('data-tip');
+      app._refreshSceneOutline();
+      await Promise.resolve();
+      await openWholeOutline(document.getElementById('scene-outline'));
+      const selects = [...document.querySelectorAll('#scene-outline select[name="lifecycleMode"]')];
+      expect(selects).toHaveLength(1);
+      const outline = selects[0].closest('label').querySelector('[data-tip]').getAttribute('data-tip');
+
+      expect(card).toMatch(/^Disappear removes a dot at its journey's end; .* Repeat journey replays the same walk exactly$/);
+      expect(outline).toBe(card);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+
+  test('the Guide helper counts paths, never edges, and the crowd strings this PR adds keep the rule', async () => {
+    const app = await crowdApp();
+    try {
+      const layer = app.selectedCrowd;
+      const helper = () => document.getElementById('crowd-guide-hint').textContent;
+      const said = [helper()];
+      layer.setGuideType('graph');
+      app.syncCrowdEditor();
+      said.push(helper());
+      const [a, b] = [[0.2, 0.2], [0.8, 0.2]].map(([x, y]) => layer.graph.addNode({ x, y }));
+      layer.graph.addEdge({ sourceId: a.id, targetId: b.id, direction: 'two-way' });
+      app.updateGuideCard();
+      said.push(helper());
+      expect(helper()).toMatch(/\(2 nodes, 1 path\)/);
+      const c = layer.graph.addNode({ x: 0.5, y: 0.8 });
+      layer.graph.addEdge({ sourceId: b.id, targetId: c.id, direction: 'one-way' });
+      app.updateGuideCard();
+      said.push(helper());
+      expect(helper()).toMatch(/\(3 nodes, 2 paths\)/);
+      expect(said.filter(text => /\b(edge|edges|link|links)\b/i.test(text))).toEqual([]);
+
+      // The crowd's own strings, read as the rule reads the shell, with the readout as it is shown.
+      const scope = document.getElementById('crowd-scope');
+      const strings = [...stringsIn(scope), ...said.map(text => ({ what: 'Guide helper', text, hint: 'prose' }))];
+      const size = document.getElementById('crowd-dot-size-value').textContent;
+      strings.push({ what: 'Size readout', text: size, hint: 'prose' });
+      const texts = strings.map(string => string.text);
+      expect(size).toBe('8 reference px');
+      expect(texts.some(text => /^Disappear removes a dot at its journey's end;/.test(text))).toBe(true);
+      expect(texts.some(text => /Journeys start at Entry nodes and end at Exit nodes/.test(text))).toBe(true);
+      expect(texts.some(text => /exports scale it from the project's reference short edge$/.test(text))).toBe(true);
+      expect(faultsIn(strings)).toEqual([]);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+});

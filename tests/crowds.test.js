@@ -16,6 +16,8 @@ import {
   formatCrowdReleaseBias,
   formatCrowdReleaseTiming,
 } from '../src/app/crowds.js';
+import { formatCrowdDotSize } from '../src/utils/uiReadouts.js';
+import { DotRenderer } from '../src/services/DotRenderer.js';
 import { Scene } from '../src/models/Scene.js';
 import { EventBus } from '../src/core/EventBus.js';
 import { SwarmEngine } from '../src/services/SwarmEngine.js';
@@ -1017,5 +1019,225 @@ describe('the "At journey end" hint (DEF-77)', () => {
       app.eventBus.emit('crowd:selected', app.scene.getFlowLayer(slow.id));
       expect(hint.hidden).toBe(false);
     });
+  });
+});
+
+/**
+ * CROWD-07 F1 — the Size readout says what is drawn. It read "0.40×", a
+ * factor of nothing the author can see, while the Marker card's Size (and the
+ * head and the path) read reference px (UI-STANDARDS: "Map-bound size
+ * controls use reference px readouts"). DotRenderer draws a dot's radius as
+ * 10 reference px per 1×, so the readout is the diameter, 20 per 1×: the
+ * default 0.40× reads "8 reference px", as the marker's default does.
+ * `dotSize` is stored as before. Three writers say it: the shell's markup
+ * (what a crowd with no emitter shows, since `syncCrowdEditor` stops before
+ * the controls), the slider's own input, and the model's refresh of the panel.
+ */
+describe('the Size readout reads reference px (CROWD-07 F1)', () => {
+  const readout = () => document.getElementById('crowd-dot-size-value');
+  const slider = () => document.getElementById('crowd-dot-size');
+  /** What the readout shows and what the slider says, which must be one string. */
+  const said = () => [readout().textContent, slider().getAttribute('aria-valuetext')];
+  const twice = text => [text, text];
+
+  test('is the diameter DotRenderer draws: 20 reference px per 1×, so 0.40× reads 8', () => {
+    const radii = [];
+    const ctx = {
+      save() {}, restore() {}, beginPath() {}, moveTo() {}, fill() {}, fillStyle: '',
+      arc(x, y, radius) { radii.push(radius); },
+    };
+    const atReferenceScale = { scaleSizeClamped: value => value };
+    for (const size of [0.05, 0.4, 1, 2]) {
+      radii.length = 0;
+      DotRenderer.render(ctx, [{ x: 0.5, y: 0.5, size, color: '#56B4E9' }], () => ({ x: 0, y: 0 }), atReferenceScale);
+      expect(radii).toHaveLength(1);
+      expect(formatCrowdDotSize(size), `${size}×`).toBe(`${2 * radii[0]} reference px`);
+    }
+    expect(formatCrowdDotSize(0.4)).toBe('8 reference px');
+    // Whole at the slider's 0.05 steps, with no binary tail; to a tenth for a
+    // value the outline set between them, down to the model's least.
+    expect(formatCrowdDotSize(0.35)).toBe('7 reference px');
+    expect(formatCrowdDotSize(0.43)).toBe('8.6 reference px');
+    expect(formatCrowdDotSize(0.01)).toBe('0.2 reference px');
+  });
+
+  test('the shell says it before any crowd is drawn into it, and its hint says how exports scale it', () => {
+    const shell = new DOMParser()
+      .parseFromString(readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'text/html');
+    const input = shell.getElementById('crowd-dot-size');
+    expect([shell.getElementById('crowd-dot-size-value').textContent, input.getAttribute('aria-valuetext')])
+      .toEqual(twice('8 reference px'));
+    expect(input.closest('label').querySelector('[data-tip]').getAttribute('data-tip'))
+      .toBe("Dot diameter in project reference pixels; exports scale it from the project's reference short edge");
+  });
+
+  test('the slider and the model write it alike; an emitterless crowd keeps the unit, first and between populated ones', async () => {
+    const app = await bootApp();
+    await app.ready;
+    document.getElementById('splash-close').click();
+    expect(await loadSnapshot(app, {
+      coordVersion: 9,
+      waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
+      scene: { flowLayers: [{ id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] }] },
+    })).toBe(true);
+    const empty = app.scene.getFlowLayer('empty');
+
+    // An emitterless crowd selected before any populated one: the shell's own words.
+    app.eventBus.emit('crowd:selected', empty);
+    expect(document.getElementById('crowd-no-emitter').hidden).toBe(false);
+    expect(said()).toEqual(twice('8 reference px'));
+
+    // Populated: the model's refresh of the panel.
+    app.addCrowd({ enterNetworkEditor: false });
+    const full = app.selectedCrowd;
+    const [emitter] = full.emitters;
+    emitter.update({ dotSize: 0.6 });
+    app.syncCrowdEditor();
+    expect(said()).toEqual(twice('12 reference px'));
+
+    // The slider's own input: 70 is 0.70×, 14 reference px, stored as before.
+    slider().value = '70';
+    slider().dispatchEvent(new Event('input', { bubbles: true }));
+    expect(emitter.dotSize).toBe(0.7);
+    expect(said()).toEqual(twice('14 reference px'));
+
+    // Empty again: its controls are off and keep the unit, readout and voice as one.
+    app.eventBus.emit('crowd:selected', empty);
+    expect(slider().disabled).toBe(true);
+    expect(said()[0]).toMatch(/^\d+(\.\d)? reference px$/);
+    expect(said()[1]).toBe(said()[0]);
+
+    // Populated again, after a change the panel did not make: the model's refresh says it.
+    emitter.update({ dotSize: 1.5 });
+    app.eventBus.emit('crowd:selected', full);
+    expect(slider().disabled).toBe(false);
+    expect(slider().value).toBe('150');
+    expect(said()).toEqual(twice('30 reference px'));
+  });
+});
+
+/**
+ * CROWD-07 F6, F14, F20 — the hints the owner accepted on 2026-10-08.
+ * F6: Respawn at the start and Repeat journey look alike on a route; the
+ * label hint of "At journey end" says how the four differ (SwarmEngine: a
+ * loop replays the first journey exactly; a respawn draws its own pace and
+ * sway). F14: what "At journey end" acts on, on a custom network, is a
+ * node's Type, said nowhere in Crowd scope; the Guide hint says it, both
+ * fallbacks as the engine has them (`_buildGraphGuide`, `_endsJourney`).
+ * F20's text is DEF-93's to change: unchanged here.
+ */
+describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
+  const F6 = "Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start "
+    + 'sends a new dot from the start with its own pace and sway; Repeat journey replays the same walk exactly';
+  const F14 = "Journeys start at Entry nodes and end at Exit nodes (a node's Type). With no Exit, they end at nodes "
+    + 'with one path; with no Entry, dots set off from any node they can leave.';
+  const guideHint = () => document.getElementById('crowd-guide-hint').textContent;
+  const tooltip = () => document.getElementById('param-tooltip');
+  const shown = () => (tooltip()?.style.display === 'block' ? tooltip().textContent : null);
+  /** The text each `aria-describedby` token resolves to. */
+  const described = control => (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)
+    .map(token => document.getElementById(token)?.textContent ?? `<missing ${token}>`);
+
+  async function editor() {
+    const app = await bootApp();
+    await app.ready;
+    document.getElementById('splash-close').click();
+    return app;
+  }
+
+  async function withEmptyCrowd() {
+    const app = await editor();
+    expect(await loadSnapshot(app, {
+      coordVersion: 9,
+      waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
+      scene: { flowLayers: [{ id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] }] },
+    })).toBe(true);
+    return app;
+  }
+
+  test('F6: "At journey end" tells its four apart, as its label hint and the select’s description, on any crowd', async () => {
+    const app = await withEmptyCrowd();
+    const select = document.getElementById('crowd-lifecycle');
+    const tip = select.closest('label').querySelector('[data-tip]');
+    expect(tip.getAttribute('data-tip')).toBe(F6);
+    // The DEF-77 helper keeps its first place in the description; the hint follows.
+    expect(select.getAttribute('aria-describedby').split(' ')[0]).toBe('crowd-lifecycle-hint');
+    expect(described(select)).toContain(F6);
+
+    // Kept on a crowd with no emitter (UI-06 B-31): the select is off, its help is not.
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
+    expect(select.disabled).toBe(true);
+    expect(document.getElementById('crowd-lifecycle-hint').textContent).toBe(''); // F20's helper: no dots, nothing to say
+    const trigger = document.querySelector(`.param-hint-trigger[aria-describedby="${tip.getAttribute('data-tip-desc')}"]`);
+    expect([trigger.disabled, trigger.hidden]).toEqual([false, false]);
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    trigger.focus();
+    expect(shown()).toBe(F6);
+    trigger.blur();
+
+    app.addCrowd({ enterNetworkEditor: false });
+    expect(select.disabled).toBe(false);
+    expect(described(select)).toContain(F6);
+  });
+
+  test('F14: the Guide hint says where journeys start and end on a custom network, empty or drawn, and never on Follow route', async () => {
+    const app = await withEmptyCrowd();
+    app.addCrowd({ enterNetworkEditor: false });
+    const layer = app.selectedCrowd;
+    expect(layer.guideType).toBe('route');
+    expect(guideHint()).toBe('Dots follow your route. Custom network lets you draw paths of their own.');
+
+    layer.setGuideType('graph');
+    app.syncCrowdEditor();
+    expect(guideHint()).toBe(`No network yet — Edit network hands you the pen. ${F14}`);
+
+    const entry = layer.graph.addNode({ x: 0.2, y: 0.5 });
+    const exit = layer.graph.addNode({ x: 0.8, y: 0.5 });
+    layer.graph.addEdge({ sourceId: entry.id, targetId: exit.id, direction: 'two-way' });
+    app.updateGuideCard();
+    expect(guideHint()).toBe(`Dots walk this crowd's own network (2 nodes, 1 path). ${F14}`);
+
+    // After the network sentence, before the timing one (a route of fewer than two).
+    const route = app.waypoints;
+    app.waypoints = route.slice(0, 1);
+    app.updateGuideCard();
+    expect(guideHint()).toBe(`Dots walk this crowd's own network (2 nodes, 1 path). ${F14} `
+      + 'Add at least two route waypoints to set the master timing before previewing or exporting.');
+
+    // On an emitterless crowd too: the Guide card is the crowd's, emitter or not.
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
+    expect(guideHint()).toBe(`No network yet — Edit network hands you the pen. ${F14} `
+      + 'Add at least two route waypoints to set the master timing before previewing or exporting.');
+
+    // Back on Follow route, it goes.
+    app.waypoints = route;
+    app.eventBus.emit('crowd:selected', layer);
+    layer.setGuideType('route');
+    app.syncCrowdEditor();
+    expect(guideHint()).not.toContain('Journeys start');
+  });
+
+  test('F20 is DEF-93’s: the endless-network helper reads as it did, and the Node Type hint keeps both fallbacks', async () => {
+    const app = await editor();
+    app.eventBus.emit('waypoint:add', { imgX: 0.1, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.9, imgY: 0.5, isMajor: true });
+    app.addCrowd({ enterNetworkEditor: false });
+    const layer = app.selectedCrowd;
+    layer.setGuideType('graph');
+    // A closed loop of pass-through nodes: no Exit, and no node with one path.
+    const nodes = [[0.2, 0.3], [0.8, 0.3], [0.5, 0.8]].map(([x, y]) => layer.graph.addNode({ x, y }));
+    nodes.forEach((node, index) => layer.graph.addEdge({
+      sourceId: node.id, targetId: nodes[(index + 1) % nodes.length].id, direction: 'two-way',
+    }));
+    app.syncCrowdEditor();
+    const hint = document.getElementById('crowd-lifecycle-hint');
+    expect(hint.hidden).toBe(false);
+    expect(hint.textContent)
+      .toBe('No dot’s journey ends on this network. Set a node’s Type to Exit to see this setting act.');
+
+    expect(document.querySelector('label[for="network-node-type"] [data-tip]').getAttribute('data-tip'))
+      .toBe('Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or end '
+        + 'them where no path leads out. With no exit, journeys end at nodes with one path; with no entry, dots set '
+        + 'off from any node they can leave');
   });
 });
