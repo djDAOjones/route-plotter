@@ -1376,10 +1376,10 @@ ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-bt
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
-ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, 04d89351)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 99d6b83d)
+ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, a97f487b)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 1d79ee7b)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 114 inside, dfce68dc)
-ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, e25f996a)
+ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, afaa3008)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
 ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item selected"
@@ -1404,10 +1404,10 @@ ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-bt
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
-ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, 04d89351)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 99d6b83d)
+ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, a97f487b)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 1d79ee7b)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 114 inside, dfce68dc)
-ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, e25f996a)
+ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, afaa3008)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
 ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item selected"
@@ -1441,10 +1441,10 @@ ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-bt
 ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
-ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, 04d89351)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 99d6b83d)
+ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, a97f487b)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 1d79ee7b)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 114 inside, dfce68dc)
-ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, e25f996a)
+ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, afaa3008)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
 ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item selected"
@@ -1555,9 +1555,9 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, 2b770944)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 90fdb90e)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 2cb052cc)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 114 inside, 8c0b8243)
-ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, 00dae7fb)
+ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, ae8bd297)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
 ui + #layers-strip>li[2]: li class="layer-item selected"

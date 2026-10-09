@@ -114,10 +114,10 @@ ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Path · one-way" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
-ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, f6e5e60a)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 99d6b83d)
+ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, 6987c470)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 1d79ee7b)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 114 inside, dfce68dc)
-ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, e25f996a)
+ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, afaa3008)
 ui ~ #edge-scope: div class="scope-group" → div (not shown)
 ui - #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" (and 26 inside, ac42ea15)
 settled:

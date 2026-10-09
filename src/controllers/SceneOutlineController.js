@@ -8,6 +8,7 @@
 
 import { sceneOutlineKey } from '../utils/sceneSemantics.js';
 import { IMAGE_COORDINATES } from '../config/constants.js';
+import { formatCrowdDotSize } from '../utils/uiReadouts.js';
 
 const OUTLINE_CANONICAL_VALUE = Symbol('outlineCanonicalValue');
 const OUTLINE_DRAFT_CONTEXT = Symbol('outlineDraftContext');
@@ -80,7 +81,6 @@ const FIELD_HINTS = Object.freeze({
   speed: 'How fast the dots travel, in image lengths per second: at 1, a dot covers the image’s width across ' +
     'or its height down in about a second; Pace variation makes some faster and some slower',
   paceVariation: 'How much each dot’s pace differs: 0% moves every dot at the same speed',
-  dotSize: 'Dot size, scaled with the image like other elements',
   walkingVariation: 'Sideways walking variation as dots travel: 0% follows the line exactly',
   dotColour: 'A hex colour such as #56B4E9, or transparent to hide the dots',
   journeyEnd: 'What a dot does when it reaches the end of its journey',
@@ -97,6 +97,17 @@ const FIELD_HINTS = Object.freeze({
     'weight 2 is twice as likely to be picked as weight 1. Arriving dots avoid turning straight back when ' +
     'another path is available',
 });
+
+/**
+ * Dot size's hint (CROWD-07 F1). The field edits the model's own unit (×); the
+ * card's Size reads the diameter drawn, so the hint gives this value's.
+ * @param {number} dotSize
+ * @returns {string}
+ */
+function dotSizeHint(dotSize) {
+  return `Dot diameter as a multiple of ${formatCrowdDotSize(1)}: ${dotSize} draws a dot `
+    + `${formatCrowdDotSize(dotSize)} across; exports scale it from the project’s reference short edge`;
+}
 
 /** What a dot does at its journey's end, as the Motion card says it (UI-06 J-02). */
 const JOURNEY_END_LABELS = Object.freeze({
@@ -956,7 +967,7 @@ export class SceneOutlineController {
           tip: FIELD_HINTS.paceVariation,
         }),
         labelledInput('dotSize', 'Dot size (×)', emitter.dotSize, {
-          min: 0.01, max: 100, step: 'any', key: `${emitter.key}:size`, tip: FIELD_HINTS.dotSize,
+          min: 0.01, max: 100, step: 'any', key: `${emitter.key}:size`, tip: dotSizeHint(emitter.dotSize),
         }),
         labelledInput('wobble', 'Walking variation (%)', emitter.wobble, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:wobble`, canonicalValue: emitter.wobbleCanonical,
