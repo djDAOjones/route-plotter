@@ -28,7 +28,7 @@
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { callsOf, lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
@@ -79,6 +79,8 @@ function nativeDialogsIn(lexed) {
 }
 
 async function editor() {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   await app.ready;
   // The splash's focus trap would take a later Escape.

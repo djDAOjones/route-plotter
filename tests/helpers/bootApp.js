@@ -302,3 +302,16 @@ export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
   };
   return app;
 }
+
+/**
+ * `localStorage.getItem` for a browser that has shown the start's preview tip
+ * and holds nothing else. The tip waits 1.5 s on the real clock from the boot
+ * (`_showPreviewTipToast`), so in a test that boots on the real clock and then
+ * pins what is announced or shown as a toast, a slow runner had it land in the
+ * middle (UI-06, CI on 882123d). Such a test boots with it seen; the tests of
+ * the tip do not.
+ * @returns {(key: string) => (string|null)}
+ */
+export function tipSeen() {
+  return key => (key === 'routePlotter_previewTipDismissed' ? 'true' : null);
+}

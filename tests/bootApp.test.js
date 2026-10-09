@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { contextFor } from './setup.js';
-import { bootApp, retireApp } from './helpers/bootApp.js';
+import { bootApp, retireApp, tipSeen } from './helpers/bootApp.js';
 import { ANNOUNCEMENTS } from '../src/config/constants.js';
 
 /**
@@ -55,6 +55,8 @@ describe('the whole app boots (TST-01)', () => {
     // The startup pause replaced "Previous session restored" a few
     // milliseconds after it was announced. Announcements are recorded, not
     // read back, because the live region clears itself after two seconds.
+    // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+    localStorage.getItem.mockImplementation(tipSeen());
     const first = await bootApp();
     await first.ready;
     first.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });

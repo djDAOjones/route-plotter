@@ -25,8 +25,9 @@
  * whether a screen reader speaks it needs a real one.
  */
 
+import { setTimeout as realDelay } from 'node:timers/promises';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { ANNOUNCEMENTS, STORAGE } from '../src/config/constants.js';
 import { EventBus } from '../src/core/EventBus.js';
@@ -99,6 +100,8 @@ async function settle(promise) {
 
 /** A booted app with nothing announced (DEF-33), on the fake clock from here. */
 async function bootIdleApp() {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   await app.ready;
   vi.useFakeTimers(FAKE_CLOCK);
@@ -180,6 +183,8 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
   });
 
   test('opening a project whose recovery leaves out its background shows the warning, then "Project loaded", each for its time', async () => {
+    // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+    localStorage.getItem.mockImplementation(tipSeen());
     const app = await bootApp();
     await app.ready;
     const project = app._buildProjectSnapshot({ includeAssets: false });
@@ -196,6 +201,20 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     expect(since(shown).map(([at]) => at)).toEqual(shown.map((_, turn) => turn * HOLD));
     // and the warning is written before "Project loaded" instead of under it.
     expect(shown.slice(-3).map(([, text]) => text)).toEqual([BACKGROUND_WARNING, 'Project loaded', '']);
+  });
+
+  test('an app booted idle stays idle once the start\'s tip would be due: the tip, on the real clock, never lands in a test (UI-06, CI on 882123d)', async () => {
+    // The tip waits 1.5 s on the real clock from the boot (`_showPreviewTipToast`).
+    // A slow runner let a test outlast it, and the tip was read in the middle of
+    // what the test pinned. The one real wait in this file: just past it.
+    await bootIdleApp();
+    const { region, shown } = recordRegion();
+
+    await realDelay(1600);
+    await playOut();
+
+    expect(shown).toEqual([]);
+    expect(region.textContent).toBe('');
   });
 
   test('an earlier message’s clear does not blank a later one early', async () => {
@@ -869,6 +888,42 @@ describe('what browser recovery did or could not do reaches the region, whatever
     const [clearedAt, cleared] = shown.at(-1);
     expect(cleared).toBe('');
     expect(clearedAt - stopped).toBeLessThanOrEqual((1 + ANNOUNCEMENTS.MAX_WAITING + 1) * HOLD);
+  });
+
+  test('the start\'s tip arriving during twelve Site walk openings is read after the last one\'s warning, and the region clears one hold later (UI-06; the owner, 2026-10-09)', async () => {
+    // Tips are "queued after the start-up recovery messages so they never cut
+    // in" (the owner): one shown in the middle of the burst waits for the end.
+    const app = await bootIdleApp();
+    const serveRepository = globalThis.fetch;
+    globalThis.fetch = vi.fn(input => serveRepository(String(input).replace(/^examples\//, 'docs/examples/')));
+    const opening = vi.spyOn(app, 'loadExampleProject');
+    const siteWalk = [...document.querySelectorAll('#example-projects-menu button')]
+      .find(item => item.textContent === 'Site walk');
+    const { shown } = recordRegion();
+
+    for (let click = 0; click < 12; click += 1) {
+      if (click) await vi.advanceTimersByTimeAsync(1000);
+      // Shown as `_showPreviewTipToast` shows it, on the test's clock.
+      if (click === 6) app.showToast(BOOT_TIP, 8000, null, { whenIdle: true });
+      siteWalk.click();
+      expect(await settle(opening.mock.results.at(-1).value)).toBe(true);
+    }
+    const stopped = Date.now();
+    await playOut();
+
+    // The warning still waits once for all the openings, and is read after the last;
+    const warnings = shown.filter(([, text]) => text === BACKGROUND_WARNING).map(([at]) => at);
+    expect(warnings.filter(at => at > stopped)).toHaveLength(1);
+    // the tip is read once, after it, last;
+    const tips = shown.filter(([, text]) => text === BOOT_TIP).map(([at]) => at);
+    expect(tips).toHaveLength(1);
+    expect(tips[0]).toBeGreaterThan(warnings.at(-1));
+    expect(shown.at(-2)[1]).toBe(BOOT_TIP);
+    // and the region is clear within a hold for the message showing, one for
+    // each that may wait, and one for the tip.
+    const [clearedAt, cleared] = shown.at(-1);
+    expect(cleared).toBe('');
+    expect(clearedAt - stopped).toBeLessThanOrEqual((1 + ANNOUNCEMENTS.MAX_WAITING + 1 + 1) * HOLD);
   });
 
   test('Clear All\'s warning that recovery could not be cleared is shown though a burst of routine messages follows it', async () => {

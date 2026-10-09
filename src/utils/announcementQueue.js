@@ -39,10 +39,11 @@
  *   oldest gives way, so a burst of toggles falls no further behind; messages
  *   the author must hear do not count.
  * - So what waits is bounded however long input goes on: at most
- *   `MAX_WAITING` routine messages and one of each text the author must hear
- *   (the app's are fixed texts). Once input stops, the region clears within
- *   one hold for the message showing and one for each message waiting. Not
- *   bounded: how long a polite message waits while assertive ones keep coming.
+ *   `MAX_WAITING` routine messages, one of each text the author must hear
+ *   (the app's are fixed texts) and one of each tip (`whenIdle`, below). Once
+ *   input stops, the region clears within one hold for the message showing,
+ *   one for each message waiting and one for each tip waiting. Not bounded:
+ *   how long a polite message waits while assertive ones keep coming.
  * - A message marked `whenIdle` (a tip: help, not status) waits until nothing
  *   else shows or waits, and is written then: it never cuts in, never
  *   displaces a message and does not count towards the cap, and every message

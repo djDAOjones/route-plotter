@@ -90,7 +90,7 @@ import { formatBinding, getDefaultBindings, isMac, MODIFIER_DISPLAY } from '../s
 /** The standard delete toast, raised by every waypoint delete (UI-06 J-05). */
 const DELETE_TOAST = `Deleted waypoint — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`;
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { CANDIDATE_KEYS, NAMED_KEYS, PRINTABLE_KEYS } from './helpers/keyDomain.js';
 import { keyListenersIn, lex, lexedFiles } from './helpers/sourceScan.js';
 
@@ -145,6 +145,8 @@ const START = [FIRST, MIDDLE, LAST];
  * the key or click under test goes through the DOM.
  */
 async function editor({ selected = 1, progress = 0.5 } = {}) {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   running.push(app);
   await app.ready;

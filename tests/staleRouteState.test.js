@@ -15,7 +15,7 @@
  */
 
 import { describe, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { buildExampleProjects } from '../src/examples/index.js';
@@ -435,6 +435,8 @@ const threeStops = ({ pausing = true } = {}) => authoredConstantTime([
 
 /** An app with `project` open, in Preview or Edit. */
 async function opened(project, { preview = true } = {}) {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   await app.ready;
   expect(await loadSnapshot(app, project)).toBe(true);
