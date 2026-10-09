@@ -40,6 +40,7 @@ const BACKGROUND_WARNING = 'Browser recovery excludes the background. Save a pro
 const IMAGES_WARNING = 'Browser recovery excludes custom images. Save a project file to preserve them.';
 const BOTH_WARNING = 'Browser recovery excludes the background and custom images. Save a project file to preserve them.';
 const AUTOSAVE_FAILED = 'Auto-save failed. Save a project file to keep your work.';
+const BOOT_TIP = 'Tip: Check your sequence in Preview mode before exporting';
 
 // The queue's timers and the history's stamps; everything else runs as booted.
 const FAKE_CLOCK = { toFake: ['setTimeout', 'clearTimeout', 'Date'] };
@@ -169,10 +170,12 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     expect(app.background.image).toBeTruthy();
     await playOut();
 
+    // The start's tip follows, once both have had their time (the owner, 2026-10-09).
     expect(since(shown)).toEqual([
       [0, BACKGROUND_WARNING],
       [HOLD, 'Previous session restored'],
-      [2 * HOLD, ''],
+      [2 * HOLD, BOOT_TIP],
+      [3 * HOLD, ''],
     ]);
   });
 
@@ -586,6 +589,33 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     ]);
   });
 
+  test('a message marked whenIdle waits until nothing else shows or waits: it cuts nothing short, displaces nothing, and later messages go ahead of it (UI-06; the owner, 2026-10-09)', async () => {
+    vi.useFakeTimers(FAKE_CLOCK);
+    const region = document.createElement('div');
+    const queue = createAnnouncementQueue(region);
+    const seen = [];
+    const turns = async (count) => {
+      for (let turn = 0; turn < count; turn += 1) {
+        seen.push(region.textContent);
+        await vi.advanceTimersByTimeAsync(HOLD);
+      }
+      seen.push(region.textContent);
+    };
+
+    queue.announce('Previous session restored', 'polite', { essential: true });
+    queue.announce('A tip', 'polite', { whenIdle: true });
+    // A burst past the cap of routine messages: the tip is not one of them.
+    for (const message of ['Playing animation', 'Animation paused', 'Undo']) queue.announce(message);
+    await turns(5);
+    expect(seen).toEqual(['Previous session restored', 'Playing animation', 'Animation paused', 'Undo', 'A tip', '']);
+
+    // With nothing showing, it is written at once.
+    seen.length = 0;
+    queue.announce('Another tip', 'polite', { whenIdle: true });
+    await turns(1);
+    expect(seen).toEqual(['Another tip', '']);
+  });
+
   test('a queue without a live region announces nothing, and does not throw', () => {
     const queue = createAnnouncementQueue(null);
     expect(() => queue.announce('Waypoint moved')).not.toThrow();
@@ -699,13 +729,45 @@ describe('what browser recovery did or could not do reaches the region, whatever
     press(app, 'play', 'pause', 'play', 'pause');
     await playOut();
 
+    // The start's tip follows all of it, and displaces none of it (the owner, 2026-10-09).
     expect(since(shown)).toEqual([
       [0, BACKGROUND_WARNING],
       [HOLD, outcome],
       [2 * HOLD, 'Animation paused'],
       [3 * HOLD, 'Playing animation'],
       [4 * HOLD, 'Animation paused'],
-      [5 * HOLD, ''],
+      [5 * HOLD, BOOT_TIP],
+      [6 * HOLD, ''],
+    ]);
+  });
+
+  test('the boot tip is spoken after the start-up recovery messages, however long the restore takes, and displaces none of them (UI-06; the owner, 2026-10-09)', async () => {
+    const legacy = await legacyRecoveryPoint();
+    // The restore's background decodes only when told: after the tip's 1.5 s.
+    const decode = ImageAsset.decodeDataURL;
+    let release = null;
+    vi.spyOn(ImageAsset, 'decodeDataURL').mockImplementationOnce((...args) => new Promise((resolve) => {
+      release = () => resolve(decode.apply(ImageAsset, args));
+    }));
+    const app = await bootRestoring(legacy);
+    const { shown } = recordRegion();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(release).toEqual(expect.any(Function));
+    expect(shown).toEqual([]);
+    release();
+    expect(await settle(app.ready)).toBe(true);
+    // The author plays and pauses at once, as in the restore above.
+    press(app, 'play', 'pause', 'play', 'pause');
+    await playOut();
+
+    expect(since(shown)).toEqual([
+      [0, BACKGROUND_WARNING],
+      [HOLD, 'Previous session restored'],
+      [2 * HOLD, 'Animation paused'],
+      [3 * HOLD, 'Playing animation'],
+      [4 * HOLD, 'Animation paused'],
+      [5 * HOLD, BOOT_TIP],
+      [6 * HOLD, ''],
     ]);
   });
 

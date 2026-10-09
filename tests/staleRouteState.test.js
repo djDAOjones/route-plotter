@@ -920,8 +920,9 @@ describe.each([
     expect(recorded).toHaveBeenCalledTimes(1);
     expect(saving).toHaveBeenCalledTimes(1);
     expect(app._editRevision - revision).toBe(1);
-    // The toast is the announcement, at its priority: one message, heard once (UI-06 J-05).
-    expect(announced.mock.calls).toEqual([[message, 'polite']]);
+    // The toast is the announcement, at its priority: one message, heard once (UI-06 J-05);
+    // before it, the opened project's first change, heard once (the owner, 2026-10-09).
+    expect(announced.mock.calls).toEqual([['Unsaved changes'], [message, 'polite']]);
     localStorage.setItem.mockClear();
     app.storageService.flushAutoSave();
     const writes = localStorage.setItem.mock.calls.filter(([key]) => key === STORAGE.AUTOSAVE_KEY);

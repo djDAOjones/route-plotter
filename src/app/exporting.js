@@ -195,6 +195,15 @@ export const exportingMixin = {
       let percent = 0;
       const showProgress = () => this.setStatus?.(`Exporting ${label} ${percent}% · Esc to cancel`);
       showProgress();
+      // Heard at 25, 50 and 75 %, once each, in the line's words (the owner,
+      // 2026-10-09); progress that jumps is heard at the furthest mark passed.
+      let spokenMark = 0;
+      const speakProgress = () => {
+        const mark = VIDEO_EXPORT.SPOKEN_PROGRESS.filter(each => percent >= each).at(-1) ?? 0;
+        if (mark <= spokenMark) return;
+        spokenMark = mark;
+        this.announce(`Exporting ${label} ${mark}%`);
+      };
 
       // Capture-phase Escape handler — cancels export and blocks other keydown listeners
       const onEscapeKey = (e) => {
@@ -278,6 +287,7 @@ export const exportingMixin = {
           onProgress: (done) => {
             percent = done;
             showProgress();
+            speakProgress();
           }
         });
 

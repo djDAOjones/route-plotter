@@ -32,7 +32,8 @@ export const VIDEO_EXPORT = {
   DEFAULT_BITRATE: 20000000,     // 20 Mbps default video bitrate (high quality)
   START_BUFFER_MS: 2000,         // 2 second static frame at start of all exports
   KEYFRAME_INTERVAL: 60,         // Keyframe every N frames (2.4s at 25fps) — WebCodecs path
-  ENCODER_QUEUE_LIMIT: 5         // Max queued frames before backpressure yield — WebCodecs path
+  ENCODER_QUEUE_LIMIT: 5,        // Max queued frames before backpressure yield — WebCodecs path
+  SPOKEN_PROGRESS: Object.freeze([25, 50, 75]) // Percentages at which an export's progress is announced (UI-06 J-18)
 };
 
 // Rendering and visual styles. Persisted map-bound sizes are reference pixels;

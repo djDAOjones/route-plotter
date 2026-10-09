@@ -183,12 +183,10 @@ export const privacyMixin = {
     this._diagnosticsCopy?.addEventListener('click', () => void this._copyDiagnostics());
     this._diagnosticsDownload?.addEventListener('click', () => this._downloadDiagnostics());
     this._diagnosticsOpenIssues?.addEventListener('click', () => {
-      this._diagnosticsStatus.textContent =
-        'GitHub Issues was requested in a new tab. Diagnostics were not sent.';
+      this._tellDiagnostics('GitHub Issues was requested in a new tab. Diagnostics were not sent.');
     });
     this._diagnosticsOpenSecurity?.addEventListener('click', () => {
-      this._diagnosticsStatus.textContent =
-        'Private vulnerability reporting was requested in a new tab. Diagnostics were not sent.';
+      this._tellDiagnostics('Private vulnerability reporting was requested in a new tab. Diagnostics were not sent.');
     });
     this._diagnosticsCopyIssuesAddress?.addEventListener('click', () => {
       void this._copyGitHubIssuesAddress();
@@ -295,16 +293,28 @@ export const privacyMixin = {
     }
   },
 
+  /**
+   * Show a line in the dialog and say it once, through the queue: the line is
+   * not a live region (UI-06; the owner, 2026-10-09), so the announcer, which
+   * a dialog no longer makes inert, is the one route.
+   * @param {string} text - What the line shows
+   * @param {string} [spoken] - What is said, where it is said in fewer words
+   * @private
+   */
+  _tellDiagnostics(text, spoken = text) {
+    this._diagnosticsStatus.textContent = text;
+    this.announce(spoken);
+  },
+
   /** Copy only the fixed support address after a separate explicit action. */
   async _copyGitHubIssuesAddress() {
     if (!this._diagnosticsBundle) return false;
     try {
       await navigator.clipboard.writeText(GITHUB_ISSUES_URL);
-      this._diagnosticsStatus.textContent = 'GitHub Issues address copied. Diagnostics were not copied or sent.';
+      this._tellDiagnostics('GitHub Issues address copied. Diagnostics were not copied or sent.');
       return true;
     } catch {
-      this._diagnosticsStatus.textContent =
-        'Address copy failed. Select the GitHub Issues address shown above; diagnostics were not copied or sent.';
+      this._tellDiagnostics('Address copy failed. Select the GitHub Issues address shown above; diagnostics were not copied or sent.');
       return false;
     }
   },
@@ -314,11 +324,9 @@ export const privacyMixin = {
     if (!this._diagnosticsBundle) return;
     try {
       await navigator.clipboard.writeText(this._diagnosticsBundle.copyText);
-      this._diagnosticsStatus.textContent = 'Diagnostics copied.';
-      this.announce('Diagnostics copied');
+      this._tellDiagnostics('Diagnostics copied.', 'Diagnostics copied');
     } catch {
-      this._diagnosticsStatus.textContent = 'Copy failed. You can select the preview text manually.';
-      this.announce('Diagnostics copy failed');
+      this._tellDiagnostics('Copy failed. You can select the preview text manually.', 'Diagnostics copy failed');
     }
   },
 
@@ -332,7 +340,7 @@ export const privacyMixin = {
       `route-plotter-diagnostics-${timestamp}.json`
     );
     if (this._diagnosticsPurpose === 'bug-report') {
-      this._diagnosticsStatus.textContent = 'Diagnostics downloaded. Nothing was sent.';
+      this._tellDiagnostics('Diagnostics downloaded. Nothing was sent.');
     } else {
       this.announce('Diagnostics downloaded');
       this._closeDiagnosticsPreview();

@@ -1468,7 +1468,9 @@
       </p>
       <label class="diagnostics-preview-label" for="diagnostics-preview">Technical information</label>
       <textarea id="diagnostics-preview" class="diagnostics-preview" rows="15" readonly spellcheck="false"></textarea>
-      <p id="diagnostics-status" class="diagnostics-status" role="status" aria-live="polite"></p>
+      <!-- Not live: what it says is announced once, through the queue (UI-06;
+           the owner, 2026-10-09), as the header's status line is -->
+      <p id="diagnostics-status" class="diagnostics-status" role="status" aria-live="off"></p>
       <p id="diagnostics-issues-note" class="diagnostics-issues-note" hidden>
         The Issues link opens a new tab without sending the preview. If it does not open, copy this address:
         <code id="diagnostics-issues-address"></code>

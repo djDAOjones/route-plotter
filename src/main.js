@@ -787,13 +787,14 @@ class RoutePlotter {
    * @param {{label: string, onClick: Function}} [action] - Optional offer the
    *   toast carries (LABEL-01). It is only ever an offer: the same action must
    *   remain reachable elsewhere, because a toast fades and can be missed.
-   * @param {{priority?: 'polite'|'assertive', announce?: boolean}} [options] -
-   *   assertive for an error the author must hear; `announce: false` for a
-   *   tip, which is help, not status (UI-STANDARDS: announce status changes),
-   *   so it never competes with what the author must hear (DEF-45)
+   * @param {{priority?: 'polite'|'assertive', whenIdle?: boolean}} [options] -
+   *   assertive for an error the author must hear; `whenIdle` for the start's
+   *   tip, read once nothing else shows or waits, so it never cuts in on what
+   *   the author must hear (DEF-45; the owner, 2026-10-09)
    */
-  showToast(message, duration = 5000, action = null, { priority = 'polite', announce = true } = {}) {
-    if (announce) this.announce(message, priority);
+  showToast(message, duration = 5000, action = null, { priority = 'polite', whenIdle = false } = {}) {
+    if (whenIdle) this.announce(message, priority, { whenIdle });
+    else this.announce(message, priority);
     const container = this.elements.toastContainer;
     if (!container) return;
     

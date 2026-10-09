@@ -944,8 +944,8 @@ export const wiringControllersMixin = {
       const { format, resolution } = request && typeof request === 'object' ? request : { format: request };
       if (refuseWhileExporting(this)) return;
       if (!this.previewMode) {
-        // A tip is help, not status: shown, not announced (UI-06 J-05)
-        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000, null, { announce: false });
+        // Read politely, as a toast is (UI-06; the owner, 2026-10-09)
+        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
       }
       this.exportVideo({ format: format || 'mp4', resolution });
     });
@@ -956,7 +956,7 @@ export const wiringControllersMixin = {
      */
     this.eventBus.on('html:export-request', () => {
       if (!this.previewMode) {
-        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000, null, { announce: false });
+        this.showToast('Tip: Switch to Preview mode to see exactly how the export will look', 6000);
       }
       void this.requestHTMLExport();
     });

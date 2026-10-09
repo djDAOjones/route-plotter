@@ -4,13 +4,13 @@
 emit history:redo
 emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
 announced "Redo"
-model ~ waypoints[0].modified: 1790154010997 → 1790154060000
-model ~ waypoints[1].modified: 1790154010997 → 1790154060000
-model ~ waypoints[2].modified: 1790154010997 → 1790154060000
+model ~ waypoints[0].modified: 1790154014502 → 1790154060000
+model ~ waypoints[1].modified: 1790154014502 → 1790154060000
+model ~ waypoints[2].modified: 1790154014502 → 1790154060000
 model ~ waypoints[3].markerStyle: "square" → "dot"
-model ~ waypoints[3].modified: 1790154010997 → 1790154060000
-model ~ waypoints[4].modified: 1790154010997 → 1790154060000
-model ~ waypoints[5].modified: 1790154010997 → 1790154060000
+model ~ waypoints[3].modified: 1790154014502 → 1790154060000
+model ~ waypoints[4].modified: 1790154014502 → 1790154060000
+model ~ waypoints[5].modified: 1790154014502 → 1790154060000
 app ~ selected: null → "waypoint[3]"
 app ~ selection: "" → "waypoint[3]"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Redo"
@@ -39,6 +39,6 @@ ui - #route-scope>div[4]: div class="settings-section expanded" data-section="ba
 ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 87e9828f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, b3d50e8f]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 36ce8767] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, b3d50e8f]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Redo" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"

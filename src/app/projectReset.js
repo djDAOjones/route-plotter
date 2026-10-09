@@ -1,5 +1,6 @@
 import { invalidateProjectOperations } from './operationGeneration.js';
 import { releaseBackgroundBusy } from './backgroundLoading.js';
+import { beginStatusEpisode } from './persistence.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { isBuiltInPathHeadStyle } from '../utils/pathHeadPresets.js';
 import { discardForClearAll } from './unrestoredAutosave.js';
@@ -97,6 +98,8 @@ export function clearProject(app) {
   const recoveryCleared = app.storageService.clearAutoSave();
   app._isDirty = false;
   app.updateTitleIndicator();
+  // A new project: its first change is heard (UI-06 B-17).
+  beginStatusEpisode(app);
   if (!recoveryCleared || unrestored.failed) {
     app.announce(
       'Browser recovery could not be cleared; reload may restore old work.',

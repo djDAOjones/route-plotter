@@ -51,13 +51,13 @@ emit video:export-error {error: Error("Video export not supported: WebM export r
 emit ui:toast {message: "Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support", priority: "assertive"}
 emit motion:preview-mode-change false
 emit animation:seek 0
-announced "Starting video export — press Esc to cancel"
+announced "Tip: Switch to Preview mode to see exactly how the export will look"
 model ~ animationState.duration: 21429.352554 → 21807.894043
 model ~ timingReference.width: 660 → 1173.333333
 app ~ focus: "#modal-title-codec" → "#export-dropdown-btn"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Tip: Switch to Preview mode to see exactly how the export will look"
 ui ~ #app: div inert="" → div
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Export failed"
 ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
@@ -80,7 +80,8 @@ ui - #codec-webm: button class="btn btn-primary" :text="Export as WebM"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Starting video export — press Esc to cancel" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Starting video export — press Esc to cancel"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Tip: Switch to Preview mode to see exactly how the export will look" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui - #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
   ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
   ui - #toast-container>div[1]: div class="toast" :text="Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"

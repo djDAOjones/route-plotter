@@ -29,7 +29,7 @@ ui - #discard-confirm: button class="btn btn-danger" type="button" :text="Discar
 ## #discard-confirm · click
 announced "The session that couldn't be restored was discarded."
 app ~ focus: "#discard-cancel" → "#scope-route-btn"
-storage - routePlotter_keptAutosave:1790154009997-{1}: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.6"
+storage - routePlotter_keptAutosave:1790154010502-{1}: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.6"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="The session that couldn't be restored was discarded."

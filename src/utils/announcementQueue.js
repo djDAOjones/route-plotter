@@ -43,6 +43,11 @@
  *   (the app's are fixed texts). Once input stops, the region clears within
  *   one hold for the message showing and one for each message waiting. Not
  *   bounded: how long a polite message waits while assertive ones keep coming.
+ * - A message marked `whenIdle` (a tip: help, not status) waits until nothing
+ *   else shows or waits, and is written then: it never cuts in, never
+ *   displaces a message and does not count towards the cap, and every message
+ *   announced while it waits goes ahead of it (UI-06; the owner, 2026-10-09:
+ *   tips "queued after the start-up recovery messages so they never cut in").
  * - A blank or whitespace-only message has nothing to read and is ignored.
  *   Text is written as text, never parsed as markup.
  *
@@ -59,6 +64,8 @@ import { ANNOUNCEMENTS } from '../config/constants.js';
  */
 export function createAnnouncementQueue(region) {
   const waiting = [];
+  /** Messages that wait for the region to be idle (`whenIdle`), in turn. */
+  const whenIdle = [];
   let showing = null;
 
   const show = (entry) => {
@@ -71,7 +78,7 @@ export function createAnnouncementQueue(region) {
   // The message showing has had its time: the next replaces it, or, with
   // none waiting, the region is cleared and left polite, as the shell has it.
   const showNext = () => {
-    const entry = waiting.shift();
+    const entry = waiting.shift() ?? whenIdle.shift();
     if (entry) {
       show(entry);
       return;
@@ -89,12 +96,17 @@ export function createAnnouncementQueue(region) {
      * @param {string} [priority='polite'] - 'assertive' waits ahead of polite messages
      * @param {Object} [options]
      * @param {boolean} [options.essential=false] - The author must hear it, so it never gives way
+     * @param {boolean} [options.whenIdle=false] - It waits until nothing else shows or waits
      */
-    announce(message, priority = 'polite', { essential = false } = {}) {
+    announce(message, priority = 'polite', { essential = false, whenIdle: idle = false } = {}) {
       if (!region || !String(message ?? '').trim()) return;
       const entry = { message, priority, kept: essential || priority === 'assertive' };
       if (!showing) {
         show(entry);
+        return;
+      }
+      if (idle) {
+        if (showing.message !== message && !whenIdle.some(each => each.message === message)) whenIdle.push(entry);
         return;
       }
       const firstPolite = waiting.findIndex(each => each.priority !== 'assertive');

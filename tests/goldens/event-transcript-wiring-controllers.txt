@@ -2533,6 +2533,7 @@ given: the format at its default, MP4; the app's whole exportVideo replaced, sin
 at once: nothing counted
   video:export-request "webm"
     toast "Tip: Switch to Preview mode to see exactly how the export will look" for 6000 ms
+    said "Tip: Switch to Preview mode to see exactly how the export will look"
     exportVideo called (replaced) with [{"format":"webm"}]; entry settings: format "mp4", 30 fps, 1920x1080, path only false, in Edit
   model:
     (unchanged)
@@ -2550,6 +2551,7 @@ fixture: open day
 at once: nothing counted
   html:export-request
     toast "Tip: Switch to Preview mode to see exactly how the export will look" for 6000 ms
+    said "Tip: Switch to Preview mode to see exactly how the export will look"
   model:
     ~ runtime.ui.shareDisclosure: "closed" -> "Export standalone HTML?"
   selection: none (unchanged)

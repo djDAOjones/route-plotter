@@ -90,7 +90,9 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Unsaved changes"
   announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Saved to browser recovery"
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -117,7 +119,9 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Unsaved changes"
   announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Saved to browser recovery"
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -144,7 +148,9 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Unsaved changes"
   announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Saved to browser recovery"
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -171,7 +177,9 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Unsaved changes"
   announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Saved to browser recovery"
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -198,7 +206,9 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Unsaved changes"
   announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Saved to browser recovery"
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
@@ -225,7 +235,9 @@ settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Unsaved changes"
   announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Saved to browser recovery"
   model ~ animationState.duration: 21429.352554 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100

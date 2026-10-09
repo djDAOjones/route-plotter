@@ -162,6 +162,130 @@ describe('the header status line (UI-06 B-17)', () => {
   });
 });
 
+/**
+ * The owner's answer, 2026-10-09 ("Speak changes, not repeats"): through the
+ * one announcer, politely, "Unsaved changes" the first time an opened or
+ * saved project changes, "Saved to browser recovery" the first time recovery
+ * saves after that, then quiet until the next open or save; export progress
+ * spoken at 25%, 50% and 75%. The status line itself stays `aria-live="off"`.
+ */
+describe('the status line, spoken as it changes, not as it repeats (UI-06 B-17, J-18; the owner, 2026-10-09)', () => {
+  const UNSAVED = 'Unsaved changes';
+  const RECOVERED = 'Saved to browser recovery';
+  const add = (app, x) => app.eventBus.emit('waypoint:add', { imgX: x, imgY: 0.5, isMajor: true });
+  /** How often each status was heard so far. */
+  const counts = announced => [UNSAVED, RECOVERED].map(text => announced().filter(([message]) => message === text).length);
+
+  test('an edit on a clean project is heard once as "Unsaved changes", the first recovery save after it once as "Saved to browser recovery", and the rest of the episode is quiet', async () => {
+    const app = await editor();
+    const { announced } = listen(app);
+
+    add(app, 0.2);
+    expect(announced().filter(([message]) => message === UNSAVED)).toEqual([[UNSAVED, 'polite']]);
+    add(app, 0.4);
+    expect(counts(announced)).toEqual([1, 0]);
+    expect(app.storageService.flushAutoSave()).toBe(true);
+    expect(announced().filter(([message]) => message === RECOVERED)).toEqual([[RECOVERED, 'polite']]);
+    add(app, 0.6);
+    expect(app.storageService.flushAutoSave()).toBe(true);
+    expect(counts(announced)).toEqual([1, 1]);
+    // The line still shows each; it is not a live region of its own.
+    expect(status()).toBe(RECOVERED);
+    expect(id('app-status').getAttribute('aria-live')).toBe('off');
+  });
+
+  test.each([
+    ['a save', async (app) => {
+      vi.spyOn(app.imageAssetService, 'downloadZip').mockImplementation(() => {});
+      await app.saveProject();
+      expect(status()).toBe('Project saved');
+    }],
+    ['an opened example', async (app) => {
+      // The shipped archive, as the site serves it from the build output.
+      const serveRepository = globalThis.fetch;
+      globalThis.fetch = vi.fn(input => serveRepository(String(input).replace(/^examples\//, 'docs/examples/')));
+      expect(await app.loadExampleProject('uon-open-day')).toBe(true);
+    }],
+    ['Clear all', async app => app.eventBus.emit('waypoints:clear-all')],
+  ])('%s starts the episode again: its next change is heard, and the recovery save after it', async (_, begin) => {
+    const app = await editor();
+    const { announced } = listen(app);
+    add(app, 0.2);
+    expect(app.storageService.flushAutoSave()).toBe(true);
+    expect(counts(announced)).toEqual([1, 1]);
+
+    await begin(app);
+    // Nothing is said of the new episode until it changes.
+    expect(counts(announced)).toEqual([1, 1]);
+    add(app, 0.5);
+    add(app, 0.7);
+    expect(app.storageService.flushAutoSave()).toBe(true);
+    expect(counts(announced)).toEqual([2, 2]);
+  });
+
+  test('a recovery write that fails says so once, and recovery working again is heard again', async () => {
+    const app = await editor();
+    allowConsole(/Failed to save to localStorage/);
+    const { announced } = listen(app);
+    add(app, 0.2);
+    expect(app.storageService.flushAutoSave()).toBe(true);
+    expect(counts(announced)).toEqual([1, 1]);
+
+    localStorage.setItem.mockImplementation(() => {
+      throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+    });
+    try {
+      add(app, 0.4);
+      app.storageService.flushAutoSave();
+      expect(status()).toBe('Browser recovery failed');
+      expect(announced().filter(([message]) => message.startsWith('Auto-save failed.'))).toHaveLength(1);
+    } finally {
+      localStorage.setItem.mockImplementation(() => {});
+    }
+    add(app, 0.6);
+    expect(app.storageService.flushAutoSave()).toBe(true);
+    expect(counts(announced)).toEqual([1, 2]);
+    add(app, 0.8);
+    expect(app.storageService.flushAutoSave()).toBe(true);
+    expect(counts(announced)).toEqual([1, 2]);
+  });
+
+  test('a video export is heard at 25, 50 and 75 %, once each, in the status line\'s words, and each export again', async () => {
+    const app = await routeOfTwo();
+    const { announced } = listen(app);
+    vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+    app.videoExporter = {
+      // Every percent, each reported twice, as frames can be.
+      export: vi.fn(async ({ onProgress }) => {
+        for (let percent = 0; percent <= 100; percent += 1) {
+          onProgress(percent);
+          onProgress(percent);
+        }
+        return new Blob(['video']);
+      }),
+      cancel: vi.fn(),
+    };
+    const progress = () => announced().filter(([message]) => /^Exporting /.test(message));
+
+    await app.exportVideo({ format: 'mp4' });
+    expect(progress()).toEqual([['Exporting MP4 25%', 'polite'], ['Exporting MP4 50%', 'polite'], ['Exporting MP4 75%', 'polite']]);
+    // The start and the end are said as they were, once each.
+    expect(announced().filter(([message]) => /^(Starting video export|Video export complete)/.test(message)).map(([message]) => message))
+      .toEqual(['Starting video export — press Esc to cancel', 'Video export complete']);
+
+    await app.exportVideo({ format: 'mp4' });
+    expect(progress()).toHaveLength(6);
+
+    // Progress that jumps is heard at the furthest mark it passed, never at one behind it.
+    app.videoExporter.export = vi.fn(async ({ onProgress }) => {
+      [10, 60, 80, 100].forEach(onProgress);
+      return new Blob(['video']);
+    });
+    await app.exportVideo({ format: 'webm' });
+    expect(progress().slice(6)).toEqual([['Exporting WebM 50%', 'polite'], ['Exporting WebM 75%', 'polite']]);
+  });
+});
+
 describe('export progress in the status line (UI-06 J-18)', () => {
   test('a video export writes its progress and its end to the status line, never into the disabled menu toggle', async () => {
     const app = await routeOfTwo();
@@ -563,6 +687,73 @@ describe('one live region (UI-06 J-05, C-5)', () => {
     expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
     const traced = announced().slice(before).filter(([message]) => /^Traced the route into/.test(message));
     expect(traced).toHaveLength(1);
+  });
+
+  /** A clipboard that takes whatever it is given, for one test. */
+  function useClipboard() {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    return writeText;
+  }
+  afterEach(() => {
+    delete navigator.clipboard;
+  });
+  /** Every live region inside a dialog: none but the announcer's queue may speak while one is open. */
+  const liveInDialogs = () => [...document.querySelectorAll('[role="dialog"] *')]
+    .filter(element => {
+      const live = element.getAttribute('aria-live');
+      if (live) return live !== 'off';
+      return ['status', 'alert', 'log'].includes(element.getAttribute('role')) || element.tagName === 'OUTPUT';
+    })
+    .map(element => `#${element.id}`);
+
+  test('copying diagnostics is heard once: the dialog\'s line shows it and is not live (the owner, 2026-10-09)', async () => {
+    const app = await editor();
+    const writeText = useClipboard();
+    const { announced } = listen(app);
+
+    id('copy-debug-btn').click();
+    await vi.waitFor(() => expect(id('diagnostics-modal').contains(document.activeElement)).toBe(true));
+    id('diagnostics-copy').click();
+    await vi.waitFor(() => expect(id('diagnostics-status').textContent).toBe('Diagnostics copied.'));
+
+    expect(writeText).toHaveBeenCalledOnce();
+    expect(announced()).toEqual([['Diagnostics copied', 'polite']]);
+    expect(id('diagnostics-status').getAttribute('aria-live')).toBe('off');
+    expect(liveInDialogs()).toEqual([]);
+  });
+
+  test('every line the bug-report dialog shows is heard once, through the queue', async () => {
+    const app = await editor();
+    useClipboard();
+    const { announced } = listen(app);
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:diagnostics');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const line = () => id('diagnostics-status').textContent;
+    /** Follow a link as the author does, without leaving the page. */
+    const follow = (link) => {
+      link.addEventListener('click', event => event.preventDefault(), { once: true });
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    };
+
+    id('report-bug-btn').click();
+    await vi.waitFor(() => expect(id('diagnostics-modal').contains(document.activeElement)).toBe(true));
+    follow(id('diagnostics-open-issues'));
+    follow(id('diagnostics-open-security'));
+    id('diagnostics-copy-issues-address').click();
+    await vi.waitFor(() => expect(line()).toMatch(/^GitHub Issues address copied/));
+    const shownBeforeDownload = line();
+    id('diagnostics-download').click();
+
+    expect(announced()).toEqual([
+      ['GitHub Issues was requested in a new tab. Diagnostics were not sent.', 'polite'],
+      ['Private vulnerability reporting was requested in a new tab. Diagnostics were not sent.', 'polite'],
+      [shownBeforeDownload, 'polite'],
+      ['Diagnostics downloaded. Nothing was sent.', 'polite'],
+    ]);
+    expect(line()).toBe('Diagnostics downloaded. Nothing was sent.');
+    expect(liveInDialogs()).toEqual([]);
   });
 });
 

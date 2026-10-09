@@ -712,6 +712,10 @@ function replaceImmediateRecovery(app) {
 
 function reportAutosaveFailure(app) {
   app.setStatus?.(STATUS_RECOVERY_FAILED);
+  // Recovery working again is a change the author hears (the owner, 2026-10-09).
+  const episode = statusEpisode(app);
+  episode.recovered = false;
+  episode.failed = true;
   if (app._autosaveFailureWarningShown) return;
   app._autosaveFailureWarningShown = true;
   // A kept record that could not be restored may be what stops the write
@@ -728,6 +732,44 @@ function reportAutosaveFailure(app) {
 const STATUS_UNSAVED = 'Unsaved changes';
 const STATUS_RECOVERED = 'Saved to browser recovery';
 const STATUS_RECOVERY_FAILED = 'Browser recovery failed';
+
+/**
+ * What of the status line is spoken (the owner, 2026-10-09: "Speak changes,
+ * not repeats"): through the one announcer, politely, "Unsaved changes" the
+ * first time an opened, saved, cleared or freshly started project changes,
+ * and "Saved to browser recovery" the first time recovery saves after that;
+ * then nothing until the next episode. A recovery write that fails is
+ * announced once (`reportAutosaveFailure`), and recovery working again is
+ * heard again. The line itself is not live (`aria-live="off"`).
+ * @param {Object} app
+ * @returns {{unsaved: boolean, recovered: boolean, failed: boolean}} This episode's state
+ */
+function statusEpisode(app) {
+  app._statusEpisode ??= { unsaved: false, recovered: false, failed: false };
+  return app._statusEpisode;
+}
+
+/** An open, a save, Clear all or a restored start begins a new episode. */
+export function beginStatusEpisode(app) {
+  app._statusEpisode = { unsaved: false, recovered: false, failed: false };
+}
+
+/** The first change of an episode is heard. */
+function speakUnsaved(app) {
+  const episode = statusEpisode(app);
+  if (episode.unsaved) return;
+  episode.unsaved = true;
+  app.announce?.(STATUS_UNSAVED);
+}
+
+/** The first recovery save after a change, or after a failed one, is heard. */
+function speakRecovered(app) {
+  const episode = statusEpisode(app);
+  if (episode.recovered || !(episode.unsaved || episode.failed)) return;
+  episode.recovered = true;
+  episode.failed = false;
+  app.announce?.(STATUS_RECOVERED);
+}
 
 /**
  * Write the project to browser recovery (debounced), reporting a failure.
@@ -751,6 +793,7 @@ function writeRecovery(app) {
       if (outcome?.ok) {
         app._autosaveFailureWarningShown = false;
         app.setStatus?.(STATUS_RECOVERED);
+        speakRecovered(app);
       } else {
         reportAutosaveFailure(app);
       }
@@ -1058,6 +1101,8 @@ function completeProjectReplacement(app) {
   app._autosaveAssetWarningShown = false;
   app._autosaveBackgroundWarningShown = false;
   app._autosaveFailureWarningShown = false;
+  // And its first change is heard (UI-06 B-17).
+  beginStatusEpisode(app);
 
   // These cancellations happen only after every operation that can reject the
   // commit. A failed load therefore retains pending autosave and undo work.
@@ -1111,6 +1156,7 @@ export const persistenceMixin = {
         this.updateTitleIndicator?.();
         this.setStatus?.('Project saved');
         this.announce('Project saved');
+        beginStatusEpisode(this);
       } else if (sameProject) {
         this.setStatus?.(STATUS_UNSAVED);
         this.announce('Project file saved; newer changes remain unsaved.');
@@ -1214,8 +1260,10 @@ export const persistenceMixin = {
    */
   markDirty() {
     advanceEditRevision(this);
-    // Each edit is unsaved until the recovery write lands (UI-06 B-17).
+    // Each edit is unsaved until the recovery write lands (UI-06 B-17); the
+    // first of an episode is heard.
     this.setStatus?.(STATUS_UNSAVED);
+    speakUnsaved(this);
     if (!this._isDirty) {
       this._isDirty = true;
       this.updateTitleIndicator();

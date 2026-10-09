@@ -326,7 +326,9 @@ describe('a record that cannot be restored (DEF-28)', () => {
 
   test('goes when the author discards it, and the announcement says so', async () => {
     allowConsole(LOAD_REFUSED);
-    const { store, app } = await bootRecording({ [AUTOSAVE]: await refusedRecord() });
+    // The start's tip seen before: it is read again since the owner's answer
+    // (2026-10-09), after what starting said, on the real clock this waits on.
+    const { store, app } = await bootRecording({ [AUTOSAVE]: await refusedRecord(), ...TIP_SEEN });
     const announced = listen(app);
     await quiet();
 
