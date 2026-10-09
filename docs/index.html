@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.711</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.711">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.711">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.711">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.711">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.711">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.711">
+  <title>Route Plotter v3.2.712</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.2.712">
+  <link rel="stylesheet" href="styles/main.css?v=3.2.712">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.712">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.712">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.712">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.712">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -24,6 +24,11 @@
     <!-- Header -->
     <header class="header" role="banner">
       <h1 id="app-title" class="header-title">Route Plotter</h1>
+      <!-- UI-06 B-17: the save state as text, in the header beside the title;
+           the "●" is a decorative mark of the same state. Not live (J-05: the
+           queue's region is the one that reads; what matters is announced) -->
+      <span id="title-indicator" class="title-indicator" aria-hidden="true" hidden>●</span>
+      <p id="app-status" class="header-status" role="status" aria-live="off"></p>
       <div class="header-controls">
         <!-- Mode Switch (Edit/Preview toggle) -->
         <div class="mode-switch" id="mode-switch">
@@ -75,9 +80,12 @@
             Export ▾
           </button>
           <div class="dropdown-menu" id="export-menu" role="menu" aria-labelledby="export-dropdown-btn">
-            <button id="export-mp4-btn" class="dropdown-item" role="menuitem" type="button">Export MP4…</button>
-            <button id="export-webm-btn" class="dropdown-item" role="menuitem" type="button">Export WebM…</button>
-            <button id="export-html-btn" class="dropdown-item" role="menuitem" type="button">Export HTML…</button>
+            <button id="export-mp4-btn" class="dropdown-item" role="menuitem" type="button" aria-describedby="export-video-reason">Export MP4…</button>
+            <button id="export-webm-btn" class="dropdown-item" role="menuitem" type="button" aria-describedby="export-video-reason">Export WebM…</button>
+            <button id="export-html-btn" class="dropdown-item" role="menuitem" type="button" aria-describedby="export-html-reason">Export HTML…</button>
+            <!-- UI-06 B-18: an export that cannot work is disabled, and the
+                 reason is a line under the items that each is described by -->
+            <p id="export-menu-reason" class="dropdown-item-reason" role="none" hidden><span id="export-video-reason"></span> <span id="export-html-reason"></span></p>
             <div class="dropdown-separator" role="separator"></div>
             <button id="download-debug-btn" class="dropdown-item" role="menuitem" type="button">Download diagnostics…</button>
             <button id="copy-debug-btn" class="dropdown-item" role="menuitem" type="button">Copy diagnostics…</button>
@@ -89,8 +97,9 @@
       </div>
     </header>
 
-    <!-- Toast notification (replaces tip banner) -->
-    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+    <!-- Toast notification (replaces tip banner). Not a live region: every
+         toast is announced once through the queue (UI-06 J-05, C-5) -->
+    <div id="toast-container" class="toast-container" aria-live="off"></div>
 
     <!-- Main Content -->
     <main class="main" id="main-content" role="main" aria-labelledby="app-title">
@@ -1060,6 +1069,10 @@
                ============================================================ -->
           <div id="crowd-scope" class="scope-group" hidden>
 
+          <!-- UI-06 B-31: a crowd with no emitter has nothing for the Dots,
+               Release and Motion cards to edit; they are disabled under this line -->
+          <p id="crowd-no-emitter" class="section-hint crowd-no-emitter" hidden>This crowd has no emitter yet</p>
+
           <!-- GUIDE: what the dots follow -->
           <div class="settings-section" data-section="guide">
             <h2 class="section-title">
@@ -1310,7 +1323,7 @@
       </aside>
       
       <!-- Canvas Area (center column) - contains canvas + controls -->
-      <div class="canvas-area">
+      <div id="canvas-area" class="canvas-area" aria-busy="false">
         <canvas id="canvas" role="img" aria-label="Route animation canvas"></canvas>
         
         <!-- Controls Panel -->
@@ -1416,6 +1429,19 @@
     </div>
   </div>
 
+  <!-- UI-06 B-23: discarding the session that could not be restored is
+       irreversible, so it asks once (the Clear dialog's pattern) -->
+  <div id="discard-confirm-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-discard" aria-describedby="modal-text-discard" style="display: none;">
+    <div class="modal-content">
+      <h3 id="modal-title-discard">Discard the session that couldn't be restored?</h3>
+      <p id="modal-text-discard">It will be gone from this browser. Download a copy first if you want to keep it.</p>
+      <div class="modal-buttons">
+        <button id="discard-cancel" class="btn btn-secondary" type="button">Cancel</button>
+        <button id="discard-confirm" class="btn btn-danger" type="button">Discard</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Manual file sharing disclosure — no export begins until confirmed. -->
   <div id="share-disclosure-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="share-disclosure-title" aria-describedby="share-disclosure-description" style="display: none;">
     <div class="modal-content">
@@ -1445,7 +1471,10 @@
       </p>
       <label class="diagnostics-preview-label" for="diagnostics-preview">Technical information</label>
       <textarea id="diagnostics-preview" class="diagnostics-preview" rows="15" readonly spellcheck="false"></textarea>
-      <p id="diagnostics-status" class="diagnostics-status" role="status" aria-live="polite"></p>
+      <!-- Not live: what it says is announced once, through the queue, as the
+           header's status line is (UI-06; the lead's scope amendment, round 2:
+           the diagnostics dialog joins the one announcer) -->
+      <p id="diagnostics-status" class="diagnostics-status" role="status" aria-live="off"></p>
       <p id="diagnostics-issues-note" class="diagnostics-issues-note" hidden>
         The Issues link opens a new tab without sending the preview. If it does not open, copy this address:
         <code id="diagnostics-issues-address"></code>
@@ -1460,6 +1489,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.711"></script>
+  <script src="app.js?v=3.2.712"></script>
 </body>
 </html>

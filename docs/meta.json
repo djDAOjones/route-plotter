@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 18918,
+      "bytes": 19036,
       "imports": [],
       "format": "esm"
     },
@@ -452,7 +452,7 @@
       "format": "esm"
     },
     "src/utils/focusTrap.js": {
-      "bytes": 6020,
+      "bytes": 12065,
       "imports": [],
       "format": "esm"
     },
@@ -2676,7 +2676,7 @@
       "format": "esm"
     },
     "src/handlers/InteractionHandler.js": {
-      "bytes": 41764,
+      "bytes": 41649,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2697,7 +2697,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 17819,
+      "bytes": 18034,
       "imports": [],
       "format": "esm"
     },
@@ -2808,7 +2808,7 @@
       "format": "esm"
     },
     "src/components/Dropdown.js": {
-      "bytes": 5568,
+      "bytes": 5680,
       "imports": [],
       "format": "esm"
     },
@@ -2818,7 +2818,7 @@
       "format": "esm"
     },
     "src/models/ImageAsset.js": {
-      "bytes": 10826,
+      "bytes": 11000,
       "imports": [],
       "format": "esm"
     },
@@ -3020,7 +3020,7 @@
       "format": "esm"
     },
     "src/app/wiringBus.js": {
-      "bytes": 19147,
+      "bytes": 19138,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -3061,7 +3061,7 @@
       "format": "esm"
     },
     "src/app/backgroundLoading.js": {
-      "bytes": 3585,
+      "bytes": 5998,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
@@ -3082,7 +3082,7 @@
       "format": "esm"
     },
     "src/app/privacy.js": {
-      "bytes": 13904,
+      "bytes": 14288,
       "imports": [
         {
           "path": "src/services/DiagnosticsService.js",
@@ -3098,7 +3098,7 @@
       "format": "esm"
     },
     "src/app/unrestoredAutosave.js": {
-      "bytes": 22573,
+      "bytes": 23984,
       "imports": [
         {
           "path": "src/app/privacy.js",
@@ -3109,6 +3109,11 @@
           "path": "src/config/constants.js",
           "kind": "import-statement",
           "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
         }
       ],
       "format": "esm"
@@ -3130,7 +3135,7 @@
       "format": "esm"
     },
     "src/app/pathTiming.js": {
-      "bytes": 36540,
+      "bytes": 36519,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -3181,7 +3186,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 59694,
+      "bytes": 64369,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3222,6 +3227,11 @@
           "path": "src/app/operationGeneration.js",
           "kind": "import-statement",
           "original": "./operationGeneration.js"
+        },
+        {
+          "path": "src/app/backgroundLoading.js",
+          "kind": "import-statement",
+          "original": "./backgroundLoading.js"
         },
         {
           "path": "src/utils/safeColor.js",
@@ -3272,7 +3282,7 @@
       "format": "esm"
     },
     "src/app/exporting.js": {
-      "bytes": 17776,
+      "bytes": 21464,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3298,7 +3308,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 56370,
+      "bytes": 56472,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3395,7 +3405,7 @@
       "format": "esm"
     },
     "src/app/playback.js": {
-      "bytes": 10859,
+      "bytes": 11223,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3454,7 +3464,7 @@
       "format": "esm"
     },
     "src/app/editorPanel.js": {
-      "bytes": 36923,
+      "bytes": 37016,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3521,7 +3531,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 46487,
+      "bytes": 48491,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3682,12 +3692,22 @@
       "format": "esm"
     },
     "src/app/projectReset.js": {
-      "bytes": 4923,
+      "bytes": 5156,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
           "kind": "import-statement",
           "original": "./operationGeneration.js"
+        },
+        {
+          "path": "src/app/backgroundLoading.js",
+          "kind": "import-statement",
+          "original": "./backgroundLoading.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./persistence.js"
         },
         {
           "path": "src/utils/renderReference.js",
@@ -3713,7 +3733,7 @@
       "format": "esm"
     },
     "src/utils/announcementQueue.js": {
-      "bytes": 5276,
+      "bytes": 7735,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3724,7 +3744,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 49235,
+      "bytes": 50610,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3962,6 +3982,11 @@
           "original": "./app/backgroundLoading.js"
         },
         {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "./config/keybindings.js"
+        },
+        {
           "path": "src/app/projectReset.js",
           "kind": "import-statement",
           "original": "./app/projectReset.js"
@@ -3986,13 +4011,13 @@
     }
   },
   "outputs": {
-    ".docs-build-pNMVvh/app.js.map": {
+    ".docs-build-xFiXMI/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3597857
+      "bytes": 3631875
     },
-    ".docs-build-pNMVvh/app.js": {
+    ".docs-build-xFiXMI/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4001,7 +4026,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 4224
+          "bytesInOutput": 4266
         },
         "src/utils/imageCoordinates.js": {
           "bytesInOutput": 141
@@ -4115,7 +4140,7 @@
           "bytesInOutput": 856
         },
         "src/utils/focusTrap.js": {
-          "bytesInOutput": 2060
+          "bytesInOutput": 3159
         },
         "node_modules/mediabunny/dist/modules/src/misc.js": {
           "bytesInOutput": 3508
@@ -4208,13 +4233,13 @@
           "bytesInOutput": 42234
         },
         "src/handlers/InteractionHandler.js": {
-          "bytesInOutput": 17968
+          "bytesInOutput": 17836
         },
         "src/services/UndoService.js": {
           "bytesInOutput": 2379
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 6974
+          "bytesInOutput": 7066
         },
         "src/services/AreaDrawingService.js": {
           "bytesInOutput": 5275
@@ -4244,13 +4269,13 @@
           "bytesInOutput": 6999
         },
         "src/components/Dropdown.js": {
-          "bytesInOutput": 2252
+          "bytesInOutput": 2268
         },
         "src/services/CameraService.js": {
           "bytesInOutput": 5670
         },
         "src/models/ImageAsset.js": {
-          "bytesInOutput": 5003
+          "bytesInOutput": 5069
         },
         "src/services/ImageAssetService.js": {
           "bytesInOutput": 14024
@@ -4292,37 +4317,37 @@
           "bytesInOutput": 3342
         },
         "src/app/backgroundLoading.js": {
-          "bytesInOutput": 1721
+          "bytesInOutput": 2392
         },
         "src/services/DiagnosticsService.js": {
           "bytesInOutput": 2176
         },
         "src/app/privacy.js": {
-          "bytesInOutput": 9648
+          "bytesInOutput": 9607
         },
         "src/app/unrestoredAutosave.js": {
-          "bytesInOutput": 6900
+          "bytesInOutput": 7389
         },
         "src/utils/sceneEnd.js": {
           "bytesInOutput": 2159
         },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 10101
+          "bytesInOutput": 10017
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 29961
+          "bytesInOutput": 31177
         },
         "src/app/exporting.js": {
-          "bytesInOutput": 5588
+          "bytesInOutput": 6710
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 22558
+          "bytesInOutput": 22463
         },
         "src/app/undoRedo.js": {
           "bytesInOutput": 8482
         },
         "src/app/playback.js": {
-          "bytesInOutput": 3813
+          "bytesInOutput": 3878
         },
         "src/app/camera.js": {
           "bytesInOutput": 4383
@@ -4334,13 +4359,13 @@
           "bytesInOutput": 4621
         },
         "src/app/editorPanel.js": {
-          "bytesInOutput": 19760
+          "bytesInOutput": 19794
         },
         "src/app/pointer.js": {
           "bytesInOutput": 1871
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 22380
+          "bytesInOutput": 23159
         },
         "src/app/network.js": {
           "bytesInOutput": 11908
@@ -4358,16 +4383,16 @@
           "bytesInOutput": 116
         },
         "src/app/projectReset.js": {
-          "bytesInOutput": 2132
+          "bytesInOutput": 2143
         },
         "src/utils/announcementQueue.js": {
-          "bytesInOutput": 686
+          "bytesInOutput": 1089
         },
         "src/main.js": {
-          "bytesInOutput": 22984
+          "bytesInOutput": 23214
         }
       },
-      "bytes": 1122054
+      "bytes": 1128037
     }
   }
 }
