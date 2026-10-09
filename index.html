@@ -1110,10 +1110,10 @@
 
               <div class="range-row">
                 <label for="crowd-dot-size">
-                  <span data-tip="Dot size factor, scaled with the image like other elements">Size</span>
-                  <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5" aria-describedby="crowd-dot-size-value" aria-valuetext="0.40×">
+                  <span data-tip="Dot diameter in project reference pixels; exports scale it from the project's reference short edge">Size</span>
+                  <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5" aria-describedby="crowd-dot-size-value" aria-valuetext="8 reference px">
                 </label>
-                <span id="crowd-dot-size-value" class="range-readout">0.40×</span>
+                <span id="crowd-dot-size-value" class="range-readout">8 reference px</span>
               </div>
 
               <div class="range-row">
@@ -1229,7 +1229,7 @@
               </div>
 
               <label for="crowd-lifecycle">
-                <span data-tip="What a dot does when it reaches the end of its journey">At journey end</span>
+                <span data-tip="Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start sends a new dot from the start with its own pace and sway; Repeat journey replays the same walk exactly">At journey end</span>
                 <select id="crowd-lifecycle" aria-describedby="crowd-lifecycle-hint">
                   <option value="respawn">Respawn at the start</option>
                   <option value="loop">Repeat journey</option>

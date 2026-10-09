@@ -37,6 +37,16 @@ const NETWORK_CARD_HINTS = {
   },
 };
 
+/**
+ * The Guide hint's line on where a custom network's journeys start and end
+ * (CROWD-07 F14): what "At journey end" acts on is a node's Type, set in Node
+ * scope. Both fallbacks as the engine has them: with no Exit, a journey ends
+ * at a node with one path; with no Entry, dots set off from every node with a
+ * path they can take (SwarmEngine `_buildGraphGuide`, `fallbackExitIds`).
+ */
+const GUIDE_JOURNEY_HINT = "Journeys start at Entry nodes and end at Exit nodes (a node's Type). "
+  + 'With no Exit, they end at nodes with one path; with no Entry, dots set off from any node they can leave.';
+
 /** A node's path-weight row hint (UI-03), worded as the Path card's Share hint. */
 const PATH_WEIGHT_HINT = 'How strongly dots leaving this node prefer this path, '
   + 'shown as the share of them that take it. Arriving dots avoid turning straight back when another path is available';
@@ -387,7 +397,8 @@ export const networkMixin = {
   /**
    * Sync the Guide card's network row: the Edit-network button shows for
    * graph-guided crowds, and the hint names the state (no network yet /
-   * node-edge counts / route following).
+   * node-edge counts / route following) and, on a custom network, where
+   * journeys start and end (CROWD-07 F14).
    */
   updateGuideCard() {
     const layer = this.selectedCrowd;
@@ -427,7 +438,7 @@ export const networkMixin = {
         const timingHint = this.waypoints?.length < 2
           ? ' Add at least two route waypoints to set the master timing before previewing or exporting.'
           : '';
-        this._guideHintEl.textContent = networkHint + timingHint;
+        this._guideHintEl.textContent = `${networkHint} ${GUIDE_JOURNEY_HINT}${timingHint}`;
       }
     }
   },

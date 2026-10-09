@@ -22,10 +22,10 @@ ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="false" class="layer-row
 ui ~ #layers-strip>li[1]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[1]>button[0]: button aria-describedby="{#layers-strip>li[1]>span[1]}" aria-pressed="true" class="layer-row" data-tip-desc="{#layers-strip>li[1]>span[1]}" data-tip="Double-click or press F2 to rename" type="button" → button aria-describedby="{#layers-strip>li[1]>span[1]}" aria-pressed="false" class="layer-row" data-tip-desc="{#layers-strip>li[1]>span[1]}" data-tip="Double-click or press F2 to rename" type="button"
 ui - #crowd-no-emitter: p (not shown)
-ui - #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 71721b3d)
-ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 99d6b83d)
+ui - #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 2de5989f)
+ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 1d79ee7b)
 ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 114 inside, 74789275)
-ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 33 inside, cb8022a2)
+ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 33 inside, c3328540)
 
 ## #scope-prev-btn · disabled, not operated
 
@@ -59,7 +59,7 @@ ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="gu
 ui ~ #crowd-guide-type: select aria-describedby="crowd-guide-type-tip" :value="graph" → select aria-describedby="crowd-guide-type-tip" :value="route"
 ui ~ #network-edit-btn: button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" type="button" :text="Edit network" → button (not shown)
 ui ~ #crowd-trace-route-btn: button aria-describedby="crowd-trace-route-reason crowd-trace-route-btn-tip" class="btn btn-secondary" data-tip-desc="crowd-trace-route-btn-tip" data-tip="Copy the route into this crowd's network, so its dots follow the same shape and can branch where the route branches" type="button" :text="Trace route into network" → button (not shown)
-ui ~ #crowd-guide-hint: p class="section-hint" :text="Dots walk this crowd's own network (4 nodes, 4 paths)." → p class="section-hint" :text="Dots follow your route. Custom network lets you draw paths of their own."
+ui ~ #crowd-guide-hint: p class="section-hint" :text="Dots walk this crowd's own network (4 nodes, 4 paths). Journeys start at Entry nodes and end at Exit nodes (a node's Type). With no Exit, they end at nodes with one path; with no Entry, dots set off from any node they can leave." → p class="section-hint" :text="Dots follow your route. Custom network lets you draw paths of their own."
 ui ~ #crowd-pattern-hint: p class="section-hint" :text="Path shares set the route proportions. Re-roll changes which dots take each path, plus individual walking and set-off variation." → p class="section-hint" :text="Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path."
 settled:
   emit animation:durationChange 27929.352554
@@ -405,7 +405,7 @@ app ~ focus: "body" → "#section-dots-content>div[2]>button[0]"
 storage ~ routePlotter_lastSection: "motion" → "dots"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #section-dots-content>div[2]>button[0]: button aria-describedby="crowd-dot-size-tip" aria-expanded="false" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --crowd-dot-size-tip;" type="button" → button aria-describedby="crowd-dot-size-tip" aria-expanded="true" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --crowd-dot-size-tip;" type="button"
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dot size factor, scaled with the image like other elements"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dot diameter in project reference pixels; exports scale it from the project's reference short edge"
 
 ## #crowd-dot-size · set 70
 emit crowd:param-changed {journeys: false}
@@ -417,8 +417,8 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
-ui ~ #crowd-dot-size: input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="0.45×" max="200" min="5" step="5" type="range" value="40" :value="45" → input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="0.70×" max="200" min="5" step="5" type="range" value="40" :value="70"
-ui ~ #crowd-dot-size-value: span class="range-readout" :text="0.45×" → span class="range-readout" :text="0.70×"
+ui ~ #crowd-dot-size: input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="9 reference px" max="200" min="5" step="5" type="range" value="40" :value="45" → input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="14 reference px" max="200" min="5" step="5" type="range" value="40" :value="70"
+ui ~ #crowd-dot-size-value: span class="range-readout" :text="9 reference px" → span class="range-readout" :text="14 reference px"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
@@ -984,7 +984,7 @@ settled:
 app ~ focus: "body" → "#section-motion-content>button[2]"
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #section-motion-content>button[2]: button aria-describedby="crowd-lifecycle-tip" aria-expanded="false" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button" → button aria-describedby="crowd-lifecycle-tip" aria-expanded="true" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button"
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="What a dot does when it reaches the end of its journey"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start sends a new dot from the start with its own pace and sway; Repeat journey replays the same walk exactly"
 
 ## #crowd-lifecycle · choose "respawn"
 emit crowd:param-changed {journeys: false}
