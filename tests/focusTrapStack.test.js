@@ -250,6 +250,117 @@ describe('two dialogs open at once (UI-06, Codex r1)', () => {
     expect(document.activeElement).toBe(byId('opener'));
   });
 
+  /**
+   * The app's skip link, its page's first control (index.html): where focus
+   * goes when nothing in the chain takes it and no dialog is open beneath
+   * (Codex r3's answer to question 2-1).
+   */
+  const skipLink = () => {
+    const link = document.createElement('a');
+    link.id = 'skip';
+    link.className = 'skip-link';
+    link.href = '#app';
+    link.textContent = 'Skip to main content';
+    document.body.prepend(link);
+    return link;
+  };
+
+  test('a target disabled through its fieldset is passed over: the next in the chain has focus, else the skip link, never the closed dialog\'s heading (Codex r3)', () => {
+    const { byId, lower, upper } = page();
+    const skip = skipLink();
+    // The opener and Other in one group, as a toolbar's buttons are; Other
+    // keeps the roving tabindex a toolbar gives its buttons.
+    const group = document.createElement('fieldset');
+    group.id = 'group';
+    byId('opener').before(group);
+    group.append(byId('opener'), byId('other'));
+    byId('other').tabIndex = -1;
+    const lowerTrap = trapFor(lower);
+    const upperTrap = trapFor(upper);
+
+    // Codex's reproduction: the opener's group disabled while the dialog was open.
+    byId('opener').focus();
+    lowerTrap.activate();
+    expect(document.activeElement).toBe(byId('modal-title-lower'));
+    group.disabled = true;
+    lower.style.display = 'none';
+    lowerTrap.deactivate();
+    expect(document.activeElement).toBe(skip);
+    group.disabled = false;
+    lower.style.display = 'flex';
+
+    // A named target disabled through its group: the next in the chain, the
+    // opener of the dialog closed beneath, has it. Other's tabindex would let
+    // jsdom focus it, disabled or not; a browser would not, and nor does the trap.
+    byId('first').focus();
+    lowerTrap.activate();
+    upperTrap.activate(null, byId('other'));
+    lowerTrap.deactivate();
+    group.disabled = true;
+    upper.style.display = 'none';
+    upperTrap.deactivate();
+    expect(document.activeElement).toBe(byId('first'));
+    upper.style.display = 'flex';
+
+    // The whole chain disabled through the group: the skip link.
+    group.disabled = false;
+    byId('opener').focus();
+    lowerTrap.activate();
+    upperTrap.activate(null, byId('other'));
+    lowerTrap.deactivate();
+    group.disabled = true;
+    upperTrap.deactivate();
+    expect(document.activeElement).toBe(skip);
+  });
+
+  test('a target that passes every check but does not take focus is passed over: the next in the chain, the skip link, or the page\'s next control has it (Codex r3)', () => {
+    const { byId, lower, upper } = page();
+    const skip = skipLink();
+    // A card focusable by its tabindex alone; the tabindex goes while a dialog is open.
+    const card = document.createElement('div');
+    card.id = 'card';
+    card.textContent = 'Card';
+    byId('other').after(card);
+    const lowerTrap = trapFor(lower);
+    const upperTrap = trapFor(upper);
+
+    // Its own opener refuses focus: the skip link.
+    card.tabIndex = 0;
+    card.focus();
+    expect(document.activeElement).toBe(card);
+    lowerTrap.activate();
+    card.removeAttribute('tabindex');
+    lower.style.display = 'none';
+    lowerTrap.deactivate();
+    expect(document.activeElement).toBe(skip);
+    lower.style.display = 'flex';
+
+    // Its named target refuses: the next in the chain, the opener of the dialog closed beneath.
+    card.tabIndex = 0;
+    byId('opener').focus();
+    lowerTrap.activate();
+    upperTrap.activate(null, card);
+    lowerTrap.deactivate();
+    card.removeAttribute('tabindex');
+    upper.style.display = 'none';
+    upperTrap.deactivate();
+    expect(document.activeElement).toBe(byId('opener'));
+    upper.style.display = 'flex';
+
+    // The page's first control refuses too (a tabindex that is not a number,
+    // which no browser focuses): the next, the skip link.
+    const stray = document.createElement('span');
+    stray.id = 'stray';
+    stray.setAttribute('tabindex', '');
+    document.body.prepend(stray);
+    card.tabIndex = 0;
+    card.focus();
+    lowerTrap.activate();
+    card.removeAttribute('tabindex');
+    lowerTrap.deactivate();
+    expect(document.activeElement).toBe(skip);
+  });
+
   test('the announcer stays out of the inert background, so what is said while a dialog is open is heard', () => {
     const { byId, lower, upper } = page();
     trapFor(lower).activate();

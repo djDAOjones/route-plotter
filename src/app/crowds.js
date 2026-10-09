@@ -921,8 +921,11 @@ export const crowdsMixin = {
    * A crowd with no emitter has nothing for the Dots, Release and Motion
    * cards to edit (UI-06 B-31): they are disabled under a line that says so,
    * which their headers are described by, and the previous crowd's values are
-   * cleared from the parts that are built, not set. A crowd with an emitter
-   * has them back; the busyness editor then sets its own buttons' state.
+   * cleared from the parts that are built, not set. Their hints' "?" triggers
+   * stay enabled, so what each control does can still be read (Codex r3), as
+   * a disabled control keeps its help (ParamTooltip.js). A crowd with an
+   * emitter has them back; the busyness editor then sets its own buttons'
+   * state.
    * @param {boolean} hasEmitter
    * @private
    */
@@ -936,7 +939,7 @@ export const crowdsMixin = {
       const header = section.querySelector('.section-header');
       if (hasEmitter) header?.removeAttribute('aria-describedby');
       else header?.setAttribute('aria-describedby', 'crowd-no-emitter');
-      for (const control of section.querySelectorAll('.section-content input, .section-content select, .section-content button')) {
+      for (const control of section.querySelectorAll('.section-content input, .section-content select, .section-content button:not(.param-hint-trigger)')) {
         control.disabled = !hasEmitter;
       }
       // The swatches' own fieldset too, so they look it (the lead's pane

@@ -17,9 +17,11 @@
  * one's own, so a dialog whose own target was inside the one closed beneath
  * it gives focus back where that one would have: in the end, the control
  * that opened the first. A target is used only if focus can land there: in
- * the page, not disabled, hidden or inert, and not inside a closed dialog;
- * the next in the chain is tried, then the start of the dialog beneath, if
- * one is open, else the page's first control that can take focus.
+ * the page, not disabled (by its own attribute or its fieldset's), hidden or
+ * inert, and not inside a closed dialog; and only if focus is then on it
+ * (Codex r3). Otherwise the next in the chain is tried, then the start of the
+ * dialog beneath, if one is open, else the page's first control that takes
+ * focus: in the app, the skip link.
  * 
  * @module utils/focusTrap
  */
@@ -64,7 +66,8 @@ function topTrap() {
 
 /**
  * Whether focus given back to `target` lands there, as a browser decides: it
- * is in the page and can be focused, is not disabled, hidden (`hidden`, or
+ * is in the page and can be focused, is not disabled (`:disabled`, so a
+ * control in a disabled fieldset is too: Codex r3), hidden (`hidden`, or
  * `display: none` on it or a container, or `visibility: hidden`) or inert,
  * and is not inside a dialog whose trap is closed (Codex r2). jsdom focuses
  * any of these, so the trap does not ask it.
@@ -72,13 +75,27 @@ function topTrap() {
  * @returns {boolean}
  */
 function canTakeFocus(target) {
-  if (!target?.isConnected || typeof target.focus !== 'function' || target.disabled) return false;
+  if (!target?.isConnected || typeof target.focus !== 'function' || target.matches(':disabled')) return false;
   if (target.closest('[inert]') || window.getComputedStyle(target).visibility === 'hidden') return false;
   for (let node = target; node && node !== document.documentElement; node = node.parentElement) {
     if (node.hidden || window.getComputedStyle(node).display === 'none') return false;
     if (trappedModals.has(node) && !openTraps.some(open => open.modal === node)) return false;
   }
   return true;
+}
+
+/**
+ * Give focus to `target` if it can take it, and say whether it did: a target
+ * that passes every check can still refuse focus (a tabindex taken away), and
+ * the next must then be tried rather than focus left in the closed dialog
+ * (Codex r3).
+ * @param {Element|null} target
+ * @returns {boolean}
+ */
+function focusLands(target) {
+  if (!canTakeFocus(target)) return false;
+  target.focus();
+  return document.activeElement === target;
 }
 
 /**
@@ -263,24 +280,23 @@ export function createFocusTrap(modal) {
     document.removeEventListener('focusin', handleFocusIn, true);
     syncInert();
 
-    // Give focus back to the first target in the chain that can take it; the
-    // dialog beneath, if any, resumes, and focus that did not come back into
-    // it goes to its start. With none open, the page's first control.
+    // Give focus back to the first target in the chain that takes it, trying
+    // each in turn (Codex r3); the dialog beneath, if any, resumes, and focus
+    // that did not come back into it goes to its start. With none open, the
+    // page's first control that takes it: the skip link (Codex r3, 2-1).
     if (wasOnTop) {
-      const target = trap.returnTargets.find(canTakeFocus);
-      if (target === document.body) {
+      const target = trap.returnTargets.find(each => (each === document.body ? canTakeFocus(each) : focusLands(each)));
+      if (target === document.body && !canTakeFocus(document.activeElement)) {
         // Nothing had focus when it opened, and nothing has now: what still
         // holds it in the closed dialog lets go, as a browser's focus fix-up
         // would once the dialog hides.
-        if (!canTakeFocus(document.activeElement)) document.activeElement?.blur?.();
-      } else {
-        target?.focus();
+        document.activeElement?.blur?.();
       }
       const below = topTrap();
       if (below) {
         if (!below.modal.contains(document.activeElement)) below.focusInitialElement();
       } else if (!target) {
-        [...document.body.querySelectorAll(FOCUSABLE_SELECTORS)].find(canTakeFocus)?.focus();
+        [...document.body.querySelectorAll(FOCUSABLE_SELECTORS)].find(focusLands);
       }
     }
     trap.returnTargets = [];

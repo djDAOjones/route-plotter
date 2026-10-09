@@ -819,6 +819,11 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
   const CARDS = ['dots', 'release', 'motion'];
   const card = name => document.querySelector(`#crowd-scope .settings-section[data-section="${name}"]`);
   const controlsOf = name => [...card(name).querySelectorAll('.section-content input, .section-content select, .section-content button')];
+  /** A hint's "?" trigger: help, not a control the crowd is edited with (Codex r3). */
+  const isHelp = control => control.classList.contains('param-hint-trigger');
+  /** What a card edits the crowd with: every control in it but the hints' triggers. */
+  const editableOf = name => controlsOf(name).filter(control => !isHelp(control));
+  const helpOf = name => controlsOf(name).filter(isHelp);
   /** The ids of a card's controls that are disabled by a rule of their own (Reset to even, with the busyness even). */
   const disabledIn = name => controlsOf(name).filter(control => control.disabled).map(control => control.id);
 
@@ -841,14 +846,43 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
 
     expect(line.hidden).toBe(false);
     expect(line.textContent).toBe('This crowd has no emitter yet');
+    // Every control that edits the crowd is disabled, all 24 of them, as
+    // many as before help was told apart: only the 11 hints' triggers are
+    // left out ([editable, help] per card).
+    expect(Object.fromEntries(CARDS.map(name => [name, [editableOf(name).length, helpOf(name).length]])))
+      .toEqual({ dots: [13, 3], release: [8, 5], motion: [3, 3] });
     for (const name of CARDS) {
-      expect(controlsOf(name).length, name).toBeGreaterThan(0);
-      expect(controlsOf(name).filter(control => !control.disabled), `${name} controls left enabled`).toEqual([]);
+      expect(editableOf(name).filter(control => !control.disabled), `${name} controls left enabled`).toEqual([]);
       expect(card(name).querySelector('.section-header').getAttribute('aria-describedby')).toBe('crowd-no-emitter');
     }
     // The guide is the crowd's, emitter or not.
     expect(id('crowd-guide-type').disabled).toBe(false);
     expect(id('crowd-guide-type').value).toBe('graph');
+
+    // Help stays (Codex r3, question 2-2): all 11 "?" triggers are enabled,
+    // and each opens its explanation by keyboard and by pointer.
+    const help = CARDS.flatMap(helpOf);
+    const named = trigger => trigger.getAttribute('aria-label');
+    expect(help).toHaveLength(11);
+    expect(help.filter(trigger => trigger.disabled || trigger.hidden).map(named)).toEqual([]);
+    /** The explanation showing, if any: the one shared hint, made on first use. */
+    const shown = () => {
+      const tooltip = id('param-tooltip');
+      return tooltip?.style.display === 'block' ? tooltip.textContent : null;
+    };
+    for (const trigger of help) {
+      // A keyboard's arrival, as jsdom's `:focus-visible` heuristic recognises one.
+      document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+      trigger.focus();
+      expect([document.activeElement === trigger, shown(), trigger.getAttribute('aria-expanded')], `${named(trigger)}, by keyboard`)
+        .toEqual([true, describedBy(trigger), 'true']);
+    }
+    for (const trigger of help) {
+      trigger.click();
+      expect([shown(), trigger.getAttribute('aria-expanded')], `${named(trigger)}, by pointer`).toEqual([describedBy(trigger), 'true']);
+      trigger.click();
+      expect([shown(), trigger.getAttribute('aria-expanded')], `${named(trigger)}, closed by pointer`).toEqual([null, 'false']);
+    }
 
     app.eventBus.emit('crowd:selected', full);
 
@@ -909,8 +943,8 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
     })).toBe(true);
     app.addCrowd({ enterNetworkEditor: false });
     const full = app.selectedCrowd;
-    // The hints' "?" triggers go with their cards too, but are not fields:
-    // their look is not this row's (a question in the round-2 report).
+    // The hints' "?" triggers stay enabled, help on an empty crowd (Codex
+    // r3), so they are not among the disabled controls looked at here.
     const shown = () => CARDS.flatMap(controlsOf)
       .filter(control => control.type !== 'hidden' && !control.classList.contains('param-hint-trigger'));
     const [field, edge, mark, accent] = ['--disabled-01', '--disabled-02', '--disabled-03', '--control-accent'].map(tokenHex);
