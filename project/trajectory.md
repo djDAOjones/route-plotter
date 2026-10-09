@@ -11,6 +11,7 @@
 
 - DEF-94 — the scene outline's validation errors show their accent bar and red field border again, because the five tokens the stylesheets used without a definition are defined (2026-10-08) — see decisions
 - DEF-83 — a keyboard user tabbing onto a collapsed card header now sees its focus ring, because the header is a native button whose ring is drawn inside it, out of the card's clip (2026-10-08) — see decisions
+- DEF-91 — a background that fails to load, uploaded or from the examples, now says why in a toast and aloud, and the canvas area is marked busy while one decodes (2026-10-09) — see decisions
 
 ## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
