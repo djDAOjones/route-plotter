@@ -50,7 +50,7 @@ ui ~ body>a[0]: a class="skip-link" href="#main-content" :text="Skip to main con
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline"
 ui ~ #app: div → div inert=""
 ui ~ #help-modal: div (not shown) → div aria-labelledby="modal-title-help" aria-modal="true" class="modal" role="dialog" style="display: flex;"
-ui + #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, c0249cf7)
+ui + #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, 2d456057)
 
 ## #scope-route-btn · click
 app ~ focus: "body" → "#scope-route-btn"

@@ -6,7 +6,7 @@ ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #app: div inert="" → div
 ui ~ #help-modal: div aria-labelledby="modal-title-help" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, c0249cf7)
+ui - #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, 2d456057)
 
 ## #help-close-x · click
 app ~ focus: "#modal-title-help" → "body"
@@ -14,7 +14,7 @@ ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #app: div inert="" → div
 ui ~ #help-modal: div aria-labelledby="modal-title-help" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, c0249cf7)
+ui - #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, 2d456057)
 
 ## #help-about>p[2]>a[0] · click
 app ~ focus: "#modal-title-help" → "#help-about>p[2]>a[0]"
@@ -27,11 +27,11 @@ app ~ focus: "#modal-title-help" → "#diagnostics-title"
 ui ~ #help-modal: div aria-labelledby="modal-title-help" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui ~ #diagnostics-modal: div (not shown) → div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;"
 ui + #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 40374417)
-ui - #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, c0249cf7)
+ui - #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, 2d456057)
 
 ## #help-show-welcome · click
 app ~ focus: "#modal-title-help" → "#splash-title"
 ui ~ #splash: div (not shown) → div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;"
 ui + #splash>div[0]: div class="splash-content" (and 41 inside, 88f9ad21)
 ui ~ #help-modal: div aria-labelledby="modal-title-help" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, c0249cf7)
+ui - #help-modal>div[0]: div class="modal-content help-modal-content" (and 149 inside, 2d456057)

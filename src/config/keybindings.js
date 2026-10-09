@@ -316,7 +316,7 @@ const DEFAULT_BINDINGS = {
       key: '?',
       modifiers: [],
       action: 'help:show-shortcuts',
-      description: 'Open Help', // the Help dialog, its shortcuts grid open (UI-06 J-01)
+      description: 'Open help', // the Help dialog, its shortcuts grid open (UI-06 J-01)
       category: 'general'
     }
   }

@@ -54,8 +54,6 @@ const ALLOWED_WORDS = new Set([
   'Home', 'End', 'Space', 'Del', 'Shift', 'Cmd', 'Ctrl', 'Alt', 'Tab', 'Enter',
   // Readout words a hint quotes as the readout writes them ("Left (Earlier)…", "right (Later)").
   'Earlier', 'Later',
-  // The Help dialog's name, as its button and title write it: `?` reads "Open Help" (UI-06 J-01).
-  'Help',
 ]);
 
 /** Runs of capitalised words that are names, not Title Case. */

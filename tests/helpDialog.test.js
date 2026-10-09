@@ -17,7 +17,8 @@
  * closing Help before the dialog they open, and focus coming back to the
  * header's Help button. And the splash: shown on a first start, any way of
  * dismissing it records that it was seen, a second start does not show it,
- * and its checkbox is gone.
+ * and its checkbox is gone; `?` on it opens Help over it, and closing Help
+ * gives focus back to it.
  */
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -199,7 +200,7 @@ describe('Help opens a dialog of its own (UI-06 J-01)', () => {
     expect(grid.querySelector('[data-binding-id="redo"] kbd').textContent)
       .toBe(`${MODIFIER_DISPLAY.meta}+${MODIFIER_DISPLAY.shift}+Z`);
     // `?` is the key that opens it, and says so.
-    expect(grid.querySelector('[data-binding-id="showShortcuts"]').textContent).toMatch(/^\?\s*Open Help$/);
+    expect(grid.querySelector('[data-binding-id="showShortcuts"]').textContent).toMatch(/^\?\s*Open help$/);
   });
 
   test("About gives the app's own version, the licence and notices, the source, and Report a bug", async () => {
@@ -294,6 +295,35 @@ describe('the welcome is for the first start (UI-06 J-01)', () => {
     expect(id('splash-dont-show')).toBeNull();
     expect(splash.querySelector('input[type="checkbox"]')).toBeNull();
     expect(splash.querySelector('details, summary, .controls-accordion, .control-item')).toBeNull();
+  });
+
+  test("`?` on the first start's welcome opens Help over it; closing Help gives focus back to the welcome, still open and not yet recorded", async () => {
+    // The owner's answer, 2026-10-09: "Help on top of the welcome". The traps stack (PR 4).
+    const store = useStorage();
+    const app = await firstStart();
+    const marked = vi.spyOn(app.storageService, 'markSplashShown');
+    expect(document.activeElement).toBe(id('splash-title'));
+
+    expect(press('?').defaultPrevented).toBe(true);
+    expect([isOpen('help-modal'), isOpen('splash')]).toEqual([true, true]);
+    expect([app._helpFocusTrap.isActive, app._splashFocusTrap.isActive]).toEqual([true, true]);
+    expect(document.activeElement).toBe(id('modal-title-help'));
+    expect(notInert()).toEqual(['announcer', 'help-modal']);
+
+    press('Escape');
+    expect([isOpen('help-modal'), isOpen('splash')]).toEqual([false, true]);
+    expect([app._helpFocusTrap.isActive, app._splashFocusTrap.isActive]).toEqual([false, true]);
+    expect(document.activeElement).toBe(id('splash-title'));
+    expect(notInert()).toEqual(['announcer', 'splash']);
+    expect(marked).not.toHaveBeenCalled();
+    expect(store.has(SPLASH_SHOWN)).toBe(false);
+
+    // The welcome then closes as any first start's does: recorded, nothing left inert.
+    id('splash-close').click();
+    expect(id('splash').style.display).toBe('none');
+    expect(app._splashFocusTrap.isActive).toBe(false);
+    expect(marked).toHaveBeenCalledOnce();
+    expect(inertChildren()).toEqual([]);
   });
 
   test.each([

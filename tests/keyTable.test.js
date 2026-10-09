@@ -492,7 +492,7 @@ const HELP_ROWS = {
     ['undo', `${META_TEXT}+Z`, 'Undo'],
     ['redo', `${META_TEXT}+${SHIFT_TEXT}+Z`, 'Redo'],
     ['save', `${META_TEXT}+S`, 'Save'],
-    ['showShortcuts', '?', 'Open Help']
+    ['showShortcuts', '?', 'Open help']
   ]
 };
 
