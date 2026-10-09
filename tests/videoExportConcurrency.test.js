@@ -20,8 +20,9 @@
  * given back as a dialog closes, a size or mode change) is refused too.
  */
 
+import { setTimeout as realDelay } from 'node:timers/promises';
 import { afterEach, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
@@ -40,6 +41,8 @@ afterEach(() => {
  * it finish. Each frame it asks for records how it was drawn.
  */
 async function exportingApp() {
+  // The start's tip seen: its timer runs on the real clock and would land mid-test on a slow runner.
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   await app.ready;
   // The welcome dialog's focus trap would take the Escape a test presses.
@@ -1304,4 +1307,13 @@ test.each(['full', 'reduced'].flatMap(stage => ['can', 'cannot'].map(answer => [
   expect(observed).toEqual({ probes: 0, shown: false, inert: false, encodings: 1 });
   expect(encode.mock.calls.map(([options]) => options.format)).toEqual(['webm', 'mp4']);
   expect(frames).toHaveLength(6);
+});
+
+test('an app booted for these tests has the start\'s tip seen: on the real clock, it never lands in one (UI-06, Codex r2)', async () => {
+  // The tip waits 1.5 s on the real clock from the boot (`_showPreviewTipToast`);
+  // a test that pins what is shown or said must not outlast it unmarked.
+  const { app } = await exportingApp();
+  const shown = vi.spyOn(app, 'showToast');
+  await realDelay(1600);
+  expect(shown.mock.calls.map(([message]) => message).filter(message => /^Tip: /.test(message))).toEqual([]);
 });

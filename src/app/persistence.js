@@ -712,10 +712,10 @@ function replaceImmediateRecovery(app) {
 
 function reportAutosaveFailure(app) {
   app.setStatus?.(STATUS_RECOVERY_FAILED);
-  // Recovery working again is a change the author hears (the owner, 2026-10-09).
-  const episode = statusEpisode(app);
-  episode.recovered = false;
-  episode.failed = true;
+  // A failure ends no episode: "Saved to browser recovery", once heard, is
+  // not heard again until the next open or save (the owner, 2026-10-09;
+  // Codex r2). The failure itself is announced below, once.
+  statusEpisode(app).failed = true;
   if (app._autosaveFailureWarningShown) return;
   app._autosaveFailureWarningShown = true;
   // A kept record that could not be restored may be what stops the write
@@ -739,8 +739,9 @@ const STATUS_RECOVERY_FAILED = 'Browser recovery failed';
  * first time an opened, saved, cleared or freshly started project changes,
  * and "Saved to browser recovery" the first time recovery saves after that;
  * then nothing until the next episode. A recovery write that fails is
- * announced once (`reportAutosaveFailure`), and recovery working again is
- * heard again. The line itself is not live (`aria-live="off"`).
+ * announced once (`reportAutosaveFailure`); recovery working again is heard
+ * only if "Saved to browser recovery" has not been yet in the episode (Codex
+ * r2). The line itself is not live (`aria-live="off"`) and shows each.
  * @param {Object} app
  * @returns {{unsaved: boolean, recovered: boolean, failed: boolean}} This episode's state
  */
@@ -762,7 +763,7 @@ function speakUnsaved(app) {
   app.announce?.(STATUS_UNSAVED);
 }
 
-/** The first recovery save after a change, or after a failed one, is heard. */
+/** The episode's first recovery save after a change, or after a failed one, is heard. */
 function speakRecovered(app) {
   const episode = statusEpisode(app);
   if (episode.recovered || !(episode.unsaved || episode.failed)) return;

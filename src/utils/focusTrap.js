@@ -11,12 +11,35 @@
  * follows the stack: everything but the top dialog is inert while any is
  * open, except the live region announcements are written to, and once the
  * last closes every element is as it was before the first opened.
+ *
+ * Focus goes back along a chain (UI-06, Codex r2). A dialog closed beneath
+ * another hands its return target to the one directly over it, after that
+ * one's own, so a dialog whose own target was inside the one closed beneath
+ * it gives focus back where that one would have: in the end, the control
+ * that opened the first. A target is used only if focus can land there: in
+ * the page, not disabled, hidden or inert, and not inside a closed dialog;
+ * the next in the chain is tried, then the start of the dialog beneath, if
+ * one is open, else the page's first control that can take focus.
  * 
  * @module utils/focusTrap
  */
 
 /** The active traps, the one opened last on top. */
 const openTraps = [];
+
+/** Every dialog a trap was made for: a control in one whose trap is closed cannot take focus back. */
+const trappedModals = new WeakSet();
+
+/** What can take focus in a dialog, and in the page when nothing else can. */
+const FOCUSABLE_SELECTORS = [
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  'a[href]',
+  'summary',
+  '[tabindex]:not([tabindex="-1"])'
+].join(', ');
 
 /**
  * Each element's `inert` as it was before the first open trap changed it, so
@@ -37,6 +60,25 @@ function topTrap() {
     if (openTraps[index].modal.isConnected) return openTraps[index];
   }
   return null;
+}
+
+/**
+ * Whether focus given back to `target` lands there, as a browser decides: it
+ * is in the page and can be focused, is not disabled, hidden (`hidden`, or
+ * `display: none` on it or a container, or `visibility: hidden`) or inert,
+ * and is not inside a dialog whose trap is closed (Codex r2). jsdom focuses
+ * any of these, so the trap does not ask it.
+ * @param {Element|null} target
+ * @returns {boolean}
+ */
+function canTakeFocus(target) {
+  if (!target?.isConnected || typeof target.focus !== 'function' || target.disabled) return false;
+  if (target.closest('[inert]') || window.getComputedStyle(target).visibility === 'hidden') return false;
+  for (let node = target; node && node !== document.documentElement; node = node.parentElement) {
+    if (node.hidden || window.getComputedStyle(node).display === 'none') return false;
+    if (trappedModals.has(node) && !openTraps.some(open => open.modal === node)) return false;
+  }
+  return true;
 }
 
 /**
@@ -66,17 +108,7 @@ function syncInert() {
  * @returns {Object} Focus trap controller with activate/deactivate methods
  */
 export function createFocusTrap(modal) {
-  const FOCUSABLE_SELECTORS = [
-    'button:not([disabled])',
-    'input:not([disabled])',
-    'select:not([disabled])',
-    'textarea:not([disabled])',
-    'a[href]',
-    'summary',
-    '[tabindex]:not([tabindex="-1"])'
-  ].join(', ');
-  
-  let previouslyFocused = null;
+  trappedModals.add(modal);
   let isActive = false;
   let temporaryFocusTarget = null;
   let previousTabindex = null;
@@ -119,8 +151,12 @@ export function createFocusTrap(modal) {
     modal.focus();
   };
 
-  /** This trap's place in the stack. */
-  const trap = { modal, focusInitialElement: () => focusInitialElement() };
+  /**
+   * This trap's place in the stack. `returnTargets` is where focus goes back
+   * to, in order: its own opener first, then what it inherits from dialogs
+   * closed beneath it.
+   */
+  const trap = { modal, focusInitialElement: () => focusInitialElement(), returnTargets: [] };
   const isOnTop = () => topTrap() === trap;
 
   /**
@@ -196,7 +232,7 @@ export function createFocusTrap(modal) {
     // A menu item that launches a dialog may be hidden as part of the same
     // click. Callers can name the stable control that should receive focus
     // when the dialog closes instead of restoring to that hidden item.
-    previouslyFocused = returnFocus || document.activeElement;
+    trap.returnTargets = [returnFocus || document.activeElement];
     isActive = true;
     openTraps.push(trap);
 
@@ -216,14 +252,42 @@ export function createFocusTrap(modal) {
     if (!isActive) return;
     
     // Closed beneath another dialog, this one leaves the top one as it is:
-    // its focus, and what it makes inert.
+    // its focus, and what it makes inert. The dialog directly over it takes
+    // its return targets after its own (Codex r2).
     const wasOnTop = isOnTop();
     isActive = false;
-    openTraps.splice(openTraps.indexOf(trap), 1);
+    const place = openTraps.indexOf(trap);
+    openTraps.splice(place, 1);
+    openTraps[place]?.returnTargets.push(...trap.returnTargets);
     window.removeEventListener('keydown', handleKeyDown, true);
     document.removeEventListener('focusin', handleFocusIn, true);
     syncInert();
 
+    // Give focus back to the first target in the chain that can take it; the
+    // dialog beneath, if any, resumes, and focus that did not come back into
+    // it goes to its start. With none open, the page's first control.
+    if (wasOnTop) {
+      const target = trap.returnTargets.find(canTakeFocus);
+      if (target === document.body) {
+        // Nothing had focus when it opened, and nothing has now: what still
+        // holds it in the closed dialog lets go, as a browser's focus fix-up
+        // would once the dialog hides.
+        if (!canTakeFocus(document.activeElement)) document.activeElement?.blur?.();
+      } else {
+        target?.focus();
+      }
+      const below = topTrap();
+      if (below) {
+        if (!below.modal.contains(document.activeElement)) below.focusInitialElement();
+      } else if (!target) {
+        [...document.body.querySelectorAll(FOCUSABLE_SELECTORS)].find(canTakeFocus)?.focus();
+      }
+    }
+    trap.returnTargets = [];
+
+    // The title focused on opening gets its tabindex back once focus has
+    // left it, not before: an element that can no longer take focus cannot
+    // be blurred.
     if (temporaryFocusTarget) {
       if (previousTabindex === null) {
         temporaryFocusTarget.removeAttribute('tabindex');
@@ -233,17 +297,6 @@ export function createFocusTrap(modal) {
       temporaryFocusTarget = null;
       previousTabindex = null;
     }
-
-    // Restore focus to previously focused element; the dialog beneath, if
-    // any, resumes, and focus that did not come back into it goes to its start.
-    if (wasOnTop) {
-      if (previouslyFocused?.isConnected && previouslyFocused.focus) {
-        previouslyFocused.focus();
-      }
-      const below = topTrap();
-      if (below && !below.modal.contains(document.activeElement)) below.focusInitialElement();
-    }
-    previouslyFocused = null;
   }
   
   return {

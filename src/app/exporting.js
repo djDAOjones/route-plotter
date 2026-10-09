@@ -197,13 +197,19 @@ export const exportingMixin = {
       showProgress();
       // Heard at 25, 50 and 75 %, once each, in the line's words (the owner,
       // 2026-10-09); progress that jumps is heard at the furthest mark passed.
+      // It is this export's: what of it still waits is withdrawn when the
+      // export ends, however it ends, so none is read after (Codex r2).
       let spokenMark = 0;
+      const progressKey = Symbol('this export\'s progress');
       const speakProgress = () => {
         const mark = VIDEO_EXPORT.SPOKEN_PROGRESS.filter(each => percent >= each).at(-1) ?? 0;
         if (mark <= spokenMark) return;
         spokenMark = mark;
-        this.announce(`Exporting ${label} ${mark}%`);
+        this.announce(`Exporting ${label} ${mark}%`, 'polite', { key: progressKey });
       };
+      // Before the end is said, so the end never waits behind, or pushes out a
+      // message for, progress that is over.
+      const endProgress = () => this.withdrawAnnouncements?.(progressKey);
 
       // Capture-phase Escape handler — cancels export and blocks other keydown listeners
       const onEscapeKey = (e) => {
@@ -293,10 +299,12 @@ export const exportingMixin = {
 
         // Download the video
         VideoExporter.downloadBlob(blob);
+        endProgress();
         this.setStatus?.('Export complete');
         this.announce('Video export complete');
 
       } catch (error) {
+        endProgress();
         if (error.message === 'Export cancelled') {
           console.log('🛑 [Export] Cancelled by user');
           this.setStatus?.('Export cancelled');

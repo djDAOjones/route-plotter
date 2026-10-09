@@ -30,6 +30,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
+import { allRules, borderColourOf, cascade, colourIn, hex, paintOf, tokensFor } from './helpers/cssTokens.js';
 import { callsOf, lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
@@ -111,6 +112,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
   Element.prototype.scrollIntoView = scrollIntoView;
   window.matchMedia = matchMedia;
+  // `clearMocks` keeps an implementation: the tip that `editor()` marks seen would
+  // otherwise be read by every boot after it (UI-06, Codex r2).
+  localStorage.getItem.mockImplementation(() => null);
 });
 
 describe('the header status line (UI-06 B-17)', () => {
@@ -225,7 +229,7 @@ describe('the status line, spoken as it changes, not as it repeats (UI-06 B-17, 
     expect(counts(announced)).toEqual([2, 2]);
   });
 
-  test('a recovery write that fails says so once, and recovery working again is heard again', async () => {
+  test('a recovery write that fails says so once; recovery working again is not heard again until the next open or save (Codex r2)', async () => {
     const app = await editor();
     allowConsole(/Failed to save to localStorage/);
     const { announced } = listen(app);
@@ -246,10 +250,13 @@ describe('the status line, spoken as it changes, not as it repeats (UI-06 B-17, 
     }
     add(app, 0.6);
     expect(app.storageService.flushAutoSave()).toBe(true);
-    expect(counts(announced)).toEqual([1, 2]);
+    // The line says it again; the announcer does not: "Saved to browser
+    // recovery" is heard the first time in an episode, and a failure ends none.
+    expect(status()).toBe('Saved to browser recovery');
+    expect(counts(announced)).toEqual([1, 1]);
     add(app, 0.8);
     expect(app.storageService.flushAutoSave()).toBe(true);
-    expect(counts(announced)).toEqual([1, 2]);
+    expect(counts(announced)).toEqual([1, 1]);
   });
 
   test('a video export is heard at 25, 50 and 75 %, once each, in the status line\'s words, and each export again', async () => {
@@ -674,6 +681,55 @@ describe('one live region (UI-06 J-05, C-5)', () => {
     expect(announced()).toEqual([[`Deleted waypoint — ${UNDO}`, 'polite']]);
   });
 
+  /**
+   * The owner's answer on Codex r2's fourth finding (2026-10-09, "Keep today's
+   * wording"): all five routes show "Deleted <name> — press Cmd+Z to undo"
+   * (Ctrl elsewhere), heard once, as a crowd's, a node's and a path's do; no
+   * Undo button. The Delete key and Shift-click are pinned in keyTable.test.js
+   * (`deleteSelected`, "Delete on row 2", Shift-click on a waypoint); these are
+   * the other three.
+   */
+  test.each([
+    ["the row's ×", () => document.querySelector('#waypoint-list .waypoint-delete').click()],
+    ['the outline', (app) => {
+      // The command its "Delete waypoint" button sends.
+      app.eventBus.emit('scene-outline:command', { action: 'delete-waypoint', waypointId: app.waypoints[0].id });
+    }],
+    ['the context menu', async (app) => {
+      await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+      const { x, y } = app.imageToScreen(app.waypoints[0].imgX, app.waypoints[0].imgY);
+      app.canvas.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, clientX: x, clientY: y }));
+      [...document.querySelectorAll('.context-menu [role="menuitem"]')].find(item => item.textContent === 'Delete waypoint').click();
+    }],
+  ])('deleting a waypoint from %s shows the one delete toast with its undo hint, heard once (the owner, 2026-10-09)', async (_, remove) => {
+    const app = await routeOfTwo();
+    const [, second] = app.waypoints;
+    const { toasts, announced } = listen(app);
+
+    await remove(app);
+
+    expect(app.waypoints).toEqual([second]);
+    expect(toasts).toEqual([{ message: `Deleted waypoint — ${UNDO}` }]);
+    expect(announced()).toEqual([[`Deleted waypoint — ${UNDO}`, 'polite']]);
+    expect([...document.querySelectorAll('#toast-container .toast')].map(toast => toast.firstChild.textContent))
+      .toEqual([`Deleted waypoint — ${UNDO}`]);
+  });
+
+  test('deleting several waypoints at once with the Delete key keeps its own count message, with no toast for each (the owner, 2026-10-09)', async () => {
+    const app = await editor();
+    for (const x of [0.2, 0.5, 0.8]) app.eventBus.emit('waypoint:add', { imgX: x, imgY: 0.5, isMajor: true });
+    const [first, second, third] = app.waypoints;
+    app.eventBus.emit('waypoint:selected', first);
+    app.eventBus.emit('waypoint:toggle-select', second);
+    const { toasts, announced } = listen(app);
+
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true, cancelable: true }));
+
+    expect(app.waypoints).toEqual([third]);
+    expect(toasts).toEqual([]);
+    expect(announced()).toEqual([['2 waypoints deleted', 'polite']]);
+  });
+
   test('arming a branch, cancelling it, and a crowd traced from the route are each heard once', async () => {
     const app = await routeOfTwo();
     const { announced } = listen(app);
@@ -709,7 +765,7 @@ describe('one live region (UI-06 J-05, C-5)', () => {
     })
     .map(element => `#${element.id}`);
 
-  test('copying diagnostics is heard once: the dialog\'s line shows it and is not live (the owner, 2026-10-09)', async () => {
+  test('copying diagnostics is heard once: the dialog\'s line shows it and is not live (the lead\'s scope amendment, round 2: the diagnostics dialog joins the one announcer)', async () => {
     const app = await editor();
     const writeText = useClipboard();
     const { announced } = listen(app);
@@ -803,4 +859,104 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
       expect(card(name).querySelector('.section-header').hasAttribute('aria-describedby')).toBe(false);
     }
   });
+
+  /**
+   * A range's thumb or track rules, read as rules for the range itself: the
+   * cascade matches a mounted element, and a pseudo-element is not one.
+   */
+  const partRules = part => allRules().flatMap((rule) => {
+    const selectors = rule.selectors.filter(selector => selector.endsWith(part)).map(selector => selector.slice(0, -part.length));
+    return selectors.length ? [{ ...rule, selectors }] : [];
+  });
+  const THUMBS = ['::-webkit-slider-thumb', '::-moz-range-thumb'];
+  const TRACKS = ['::-webkit-slider-runnable-track', '::-moz-range-track'];
+  const FILL = ['background', 'background-color'];
+  const tokenHex = name => hex(colourIn(`var(${name})`, tokensFor()));
+
+  /**
+   * How a control looks, through the cascade of every sheet index.html loads
+   * (tests/helpers/cssTokens.js): its cursor, and the colours a range's thumb
+   * and track, a select or number field, or a swatch are painted in.
+   */
+  function look(control) {
+    const cursor = cascade(control, 'cursor')?.value;
+    if (control.type === 'range') {
+      return {
+        cursor,
+        thumbs: THUMBS.map(part => [hex(paintOf(control, FILL, { rules: partRules(part) })), cascade(control, 'cursor', { rules: partRules(part) })?.value]),
+        tracks: TRACKS.map(part => [hex(paintOf(control, FILL, { rules: partRules(part) })), hex(borderColourOf(control, 'top', { rules: partRules(part) }))]),
+      };
+    }
+    if (control.tagName === 'SELECT' || control.type === 'number') {
+      // An enabled number field has no fill of its own: the browser's white.
+      const fill = cascade(control, FILL) ? hex(paintOf(control, FILL)) : undefined;
+      return { cursor, fill, text: hex(paintOf(control, 'color')), border: hex(borderColourOf(control)) };
+    }
+    if (control.type === 'radio') {
+      const option = control.closest('.swatch-option');
+      return { fieldset: control.closest('fieldset.swatch-fieldset').disabled, cursor: cascade(option, 'cursor')?.value, opacity: cascade(option, 'opacity')?.value };
+    }
+    if (control.classList.contains('btn')) return { cursor };
+    throw new Error(`#${control.id}: a ${control.type} control this test does not know how to look at`);
+  }
+
+  test('its disabled cards look disabled: ranges, the select and the swatches in the disabled tokens with a not-allowed cursor, through the cascade (the lead\'s pane finding, round 2)', async () => {
+    const app = await editor();
+    expect(await loadSnapshot(app, {
+      coordVersion: 9,
+      waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
+      scene: { flowLayers: [{ id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] }] },
+    })).toBe(true);
+    app.addCrowd({ enterNetworkEditor: false });
+    const full = app.selectedCrowd;
+    // The hints' "?" triggers go with their cards too, but are not fields:
+    // their look is not this row's (a question in the round-2 report).
+    const shown = () => CARDS.flatMap(controlsOf)
+      .filter(control => control.type !== 'hidden' && !control.classList.contains('param-hint-trigger'));
+    const [field, edge, mark, accent] = ['--disabled-01', '--disabled-02', '--disabled-03', '--control-accent'].map(tokenHex);
+    const DISABLED = {
+      range: { cursor: 'not-allowed', thumbs: [[mark, 'not-allowed'], [mark, 'not-allowed']], tracks: [[field, edge], [field, edge]] },
+      field: { cursor: 'not-allowed', fill: field, text: mark, border: edge },
+      radio: { fieldset: true, cursor: 'not-allowed', opacity: '0.6' },
+      button: { cursor: 'not-allowed' },
+    };
+    const kind = (control) => {
+      if (control.tagName === 'SELECT' || control.type === 'number') return 'field';
+      return control.type === 'range' || control.type === 'radio' ? control.type : 'button';
+    };
+
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
+    const controls = shown();
+    expect(new Set(controls.map(kind))).toEqual(new Set(['range', 'field', 'radio', 'button']));
+    for (const control of controls) {
+      expect(control.disabled, `#${control.id || control.value}`).toBe(true);
+      expect(look(control), `#${control.id || control.value}`).toEqual(DISABLED[kind(control)]);
+    }
+
+    // With an emitter, each is as it was: the accent thumb, a field's own
+    // text and border, the swatches' fieldset enabled, and no not-allowed
+    // cursor; the busyness editor's handles, built now, among them.
+    app.eventBus.emit('crowd:selected', full);
+    expect(shown().filter(control => control.type === 'number').length).toBeGreaterThan(0);
+    for (const control of shown().filter(each => !each.disabled)) {
+      const now = look(control);
+      expect(now.cursor, `#${control.id || control.value}`).not.toBe('not-allowed');
+      if (kind(control) === 'range') expect(now.thumbs.map(([fill]) => fill), `#${control.id}`).toEqual([accent, accent]);
+      // A select's field is --ui-02, the same grey as --disabled-01: its text and border tell the two apart.
+      if (kind(control) === 'field') {
+        expect(now.text, `#${control.id}`).not.toBe(mark);
+        expect(now.border, `#${control.id}`).not.toBe(edge);
+      }
+      if (kind(control) === 'radio') expect([now.fieldset, now.opacity], `#${control.id || control.value}`).toEqual([false, undefined]);
+    }
+  });
+});
+
+/**
+ * The tests above mark the start's tip seen before their boots; `clearMocks`
+ * keeps that implementation, so without a reset every later boot read it too,
+ * seen or unseen by test order (UI-06, Codex r2).
+ */
+test('no test inherits another\'s storage: a boot that does not mark the start\'s tip finds it unseen (Codex r2)', () => {
+  expect(localStorage.getItem('routePlotter_previewTipDismissed')).toBeNull();
 });

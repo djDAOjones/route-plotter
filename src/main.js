@@ -907,11 +907,21 @@ class RoutePlotter {
    * another is not lost (DEF-45; the rules are in utils/announcementQueue.js).
    * @param {string} message
    * @param {'polite'|'assertive'} [priority='polite'] - Assertive waits ahead of polite messages
-   * @param {{essential?: boolean}} [options] - essential: the author must hear it, so a burst
-   *   of routine messages never displaces it
+   * @param {{essential?: boolean, whenIdle?: boolean, key?: *}} [options] - essential: the author
+   *   must hear it, so a burst of routine messages never displaces it; key: whose it is, so
+   *   `withdrawAnnouncements` can take it out while it waits
    */
   announce(message, priority = 'polite', options) {
     this._announcements.announce(message, priority, options);
+  }
+
+  /**
+   * Take the messages announced under `key` that still wait out of the queue
+   * (an export's progress once it has ended: UI-06, Codex r2).
+   * @param {*} key - The `key` they were announced with
+   */
+  withdrawAnnouncements(key) {
+    this._announcements.withdraw(key);
   }
   
   /**

@@ -65,10 +65,10 @@ export const wiringBusMixin = {
   /**
    * After waypoints leave the model (a deletion, an undo or a redo): an area
    * draw follows its waypoint, or ends when that has gone, and the author is
-   * told, since the polygon being drawn is lost (DEF-43). Told in a toast:
-   * the action goes on to announce its own outcome ("Waypoint deleted",
-   * "Undo"), which would replace this at once in the announcer's one region;
-   * the toasts' region is a live region of its own, and on screen.
+   * told, since the polygon being drawn is lost (DEF-43). Told in a toast,
+   * on screen and announced once through the queue, in turn with the
+   * action's own outcome ("Deleted <name> — press Cmd/Ctrl+Z to undo",
+   * "Undo"), so neither replaces the other (DEF-45; UI-06 J-05).
    */
   followAreaDrawTarget() {
     if (this.areaDrawingService?.followModel?.(this.waypoints)) {

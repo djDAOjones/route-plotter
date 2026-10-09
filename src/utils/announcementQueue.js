@@ -49,6 +49,11 @@
  *   displaces a message and does not count towards the cap, and every message
  *   announced while it waits goes ahead of it (UI-06; the owner, 2026-10-09:
  *   tips "queued after the start-up recovery messages so they never cut in").
+ * - A message announced under a `key` belongs to whoever holds the key, and
+ *   `withdraw(key)` takes every such message still waiting out of the queue:
+ *   an export's progress, once that export has ended (UI-06, Codex r2). The
+ *   message showing has been written already, so it keeps its hold; one that
+ *   another request merged into is that request's too, and is not withdrawn.
  * - A blank or whitespace-only message has nothing to read and is ignored.
  *   Text is written as text, never parsed as markup.
  *
@@ -61,7 +66,7 @@ import { ANNOUNCEMENTS } from '../config/constants.js';
  * Create the queue that writes a live region.
  *
  * @param {HTMLElement|null} region - The live region; without one, announcing does nothing
- * @returns {{announce: (message: string, priority?: string, options?: {essential?: boolean}) => void}}
+ * @returns {{announce: (message: string, priority?: string, options?: {essential?: boolean, whenIdle?: boolean, key?: *}) => void, withdraw: (key: *) => void}}
  */
 export function createAnnouncementQueue(region) {
   const waiting = [];
@@ -98,10 +103,11 @@ export function createAnnouncementQueue(region) {
      * @param {Object} [options]
      * @param {boolean} [options.essential=false] - The author must hear it, so it never gives way
      * @param {boolean} [options.whenIdle=false] - It waits until nothing else shows or waits
+     * @param {*} [options.key] - Whose it is: `withdraw(key)` takes it out while it waits
      */
-    announce(message, priority = 'polite', { essential = false, whenIdle: idle = false } = {}) {
+    announce(message, priority = 'polite', { essential = false, whenIdle: idle = false, key } = {}) {
       if (!region || !String(message ?? '').trim()) return;
-      const entry = { message, priority, kept: essential || priority === 'assertive' };
+      const entry = { message, priority, kept: essential || priority === 'assertive', key };
       if (!showing) {
         show(entry);
         return;
@@ -117,6 +123,8 @@ export function createAnnouncementQueue(region) {
       const same = copy ?? (before.message === message ? before : undefined);
       if (same) {
         same.kept ||= entry.kept;
+        // Asked for by another request too, it is no longer one owner's alone.
+        if (same.key !== entry.key) same.key = undefined;
         if (same !== showing && priority === 'assertive' && same.priority !== 'assertive') {
           waiting.splice(waiting.indexOf(same), 1);
           same.priority = 'assertive';
@@ -128,6 +136,18 @@ export function createAnnouncementQueue(region) {
       waiting.splice(at, 0, entry);
       const routine = waiting.filter(each => !each.kept);
       if (routine.length > ANNOUNCEMENTS.MAX_WAITING) waiting.splice(waiting.indexOf(routine[0]), 1);
+    },
+
+    /**
+     * Take every message announced under `key` that still waits out of the
+     * queue; the one showing keeps its hold.
+     * @param {*} key
+     */
+    withdraw(key) {
+      if (key === undefined) return;
+      for (let index = waiting.length - 1; index >= 0; index -= 1) {
+        if (waiting[index].key === key) waiting.splice(index, 1);
+      }
     },
   };
 }

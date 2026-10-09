@@ -21,9 +21,10 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { setTimeout as realDelay } from 'node:timers/promises';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { bootApp, retireApp } from './helpers/bootApp.js';
+import { bootApp, retireApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { ANNOUNCEMENTS, STORAGE } from '../src/config/constants.js';
@@ -98,6 +99,18 @@ function useStorage(entries = {}, { quotaFor = [], capacity = Infinity, removalF
   return store;
 }
 
+/**
+ * Boot the app with the start's tip seen, over the storage the test set up:
+ * every other key reads as that storage has it, and nothing is written to it.
+ * The tip waits 1.5 s on the real clock from the boot, and these tests pin
+ * what is said and stored across real waits (UI-06, Codex r2). The probe's
+ * boot is one of these.
+ */
+function boot() {
+  localStorage.getItem.mockImplementation(tipSeen(localStorage.getItem.getMockImplementation()));
+  return bootApp();
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   localStorage.getItem.mockImplementation(() => null);
@@ -114,7 +127,7 @@ function kept(store) {
 
 /** A saved project, as a booted app writes it. */
 async function savedProject() {
-  const app = await bootApp();
+  const app = await boot();
   await app.ready;
   app.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
   app.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
@@ -161,7 +174,7 @@ async function restart(prototype) {
   const announce = vi.spyOn(prototype, 'announce');
   let started;
   try {
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     started = {
       app,
@@ -176,7 +189,7 @@ async function restart(prototype) {
 
 /** Boot over a browser storage holding `entries`, recording announcements. */
 async function bootRecording(entries, options) {
-  const probe = await bootApp();
+  const probe = await boot();
   await probe.ready;
   const prototype = Object.getPrototypeOf(probe);
   const store = useStorage(entries, options);
@@ -479,7 +492,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
     // back, so nothing was restored, and the record is kept like any other.
     const record = JSON.stringify(await savedProject(), null, 2);
     const store = useStorage();
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED);
@@ -500,7 +513,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
   test('is not kept when the project restored and only what follows the commit failed', async () => {
     const record = JSON.stringify(await savedProject());
     const store = useStorage();
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(/Restoring the autosave did not finish after it was loaded/);
@@ -516,7 +529,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
   test('is the record that was read, even if another tab writes the key while it restores', async () => {
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const store = useStorage();
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED);
@@ -535,7 +548,7 @@ describe('a record that cannot be restored (DEF-28)', () => {
   test('is kept although the recovery key cannot be read again: the copy is made, and the key left alone', async () => {
     const record = await refusedRecord();
     const store = useStorage();
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, /Failed to load from localStorage \(routePlotter_autosave\)/);
@@ -730,7 +743,7 @@ describe('a record no copy of which fits (DEF-28)', () => {
   test('is still held, and offered, not tried again, at the next start', async () => {
     const record = JSON.stringify(await savedProject(), null, 2);
     const store = useStorage({}, { quotaFor: [isKept] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     const prototype = Object.getPrototypeOf(app);
     store.set(AUTOSAVE, record);
@@ -754,7 +767,7 @@ describe('a record no copy of which fits (DEF-28)', () => {
   test('is offered for download, and not called kept, when no copy fits and another tab writes the key while it restores', async () => {
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const store = useStorage({}, { quotaFor: [isKept] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED);
@@ -781,7 +794,7 @@ describe('a record no copy of which fits (DEF-28)', () => {
     // It may still be there, so it is treated as there: held, not given up.
     const record = await refusedRecord();
     const store = useStorage({}, { quotaFor: [isKept] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to load from localStorage \(routePlotter_autosave\)/);
@@ -1293,7 +1306,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const unreadable = { now: false };
     const store = useStorage({}, { ...noCopies, readFails: [key => key === AUTOSAVE && unreadable.now] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED, /Failed to load from localStorage \(routePlotter_autosave\)/);
@@ -1423,7 +1436,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const room = { forCopies: false };
     const store = useStorage({}, { quotaFor: [key => isKept(key) && !room.forCopies] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, WRITE_FAILED);
@@ -1482,7 +1495,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const room = { forCopies: false };
     const store = useStorage({}, { quotaFor: [key => isKept(key) && !room.forCopies], ...options });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     closeSplash();
     store.set(AUTOSAVE, record);
@@ -1650,7 +1663,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
 
   test.each(['Discard', 'Clear All'])('a restore still in progress does not keep again a record the author chose to discard in another tab meanwhile (%s)', async (choice) => {
     const { app, store, record } = await discardedElsewhereDuringRestore(choice, async (text, storage) => {
-      const booted = await bootApp();
+      const booted = await boot();
       await booted.ready;
       storage.set(AUTOSAVE, text);
       const decoding = holdDecoding();
@@ -1678,7 +1691,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
           resolveReached();
         }));
       });
-      const booted = await bootApp();
+      const booted = await boot();
       return { app: booted, restoring: booted.ready, decoding: { reached, fail: () => fail(new Error('the background could not be decoded')) } };
     });
 
@@ -1782,7 +1795,7 @@ describe('several tabs, and a store that cannot always be read (DEF-28)', () => 
     const record = JSON.stringify({ ...(await savedProject()), backgroundImage: 'data:image/png;base64,iVBORw0KGgo=' });
     const unreadable = { key: null };
     const store = useStorage({}, { readFails: [key => key === unreadable.key] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, /Failed to load from localStorage \(routePlotter_keptAutosave:/);
@@ -1831,7 +1844,7 @@ describe('another tab during this start’s restore, and what Clear All says it 
         resolveReached();
       }));
     });
-    const app = await bootApp();
+    const app = await boot();
     const heard = listen(app);
     await reached;
     return { app, store, heard, fail: () => fail(new Error('the background could not be decoded')) };
@@ -1974,7 +1987,7 @@ describe('another tab during this start’s restore, and what Clear All says it 
     const record = await recordWithBackground();
     const faults = { search: false, read: null };
     const store = useStorage({}, { searchFails: () => faults.search, readFails: [key => key === faults.read] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, /Failed to search localStorage/, /Failed to load from localStorage/);
@@ -2000,7 +2013,7 @@ describe('another tab during this start’s restore, and what Clear All says it 
     const record = await recordWithBackground();
     const faults = { search: false, remove: null, read: null };
     const store = useStorage({}, { searchFails: () => faults.search, removalFails: [key => key === faults.remove], readFails: [key => key === faults.read] });
-    const app = await bootApp();
+    const app = await boot();
     await app.ready;
     store.set(AUTOSAVE, record);
     allowConsole(LOAD_REFUSED, /Failed to search localStorage/, /Failed to load from localStorage/, /Failed to remove from localStorage/);
@@ -2382,7 +2395,7 @@ describe('another tab during this start’s restore, and what Clear All says it 
         resolveReached();
       }));
     });
-    const app = await bootApp();
+    const app = await boot();
     const heard = listen(app);
     await reached;
     expect(status()).toBe(KEPT);
@@ -3036,4 +3049,15 @@ describe('Codex’s round-9 cases: faults while records are known', () => {
     editAndSave(app);
     expect(store.has(AUTOSAVE)).toBe(true);
   });
+});
+
+test('every app these tests boot, the probe included, has the start\'s tip seen over the test\'s own storage: on the real clock, it never lands in one (UI-06, Codex r2)', async () => {
+  // The tip waits 1.5 s on the real clock from each boot (`_showPreviewTipToast`).
+  const record = JSON.stringify(await savedProject());
+  const { store, prototype } = await bootRecording({ [AUTOSAVE]: record });
+  const shown = vi.spyOn(prototype, 'showToast');
+  await realDelay(1600);
+  expect(shown.mock.calls.map(([message]) => message).filter(message => /^Tip: /.test(message))).toEqual([]);
+  // The store is the test's own: the tip's flag is read as seen, never written into it.
+  expect([...store.keys()].filter(key => /previewTip/.test(key))).toEqual([]);
 });

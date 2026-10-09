@@ -295,8 +295,9 @@ export const privacyMixin = {
 
   /**
    * Show a line in the dialog and say it once, through the queue: the line is
-   * not a live region (UI-06; the owner, 2026-10-09), so the announcer, which
-   * a dialog no longer makes inert, is the one route.
+   * not a live region (UI-06; the lead's scope amendment, round 2: the
+   * diagnostics dialog joins the one announcer), so the announcer, which a
+   * dialog no longer makes inert, is the one route.
    * @param {string} text - What the line shows
    * @param {string} [spoken] - What is said, where it is said in fewer words
    * @private

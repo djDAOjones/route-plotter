@@ -939,6 +939,11 @@ export const crowdsMixin = {
       for (const control of section.querySelectorAll('.section-content input, .section-content select, .section-content button')) {
         control.disabled = !hasEmitter;
       }
+      // The swatches' own fieldset too, so they look it (the lead's pane
+      // finding, round 2): .swatch-fieldset:disabled is what greys them.
+      for (const fieldset of section.querySelectorAll('.section-content .swatch-fieldset')) {
+        fieldset.disabled = !hasEmitter;
+      }
     }
     if (hasEmitter) return;
     document.getElementById('crowd-busyness-graph')?.replaceChildren();

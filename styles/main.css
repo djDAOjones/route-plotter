@@ -4120,3 +4120,50 @@ body[data-mode="preview"]::after {
      survive — make that border carry the selection. */
   .scene-outline-action.is-selected{ border-color:Highlight; }
 }
+
+/* Disabled fields look disabled (UI-06 B-31; the lead's pane finding, round
+   2). A crowd with no emitter disables its Dots, Release and Motion cards,
+   and their ranges and select looked exactly as when enabled: the accent
+   thumb, the field's own text and border. Carbon's disabled state, as the
+   .btn rule has it: the --disabled tokens and a not-allowed cursor. Disabled
+   controls are exempt from contrast (WCAG 1.4.11); the thumb takes the
+   darkest of the three so the value it marks can still be read. The swatches
+   sit in a fieldset that is disabled with them (.swatch-fieldset:disabled,
+   swatch-picker.css): a chip is the colour it offers, so it keeps its hue.
+   Placed last: the field rules above tie with these on specificity. Each
+   pseudo-element has its own rule, as a browser drops a rule it cannot
+   parse whole. */
+input[type="range"]:disabled{
+  cursor:not-allowed;
+  accent-color:var(--disabled-03);
+}
+
+.section-content input[type="range"]:disabled::-webkit-slider-runnable-track{
+  background:var(--disabled-01);
+  border-color:var(--disabled-02);
+}
+
+.section-content input[type="range"]:disabled::-moz-range-track{
+  background:var(--disabled-01);
+  border-color:var(--disabled-02);
+}
+
+.section-content input[type="range"]:disabled::-webkit-slider-thumb{
+  background:var(--disabled-03);
+  box-shadow:none;
+  cursor:not-allowed;
+}
+
+.section-content input[type="range"]:disabled::-moz-range-thumb{
+  background:var(--disabled-03);
+  box-shadow:none;
+  cursor:not-allowed;
+}
+
+select:disabled,
+input[type="number"]:disabled{
+  background-color:var(--disabled-01);
+  color:var(--disabled-03);
+  border-color:var(--disabled-02);
+  cursor:not-allowed;
+}

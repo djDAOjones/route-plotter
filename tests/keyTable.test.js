@@ -109,6 +109,9 @@ const flashedSections = [];
 const DIALOGS = [['share-disclosure-modal', 'share-disclosure-cancel'], ['splash', 'splash-close']];
 
 afterEach(async () => {
+  // `clearMocks` keeps an implementation: the tip that `editor()` marks seen would
+  // otherwise be read by every boot after it (UI-06, Codex r2).
+  localStorage.getItem.mockImplementation(() => null);
   // An open dialog keeps its focus trap on `window`, where it would take the
   // next test's Tab and Escape: close it as a user would.
   for (const [dialog, close] of DIALOGS) {
@@ -2179,7 +2182,9 @@ const LISTENER_ROWS = [
         'Tab: taken; open, focus #splash-close-x',
         'Shift+Tab: taken; open, focus licences and third-party notices (opens in a new tab)',
         'Tab: taken; open, focus #splash-close-x',
-        'Escape: taken; closed, focus #splash-close-x'
+        // Not left in the closed dialog (Codex r2): nothing had focus when
+        // it opened, and nothing has it now.
+        'Escape: taken; closed, focus the page'
       ]);
     }
   }
@@ -2619,4 +2624,13 @@ describe('every key listener the app adds (TST-13)', () => {
       expect(log.swept(listener), `the row swept every other key past ${listener}`).toBe(true);
     }
   });
+});
+
+/**
+ * The tests above mark the start's tip seen before their boots; `clearMocks`
+ * keeps that implementation, so without a reset every later boot read it too,
+ * seen or unseen by test order (UI-06, Codex r2).
+ */
+test('no test inherits another\'s storage: a boot that does not mark the start\'s tip finds it unseen (Codex r2)', () => {
+  expect(localStorage.getItem('routePlotter_previewTipDismissed')).toBeNull();
 });

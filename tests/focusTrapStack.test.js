@@ -19,12 +19,13 @@ import { createFocusTrap } from '../src/utils/focusTrap.js';
 /**
  * The page: the announcer and the app beside two dialogs, as index.html has
  * them (each dialog a child of the body), and one element the page made
- * inert itself before any dialog opened.
+ * inert itself before any dialog opened. The opener is not the page's first
+ * control, so focus that falls back to the page is told from focus given back.
  */
 function page() {
   document.body.innerHTML = `
     <div id="announcer" role="status" aria-live="polite"></div>
-    <main id="app"><button id="opener" type="button">Open</button><button id="other" type="button">Other</button></main>
+    <main id="app"><button id="first" type="button">Menu</button><button id="opener" type="button">Open</button><button id="other" type="button">Other</button></main>
     <div id="parked" inert><button type="button">Parked</button></div>
     <div id="lower" role="dialog" aria-modal="true" style="display:flex">
       <h2 id="modal-title-lower">Discard?</h2>
@@ -191,6 +192,62 @@ describe('two dialogs open at once (UI-06, Codex r1)', () => {
     upper.style.display = 'none';
     upperTrap.deactivate();
     expect(inert()).toEqual(['parked']);
+    // The top dialog's own return target is in the hidden dialog beneath; it
+    // gives focus back where that one would have: the opener (Codex r2).
+    expect(document.activeElement).toBe(byId('opener'));
+  });
+
+  test('closed out of order, the return chain leads to the first opener that can take focus: never a hidden, inert or closed dialog\'s control (Codex r2)', () => {
+    const { byId, lower, upper } = page();
+    const middle = document.createElement('div');
+    middle.id = 'middle';
+    middle.setAttribute('role', 'dialog');
+    middle.setAttribute('aria-modal', 'true');
+    middle.innerHTML = '<h2 id="modal-title-middle">Share</h2><button id="middle-ok" type="button">OK</button>';
+    upper.before(middle);
+    const lowerTrap = trapFor(lower);
+    const middleTrap = trapFor(middle);
+    const upperTrap = trapFor(upper);
+
+    // Closed beneath the top one but left on screen: still a closed dialog.
+    byId('opener').focus();
+    lowerTrap.activate(byId('lower-cancel'));
+    upperTrap.activate();
+    lowerTrap.deactivate();
+    upperTrap.deactivate();
+    expect(document.activeElement).toBe(byId('opener'));
+
+    // Three deep, the two beneath closed first, the lowest left on screen:
+    // the chain runs through both to the opener.
+    byId('opener').focus();
+    lowerTrap.activate(byId('lower-cancel'));
+    middleTrap.activate(byId('middle-ok'));
+    upperTrap.activate();
+    lowerTrap.deactivate();
+    middle.style.display = 'none';
+    middleTrap.deactivate();
+    expect(upper.contains(document.activeElement)).toBe(true);
+    upperTrap.deactivate();
+    expect(document.activeElement).toBe(byId('opener'));
+    middle.style.display = '';
+
+    // The opener gone from view meanwhile: the page's first control that can take focus.
+    lowerTrap.activate(byId('lower-cancel'));
+    upperTrap.activate();
+    lowerTrap.deactivate();
+    byId('opener').hidden = true;
+    upperTrap.deactivate();
+    expect(document.activeElement).toBe(byId('first'));
+    byId('opener').hidden = false;
+
+    // In the order they opened, nothing changes: each gives focus back to its own opener.
+    byId('opener').focus();
+    lowerTrap.activate(byId('lower-cancel'));
+    upperTrap.activate();
+    upperTrap.deactivate();
+    expect(document.activeElement).toBe(byId('lower-cancel'));
+    lowerTrap.deactivate();
+    expect(document.activeElement).toBe(byId('opener'));
   });
 
   test('the announcer stays out of the inert background, so what is said while a dialog is open is heard', () => {

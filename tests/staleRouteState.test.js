@@ -14,7 +14,7 @@
  * in either timing mode.
  */
 
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
@@ -24,6 +24,12 @@ import { ANIMATION, STORAGE } from '../src/config/constants.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 
 const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
+
+afterEach(() => {
+  // `clearMocks` keeps an implementation: the tip that `opened()` marks seen would
+  // otherwise be read by every boot after it (UI-06, Codex r2).
+  localStorage.getItem.mockImplementation(() => null);
+});
 
 /**
  * The open day example, branched, with a grow beacon on one waypoint, and the
@@ -1298,4 +1304,13 @@ test.each(['Preview', 'Edit'].flatMap(mode => ['made', 'cleared'].flatMap(action
   for (const [where, snapshot] of [['recovery', recovery], ['the saved file', saved]]) {
     expect(await reopenedDuration(snapshot), `${where}, reopened`).toBeCloseTo(expected, 6);
   }
+});
+
+/**
+ * The tests above mark the start's tip seen before their boots; `clearMocks`
+ * keeps that implementation, so without a reset every later boot read it too,
+ * seen or unseen by test order (UI-06, Codex r2).
+ */
+test('no test inherits another\'s storage: a boot that does not mark the start\'s tip finds it unseen (Codex r2)', () => {
+  expect(localStorage.getItem('routePlotter_previewTipDismissed')).toBeNull();
 });

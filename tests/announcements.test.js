@@ -34,6 +34,7 @@ import { EventBus } from '../src/core/EventBus.js';
 import { UIController } from '../src/controllers/UIController.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { createAnnouncementQueue } from '../src/utils/announcementQueue.js';
+import { VideoExporter } from '../src/services/VideoExporter.js';
 
 const HOLD = ANNOUNCEMENTS.HOLD_MS;
 const PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
@@ -635,6 +636,42 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     expect(seen).toEqual(['Another tip', '']);
   });
 
+  test('messages announced under a key are withdrawn together while they wait; the one showing keeps its hold, and nothing else moves (UI-06, Codex r2)', async () => {
+    vi.useFakeTimers(FAKE_CLOCK);
+    const region = document.createElement('div');
+    const queue = createAnnouncementQueue(region);
+    const seen = [];
+    const turns = async (count) => {
+      for (let turn = 0; turn < count; turn += 1) {
+        seen.push(region.textContent);
+        await vi.advanceTimersByTimeAsync(HOLD);
+      }
+      seen.push(region.textContent);
+    };
+    const thisExport = Symbol('this export');
+    const another = Symbol('another export');
+
+    queue.announce('Starting video export — press Esc to cancel');
+    queue.announce('Exporting MP4 25%', 'polite', { key: thisExport });
+    queue.announce('Waypoint moved');
+    queue.announce('Exporting MP4 50%', 'polite', { key: thisExport });
+    queue.withdraw(thisExport);
+    queue.announce('Exporting WebM 25%', 'polite', { key: another });
+    queue.announce('Video export cancelled');
+    await turns(4);
+    expect(seen).toEqual(['Starting video export — press Esc to cancel', 'Waypoint moved', 'Exporting WebM 25%', 'Video export cancelled', '']);
+
+    // What is showing was written already: it is not withdrawn. A keyed
+    // message another caller asked for too is no longer the key's alone.
+    seen.length = 0;
+    queue.announce('Exporting MP4 75%', 'polite', { key: thisExport });
+    queue.announce('Saving project...', 'polite', { key: thisExport });
+    queue.announce('Saving project...');
+    queue.withdraw(thisExport);
+    await turns(2);
+    expect(seen).toEqual(['Exporting MP4 75%', 'Saving project...', '']);
+  });
+
   test('a queue without a live region announces nothing, and does not throw', () => {
     const queue = createAnnouncementQueue(null);
     expect(() => queue.announce('Waypoint moved')).not.toThrow();
@@ -948,5 +985,59 @@ describe('what browser recovery did or could not do reaches the region, whatever
       [4 * HOLD, 'Waypoint duplicated'],
       [5 * HOLD, ''],
     ]);
+  });
+});
+
+/**
+ * Codex r2: an export's spoken progress (25, 50 and 75 %) waits its turn like
+ * any message, and outlived the export: cancelled while the start's message
+ * still held the region, the queue went on to read "25%" and "50%" before
+ * "Video export cancelled". Progress belongs to its export; when the export
+ * ends, however it ends, what of it still waits is withdrawn.
+ */
+describe('an export\'s progress belongs to it (UI-06 J-18, Codex r2)', () => {
+  const START = 'Starting video export — press Esc to cancel';
+
+  test.each([
+    ['is cancelled with Escape', 'Video export cancelled', (reject) => {
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      expect(reject).toHaveBeenCalledOnce();
+    }],
+    ['fails', 'Export failed: the encoder failed', reject => reject(new Error('the encoder failed'))],
+    ['finishes', 'Video export complete', (reject, resolve) => resolve(new Blob(['video']))],
+  ])('an export that %s while its first two marks wait behind the start: neither is written, and its end is', async (_, end, finish) => {
+    const app = await bootIdleApp();
+    document.getElementById('splash-close').click();
+    app.eventBus.emit('waypoint:add', { imgX: 0.25, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.75, imgY: 0.5, isMajor: true });
+    await playOut();
+    allowConsole(/Video export failed/);
+    vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+    const announce = vi.spyOn(app, 'announce');
+    let pending;
+    const reject = vi.fn(error => pending.reject(error));
+    app.videoExporter = {
+      export: ({ onProgress }) => new Promise((resolve, rejectExport) => {
+        pending = { resolve, reject: rejectExport };
+        onProgress(25);
+        onProgress(50);
+      }),
+      cancel: () => reject(new Error('Export cancelled')),
+    };
+    const { region, shown } = recordRegion();
+
+    const exported = app.exportVideo({ format: 'mp4' });
+    await vi.advanceTimersByTimeAsync(0);
+    // Both were said, and wait behind the start, which still holds the region.
+    expect(announce.mock.calls.map(([message]) => message)).toEqual(expect.arrayContaining(['Exporting MP4 25%', 'Exporting MP4 50%']));
+    expect(region.textContent).toBe(START);
+
+    finish(reject, value => pending.resolve(value));
+    await settle(exported);
+    await playOut();
+
+    const written = shown.map(([, text]) => text);
+    expect(written.filter(text => /^Exporting /.test(text))).toEqual([]);
+    expect(written.slice(written.indexOf(START))).toEqual([START, end, '']);
   });
 });
