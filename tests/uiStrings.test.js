@@ -440,6 +440,26 @@ describe('the crowd’s words agree (CROWD-07 F8)', () => {
     }
   });
 
+  // One description for one control wherever it appears (the owner, 2026-10-09):
+  // the outline's field says what the Motion card's F6 hint says, word for word.
+  test('the outline’s "At journey end" hint is the card’s, word for word', async () => {
+    const app = await crowdApp();
+    try {
+      const card = document.querySelector('label[for="crowd-lifecycle"] [data-tip]').getAttribute('data-tip');
+      app._refreshSceneOutline();
+      await Promise.resolve();
+      await openWholeOutline(document.getElementById('scene-outline'));
+      const selects = [...document.querySelectorAll('#scene-outline select[name="lifecycleMode"]')];
+      expect(selects).toHaveLength(1);
+      const outline = selects[0].closest('label').querySelector('[data-tip]').getAttribute('data-tip');
+
+      expect(card).toMatch(/^Disappear removes a dot at its journey's end; .* Repeat journey replays the same walk exactly$/);
+      expect(outline).toBe(card);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+
   test('the Guide helper counts paths, never edges, and the crowd strings this PR adds keep the rule', async () => {
     const app = await crowdApp();
     try {
