@@ -54,6 +54,8 @@ const ALLOWED_WORDS = new Set([
   'Home', 'End', 'Space', 'Del', 'Shift', 'Cmd', 'Ctrl', 'Alt', 'Tab', 'Enter',
   // Readout words a hint quotes as the readout writes them ("Left (Earlier)…", "right (Later)").
   'Earlier', 'Later',
+  // The Help dialog's name, as its button and title write it: `?` reads "Open Help" (UI-06 J-01).
+  'Help',
 ]);
 
 /** Runs of capitalised words that are names, not Title Case. */
@@ -397,5 +399,68 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
     expect(retiredWord('0% is the image’s left edge, 100% its right edge')).toBeNull();
     expect(retiredWord('Deleted path — press Ctrl+Z to undo')).toBeNull();
     expect(retiredWord('Editing the network — click the map to place linked nodes.')).toBeNull();
+  });
+});
+
+/**
+ * UI-06 J-01: Help is a dialog of its own. Its words are held to the rule as
+ * the shell's are, and its five crowd lines are the owner's (2026-10-09,
+ * "These five lines (Recommended)"), shipped as written, one paragraph each.
+ * They quote option names in parentheses ("(Follow route)"), which the
+ * parenthesis check exists to catch in a label, so they are held word for
+ * word instead; and each bold label is the live control's own text, so a
+ * later rename of the control fails here.
+ */
+const CROWD_LINES = [
+  'Under Layers, click + Add crowd. Its Guide starts as Follow route, so the dots walk your route.',
+  "A crowd's Guide is what its dots walk along: your route (Follow route) or a network of its own (Custom network).",
+  'To draw a network, set the Guide to Custom network and click Edit network: nodes joined by paths.',
+  "Trace route into network copies your route into the crowd's network, so it splits and rejoins where the route does.",
+  'At journey end decides what a dot does when it finishes: Respawn at the start, Repeat journey, Disappear or ' +
+    "Collect at the end. It is in the crowd's Motion card.",
+];
+
+/** Each line's bold label, and the live control whose own text it must be. */
+const CROWD_LABELS = [
+  ['+ Add crowd', '#add-crowd-btn'],
+  ['Guide', 'label[for="crowd-guide-type"] > span'],
+  ['Edit network', '#network-edit-btn'],
+  ['Trace route into network', '#crowd-trace-route-btn'],
+  ['At journey end', 'label[for="crowd-lifecycle"] > span'],
+];
+
+describe("Help's words (UI-06 J-01)", () => {
+  test('Help, open: its headings, rows, buttons and lines are sentence case; its crowd lines are the owner\'s, each bold label the control\'s own text', async () => {
+    const app = await bootApp();
+    await app.ready;
+    // The first start's welcome holds focus until it is put away.
+    document.getElementById('splash-close').click();
+    document.getElementById('help-btn').click();
+    const modal = document.getElementById('help-modal');
+    try {
+      expect(modal.style.display).toBe('flex');
+      const strings = stringsIn(modal);
+      const count = what => strings.filter(string => string.what === what).length;
+      // Vacuous unless the dialog was there to read.
+      expect(count('h2')).toBe(1);
+      expect(count('h3')).toBe(4);
+      expect(count('h4')).toBe(4);
+      expect(count('help row')).toBeGreaterThan(30);
+      expect(count('prose')).toBeGreaterThan(5);
+      expect(strings.filter(string => string.what === 'button').map(string => string.text))
+        .toEqual(['×', 'Report a bug', 'Show the welcome again']);
+      expect(faultsIn(strings)).toEqual([]);
+
+      const lines = [...modal.querySelectorAll('#help-crowds p')];
+      expect(lines.map(line => line.textContent.replace(/\s+/g, ' ').trim())).toEqual(CROWD_LINES);
+      expect(lines.map(line => [...line.querySelectorAll('strong')].map(bold => bold.textContent)))
+        .toEqual(CROWD_LABELS.map(([label]) => [label]));
+      for (const [label, control] of CROWD_LABELS) {
+        expect(visibleText(document.querySelector(control)), control).toBe(label);
+      }
+    } finally {
+      document.getElementById('help-close-x').click();
+      app.interactionHandler.destroy();
+    }
   });
 });

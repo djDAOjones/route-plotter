@@ -106,7 +106,8 @@ const running = [];
 const flashedSections = [];
 
 /** The dialogs a key can open, and the button that closes each. */
-const DIALOGS = [['share-disclosure-modal', 'share-disclosure-cancel'], ['splash', 'splash-close']];
+const DIALOGS = [['share-disclosure-modal', 'share-disclosure-cancel'], ['help-modal', 'help-close-x'],
+  ['splash', 'splash-close']];
 
 afterEach(async () => {
   // `clearMocks` keeps an implementation: the tip that `editor()` marks seen would
@@ -153,7 +154,7 @@ async function editor({ selected = 1, progress = 0.5 } = {}) {
   const app = await bootApp();
   running.push(app);
   await app.ready;
-  // A first run opens Help, whose focus trap holds the keyboard.
+  // A first run opens the welcome, whose focus trap holds the keyboard.
   document.getElementById('splash-close').click();
   await vi.waitFor(() => expect(app.background.image).toBeTruthy());
   // The live region writes what the editor says in turn, each message for a
@@ -267,9 +268,11 @@ function editorState(app) {
     speed: app.animationEngine.state.playbackSpeed,
     progress: round(app.animationEngine.getProgress()),
     zoom: round(app.viewport.zoom),
-    dialog: open('splash') ? 'Help'
-      : open('share-disclosure-modal') ? document.getElementById('share-disclosure-title').textContent
-        : null,
+    // Help is a dialog of its own; the splash is the first-run welcome (UI-06 J-01).
+    dialog: open('help-modal') ? 'Help'
+      : open('splash') ? 'Welcome'
+        : open('share-disclosure-modal') ? document.getElementById('share-disclosure-title').textContent
+          : null,
     prompt: document.querySelector('#zoom-prompt.visible')?.textContent ?? null,
     toasts: [...document.querySelectorAll('#toast-container .toast')].map(toast => toast.firstChild.textContent),
     said: document.getElementById('announcer').textContent
@@ -489,7 +492,7 @@ const HELP_ROWS = {
     ['undo', `${META_TEXT}+Z`, 'Undo'],
     ['redo', `${META_TEXT}+${SHIFT_TEXT}+Z`, 'Redo'],
     ['save', `${META_TEXT}+S`, 'Save'],
-    ['showShortcuts', '?', 'Show keyboard shortcuts']
+    ['showShortcuts', '?', 'Open Help']
   ]
 };
 
@@ -512,9 +515,10 @@ const HIDDEN_FROM_HELP = {
 const KEYS_HELP_DOES_NOT_SHOW = { deleteSelected: ['Backspace'], zoomIn: ['+'], zoomOut: ['_'] };
 
 /**
- * Help's prose names chords too: the splash's sections and the waypoint
- * list's Quick Start. Each line, as rendered, and the entry whose chord it
- * restates (its gesture or key, and its modifiers).
+ * Help's prose names chords too: the welcome's sections, Help's Mouse and
+ * pen (UI-06 J-01) and the waypoint list's Quick Start. Each line, as
+ * rendered, and the entry whose chord it restates (its gesture or key, and
+ * its modifiers).
  */
 const HELP_PROSE = {
   // An image file dropped on the canvas becomes the background: no binding.
@@ -528,6 +532,14 @@ const HELP_PROSE = {
       'without selecting', 'forceAddWaypoint'],
     [`${ALT_TEXT}+${META_TEXT}+Click to add a minor waypoint without selecting`, 'forceAddMinorWaypoint']],
   'Preview and export': [['Space to play/pause the animation', 'playPause']],
+  // Help's own, sharing the welcome's words for the same gestures; its right-click and network pen lines
+  // start with no chord.
+  'Mouse and pen': [['Click the map to add waypoints', 'addWaypoint'],
+    ['Drag waypoints to reposition them', 'moveWaypoint'],
+    [`${SHIFT_TEXT}+Click a waypoint to delete it`, 'deleteWaypoint'],
+    [`${META_TEXT}+Click to add a minor waypoint`, 'addMinorWaypoint'],
+    [`${ALT_TEXT}+Click a major waypoint to start a branch; ${ALT_TEXT}+Click empty map to add a major waypoint ` +
+      'without selecting', 'forceAddWaypoint']],
   'Quick Start': [['Click Add waypoint', 'addWaypoint'], ['Drag Move waypoint', 'moveWaypoint'],
     [`${SHIFT_TEXT}+Click Delete`, 'deleteWaypoint'], ['Space Play/pause', 'playPause']]
 };
@@ -568,7 +580,7 @@ describe("Help's key table (TST-13)", () => {
     expect(editorState(app).dialog).toBe('Help');
 
     const rendered = {};
-    for (const category of document.querySelectorAll('#splash-help .controls-category')) {
+    for (const category of document.querySelectorAll('#help-modal .controls-category')) {
       rendered[category.querySelector('h4').textContent] = [...category.querySelectorAll('.control-item')]
         .map(row => [row.querySelector('kbd').textContent, row.querySelector('span').textContent]);
     }
@@ -599,7 +611,8 @@ describe("Help's key table (TST-13)", () => {
     press('?');
     expect(editorState(app).dialog).toBe('Help');
     const prose = {};
-    for (const section of document.querySelectorAll('#splash-help .help-section')) {
+    // The welcome's sections stay in the page once its first start has shown them; Help's are written at boot.
+    for (const section of document.querySelectorAll('#splash-help .help-section, #help-modal .help-section')) {
       const lines = [...section.querySelectorAll('li')].map(item => item.textContent.replace(/^Press /, ''))
         .filter(line => /^(\S+\+)?(Click|Drag|Space)\b/.test(line));
       if (lines.length > 0) prose[section.querySelector('h3').textContent] = lines;
@@ -1163,8 +1176,8 @@ describe('what the page shortcuts react to (TST-13)', () => {
     ['a button in an open dialog', async () => {
       document.body.click(); // closes the menu, as a click elsewhere does
       document.getElementById('help-btn').click();
-      await vi.waitFor(() => expect(document.activeElement.id).toBe('splash-title'));
-      return document.getElementById('splash-close');
+      await vi.waitFor(() => expect(document.activeElement.id).toBe('modal-title-help'));
+      return document.getElementById('help-close-x');
     }]
   ];
 
@@ -2168,9 +2181,9 @@ const LISTENER_ROWS = [
     async run(log) {
       await editor();
       press('?');
-      const dialog = document.getElementById('splash');
-      // The trap starts when the dialog shows (a MutationObserver), with focus on its title.
-      await vi.waitFor(() => expect(document.activeElement.id).toBe('splash-title'));
+      const dialog = document.getElementById('help-modal');
+      // The trap starts as Help shows, with focus on its title (UI-06 J-01: `?` opened the welcome).
+      await vi.waitFor(() => expect(document.activeElement.id).toBe('modal-title-help'));
       const state = () => `${dialog.style.display === 'flex' ? 'open' : 'closed'}, focus ${focusName()}`;
       const step = (key, flags = {}) => `${flags.shiftKey ? 'Shift+' : ''}${key}: ` +
         `${taken(log.press(KEY_LISTENER.focusTrap, key, document.activeElement, flags))}; ${state()}`;
@@ -2178,10 +2191,10 @@ const LISTENER_ROWS = [
       log.sweep(KEY_LISTENER.focusTrap, () => document.activeElement, state);
       steps.push(step('Escape'));
       expect(steps).toEqual([
-        'opened: open, focus #splash-title',
-        'Tab: taken; open, focus #splash-close-x',
-        'Shift+Tab: taken; open, focus licences and third-party notices (opens in a new tab)',
-        'Tab: taken; open, focus #splash-close-x',
+        'opened: open, focus #modal-title-help',
+        'Tab: taken; open, focus #help-close-x',
+        'Shift+Tab: taken; open, focus #help-show-welcome',
+        'Tab: taken; open, focus #help-close-x',
         // Not left in the closed dialog (Codex r2): nothing had focus when
         // it opened, and nothing has it now.
         'Escape: taken; closed, focus the page'

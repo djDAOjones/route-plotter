@@ -1,36 +1,31 @@
-# splash: Help open
+# welcome: a first start, its welcome open
 
 ## #splash · click
 app ~ focus: "#splash-title" → "body"
+storage + routePlotter_splashShown: "true"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #app: div inert="" → div
 ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
-ui - #splash>div[0]: div class="splash-content" (and 149 inside, f9a94238)
+ui - #splash>div[0]: div class="splash-content" (and 41 inside, 88f9ad21)
 
 ## #splash-close-x · click
 app ~ focus: "#splash-title" → "body"
+storage + routePlotter_splashShown: "true"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #app: div inert="" → div
 ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
-ui - #splash>div[0]: div class="splash-content" (and 149 inside, f9a94238)
-
-## #splash-help>div[0]>details[2]>summary[0] · click
-app ~ focus: "#splash-title" → "#splash-help>div[0]>details[2]>summary[0]"
-ui ~ #splash-help>div[0]>details[2]: details class="controls-accordion" open="" → details class="controls-accordion"
+ui - #splash>div[0]: div class="splash-content" (and 41 inside, 88f9ad21)
 
 ## #splash-close · click
 app ~ focus: "#splash-title" → "body"
+storage + routePlotter_splashShown: "true"
 ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to main content" → a class="skip-link" href="#main-content" :text="Skip to main content"
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #app: div inert="" → div
 ui ~ #splash: div aria-labelledby="splash-title" aria-modal="true" class="splash-screen" role="dialog" style="display: flex;" → div (not shown)
-ui - #splash>div[0]: div class="splash-content" (and 149 inside, f9a94238)
+ui - #splash>div[0]: div class="splash-content" (and 41 inside, 88f9ad21)
 
-## #splash-dont-show · click
-app ~ focus: "#splash-title" → "#splash-dont-show"
-ui ~ #splash-dont-show: input type="checkbox" :unchecked → input type="checkbox" :checked
-
-## #splash>div[0]>p[5]>a[0] · click
-app ~ focus: "#splash-title" → "#splash>div[0]>p[5]>a[0]"
+## #splash>div[0]>p[4]>a[0] · click
+app ~ focus: "#splash-title" → "#splash>div[0]>p[4]>a[0]"

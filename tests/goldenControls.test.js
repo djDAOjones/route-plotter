@@ -1673,6 +1673,9 @@ const WEBM_UNSUPPORTED = [/Export failed: Error: Video export not supported/, /V
  * reveal them. `values` keeps only the controls that write a value, for a
  * context that repeats another's with a different selection; `only`, only
  * the gestures it names, for one that exists to show what they do there.
+ * `firstRun` keeps the first start's welcome open, focus where its trap put
+ * it and nothing recorded, for the context that exists to show it (UI-06
+ * J-01): every other context puts it away first, as an author does.
  */
 const CONTEXTS = [
   {
@@ -1770,7 +1773,19 @@ const CONTEXTS = [
     clipboard: async () => { throw new DOMException('Write permission denied.', 'NotAllowedError'); },
     enter: clickId('report-bug-btn'),
   },
-  { name: 'splash', about: 'Help open', roots: ['#splash'], enter: clickId('help-btn') },
+  // UI-06 J-01: the welcome is the first start's alone, and Help a dialog of its own.
+  {
+    name: 'welcome',
+    about: 'a first start, its welcome open',
+    roots: ['#splash'],
+    firstRun: true,
+    // A row that put it away is undone as a first start shows it: the flag
+    // unrecorded again (the baseline's storage), the welcome shown.
+    enter: (app) => {
+      if (document.getElementById('splash').style.display === 'none') app.showSplash();
+    },
+  },
+  { name: 'help', about: 'Help open', roots: ['#help-modal'], enter: clickId('help-btn') },
   {
     name: 'codec',
     about: 'an MP4 export this browser cannot encode',
@@ -2053,10 +2068,11 @@ async function establish(app, context, selections = null, lastFrame = undefined)
   vi.setSystemTime(FIXED_NOW);
   expect(await drive(loadSnapshot(app, project))).toBe(true);
   const splash = document.getElementById('splash');
-  if (splash.style.display !== 'none') document.getElementById('splash-close').click();
+  if (!context.firstRun && splash.style.display !== 'none') document.getElementById('splash-close').click();
   // A dialog a row opened outlives the reload: Escape closes it, as it would
-  // for a user, and gives back focus and the page it made inert.
-  for (let open = 0; open < 4 && document.querySelector('body > [inert]'); open += 1) {
+  // for a user, and gives back focus and the page it made inert. The welcome,
+  // in the context that keeps it, is no such dialog: no row there opens one.
+  for (let open = 0; !context.firstRun && open < 4 && document.querySelector('body > [inert]'); open += 1) {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     await settle(6);
   }
@@ -2080,9 +2096,9 @@ async function establish(app, context, selections = null, lastFrame = undefined)
   app._setPreviewMode(false);
   app.invalidateAnimationTiming();
   // Rows move focus; each starts with it on the body, once the splash's focus
-  // trap has let go.
+  // trap has let go, or, in the welcome's own context, where its trap put it.
   await settle(6);
-  document.activeElement?.blur();
+  if (!context.firstRun) document.activeElement?.blur();
   await context.enter(app);
   await settle(6);
   openCards(context);
