@@ -11,7 +11,9 @@
  * report, "Show the welcome again" the welcome, without touching the flag
  * that says the welcome was seen. Each of those gives focus back to the
  * header's Help button when it closes, a control that is always there, rather
- * than to whatever opened Help.
+ * than to whatever opened Help. The one exception: the bug report, from Help
+ * opened over the first start's welcome, gives it to the welcome's title,
+ * since the welcome is still open beneath and the Help button inert behind it.
  *
  * RoutePlotter prototype mixin: every method runs with `this` bound to the
  * RoutePlotter instance; main.js attaches the group via
@@ -87,11 +89,15 @@ export const helpDialogMixin = {
    * Close Help, then show the welcome as a first start does, the flag left as
    * it is. Its trap starts here rather than from its observer, a microtask
    * later, so that it returns focus to the Help button: the observer's would
-   * return it to whatever opened Help.
+   * return it to whatever opened Help. Help opened over the first start's
+   * welcome leaves the welcome's trap active beneath it, and starting an
+   * active trap does nothing, so that trap stops first and starts afresh
+   * (Codex r1): otherwise the welcome's dismissal gives focus to the page.
    * @private
    */
   _showWelcomeAgain() {
     this.hideHelp();
+    this._splashFocusTrap?.deactivate();
     this.showSplash();
     this._splashFocusTrap?.activate(null, this.elements.helpBtn);
   },

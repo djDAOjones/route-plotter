@@ -15,10 +15,13 @@
  * glyphs; its four sections, in order, with no accordion; About's version,
  * from the app, not a fetch; "Report a bug" and "Show the welcome again" each
  * closing Help before the dialog they open, and focus coming back to the
- * header's Help button. And the splash: shown on a first start, any way of
- * dismissing it records that it was seen, a second start does not show it,
- * and its checkbox is gone; `?` on it opens Help over it, and closing Help
- * gives focus back to it.
+ * header's Help button. From Help opened over the first start's welcome, the
+ * welcome shown again gives focus to the Help button too, and the bug
+ * report gives it back to the welcome, still open beneath, its title (the
+ * Help button is inert behind it). And the splash: shown on a first start,
+ * any way of dismissing it records that it was seen, a second start does not
+ * show it, and its checkbox is gone; `?` on it opens Help over it, and
+ * closing Help gives focus back to it.
  */
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -280,6 +283,76 @@ describe("Help's hand-offs: each closes Help first, and focus comes back to the 
     expect(document.activeElement).toBe(id('help-btn'));
     expect(inertChildren()).toEqual(before);
     expect(store.get(SPLASH_SHOWN)).toBe('true');
+  });
+});
+
+describe("Help's hand-offs from Help opened over the first start's welcome (the owner's answer, 2026-10-09: \"Help on top of the welcome\")", () => {
+  test("Show the welcome again: the welcome's trap starts afresh with the Help button as its return target, so its dismissal gives focus there, not to the page", async () => {
+    // Codex r1 (REAL): the welcome's trap was still active beneath Help, so
+    // starting it with the Help button did nothing and focus went to the page.
+    const store = useStorage();
+    const app = await firstStart();
+    const marked = vi.spyOn(app.storageService, 'markSplashShown');
+    expect(document.activeElement).toBe(id('splash-title'));
+    press('?');
+    expect([isOpen('help-modal'), isOpen('splash')]).toEqual([true, true]);
+    expect([app._helpFocusTrap.isActive, app._splashFocusTrap.isActive]).toEqual([true, true]);
+
+    id('help-show-welcome').click();
+    await Promise.resolve();
+    expect(isOpen('help-modal')).toBe(false);
+    expect(app._helpFocusTrap.isActive).toBe(false);
+    expect(isOpen('splash')).toBe(true);
+    expect(app._splashFocusTrap.isActive).toBe(true);
+    expect(document.activeElement).toBe(id('splash-title'));
+    expect(notInert()).toEqual(['announcer', 'splash']);
+    expect(marked).not.toHaveBeenCalled();
+    expect(store.has(SPLASH_SHOWN)).toBe(false);
+
+    id('splash-close').click();
+    await Promise.resolve();
+    expect(id('splash').style.display).toBe('none');
+    expect([app._helpFocusTrap.isActive, app._splashFocusTrap.isActive]).toEqual([false, false]);
+    expect(document.activeElement).toBe(id('help-btn'));
+    expect(inertChildren()).toEqual([]);
+    // Dismissed, the first start's welcome is recorded, as any dismissal records it.
+    expect(marked).toHaveBeenCalledOnce();
+    expect(store.get(SPLASH_SHOWN)).toBe('true');
+  });
+
+  test("Report a bug: Cancel gives focus back to the welcome's title, the welcome still open, since the Help button behind it is inert", async () => {
+    // Codex r1 (ADVISORY): the one hand-off whose focus does not come back to
+    // the header. Pinned as built: the welcome stays beneath, and its title
+    // takes focus when no return target can.
+    const store = useStorage();
+    const app = await firstStart();
+    const marked = vi.spyOn(app.storageService, 'markSplashShown');
+    press('?');
+    expect([app._helpFocusTrap.isActive, app._splashFocusTrap.isActive]).toEqual([true, true]);
+
+    id('help-report-bug').click();
+    expect(isOpen('help-modal')).toBe(false);
+    expect(app._helpFocusTrap.isActive).toBe(false);
+    await vi.waitFor(() => expect(app._diagnosticsTrap.isActive).toBe(true));
+    expect(id('diagnostics-title').textContent).toBe('Report a bug');
+    expect([isOpen('splash'), app._splashFocusTrap.isActive]).toEqual([true, true]);
+    expect(notInert()).toEqual(['announcer', 'diagnostics-modal']);
+
+    id('diagnostics-cancel').click();
+    expect(app._diagnosticsTrap.isActive).toBe(false);
+    expect([isOpen('splash'), app._splashFocusTrap.isActive]).toEqual([true, true]);
+    expect(id('help-btn').closest('[inert]')).not.toBeNull();
+    expect(document.activeElement).toBe(id('splash-title'));
+    expect(notInert()).toEqual(['announcer', 'splash']);
+    expect(marked).not.toHaveBeenCalled();
+    expect(store.has(SPLASH_SHOWN)).toBe(false);
+
+    // The welcome then closes as any first start's does: recorded, nothing left inert.
+    id('splash-close').click();
+    expect(id('splash').style.display).toBe('none');
+    expect(app._splashFocusTrap.isActive).toBe(false);
+    expect(marked).toHaveBeenCalledOnce();
+    expect(inertChildren()).toEqual([]);
   });
 });
 
