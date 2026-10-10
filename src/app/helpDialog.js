@@ -12,8 +12,9 @@
  * that says the welcome was seen. Each of those gives focus back to the
  * header's Help button when it closes, a control that is always there, rather
  * than to whatever opened Help. The one exception: the bug report, from Help
- * opened over the first start's welcome, gives it to the welcome's title,
- * since the welcome is still open beneath and the Help button inert behind it.
+ * opened over a welcome that is already open (the first start's, or one shown
+ * again), gives it to the welcome's title, since the welcome is still open
+ * beneath and the Help button inert behind it.
  *
  * RoutePlotter prototype mixin: every method runs with `this` bound to the
  * RoutePlotter instance; main.js attaches the group via
