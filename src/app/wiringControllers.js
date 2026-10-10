@@ -1272,18 +1272,15 @@ export const wiringControllersMixin = {
       this.announce('Minor waypoint added to leg');
     });
 
-    // Help events
+    // Help events: Help is a dialog of its own, its shortcuts grid open; the
+    // splash is the first-run welcome (UI-06 J-01)
     this.eventBus.on('help:toggle', () => {
-      if (this.elements.splash.style.display === 'none' || 
-          this.elements.splash.style.display === '') {
-        this.showSplash();
-      } else {
-        this.hideSplash();
-      }
+      this.toggleHelp();
     });
     
+    // `?` (InteractionHandler)
     this.eventBus.on('help:show-shortcuts', () => {
-      this.showSplash(); // Consolidated into splash modal with accordion
+      this.showHelp();
     });
     
     // ========== WAYPOINT KEYBOARD EVENTS ==========

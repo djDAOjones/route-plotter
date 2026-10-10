@@ -183,6 +183,10 @@ const LOOKED_UP = {
   'src/app/editorPanel.js': words('area-draw-reason waypoint-scope'),
   // UI-06 B-18: the export items' reason line and its two spans.
   'src/app/exporting.js': words('export-dropdown-btn export-html-reason export-menu-reason export-video-reason'),
+  // UI-06 J-01: Help, a dialog of its own, and its controls.
+  'src/app/helpDialog.js': words(`
+    help-close-x help-modal help-report-bug help-sections help-show-welcome help-source help-version
+  `),
   'src/app/network.js': words(`
     crowd-guide-hint crowd-trace-route-btn crowd-trace-route-reason network-edge-delete network-edge-direction
     network-edge-direction network-edge-hint network-edge-swap network-edge-swap network-edge-weight
@@ -219,7 +223,7 @@ const LOOKED_UP = {
     aov-controls aov-controls clear-cancel clear-confirm clear-confirm-modal codec-cancel
     codec-modal-message codec-mp4-reduced codec-unsupported-modal codec-webm file-dropdown-btn
     leg-section-title modal-title-codec pacing-comet-hint path-trail-control reveal-trail-control scope-chip
-    scope-chip-text scope-next-btn scope-prev-btn scope-route-btn splash-help spotlight-controls
+    scope-chip-text scope-next-btn scope-prev-btn scope-route-btn spotlight-controls
     spotlight-controls
   `),
   'src/main.js': words(`
@@ -255,7 +259,7 @@ const LOOKED_UP = {
     ripple-thickness-value ripple-wait save-project-btn segment-color segment-speed-control segment-style
     segment-width segment-width-value settings-help-placeholder settings-sections shape-amplitude
     shape-amplitude-value shape-frequency shape-frequency-value shape-params-controls skip-end-btn
-    skip-start-btn speed-control splash splash-close splash-close-x splash-dont-show splash-help
+    skip-start-btn speed-control splash splash-close splash-close-x splash-help
     timeline-slider toast-container total-time undo-btn waypoint-label waypoint-list waypoint-pause-time
     waypoint-pause-time-value waypoint-segment-speed waypoint-segment-speed-value waypoint-visibility
   `),

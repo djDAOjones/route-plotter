@@ -2746,10 +2746,27 @@ kbd{
   width:100%;
 }
 
-/* Splash content: flex column for consistent vertical rhythm (Carbon modal body pattern) */
+/* Help and the welcome (UI-06 J-01 round 4): Carbon's modal anatomy. The
+   dialog is a column bounded to the viewport, at the height Help had; its
+   header (the title, and the × in its corner) and its footer action stay in
+   view, and only its body scrolls. Neither box scrolls itself. */
+.help-modal-content,
 .splash-content{
   display:flex;
   flex-direction:column;
+  max-height:calc(100vh - (2 * var(--space-4)));
+}
+
+/* The body takes the room left and scrolls inside it. Its padding, given
+   back by its margin, keeps the focus ring of a control at its edge from
+   being clipped by the scroll; while it scrolls it takes focus itself
+   (utils/focusTrap.js), and the universal ring marks it. */
+.modal-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  margin:0 calc(-1 * var(--space-2));
+  padding:var(--space-2);
 }
 
 /* MOD-01: Close × button in top-right corner of modals */
@@ -2807,6 +2824,42 @@ kbd{
   max-width:48rem;
   max-height:calc(100vh - (2 * var(--space-4)));
   overflow-y:auto;
+}
+
+/* Help (UI-06 J-01): wide enough for two columns of shortcuts; long, so
+   its body scrolls (above) */
+.help-modal-content{
+  max-width:48rem;
+}
+
+.help-modal-content h2{
+  margin:0 0 var(--space-5) 0;
+  padding-right:var(--touch-target-min);
+  color:var(--text-01);
+  font-size:var(--type-h1);
+}
+
+.help-modal-content .help-section{
+  margin:0 0 var(--space-6) 0;
+}
+
+.help-modal-content .help-section h3{
+  margin:0 0 var(--space-3) 0;
+  color:var(--text-01);
+  font-size:var(--type-h2);
+}
+
+.help-modal-content .help-section p{
+  margin:0 0 var(--space-3) 0;
+  font-size:var(--type-body-compact);
+}
+
+/* A link on a line of its own is a 44 px target, its text no larger (WCAG
+   2.5.5; round 4); a link inside a sentence keeps the inline exception */
+.standalone-link{
+  display:inline-flex;
+  align-items:center;
+  min-height:var(--touch-target-min);
 }
 
 .modal-content .diagnostics-public-warning{
@@ -3152,12 +3205,10 @@ kbd{
   font-weight:600;
 }
 
-/* Splash help layout */
+/* Splash help layout: the welcome's body scrolls, not this wrapper (UI-06
+   J-01 round 4: a 60vh cap here cut its last line at 1440×900) */
 .splash-help{
   text-align:left;
-  max-height:60vh;
-  overflow-y:auto;
-  padding-right:var(--space-2);
 }
 
 .splash-intro{
@@ -3199,73 +3250,27 @@ kbd{
   border-radius:var(--radius-1);
 }
 
-/* Controls accordion (Carbon disclosure pattern) */
-.controls-accordion{
-  margin-top:var(--space-5);
+/* Help's shortcuts grid (UI-06 J-01): the accordion's panel, always open,
+   its categories side by side where the dialog is wide enough, and one
+   column where it is not, down to 320 CSS px (WCAG 1.4.10, round 4) */
+.controls-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap:var(--space-4) var(--space-6);
+  padding:var(--space-3) var(--space-4);
   border:1px solid var(--border-subtle);
   border-radius:var(--radius-2);
   background:var(--ui-01);
 }
 
-.controls-accordion summary{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:var(--space-3) var(--space-4);
-  font-size:var(--type-body-compact);
-  font-weight:500;
-  color:var(--text-01);
-  cursor:pointer;
-  list-style:none;
-  user-select:none;
-}
-
-.controls-accordion summary::-webkit-details-marker{
-  display:none;
-}
-
-.controls-accordion summary::before{
-  content:'▶';
-  margin-right:var(--space-2);
-  font-size:0.75rem;
-  transition:transform var(--motion-fast) var(--ease-out);
-}
-
-.controls-accordion[open] summary::before{
-  transform:rotate(90deg);
-}
-
-.controls-accordion .accordion-hint{
-  font-size:var(--type-caption);
-  color:var(--text-helper);
-}
-
-.controls-accordion[open] .accordion-hint{
-  display:none;
-}
-
-.controls-accordion summary:hover{
-  background:var(--hover-ui);
-}
-
-.controls-accordion summary:focus-visible{
-  outline:none;
-  box-shadow:inset 0 0 0 2px var(--focus-inner);
-}
-
-.controls-content{
-  padding:var(--space-3) var(--space-4);
-  border-top:1px solid var(--border-subtle);
-  max-height:40vh;
-  overflow-y:auto;
-}
-
 .controls-category{
-  margin-bottom:var(--space-4);
+  margin:0;
 }
 
-.controls-category:last-child{
-  margin-bottom:0;
+/* Each category a list of terms (round 4: WCAG 1.3.1): a row groups the key,
+   its dt, with the action, its dd */
+.controls-category dl{
+  margin:0;
 }
 
 .controls-category h4{
@@ -3294,7 +3299,15 @@ kbd{
   border-radius:var(--radius-1);
 }
 
-.control-item span{
+/* The key's term holds its chip as the row held it before: a flex item, so
+   the chip's 6rem minimum lines the actions up */
+.control-item dt{
+  display:flex;
+  flex:0 0 auto;
+}
+
+.control-item dd{
+  margin:0;
   font-size:var(--type-body-compact);
   color:var(--text-02);
 }
@@ -3694,14 +3707,6 @@ a.btn-primary:visited{
   margin-top:var(--space-5);
 }
 
-/* Checkbox below CTA — enough space to feel separate, not orphaned, and a
-   44px row to press (WCAG 2.5.5, UI-06 B-19) */
-.splash-content>.checkbox-label{
-  min-height:var(--touch-target-min);
-  margin-top:var(--space-3);
-  margin-bottom:0!important;
-}
-
 /* LEGAL-01: the licence line sits under the CTA as secondary text. It must
    never compete with Get Started, but it is still body copy, so it keeps the
    AAA text token rather than a lighter one. */
@@ -3954,6 +3959,12 @@ a.btn-primary:visited{
     max-height:calc(100vh - (2 * var(--space-2)));
     overflow-y:auto;
     padding:var(--space-4);
+  }
+
+  /* Help and the welcome scroll their body, not their box (UI-06 J-01 round 4) */
+  .help-modal-content,
+  .splash-content{
+    overflow-y:visible;
   }
 
   .section-content label.crowd-variation-control{

@@ -8,6 +8,8 @@
 import { DiagnosticsService } from '../services/DiagnosticsService.js';
 import { createFocusTrap } from '../utils/focusTrap.js';
 
+/** The source, which Help's About links to (UI-06 J-01). */
+export const GITHUB_REPOSITORY_URL = 'https://github.com/djDAOjones/route-plotter';
 export const GITHUB_ISSUES_URL = 'https://github.com/djDAOjones/route-plotter/issues';
 export const GITHUB_SECURITY_URL =
   'https://github.com/djDAOjones/route-plotter/security/advisories/new';

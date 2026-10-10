@@ -8,7 +8,7 @@ import { viewportMixin } from '../src/app/viewport.js';
 import { UIController } from '../src/controllers/UIController.js';
 import { SectionController } from '../src/controllers/SectionController.js';
 import { initDropdown } from '../src/components/Dropdown.js';
-import { getSplashHelpHTML } from '../src/config/helpContent.js';
+import { getHelpDialogHTML, getSplashHelpHTML } from '../src/config/helpContent.js';
 import { getDefaultBindings } from '../src/config/keybindings.js';
 import { EventBus } from '../src/core/EventBus.js';
 import { createFocusTrap } from '../src/utils/focusTrap.js';
@@ -176,16 +176,24 @@ describe('review remediation keyboard path', () => {
   test('Tab waypoint bindings no longer appear in configuration or Help', () => {
     const bindings = Object.values(getDefaultBindings().keyboard);
     expect(bindings.some(binding => binding.key === 'Tab')).toBe(false);
-    expect(getSplashHelpHTML()).not.toContain('Select next waypoint');
-    expect(getSplashHelpHTML()).not.toContain('Select previous waypoint');
+    // The bindings are listed in Help's own dialog since UI-06 J-01; the welcome keeps its short sections.
+    for (const html of [getSplashHelpHTML(), getHelpDialogHTML()]) {
+      expect(html).not.toContain('Select next waypoint');
+      expect(html).not.toContain('Select previous waypoint');
+    }
+    expect(getHelpDialogHTML()).toContain('data-binding-id="addAtCenter"');
   });
 
-  test('Help disclosure keeps native Summary Tab and Space behaviour', () => {
+  test('a disclosure in a dialog keeps native Summary Tab and Space behaviour', () => {
+    // Help's shortcuts were such a disclosure until UI-06 J-01 opened them in
+    // a grid of its own dialog; the rule holds for any summary in a dialog.
     document.body.innerHTML = `
       <div id="splash" role="dialog" aria-modal="true" aria-labelledby="splash-title">
         <button id="splash-close-x" type="button">Close</button>
         <h2 id="splash-title">Help</h2>
-        <div id="splash-help">${getSplashHelpHTML()}</div>
+        <div id="splash-help">${getSplashHelpHTML()}
+          <details class="controls-accordion"><summary>All keyboard shortcuts and controls</summary></details>
+        </div>
         <button id="splash-close" type="button">Get Started</button>
       </div>
     `;

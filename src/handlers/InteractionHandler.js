@@ -32,6 +32,7 @@
 
 import { INTERACTION } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
+import { isInOpenModal } from '../utils/focusTrap.js';
 
 export class InteractionHandler {
   /**
@@ -901,17 +902,24 @@ export class InteractionHandler {
     
     const key = event.key.toLowerCase();
 
+    // Inside an open modal dialog the editor behind it is inert, so every
+    // shortcut waits wherever focus is in the dialog: its title, where it puts
+    // focus when it opens, its body or a control (DEF-82). Nothing is
+    // prevented, so Space, Home, End and the arrows scroll the dialog as the
+    // browser does. `?` is the one that runs: Help opens over any dialog, from
+    // a button in the welcome too (the owner's "Help on top of the welcome").
+    // Escape is the dialog's own, taken by its focus trap on the window first.
+    if (isInOpenModal(target) && key !== '?') return;
+
     // A focused button, link, disclosure or menu item keeps only the keys it
     // acts on: Space, its activation (Enter, the other, is no shortcut), and
     // in a menu or list the arrows that move through it. Every other shortcut
     // runs, since Chromium leaves focus on a button after a click (DEF-13).
-    // Inside a modal dialog a control still keeps every key: the editor
-    // behind it is inert.
     const control = target?.closest?.(
       'button, a[href], summary, [role="button"], [role="menuitem"], [role="option"]'
     );
     if (control) {
-      if (key === ' ' || control.closest('[aria-modal="true"]')) return;
+      if (key === ' ') return;
       if (control.matches('[role="menuitem"], [role="option"]') &&
           ['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
         return;

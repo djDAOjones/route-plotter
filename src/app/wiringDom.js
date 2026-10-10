@@ -99,8 +99,9 @@ export const wiringDomMixin = {
     });
     
     // ===== SPLASH SCREEN EVENT LISTENERS =====
-    // Both first-run and Help paths show this dialog by changing its inline
-    // display, so one observer keeps the shared focus trap in sync.
+    // The first start and Help's "Show the welcome again" show this dialog by
+    // changing its inline display, so one observer keeps its focus trap in
+    // sync (Help is a dialog of its own: UI-06 J-01).
     if (this.elements.splash) {
       this._splashFocusTrap = createFocusTrap(this.elements.splash);
       const syncSplashFocus = () => {

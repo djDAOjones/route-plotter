@@ -22,6 +22,17 @@
  * (Codex r3). Otherwise the next in the chain is tried, then the start of the
  * dialog beneath, if one is open, else the page's first control that takes
  * focus: in the app, the skip link.
+ *
+ * A dialog that scrolls only its body (Help, the welcome: UI-06 J-01 round 4)
+ * keeps its title, its × and its footer action in view, as Carbon's modal
+ * does. Focus starts on the title, outside that body, so while the body is
+ * longer than the room it has it takes focus itself, a region named as its
+ * dialog, and the browser's own keys scroll it (Carbon: tabindex 0 and a
+ * label while the content scrolls); a body that fits is no stop in the Tab
+ * order. The trap checks on opening and on every resize while it is open.
+ *
+ * While focus is anywhere in an open modal dialog, the page's shortcuts wait
+ * (`isInOpenModal`, DEF-82): the editor behind it is inert.
  * 
  * @module utils/focusTrap
  */
@@ -55,6 +66,41 @@ const inertBefore = new Map();
  * a dialog is open is still heard.
  */
 const NEVER_INERT = '#announcer';
+
+/** A dialog's body that scrolls while its header and footer stay in view. */
+const SCROLLING_BODY = '.modal-body';
+
+/**
+ * Whether `element` is inside a modal dialog that is open (DEF-82): the
+ * dialog itself, its title, its body or a control in it. The page's key
+ * listeners ask this, so that nothing they do reaches the editor the dialog
+ * makes inert, wherever in the dialog focus is.
+ * @param {Element|Document|null|undefined} element
+ * @returns {boolean}
+ */
+export function isInOpenModal(element) {
+  const modal = element?.closest?.('[aria-modal="true"]');
+  return Boolean(modal) && !modal.hidden && window.getComputedStyle(modal).display !== 'none';
+}
+
+/**
+ * A scrolling body takes focus, named as its dialog, while it is longer than
+ * the room it has; one that fits takes none (see the module's note).
+ * @param {HTMLElement} modal
+ */
+function syncScrollingBodies(modal) {
+  for (const body of modal.querySelectorAll(SCROLLING_BODY)) {
+    if (body.scrollHeight > body.clientHeight) {
+      body.setAttribute('tabindex', '0');
+      body.setAttribute('role', 'region');
+      body.setAttribute('aria-labelledby', modal.getAttribute('aria-labelledby') ?? '');
+    } else {
+      body.removeAttribute('tabindex');
+      body.removeAttribute('role');
+      body.removeAttribute('aria-labelledby');
+    }
+  }
+}
 
 /** The trap on top: the last opened whose dialog is still in the page. */
 function topTrap() {
@@ -175,6 +221,7 @@ export function createFocusTrap(modal) {
    */
   const trap = { modal, focusInitialElement: () => focusInitialElement(), returnTargets: [] };
   const isOnTop = () => topTrap() === trap;
+  const syncBodies = () => syncScrollingBodies(modal);
 
   /**
    * Handle keydown events for focus trapping
@@ -257,7 +304,9 @@ export function createFocusTrap(modal) {
     // keyboard, and assistive-technology users while the dialog is open; a
     // dialog this one opens over is background now too.
     syncInert();
+    syncBodies();
     window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('resize', syncBodies);
     document.addEventListener('focusin', handleFocusIn, true);
     focusInitialElement(initialFocus);
   }
@@ -277,6 +326,7 @@ export function createFocusTrap(modal) {
     openTraps.splice(place, 1);
     openTraps[place]?.returnTargets.push(...trap.returnTargets);
     window.removeEventListener('keydown', handleKeyDown, true);
+    window.removeEventListener('resize', syncBodies);
     document.removeEventListener('focusin', handleFocusIn, true);
     syncInert();
 

@@ -36,6 +36,7 @@ import { crowdsMixin } from '../src/app/crowds.js';
 import { networkMixin } from '../src/app/network.js';
 import { sceneOutlineMixin } from '../src/app/sceneOutline.js';
 import { privacyMixin } from '../src/app/privacy.js';
+import { helpDialogMixin } from '../src/app/helpDialog.js';
 import { snapToAngle } from '../src/utils/snapToAngle.js';
 import { sliderToPathWidth, pathWidthToSlider } from '../src/utils/pathWidthScale.js';
 
@@ -56,6 +57,7 @@ const MIXINS = {
   networkMixin,
   sceneOutlineMixin,
   privacyMixin,
+  helpDialogMixin,
 };
 
 describe('RoutePlotter prototype mixins', () => {

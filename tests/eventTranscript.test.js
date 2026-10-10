@@ -895,6 +895,8 @@ function runtimeState(app) {
       undoDisabled: elements.undoBtn?.disabled,
       redoDisabled: elements.redoBtn?.disabled,
       splash: elements.splash?.style.display || '(stylesheet)',
+      // Help is a dialog of its own (UI-06 J-01); `help:toggle` and `?` open it, not the splash.
+      help: app._helpModal?.style.display || '(stylesheet)',
       shareDisclosure: app._shareDisclosureModal?.style.display === 'flex'
         ? app._shareDisclosureTitle?.textContent
         : 'closed',
