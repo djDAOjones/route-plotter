@@ -444,10 +444,14 @@ const MOUSE_CHORDS = {
   moveWaypoint: ['drag', []]
 };
 
-/** How Help writes each modifier: Cmd's symbols on a Mac, words elsewhere. */
+/**
+ * How Help writes each modifier: Cmd's symbols on a Mac, words elsewhere.
+ * Shift is a word elsewhere too, from the platform table (UI-06 J-01 round 4:
+ * Windows wrote "Ctrl+⇧+Z").
+ */
 const MODIFIER_TEXT = isMac
   ? { meta: '⌘', ctrl: '⌃', alt: '⌥', shift: '⇧' }
-  : { meta: 'Ctrl', ctrl: 'Ctrl', alt: 'Alt', shift: '⇧' };
+  : { meta: 'Ctrl', ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift' };
 const { meta: META_TEXT, alt: ALT_TEXT, shift: SHIFT_TEXT } = MODIFIER_TEXT;
 
 /**
@@ -463,7 +467,8 @@ const HELP_ROWS = {
     ['deleteWaypoint', `${SHIFT_TEXT}+Click`, 'Delete waypoint'],
     ['selectWaypoint', 'Click', 'Select waypoint'],
     ['moveWaypoint', 'Drag', 'Move waypoint'],
-    ['addAtCenter', 'A', 'Add waypoint at center'],
+    // "centre", the glossary's spelling (UI-06 J-01 round 4).
+    ['addAtCenter', 'A', 'Add waypoint at centre'],
     ['duplicateWaypoint', `${META_TEXT}+D`, 'Duplicate selected'],
     ['deleteSelected', 'Del', 'Delete selected'],
     ['deselectWaypoint', 'Esc', 'Deselect'],
@@ -480,9 +485,11 @@ const HELP_ROWS = {
     ['zoomReset', '0', 'Reset zoom']
   ],
   Playback: [
-    ['playPause', 'Space', 'Play / pause'],
-    ['skipToStart', 'HOME', 'Skip to start'],
-    ['skipToEnd', 'END', 'Skip to end'],
+    // One form of "Play/pause", as K's entry and the Quick start write it; Home
+    // and End named as Esc and Del are, not upper-cased (UI-06 J-01 round 4).
+    ['playPause', 'Space', 'Play/pause'],
+    ['skipToStart', 'Home', 'Skip to start'],
+    ['skipToEnd', 'End', 'Skip to end'],
     ['playReverse', 'J', 'Play reverse'],
     ['playForward', 'L', 'Play forward'],
     ['stepBackward', ',', 'Skip to start'],
@@ -581,8 +588,9 @@ describe("Help's key table (TST-13)", () => {
 
     const rendered = {};
     for (const category of document.querySelectorAll('#help-modal .controls-category')) {
+      // Each row a `dt` (the key) and its `dd` (the action), no longer a styled span (UI-06 J-01 round 4).
       rendered[category.querySelector('h4').textContent] = [...category.querySelectorAll('.control-item')]
-        .map(row => [row.querySelector('kbd').textContent, row.querySelector('span').textContent]);
+        .map(row => [row.querySelector('dt > kbd').textContent, row.querySelector('dd').textContent]);
     }
     expect(rendered, "Help's full list, as rendered (HELP_ROWS)").toEqual(Object.fromEntries(
       Object.entries(HELP_ROWS).map(([category, rows]) => [category, rows.map(([, chord, text]) => [chord, text])])));
@@ -1151,7 +1159,8 @@ describe('what the page shortcuts react to (TST-13)', () => {
   /**
    * Where a key is pressed. The page runs shortcuts; a field keeps every key,
    * and a control only its own. The dialog comes last: its trap leaves the
-   * editor behind it inert.
+   * editor behind it inert, wherever in it focus is, its title included
+   * (DEF-82).
    */
   const FOCUS = [
     ['the page, after a click on the canvas', () => document.body],
@@ -1178,7 +1187,9 @@ describe('what the page shortcuts react to (TST-13)', () => {
       document.getElementById('help-btn').click();
       await vi.waitFor(() => expect(document.activeElement.id).toBe('modal-title-help'));
       return document.getElementById('help-close-x');
-    }]
+    }],
+    // DEF-82: where the dialog puts focus when it opens. Help is still open from the row above.
+    ["an open dialog's title", () => document.getElementById('modal-title-help')]
   ];
 
   const FOCUS_KEYS = [
@@ -1221,12 +1232,17 @@ describe('what the page shortcuts react to (TST-13)', () => {
     'a skip link': ON_A_CONTROL,
     // A menu keeps the arrows that move through it too.
     'a menu item, its menu open': { ...ON_A_CONTROL, '→': '—' },
-    // The editor behind a modal dialog is inert: its shortcuts wait.
-    'a button in an open dialog': NOTHING
+    // The editor behind a modal dialog is inert: its shortcuts wait, from its
+    // title as from its controls (DEF-82), and nothing is prevented, so the
+    // browser's own keys (Space, Home, End, the arrows) scroll the dialog.
+    // `?` is the one that still runs: Help opens over any dialog (the owner's
+    // "Help on top of the welcome"), so a button in one no longer keeps it.
+    'a button in an open dialog': { ...NOTHING, '?': 'help:show-shortcuts, prevented' },
+    "an open dialog's title": { ...NOTHING, '?': 'help:show-shortcuts, prevented' }
   };
 
-  test('a shortcut runs from the page and from a control, which keeps only its own keys; never from a field ' +
-    'or a dialog (DEF-13)', async () => {
+  test('a shortcut runs from the page and from a control, which keeps only its own keys; never from a field, ' +
+    'nor from a dialog but `?` (DEF-13, DEF-82)', async () => {
     const app = await editor();
     const emit = vi.spyOn(app.eventBus, 'emit').mockImplementation(() => {});
     const found = {};
@@ -1305,6 +1321,101 @@ describe('what the page shortcuts react to (TST-13)', () => {
       ['Escape on the hint\'s "?"', {}, 'prevented', 'focus Help: Wait time'],
       ['hint', 'hidden']
     ]);
+  });
+
+  /**
+   * DEF-82 ("Dialog heading passes shortcuts through"): a dialog puts focus on
+   * its title when it opens, and from there every page shortcut reached the
+   * editor behind it, though its trap makes that editor inert. Each key here,
+   * pressed on Help's title with a waypoint selected and the transport paused
+   * half-way, changes nothing, sends nothing and is left to the browser, which
+   * scrolls the dialog with Space, Home, End and the arrows. `?` still asks
+   * for Help (the owner's "Help on top of the welcome"); Escape is the trap's,
+   * on the window, ahead of every page listener: it closes Help and leaves the
+   * selection.
+   */
+  test("from an open dialog's title the page's shortcuts change nothing behind it and are left to the " +
+    'browser; `?` still asks for Help, and Escape closes the dialog, not the selection (DEF-82)', async () => {
+    const app = await editor();
+    const help = document.getElementById('help-btn');
+    help.focus();
+    help.click();
+    const title = document.getElementById('modal-title-help');
+    await vi.waitFor(() => expect(document.activeElement).toBe(title));
+    const KEYS = [['Space', ' '], ['K', 'k'], ['J', 'j'], ['L', 'l'], ['Home', 'Home'], ['End', 'End'], [',', ','],
+      ['.', '.'], ['→', 'ArrowRight'], ['Shift+↑', 'ArrowUp', ['shift']], ['Delete', 'Delete'],
+      ['Backspace', 'Backspace'], ['A', 'a'], ['T', 't'], ['=', '='], ['-', '-'], ['0', '0'],
+      ['Ctrl/Cmd+D', 'd', ['meta']], ['Ctrl/Cmd+A', 'a', ['meta']], ['Ctrl/Cmd+Z', 'z', ['meta']]];
+    const steps = KEYS.map(([name, key, modifiers = []]) => {
+      const [asTyped, flags] = typed(key, modifiers);
+      const { changed, sent, prevented } = observe(app, () => press(asTyped, flags, title));
+      return [name, changed, sent, prevented ? 'prevented' : 'left'];
+    });
+    expect(steps).toEqual(KEYS.map(([name]) => [name, {}, [], 'left']));
+    expect(document.activeElement).toBe(title);
+
+    // Every other key of the domain, on the title and on the dialog's ×: none reaches the bus or is taken,
+    // but Tab and Escape, the trap's, and `?`.
+    const emit = vi.spyOn(app.eventBus, 'emit');
+    const reached = [];
+    try {
+      for (const where of [title, document.getElementById('help-close-x')]) {
+        for (const key of CANDIDATE_KEYS) {
+          if (key === '?' || key === 'Escape' || key === 'Tab') continue;
+          emit.mockClear();
+          const event = press(key, {}, where);
+          const sent = emit.mock.calls.map(([name]) => name);
+          if (event.defaultPrevented || sent.length > 0) reached.push(`${where.id} ${key}: ${taken(event)} ${sent}`);
+        }
+      }
+    } finally {
+      emit.mockRestore();
+    }
+    expect(reached).toEqual([]);
+    expect(editorState(app).dialog).toBe('Help');
+
+    const [asTyped, flags] = typed('?', []);
+    expect(observe(app, () => press(asTyped, flags, title)))
+      .toEqual({ changed: {}, sent: ['help:show-shortcuts'], prevented: true });
+
+    const escape = observe(app, () => press('Escape', {}, title));
+    expect([escape.changed, escape.sent, escape.prevented]).toEqual([{ dialog: null }, [], true]);
+    expect(document.activeElement).toBe(document.getElementById('help-btn'));
+    expect(app.selectedWaypoint).toBe(app.waypoints[1]);
+  });
+
+  test("from an open dialog's title the network pen's keys wait too: Delete, Backspace and T leave the " +
+    'selected node, and Escape closes the dialog, not the pen (DEF-82)', async () => {
+    // Codex's check of the round-4 brief: the pen's capture listener had no
+    // guard of its own, and Delete from Help's title deleted the selection.
+    const app = await editor();
+    document.getElementById('add-crowd-btn').click();
+    const guide = document.getElementById('crowd-guide-type');
+    guide.value = 'graph';
+    guide.dispatchEvent(new Event('change', { bubbles: true }));
+    const pen = app.networkEditService;
+    expect(pen.active).toBe(true);
+    const node = pen.placeNode({ x: 0.5, y: 0.5 });
+    const network = () => ({
+      nodes: pen.layer.graph.getNodes().map(each => `${each.id} ${each.type}`),
+      selection: pen.selection,
+      pen: pen.penNodeId,
+      active: pen.active
+    });
+    const before = network();
+    expect(before.selection).toEqual({ kind: 'node', id: node.id });
+
+    document.getElementById('help-btn').click();
+    const title = document.getElementById('modal-title-help');
+    await vi.waitFor(() => expect(document.activeElement).toBe(title));
+    const taken = [['Delete'], ['Backspace'], ['t'], ['T', { shiftKey: true }]]
+      .map(([key, flags = {}]) => [key, press(key, flags, title).defaultPrevented]);
+    expect(taken).toEqual([['Delete', false], ['Backspace', false], ['t', false], ['T', false]]);
+    expect(network()).toEqual(before);
+
+    expect(press('Escape', {}, title).defaultPrevented).toBe(true);
+    expect(document.getElementById('help-modal').style.display).toBe('none');
+    expect(network()).toEqual(before);
   });
 });
 
@@ -2179,7 +2290,7 @@ const LISTENER_ROWS = [
     title: "an open dialog's focus trap: Tab and Shift+Tab wrap, Escape closes it; every other key stays in it",
     covers: [KEY_LISTENER.focusTrap],
     async run(log) {
-      await editor();
+      const app = await editor();
       press('?');
       const dialog = document.getElementById('help-modal');
       // The trap starts as Help shows, with focus on its title (UI-06 J-01: `?` opened the welcome).
@@ -2188,7 +2299,11 @@ const LISTENER_ROWS = [
       const step = (key, flags = {}) => `${flags.shiftKey ? 'Shift+' : ''}${key}: ` +
         `${taken(log.press(KEY_LISTENER.focusTrap, key, document.activeElement, flags))}; ${state()}`;
       const steps = [`opened: ${state()}`, step('Tab'), step('Tab', { shiftKey: true }), step('Tab')];
-      log.sweep(KEY_LISTENER.focusTrap, () => document.activeElement, state);
+      // The sweep lands on Help's ×, a control: since DEF-82 a dialog's control no longer keeps `?` from the
+      // page (Help opens over any dialog; WHERE_KEYS_RUN pins it), so the dispatcher stands aside for its own
+      // keys, as on every control, and each reaches the trap alone. That the page's other shortcuts wait in a
+      // dialog, title and × alike, every key of the domain, is DEF-82's own test above.
+      log.sweep(KEY_LISTENER.focusTrap, () => document.activeElement, state, { page: app });
       steps.push(step('Escape'));
       expect(steps).toEqual([
         'opened: open, focus #modal-title-help',

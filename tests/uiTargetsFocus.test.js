@@ -358,6 +358,22 @@ describe('small targets grow to 44 px (UI-06 B-19, B-20)', () => {
     }
   });
 
+  // UI-06 J-01 round 4 (Codex's check of the brief): the source link stands on
+  // a line of its own, about 21 px tall; a link inside a sentence keeps the
+  // inline exception (WCAG 2.5.5).
+  test("Help's GitHub link, on a line of its own, is a 44 px target, its text no larger; the notices link in its sentence stays inline", () => {
+    const dialog = mount(fragment('#help-modal'), '#help-modal');
+    const source = dialog.querySelector('#help-source');
+    expect(source.parentElement.children).toHaveLength(1);
+    expect(winning(source, 'display')).toBe('inline-flex');
+    expect(winning(source, 'align-items')).toBe('center');
+    expect(winning(source, 'min-height')).toBe('2.75rem');
+    expect(cascade(source, ['font-size', 'font'])).toBeUndefined();
+    const notices = dialog.querySelector('a[href="THIRD_PARTY_NOTICES.txt"]');
+    expect(cascade(notices, 'min-height')).toBeUndefined();
+    expect(cascade(notices, 'display')).toBeUndefined();
+  });
+
   test('a toast\'s dismiss is a 44 × 44 ghost icon button', async () => {
     const app = await editor();
     app.showToast('Saved', 0);

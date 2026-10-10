@@ -24,13 +24,14 @@ export const isMac = typeof navigator !== 'undefined' &&
   navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
 /**
- * Modifier display names (platform-aware)
+ * Modifier display names (platform-aware): a Mac's symbols, and elsewhere
+ * words, Shift among them (UI-06 J-01 round 4: Windows wrote "Ctrl+⇧+Z")
  */
 export const MODIFIER_DISPLAY = {
   meta: isMac ? '⌘' : 'Ctrl',
   ctrl: isMac ? '⌃' : 'Ctrl',
   alt: isMac ? '⌥' : 'Alt',
-  shift: '⇧'
+  shift: isMac ? '⇧' : 'Shift'
 };
 
 /**
@@ -105,7 +106,7 @@ const DEFAULT_BINDINGS = {
       key: 'a',
       modifiers: [],
       action: 'waypoint:add-at-center',
-      description: 'Add waypoint at center',
+      description: 'Add waypoint at centre', // the glossary's spelling (UI-06 J-01 round 4)
       category: 'waypoint'
     },
     duplicateWaypoint: {
@@ -235,7 +236,7 @@ const DEFAULT_BINDINGS = {
       key: ' ',
       modifiers: [],
       action: 'animation:toggle',
-      description: 'Play / pause',
+      description: 'Play/pause', // one form, as K's and the Quick start's (UI-06 J-01 round 4)
       displayKey: 'Space', // For display purposes
       category: 'playback'
     },
@@ -442,6 +443,9 @@ function formatKey(key) {
     'ArrowRight': '→',
     'Escape': 'Esc',
     'Delete': 'Del',
+    // Named as Esc and Del are, not upper-cased (UI-06 J-01 round 4)
+    'Home': 'Home',
+    'End': 'End',
     'Backspace': '⌫',
     'click': 'Click',
     'drag': 'Drag'

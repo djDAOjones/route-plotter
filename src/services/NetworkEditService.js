@@ -34,6 +34,7 @@
 import { snapToAngle } from '../utils/snapToAngle.js';
 import { getGraphDepartureShares } from '../utils/graphRouting.js';
 import { networkRoom, NETWORK_FULL } from '../utils/networkBudget.js';
+import { isInOpenModal } from '../utils/focusTrap.js';
 
 /** Node types in T-key cycle order; 'normal' is user-facing "pass-through". */
 const NODE_TYPE_CYCLE = ['normal', 'entry', 'exit'];
@@ -736,13 +737,16 @@ export class NetworkEditService {
 
   /**
    * Mode keys, on the capture phase so global shortcuts stay out
-   * (area draw precedent). Esc: cancel drag → lift pen → exit.
+   * (area draw precedent). Esc: cancel drag → lift pen → exit. Inside an
+   * open modal dialog they wait, as the page's do (DEF-82): Delete from Help's
+   * title deleted the selection behind it.
    * @private
    */
   _handleKeyDown(e) {
     if (!this.active) return;
     const tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+    if (isInOpenModal(e.target)) return;
 
     if (e.key === 'Escape') {
       e.preventDefault();

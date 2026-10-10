@@ -17,7 +17,7 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
-ui ~ #redo-btn: button aria-label="Redo" class="btn btn-icon" title="Redo (Ctrl+⇧+Z)" → button aria-label="Redo" class="btn btn-icon" disabled="" title="Redo (Ctrl+⇧+Z)"
+ui ~ #redo-btn: button aria-label="Redo" class="btn btn-icon" title="Redo (Ctrl+Shift+Z)" → button aria-label="Redo" class="btn btn-icon" disabled="" title="Redo (Ctrl+Shift+Z)"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
 ui ~ #scope-route-btn: button aria-current="true" class="scope-route-btn" type="button" :text="Route" → button class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button"

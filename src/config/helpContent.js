@@ -133,9 +133,13 @@ function renderSection(section, tag = 'h3') {
 
 /**
  * Help's shortcuts grid, from the keybindings config, every category open
- * (UI-06 J-01: it was a <details> accordion under the welcome). Each row
- * carries its binding's id, so what is listed can be checked by identity;
- * hidden bindings are left out, as getBindingsByCategory leaves them.
+ * (UI-06 J-01: it was a <details> accordion under the welcome). Each category
+ * is a list of terms, its rows a key or chord (`dt`, its chip in the
+ * platform's glyphs) and the action it pairs with (`dd`), grouped in a div as
+ * HTML lets a `dl` group them (round 4: they were styled divs, paired only by
+ * sight, WCAG 1.3.1). Each row carries its binding's id, so what is listed
+ * can be checked by identity; hidden bindings are left out, as
+ * getBindingsByCategory leaves them.
  * 
  * @returns {string} HTML string for the grid
  */
@@ -147,14 +151,14 @@ function renderControlsGrid() {
       if (category.bindings.length === 0) return '';
       
       const bindingsHTML = category.bindings
-        .map(b => `<div class="control-item" data-binding-id="${b.id}"><kbd>${b.formatted}</kbd>` +
-          `<span>${b.description}</span></div>`)
+        .map(b => `<div class="control-item" data-binding-id="${b.id}"><dt><kbd>${b.formatted}</kbd></dt>` +
+          `<dd>${b.description}</dd></div>`)
         .join('\n');
       
       return `
         <div class="controls-category">
           <h4>${category.title}</h4>
-          ${bindingsHTML}
+          <dl>${bindingsHTML}</dl>
         </div>`;
     })
     .filter(Boolean)
@@ -166,7 +170,8 @@ function renderControlsGrid() {
 /**
  * Get HTML for inline help (waypoint list placeholder)
  * 
- * Compact version with link to open Help.
+ * Compact version with a button to open Help, named as the grid's `?` row
+ * names it (UI-06 J-01 round 4: it said "View all controls").
  * 
  * @returns {string} HTML string for inline help
  */
@@ -187,7 +192,7 @@ export function getInlineHelpHTML() {
       <h2>Quick start</h2>
       <div class="inline-shortcuts">${items}</div>
       <button type="button" class="shortcuts-hint-btn" data-action="show-help">
-        <kbd>?</kbd> View all controls
+        <kbd>?</kbd> Open help
       </button>
     </div>
   `;

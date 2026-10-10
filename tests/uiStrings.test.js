@@ -193,7 +193,8 @@ function stringsIn(root) {
   for (const item of root.querySelectorAll('[role="menuitem"]:not(button):not(.dropdown-item-example)')) {
     add('menu item', visibleText(item));
   }
-  for (const row of root.querySelectorAll('.control-item > span, .inline-shortcut > span')) {
+  // Help's rows: each action is the `dd` its key's `dt` pairs with (UI-06 J-01 round 4: it was a span).
+  for (const row of root.querySelectorAll('.control-item > dd, .inline-shortcut > span')) {
     add('help row', visibleText(row));
   }
   for (const tip of root.querySelectorAll('[data-tip]')) add('hint', tip.getAttribute('data-tip'), true);
@@ -444,6 +445,8 @@ describe("Help's words (UI-06 J-01)", () => {
       expect(count('h3')).toBe(4);
       expect(count('h4')).toBe(4);
       expect(count('help row')).toBeGreaterThan(30);
+      // Every action in the grid is read: each `dd`, none left out by the selector (UI-06 J-01 round 4).
+      expect(count('help row')).toBe(modal.querySelectorAll('.controls-grid dd').length);
       expect(count('prose')).toBeGreaterThan(5);
       expect(strings.filter(string => string.what === 'button').map(string => string.text))
         .toEqual(['×', 'Report a bug', 'Show the welcome again']);
