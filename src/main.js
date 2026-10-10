@@ -76,6 +76,7 @@ import { crowdsMixin } from './app/crowds.js';
 import { networkMixin } from './app/network.js';
 import { sceneOutlineMixin } from './app/sceneOutline.js';
 import { privacyMixin } from './app/privacy.js';
+import { helpDialogMixin } from './app/helpDialog.js';
 import { restoreStartupProject } from './app/startup.js';
 import { setupUnrestoredNotice } from './app/unrestoredAutosave.js';
 import { loadExampleBackground } from './app/backgroundLoading.js';
@@ -289,7 +290,6 @@ class RoutePlotter {
       splash: document.getElementById('splash'),
       splashClose: document.getElementById('splash-close'),
       splashCloseX: document.getElementById('splash-close-x'), // MOD-01
-      splashDontShow: document.getElementById('splash-dont-show'),
       segmentColor: document.getElementById('segment-color'),
       segmentWidth: document.getElementById('segment-width'),
       segmentWidthValue: document.getElementById('segment-width-value'),
@@ -587,7 +587,7 @@ class RoutePlotter {
       const action = actionBtn.dataset.action;
       if (action === 'show-help' || action === 'show-shortcuts') {
         e.preventDefault();
-        this.showSplash(); // All help goes through splash modal now
+        this.showHelp(); // Help's own dialog (UI-06 J-01); the splash is the first-run welcome
       }
     });
     
@@ -615,6 +615,9 @@ class RoutePlotter {
 
     // Manual file and diagnostics sharing pauses at a disclosure/preview.
     this.setupPrivacyControls();
+
+    // Help, a dialog of its own; its Report a bug opens the preview above (UI-06 J-01).
+    this.setupHelpDialog();
 
     // A recovery record that could not be restored waits for a choice (DEF-28).
     setupUnrestoredNotice(this);
@@ -660,8 +663,8 @@ class RoutePlotter {
     appRoot?.removeAttribute('aria-busy');
     appRoot?.removeAttribute('inert');
 
-    // First-run help opens only after the application transaction has reached
-    // a stable state; its focus trap will inert the app again while visible.
+    // The first-run welcome opens only after the application transaction has
+    // reached a stable state; its focus trap will inert the app again while visible.
     if (this.storageService.shouldShowSplash()) {
       this.showSplash();
     }
@@ -893,11 +896,15 @@ class RoutePlotter {
     this.elements.splash.style.display = 'flex';
   }
   
+  /**
+   * The welcome is for the first start (UI-06 J-01, the owner's pick): any
+   * dismissal — Get started, its close button, its backdrop, Escape —
+   * records that it was seen, so the next start does not show it. Help's
+   * "Show the welcome again" shows it without reading the flag.
+   */
   hideSplash() {
     this.elements.splash.style.display = 'none';
-    if (this.elements.splashDontShow.checked) {
-      this.storageService.markSplashShown();
-    }
+    this.storageService.markSplashShown();
   }
   
   // ----- Accessibility and persistence helpers -----
@@ -1127,6 +1134,7 @@ Object.assign(
   networkMixin,
   sceneOutlineMixin,
   privacyMixin,
+  helpDialogMixin,
 );
 
 // Initialize app when DOM is ready

@@ -8,10 +8,11 @@
  * Space are the browser's and the 17 headings keep their rank; their focus
  * ring is drawn inside the header's own box, since the card clips what its
  * children draw outside it and a collapsed card is nothing but its header.
- * The splash's "Don't show this again" row and the toast's dismiss are 44 px
- * targets; the playbar's slider has a visible name; the hint popover's text
- * is 14 px; the scope chip's Route is the current scope in Route scope, and
- * the way back to it from every other.
+ * Help's controls (where the splash's "Don't show this again" row was, until
+ * UI-06 J-01 took it away) and the toast's dismiss are 44 px targets; the
+ * playbar's slider has a visible name; the hint popover's text is 14 px;
+ * the scope chip's Route is the current scope in Route scope, and the way
+ * back to it from every other.
  *
  * The stylesheet is read through the test helper's cascade: a rule's effect
  * on the mounted element, not its text, so a later rule that undid one of
@@ -342,10 +343,19 @@ describe('a readout never overlaps its slider (UI-06 B-06, Codex round 1)', () =
 });
 
 describe('small targets grow to 44 px (UI-06 B-19, B-20)', () => {
-  test('the splash\'s "Don\'t show this again" row', () => {
-    const label = mount(fragment('#splash'), '.splash-content > .checkbox-label');
-    expect(label.querySelector('#splash-dont-show')).not.toBeNull();
-    expect(winning(label, 'min-height')).toBe('2.75rem');
+  // The splash's "Don't show this again" row was the third; the welcome is now
+  // for the first start only and the row is gone (UI-06 J-01), so Help's own
+  // controls take its place here.
+  test('Help\'s controls: its close a 44 × 44 button, Report a bug and Show the welcome again 44 px tall', () => {
+    expect(shell().getElementById('splash-dont-show')).toBeNull();
+    // Mounted once: a second copy's ids would repeat, and the selector engine finds the first copy's.
+    const dialog = mount(fragment('#help-modal'), '#help-modal');
+    const close = dialog.querySelector('#help-close-x');
+    expect(winning(close, 'width')).toBe('2.75rem');
+    expect(winning(close, 'height')).toBe('2.75rem');
+    for (const id of ['#help-report-bug', '#help-show-welcome']) {
+      expect(winning(dialog.querySelector(id), 'min-height'), id).toBe('2.75rem');
+    }
   });
 
   test('a toast\'s dismiss is a 44 × 44 ghost icon button', async () => {

@@ -4,7 +4,7 @@
  */
 
 import { RENDERING, ANIMATION, MOTION, AREA_HIGHLIGHT, PATH_VISIBILITY, BACKGROUND_VISIBILITY } from '../config/constants.js';
-import { getInlineHelpHTML, getSplashHelpHTML } from '../config/helpContent.js';
+import { getInlineHelpHTML } from '../config/helpContent.js';
 import {
   angleToSlider, bipolarSliderToLog2Value, formatUIValue, log2ValueToSlider, sliderToAngle, sliderToLog2Value,
 } from '../utils/sliderScales.js';
@@ -936,11 +936,6 @@ export class UIController {
           this._clearFocusTrap.activate(clearCancelBtn, clearReturnFocus);
         }
       });
-    });
-    
-    // Help button
-    this.elements.helpBtn?.addEventListener('click', () => {
-      this.showHelp();
     });
     
     // Export MP4 button — cascading H.264 probe at actual export dimensions
@@ -2444,30 +2439,6 @@ export class UIController {
       this.elements.timelineSlider, this.elements.currentTime, this.elements.totalTime,
       formatTime(currentTime), formatTime(duration)
     );
-  }
-  
-  /**
-   * Show help/splash screen
-   * Populates help content from centralized source
-   */
-  showHelp() {
-    if (this.elements.splash) {
-      // Populate help content from centralized source
-      const helpContainer = document.getElementById('splash-help');
-      if (helpContainer) {
-        helpContainer.innerHTML = getSplashHelpHTML();
-      }
-      this.elements.splash.style.display = 'flex';
-    }
-  }
-  
-  /**
-   * Hide help/splash screen
-   */
-  hideHelp() {
-    if (this.elements.splash) {
-      this.elements.splash.style.display = 'none';
-    }
   }
   
   /**

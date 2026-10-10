@@ -3296,7 +3296,7 @@ fixture: open day
 at once: nothing counted
   help:toggle
   model:
-    ~ runtime.ui.splash: "none" -> "flex"
+    ~ runtime.ui.help: "none" -> "flex"
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
 later: nothing counted
@@ -3311,7 +3311,7 @@ fixture: open day
 at once: nothing counted
   help:show-shortcuts
   model:
-    ~ runtime.ui.splash: "none" -> "flex"
+    ~ runtime.ui.help: "none" -> "flex"
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
 later: nothing counted

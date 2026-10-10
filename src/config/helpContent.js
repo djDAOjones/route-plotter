@@ -2,30 +2,50 @@
  * Centralized help content for Route Plotter
  * 
  * This module provides a single source of truth for all help text displayed
- * in the application. Both the splash screen and the inline waypoint instructions
- * use this content, ensuring consistency and easy maintenance.
+ * in the application. The first-run welcome (the splash), the Help dialog and
+ * the inline waypoint instructions use this content, ensuring consistency and
+ * easy maintenance.
  * 
  * Content is derived from keybindings.js where possible for DRY compliance.
  * 
  * ## Carbon Pattern: Progressive Disclosure
- * - Splash: Brief sections + expandable full controls (accordion)
- * - Inline: Compact version + link to open splash
+ * - Welcome: brief sections, shown on the first start only
+ * - Help: a dialog of its own, every shortcut open in a grid (UI-06 J-01)
+ * - Inline: Compact version + link to open Help
  * 
  * ## Usage
  * 
  * Import and call the appropriate function:
  * ```javascript
- * import { getInlineHelpHTML, getSplashHelpHTML } from './config/helpContent.js';
+ * import { getInlineHelpHTML, getSplashHelpHTML, getHelpDialogHTML } from './config/helpContent.js';
  * 
  * // For waypoint list placeholder (compact)
  * element.innerHTML = getInlineHelpHTML();
  * 
- * // For splash screen (full)
+ * // For the welcome (brief)
  * element.innerHTML = getSplashHelpHTML();
+ *
+ * // For the Help dialog (the shortcuts grid, mouse and pen, crowds and networks)
+ * element.innerHTML = getHelpDialogHTML();
  * ```
  */
 
 import { MODIFIER_DISPLAY, getBindingsByCategory } from './keybindings.js';
+
+/**
+ * The lines the welcome and Help both say about the mouse: one string each,
+ * so the two never drift apart.
+ */
+const MOUSE_LINES = {
+  click: '<strong>Click</strong> the map to add waypoints',
+  drag: '<strong>Drag</strong> waypoints to reposition them',
+  shiftClick: `<strong>${MODIFIER_DISPLAY.shift}+Click</strong> a waypoint to delete it`,
+  metaClick: `<strong>${MODIFIER_DISPLAY.meta}+Click</strong> to add a minor waypoint`,
+  altClick: `<strong>${MODIFIER_DISPLAY.alt}+Click</strong> a major waypoint to start a branch; ` +
+    `<strong>${MODIFIER_DISPLAY.alt}+Click</strong> empty map to add a major waypoint without selecting`,
+  altMetaClick: `<strong>${MODIFIER_DISPLAY.alt}+${MODIFIER_DISPLAY.meta}+Click</strong> ` +
+    'to add a minor waypoint without selecting'
+};
 
 /**
  * Help sections with concise instructions
@@ -37,19 +57,18 @@ const HELP_SECTIONS = [
     title: 'Create your route',
     items: [
       '<strong>Drag an image</strong> onto the canvas to get started',
-      '<strong>Click</strong> the map to add waypoints',
-      '<strong>Drag</strong> waypoints to reposition them'
+      MOUSE_LINES.click,
+      MOUSE_LINES.drag
     ]
   },
   {
     id: 'edit',
     title: 'Edit points',
     items: [
-      `<strong>${MODIFIER_DISPLAY.shift}+Click</strong> a waypoint to delete it`,
-      `<strong>${MODIFIER_DISPLAY.meta}+Click</strong> to add a minor waypoint`,
-      `<strong>${MODIFIER_DISPLAY.alt}+Click</strong> a major waypoint to start a branch; ` +
-        `<strong>${MODIFIER_DISPLAY.alt}+Click</strong> empty map to add a major waypoint without selecting`,
-      `<strong>${MODIFIER_DISPLAY.alt}+${MODIFIER_DISPLAY.meta}+Click</strong> to add a minor waypoint without selecting`,
+      MOUSE_LINES.shiftClick,
+      MOUSE_LINES.metaClick,
+      MOUSE_LINES.altClick,
+      MOUSE_LINES.altMetaClick,
       'Use the <strong>sidebar</strong> to adjust styles and timing'
     ]
   },
@@ -62,6 +81,38 @@ const HELP_SECTIONS = [
       '<strong>Export video</strong> when ready to share'
     ]
   }
+];
+
+/**
+ * Help's "Mouse and pen": the canvas gestures, the context menu, and the
+ * network pen's own keys and Shift-click (NetworkEditService, "Pen gestures").
+ */
+const MOUSE_AND_PEN = [
+  MOUSE_LINES.click,
+  MOUSE_LINES.drag,
+  MOUSE_LINES.shiftClick,
+  MOUSE_LINES.metaClick,
+  MOUSE_LINES.altClick,
+  '<strong>Right-click</strong> a waypoint or the map for a menu of actions',
+  `While editing the network: <strong>${MODIFIER_DISPLAY.shift}+Click</strong> a node, path or bend to ` +
+    'delete it; <kbd>T</kbd> changes the selected node\'s type; <kbd>Esc</kbd> lifts the pen'
+];
+
+/**
+ * Help's "Crowds and networks": the owner's five lines (2026-10-09, "These
+ * five lines (Recommended)"), shipped as written, one paragraph each; a bold
+ * label is the control's own text (tests/uiStrings.test.js holds them to it).
+ */
+const CROWD_LINES = [
+  'Under Layers, click <strong>+ Add crowd</strong>. Its Guide starts as Follow route, so the dots walk your route.',
+  'A crowd\'s <strong>Guide</strong> is what its dots walk along: your route (Follow route) or a network of its ' +
+    'own (Custom network).',
+  'To draw a network, set the Guide to Custom network and click <strong>Edit network</strong>: nodes joined by ' +
+    'paths.',
+  '<strong>Trace route into network</strong> copies your route into the crowd\'s network, so it splits and ' +
+    'rejoins where the route does.',
+  '<strong>At journey end</strong> decides what a dot does when it finishes: Respawn at the start, Repeat journey, ' +
+    'Disappear or Collect at the end. It is in the crowd\'s Motion card.'
 ];
 
 /**
@@ -81,12 +132,14 @@ function renderSection(section, tag = 'h3') {
 }
 
 /**
- * Generate comprehensive controls accordion from keybindings config
- * Uses native <details>/<summary> for accessibility and efficiency
+ * Help's shortcuts grid, from the keybindings config, every category open
+ * (UI-06 J-01: it was a <details> accordion under the welcome). Each row
+ * carries its binding's id, so what is listed can be checked by identity;
+ * hidden bindings are left out, as getBindingsByCategory leaves them.
  * 
- * @returns {string} HTML string for accordion
+ * @returns {string} HTML string for the grid
  */
-function renderControlsAccordion() {
+function renderControlsGrid() {
   const categories = getBindingsByCategory({ includeHidden: false, includeMouse: true });
   
   const sectionsHTML = Object.entries(categories)
@@ -94,7 +147,8 @@ function renderControlsAccordion() {
       if (category.bindings.length === 0) return '';
       
       const bindingsHTML = category.bindings
-        .map(b => `<div class="control-item"><kbd>${b.formatted}</kbd><span>${b.description}</span></div>`)
+        .map(b => `<div class="control-item" data-binding-id="${b.id}"><kbd>${b.formatted}</kbd>` +
+          `<span>${b.description}</span></div>`)
         .join('\n');
       
       return `
@@ -106,22 +160,13 @@ function renderControlsAccordion() {
     .filter(Boolean)
     .join('\n');
   
-  return `
-    <details class="controls-accordion">
-      <summary>
-        <span class="accordion-title">All keyboard shortcuts and controls</span>
-        <span class="accordion-hint">Click to expand</span>
-      </summary>
-      <div class="controls-content">
-        ${sectionsHTML}
-      </div>
-    </details>`;
+  return `<div class="controls-grid">${sectionsHTML}</div>`;
 }
 
 /**
  * Get HTML for inline help (waypoint list placeholder)
  * 
- * Compact version with link to open full help modal.
+ * Compact version with link to open Help.
  * 
  * @returns {string} HTML string for inline help
  */
@@ -149,9 +194,10 @@ export function getInlineHelpHTML() {
 }
 
 /**
- * Get HTML for splash screen help modal
+ * Get HTML for the first-run welcome (the splash)
  * 
- * Includes title, intro, sections, and expandable controls accordion.
+ * Includes the intro and the three short sections; every shortcut is in
+ * Help (UI-06 J-01).
  * 
  * @returns {string} HTML string for splash help
  */
@@ -165,10 +211,33 @@ export function getSplashHelpHTML() {
       <div class="splash-sections">
         ${sectionsHTML}
       </div>
-      
-      ${renderControlsAccordion()}
     </div>
   `;
+}
+
+/**
+ * Get HTML for the Help dialog's sections before About: the shortcuts grid,
+ * open; mouse and pen; crowds and networks. About and the dialog's buttons
+ * are in index.html, as the welcome's licence line is.
+ * 
+ * @returns {string} HTML string for the Help dialog
+ */
+export function getHelpDialogHTML() {
+  const mouse = MOUSE_AND_PEN.map(item => `<li>${item}</li>`).join('\n');
+  const crowds = CROWD_LINES.map(line => `<p>${line}</p>`).join('\n');
+  return `
+    <section class="help-section" id="help-shortcuts">
+      <h3>Keyboard shortcuts and controls</h3>
+      ${renderControlsGrid()}
+    </section>
+    <section class="help-section" id="help-mouse">
+      <h3>Mouse and pen</h3>
+      <ul>${mouse}</ul>
+    </section>
+    <section class="help-section" id="help-crowds">
+      <h3>Crowds and networks</h3>
+      ${crowds}
+    </section>`;
 }
 
 /**

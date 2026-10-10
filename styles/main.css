@@ -2809,6 +2809,35 @@ kbd{
   overflow-y:auto;
 }
 
+/* Help (UI-06 J-01): long, so it scrolls inside itself, as diagnostics does */
+.help-modal-content{
+  max-width:48rem;
+  max-height:calc(100vh - (2 * var(--space-4)));
+  overflow-y:auto;
+}
+
+.help-modal-content h2{
+  margin:0 0 var(--space-5) 0;
+  padding-right:var(--touch-target-min);
+  color:var(--text-01);
+  font-size:var(--type-h1);
+}
+
+.help-modal-content .help-section{
+  margin:0 0 var(--space-6) 0;
+}
+
+.help-modal-content .help-section h3{
+  margin:0 0 var(--space-3) 0;
+  color:var(--text-01);
+  font-size:var(--type-h2);
+}
+
+.help-modal-content .help-section p{
+  margin:0 0 var(--space-3) 0;
+  font-size:var(--type-body-compact);
+}
+
 .modal-content .diagnostics-public-warning{
   margin-top:calc(-1 * var(--space-2));
   padding:var(--space-3);
@@ -3199,73 +3228,20 @@ kbd{
   border-radius:var(--radius-1);
 }
 
-/* Controls accordion (Carbon disclosure pattern) */
-.controls-accordion{
-  margin-top:var(--space-5);
+/* Help's shortcuts grid (UI-06 J-01): the accordion's panel, always open,
+   its categories side by side where the dialog is wide enough */
+.controls-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(18rem, 1fr));
+  gap:var(--space-4) var(--space-6);
+  padding:var(--space-3) var(--space-4);
   border:1px solid var(--border-subtle);
   border-radius:var(--radius-2);
   background:var(--ui-01);
 }
 
-.controls-accordion summary{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:var(--space-3) var(--space-4);
-  font-size:var(--type-body-compact);
-  font-weight:500;
-  color:var(--text-01);
-  cursor:pointer;
-  list-style:none;
-  user-select:none;
-}
-
-.controls-accordion summary::-webkit-details-marker{
-  display:none;
-}
-
-.controls-accordion summary::before{
-  content:'▶';
-  margin-right:var(--space-2);
-  font-size:0.75rem;
-  transition:transform var(--motion-fast) var(--ease-out);
-}
-
-.controls-accordion[open] summary::before{
-  transform:rotate(90deg);
-}
-
-.controls-accordion .accordion-hint{
-  font-size:var(--type-caption);
-  color:var(--text-helper);
-}
-
-.controls-accordion[open] .accordion-hint{
-  display:none;
-}
-
-.controls-accordion summary:hover{
-  background:var(--hover-ui);
-}
-
-.controls-accordion summary:focus-visible{
-  outline:none;
-  box-shadow:inset 0 0 0 2px var(--focus-inner);
-}
-
-.controls-content{
-  padding:var(--space-3) var(--space-4);
-  border-top:1px solid var(--border-subtle);
-  max-height:40vh;
-  overflow-y:auto;
-}
-
 .controls-category{
-  margin-bottom:var(--space-4);
-}
-
-.controls-category:last-child{
-  margin-bottom:0;
+  margin:0;
 }
 
 .controls-category h4{
@@ -3692,14 +3668,6 @@ a.btn-primary:visited{
   padding:var(--space-3);
   font-size:var(--type-body);
   margin-top:var(--space-5);
-}
-
-/* Checkbox below CTA — enough space to feel separate, not orphaned, and a
-   44px row to press (WCAG 2.5.5, UI-06 B-19) */
-.splash-content>.checkbox-label{
-  min-height:var(--touch-target-min);
-  margin-top:var(--space-3);
-  margin-bottom:0!important;
 }
 
 /* LEGAL-01: the licence line sits under the CTA as secondary text. It must
