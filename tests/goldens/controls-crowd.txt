@@ -25,7 +25,7 @@ ui - #crowd-no-emitter: p (not shown)
 ui - #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 2de5989f)
 ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 1d79ee7b)
 ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 114 inside, 74789275)
-ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 33 inside, c3328540)
+ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 33 inside, 6f8ae648)
 
 ## #scope-prev-btn · disabled, not operated
 
@@ -984,7 +984,7 @@ settled:
 app ~ focus: "body" → "#section-motion-content>button[2]"
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #section-motion-content>button[2]: button aria-describedby="crowd-lifecycle-tip" aria-expanded="false" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button" → button aria-describedby="crowd-lifecycle-tip" aria-expanded="true" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button"
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start sends a new dot from the start with its own pace and sway; Repeat journey replays the same walk exactly"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start sends a new dot from the start with its own pace and sway; Repeat journey follows the same paths again at the same pace"
 
 ## #crowd-lifecycle · choose "respawn"
 emit crowd:param-changed {journeys: false}

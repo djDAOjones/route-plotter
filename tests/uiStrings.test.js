@@ -519,7 +519,7 @@ describe('the crowd’s words agree (CROWD-07 F8)', () => {
       expect(selects).toHaveLength(1);
       const outline = selects[0].closest('label').querySelector('[data-tip]').getAttribute('data-tip');
 
-      expect(card).toMatch(/^Disappear removes a dot at its journey's end; .* Repeat journey replays the same walk exactly$/);
+      expect(card).toMatch(/^Disappear removes a dot at its journey's end; .* Repeat journey follows the same paths again at the same pace$/);
       expect(outline).toBe(card);
     } finally {
       app.interactionHandler.destroy();

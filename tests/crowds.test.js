@@ -1120,15 +1120,17 @@ describe('the Size readout reads reference px (CROWD-07 F1)', () => {
  * CROWD-07 F6, F14, F20 — the hints the owner accepted on 2026-10-08.
  * F6: Respawn at the start and Repeat journey look alike on a route; the
  * label hint of "At journey end" says how the four differ (SwarmEngine: a
- * loop replays the first journey exactly; a respawn draws its own pace and
- * sway). F14: what "At journey end" acts on, on a custom network, is a
- * node's Type, said nowhere in Crowd scope; the Guide hint says it, both
- * fallbacks as the engine has them (`_buildGraphGuide`, `_endsJourney`).
- * F20's text is DEF-93's to change: unchanged here.
+ * loop follows its first journey's paths again at the same pace, though on a
+ * network its sway runs on, so not the same walk (Codex, round 1); a respawn
+ * draws its own pace and sway). F14: what "At journey end" acts on, on a
+ * custom network, is a node's Type, said nowhere in Crowd scope; the Guide
+ * hint says it, both fallbacks as the engine has them (`_buildGraphGuide`,
+ * `_endsJourney`). F20's text is DEF-93's to change: unchanged here.
  */
 describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
   const F6 = "Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start "
-    + 'sends a new dot from the start with its own pace and sway; Repeat journey replays the same walk exactly';
+    + 'sends a new dot from the start with its own pace and sway; Repeat journey follows the same paths again '
+    + 'at the same pace';
   const F14 = "Journeys start at Entry nodes and end at Exit nodes (a node's Type). With no Exit, they end at nodes "
     + 'with one path; with no Entry, dots set off from any node they can leave.';
   const guideHint = () => document.getElementById('crowd-guide-hint').textContent;
