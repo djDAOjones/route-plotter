@@ -431,12 +431,12 @@
       "format": "esm"
     },
     "src/config/keybindings.js": {
-      "bytes": 14503,
+      "bytes": 14889,
       "imports": [],
       "format": "esm"
     },
     "src/config/helpContent.js": {
-      "bytes": 5435,
+      "bytes": 8759,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -452,7 +452,7 @@
       "format": "esm"
     },
     "src/utils/focusTrap.js": {
-      "bytes": 12065,
+      "bytes": 14248,
       "imports": [],
       "format": "esm"
     },
@@ -2625,7 +2625,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 108769,
+      "bytes": 108065,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2676,7 +2676,7 @@
       "format": "esm"
     },
     "src/handlers/InteractionHandler.js": {
-      "bytes": 41649,
+      "bytes": 42160,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2687,6 +2687,11 @@
           "path": "src/config/keybindings.js",
           "kind": "import-statement",
           "original": "../config/keybindings.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
         }
       ],
       "format": "esm"
@@ -2739,7 +2744,7 @@
       "format": "esm"
     },
     "src/services/NetworkEditService.js": {
-      "bytes": 42120,
+      "bytes": 42350,
       "imports": [
         {
           "path": "src/utils/snapToAngle.js",
@@ -2755,6 +2760,11 @@
           "path": "src/utils/networkBudget.js",
           "kind": "import-statement",
           "original": "../utils/networkBudget.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
         }
       ],
       "format": "esm"
@@ -2959,7 +2969,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 45437,
+      "bytes": 45501,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3082,7 +3092,7 @@
       "format": "esm"
     },
     "src/app/privacy.js": {
-      "bytes": 14288,
+      "bytes": 14433,
       "imports": [
         {
           "path": "src/services/DiagnosticsService.js",
@@ -3308,7 +3318,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 56472,
+      "bytes": 56397,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3680,6 +3690,27 @@
       ],
       "format": "esm"
     },
+    "src/app/helpDialog.js": {
+      "bytes": 4811,
+      "imports": [
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        },
+        {
+          "path": "src/config/helpContent.js",
+          "kind": "import-statement",
+          "original": "../config/helpContent.js"
+        },
+        {
+          "path": "src/app/privacy.js",
+          "kind": "import-statement",
+          "original": "./privacy.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/app/startup.js": {
       "bytes": 722,
       "imports": [
@@ -3744,7 +3775,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 50610,
+      "bytes": 51015,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3967,6 +3998,11 @@
           "original": "./app/privacy.js"
         },
         {
+          "path": "src/app/helpDialog.js",
+          "kind": "import-statement",
+          "original": "./app/helpDialog.js"
+        },
+        {
           "path": "src/app/startup.js",
           "kind": "import-statement",
           "original": "./app/startup.js"
@@ -4011,13 +4047,13 @@
     }
   },
   "outputs": {
-    ".docs-build-xFiXMI/app.js.map": {
+    ".docs-build-cC8T0A/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3631875
+      "bytes": 3645576
     },
-    ".docs-build-xFiXMI/app.js": {
+    ".docs-build-cC8T0A/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4131,16 +4167,16 @@
           "bytesInOutput": 1297
         },
         "src/config/keybindings.js": {
-          "bytesInOutput": 6237
+          "bytesInOutput": 6254
         },
         "src/config/helpContent.js": {
-          "bytesInOutput": 2575
+          "bytesInOutput": 3919
         },
         "src/utils/sliderScales.js": {
           "bytesInOutput": 856
         },
         "src/utils/focusTrap.js": {
-          "bytesInOutput": 3159
+          "bytesInOutput": 3703
         },
         "node_modules/mediabunny/dist/modules/src/misc.js": {
           "bytesInOutput": 3508
@@ -4230,10 +4266,10 @@
           "bytesInOutput": 1370
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 42234
+          "bytesInOutput": 41940
         },
         "src/handlers/InteractionHandler.js": {
-          "bytesInOutput": 17836
+          "bytesInOutput": 17831
         },
         "src/services/UndoService.js": {
           "bytesInOutput": 2379
@@ -4251,7 +4287,7 @@
           "bytesInOutput": 644
         },
         "src/services/NetworkEditService.js": {
-          "bytesInOutput": 17771
+          "bytesInOutput": 17785
         },
         "src/services/AreaEditService.js": {
           "bytesInOutput": 4525
@@ -4323,7 +4359,7 @@
           "bytesInOutput": 2176
         },
         "src/app/privacy.js": {
-          "bytesInOutput": 9607
+          "bytesInOutput": 9656
         },
         "src/app/unrestoredAutosave.js": {
           "bytesInOutput": 7389
@@ -4341,7 +4377,7 @@
           "bytesInOutput": 6710
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 22463
+          "bytesInOutput": 22358
         },
         "src/app/undoRedo.js": {
           "bytesInOutput": 8482
@@ -4379,6 +4415,9 @@
         "src/app/sceneOutline.js": {
           "bytesInOutput": 26766
         },
+        "src/app/helpDialog.js": {
+          "bytesInOutput": 1387
+        },
         "src/app/startup.js": {
           "bytesInOutput": 116
         },
@@ -4389,10 +4428,10 @@
           "bytesInOutput": 1089
         },
         "src/main.js": {
-          "bytesInOutput": 23214
+          "bytesInOutput": 23141
         }
       },
-      "bytes": 1128037
+      "bytes": 1130915
     }
   }
 }
