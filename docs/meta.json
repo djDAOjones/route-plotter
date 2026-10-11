@@ -154,7 +154,7 @@
       "format": "esm"
     },
     "src/utils/uiReadouts.js": {
-      "bytes": 2885,
+      "bytes": 3646,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -457,7 +457,7 @@
       "format": "esm"
     },
     "src/utils/focusTrap.js": {
-      "bytes": 14248,
+      "bytes": 14262,
       "imports": [],
       "format": "esm"
     },
@@ -2630,7 +2630,7 @@
       "format": "esm"
     },
     "src/controllers/UIController.js": {
-      "bytes": 108065,
+      "bytes": 108163,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2712,7 +2712,7 @@
       "format": "esm"
     },
     "src/services/AreaDrawingService.js": {
-      "bytes": 13009,
+      "bytes": 13154,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2749,7 +2749,7 @@
       "format": "esm"
     },
     "src/services/NetworkEditService.js": {
-      "bytes": 42350,
+      "bytes": 42589,
       "imports": [
         {
           "path": "src/utils/snapToAngle.js",
@@ -2823,7 +2823,7 @@
       "format": "esm"
     },
     "src/components/Dropdown.js": {
-      "bytes": 5680,
+      "bytes": 6277,
       "imports": [],
       "format": "esm"
     },
@@ -2974,7 +2974,7 @@
       "format": "esm"
     },
     "src/app/wiringDom.js": {
-      "bytes": 45501,
+      "bytes": 45636,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3076,7 +3076,7 @@
       "format": "esm"
     },
     "src/app/backgroundLoading.js": {
-      "bytes": 5998,
+      "bytes": 6679,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
@@ -3201,7 +3201,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 64369,
+      "bytes": 64959,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3297,7 +3297,7 @@
       "format": "esm"
     },
     "src/app/exporting.js": {
-      "bytes": 21464,
+      "bytes": 23610,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3323,7 +3323,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 56397,
+      "bytes": 56451,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3479,7 +3479,7 @@
       "format": "esm"
     },
     "src/app/editorPanel.js": {
-      "bytes": 37016,
+      "bytes": 37028,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3546,7 +3546,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 48634,
+      "bytes": 51774,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3592,7 +3592,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 27696,
+      "bytes": 28188,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3623,7 +3623,7 @@
       "format": "esm"
     },
     "src/utils/sceneSemantics.js": {
-      "bytes": 9976,
+      "bytes": 10845,
       "imports": [
         {
           "path": "src/utils/waypointNaming.js",
@@ -3634,7 +3634,7 @@
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
-      "bytes": 56003,
+      "bytes": 58512,
       "imports": [
         {
           "path": "src/utils/sceneSemantics.js",
@@ -3655,7 +3655,7 @@
       "format": "esm"
     },
     "src/app/sceneOutline.js": {
-      "bytes": 45617,
+      "bytes": 45683,
       "imports": [
         {
           "path": "src/controllers/SceneOutlineController.js",
@@ -3790,7 +3790,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 51015,
+      "bytes": 53589,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -4056,19 +4056,24 @@
           "path": "src/utils/announcementQueue.js",
           "kind": "import-statement",
           "original": "./utils/announcementQueue.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "./utils/focusTrap.js"
         }
       ],
       "format": "esm"
     }
   },
   "outputs": {
-    ".docs-build-A74hRf/app.js.map": {
+    ".docs-build-ffS2K6/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3648550
+      "bytes": 3668915
     },
-    ".docs-build-A74hRf/app.js": {
+    ".docs-build-ffS2K6/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4119,7 +4124,7 @@
           "bytesInOutput": 429
         },
         "src/utils/uiReadouts.js": {
-          "bytesInOutput": 727
+          "bytesInOutput": 765
         },
         "src/services/StorageService.js": {
           "bytesInOutput": 8260
@@ -4281,7 +4286,7 @@
           "bytesInOutput": 1370
         },
         "src/controllers/UIController.js": {
-          "bytesInOutput": 41940
+          "bytesInOutput": 41970
         },
         "src/handlers/InteractionHandler.js": {
           "bytesInOutput": 17831
@@ -4293,7 +4298,7 @@
           "bytesInOutput": 7066
         },
         "src/services/AreaDrawingService.js": {
-          "bytesInOutput": 5275
+          "bytesInOutput": 5287
         },
         "src/utils/snapToAngle.js": {
           "bytesInOutput": 191
@@ -4302,7 +4307,7 @@
           "bytesInOutput": 644
         },
         "src/services/NetworkEditService.js": {
-          "bytesInOutput": 17785
+          "bytesInOutput": 17852
         },
         "src/services/AreaEditService.js": {
           "bytesInOutput": 4525
@@ -4320,7 +4325,7 @@
           "bytesInOutput": 6999
         },
         "src/components/Dropdown.js": {
-          "bytesInOutput": 2268
+          "bytesInOutput": 2348
         },
         "src/services/CameraService.js": {
           "bytesInOutput": 5670
@@ -4359,7 +4364,7 @@
           "bytesInOutput": 4585
         },
         "src/app/wiringDom.js": {
-          "bytesInOutput": 18730
+          "bytesInOutput": 18751
         },
         "src/app/wiringBus.js": {
           "bytesInOutput": 6154
@@ -4368,7 +4373,7 @@
           "bytesInOutput": 3342
         },
         "src/app/backgroundLoading.js": {
-          "bytesInOutput": 2392
+          "bytesInOutput": 2582
         },
         "src/services/DiagnosticsService.js": {
           "bytesInOutput": 2176
@@ -4386,10 +4391,10 @@
           "bytesInOutput": 10017
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 31177
+          "bytesInOutput": 31378
         },
         "src/app/exporting.js": {
-          "bytesInOutput": 6710
+          "bytesInOutput": 7241
         },
         "src/app/wiringControllers.js": {
           "bytesInOutput": 22358
@@ -4416,19 +4421,19 @@
           "bytesInOutput": 1871
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 23125
+          "bytesInOutput": 24296
         },
         "src/app/network.js": {
-          "bytesInOutput": 12080
+          "bytesInOutput": 12231
         },
         "src/utils/sceneSemantics.js": {
-          "bytesInOutput": 4321
+          "bytesInOutput": 4440
         },
         "src/controllers/SceneOutlineController.js": {
-          "bytesInOutput": 33030
+          "bytesInOutput": 33744
         },
         "src/app/sceneOutline.js": {
-          "bytesInOutput": 26766
+          "bytesInOutput": 26752
         },
         "src/app/helpDialog.js": {
           "bytesInOutput": 1387
@@ -4443,10 +4448,10 @@
           "bytesInOutput": 1089
         },
         "src/main.js": {
-          "bytesInOutput": 23141
+          "bytesInOutput": 24086
         }
       },
-      "bytes": 1131428
+      "bytes": 1135684
     }
   }
 }

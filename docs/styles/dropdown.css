@@ -124,7 +124,10 @@
   box-shadow: inset 0 0 0 2px var(--focus-outer);
 }
 
-.dropdown-menu [role="menuitem"]:disabled {
+/* Disabled natively or, so it stays focusable with its reason, by
+   aria-disabled (the Export items, UI-06 B-18 follow-up): the same tokens */
+.dropdown-menu [role="menuitem"]:disabled,
+.dropdown-menu [role="menuitem"][aria-disabled="true"] {
   color: var(--disabled-03);
   cursor: not-allowed;
 }

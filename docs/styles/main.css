@@ -988,12 +988,15 @@ kbd{
   box-shadow:inset 4px 0 0 0 var(--interactive-01);
 }
 
-/* Expanded + focused: combine both indicators */
+/* Expanded + focused: combine both indicators. The ring's layers come
+   first, so they are painted on top; the accent, listed last, reaches 9px
+   in and shows its 4px past the ring's 5px (UI-06 low item c: listed first,
+   it covered 4px of the ring's left side). */
 .settings-section.expanded .section-header:focus-visible{
   box-shadow:
-    inset 4px 0 0 0 var(--interactive-01),
     inset 0 0 0 2px var(--focus-inner),
-    inset 0 0 0 5px var(--focus-outer);
+    inset 0 0 0 5px var(--focus-outer),
+    inset 9px 0 0 0 var(--interactive-01);
 }
 
 /* Section title - text always #0F0F0F per spec §0. The heading wraps the
@@ -1109,6 +1112,21 @@ kbd{
   justify-content:space-between;
   gap:var(--space-2);
   min-height:var(--touch-target-min);
+}
+
+/* CROWD-07 F18: the Pattern seed's label is a <label>, holding only its hint
+   span, so the span is both the label's first child and its last: it reads
+   as the card's other labels do (span:first-child), not as a value
+   (span:last-child), and the row keeps its own spacing. */
+.section-content #crowd-seed-label{
+  margin-bottom:0;
+}
+.section-content #crowd-seed-label span:last-child{
+  min-width:0;
+  text-align:left;
+  font-family:inherit;
+  font-size:var(--type-caption);
+  font-weight:500;
 }
 
 #crowd-seed-value{
@@ -1942,13 +1960,17 @@ kbd{
 }
 /* A hidden crowd is still a live row (selectable, renamable), so its title
    keeps 7:1 text — --text-02 is 11:1 on --ui-01, 8.6:1 selected — and a
-   "hidden" tag beside it says the state in words; only the swatch fades
-   (UI-06 B-11). */
+   "hidden" tag beside it says the state in words; only the swatch's fill
+   fades (UI-06 B-11), under a wash of the strip's surface: its border keeps
+   3:1, where fading the whole swatch took it too (UI-06 B-36). */
 .layer-item.layer-hidden .layer-title{
   color:var(--text-02);
 }
 .layer-item.layer-hidden .layer-swatch{
-  opacity:0.45;
+  background-image:linear-gradient(
+    color-mix(in srgb, var(--ui-01) 55%, transparent),
+    color-mix(in srgb, var(--ui-01) 55%, transparent)
+  );
 }
 .layer-hidden-tag{
   flex-shrink:0;
@@ -1996,7 +2018,9 @@ kbd{
   width:0.75rem;
   height:0.75rem;
   border-radius:50%;
-  border:1px solid var(--border-quiet);
+  /* B-13's token: 3:1 or more on a white or yellow fill and on the strip
+     (UI-06 B-36; --border-quiet was 1.31:1) */
+  border:1px solid var(--border-interactive);
 }
 
 .layer-title{

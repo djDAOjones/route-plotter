@@ -9,10 +9,13 @@
   margin-bottom: var(--row-gap, 0.5rem);
 }
 
-/* fieldset created by JS - two columns keep labels aligned with other controls */
+/* fieldset created by JS - one track: the legend above, the swatch grid the
+   picker's full width under it, so each of five options is 44px or wider in
+   the narrowest sidebar (UI-06 B-32). A rendered <legend> takes no grid cell:
+   with a 6rem label column the grid fell into it, 16px per option. */
 .swatch-fieldset {
   display: grid;
-  grid-template-columns: 6rem minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: var(--space-2, 8px);
   margin: 0;
@@ -30,7 +33,7 @@
   letter-spacing: normal;
 }
 
-/* Swatch grid: 5×2 CSS Grid fills remaining space after label */
+/* Swatch grid: 5×2 CSS Grid, the picker's full width under its legend */
 .swatch-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -137,7 +140,6 @@
 
 /* Optional actions row */
 .swatch-actions {
-  grid-column: 2;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2, 8px);
@@ -146,7 +148,6 @@
 }
 
 .swatch-disclosure {
-  grid-column: 2;
   display: grid;
   gap: var(--space-2, 8px);
   padding: var(--space-3, 12px);
@@ -198,7 +199,9 @@
   width: 1.25rem;
   height: 1.25rem;
   flex: 0 0 1.25rem;
-  border: 1px solid rgba(0, 0, 0, 0.3);
+  /* B-13's token, as the chips above: 3:1 on a white or yellow fill and on
+     the card (UI-06 B-36; rgba(0,0,0,.3) was 2.09:1) */
+  border: 1px solid var(--border-interactive);
   border-radius: var(--radius-1, 2px);
 }
 
@@ -214,7 +217,6 @@
 }
 
 .swatch-mixed-state {
-  grid-column: 2;
   align-items: center;
   min-height: 2rem;
   color: var(--text-02, #2E2E2E);
@@ -226,7 +228,7 @@
   display: inline-flex;
 }
 
-/* Neutral ink grid: same auto-fit behaviour */
+/* Neutral ink grid: auto-fit columns, none narrower than a 44px target */
 .swatch-grid.swatch-grid-neutral {
-  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(2.75rem, 1fr));
 }
