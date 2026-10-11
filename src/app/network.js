@@ -435,9 +435,9 @@ export const networkMixin = {
           ? 'No network yet — Edit network hands you the pen.'
           : `Dots walk this crowd's own network (${nodes} node${nodes === 1 ? '' : 's'}, `
             + `${edges} path${edges === 1 ? '' : 's'}).`;
-        // The Trace reason above asks for the waypoints (UI-06 B-07); this says what they set, so the ask is said once.
+        // The Trace reason above asks for the waypoints (UI-06 B-07); this says what needs them, so the ask is said once.
         const timingHint = this.waypoints?.length < 2
-          ? ' It takes at least two route waypoints to set the master timing before previewing or exporting.'
+          ? ' It takes at least two route waypoints before previewing or exporting.'
           : '';
         this._guideHintEl.textContent = `${networkHint} ${GUIDE_JOURNEY_HINT}${timingHint}`;
       }

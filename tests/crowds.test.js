@@ -1204,12 +1204,12 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
     app.waypoints = route.slice(0, 1);
     app.updateGuideCard();
     expect(guideHint()).toBe(`Dots walk this crowd's own network (2 nodes, 1 path). ${F14} `
-      + 'It takes at least two route waypoints to set the master timing before previewing or exporting.');
+      + 'It takes at least two route waypoints before previewing or exporting.');
 
     // On an emitterless crowd too: the Guide card is the crowd's, emitter or not.
     app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
     expect(guideHint()).toBe(`No network yet — Edit network hands you the pen. ${F14} `
-      + 'It takes at least two route waypoints to set the master timing before previewing or exporting.');
+      + 'It takes at least two route waypoints before previewing or exporting.');
 
     // Back on Follow route, it goes.
     app.waypoints = route;
@@ -1220,7 +1220,7 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
   });
 
   // The owner's audit (2026-10-10): with no route, the Trace reason and the Guide hint below it both said
-  // "Add at least two route waypoints". One says it: the reason Trace is off (UI-06 B-07); the hint keeps the timing.
+  // "Add at least two route waypoints". One says it: the reason Trace is off (UI-06 B-07); the hint says what needs them.
   test('on a Custom network with no route, the Guide card says "Add at least two route waypoints" once', async () => {
     const app = await withEmptyCrowd();
     app.addCrowd({ enterNetworkEditor: false });
@@ -1237,7 +1237,7 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
       expect(lines()).toHaveLength(2);
       expect([reason.hidden, reason.textContent]).toEqual([false, 'Add at least two route waypoints first.']);
       expect(asked()).toHaveLength(1);
-      expect(guideHint()).toMatch(/at least two route waypoints to set the master timing before previewing or exporting\.$/);
+      expect(guideHint()).toMatch(/It takes at least two route waypoints before previewing or exporting\.$/);
     }
   });
 
