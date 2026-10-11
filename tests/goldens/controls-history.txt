@@ -2,7 +2,7 @@
 
 ## #undo-btn · click
 emit history:undo
-emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Undo"
 model ~ waypoints[0].modified: 1790154000000 → 1790154060000
 model ~ waypoints[1].modified: 1790154000000 → 1790154060000
@@ -16,8 +16,8 @@ app ~ selection: "waypoint[3]" → ""
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Undo"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
-ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)"
-ui ~ #redo-btn: button aria-label="Redo" class="btn btn-icon" disabled="" title="Redo (Ctrl+Shift+Z)" → button aria-label="Redo" class="btn btn-icon" title="Redo (Ctrl+Shift+Z)"
+ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled=""
+ui ~ #redo-btn: button aria-describedby="redo-btn-tip" aria-label="Redo" class="btn btn-icon" data-tip-desc="redo-btn-tip" data-tip="Redo what you undid (Ctrl+Shift+Z)" disabled="" → button aria-describedby="redo-btn-tip" aria-label="Redo" class="btn btn-icon" data-tip-desc="redo-btn-tip" data-tip="Redo what you undid (Ctrl+Shift+Z)"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
@@ -28,11 +28,11 @@ ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 
 ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 6b236c13)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
 ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
-ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 81 inside, 25fc5af3)
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 81 inside, ee7ba0f1)
 ui - #waypoint-scope>div[1]: div class="settings-section" data-section="on-arrival" (and 62 inside, 8e022f89)
 ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 138 inside, 712d7514)
 ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 103 inside, 07477f09)

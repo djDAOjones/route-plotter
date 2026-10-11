@@ -664,7 +664,7 @@ export const wiringControllersMixin = {
       this.uiController.updateWaypointEditor(newWaypoint);
       this.autoSave();
       
-      this.uiController.announce('Waypoint added at center of map');
+      this.uiController.announce('Waypoint added at centre of map'); // the glossary's spelling
     });
     
     // waypoint:name-changed - Waypoint renamed in list
@@ -1294,7 +1294,7 @@ export const wiringControllersMixin = {
         imgY: centerY,
         isMajor: true
       });
-      this.announce('Waypoint added at center');
+      this.announce('Waypoint added at centre'); // the glossary's spelling
     });
     
     this.eventBus.on('waypoint:deselect', () => {

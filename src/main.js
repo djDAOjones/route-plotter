@@ -23,10 +23,8 @@ console.log(`🚀 Route Plotter v${APP_VERSION} loaded`);
 document.addEventListener('DOMContentLoaded', () => {
   document.title = `Route Plotter v${APP_VERSION}`;
   const h1 = document.getElementById('app-title');
-  if (h1) {
-    h1.textContent = 'Route Plotter';
-    h1.title = `Version ${APP_VERSION}`;
-  }
+  // No title: Help shows the version, by keyboard too (UI-06 G-10)
+  if (h1) h1.textContent = 'Route Plotter';
 });
 
 // Import modular utilities
@@ -85,6 +83,10 @@ import { clearProject } from './app/projectReset.js';
 import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
 import { boundEntryWaypointIds } from './utils/routeAnchors.js';
 import { createAnnouncementQueue } from './utils/announcementQueue.js';
+import { focusLands } from './utils/focusTrap.js';
+
+/** Toasts on their way out, which focus is never given to (UI-06 B-35). */
+const leavingToasts = new WeakSet();
 
 // Main application class for Route Plotter v3
 class RoutePlotter {
@@ -579,6 +581,9 @@ class RoutePlotter {
     this.sectionController.init();
     this.sectionController.setHelpContent(getInlineHelpHTML());
     
+    // Where a toast that goes gives focus back (UI-06 B-35)
+    this._trackFocusBeforeToasts();
+
     // Event delegation for data-action buttons (help, shortcuts, etc.)
     document.addEventListener('click', (e) => {
       const actionBtn = e.target.closest('[data-action]');
@@ -782,11 +787,13 @@ class RoutePlotter {
   }
   
   /**
-   * Show a toast notification that auto-dismisses. The container is not a
-   * live region: the toast's words are announced once, through the queue,
-   * so nothing is read twice (UI-06 J-05, C-5).
+   * Show a toast notification that auto-dismisses, unless it is an error.
+   * The container is not a live region: the toast's words are announced
+   * once, through the queue, so nothing is read twice (UI-06 J-05, C-5).
    * @param {string} message - Text to display
-   * @param {number} [duration=5000] - Time in ms before auto-dismiss
+   * @param {number} [duration] - Time in ms before auto-dismiss; 0 never.
+   *   Left out, 5000; for an assertive toast, an error, 0: it stays until it
+   *   is dismissed (UI-06 B-16, WCAG 2.2.3)
    * @param {{label: string, onClick: Function}} [action] - Optional offer the
    *   toast carries (LABEL-01). It is only ever an offer: the same action must
    *   remain reachable elsewhere, because a toast fades and can be missed.
@@ -795,7 +802,8 @@ class RoutePlotter {
    *   tip, read once nothing else shows or waits, so it never cuts in on what
    *   the author must hear (DEF-45; the owner, 2026-10-09)
    */
-  showToast(message, duration = 5000, action = null, { priority = 'polite', whenIdle = false } = {}) {
+  showToast(message, duration, action = null, { priority = 'polite', whenIdle = false } = {}) {
+    const lifetime = duration ?? (priority === 'assertive' ? 0 : 5000);
     if (whenIdle) this.announce(message, priority, { whenIdle });
     else this.announce(message, priority);
     const container = this.elements.toastContainer;
@@ -828,17 +836,64 @@ class RoutePlotter {
     // Trigger enter animation on next frame
     requestAnimationFrame(() => toast.classList.add('is-visible'));
     
-    function remove() {
+    const remove = () => {
+      // Focus in the toast (its Dismiss or action, or held there when its
+      // timer runs) would go with it: it moves first (UI-06 B-35).
+      leavingToasts.add(toast);
+      if (toast.contains(document.activeElement)) this._focusOffToast(toast);
       toast.classList.remove('is-visible');
       toast.addEventListener('transitionend', () => toast.remove(), { once: true });
       // Fallback removal if transition doesn't fire
       setTimeout(() => { if (toast.parentNode) toast.remove(); }, 500);
-    }
+    };
     
     dismiss.addEventListener('click', remove);
-    if (duration > 0) setTimeout(remove, duration);
+    if (lifetime > 0) setTimeout(remove, lifetime);
   }
   
+  /**
+   * Remember the last control focused outside the toasts, from the start
+   * (UI-06 B-35); `destroy()` stops it.
+   * @private
+   */
+  _trackFocusBeforeToasts() {
+    const container = this.elements.toastContainer;
+    if (!container || this._toastFocusListener) return;
+    this._focusBeforeToast = null;
+    this._toastFocusListener = (event) => {
+      if (!container.contains(event.target)) this._focusBeforeToast = event.target;
+    };
+    document.addEventListener('focusin', this._toastFocusListener);
+  }
+
+  /** Stop remembering where focus was before the toasts. @private */
+  _stopTrackingFocusBeforeToasts() {
+    if (this._toastFocusListener) document.removeEventListener('focusin', this._toastFocusListener);
+    this._toastFocusListener = null;
+    this._focusBeforeToast = null;
+  }
+
+  /**
+   * Give focus held in a leaving toast to the control focused before it
+   * [Q2], where a browser would let it land (PR 7's checks: in the page,
+   * enabled, in no hidden container, fieldset or closed dialog); else to
+   * the next toast still showing, then an earlier one; else to the
+   * container, the end of the focus-return rule.
+   * @param {HTMLElement} toast
+   * @private
+   */
+  _focusOffToast(toast) {
+    if (focusLands(this._focusBeforeToast)) return;
+    const container = this.elements.toastContainer;
+    const showing = [...container.querySelectorAll('.toast')].filter(other => !leavingToasts.has(other));
+    const after = showing.filter(other => toast.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const before = showing.filter(other => !after.includes(other)).reverse();
+    for (const other of [...after, ...before]) {
+      if (focusLands(other.querySelector('button'))) return;
+    }
+    container.focus();
+  }
+
   deleteWaypoint(waypoint) {
     const index = this.waypoints.indexOf(waypoint);
     if (index > -1) {
@@ -1068,6 +1123,7 @@ class RoutePlotter {
     // Stop animation
     this.animationEngine?.stop();
     this.storageService?.detachLifecycle();
+    this._stopTrackingFocusBeforeToasts();
     
     // Clean up controllers
     this.interactionHandler?.destroy();

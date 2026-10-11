@@ -533,6 +533,9 @@ export const crowdsMixin = {
     const strip = this._layersStripEl;
     if (!strip) return;
 
+    // The rebuild takes the focused control with it (UI-06 B-33): which
+    // layer's control had focus is read first, and given back at the end.
+    const focusedBefore = this._focusedStripControl();
     strip.innerHTML = '';
     // Rows contain independent select, visibility, and delete buttons, so
     // native list semantics are more accurate than a partial ARIA listbox.
@@ -566,6 +569,7 @@ export const crowdsMixin = {
         this.eventBus.emit('crowd:deselected');
       }
     });
+    this._stripControls().set(routeRow, { layerId: null, control: 'row' });
     routeItem.appendChild(routeRow);
     strip.appendChild(routeItem);
 
@@ -583,6 +587,52 @@ export const crowdsMixin = {
         ? 'Add a crowd and draw the network it follows'
         : 'Add a crowd of dots that follows the route');
     }
+    this._restoreStripFocus(strip, focusedBefore);
+  },
+
+  /**
+   * The strip's controls by element, as last built: whose they are (a
+   * crowd's id, or null for the Route row) and which (row, eye, delete).
+   * @returns {WeakMap<HTMLElement, {layerId: (string|null), control: string}>}
+   * @private
+   */
+  _stripControls() {
+    this._stripControlsMap ??= new WeakMap();
+    return this._stripControlsMap;
+  },
+
+  /**
+   * The strip control that has focus, before a rebuild, or null: only the
+   * strip's rows, eyes and deletes are in its map. A rename field is not
+   * one: it commits on blur, and where the user went then is theirs.
+   * @private
+   */
+  _focusedStripControl() {
+    const active = document.activeElement;
+    return active ? this._stripControls().get(active) ?? null : null;
+  },
+
+  /**
+   * After a rebuild, give focus to the replacement of the control that had
+   * it, as the waypoint list does (UIController's rebuild), and only where
+   * the rebuild dropped it: on the page, or on a node no longer connected.
+   * A crowd no longer in the scene sends it to the Route row [Q2].
+   * @param {HTMLElement} strip
+   * @param {{layerId: (string|null), control: string}|null} was
+   * @private
+   */
+  _restoreStripFocus(strip, was) {
+    if (!was) return;
+    const active = document.activeElement;
+    const dropped = !active || active === document.body || active === document.documentElement || !active.isConnected;
+    if (!dropped) return;
+    const layer = was.layerId === null
+      ? null
+      : this.scene.getFlowLayers().find(candidate => candidate.id === was.layerId) ?? null;
+    const item = layer ? this._crowdRowOf(layer)?.closest('li') : null;
+    const selector = { row: '.layer-row', eye: '.layer-visibility', delete: '.layer-delete' }[was.control];
+    const target = item?.querySelector(selector) ?? strip.firstElementChild?.querySelector('.layer-row');
+    target?.focus();
   },
 
   /**
@@ -623,6 +673,7 @@ export const crowdsMixin = {
       }
     });
     row.addEventListener('dblclick', () => this._startCrowdRename(layer, title));
+    this._stripControls().set(row, { layerId: layer.id, control: 'row' });
     // F2 renames too, as a waypoint row's does (UI-06 J-13): the row is
     // selected first, as a double-click's first click selects it.
     row.addEventListener('keydown', (e) => {
@@ -636,10 +687,12 @@ export const crowdsMixin = {
     visBtn.className = 'layer-visibility';
     visBtn.setAttribute('aria-pressed', layer.visible ? 'true' : 'false');
     visBtn.setAttribute('aria-label', layer.visible ? `Hide ${layer.name}` : `Show ${layer.name}`);
-    visBtn.title = layer.visible ? 'Hide crowd' : 'Show crowd';
+    // One string per control: the title is the name (CROWD-07 F12)
+    visBtn.title = visBtn.getAttribute('aria-label');
     visBtn.innerHTML = layer.visible
       ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z"/><circle cx="8" cy="8" r="2"/></svg>'
       : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z" opacity="0.35"/><path d="M2 14L14 2"/></svg>';
+    this._stripControls().set(visBtn, { layerId: layer.id, control: 'eye' });
     visBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       layer.visible = !layer.visible;
@@ -655,8 +708,9 @@ export const crowdsMixin = {
     delBtn.type = 'button';
     delBtn.className = 'layer-delete';
     delBtn.setAttribute('aria-label', `Delete ${layer.name}`);
-    delBtn.title = 'Delete crowd';
+    delBtn.title = delBtn.getAttribute('aria-label');
     delBtn.textContent = '×';
+    this._stripControls().set(delBtn, { layerId: layer.id, control: 'delete' });
     delBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.deleteCrowd(layer);
@@ -953,6 +1007,12 @@ export const crowdsMixin = {
     if (hasEmitter) return;
     document.getElementById('crowd-busyness-graph')?.replaceChildren();
     document.getElementById('crowd-busyness-handles')?.replaceChildren();
+    // Off with the card, under its own line: not "already even" (CROWD-07 F18).
+    const resetReason = document.getElementById('crowd-busyness-reset-reason');
+    if (resetReason) {
+      resetReason.textContent = '';
+      resetReason.hidden = true;
+    }
   },
 
   /**
@@ -1091,8 +1151,15 @@ export const crowdsMixin = {
       }
     }
     const reset = document.getElementById('crowd-busyness-reset');
+    const resetReason = document.getElementById('crowd-busyness-reset-reason');
     if (reset) {
       reset.disabled = JSON.stringify(handles) === JSON.stringify(defaultBusynessEnvelope());
+      // As Add handle's: disabled, its hint cannot be reached, so why is a
+      // line it is described by (CROWD-07 F18).
+      if (resetReason) {
+        resetReason.textContent = reset.disabled ? 'Busyness is already even.' : '';
+        resetReason.hidden = !reset.disabled;
+      }
     }
   },
 

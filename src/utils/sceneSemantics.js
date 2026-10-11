@@ -13,8 +13,12 @@ const round = (value, places = 3) => {
   return Math.round(Number(value) * factor) / factor;
 };
 
-// Keep authoring values lossless. Human-facing summaries use the rounded
-// companion labels, while number inputs receive the full JS round-trip value.
+// Keep authoring values lossless. Headings and position fields show the
+// rounded companion labels (UI-06 W-02); a field carries the canonical value
+// beside it, which a field never edited submits, so nothing is lost. One the
+// author typed in, even back to what it showed, submits what it holds
+// (SceneOutlineController). Other number inputs receive the full JS
+// round-trip value.
 const percent = value => Number(value) * 100;
 const percentLabel = value => round(Number(value) * 100, 2);
 
@@ -66,6 +70,20 @@ function waypointName(waypoint, numbering) {
     ? `Waypoint ${numbering.displayNumber} (branch ${numbering.branchLetter})`
     : `${numbering.isMajor ? 'Major waypoint' : 'Minor waypoint'} ${numbering.displayNumber}`;
   return authored ? `${base} — ${authored}` : base;
+}
+
+/**
+ * A waypoint's name as running text says it, after "Select" or "After": the
+ * kind in lower case, mid-sentence (UI-06 B-15). An authored name, and a
+ * branch waypoint's "Waypoint 1-B1 (branch B)", are names and keep their
+ * capitals; the entry's heading, which starts with the name, keeps `name`.
+ * @param {string} name - `waypointName`'s
+ * @param {Object} numbering
+ * @returns {string}
+ */
+function runningName(name, numbering) {
+  if (numbering.branchId) return name;
+  return name.replace(/^(Major|Minor) waypoint\b/, kind => kind.toLowerCase());
 }
 
 function nodeName(node, index) {
@@ -197,6 +215,7 @@ export function buildSceneOutlineSnapshot({
       ? waypoint.areaHighlight.points
       : [];
     const area = waypoint.areaHighlight || {};
+    const name = waypointName(waypoint, routeNumber);
     return {
       key: sceneOutlineKey('waypoint', waypoint.id),
       id: waypoint.id,
@@ -209,7 +228,8 @@ export function buildSceneOutlineSnapshot({
       legNumber: routeNumber.legNumber,
       displayNumber: routeNumber.displayNumber,
       isMajor: Boolean(waypoint.isMajor),
-      name: waypointName(waypoint, routeNumber),
+      name,
+      runningName: runningName(name, routeNumber),
       x: percent(waypoint.imgX),
       y: percent(waypoint.imgY),
       xLabel: percentLabel(waypoint.imgX),

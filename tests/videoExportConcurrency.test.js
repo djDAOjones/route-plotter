@@ -96,9 +96,20 @@ async function exportingApp() {
 /** The toast a video export refused for its route is (UI-06 B-18). */
 const VIDEO_REFUSED = { message: 'Export MP4 and WebM need at least 2 waypoints.', priority: 'assertive' };
 
-/** Whether each export control is disabled: MP4, WebM, HTML and the menu. */
+/**
+ * Whether each export control is disabled: MP4, WebM, HTML and the menu. The
+ * items by `aria-disabled`, never natively, so they stay focusable; the menu's
+ * toggle alone natively (UI-06 B-18 follow-up). An item natively disabled
+ * fails here, in every state: read as "not aria-disabled", a stuck one would
+ * have passed for free (Codex r1).
+ */
 const exportButtons = () => ['export-mp4-btn', 'export-webm-btn', 'export-html-btn', 'export-dropdown-btn']
-  .map(id => document.getElementById(id).disabled);
+  .map(id => document.getElementById(id))
+  .map(control => {
+    if (control.id === 'export-dropdown-btn') return control.disabled;
+    expect(control.disabled, `${control.id} is never natively disabled`).toBe(false);
+    return control.getAttribute('aria-disabled') === 'true';
+  });
 /**
  * The controls free of an export: the state the project allows each (UI-06
  * B-18). The authored-extras project has no background, so Export HTML stays
@@ -504,7 +515,8 @@ test('a click sent to Export MP4 while it is disabled, as it is while an export 
   const first = app.exportVideo();
   await running;
   const mp4 = document.getElementById('export-mp4-btn');
-  expect(mp4.disabled).toBe(true);
+  // aria-disabled, so focusable (UI-06 B-18 follow-up): the click guard, not the browser, refuses the click.
+  expect(mp4.getAttribute('aria-disabled')).toBe('true');
 
   mp4.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   await answered();

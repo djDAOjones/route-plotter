@@ -16,7 +16,7 @@
 import { afterEach, describe, test, expect } from 'vitest';
 import {
   FORCED_COLOURS, MORE_CONTRAST, allRules, borderColourOf, cascade, colourIn, computed, contrast, declaration,
-  hex, loadOrder, opacityOf, paintOf, parseColour, readStyle, surfaceOf, textPair, tokensFor,
+  hex, loadOrder, opacityOf, over, paintOf, parseColour, readStyle, surfaceOf, textPair, tokensFor, withOpacity,
 } from './helpers/cssTokens.js';
 
 const mainCss = readStyle('main.css');
@@ -119,6 +119,13 @@ const SWATCHES = ({ checked = false } = {}) => `
       <label class="swatch-option">
         <input type="radio" class="swatch-radio"${checked ? ' checked' : ''}><span class="swatch-chip"></span>
       </label>
+    </div></fieldset></div>
+  </div></div>`;
+const SWATCH_CURRENT = `
+  <div class="settings-section expanded" data-section="label"><div class="section-content">
+    <div class="swatch-picker"><fieldset class="swatch-fieldset swatch-fieldset-custom"><div class="swatch-actions">
+      <span class="swatch-current"><span class="swatch-current-chip" aria-hidden="true"></span>
+        <span class="swatch-current-text">Current #FFFFFF</span></span>
     </div></fieldset></div>
   </div></div>`;
 const WAYPOINT_ROW = ({ selected = false } = {}) => `
@@ -307,6 +314,48 @@ describe('swatch chip and colour dot boundaries (B-13)', () => {
     expectContrast(border, surfaceOf(dot.parentElement, HOVER), NON_TEXT, 'dot border on a hovered row');
     const selected = mount(WAYPOINT_ROW({ selected: true }), '.waypoint-color-dot');
     expectContrast(borderColourOf(selected), surfaceOf(selected.parentElement), NON_TEXT, 'dot border, selected row');
+  });
+});
+
+describe('the layer swatch and the current-colour chip bound a white or yellow fill (UI-06 B-36)', () => {
+  // A crowd's swatch had --border-quiet (rgba(0,0,0,.12), 1.31:1) and the
+  // picker's current chip rgba(0,0,0,.3) (2.09:1): a white or yellow fill
+  // showed no edge. Both take B-13's --border-interactive. A hidden crowd's
+  // swatch faded whole (opacity .45), border too; now only its fill dims.
+  /** A border as the eye sees it: through any group opacity, over the surface beneath. */
+  function seenBorder(element, options = REST) {
+    const border = borderColourOf(element, 'top', options);
+    expect(border.alpha, 'an opaque border').toBe(1);
+    return over(withOpacity(border, opacityOf(element, options)), surfaceOf(element.parentElement, options));
+  }
+  function expectBoundary(element, options, where) {
+    const border = seenBorder(element, options);
+    expectContrast(border, token('--map-series-0', options), NON_TEXT, `${where}: on a white fill`);
+    expectContrast(border, token('--map-series-7', options), NON_TEXT, `${where}: on a yellow fill`);
+    expectContrast(border, surfaceOf(element.parentElement, options), NON_TEXT, `${where}: on its surface`);
+  }
+
+  test('a layer swatch, at rest, hovered, selected and hidden', () => {
+    for (const [where, layers, options] of [
+      ['at rest', LAYERS(), REST],
+      ['hovered', LAYERS(), HOVER],
+      ['selected', LAYERS({ selected: true }), REST],
+      ['hidden', LAYERS({ hidden: true }), REST],
+      ['hidden and selected, hovered', LAYERS({ hidden: true, selected: true }), HOVER],
+    ]) {
+      const swatch = mount(layers, '.layer-item:nth-child(2) .layer-swatch');
+      expectBoundary(swatch, options, `crowd swatch ${where}`);
+      document.body.innerHTML = '';
+    }
+    // The route's swatch is the same element class.
+    expectBoundary(mount(LAYERS(), '.layer-item:first-child .layer-swatch'), REST, 'route swatch');
+  });
+
+  test('the picker\'s current-colour chip, at rest and hovered', () => {
+    for (const [where, options] of [['at rest', REST], ['hovered', HOVER]]) {
+      expectBoundary(mount(SWATCH_CURRENT, '.swatch-current-chip'), options, `current chip ${where}`);
+      document.body.innerHTML = '';
+    }
   });
 });
 

@@ -28,10 +28,25 @@ export function refuseWhileExporting(app) {
 }
 
 /**
+ * Disable an Export menu item, or let it go: `aria-disabled`, never native,
+ * so it stays focusable and is read with its reason; the menu's click guard
+ * (Dropdown.js) refuses a click on it (UI-06 B-18 follow-up, as the context
+ * menu's entries).
+ * @param {HTMLElement|null|undefined} item
+ * @param {boolean} disabled
+ */
+function setItemDisabled(item, disabled) {
+  if (!item) return;
+  if (disabled) item.setAttribute('aria-disabled', 'true');
+  else item.removeAttribute('aria-disabled');
+}
+
+/**
  * Disable the export controls (the menu's toggle, MP4, WebM, HTML) while an
  * export is the app's; `release()`, when it has let go, enables the toggle
  * and gives each item back the state the project allows it, whatever part of
- * the clean-up failed (DEF-46). The toggle keeps its words throughout: the
+ * the clean-up failed (DEF-46). Only the toggle is disabled natively; the
+ * items by `setItemDisabled`. The toggle keeps its words throughout: the
  * export's progress is the status line's (UI-06 J-18). A module helper, so a
  * host that borrows `exportVideo` alone keeps it.
  * @param {Object} app
@@ -39,13 +54,18 @@ export function refuseWhileExporting(app) {
  */
 function holdExportControls(app) {
   const menu = document.getElementById('export-dropdown-btn');
-  const buttons = [menu, app.elements?.exportMp4Btn, app.elements?.exportWebmBtn, app.elements?.exportHtmlBtn].filter(Boolean);
-  for (const button of buttons) button.disabled = true;
+  const items = [app.elements?.exportMp4Btn, app.elements?.exportWebmBtn, app.elements?.exportHtmlBtn].filter(Boolean);
+  // Read before the hold: a browser may take focus off the toggle it disables.
+  const hadFocus = [menu, ...items].includes(document.activeElement);
+  if (menu) menu.disabled = true;
+  for (const item of items) setItemDisabled(item, true);
   return {
+    /** Whether one of the controls held had focus when the hold began (UI-06 J-18). */
+    hadFocus,
     release() {
       if (menu) menu.disabled = false;
       if (app.updateExportAvailability) app.updateExportAvailability();
-      else for (const button of buttons) button.disabled = false;
+      else for (const item of items) setItemDisabled(item, false);
     },
   };
 }
@@ -165,6 +185,7 @@ export const exportingMixin = {
     // controls with it, so no later export is refused for good (DEF-46).
     this._videoExportRunning = true;
     let controls = null;
+    let cancelHadFocus = false;
     try {
       this.uiController?.exportRunning?.(true);
       // This is the export the author now asks for, by whatever route: a codec
@@ -211,14 +232,20 @@ export const exportingMixin = {
       // message for, progress that is over.
       const endProgress = () => this.withdrawAnnouncements?.(progressKey);
 
+      // Escape, or the Cancel button beside the status line (UI-06 J-18):
+      // the one call that cancels the export
+      const cancelExport = () => {
+        if (this.videoExporter) {
+          this.videoExporter.cancel();
+        }
+      };
+      const cancelButton = document.getElementById('export-cancel-btn');
       // Capture-phase Escape handler — cancels export and blocks other keydown listeners
       const onEscapeKey = (e) => {
         if (e.key === 'Escape') {
           e.preventDefault();
           e.stopImmediatePropagation();
-          if (this.videoExporter) {
-            this.videoExporter.cancel();
-          }
+          cancelExport();
         }
       };
       // Visibility-aware pause/resume (MediaRecorder fallback only)
@@ -245,6 +272,17 @@ export const exportingMixin = {
       try {
         this.announce('Starting video export — press Esc to cancel');
         window.addEventListener('keydown', onEscapeKey, true); // capture phase
+        // Cancel by pointer too, shown with the progress; focus on a control
+        // the hold disabled goes to it (UI-06 J-18).
+        if (cancelButton) {
+          cancelButton.addEventListener('click', cancelExport);
+          cancelButton.hidden = false;
+          const active = document.activeElement;
+          const dropped = !active || active === document.body || !active.isConnected;
+          if (controls.hadFocus && (dropped || active.disabled || active.getAttribute('aria-disabled') === 'true')) {
+            cancelButton.focus();
+          }
+        }
         this.eventBus.on('video:export-paused', onExportPaused);
         this.eventBus.on('video:export-resumed', onExportResumed);
 
@@ -325,6 +363,13 @@ export const exportingMixin = {
         };
         // Clean up listeners
         putBack(() => window.removeEventListener('keydown', onEscapeKey, true));
+        putBack(() => {
+          if (!cancelButton) return;
+          // Focus on Cancel goes to the toggle once the controls are let go.
+          cancelHadFocus = cancelButton === document.activeElement;
+          cancelButton.removeEventListener('click', cancelExport);
+          cancelButton.hidden = true;
+        });
         putBack(() => this.eventBus.off('video:export-paused', onExportPaused));
         putBack(() => this.eventBus.off('video:export-resumed', onExportResumed));
         // Restore background if it was hidden for path-only export: before the
@@ -352,6 +397,7 @@ export const exportingMixin = {
       this._videoExportRunning = false;
       controls?.release();
       this.uiController?.exportRunning?.(false);
+      if (cancelHadFocus) document.getElementById('export-dropdown-btn')?.focus();
     }
   },
   
@@ -380,8 +426,7 @@ export const exportingMixin = {
     
     // The item is disabled while it works; the progress is the status
     // line's, not words written into a closed menu (UI-06 J-07, J-18)
-    const exportBtn = this.elements.exportHtmlBtn;
-    if (exportBtn) exportBtn.disabled = true;
+    setItemDisabled(this.elements.exportHtmlBtn, true);
     this.setStatus?.('Exporting HTML…');
     
     this.announce('Starting HTML export');
@@ -436,15 +481,16 @@ export const exportingMixin = {
    * line under them (UI-06 B-18): MP4 and WebM need a route of two; HTML a
    * background as well. Called on every route change and background change,
    * and once an export has let the controls go. The names never change with
-   * the state (J-21): the reason is the description.
+   * the state (J-21): the reason is the description. Disabled by
+   * `aria-disabled`, so each stays focusable with its reason.
    */
   updateExportAvailability() {
     const { exportMp4Btn, exportWebmBtn, exportHtmlBtn } = this.elements ?? {};
     const few = this.waypoints.length < 2;
     const noBackground = !this.background?.image;
     const running = Boolean(this._videoExportRunning);
-    for (const item of [exportMp4Btn, exportWebmBtn]) if (item) item.disabled = running || few;
-    if (exportHtmlBtn) exportHtmlBtn.disabled = running || few || noBackground;
+    for (const item of [exportMp4Btn, exportWebmBtn]) setItemDisabled(item, running || few);
+    setItemDisabled(exportHtmlBtn, running || few || noBackground);
     const videoReason = document.getElementById('export-video-reason');
     const htmlReason = document.getElementById('export-html-reason');
     setReason(videoReason, few ? VIDEO_REASON : '');

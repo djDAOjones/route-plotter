@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { EventBus } from '../src/core/EventBus.js';
 import { Scene } from '../src/models/Scene.js';
@@ -312,11 +314,12 @@ describe('native scene outline DOM', () => {
       selectionKey: sceneOutlineKey('waypoint', fixture.major.id),
     }));
     expect(addForm().elements.afterWaypointId.value).toBe(fixture.major.id);
+    // "major"/"minor" in lower case, mid-sentence (reason: UI-06 B-15, sentence case).
     expect([...addForm().elements.afterWaypointId.options].map(option => option.textContent))
       .toEqual([
         'Start of route',
-        `After ${snapshotFor(fixture).route[0].name}`,
-        `After ${snapshotFor(fixture).route[1].name}`,
+        'After major waypoint 1 — <img src=x onerror=window.outlineInjected=true>',
+        'After minor waypoint 1.1 — Curve point',
       ]);
 
     eventBus.emit('scene-outline:update', snapshotFor(fixture, {
@@ -368,12 +371,14 @@ describe('native scene outline DOM', () => {
 
     await openDisclosure(container, 'waypoint:wp-minor');
     await openDisclosure(container, 'polygon:wp-minor');
-    expect(container.textContent).toContain('Vertex 3');
+    // "Corner", the panel's word (reason: UI-06 low items, one word per concept [Q4]).
+    expect(container.textContent).toContain('Corner 3');
     const firstVertex = await openDisclosure(container, 'vertex:wp-minor:0');
     const disabledVertexDelete = firstVertex.querySelector('button[data-outline-action="delete-vertex"]');
     expect(disabledVertexDelete.disabled).toBe(true);
     expect(disabledVertexDelete.closest('.scene-outline-content').textContent)
-      .toContain('A polygon needs at least three vertices');
+      // "area" and "corners", the panel's words (reason: UI-06 low items, one word per concept [Q4]).
+      .toContain('A drawn area needs at least three corners');
   });
 
   test('emits stable-ID commands and exposes semantic validation errors inline', async () => {
@@ -545,13 +550,15 @@ describe('native scene outline DOM', () => {
     waypointForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
     const command = listener.mock.lastCall[0];
+    // The field shows the heading's two decimals; the canonical value is the
+    // exact one (reason: UI-06 W-02, numbers at the heading's precision).
     expect(command.outlineOriginalValues).toEqual({
       x: {
-        display: String(snapshot.route[0].x),
+        display: String(snapshot.route[0].xLabel),
         canonical: fixture.major.imgX,
       },
       y: {
-        display: String(snapshot.route[0].y),
+        display: String(snapshot.route[0].yLabel),
         canonical: fixture.major.imgY,
       },
       waitSeconds: {
@@ -987,6 +994,109 @@ describe('native scene outline DOM', () => {
   });
 });
 
+describe('the outline calls a drawn area an area, and its corners corners (UI-06 low items, one word per concept)', () => {
+  // The Area card says "Draw", "Draw area" and "Delete area"; the outline
+  // said "polygon" and "vertices" for the same things [Q4, the owner's words].
+  const OLD_WORDS = /polygon|vertices|vertex/i;
+
+  /** Every word the outline shows for `root`: text, names, hints. */
+  function wordsIn(root) {
+    const found = [root.textContent];
+    for (const element of root.querySelectorAll('*')) {
+      for (const name of ['data-tip', 'aria-label', 'title', 'placeholder']) {
+        if (element.hasAttribute(name)) found.push(element.getAttribute(name));
+      }
+    }
+    return found.join(' ');
+  }
+
+  test('a drawn area\'s entry, every corner open, and the button that adds one', async () => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    const eventBus = new EventBus();
+    const container = document.getElementById('scene-outline');
+    new SceneOutlineController(container, eventBus);
+    const fixture = makeFixture();
+    fixture.major.name = 'Gate';
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    const major = await openDisclosure(container, 'waypoint:wp-major');
+    expect([...major.querySelectorAll('button')].map(each => each.textContent)).toContain('Add triangle area');
+
+    await openDisclosure(container, 'waypoint:wp-minor');
+    await openDisclosure(container, 'polygon:wp-minor');
+    for (const index of [0, 1, 2]) await openDisclosure(container, `vertex:wp-minor:${index}`);
+    const minor = disclosure(container, 'waypoint:wp-minor');
+    const area = disclosure(container, 'polygon:wp-minor');
+    expect(area.querySelector(':scope > summary').textContent).toBe('Drawn area — 3 corners');
+    expect(area.querySelectorAll('details[data-outline-disclosure^="vertex:"][open]')).toHaveLength(3);
+    const buttons = [...area.querySelectorAll('button')].map(each => each.textContent);
+    expect(buttons).toEqual(expect.arrayContaining([
+      'Select area', 'Delete area', 'Apply area timing', 'Select corner 1', 'Apply corner', 'Delete corner', 'Add corner',
+    ]));
+    expect(area.querySelector(`details[data-outline-disclosure="vertex:wp-minor:0"] > summary`).textContent)
+      .toBe('Corner 1 — 10%, 20%');
+    expect(area.textContent).toContain('A drawn area needs at least three corners. Delete the area instead.');
+    const labels = [...area.querySelectorAll('label')].map(label => label.textContent.trim());
+    expect(labels).toEqual(expect.arrayContaining(['New corner horizontal position (%)', 'New corner vertical position (%)']));
+    expect(wordsIn(disclosure(container, 'waypoint:wp-major'))).not.toMatch(OLD_WORDS);
+    expect(wordsIn(minor)).not.toMatch(OLD_WORDS);
+  });
+
+  test('the outline\'s own help line says so too', () => {
+    const page = new DOMParser().parseFromString(readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'text/html');
+    const help = page.getElementById('scene-outline-help').textContent.replace(/\s+/g, ' ').trim();
+    expect(help).toBe('Inspect and edit the route, every crowd and its emitters, custom networks, path bends and area corners '
+      + 'without using the canvas.');
+  });
+});
+
+describe('waypoint names in running text are in sentence case (UI-06 B-15)', () => {
+  // "Select Major waypoint 2" capitalised a word mid-sentence. In running
+  // text ("Select …", "After …") the kind is lower case; an authored name,
+  // a branch waypoint's "Waypoint 1-B1 (branch B)" and the entry's own
+  // heading, which starts it, keep theirs.
+  test('Select and After say "major waypoint" and "minor waypoint"; the heading keeps its capital', async () => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    const eventBus = new EventBus();
+    const container = document.getElementById('scene-outline');
+    new SceneOutlineController(container, eventBus);
+    const first = new Waypoint({ id: 'one', imgX: 0.1, imgY: 0.5, isMajor: true });
+    const trent = new Waypoint({ id: 'two', imgX: 0.4, imgY: 0.5, isMajor: true, name: 'Trent Building' });
+    const curve = new Waypoint({ id: 'three', imgX: 0.6, imgY: 0.5, isMajor: false });
+    const last = new Waypoint({ id: 'four', imgX: 0.9, imgY: 0.5, isMajor: true, name: 'Major Oak' });
+    const waypoints = [first, trent, curve, last];
+    const snapshot = buildSceneOutlineSnapshot({ waypoints, scene: new Scene() });
+    expect(snapshot.route.map(waypoint => waypoint.name)).toEqual([
+      'Major waypoint 1', 'Major waypoint 2 — Trent Building', 'Minor waypoint 2.1', 'Major waypoint 3 — Major Oak',
+    ]);
+    eventBus.emit('scene-outline:update', snapshot);
+    const insert = container.querySelector('form[data-outline-form-key="route:add-submit"]').elements.afterWaypointId;
+    expect([...insert.options].map(option => option.textContent)).toEqual([
+      'Start of route', 'After major waypoint 1', 'After major waypoint 2 — Trent Building', 'After minor waypoint 2.1',
+      'After major waypoint 3 — Major Oak',
+    ]);
+    const selects = [];
+    for (const waypoint of snapshot.route) {
+      const entry = await openDisclosure(container, waypoint.key);
+      expect(entry.querySelector(':scope > summary').textContent).toMatch(new RegExp(`^${waypoint.name} — `));
+      selects.push(entry.querySelector('.scene-outline-actions button').textContent);
+    }
+    expect(selects).toEqual([
+      'Select major waypoint 1', 'Select major waypoint 2 — Trent Building', 'Select minor waypoint 2.1',
+      'Select major waypoint 3 — Major Oak',
+    ]);
+  });
+
+  test('a branch waypoint\'s name is a name: running text leaves it as it is', () => {
+    const fork = new Waypoint({ id: 'fork', imgX: 0.2, imgY: 0.5, isMajor: true });
+    const end = new Waypoint({ id: 'end', imgX: 0.8, imgY: 0.5, isMajor: true });
+    const branch = new Waypoint({ id: 'branch', imgX: 0.5, imgY: 0.2, isMajor: true, branchId: 'b', branchFrom: 'fork' });
+    const snapshot = buildSceneOutlineSnapshot({ waypoints: [fork, end, branch], scene: new Scene() });
+    const named = snapshot.route.find(waypoint => waypoint.id === 'branch');
+    expect(named.name).toMatch(/^Waypoint \S+ \(branch [A-Z]\)$/);
+    expect(named.runningName).toBe(named.name);
+  });
+});
+
 describe('an outline entry opens and closes as a browser clicks it (DEF-40)', () => {
   let eventBus;
   let container;
@@ -1156,5 +1266,167 @@ describe('an outline entry opens and closes as a browser clicks it (DEF-40)', ()
 
     expect(entry().open).toBe(false);
     expect(document.activeElement).toBe(summaryOf(entry()));
+  });
+});
+
+describe('a bend off the image applies as its field shows it (UI-06 W-02, Codex r1)', () => {
+  // A traced bend may sit off the image (DEF-41). Its field shows the
+  // heading's two decimals, -18.92 for -18.916%, but took its bounds from the
+  // stored value alone (min -18.916), so the browser refused the field as
+  // shown, and with it an edit to the bend's other coordinate.
+  let eventBus;
+  let container;
+
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    eventBus = new EventBus();
+    container = document.getElementById('scene-outline');
+    new SceneOutlineController(container, eventBus);
+  });
+
+  const BEND = ['crowd:crowd-route', 'network:crowd-route', 'edges:crowd-route', 'edge:crowd-route:edge-a',
+    'controls:crowd-route:edge-a', 'control:crowd-route:edge-a:0'];
+
+  /** Draw the bend at `point`, open it, change its other coordinate to 70 and Apply. */
+  async function applyOther(point, other) {
+    const fixture = makeFixture();
+    fixture.routeCrowd.graph.getEdge('edge-a').controlPoints[0] = { ...point };
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    for (const key of BEND) await openDisclosure(container, key);
+    const form = container.querySelector('form[data-outline-form-key="control:crowd-route:edge-a:0:apply"]');
+    const untouched = form.reportValidity();
+    form.elements[other].value = '70';
+    const listener = vi.fn();
+    eventBus.on('scene-outline:command', listener);
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    return { form, untouched, listener };
+  }
+
+  test.each([
+    ['below 0%', -0.18916, '-18.92'],
+    ['above 100%', 1.18916, '118.92'],
+  ])('an untouched coordinate %s is valid as shown, and a change to the other is sent', async (_, off, shown) => {
+    for (const [axis, other] of [['x', 'y'], ['y', 'x']]) {
+      const point = { x: 0.4, y: 0.6, [axis]: off };
+      const { form, untouched, listener } = await applyOther(point, other);
+      expect(form.elements[axis].value, axis).toBe(shown);
+      expect(untouched, `${axis} untouched`).toBe(true);
+      expect(listener, axis).toHaveBeenCalledTimes(1);
+      expect(listener.mock.lastCall[0], axis).toMatchObject({
+        action: 'update-control',
+        [axis]: shown,
+        [other]: '70',
+        outlineOriginalValues: { [axis]: { display: shown, canonical: off } },
+      });
+      // A bend on the image keeps 0–100 (DEF-35); one off it, the value stored and the value shown.
+      expect([Number(form.elements[axis].min), Number(form.elements[axis].max)], axis)
+        .toEqual(off < 0 ? [Number(shown), 100] : [0, Number(shown)]);
+      expect([form.elements[other].min, form.elements[other].max], other).toEqual(['0', '100']);
+    }
+  });
+});
+
+describe('an edited field submits what it holds, not the stored value (UI-06 W-02, Codex r1)', () => {
+  // A field that is never edited submits the exact stored value it was drawn
+  // from (round 1). One the author typed in, even back to the value it showed,
+  // submits what it holds: the controller leaves its canonical value out.
+  let eventBus;
+  let container;
+  let fixture;
+  let listener;
+
+  beforeEach(async () => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    eventBus = new EventBus();
+    container = document.getElementById('scene-outline');
+    new SceneOutlineController(container, eventBus);
+    fixture = makeFixture();
+    fixture.major.imgX = 0.18914301880222837;
+    fixture.routeCrowd.graph.getEdge('edge-a').controlPoints[0] = { x: 0.18914301880222837, y: 0.6 };
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    for (const key of ['waypoint:wp-major', 'crowd:crowd-route', 'network:crowd-route', 'edges:crowd-route',
+      'edge:crowd-route:edge-a', 'controls:crowd-route:edge-a', 'control:crowd-route:edge-a:0']) {
+      await openDisclosure(container, key);
+    }
+    listener = vi.fn();
+    eventBus.on('scene-outline:command', listener);
+  });
+
+  const WAYPOINT = 'waypoint:wp-major:apply';
+  const BEND = 'control:crowd-route:edge-a:0:apply';
+  const formFor = key => container.querySelector(`form[data-outline-form-key="${key}"]`);
+  const fieldOf = (key, name) => formFor(key).elements[name];
+  /** Type the value the field already shows, as the author does, ending with a change event. */
+  const retypeShown = (key, name, type = 'input') => {
+    const field = fieldOf(key, name);
+    const shown = field.value;
+    field.value = '';
+    field.dispatchEvent(new Event(type, { bubbles: true }));
+    field.value = shown;
+    field.dispatchEvent(new Event(type, { bubbles: true }));
+  };
+  const submit = key => {
+    formFor(key).dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    return listener.mock.lastCall[0];
+  };
+  const redraw = () => eventBus.emit('scene-outline:update', snapshotFor(fixture));
+
+  test('an input or change event marks a field edited, and the mark survives a redraw and a failed Apply', async () => {
+    retypeShown(WAYPOINT, 'x');
+    retypeShown(BEND, 'y', 'change');
+    let waypoint = submit(WAYPOINT);
+    expect(waypoint.x).toBe('18.91');
+    expect(Object.keys(waypoint.outlineOriginalValues).sort()).toEqual(['waitSeconds', 'y']);
+    expect(Object.keys(submit(BEND).outlineOriginalValues)).toEqual(['x']);
+
+    // Redrawn, and redrawn with the entry collapsed and reopened.
+    redraw();
+    expect(Object.keys(submit(WAYPOINT).outlineOriginalValues).sort()).toEqual(['waitSeconds', 'y']);
+    await openDisclosure(container, 'waypoint:wp-major');
+    formFor(WAYPOINT).closest('details').querySelector(':scope > summary').click();
+    await Promise.resolve();
+    expect(formFor(WAYPOINT)).toBeNull();
+    await openDisclosure(container, 'waypoint:wp-major');
+    expect(fieldOf(WAYPOINT, 'x').value).toBe('18.91');
+    expect(Object.keys(submit(WAYPOINT).outlineOriginalValues).sort()).toEqual(['waitSeconds', 'y']);
+
+    // The app refused the Apply: the edit stands.
+    eventBus.emit('scene-outline:error', { formKey: WAYPOINT, message: 'That waypoint no longer exists.' });
+    redraw();
+    expect(Object.keys(submit(WAYPOINT).outlineOriginalValues).sort()).toEqual(['waitSeconds', 'y']);
+    // Focus and blur alone are no edit.
+    fieldOf(BEND, 'x').focus();
+    fieldOf(BEND, 'x').blur();
+    expect(Object.keys(submit(BEND).outlineOriginalValues)).toEqual(['x']);
+  });
+
+  test('the mark goes when the Apply is accepted, on Escape, with a new project, and when the bends change', () => {
+    const allOriginals = { x: expect.anything(), y: expect.anything(), waitSeconds: expect.anything() };
+    const edited = () => Object.keys(submit(WAYPOINT).outlineOriginalValues).sort();
+
+    retypeShown(WAYPOINT, 'x');
+    expect(edited()).toEqual(['waitSeconds', 'y']);
+    eventBus.emit('scene-outline:accepted', { formKey: WAYPOINT });
+    redraw();
+    expect(submit(WAYPOINT).outlineOriginalValues).toEqual(allOriginals);
+
+    retypeShown(WAYPOINT, 'x');
+    fieldOf(WAYPOINT, 'x').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(submit(WAYPOINT).outlineOriginalValues).toEqual(allOriginals);
+    redraw();
+    expect(submit(WAYPOINT).outlineOriginalValues).toEqual(allOriginals);
+
+    for (const boundary of ['project:replaced', 'app:cleared']) {
+      retypeShown(WAYPOINT, 'x');
+      eventBus.emit(boundary);
+      redraw();
+      expect(submit(WAYPOINT).outlineOriginalValues, boundary).toEqual(allOriginals);
+    }
+
+    // A bend is named by its place in the list: a list that changed is another bend.
+    retypeShown(BEND, 'x');
+    fixture.routeCrowd.graph.getEdge('edge-a').controlPoints[0] = { x: 0.18914301880222837, y: 0.65 };
+    redraw();
+    expect(Object.keys(submit(BEND).outlineOriginalValues).sort()).toEqual(['x', 'y']);
   });
 });

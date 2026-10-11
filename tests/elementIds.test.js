@@ -173,16 +173,20 @@ const words = text => text.trim().split(/\s+/);
  */
 const LOOKED_UP = {
   'src/app/camera.js': words('camera-zoom-warning camera-zoom-warning'),
+  // CROWD-07 F18: Reset to even's reason line, written with its state and cleared for a crowd with no emitter.
   'src/app/crowds.js': words(`
     add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-add-reason crowd-busyness-graph crowd-busyness-graph
     crowd-busyness-graph
     crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
+    crowd-busyness-reset-reason crowd-busyness-reset-reason
     crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-lifecycle-hint
     crowd-no-emitter crowd-pattern-hint crowd-reroll-btn crowd-scope layers-strip
   `),
   'src/app/editorPanel.js': words('area-draw-reason waypoint-scope'),
   // UI-06 B-18: the export items' reason line and its two spans.
-  'src/app/exporting.js': words('export-dropdown-btn export-html-reason export-menu-reason export-video-reason'),
+  // UI-06 J-18: the Cancel button an export shows, and the toggle that takes focus from it as it hides.
+  'src/app/exporting.js': words(`export-cancel-btn export-dropdown-btn export-dropdown-btn export-html-reason export-menu-reason
+    export-video-reason`),
   // UI-06 J-01: Help, a dialog of its own, and its controls.
   'src/app/helpDialog.js': words(`
     help-close-x help-modal help-report-bug help-sections help-show-welcome help-source help-version

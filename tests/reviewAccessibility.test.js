@@ -531,7 +531,8 @@ describe('render and static UI regressions', () => {
     expect(document.getElementById('label-size-value').textContent).toBe('16 reference px');
     expect(labelSize.getAttribute('aria-valuetext')).toBe('16 reference px');
 
-    expect(document.getElementById('dot-size-value').textContent).toBe('8 reference px');
+    // The diameter drawn, twice the stored 8 (reason: DEF-96).
+    expect(document.getElementById('dot-size-value').textContent).toBe('16 reference px');
     expect(document.getElementById('segment-width-value').textContent).toBe('3.0 reference px');
     expect(document.getElementById('path-head-size-value').textContent).toBe('8 reference px');
     expect(document.getElementById('shape-amplitude-value').textContent).toBe('2%');

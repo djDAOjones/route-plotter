@@ -220,11 +220,19 @@ export const networkMixin = {
     if (!layer) return;
     const svc = this.networkEditService;
     if (svc.active && svc.layer === layer) return;
+    // Entering disables the Edit network button, which takes focus from it
+    // (UI-06 B-34): from that button, or from nowhere, focus goes to the
+    // banner's Done [Q2]. Anywhere else (the Guide select that chose Custom
+    // network) keeps it.
+    const from = document.activeElement;
+    const focusToBanner = from === this._editNetworkBtn || !from || from === document.body
+      || from === document.documentElement || !from.isConnected;
     // Drawing a network is editing: leave Preview through the canonical
     // switch (flipping back to Preview later closes the mode)
     this._setPreviewMode(false);
     svc.enter(layer, { returnFocusTo: this._editNetworkBtn });
     this.updateGuideCard();
+    if (focusToBanner) svc.focusBanner();
     this.announce('Editing the network — click the map to place linked nodes. Escape lifts the pen.');
   },
 

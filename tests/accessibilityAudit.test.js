@@ -130,6 +130,22 @@ describe('the app shell’s accessibility structure', () => {
     }
   });
 
+  // UI-06 J-20: no ARIA a native element already has. The header, main and
+  // asides are their landmarks without a role; a menu button keeps
+  // aria-haspopup="menu" (a button implies no popup), written once, in the
+  // markup, as the booted page has it.
+  test('no landmark role is written on the element that is that landmark', () => {
+    const NATIVE = { header: 'banner', main: 'main', aside: 'complementary', nav: 'navigation', footer: 'contentinfo' };
+    const redundant = Object.entries(NATIVE).flatMap(([tag, role]) => [...document.querySelectorAll(`${tag}[role="${role}"]`)]
+      .map(element => `${tag}[role=${role}]`));
+    expect(redundant).toEqual([]);
+    expect(document.querySelectorAll('header, main, aside').length).toBe(4);
+    for (const trigger of document.querySelectorAll('.dropdown-toggle')) {
+      expect(trigger.getAttribute('aria-haspopup'), trigger.id).toBe('menu');
+      expect(trigger.parentElement.querySelector('.dropdown-menu').getAttribute('role'), trigger.id).toBe('menu');
+    }
+  });
+
   test('every image carries alt text', () => {
     const missing = [...document.querySelectorAll('img')]
       .filter(image => image.getAttribute('alt') === null)
@@ -248,5 +264,34 @@ describe('forced colours keeps focus and selection visible (A11Y-02)', () => {
       .filter(name => !new RegExp(`${name}\\s*:`).test(tokensCss));
 
     expect(undefinedTokens).toEqual([]);
+  });
+});
+
+describe('a menu button\'s markup is what the booted page has (UI-06 J-20)', () => {
+  test('Dropdown.js writes no role or aria-haspopup the markup already carries', async () => {
+    const { bootApp } = await import('./helpers/bootApp.js');
+    const page = new DOMParser().parseFromString(indexHtml, 'text/html');
+    const shellOf = id => page.getElementById(id);
+    const app = await bootApp();
+    await app.ready;
+    const writes = [];
+    const set = Element.prototype.setAttribute;
+    Element.prototype.setAttribute = function recorded(name, value) {
+      if (this.matches?.('.dropdown-toggle, .dropdown-menu')) writes.push(`${this.id} ${name}=${value}`);
+      return set.call(this, name, value);
+    };
+    try {
+      const { initDropdown } = await import('../src/components/Dropdown.js');
+      for (const dropdown of document.querySelectorAll('.dropdown')) initDropdown(dropdown.cloneNode(true));
+    } finally {
+      Element.prototype.setAttribute = set;
+    }
+    expect(writes.filter(write => /\b(role|aria-haspopup)=/.test(write))).toEqual([]);
+    for (const id of ['file-dropdown-btn', 'export-dropdown-btn']) {
+      expect(document.getElementById(id).getAttribute('aria-haspopup'), id).toBe(shellOf(id).getAttribute('aria-haspopup'));
+    }
+    for (const id of ['file-menu', 'export-menu']) {
+      expect(document.getElementById(id).getAttribute('role'), id).toBe(shellOf(id).getAttribute('role'));
+    }
   });
 });

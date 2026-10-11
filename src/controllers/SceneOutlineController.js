@@ -11,6 +11,9 @@ import { IMAGE_COORDINATES } from '../config/constants.js';
 import { formatCrowdDotSize } from '../utils/uiReadouts.js';
 
 const OUTLINE_CANONICAL_VALUE = Symbol('outlineCanonicalValue');
+// A field the author has typed in or chosen in (UI-06 W-02, Codex r1): it
+// submits what it holds, though that is the value it was drawn with.
+const OUTLINE_EDITED = Symbol('outlineEdited');
 const OUTLINE_DRAFT_CONTEXT = Symbol('outlineDraftContext');
 const OUTLINE_ERROR_ID_PREFIX = 'scene-outline-error-';
 
@@ -24,14 +27,20 @@ const IMAGE_POSITION_PERCENT = Object.freeze({
 });
 
 /**
- * A bend point's position field: 0–100%, and the value it holds. A traced
- * bend sits where its minor waypoint is, which may be off the image (DEF-41);
- * left as it is, the app keeps it, and a new value is held to the image.
+ * A bend point's position field: 0–100%, and the value it holds, both as
+ * stored and as the field shows it. A traced bend sits where its minor
+ * waypoint is, which may be off the image (DEF-41); left as it is, the app
+ * keeps it, and a new value is held to the image. The field shows two
+ * decimals (UI-06 W-02), -18.92 for -18.916, so bounds from the stored value
+ * alone refused the field as shown, and the whole form with it (Codex r1).
+ * @param {number} value - The stored position, in percent
+ * @param {number} [shown] - The value the field shows
  */
-function bendPercentRange(value) {
+function bendPercentRange(value, shown = value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return { min: 0, max: 100 };
-  return { min: Math.min(0, number), max: Math.max(100, number) };
+  const label = Number.isFinite(Number(shown)) ? Number(shown) : number;
+  return { min: Math.min(0, number, label), max: Math.max(100, number, label) };
 }
 
 /**
@@ -50,9 +59,9 @@ const FIELD_HINTS = Object.freeze({
     'beyond them is off the image',
   newWaypointY: 'Where the new waypoint goes: 0% is the image’s top edge, 100% its bottom edge; ' +
     'beyond them is off the image',
-  newVertexX: 'Where the new vertex goes, after the last one: 0% is the image’s left edge, 100% its right ' +
+  newVertexX: 'Where the new corner goes, after the last one: 0% is the image’s left edge, 100% its right ' +
     'edge; beyond them is off the image',
-  newVertexY: 'Where the new vertex goes, after the last one: 0% is the image’s top edge, 100% its bottom ' +
+  newVertexY: 'Where the new corner goes, after the last one: 0% is the image’s top edge, 100% its bottom ' +
     'edge; beyond them is off the image',
   newNodeX: 'Where the new node goes: 0% is the image’s left edge, 100% its right edge',
   newNodeY: 'Where the new node goes: 0% is the image’s top edge, 100% its bottom edge',
@@ -64,8 +73,8 @@ const FIELD_HINTS = Object.freeze({
   wait: 'How long the path head waits at this waypoint before moving on',
   legSpeed: 'How fast the path head travels the leg after this waypoint: 2 takes half the time, ' +
     '0.5 twice as long',
-  fadeIn: 'How long the polygon takes to fade in when it appears',
-  fadeOut: 'How long the polygon takes to fade out when it disappears',
+  fadeIn: 'How long the area takes to fade in when it appears',
+  fadeOut: 'How long the area takes to fade out when it disappears',
   crowdName: 'The crowd’s name in Layers and in this outline',
   crowdVisibility: 'Hidden crowds are not drawn, in the editor or in exports; their settings are kept',
   guide: 'What the dots travel along: the route, or a custom network of nodes and paths',
@@ -291,9 +300,12 @@ export class SceneOutlineController {
     this._boundSubmit = event => this._onSubmit(event);
     this._boundClick = event => this._onClick(event);
     this._boundKeyDown = event => this._onKeyDown(event);
+    this._boundEdit = event => this._onEdit(event);
     this.container?.addEventListener('submit', this._boundSubmit);
     this.container?.addEventListener('click', this._boundClick);
     this.container?.addEventListener('keydown', this._boundKeyDown);
+    this.container?.addEventListener('input', this._boundEdit);
+    this.container?.addEventListener('change', this._boundEdit);
   }
 
   destroy() {
@@ -301,6 +313,8 @@ export class SceneOutlineController {
     this.container?.removeEventListener('submit', this._boundSubmit);
     this.container?.removeEventListener('click', this._boundClick);
     this.container?.removeEventListener('keydown', this._boundKeyDown);
+    this.container?.removeEventListener('input', this._boundEdit);
+    this.container?.removeEventListener('change', this._boundEdit);
     this._drafts.clear();
   }
 
@@ -441,11 +455,14 @@ export class SceneOutlineController {
         const dirty = checkable
           ? field.checked !== field.defaultChecked
           : field.value !== this._defaultFieldValue(field);
-        if (!dirty) continue;
+        // An edited field is kept though it holds its default: the edit is.
+        const edited = field[OUTLINE_EDITED] === true;
+        if (!dirty && !edited) continue;
         fields.set(fieldKey, {
           name: field.name,
           value: field.value,
           checked: checkable ? field.checked : null,
+          edited,
         });
       }
       const formKey = formEl.dataset.outlineFormKey;
@@ -478,6 +495,7 @@ export class SceneOutlineController {
             || [...field.options].some(option => option.value === fieldDraft.value)) {
           field.value = fieldDraft.value;
         }
+        if (fieldDraft.edited) field[OUTLINE_EDITED] = true;
       }
     }
   }
@@ -536,10 +554,16 @@ export class SceneOutlineController {
     }
   }
 
+  /** A form's fields back to unedited: they submit their stored values again. */
+  _clearEdits(formEl) {
+    for (const field of formEl?.elements ?? []) delete field[OUTLINE_EDITED];
+  }
+
   _resetDrafts() {
     this._drafts.clear();
     for (const formEl of this.container.querySelectorAll('form[data-outline-form-key]')) {
       formEl.reset();
+      this._clearEdits(formEl);
     }
     this._clearCommandError();
   }
@@ -565,6 +589,7 @@ export class SceneOutlineController {
           field.defaultValue = field.value;
         }
       }
+      this._clearEdits(formEl);
     }
     this._drafts.delete(normalizedKey);
     this._clearCommandError();
@@ -626,7 +651,7 @@ export class SceneOutlineController {
         { value: '', label: 'Start of route' },
         ...snapshot.route.map(waypoint => ({
           value: waypoint.id,
-          label: `After ${waypoint.name}`,
+          label: `After ${waypoint.runningName}`,
         })),
       ], { key: 'route:add-after', tip: FIELD_HINTS.insertPosition }),
       labelledSelect('kind', 'Type', 'major', [
@@ -664,7 +689,7 @@ export class SceneOutlineController {
     const content = el('div', { className: 'scene-outline-content' });
     const actions = el('div', { className: 'scene-outline-actions' });
     actions.append(
-      this._selectButton(`Select ${waypoint.name}`, 'waypoint', waypoint.key, { waypointId: waypoint.id }),
+      this._selectButton(`Select ${waypoint.runningName}`, 'waypoint', waypoint.key, { waypointId: waypoint.id }),
       button('Delete waypoint', 'delete-waypoint', { waypointId: waypoint.id }, {
         danger: true,
         key: `${waypoint.key}:delete`,
@@ -673,11 +698,12 @@ export class SceneOutlineController {
     content.appendChild(actions);
 
     const fields = [
-      labelledInput('x', 'Horizontal position (%)', waypoint.x, {
+      // The heading's two decimals; an untouched field submits the exact value (UI-06 W-02).
+      labelledInput('x', 'Horizontal position (%)', waypoint.xLabel, {
         ...IMAGE_POSITION_PERCENT, step: 'any', key: `${waypoint.key}:x`, canonicalValue: waypoint.xCanonical,
         tip: FIELD_HINTS.imageX,
       }),
-      labelledInput('y', 'Vertical position (%)', waypoint.y, {
+      labelledInput('y', 'Vertical position (%)', waypoint.yLabel, {
         ...IMAGE_POSITION_PERCENT, step: 'any', key: `${waypoint.key}:y`, canonicalValue: waypoint.yCanonical,
         tip: FIELD_HINTS.imageY,
       }),
@@ -714,7 +740,8 @@ export class SceneOutlineController {
     const wrapper = el('div', { className: 'scene-outline-subgroup' });
     if (area.shape !== 'polygon') {
       if (area.shape === 'none') {
-        wrapper.appendChild(button('Create polygon area', 'create-polygon', { waypointId: waypoint.id }, {
+        // It adds a triangle round the waypoint at once (UI-06 low items: its words say so).
+        wrapper.appendChild(button('Add triangle area', 'create-polygon', { waypointId: waypoint.id }, {
           key: `${area.key}:create`,
         }));
       } else {
@@ -727,7 +754,8 @@ export class SceneOutlineController {
 
     const details = detailsBlock(
       area.key,
-      `Polygon area — ${plural(area.points.length, 'vertex', 'vertices')}`,
+      // The Area card's words: a drawn area, and its corners (UI-06 low items, one word per concept).
+      `Drawn area — ${plural(area.points.length, 'corner', 'corners')}`,
       this._isOpen(area.key, false, areaContainsKey(area, this._snapshot.selectionKey)),
       'scene-outline-polygon'
     );
@@ -741,8 +769,8 @@ export class SceneOutlineController {
     );
     const actions = el('div', { className: 'scene-outline-actions' });
     actions.append(
-      this._selectButton('Select polygon', 'polygon', area.key, { waypointId: waypoint.id }),
-      button('Delete polygon', 'delete-polygon', { waypointId: waypoint.id }, {
+      this._selectButton('Select area', 'polygon', area.key, { waypointId: waypoint.id }),
+      button('Delete area', 'delete-polygon', { waypointId: waypoint.id }, {
         danger: true,
         key: `${area.key}:delete`,
       })
@@ -757,13 +785,13 @@ export class SceneOutlineController {
         min: 0, max: 600, step: 'any', key: `${area.key}:fade-out`, canonicalValue: area.fadeOutMsCanonical,
         tip: FIELD_HINTS.fadeOut,
       }),
-    ], 'Apply polygon timing', `${area.key}:timing`));
+    ], 'Apply area timing', `${area.key}:timing`));
 
     const list = el('ol', { className: 'scene-outline-list scene-outline-point-list' });
     for (const point of area.points) {
       const pointDetails = detailsBlock(
         point.key,
-        `Vertex ${point.index + 1} — ${point.xLabel}%, ${point.yLabel}%`,
+        `Corner ${point.index + 1} — ${point.xLabel}%, ${point.yLabel}%`,
         this._isOpen(point.key, false, this._selected(point.key)),
         'scene-outline-point'
       );
@@ -772,21 +800,21 @@ export class SceneOutlineController {
         continue;
       }
       const pointContent = el('div', { className: 'scene-outline-content' });
-      pointContent.appendChild(this._selectButton(`Select vertex ${point.index + 1}`, 'vertex', point.key, {
+      pointContent.appendChild(this._selectButton(`Select corner ${point.index + 1}`, 'vertex', point.key, {
         waypointId: waypoint.id,
         index: point.index,
       }));
       pointContent.appendChild(form('update-vertex', { waypointId: waypoint.id, index: point.index }, [
-        labelledInput('x', 'Horizontal position (%)', point.x, {
+        labelledInput('x', 'Horizontal position (%)', point.xLabel, {
           ...IMAGE_POSITION_PERCENT, step: 'any', key: `${point.key}:x`, canonicalValue: point.xCanonical,
           tip: FIELD_HINTS.imageX,
         }),
-        labelledInput('y', 'Vertical position (%)', point.y, {
+        labelledInput('y', 'Vertical position (%)', point.yLabel, {
           ...IMAGE_POSITION_PERCENT, step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
           tip: FIELD_HINTS.imageY,
         }),
-      ], 'Apply vertex', `${point.key}:apply`, vertexDraftContext));
-      pointContent.appendChild(button('Delete vertex', 'delete-vertex', {
+      ], 'Apply corner', `${point.key}:apply`, vertexDraftContext));
+      pointContent.appendChild(button('Delete corner', 'delete-vertex', {
         waypointId: waypoint.id,
         index: point.index,
       }, {
@@ -795,20 +823,20 @@ export class SceneOutlineController {
         key: `${point.key}:delete`,
       }));
       if (area.points.length <= 3) {
-        pointContent.appendChild(description('A polygon needs at least three vertices. Delete the polygon instead.'));
+        pointContent.appendChild(description('A drawn area needs at least three corners. Delete the area instead.'));
       }
       pointDetails.appendChild(pointContent);
       list.appendChild(itemFor(pointDetails));
     }
     content.appendChild(list);
     content.appendChild(form('add-vertex', { waypointId: waypoint.id }, [
-      labelledInput('x', 'New vertex horizontal position (%)', waypoint.x, {
+      labelledInput('x', 'New corner horizontal position (%)', waypoint.xLabel, {
         ...IMAGE_POSITION_PERCENT, step: 'any', key: `${area.key}:add-x`, tip: FIELD_HINTS.newVertexX,
       }),
-      labelledInput('y', 'New vertex vertical position (%)', waypoint.y, {
+      labelledInput('y', 'New corner vertical position (%)', waypoint.yLabel, {
         ...IMAGE_POSITION_PERCENT, step: 'any', key: `${area.key}:add-y`, tip: FIELD_HINTS.newVertexY,
       }),
-    ], 'Add vertex', `${area.key}:add`));
+    ], 'Add corner', `${area.key}:add`));
     details.appendChild(content);
     wrapper.appendChild(details);
     return wrapper;
@@ -1113,11 +1141,11 @@ export class SceneOutlineController {
       nodeId: node.id,
     }));
     content.appendChild(form('update-node', { layerId: crowd.id, nodeId: node.id }, [
-      labelledInput('x', 'Horizontal position (%)', node.x, {
+      labelledInput('x', 'Horizontal position (%)', node.xLabel, {
         min: 0, max: 100, step: 'any', key: `${node.key}:x`, canonicalValue: node.xCanonical,
         tip: FIELD_HINTS.onImageX,
       }),
-      labelledInput('y', 'Vertical position (%)', node.y, {
+      labelledInput('y', 'Vertical position (%)', node.yLabel, {
         min: 0, max: 100, step: 'any', key: `${node.key}:y`, canonicalValue: node.yCanonical,
         tip: FIELD_HINTS.onImageY,
       }),
@@ -1206,13 +1234,13 @@ export class SceneOutlineController {
         edgeId: edge.id,
         index: point.index,
       }, [
-        labelledInput('x', 'Horizontal position (%)', point.x, {
-          ...bendPercentRange(point.x), step: 'any', key: `${point.key}:x`, canonicalValue: point.xCanonical,
-          tip: FIELD_HINTS.onImageX,
+        labelledInput('x', 'Horizontal position (%)', point.xLabel, {
+          ...bendPercentRange(point.x, point.xLabel), step: 'any', key: `${point.key}:x`,
+          canonicalValue: point.xCanonical, tip: FIELD_HINTS.onImageX,
         }),
-        labelledInput('y', 'Vertical position (%)', point.y, {
-          ...bendPercentRange(point.y), step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
-          tip: FIELD_HINTS.onImageY,
+        labelledInput('y', 'Vertical position (%)', point.yLabel, {
+          ...bendPercentRange(point.y, point.yLabel), step: 'any', key: `${point.key}:y`,
+          canonicalValue: point.yCanonical, tip: FIELD_HINTS.onImageY,
         }),
       ], 'Apply bend', `${point.key}:apply`, controlDraftContext));
       pointContent.appendChild(button('Delete bend', 'delete-control', {
@@ -1254,6 +1282,8 @@ export class SceneOutlineController {
     const outlineOriginalValues = {};
     for (const field of formEl.elements) {
       if (!field.name || !(OUTLINE_CANONICAL_VALUE in field)) continue;
+      // An edited field submits what it holds, whatever it holds (UI-06 W-02, Codex r1).
+      if (field[OUTLINE_EDITED]) continue;
       outlineOriginalValues[field.name] = {
         display: field.defaultValue,
         canonical: field[OUTLINE_CANONICAL_VALUE],
@@ -1298,6 +1328,20 @@ export class SceneOutlineController {
     this._clearCommandError();
     this._drafts.delete(field.form?.dataset?.outlineFormKey);
     field.form?.reset();
+    this._clearEdits(field.form);
     field.form?.querySelector('[type="submit"]')?.focus();
+  }
+
+  /**
+   * An explicit edit, typed or chosen, marks its field (UI-06 W-02, Codex r1).
+   * The mark is kept through the outline's redraws as a draft is, and goes
+   * when the Apply is accepted, on Escape, with a new project, or, for a
+   * corner or a bend, when the point list it was drawn from changes; a
+   * refused Apply keeps it.
+   */
+  _onEdit(event) {
+    const field = event.target;
+    if (!field?.form?.dataset?.outlineFormKey || !this.container.contains(field)) return;
+    if (OUTLINE_CANONICAL_VALUE in field) field[OUTLINE_EDITED] = true;
   }
 }

@@ -19,30 +19,35 @@
   <!-- Application Container -->
   <div id="app">
     <!-- Header -->
-    <header class="header" role="banner">
+    <header class="header">
       <h1 id="app-title" class="header-title">Route Plotter</h1>
       <!-- UI-06 B-17: the save state as text, in the header beside the title;
            the "●" is a decorative mark of the same state. Not live (J-05: the
            queue's region is the one that reads; what matters is announced) -->
       <span id="title-indicator" class="title-indicator" aria-hidden="true" hidden>●</span>
       <p id="app-status" class="header-status" role="status" aria-live="off"></p>
+      <!-- UI-06 J-18: a video export cancelled by pointer as well as by Esc,
+           shown with its progress; PR 6 may move it into the banner slot -->
+      <button id="export-cancel-btn" class="btn btn-secondary" type="button" aria-describedby="app-status" hidden>Cancel</button>
       <div class="header-controls">
         <!-- Mode Switch (Edit/Preview toggle) -->
         <div class="mode-switch" id="mode-switch">
-          <span class="mode-label mode-label-edit active">Edit</span>
-          <button class="mode-toggle" id="mode-toggle-btn" type="button" role="switch" aria-checked="false" aria-label="Toggle preview mode">
+          <!-- UI-06 J-16: the switch is named by the word beside it; the
+               words either side are drawn, not read again -->
+          <span class="mode-label mode-label-edit active" aria-hidden="true">Edit</span>
+          <button class="mode-toggle" id="mode-toggle-btn" type="button" role="switch" aria-checked="false" aria-label="Preview mode">
             <span class="mode-toggle-thumb"></span>
           </button>
-          <span class="mode-label mode-label-preview">Preview</span>
+          <span class="mode-label mode-label-preview" aria-hidden="true">Preview</span>
         </div>
         <!-- History Controls -->
         <div class="header-group">
-          <button id="undo-btn" class="btn btn-icon" title="Undo (⌘+Z)" disabled aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6a4 4 0 0 1 0 8H9"/><polyline points="6 4 3 7 6 10"/></svg></button>
-          <button id="redo-btn" class="btn btn-icon" title="Redo (⌘+⇧+Z)" disabled aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7H7a4 4 0 0 0 0 8h1"/><polyline points="10 4 13 7 10 10"/></svg></button>
+          <button id="undo-btn" class="btn btn-icon" data-tip="Undo the last change (⌘+Z)" disabled aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6a4 4 0 0 1 0 8H9"/><polyline points="6 4 3 7 6 10"/></svg></button>
+          <button id="redo-btn" class="btn btn-icon" data-tip="Redo what you undid (⌘+⇧+Z)" disabled aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7H7a4 4 0 0 0 0 8h1"/><polyline points="10 4 13 7 10 10"/></svg></button>
         </div>
         <!-- File Dropdown (consolidates Save, Open, Examples, Clear) -->
         <div class="dropdown" id="file-dropdown">
-          <button class="btn btn-secondary dropdown-toggle" id="file-dropdown-btn" aria-haspopup="true" aria-expanded="false">
+          <button class="btn btn-secondary dropdown-toggle" id="file-dropdown-btn" aria-haspopup="menu" aria-expanded="false">
             File ▾
           </button>
           <div class="dropdown-menu dropdown-menu-file" id="file-menu" role="menu" aria-labelledby="file-dropdown-btn">
@@ -73,7 +78,7 @@
         </div>
         <!-- Export Dropdown -->
         <div class="dropdown" id="export-dropdown">
-          <button class="btn btn-primary dropdown-toggle" id="export-dropdown-btn" aria-haspopup="true" aria-expanded="false">
+          <button class="btn btn-primary dropdown-toggle" id="export-dropdown-btn" aria-haspopup="menu" aria-expanded="false">
             Export ▾
           </button>
           <div class="dropdown-menu" id="export-menu" role="menu" aria-labelledby="export-dropdown-btn">
@@ -95,13 +100,14 @@
     </header>
 
     <!-- Toast notification (replaces tip banner). Not a live region: every
-         toast is announced once through the queue (UI-06 J-05, C-5) -->
-    <div id="toast-container" class="toast-container" aria-live="off"></div>
+         toast is announced once through the queue (UI-06 J-05, C-5). It takes
+         focus from a leaving toast when nothing else can (UI-06 B-35) -->
+    <div id="toast-container" class="toast-container" aria-live="off" tabindex="-1"></div>
 
     <!-- Main Content -->
-    <main class="main" id="main-content" role="main" aria-labelledby="app-title">
+    <main class="main" id="main-content" aria-labelledby="app-title">
       <!-- Left Sidebar - Settings with Collapsible Sections -->
-      <aside class="sidebar" role="complementary" aria-label="Settings panel">
+      <aside class="sidebar" aria-label="Settings panel">
         <!-- DEF-28: a recovery record that could not be restored is kept
              until the author discards it -->
         <div id="unrestored-notice" class="unrestored-notice" role="region" aria-labelledby="unrestored-notice-text" aria-describedby="unrestored-notice-status" hidden>
@@ -184,9 +190,10 @@
               <div class="range-row">
                 <label for="dot-size">
                   <span data-tip="Waypoint marker diameter in project reference pixels; exports scale from the reference short edge">Size</span>
-                  <input type="range" id="dot-size" min="4" max="16" value="8" step="1" aria-describedby="dot-size-value" aria-valuetext="8 reference px">
+                  <input type="range" id="dot-size" min="4" max="16" value="8" step="1" aria-describedby="dot-size-value" aria-valuetext="16 reference px">
                 </label>
-                <span id="dot-size-value" class="range-readout">8 reference px</span>
+                <!-- DEF-96: the diameter drawn, twice the stored radius -->
+                <span id="dot-size-value" class="range-readout">16 reference px</span>
               </div>
 
               <div class="waypoint-card-actions" role="group" aria-label="Marker actions">
@@ -984,10 +991,11 @@
               <!-- Upload -->
               <div class="upload-row">
                 <span>Upload</span>
-                <button id="bg-upload-btn" class="btn btn-secondary" aria-describedby="bg-upload-desc">Choose image</button>
+                <button id="bg-upload-btn" class="btn btn-secondary" aria-describedby="bg-upload-desc bg-drop-hint">Choose image</button>
                 <input id="bg-upload" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" aria-label="Upload background image" />
                 <span id="bg-upload-desc" class="sr-only">the background image</span>
               </div>
+              <!-- UI-06 J-04: Choose image is described by it -->
               <p class="sr-only" id="bg-drop-hint">Tip: Drag an image onto the canvas to set the background.</p>
             </div>
           </div>
@@ -1067,8 +1075,9 @@
           <div id="crowd-scope" class="scope-group" hidden>
 
           <!-- UI-06 B-31: a crowd with no emitter has nothing for the Dots,
-               Release and Motion cards to edit; they are disabled under this line -->
-          <p id="crowd-no-emitter" class="section-hint crowd-no-emitter" hidden>This crowd has no emitter yet</p>
+               Release and Motion cards to edit; they are disabled under this
+               line, which says what to do (glossary §D) -->
+          <p id="crowd-no-emitter" class="section-hint crowd-no-emitter" hidden>This crowd has no dots. To start again, delete it in Layers and choose + Add crowd.</p>
 
           <!-- GUIDE: what the dots follow -->
           <div class="settings-section" data-section="guide">
@@ -1187,16 +1196,19 @@
                     <div id="crowd-busyness-handles" class="crowd-busyness-handles" aria-label="Busyness handles"></div>
                     <div class="crowd-busyness-actions">
                       <button id="crowd-busyness-add" class="btn btn-secondary" type="button" aria-describedby="crowd-busyness-add-reason" data-tip="Add a handle in the widest span">Add handle</button>
-                      <button id="crowd-busyness-reset" class="btn btn-ghost" type="button">Reset to even</button>
+                      <button id="crowd-busyness-reset" class="btn btn-ghost" type="button" aria-describedby="crowd-busyness-reset-reason" data-tip="Set busyness back to even across the window">Reset to even</button>
                     </div>
                     <!-- UI-06 B-07: why Add handle is disabled (the handle limit), read as its description -->
                     <p id="crowd-busyness-add-reason" class="section-hint" hidden></p>
+                    <!-- CROWD-07 F18: why Reset to even is disabled (the busyness is even already), read as its description -->
+                    <p id="crowd-busyness-reset-reason" class="section-hint" hidden></p>
                   </div>
 
                   <div class="crowd-pattern-controls" role="group" aria-labelledby="crowd-seed-label" aria-describedby="crowd-pattern-hint">
                     <div class="crowd-seed-row">
-                      <span id="crowd-seed-label">Pattern seed</span>
-                      <output id="crowd-seed-value" aria-labelledby="crowd-seed-label">0</output>
+                      <!-- CROWD-07 F18: a label for the output (an output is labelable) with its hint -->
+                      <label id="crowd-seed-label" for="crowd-seed-value"><span data-tip="The same seed always gives the same walking and set-off variation">Pattern seed</span></label>
+                      <output id="crowd-seed-value">0</output>
                     </div>
                     <button id="crowd-reroll-btn" class="btn btn-secondary" type="button">Re-roll pattern</button>
                     <p id="crowd-pattern-hint" class="section-hint">Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path.</p>
@@ -1343,7 +1355,7 @@
       
       <!-- Right Sidebar - Layers strip + Waypoints (Duration/Scale/Path
            emphasis moved to the left inspector's Route scope, Phase 4) -->
-      <aside class="sidebar-right" role="complementary" aria-label="Layers and waypoints panel">
+      <aside class="sidebar-right" aria-label="Layers and waypoints panel">
         <div class="control-group" style="padding: 0.75rem 0.75rem 0;">
           <h2 style="margin-bottom:0.5rem;">Layers</h2>
           <!-- Layers strip: Route + crowd layers; rows built by crowds.js -->
@@ -1360,7 +1372,7 @@
             <summary id="scene-outline-title" class="scene-outline-title">Full scene outline</summary>
             <p id="scene-outline-help" class="section-hint">
               Inspect and edit the route, every crowd and its emitters, custom networks,
-              path bends and polygon vertices without using the canvas.
+              path bends and area corners without using the canvas.
             </p>
             <div id="scene-outline" class="scene-outline" role="region"
                  aria-labelledby="scene-outline-title" aria-describedby="scene-outline-help"></div>

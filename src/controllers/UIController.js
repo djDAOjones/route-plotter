@@ -16,6 +16,7 @@ import { resolveRouteBranches } from '../utils/routeBranches.js';
 import {
   formatBackgroundOverlay,
   formatHoldAtEnd,
+  formatMarkerSize,
   formatRendererPixels,
   setRangeReadout,
   setTimelineReadout,
@@ -942,8 +943,8 @@ export class UIController {
     this.elements.exportMp4Btn?.addEventListener('click', async () => {
       // Disabled while an export runs: a click sent to it then (a script's)
       // asks for nothing, not even a probe, whose dialog would open over the
-      // export (DEF-46).
-      if (this.elements.exportMp4Btn.disabled || this._exportRunning) return;
+      // export (DEF-46). Disabled is aria-disabled (UI-06 B-18 follow-up).
+      if (this.elements.exportMp4Btn.getAttribute('aria-disabled') === 'true' || this._exportRunning) return;
       const w = parseInt(this.elements.exportResX?.value) || 1920;
       const h = parseInt(this.elements.exportResY?.value) || 1080;
       console.log(`🎬 [Export] MP4 probe at ${w}×${h}`);
@@ -2169,7 +2170,7 @@ export class UIController {
       setRangeReadout(
         this.elements.dotSize,
         this.elements.dotSizeValue,
-        formatRendererPixels(waypoint.dotSize || 8)
+        formatMarkerSize(waypoint.dotSize || 8)
       );
     }
     

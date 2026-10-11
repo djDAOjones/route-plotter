@@ -120,7 +120,7 @@ function topTrap() {
  * @param {Element|null} target
  * @returns {boolean}
  */
-function canTakeFocus(target) {
+export function canTakeFocus(target) {
   if (!target?.isConnected || typeof target.focus !== 'function' || target.matches(':disabled')) return false;
   if (target.closest('[inert]') || window.getComputedStyle(target).visibility === 'hidden') return false;
   for (let node = target; node && node !== document.documentElement; node = node.parentElement) {
@@ -138,7 +138,7 @@ function canTakeFocus(target) {
  * @param {Element|null} target
  * @returns {boolean}
  */
-function focusLands(target) {
+export function focusLands(target) {
   if (!canTakeFocus(target)) return false;
   target.focus();
   return document.activeElement === target;

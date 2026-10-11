@@ -16,6 +16,7 @@ import {
   isAsyncProjectOperationCurrent,
 } from './operationGeneration.js';
 import {
+  formatMarkerSize,
   formatRendererPixels,
   formatShapeAmplitude,
   setRangeReadout,
@@ -76,10 +77,12 @@ export const wiringDomMixin = {
     }
     
     // The shortcuts the header shows are written as Help writes them, for
-    // this platform (UI-06 J-17): ⌘ on a Mac, Ctrl elsewhere.
+    // this platform (UI-06 J-17): ⌘ on a Mac, Ctrl elsewhere. Undo's and
+    // Redo's are in their hints, which a keyboard reaches, not a title
+    // (UI-06 G-10).
     const { undo, redo, save } = getKeybindings().keyboard;
-    if (this.elements.undoBtn) this.elements.undoBtn.title = `Undo (${formatBinding(undo)})`;
-    if (this.elements.redoBtn) this.elements.redoBtn.title = `Redo (${formatBinding(redo)})`;
+    this.elements.undoBtn?.setAttribute('data-tip', `Undo the last change (${formatBinding(undo)})`);
+    this.elements.redoBtn?.setAttribute('data-tip', `Redo what you undid (${formatBinding(redo)})`);
     const saveChip = this.elements.saveProjectBtn?.querySelector('kbd');
     if (saveChip) saveChip.textContent = formatBinding(save);
 
@@ -811,7 +814,7 @@ export const wiringDomMixin = {
         setRangeReadout(
           this.elements.dotSize,
           this.elements.dotSizeValue,
-          formatRendererPixels(e.target.value)
+          formatMarkerSize(e.target.value)
         );
         this.eventBus.emit('waypoint:style-changed', this.selectedWaypoint);
       }

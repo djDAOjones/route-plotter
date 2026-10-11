@@ -22,6 +22,7 @@ import {
   setSelectMixed,
 } from '../utils/mixedControlState.js';
 import {
+  formatMarkerSize,
   formatRendererPixels,
   formatShapeAmplitude,
   setRangeReadout,
@@ -375,7 +376,7 @@ export const editorPanelMixin = {
     if (this.elements.dotSize) {
       const size = source.dotSize || this.styles.dotSize;
       this.elements.dotSize.value = size;
-      setRangeReadout(this.elements.dotSize, this.elements.dotSizeValue, formatRendererPixels(size));
+      setRangeReadout(this.elements.dotSize, this.elements.dotSizeValue, formatMarkerSize(size));
     }
     if (this.elements.customMarkerControls) {
       this.elements.customMarkerControls.style.display = markerStyle === 'custom' ? 'block' : 'none';
@@ -626,7 +627,7 @@ export const editorPanelMixin = {
       setRangeReadout(
         this.elements.dotSize,
         this.elements.dotSizeValue,
-        formatRendererPixels(this.elements.dotSize.value)
+        formatMarkerSize(this.elements.dotSize.value)
       );
       
       // Custom marker controls visibility

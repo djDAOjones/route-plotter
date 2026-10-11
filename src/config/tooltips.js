@@ -57,7 +57,7 @@ export const TOOLTIPS = {
   header_preview: 'Switch to preview mode (hides editing controls)',
   
   // Waypoint list
-  waypoint_add: 'Add a new waypoint at the center of the map',
+  waypoint_add: 'Add a new waypoint at the centre of the map',
   waypoint_delete: 'Delete this waypoint (Shift+Click)',
   waypoint_reorder: 'Drag to reorder waypoints',
   

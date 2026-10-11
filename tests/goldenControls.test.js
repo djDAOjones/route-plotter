@@ -1079,6 +1079,7 @@ const NOT_OPERATED = [
   ['#waypoint-scope', 'delegation only: card actions and mixed-state resets, which the rows inside show'],
   ['#crowd-busyness-handles', 'delegation only: the handle inputs inside are rows'],
   ['input[type=hidden]', 'written by its swatch picker, whose radios and custom-colour inputs are rows'],
+  ['#export-cancel-btn', 'shown and wired only while a video export runs, which no row holds open: uiStatus.test.js (UI-06 J-18)'],
 ];
 
 /** Gestures no row performs anywhere, each with the reason. */

@@ -252,10 +252,10 @@ export class AreaDrawingService {
     this._banner.setAttribute('aria-live', 'polite');
     this._banner.innerHTML = `
       <span class="banner-text">
-        <strong>Drawing polygon area</strong> — Click to place vertices. 
+        <strong>Drawing an area</strong> — Click to place corners. 
         Click near the first point to close. 
         <kbd>Esc</kbd> to cancel.
-        <span class="banner-count">0 vertices</span>
+        <span class="banner-count">0 corners</span>
       </span>
       <button class="banner-cancel" aria-label="Cancel drawing">Cancel</button>
     `;
@@ -304,9 +304,11 @@ export class AreaDrawingService {
     if (countEl) {
       const n = this.vertices.length;
       const remaining = Math.max(0, AREA_HIGHLIGHT.DRAW_MIN_VERTICES - n);
+      // The outline's words: an area and its corners (UI-06 low items, one word per concept)
+      const corners = `${n} ${n === 1 ? 'corner' : 'corners'}`;
       countEl.textContent = remaining > 0
-        ? `${n} vertices (${remaining} more needed to close)`
-        : `${n} vertices (click near first to close)`;
+        ? `${corners} (${remaining} more needed to close)`
+        : `${corners} (click near first to close)`;
     }
   }
   

@@ -678,7 +678,8 @@ describe("Help's key table (TST-13)", () => {
       route: [...START, 'major 0.5,0.5'],
       selected: ['#3 major 0.5,0.5'],
       primary: '#3 major 0.5,0.5',
-      said: 'Waypoint added at center'
+      // The glossary's spelling (reason: UI-06, the lead's addendum to PR 8).
+      said: 'Waypoint added at centre'
     },
     duplicateWaypoint: {
       route: [...START, 'major 0.52,0.52'],
