@@ -13,6 +13,7 @@
 - DEF-83 — a keyboard user tabbing onto a collapsed card header now sees its focus ring, because the header is a native button whose ring is drawn inside it, out of the card's clip (2026-10-08) — see decisions
 - DEF-91 — a background that fails to load, uploaded or from the examples, now says why in a toast and aloud, and the canvas area is marked busy while one decodes (2026-10-09) — see decisions
 - DEF-82 — with focus anywhere inside an open dialog, its title included, the page's shortcuts stand down, so Space, Delete or A no longer act on the editor behind it, nor Delete or T on the network pen's selection, while `?` still opens Help (2026-10-11) — see decisions
+- DEF-96 — the Marker card's Size reads the diameter it draws, "16 reference px" at the default where it read 8, in its readout and `aria-valuetext` wherever they are written, while what is stored and drawn is unchanged (2026-10-11) — see decisions
 
 ## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
