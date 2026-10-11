@@ -42,12 +42,12 @@ const DEFAULT_SECTION_STATE = {
   'path-emphasis': false,
   background: true,
   video: false,
-  // Crowd scope (Dots + Release open: the look and the flow are what a
-  // fresh crowd gets tuned first; Follow-route guide is already on)
-  guide: false,
+  // Crowd scope: every card open (CROWD-07 X-09, the owner's pick), so a
+  // new crowd shows its guide, "At journey end" and Speed too
+  guide: true,
   dots: true,
   release: true,
-  motion: false,
+  motion: true,
   // Network scopes (single card each — always open)
   node: true,
   edge: true

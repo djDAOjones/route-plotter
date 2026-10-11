@@ -18,7 +18,10 @@ import { INTERACTION } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
 import { getGraphDepartureShares } from '../utils/graphRouting.js';
 import { nearestOnPolyline } from '../utils/segmentHitTest.js';
-import { setRangeReadout } from '../utils/uiReadouts.js';
+import {
+  cleanNumber, clearFieldError, formatFieldNumber, setControlReason, setRangeReadout, showFieldError,
+  SLIDER_REACH_REASON,
+} from '../utils/uiReadouts.js';
 
 const NODE_TYPE_LABELS = {
   normal: 'pass-through',
@@ -51,6 +54,16 @@ const GUIDE_JOURNEY_HINT = "Journeys start at entry nodes and end at exit nodes 
 const PATH_WEIGHT_HINT = 'How strongly dots leaving this node prefer this path, '
   + 'shown as the share of them that take it. Arriving dots avoid turning straight back when another path is available';
 
+/** The Path card's Share row (DEF-86): its slider, the weight's field, the slider's reason and the field's error. */
+function edgeWeightParts() {
+  return {
+    slider: document.getElementById('network-edge-weight'),
+    field: document.getElementById('network-edge-weight-field'),
+    reason: document.getElementById('network-edge-weight-reason'),
+    error: document.getElementById('network-edge-weight-field-error'),
+  };
+}
+
 /** Compact author-facing weight text without losing useful decimals. */
 function formatWeight(weight) {
   return Number(weight.toFixed(2)).toString();
@@ -82,12 +95,11 @@ export const networkMixin = {
     this._traceRouteBtn?.addEventListener('click', () => this.traceRouteIntoCrowd());
 
     // ── Guide changes (emitted by the crowds mixin's select wiring) ──
-    // Switching an empty-network crowd to Custom network hands the user
-    // the pen immediately; switching back to route while drawing exits.
+    // Custom network is a setting, not a mode (CROWD-07 X-02): choosing it
+    // refreshes the Guide card, and Edit network is the request. Switching
+    // back to route while drawing exits.
     this.eventBus.on('network:guide-changed', (layer) => {
-      if (layer.guideType === 'graph' && layer.graph.getNodes().length === 0) {
-        this.enterNetworkEditMode();
-      } else if (layer.guideType === 'route') {
+      if (layer.guideType === 'route') {
         const svc = this.networkEditService;
         if (svc.active) svc.exit();
         else if (svc.layer === layer) svc.clearInspection();
@@ -200,20 +212,42 @@ export const networkMixin = {
     document.getElementById('network-edge-delete')?.addEventListener('click', () => {
       this._deleteNetworkSelection('edge');
     });
-    document.getElementById('network-edge-weight')?.addEventListener('input', (e) => {
+    const weight = edgeWeightParts();
+    weight.slider?.addEventListener('input', (e) => {
       const edge = this.networkEditService.selectedEdge();
       if (!edge) return;
-      edge.setWeight(parseFloat(e.target.value) / 10);
-      this._updateEdgeShareReadout(edge);
+      // Off for a weight past its ends, it writes nothing: the weight stays (DEF-86).
+      if (weight.slider.disabled) {
+        this._syncEdgeWeight(edge);
+        return;
+      }
+      edge.setWeight(cleanNumber(parseFloat(e.target.value) / 10));
+      // The field shows the weight the slider set: whatever was wrong with what was typed there is gone.
+      clearFieldError(weight.field, weight.error);
+      this._syncEdgeWeight(edge);
       // Debounced undo + autosave + render — the crowd param pipeline
+      this.eventBus.emit('crowd:param-changed');
+    });
+    // The raw weight, typed (DEF-86): any weight of 0.01 or more, with no
+    // top, as the model takes it; the slider follows within its reach.
+    weight.field?.addEventListener('change', () => {
+      const edge = this.networkEditService.selectedEdge();
+      if (!edge) return;
+      const typed = Number(weight.field.value);
+      if (weight.field.value.trim() === '' || !Number.isFinite(typed) || typed < 0.01) {
+        showFieldError(weight.field, weight.error, weightMessage(edge), message => this.announce?.(message));
+        return;
+      }
+      clearFieldError(weight.field, weight.error);
+      edge.setWeight(typed);
+      this._syncEdgeWeight(edge);
       this.eventBus.emit('crowd:param-changed');
     });
   },
 
   /**
-   * Enter network edit mode for the selected crowd (Guide card button,
-   * or automatically when an empty-network crowd switches to Custom
-   * network).
+   * Enter network edit mode for the selected crowd: the Guide card's Edit
+   * network button, the one request for it (CROWD-07 X-02).
    */
   enterNetworkEditMode() {
     const layer = this.selectedCrowd;
@@ -222,8 +256,7 @@ export const networkMixin = {
     if (svc.active && svc.layer === layer) return;
     // Entering disables the Edit network button, which takes focus from it
     // (UI-06 B-34): from that button, or from nowhere, focus goes to the
-    // banner's Done [Q2]. Anywhere else (the Guide select that chose Custom
-    // network) keeps it.
+    // banner's Done [Q2]. Anywhere else keeps it.
     const from = document.activeElement;
     const focusToBanner = from === this._editNetworkBtn || !from || from === document.body
       || from === document.documentElement || !from.isConnected;
@@ -417,9 +450,9 @@ export const networkMixin = {
     }
     if (this._traceRouteBtn) {
       // Tracing needs a graph-guided crowd to write into and a route worth
-      // copying. It stays available while the pen is live: switching to a
-      // custom network hands you the pen immediately, which is exactly the
-      // moment "or just trace the route" is most useful (COMPOSE-03).
+      // copying. It stays available while the pen is live: drawing a network
+      // is exactly the moment "or just trace the route" is most useful
+      // (COMPOSE-03).
       const graphGuided = !!layer && layer.guideType === 'graph';
       const hasRoute = (this.waypoints?.length || 0) >= 2;
       this._traceRouteBtn.hidden = !graphGuided;
@@ -440,7 +473,7 @@ export const networkMixin = {
         const nodes = layer.graph.getNodes().length;
         const edges = layer.graph.getEdges().length;
         const networkHint = nodes === 0
-          ? 'No network yet — Edit network hands you the pen.'
+          ? 'No network yet — press Edit network to draw one, or Trace route into network.'
           : `Dots walk this crowd's own network (${nodes} node${nodes === 1 ? '' : 's'}, `
             + `${edges} path${edges === 1 ? '' : 's'}).`;
         // The Trace reason above asks for the waypoints (UI-06 B-07); this says what needs them, so the ask is said once.
@@ -469,6 +502,7 @@ export const networkMixin = {
       const typeEl = document.getElementById('network-node-type');
       if (typeEl) typeEl.value = node.type;
     }
+    this._syncNodeCardTitle(node);
     this._syncNodePathWeights(node);
 
     const edge = svc.selectedEdge();
@@ -477,10 +511,54 @@ export const networkMixin = {
       if (dirEl) dirEl.value = edge.direction;
       const swapBtn = document.getElementById('network-edge-swap');
       if (swapBtn) swapBtn.hidden = edge.direction !== 'one-way';
-      const weightEl = document.getElementById('network-edge-weight');
-      if (weightEl) weightEl.value = Math.round(edge.weight * 10);
-      this._updateEdgeShareReadout(edge);
+      const { field, error } = edgeWeightParts();
+      clearFieldError(field, error);
+      this._syncEdgeWeight(edge);
     }
+  },
+
+  /**
+   * Show a path's weight (DEF-86): the field holds it as stored; the Share
+   * slider, the weight × 10 from 0.1 to 5, sits there, or, for a weight past
+   * its ends, at its nearer end and off, saying why, so the first nudge
+   * never rewrites it; the readout says the share it gives.
+   * @param {Object} edge
+   * @private
+   */
+  _syncEdgeWeight(edge) {
+    const { slider, field, reason } = edgeWeightParts();
+    if (field) field.value = formatFieldNumber(edge.weight);
+    if (slider) {
+      const position = cleanNumber(edge.weight * 10);
+      const min = Number(slider.min);
+      const max = Number(slider.max);
+      const reachable = position >= min && position <= max;
+      slider.value = String(Math.round(Math.min(max, Math.max(min, position))));
+      slider.disabled = !reachable;
+      setControlReason(slider, reason, reachable ? '' : SLIDER_REACH_REASON);
+    }
+    this._updateEdgeShareReadout(edge);
+  },
+
+  /**
+   * Head the Node card with the node it edits (CROWD-07 X-05): "Node · Main
+   * entrance · entry", the name a traced node keeps from its waypoint, or
+   * "Node 3 · entry", its number in the network, for a node with no name
+   * [Q8]. The header button holds the span, as the Leg card's does.
+   * @param {Object|null} node
+   * @private
+   */
+  _syncNodeCardTitle(node) {
+    const title = document.getElementById('node-section-title');
+    if (!title) return;
+    if (!node) {
+      title.textContent = 'Node';
+      return;
+    }
+    const name = typeof node.label === 'string' ? node.label.trim() : '';
+    const number = this.networkEditService.layer?.graph.getNodes().indexOf(node) ?? -1;
+    const subject = name ? `Node · ${name}` : `Node ${number + 1}`;
+    title.textContent = `${subject} · ${NODE_TYPE_LABELS[node.type] ?? node.type}`;
   },
 
   /**

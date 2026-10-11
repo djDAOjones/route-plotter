@@ -29,6 +29,7 @@ import { resolve } from 'node:path';
 import { describe, test, expect, vi } from 'vitest';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
 import { bootApp } from './helpers/bootApp.js';
+import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
 import { TOOLTIPS } from '../src/config/tooltips.js';
 
@@ -278,7 +279,7 @@ async function populatedApp() {
   expect(app.waypoints.length).toBe(2);
   app.eventBus.emit('waypoint:selected', app.waypoints[0]);
 
-  app.addCrowd({ enterNetworkEditor: false });
+  app.addCrowd();
   const layer = app.selectedCrowd;
   layer.setGuideType('graph');
   app.syncCrowdEditor();
@@ -310,7 +311,9 @@ async function populatedApp() {
   const emitterForm = document.querySelector('#scene-outline form[data-outline-action="update-emitter"]');
   const command = {
     action: 'update-emitter', layerId: layer.id, emitterId: emitter.id, outlineFormKey: emitterForm?.dataset.outlineFormKey,
-    dotCount: '15', releaseStart: '10', releaseDuration: '70', onsetVariance: '20', intensityRamp: '-25',
+    dotCount: '15', releaseStart: '10', releaseDuration: '70', onsetVariance: '20',
+    // Release bias as the outline sends it since CROWD-07 F15 (reason: a direction and an amount, not −25).
+    intensityRampDirection: 'earlier', intensityRampAmount: '25',
     speed: '0.2', speedVariance: '30', dotSize: '1.5', wobble: '40', dotColor: '#0072B2', lifecycleMode: 'loop',
   };
   // The apply first (its announcement), then the error, which stays in view.
@@ -515,7 +518,7 @@ describe('the crowd’s words agree (CROWD-07 F8)', () => {
     document.getElementById('splash-close').click();
     app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
     app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     return app;
   }
 
@@ -583,7 +586,9 @@ describe('the crowd’s words agree (CROWD-07 F8)', () => {
       // The crowd's own strings, read as the rule reads the shell, with the readout as it is shown.
       const scope = document.getElementById('crowd-scope');
       const strings = [...stringsIn(scope), ...said.map(text => ({ what: 'Guide helper', text, hint: 'prose' }))];
-      const size = document.getElementById('crowd-dot-size-value').textContent;
+      // The readout is the number field and its unit since DEF-86 (reason: read with the field's value).
+      const readout = document.getElementById('crowd-dot-size-value');
+      const size = `${readout.querySelector('input').value}${readout.textContent}`.replace(/\s+/g, ' ').trim();
       strings.push({ what: 'Size readout', text: size, hint: 'prose' });
       const texts = strings.map(string => string.text);
       expect(size).toBe('8 reference px');
@@ -683,6 +688,101 @@ describe('the glossary spells it centre (UI-06, the lead\'s addendum to PR 8)', 
       app.eventBus.emit('waypoint:add-at-center');
       expect(said).toContain('Waypoint added at centre');
       expect(said.map(retiredWord).filter(Boolean)).toEqual([]);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+});
+
+/**
+ * CROWD-07 PR 5b's words, each held to the rules the shell's are: the
+ * no-route announcement and the empty-network helper (X-02), a slider's
+ * reason and each number field's error (DEF-86), the seed's error and what
+ * a seed typed says (F16), the outline's Release bias (F15) and its Even
+ * reason [Q9], and the Node card's title (X-05).
+ */
+describe('the words PR 5b adds keep the rules (CROWD-07)', () => {
+  test('announcements, helper lines, reasons, errors, labels and titles: sentence case, no retired word', async () => {
+    const app = await bootApp();
+    try {
+      await app.ready;
+      const announced = [];
+      vi.spyOn(app, 'announce').mockImplementation((message) => { announced.push(message); });
+      document.getElementById('splash-close').click();
+      const strings = [];
+      const prose = (what, text) => strings.push({ what, text, hint: 'prose' });
+
+      // No route: + Add crowd says how to draw the crowd's network, and the helper names Edit network.
+      document.getElementById('add-crowd-btn').click();
+      prose('Guide helper', document.getElementById('crowd-guide-hint').textContent);
+      expect(announced.some(text => /^Crowd 1 added — press Edit network/.test(text))).toBe(true);
+
+      expect(await loadSnapshot(app, {
+        coordVersion: 9,
+        waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true, name: 'Main entrance' },
+          { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
+        scene: { flowLayers: [
+          { id: 'big', name: 'Crowd 1', guideType: 'graph', emitters: [{ id: 'e', dotCount: 1000, speed: 0.4 }],
+            graph: { nodes: [{ id: 'n1', x: 0.2, y: 0.3, label: 'Main entrance' }, { id: 'n2', x: 0.7, y: 0.6 }],
+              edges: [{ id: 'p', sourceId: 'n1', targetId: 'n2', weight: 24 }] } },
+          { id: 'other', name: 'Crowd 2', guideType: 'route', emitters: [{ id: 'f', dotCount: 5000 }] },
+          { id: 'third', name: 'Crowd 3', guideType: 'route', emitters: [{ id: 'g', dotCount: 5000 }] },
+          { id: 'fourth', name: 'Crowd 4', guideType: 'route', emitters: [{ id: 'h', dotCount: 5000 }] },
+          { id: 'fifth', name: 'Crowd 5', guideType: 'route', emitters: [{ id: 'i', dotCount: 3000 }] },
+        ] },
+      })).toBe(true);
+      const layer = app.scene.getFlowLayer('big');
+      app.eventBus.emit('crowd:selected', layer);
+      prose('slider reason', document.getElementById('crowd-count-reason').textContent);
+      // Each field's error, and the budget's.
+      const type = (id, value) => {
+        const field = document.getElementById(id);
+        field.value = value;
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        return document.getElementById(id === 'crowd-seed-value' ? 'crowd-seed-error' : `${id}-error`).textContent;
+      };
+      for (const id of ['crowd-dot-size', 'crowd-wobble', 'crowd-count', 'crowd-release-start', 'crowd-release-duration',
+        'crowd-onset-variance', 'crowd-intensity-ramp', 'crowd-speed', 'crowd-speed-variance']) {
+        prose(`${id} error`, type(`${id}-field`, ''));
+      }
+      prose('budget error', type('crowd-count-field', '5000'));
+      prose('seed error', type('crowd-seed-value', '-1'));
+      type('crowd-seed-value', '42');
+      expect(announced).toContain('Crowd 1 pattern seed set to 42. Undo is available.');
+      // The Node card's title, named and not; the Path card's weight, its reason and its error.
+      // The rule judges the app's words: the author's name for the node, its middle part, is theirs.
+      const titles = [];
+      for (const nodeId of ['n1', 'n2']) {
+        app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'node', layerId: layer.id, nodeId });
+        titles.push(document.getElementById('node-section-title').textContent);
+      }
+      for (const title of titles) {
+        strings.push({ what: 'Node title', text: title.replace('Main entrance', 'name') });
+      }
+      expect(titles).toEqual(['Node · Main entrance · pass-through', 'Node 2 · pass-through']);
+      app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'edge', layerId: layer.id, edgeId: 'p' });
+      prose('Share reason', document.getElementById('network-edge-weight-reason').textContent);
+      prose('weight error', type('network-edge-weight-field', '0'));
+      strings.push(...stringsIn(document.getElementById('edge-scope')));
+      // The outline's Release bias, Even chosen.
+      app._refreshSceneOutline();
+      await Promise.resolve();
+      await openWholeOutline(document.getElementById('scene-outline'));
+      const form = document.querySelector('#scene-outline form[data-outline-action="update-emitter"]');
+      form.elements.intensityRampDirection.value = 'even';
+      form.elements.intensityRampDirection.dispatchEvent(new Event('change', { bubbles: true }));
+      strings.push(...stringsIn(form));
+      for (const message of announced) prose('announcement', message);
+
+      const texts = strings.map(string => string.text);
+      expect(texts).toContain('Beyond the slider\'s reach — use the number field');
+      expect(texts).toContain('Shares are already even.');
+      expect(texts).toContain('Seed is a whole number from 0 to 4294967295');
+      expect(texts).toContain('The whole scene supports at most 20000 configured dots.');
+      // Nine crowd fields' errors and the weight's, each in its line and said once.
+      expect(new Set(texts.filter(text => /^Enter .+ until you do\.$/.test(text))).size).toBe(10);
+      expect(texts).toContain('Release bias amount (%)');
+      expect(faultsIn(strings)).toEqual([]);
     } finally {
       app.interactionHandler.destroy();
     }

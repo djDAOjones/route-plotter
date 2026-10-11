@@ -539,9 +539,12 @@ describe('scene-outline command adapter', () => {
   test('its messages use the controls’ words: Count, Window start, journey end, Crowd updated, Path updated (UI-06)', () => {
     const layer = app.scene.addFlowLayer({ id: 'crowd-w', name: 'Visitors', guideType: 'graph' });
     const primary = layer.addEmitter({ id: 'emitter-w', dotCount: 10, seed: 1 });
+    // Release bias as the outline sends it since CROWD-07 F15 (reason for the
+    // changed fields): a direction and an amount, not a signed −25.
     const command = {
       action: 'update-emitter', layerId: layer.id, emitterId: primary.id,
-      dotCount: '15', releaseStart: '10', releaseDuration: '70', onsetVariance: '20', intensityRamp: '-25',
+      dotCount: '15', releaseStart: '10', releaseDuration: '70', onsetVariance: '20',
+      intensityRampDirection: 'earlier', intensityRampAmount: '25',
       speed: '0.2', speedVariance: '30', dotSize: '1.5', wobble: '40', dotColor: '#0072B2', lifecycleMode: 'loop',
     };
     const said = (patch) => {
@@ -568,6 +571,49 @@ describe('scene-outline command adapter', () => {
     expect(app.announced.at(-1)).toBe('Path deleted. Undo available.');
   });
 
+  // CROWD-07 F15: the outline sends Release bias as a direction and an amount.
+  test('Release bias: Earlier 40 writes −0.40, Even 0, Later 100 writes 1, and an untouched amount its stored value', () => {
+    const layer = app.scene.addFlowLayer({ id: 'crowd-f15', name: 'Visitors', guideType: 'route' });
+    const emitter = layer.addEmitter({ id: 'emitter-f15', dotCount: 10, seed: 1, intensityRamp: -0.375 });
+    const base = {
+      action: 'update-emitter', layerId: layer.id, emitterId: emitter.id,
+      dotCount: '10', releaseStart: '0', releaseDuration: '100', onsetVariance: '20',
+      speed: '0.15', speedVariance: '20', dotSize: '0.4', wobble: '0', dotColor: '#E69F00', lifecycleMode: 'respawn',
+    };
+    const apply = patch => app._handleSceneOutlineCommand({ ...base, ...patch });
+
+    // Untouched: the amount's original goes in, so −0.375 is kept exactly.
+    apply({
+      intensityRampDirection: 'earlier', intensityRampAmount: '37.5',
+      outlineOriginalValues: { intensityRampAmount: { display: '37.5', canonical: 0.375 } },
+    });
+    expect(emitter.intensityRamp).toBe(-0.375);
+    // Its direction alone changed: the same amount, the other way.
+    apply({
+      intensityRampDirection: 'later', intensityRampAmount: '37.5',
+      outlineOriginalValues: { intensityRampAmount: { display: '37.5', canonical: 0.375 } },
+    });
+    expect(emitter.intensityRamp).toBe(0.375);
+
+    apply({ intensityRampDirection: 'earlier', intensityRampAmount: '40' });
+    expect(emitter.intensityRamp).toBe(-0.4);
+    apply({ intensityRampDirection: 'even' });
+    expect(emitter.intensityRamp).toBe(0);
+    apply({ intensityRampDirection: 'later', intensityRampAmount: '100' });
+    expect(emitter.intensityRamp).toBe(1);
+    apply({ intensityRampDirection: 'earlier', intensityRampAmount: '0' });
+    expect(Object.is(emitter.intensityRamp, 0)).toBe(true); // no −0 stored
+
+    // Refused, the model kept: an amount past 100 or not a number, a direction that is none.
+    apply({ intensityRampDirection: 'later', intensityRampAmount: '150' });
+    expect(app.announced.at(-1)).toBe('Release bias amount must be between 0 and 100.');
+    apply({ intensityRampDirection: 'later', intensityRampAmount: 'x' });
+    expect(app.announced.at(-1)).toBe('Release bias amount must be between 0 and 100.');
+    apply({ intensityRampDirection: 'sideways', intensityRampAmount: '10' });
+    expect(app.announced.at(-1)).toBe('Choose Earlier, Even or Later for Release bias.');
+    expect(emitter.intensityRamp).toBe(0);
+  });
+
   test('keeps extra emitters read-only while committing primary settings once', () => {
     const layer = app.scene.addFlowLayer({ id: 'crowd-a', name: 'Visitors', guideType: 'route' });
     const primary = layer.addEmitter({ id: 'emitter-a', dotCount: 10, seed: 1 });
@@ -580,7 +626,9 @@ describe('scene-outline command adapter', () => {
       releaseStart: '10',
       releaseDuration: '70',
       onsetVariance: '20',
-      intensityRamp: '-25',
+      // Release bias as a direction and an amount since CROWD-07 F15 (reason for the changed fields).
+      intensityRampDirection: 'earlier',
+      intensityRampAmount: '25',
       speed: '0.2',
       speedVariance: '30',
       dotSize: '1.5',
@@ -623,7 +671,8 @@ describe('scene-outline command adapter', () => {
         releaseStart: String(emitter.releaseStart * 100),
         releaseDuration: String(emitter.releaseDuration * 100),
         onsetVariance: String(emitter.onsetVariance * 100),
-        intensityRamp: String(emitter.intensityRamp * 100),
+        // A new emitter's bias is even (0); sent as the outline sends it since CROWD-07 F15.
+        intensityRampDirection: 'even',
         speed: String(emitter.speed),
         speedVariance: String(emitter.speedVariance * 100),
         dotSize: String(emitter.dotSize),

@@ -616,7 +616,8 @@ describe('render and static UI regressions', () => {
 
     const seed = document.getElementById('crowd-seed-value');
     const reroll = document.getElementById('crowd-reroll-btn');
-    expect(seed.tagName).toBe('OUTPUT');
+    // The seed is typed since CROWD-07 F16 (reason for the change: a whole-number field, where it was an output).
+    expect([seed.tagName, seed.type]).toEqual(['INPUT', 'number']);
     expect(reroll.type).toBe('button');
     expect(reroll.textContent).toBe('Re-roll pattern');
     expect(document.getElementById('crowd-pattern-hint').textContent)

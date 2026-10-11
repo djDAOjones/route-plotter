@@ -22,10 +22,10 @@ ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="false" class="layer-row
 ui ~ #layers-strip>li[1]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[1]>button[0]: button aria-describedby="{#layers-strip>li[1]>span[1]}" aria-pressed="true" class="layer-row" data-tip-desc="{#layers-strip>li[1]>span[1]}" data-tip="Double-click or press F2 to rename" type="button" → button aria-describedby="{#layers-strip>li[1]>span[1]}" aria-pressed="false" class="layer-row" data-tip-desc="{#layers-strip>li[1]>span[1]}" data-tip="Double-click or press F2 to rename" type="button"
 ui - #crowd-no-emitter: p (not shown)
-ui - #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 79f41f1f)
-ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 1d79ee7b)
-ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 120 inside, 3708a65f)
-ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 33 inside, 7d184bf8)
+ui - #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
+ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
+ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 141 inside, 40978646)
+ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 
 ## #scope-prev-btn · disabled, not operated
 
@@ -33,14 +33,14 @@ ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="mo
 
 ## #crowd-scope>div[1]>h2[0]>button[0] · click
 app ~ focus: "body" → "#crowd-scope>div[1]>h2[0]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "guide"
+storage + routePlotter_lastSection: "guide"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 5c9a7faf]
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" → div class="settings-section" data-last="true" data-section="guide"
 ui ~ #crowd-scope>div[1]>h2[0]>button[0]: button aria-controls="section-guide-content" aria-expanded="true" class="section-header" type="button" :text="Guide" → button aria-controls="section-guide-content" aria-expanded="false" class="section-header" type="button" :text="Guide"
 
 ## #section-guide-content>button[0] · click
 app ~ focus: "body" → "#section-guide-content>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "guide"
+storage + routePlotter_lastSection: "guide"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
 ui ~ #section-guide-content>button[0]: button aria-describedby="crowd-guide-type-tip" aria-expanded="false" aria-label="Help: Guide" class="param-hint-trigger" style="position-anchor: --crowd-guide-type-tip;" type="button" → button aria-describedby="crowd-guide-type-tip" aria-expanded="true" aria-label="Help: Guide" class="param-hint-trigger" style="position-anchor: --crowd-guide-type-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="What the dots travel along"
@@ -51,7 +51,7 @@ emit network:guide-changed layer[0]
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].guideType: "graph" → "route"
 app ~ focus: "body" → "#crowd-guide-type"
-storage ~ routePlotter_lastSection: "motion" → "guide"
+storage + routePlotter_lastSection: "guide"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -79,7 +79,7 @@ emit network:edit-mode-changed {active: true, layer: layer[0]}
 emit render:request
 announced "Editing the network — click the map to place linked nodes. Escape lifts the pen."
 app ~ focus: "body" → "#network-edit-banner>button[1]"
-storage ~ routePlotter_lastSection: "motion" → "guide"
+storage + routePlotter_lastSection: "guide"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing the network — click the map to place linked nodes. Escape lifts the pen."
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
 ui ~ #network-edit-btn: button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" type="button" :text="Edit network" → button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" disabled="" type="button" :text="Edit network"
@@ -140,7 +140,7 @@ model - scene.flowLayers[0].graph.edges[1].controlPoints[0].y: 0.58
 model - scene.flowLayers[0].graph.edges[1].controlPoints[1].x: 0.63
 model - scene.flowLayers[0].graph.edges[1].controlPoints[1].y: 0.55
 app ~ focus: "body" → "#crowd-trace-route-btn"
-storage ~ routePlotter_lastSection: "motion" → "guide"
+storage + routePlotter_lastSection: "guide"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -148,6 +148,7 @@ ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="
 ui + #toast-container>div[0]: div class="toast" :text="Traced the route into Visitors — 5 nodes, 4 paths"
 ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
+ui ~ #crowd-guide-hint: p class="section-hint" :text="Dots walk this crowd's own network (4 nodes, 4 paths). Journeys start at entry nodes and end at exit nodes (a node's Type). With no exit, they end at nodes with one path; with no entry, dots set off from any node they can leave." → p class="section-hint" :text="Dots walk this crowd's own network (5 nodes, 4 paths). Journeys start at entry nodes and end at exit nodes (a node's Type). With no exit, they end at nodes with one path; with no entry, dots set off from any node they can leave."
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
 ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
 settled:
@@ -162,14 +163,14 @@ settled:
 
 ## #crowd-scope>div[2]>h2[0]>button[0] · click
 app ~ focus: "body" → "#crowd-scope>div[2]>h2[0]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, ee9e1b07]
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section" data-last="true" data-section="dots"
 ui ~ #crowd-scope>div[2]>h2[0]>button[0]: button aria-controls="section-dots-content" aria-expanded="true" class="section-header" type="button" :text="Dots" → button aria-controls="section-dots-content" aria-expanded="false" class="section-header" type="button" :text="Dots"
 
 ## #section-dots-content>div[1]>button[0] · click
 app ~ focus: "body" → "#section-dots-content>div[1]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #section-dots-content>div[1]>button[0]: button aria-describedby="{#section-dots-content>div[1]>fieldset[1]>span[1]}" aria-expanded="false" aria-label="Help: Colour" class="param-hint-trigger" style="position-anchor: --{#section-dots-content>div[1]>fieldset[1]>span[1]};" type="button" → button aria-describedby="{#section-dots-content>div[1]>fieldset[1]>span[1]}" aria-expanded="true" aria-label="Help: Colour" class="param-hint-trigger" style="position-anchor: --{#section-dots-content>div[1]>fieldset[1]>span[1]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Colour of this crowd's dots"
@@ -179,7 +180,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#ffffff"
 app ~ focus: "body" → "#crowd-dot-color-group-0"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -202,7 +203,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#f0e442"
 app ~ focus: "body" → "#crowd-dot-color-group-1"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -225,7 +226,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#e69f00"
 app ~ focus: "body" → "#crowd-dot-color-group-2"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -248,7 +249,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#d55e00"
 app ~ focus: "body" → "#crowd-dot-color-group-3"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -271,7 +272,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#cc79a7"
 app ~ focus: "body" → "#crowd-dot-color-group-4"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -294,7 +295,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#000000"
 app ~ focus: "body" → "#crowd-dot-color-group-5"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -314,7 +315,7 @@ settled:
 
 ## #crowd-dot-color-group-6 · click
 app ~ focus: "body" → "#crowd-dot-color-group-6"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 
 ## #crowd-dot-color-group-6 · click, from #crowd-dot-color-group-0
@@ -337,7 +338,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#0072b2"
 app ~ focus: "body" → "#crowd-dot-color-group-7"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -360,7 +361,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "#009e73"
 app ~ focus: "body" → "#crowd-dot-color-group-8"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -383,7 +384,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotColor: "#56B4E9" → "transparent"
 app ~ focus: "body" → "#crowd-dot-color-group-9"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -403,7 +404,7 @@ settled:
 
 ## #section-dots-content>div[2]>button[0] · click
 app ~ focus: "body" → "#section-dots-content>div[2]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #section-dots-content>div[2]>button[0]: button aria-describedby="crowd-dot-size-tip" aria-expanded="false" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --crowd-dot-size-tip;" type="button" → button aria-describedby="crowd-dot-size-tip" aria-expanded="true" aria-label="Help: Size" class="param-hint-trigger" style="position-anchor: --crowd-dot-size-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dot diameter in project reference pixels; exports scale it from the project's reference short edge"
@@ -413,13 +414,13 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotSize: 0.45 → 0.7
 app ~ focus: "body" → "#crowd-dot-size"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-dot-size: input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="9 reference px" max="200" min="5" step="5" type="range" value="40" :value="45" → input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="14 reference px" max="200" min="5" step="5" type="range" value="40" :value="70"
-ui ~ #crowd-dot-size-value: span class="range-readout" :text="9 reference px" → span class="range-readout" :text="14 reference px"
+ui ~ #crowd-dot-size-field: input aria-describedby="crowd-dot-size-tip" aria-labelledby="crowd-dot-size-label crowd-dot-size-unit" max="2000" min="0.2" step="any" type="number" value="8" :value="9" → input aria-describedby="crowd-dot-size-tip" aria-labelledby="crowd-dot-size-label crowd-dot-size-unit" max="2000" min="0.2" step="any" type="number" value="8" :value="14"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
@@ -429,9 +430,41 @@ settled:
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
+## #crowd-dot-size-field · enter 24
+emit crowd:param-changed {journeys: false}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].dotSize: 0.45 → 1.2
+app ~ focus: "body" → "#crowd-dot-size-field"
+storage + routePlotter_lastSection: "dots"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
+ui ~ #crowd-dot-size: input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="9 reference px" max="200" min="5" step="5" type="range" value="40" :value="45" → input aria-describedby="crowd-dot-size-value crowd-dot-size-tip" aria-valuetext="24 reference px" max="200" min="5" step="5" type="range" value="40" :value="120"
+ui ~ #crowd-dot-size-field: input aria-describedby="crowd-dot-size-tip" aria-labelledby="crowd-dot-size-label crowd-dot-size-unit" max="2000" min="0.2" step="any" type="number" value="8" :value="9" → input aria-describedby="crowd-dot-size-tip" aria-labelledby="crowd-dot-size-label crowd-dot-size-unit" max="2000" min="0.2" step="any" type="number" value="8" :value="24"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, 7d7805f1]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+
+## #crowd-dot-size-field · enter 99999
+announced "Enter a size from 0.2 to 2000 reference px; the crowd keeps 9 reference px until you do."
+app ~ focus: "body" → "#crowd-dot-size-field"
+storage + routePlotter_lastSection: "dots"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a size from 0.2 to 2000 reference px; the crowd keeps 9 reference px until you do."
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
+ui ~ #crowd-dot-size-field: input aria-describedby="crowd-dot-size-tip" aria-labelledby="crowd-dot-size-label crowd-dot-size-unit" max="2000" min="0.2" step="any" type="number" value="8" :value="9" → input aria-describedby="crowd-dot-size-field-error crowd-dot-size-tip" aria-invalid="true" aria-labelledby="crowd-dot-size-label crowd-dot-size-unit" max="2000" min="0.2" step="any" type="number" value="8" :value="99999"
+ui ~ #crowd-dot-size-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a size from 0.2 to 2000 reference px; the crowd keeps 9 reference px until you do."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a size from 0.2 to 2000 reference px; the crowd keeps 9 reference px until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
 ## #section-dots-content>div[3]>button[0] · click
 app ~ focus: "body" → "#section-dots-content>div[3]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #section-dots-content>div[3]>button[0]: button aria-describedby="crowd-wobble-tip" aria-expanded="false" aria-label="Help: Walking variation" class="param-hint-trigger" style="position-anchor: --crowd-wobble-tip;" type="button" → button aria-describedby="crowd-wobble-tip" aria-expanded="true" aria-label="Help: Walking variation" class="param-hint-trigger" style="position-anchor: --crowd-wobble-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Sideways walking variation as dots travel — 0% follows the line exactly"
@@ -441,13 +474,13 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].wobble: 0 → 0.33
 app ~ focus: "body" → "#crowd-wobble"
-storage ~ routePlotter_lastSection: "motion" → "dots"
+storage + routePlotter_lastSection: "dots"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
 ui ~ #crowd-wobble: input aria-describedby="crowd-wobble-value crowd-wobble-tip" aria-valuetext="0%" max="100" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-wobble-value crowd-wobble-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="0" :value="33"
-ui ~ #crowd-wobble-value: span class="range-readout" :text="0%" → span class="range-readout" :text="33%"
+ui ~ #crowd-wobble-field: input aria-describedby="crowd-wobble-tip" aria-labelledby="crowd-wobble-label crowd-wobble-unit" max="100" min="0" step="any" type="number" value="0" :value="0" → input aria-describedby="crowd-wobble-tip" aria-labelledby="crowd-wobble-label crowd-wobble-unit" max="100" min="0" step="any" type="number" value="0" :value="33"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
@@ -457,16 +490,48 @@ settled:
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
+## #crowd-wobble-field · enter 24
+emit crowd:param-changed {journeys: false}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].wobble: 0 → 0.24
+app ~ focus: "body" → "#crowd-wobble-field"
+storage + routePlotter_lastSection: "dots"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
+ui ~ #crowd-wobble: input aria-describedby="crowd-wobble-value crowd-wobble-tip" aria-valuetext="0%" max="100" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-wobble-value crowd-wobble-tip" aria-valuetext="24%" max="100" min="0" step="1" type="range" value="0" :value="24"
+ui ~ #crowd-wobble-field: input aria-describedby="crowd-wobble-tip" aria-labelledby="crowd-wobble-label crowd-wobble-unit" max="100" min="0" step="any" type="number" value="0" :value="0" → input aria-describedby="crowd-wobble-tip" aria-labelledby="crowd-wobble-label crowd-wobble-unit" max="100" min="0" step="any" type="number" value="0" :value="24"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9703 chars, d791bc2d]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+
+## #crowd-wobble-field · enter 99999
+announced "Enter a walking variation from 0 to 100%; the crowd keeps 0% until you do."
+app ~ focus: "body" → "#crowd-wobble-field"
+storage + routePlotter_lastSection: "dots"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a walking variation from 0 to 100%; the crowd keeps 0% until you do."
+ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section expanded" data-last="true" data-section="dots"
+ui ~ #crowd-wobble-field: input aria-describedby="crowd-wobble-tip" aria-labelledby="crowd-wobble-label crowd-wobble-unit" max="100" min="0" step="any" type="number" value="0" :value="0" → input aria-describedby="crowd-wobble-field-error crowd-wobble-tip" aria-invalid="true" aria-labelledby="crowd-wobble-label crowd-wobble-unit" max="100" min="0" step="any" type="number" value="0" :value="99999"
+ui ~ #crowd-wobble-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a walking variation from 0 to 100%; the crowd keeps 0% until you do."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a walking variation from 0 to 100%; the crowd keeps 0% until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
 ## #crowd-scope>div[3]>h2[0]>button[0] · click
 app ~ focus: "body" → "#crowd-scope>div[3]>h2[0]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 6e43a33f]
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section" data-last="true" data-section="release"
 ui ~ #crowd-scope>div[3]>h2[0]>button[0]: button aria-controls="section-release-content" aria-expanded="true" class="section-header" type="button" :text="Release" → button aria-controls="section-release-content" aria-expanded="false" class="section-header" type="button" :text="Release"
 
 ## #section-release-content>div[0]>div[0]>button[0] · click
 app ~ focus: "body" → "#section-release-content>div[0]>div[0]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #section-release-content>div[0]>div[0]>button[0]: button aria-describedby="crowd-count-tip" aria-expanded="false" aria-label="Help: Count" class="param-hint-trigger" style="position-anchor: --crowd-count-tip;" type="button" → button aria-describedby="crowd-count-tip" aria-expanded="true" aria-label="Help: Count" class="param-hint-trigger" style="position-anchor: --crowd-count-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Total dots released across the window"
@@ -476,13 +541,13 @@ emit crowd:param-changed {journeys: true}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].dotCount: 60 → 167
 app ~ focus: "body" → "#crowd-count"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-count: input aria-describedby="crowd-count-value crowd-count-tip" aria-valuetext="60" max="500" min="1" step="1" type="range" value="50" :value="60" → input aria-describedby="crowd-count-value crowd-count-tip" aria-valuetext="167" max="500" min="1" step="1" type="range" value="50" :value="167"
-ui ~ #crowd-count-value: span class="range-readout" :text="60" → span class="range-readout" :text="167"
+ui ~ #crowd-count-field: input aria-describedby="crowd-count-tip" aria-labelledby="crowd-count-label" inputmode="numeric" max="5000" min="1" step="1" type="number" value="50" :value="60" → input aria-describedby="crowd-count-tip" aria-labelledby="crowd-count-label" inputmode="numeric" max="5000" min="1" step="1" type="number" value="50" :value="167"
 settled:
   emit animation:durationChange 28958.821688
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28958.821688, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -496,9 +561,45 @@ settled:
   ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:28"
 
+## #crowd-count-field · enter 24
+emit crowd:param-changed {journeys: true}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].dotCount: 60 → 24
+app ~ focus: "body" → "#crowd-count-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-count: input aria-describedby="crowd-count-value crowd-count-tip" aria-valuetext="60" max="500" min="1" step="1" type="range" value="50" :value="60" → input aria-describedby="crowd-count-value crowd-count-tip" aria-valuetext="24" max="500" min="1" step="1" type="range" value="50" :value="24"
+ui ~ #crowd-count-field: input aria-describedby="crowd-count-tip" aria-labelledby="crowd-count-label" inputmode="numeric" max="5000" min="1" step="1" type="number" value="50" :value="60" → input aria-describedby="crowd-count-tip" aria-labelledby="crowd-count-label" inputmode="numeric" max="5000" min="1" step="1" type="number" value="50" :value="24"
+settled:
+  emit animation:durationChange 28231.24513
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28231.24513, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 927a9b03]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:28"
+
+## #crowd-count-field · enter 99999
+announced "Enter a whole number of dots from 1 to 5000; the crowd keeps 60 until you do."
+app ~ focus: "body" → "#crowd-count-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a whole number of dots from 1 to 5000; the crowd keeps 60 until you do."
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-count-field: input aria-describedby="crowd-count-tip" aria-labelledby="crowd-count-label" inputmode="numeric" max="5000" min="1" step="1" type="number" value="50" :value="60" → input aria-describedby="crowd-count-field-error crowd-count-tip" aria-invalid="true" aria-labelledby="crowd-count-label" inputmode="numeric" max="5000" min="1" step="1" type="number" value="50" :value="99999"
+ui ~ #crowd-count-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a whole number of dots from 1 to 5000; the crowd keeps 60 until you do."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a whole number of dots from 1 to 5000; the crowd keeps 60 until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
 ## #section-release-content>div[0]>div[1]>button[0] · click
 app ~ focus: "body" → "#section-release-content>div[0]>div[1]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #section-release-content>div[0]>div[1]>button[0]: button aria-describedby="crowd-release-start-tip" aria-expanded="false" aria-label="Help: Window start" class="param-hint-trigger" style="position-anchor: --crowd-release-start-tip;" type="button" → button aria-describedby="crowd-release-start-tip" aria-expanded="true" aria-label="Help: Window start" class="param-hint-trigger" style="position-anchor: --crowd-release-start-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="When the first dots set off, as a position in the timeline"
@@ -508,13 +609,13 @@ emit crowd:param-changed {journeys: true}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].releaseStart: 0 → 0.33
 app ~ focus: "body" → "#crowd-release-start"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-release-start: input aria-describedby="crowd-release-start-value crowd-release-start-tip" aria-valuetext="0%" max="100" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-release-start-value crowd-release-start-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="0" :value="33"
-ui ~ #crowd-release-start-value: span class="range-readout" :text="0%" → span class="range-readout" :text="33%"
+ui ~ #crowd-release-start-field: input aria-describedby="crowd-release-start-tip" aria-labelledby="crowd-release-start-label crowd-release-start-unit" max="100" min="0" step="any" type="number" value="0" :value="0" → input aria-describedby="crowd-release-start-tip" aria-labelledby="crowd-release-start-label crowd-release-start-unit" max="100" min="0" step="any" type="number" value="0" :value="33"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
@@ -524,9 +625,41 @@ settled:
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
+## #crowd-release-start-field · enter 24
+emit crowd:param-changed {journeys: true}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].releaseStart: 0 → 0.24
+app ~ focus: "body" → "#crowd-release-start-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-release-start: input aria-describedby="crowd-release-start-value crowd-release-start-tip" aria-valuetext="0%" max="100" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-release-start-value crowd-release-start-tip" aria-valuetext="24%" max="100" min="0" step="1" type="range" value="0" :value="24"
+ui ~ #crowd-release-start-field: input aria-describedby="crowd-release-start-tip" aria-labelledby="crowd-release-start-label crowd-release-start-unit" max="100" min="0" step="any" type="number" value="0" :value="0" → input aria-describedby="crowd-release-start-tip" aria-labelledby="crowd-release-start-label crowd-release-start-unit" max="100" min="0" step="any" type="number" value="0" :value="24"
+settled:
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9703 chars, 1b5ef6bb]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+
+## #crowd-release-start-field · enter 99999
+announced "Enter a window start from 0 to 100%; the crowd keeps 0% until you do."
+app ~ focus: "body" → "#crowd-release-start-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a window start from 0 to 100%; the crowd keeps 0% until you do."
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-release-start-field: input aria-describedby="crowd-release-start-tip" aria-labelledby="crowd-release-start-label crowd-release-start-unit" max="100" min="0" step="any" type="number" value="0" :value="0" → input aria-describedby="crowd-release-start-field-error crowd-release-start-tip" aria-invalid="true" aria-labelledby="crowd-release-start-label crowd-release-start-unit" max="100" min="0" step="any" type="number" value="0" :value="99999"
+ui ~ #crowd-release-start-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a window start from 0 to 100%; the crowd keeps 0% until you do."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a window start from 0 to 100%; the crowd keeps 0% until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
 ## #section-release-content>div[0]>div[2]>button[0] · click
 app ~ focus: "body" → "#section-release-content>div[0]>div[2]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #section-release-content>div[0]>div[2]>button[0]: button aria-describedby="crowd-release-duration-tip" aria-expanded="false" aria-label="Help: Window length" class="param-hint-trigger" style="position-anchor: --crowd-release-duration-tip;" type="button" → button aria-describedby="crowd-release-duration-tip" aria-expanded="true" aria-label="Help: Window length" class="param-hint-trigger" style="position-anchor: --crowd-release-duration-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How much of the timeline the release is spread across"
@@ -536,13 +669,13 @@ emit crowd:param-changed {journeys: true}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].releaseDuration: 0.45 → 0.33
 app ~ focus: "body" → "#crowd-release-duration"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-release-duration: input aria-describedby="crowd-release-duration-value crowd-release-duration-tip" aria-valuetext="45%" max="100" min="0" step="1" type="range" value="100" :value="45" → input aria-describedby="crowd-release-duration-value crowd-release-duration-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="100" :value="33"
-ui ~ #crowd-release-duration-value: span class="range-readout" :text="45%" → span class="range-readout" :text="33%"
+ui ~ #crowd-release-duration-field: input aria-describedby="crowd-release-duration-tip" aria-labelledby="crowd-release-duration-label crowd-release-duration-unit" max="100" min="0" step="any" type="number" value="100" :value="45" → input aria-describedby="crowd-release-duration-tip" aria-labelledby="crowd-release-duration-label crowd-release-duration-unit" max="100" min="0" step="any" type="number" value="100" :value="33"
 settled:
   emit animation:durationChange 28599.904201
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28599.904201, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -556,15 +689,51 @@ settled:
   ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:28"
 
+## #crowd-release-duration-field · enter 24
+emit crowd:param-changed {journeys: true}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].releaseDuration: 0.45 → 0.24
+app ~ focus: "body" → "#crowd-release-duration-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-release-duration: input aria-describedby="crowd-release-duration-value crowd-release-duration-tip" aria-valuetext="45%" max="100" min="0" step="1" type="range" value="100" :value="45" → input aria-describedby="crowd-release-duration-value crowd-release-duration-tip" aria-valuetext="24%" max="100" min="0" step="1" type="range" value="100" :value="24"
+ui ~ #crowd-release-duration-field: input aria-describedby="crowd-release-duration-tip" aria-labelledby="crowd-release-duration-label crowd-release-duration-unit" max="100" min="0" step="any" type="number" value="100" :value="45" → input aria-describedby="crowd-release-duration-tip" aria-labelledby="crowd-release-duration-label crowd-release-duration-unit" max="100" min="0" step="any" type="number" value="100" :value="24"
+settled:
+  emit animation:durationChange 27929.352554
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 192eb38e]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
+
+## #crowd-release-duration-field · enter 99999
+announced "Enter a window length from 0 to 100%; the crowd keeps 45% until you do."
+app ~ focus: "body" → "#crowd-release-duration-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a window length from 0 to 100%; the crowd keeps 45% until you do."
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-release-duration-field: input aria-describedby="crowd-release-duration-tip" aria-labelledby="crowd-release-duration-label crowd-release-duration-unit" max="100" min="0" step="any" type="number" value="100" :value="45" → input aria-describedby="crowd-release-duration-field-error crowd-release-duration-tip" aria-invalid="true" aria-labelledby="crowd-release-duration-label crowd-release-duration-unit" max="100" min="0" step="any" type="number" value="100" :value="99999"
+ui ~ #crowd-release-duration-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a window length from 0 to 100%; the crowd keeps 45% until you do."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a window length from 0 to 100%; the crowd keeps 45% until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
 ## #section-release-content>details[1]>summary[0] · click
 app ~ focus: "body" → "#section-release-content>details[1]>summary[0]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #section-release-content>details[1]: details class="section-more" open="" → details class="section-more"
 
 ## #section-release-content>details[1]>div[1]>div[0]>button[0] · click
 app ~ focus: "body" → "#section-release-content>details[1]>div[1]>div[0]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #section-release-content>details[1]>div[1]>div[0]>button[0]: button aria-describedby="crowd-onset-variance-tip" aria-expanded="false" aria-label="Help: Release timing" class="param-hint-trigger" style="position-anchor: --crowd-onset-variance-tip;" type="button" → button aria-describedby="crowd-onset-variance-tip" aria-expanded="true" aria-label="Help: Release timing" class="param-hint-trigger" style="position-anchor: --crowd-onset-variance-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How unevenly individual dots set off within the release window"
@@ -574,13 +743,13 @@ emit crowd:param-changed {journeys: true}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].onsetVariance: 0.6 → 0.33
 app ~ focus: "body" → "#crowd-onset-variance"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-onset-variance: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="60% uneven" max="100" min="0" step="1" type="range" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="33% uneven" max="100" min="0" step="1" type="range" value="20" :value="33"
-ui ~ #crowd-onset-variance-value: span class="range-readout" :text="60% uneven" → span class="range-readout" :text="33% uneven"
+ui ~ #crowd-onset-variance: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="60%" max="100" min="0" step="1" type="range" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="20" :value="33"
+ui ~ #crowd-onset-variance-field: input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="60" → input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="33"
 settled:
   emit animation:durationChange 30609.179801
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30609.179801, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -592,9 +761,43 @@ settled:
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
+## #crowd-onset-variance-field · enter 24
+emit crowd:param-changed {journeys: true}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].onsetVariance: 0.6 → 0.24
+app ~ focus: "body" → "#crowd-onset-variance-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-onset-variance: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="60%" max="100" min="0" step="1" type="range" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="24%" max="100" min="0" step="1" type="range" value="20" :value="24"
+ui ~ #crowd-onset-variance-field: input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="60" → input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="24"
+settled:
+  emit animation:durationChange 30552.42122
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30552.42122, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9701 chars, 52990e9f]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+
+## #crowd-onset-variance-field · enter 99999
+announced "Enter a release timing from 0 to 100%; the crowd keeps 60% until you do."
+app ~ focus: "body" → "#crowd-onset-variance-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a release timing from 0 to 100%; the crowd keeps 60% until you do."
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-onset-variance-field: input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="60" → input aria-describedby="crowd-onset-variance-field-error crowd-onset-variance-tip" aria-invalid="true" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="99999"
+ui ~ #crowd-onset-variance-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a release timing from 0 to 100%; the crowd keeps 60% until you do."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a release timing from 0 to 100%; the crowd keeps 60% until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
 ## #section-release-content>details[1]>div[1]>div[1]>button[0] · click
 app ~ focus: "body" → "#section-release-content>details[1]>div[1]>div[1]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #section-release-content>details[1]>div[1]>div[1]>button[0]: button aria-describedby="crowd-intensity-ramp-tip" aria-expanded="false" aria-label="Help: Release bias" class="param-hint-trigger" style="position-anchor: --crowd-intensity-ramp-tip;" type="button" → button aria-describedby="crowd-intensity-ramp-tip" aria-expanded="true" aria-label="Help: Release bias" class="param-hint-trigger" style="position-anchor: --crowd-intensity-ramp-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither"
@@ -604,12 +807,13 @@ emit crowd:param-changed {journeys: true}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].intensityRamp: 0 → -0.33
 app ~ focus: "body" → "#crowd-intensity-ramp"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-intensity-ramp: input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-valuetext="Even" max="100" min="-100" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-valuetext="Earlier 33%" max="100" min="-100" step="1" type="range" value="0" :value="-33"
+ui ~ #crowd-intensity-ramp-field: input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-labelledby="crowd-intensity-ramp-label crowd-intensity-ramp-unit" max="100" min="-100" step="any" type="number" value="0" :value="0" → input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-labelledby="crowd-intensity-ramp-label crowd-intensity-ramp-unit" max="100" min="-100" step="any" type="number" value="0" :value="-33"
 ui ~ #crowd-intensity-ramp-value: span class="range-readout" :text="Even" → span class="range-readout" :text="Earlier 33%"
 settled:
   emit animation:durationChange 30345.349556
@@ -621,6 +825,43 @@ settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+
+## #crowd-intensity-ramp-field · enter 24
+emit crowd:param-changed {journeys: true}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].intensityRamp: 0 → 0.24
+app ~ focus: "body" → "#crowd-intensity-ramp-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-intensity-ramp: input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-valuetext="Even" max="100" min="-100" step="1" type="range" value="0" :value="0" → input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-valuetext="Later 24%" max="100" min="-100" step="1" type="range" value="0" :value="24"
+ui ~ #crowd-intensity-ramp-field: input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-labelledby="crowd-intensity-ramp-label crowd-intensity-ramp-unit" max="100" min="-100" step="any" type="number" value="0" :value="0" → input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-labelledby="crowd-intensity-ramp-label crowd-intensity-ramp-unit" max="100" min="-100" step="any" type="number" value="0" :value="24"
+ui ~ #crowd-intensity-ramp-value: span class="range-readout" :text="Even" → span class="range-readout" :text="Later 24%"
+settled:
+  emit animation:durationChange 31045.306048
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 31045.306048, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9703 chars, e9826c39]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:31" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:31"
+
+## #crowd-intensity-ramp-field · enter 99999
+announced "Enter a release bias from −100 to 100%; the crowd keeps Even until you do."
+app ~ focus: "body" → "#crowd-intensity-ramp-field"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a release bias from −100 to 100%; the crowd keeps Even until you do."
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-intensity-ramp-field: input aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-labelledby="crowd-intensity-ramp-label crowd-intensity-ramp-unit" max="100" min="-100" step="any" type="number" value="0" :value="0" → input aria-describedby="crowd-intensity-ramp-field-error crowd-intensity-ramp-value crowd-intensity-ramp-tip" aria-invalid="true" aria-labelledby="crowd-intensity-ramp-label crowd-intensity-ramp-unit" max="100" min="-100" step="any" type="number" value="0" :value="99999"
+ui ~ #crowd-intensity-ramp-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a release bias from −100 to 100%; the crowd keeps Even until you do."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a release bias from −100 to 100%; the crowd keeps Even until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #crowd-busyness-graph · drag its first handle a third of the way down, and let go there
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -717,7 +958,7 @@ settled:
 
 ## #crowd-busyness-handles>div[0]>button[1] · click
 app ~ focus: "body" → "#crowd-busyness-handles>div[0]>button[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[0]>button[1]: button aria-describedby="{#crowd-busyness-handles>div[0]>span[3]}" aria-expanded="false" aria-label="Help: Time" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[0]>span[3]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[0]>span[3]}" aria-expanded="true" aria-label="Help: Time" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[0]>span[3]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Where this handle sits in the window: 0% at its start, 100% at its end. The first and last handles stay put"
@@ -726,7 +967,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #crowd-busyness-handles>div[0]>button[4] · click
 app ~ focus: "body" → "#crowd-busyness-handles>div[0]>button[4]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[0]>button[4]: button aria-describedby="{#crowd-busyness-handles>div[0]>span[6]}" aria-expanded="false" aria-label="Help: Busy" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[0]>span[6]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[0]>span[6]}" aria-expanded="true" aria-label="Help: Busy" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[0]>span[6]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How busy the release is at this handle: higher sets more dots off around it, 0% none"
@@ -738,7 +979,7 @@ emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[0].value: 1 → 0.24
 app ~ focus: "body" → "#crowd-busyness-handles>div[0]>label[5]>input[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -765,13 +1006,13 @@ settled:
 
 ## #crowd-busyness-handles>div[0]>label[5]>input[1] · enter 99999
 app ~ focus: "body" → "#crowd-busyness-handles>div[0]>label[5]>input[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[0]>label[5]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[0]>span[6]}" aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[0]>span[6]}" aria-label="Busy for busyness handle 1, percent" data-busyness-field="value" data-busyness-index="0" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
 
 ## #crowd-busyness-handles>div[0]>button[7] · click
 app ~ focus: "body" → "#crowd-busyness-handles>div[0]>button[7]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[0]>button[7]: button aria-describedby="{#crowd-busyness-handles>div[0]>span[9]}" aria-expanded="false" aria-label="Help: Change" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[0]>span[9]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[0]>span[9]}" aria-expanded="true" aria-label="Help: Change" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[0]>span[9]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps"
@@ -783,7 +1024,7 @@ emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[0].transition: "gradual" → "step"
 app ~ focus: "body" → "#crowd-busyness-handles>div[0]>label[8]>select[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -802,7 +1043,7 @@ settled:
 
 ## #crowd-busyness-handles>div[1]>button[1] · click
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>button[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[1]>button[1]: button aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-expanded="false" aria-label="Help: Time" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[3]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[1]>span[3]}" aria-expanded="true" aria-label="Help: Time" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[3]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Where this handle sits in the window: 0% at its start, 100% at its end. The first and last handles stay put"
@@ -811,7 +1052,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #crowd-busyness-handles>div[1]>button[4] · click
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>button[4]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[1]>button[4]: button aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-expanded="false" aria-label="Help: Busy" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[6]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-expanded="true" aria-label="Help: Busy" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[6]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How busy the release is at this handle: higher sets more dots off around it, 0% none"
@@ -823,7 +1064,7 @@ emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].value: 1 → 0.24
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[5]>input[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -850,7 +1091,7 @@ settled:
 
 ## #crowd-busyness-handles>div[1]>label[5]>input[1] · enter 99999
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[5]>input[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[1]>label[5]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[1]>span[6]}" aria-label="Busy for busyness handle 2, percent" data-busyness-field="value" data-busyness-index="1" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
 
@@ -864,7 +1105,7 @@ model + scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
 model + scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
 model + scene.flowLayers[0].emitters[0].busynessEnvelope[2].transition: "gradual"
 app ~ focus: "body" → "#crowd-busyness-add"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -901,10 +1142,60 @@ settled:
 
 ## #section-release-content>details[1]>div[1]>div[3]>div[0]>button[0] · click
 app ~ focus: "body" → "#section-release-content>details[1]>div[1]>div[3]>div[0]>button[0]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #section-release-content>details[1]>div[1]>div[3]>div[0]>button[0]: button aria-describedby="crowd-seed-value-tip" aria-expanded="false" aria-label="Help: Pattern seed" class="param-hint-trigger" style="position-anchor: --crowd-seed-value-tip;" type="button" → button aria-describedby="crowd-seed-value-tip" aria-expanded="true" aria-label="Help: Pattern seed" class="param-hint-trigger" style="position-anchor: --crowd-seed-value-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="The same seed always gives the same walking and set-off variation"
+
+## #crowd-seed-value · enter 24
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-pattern-seed", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].seed: 20260827 → 24
+app ~ focus: "body" → "#crowd-seed-value"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-seed-value: input aria-describedby="crowd-seed-value-tip" inputmode="numeric" max="4294967295" min="0" step="1" type="number" value="0" :value="20260827" → input aria-describedby="crowd-seed-value-tip" inputmode="numeric" max="4294967295" min="0" step="1" type="number" value="0" :value="24"
+settled:
+  emit animation:durationChange 28067.277935
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28067.277935, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Visitors pattern seed set to 24. Undo is available."
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9694 chars, 6bf61aec]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:28"
+
+## #crowd-seed-value · enter 99999
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+emit scene:semantic-changed {kind: "crowd-pattern-seed", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].seed: 20260827 → 99999
+app ~ focus: "body" → "#crowd-seed-value"
+storage + routePlotter_lastSection: "release"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-seed-value: input aria-describedby="crowd-seed-value-tip" inputmode="numeric" max="4294967295" min="0" step="1" type="number" value="0" :value="20260827" → input aria-describedby="crowd-seed-value-tip" inputmode="numeric" max="4294967295" min="0" step="1" type="number" value="0" :value="99999"
+settled:
+  emit animation:durationChange 29931.865738
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 29931.865738, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  announced "Visitors pattern seed set to 99999. Undo is available."
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, beb65aa9]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:29"
 
 ## #crowd-reroll-btn · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -913,13 +1204,13 @@ emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].seed: 20260827 → 2109913163
 app ~ focus: "body" → "#crowd-reroll-btn"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-seed-value: output aria-describedby="crowd-seed-value-tip" :text="20260827" → output aria-describedby="crowd-seed-value-tip" :text="2109913163"
+ui ~ #crowd-seed-value: input aria-describedby="crowd-seed-value-tip" inputmode="numeric" max="4294967295" min="0" step="1" type="number" value="0" :value="20260827" → input aria-describedby="crowd-seed-value-tip" inputmode="numeric" max="4294967295" min="0" step="1" type="number" value="0" :value="2109913163"
 settled:
   emit animation:durationChange 28884.727903
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28884.727903, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -933,12 +1224,14 @@ settled:
 
 ## #crowd-scope>div[4]>h2[0]>button[0] · click
 app ~ focus: "body" → "#crowd-scope>div[4]>h2[0]>button[0]"
+storage + routePlotter_lastSection: "motion"
 storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 216d91a3]
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
 ui ~ #crowd-scope>div[4]>h2[0]>button[0]: button aria-controls="section-motion-content" aria-expanded="true" class="section-header" type="button" :text="Motion" → button aria-controls="section-motion-content" aria-expanded="false" class="section-header" type="button" :text="Motion"
 
 ## #section-motion-content>div[0]>button[0] · click
 app ~ focus: "body" → "#section-motion-content>div[0]>button[0]"
+storage + routePlotter_lastSection: "motion"
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #section-motion-content>div[0]>button[0]: button aria-describedby="crowd-speed-tip" aria-expanded="false" aria-label="Help: Speed" class="param-hint-trigger" style="position-anchor: --crowd-speed-tip;" type="button" → button aria-describedby="crowd-speed-tip" aria-expanded="true" aria-label="Help: Speed" class="param-hint-trigger" style="position-anchor: --crowd-speed-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dot travel speed in image lengths per second: 1 is the image's width across or its height down"
@@ -948,12 +1241,13 @@ emit crowd:param-changed {journeys: true}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].speed: 0.06 → 0.34
 app ~ focus: "body" → "#crowd-speed"
+storage + routePlotter_lastSection: "motion"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-speed: input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.06 image lengths/s" max="100" min="1" step="1" type="range" value="15" :value="6" → input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.34 image lengths/s" max="100" min="1" step="1" type="range" value="15" :value="34"
-ui ~ #crowd-speed-value: span class="range-readout" :text="0.06 image lengths/s" → span class="range-readout" :text="0.34 image lengths/s"
+ui ~ #crowd-speed-field: input aria-describedby="crowd-speed-tip" aria-labelledby="crowd-speed-label crowd-speed-unit" max="1000" min="0.001" step="0.001" type="number" value="0.15" :value="0.06" → input aria-describedby="crowd-speed-tip" aria-labelledby="crowd-speed-label crowd-speed-unit" max="1000" min="0.001" step="0.001" type="number" value="0.15" :value="0.34"
 settled:
   emit animation:durationChange 27929.352554
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -967,8 +1261,46 @@ settled:
   ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
 
+## #crowd-speed-field · enter 24
+emit crowd:param-changed {journeys: true}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].speed: 0.06 → 24
+app ~ focus: "body" → "#crowd-speed-field"
+storage + routePlotter_lastSection: "motion"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-speed: input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.06 image lengths/s" max="100" min="1" step="1" type="range" value="15" :value="6" → input aria-describedby="crowd-speed-value crowd-speed-tip crowd-speed-reason" aria-valuetext="24 image lengths/s" disabled="" max="100" min="1" step="1" type="range" value="15" :value="100"
+ui ~ #crowd-speed-field: input aria-describedby="crowd-speed-tip" aria-labelledby="crowd-speed-label crowd-speed-unit" max="1000" min="0.001" step="0.001" type="number" value="0.15" :value="0.06" → input aria-describedby="crowd-speed-tip" aria-labelledby="crowd-speed-label crowd-speed-unit" max="1000" min="0.001" step="0.001" type="number" value="0.15" :value="24"
+ui ~ #crowd-speed-reason: p (not shown) → p class="section-hint range-reason" :text="Beyond the slider's reach — use the number field"
+settled:
+  emit animation:durationChange 27929.352554
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, 3af1c4a5]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
+
+## #crowd-speed-field · enter 99999
+announced "Enter a speed from 0.001 to 1000 image lengths/s; the crowd keeps 0.06 image lengths/s until you do."
+app ~ focus: "body" → "#crowd-speed-field"
+storage + routePlotter_lastSection: "motion"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a speed from 0.001 to 1000 image lengths/s; the crowd keeps 0.06 image lengths/s until you do."
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-speed-field: input aria-describedby="crowd-speed-tip" aria-labelledby="crowd-speed-label crowd-speed-unit" max="1000" min="0.001" step="0.001" type="number" value="0.15" :value="0.06" → input aria-describedby="crowd-speed-field-error crowd-speed-tip" aria-invalid="true" aria-labelledby="crowd-speed-label crowd-speed-unit" max="1000" min="0.001" step="0.001" type="number" value="0.15" :value="99999"
+ui ~ #crowd-speed-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a speed from 0.001 to 1000 image lengths/s; the crowd keeps 0.06 image lengths/s until you do."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a speed from 0.001 to 1000 image lengths/s; the crowd keeps 0.06 image lengths/s until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
 ## #section-motion-content>div[1]>button[0] · click
 app ~ focus: "body" → "#section-motion-content>div[1]>button[0]"
+storage + routePlotter_lastSection: "motion"
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #section-motion-content>div[1]>button[0]: button aria-describedby="crowd-speed-variance-tip" aria-expanded="false" aria-label="Help: Pace variation" class="param-hint-trigger" style="position-anchor: --crowd-speed-variance-tip;" type="button" → button aria-describedby="crowd-speed-variance-tip" aria-expanded="true" aria-label="Help: Pace variation" class="param-hint-trigger" style="position-anchor: --crowd-speed-variance-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Per-dot pace variation — 0% moves every dot at the same speed"
@@ -978,12 +1310,13 @@ emit crowd:param-changed {journeys: true}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].speedVariance: 0.35 → 0.33
 app ~ focus: "body" → "#crowd-speed-variance"
+storage + routePlotter_lastSection: "motion"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-speed-variance: input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="35%" max="100" min="0" step="1" type="range" value="20" :value="35" → input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="20" :value="33"
-ui ~ #crowd-speed-variance-value: span class="range-readout" :text="35%" → span class="range-readout" :text="33%"
+ui ~ #crowd-speed-variance-field: input aria-describedby="crowd-speed-variance-tip" aria-labelledby="crowd-speed-variance-label crowd-speed-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="35" → input aria-describedby="crowd-speed-variance-tip" aria-labelledby="crowd-speed-variance-label crowd-speed-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="33"
 settled:
   emit animation:durationChange 30156.273151
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30156.273151, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -995,8 +1328,45 @@ settled:
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
+## #crowd-speed-variance-field · enter 24
+emit crowd:param-changed {journeys: true}
+announced "Unsaved changes"
+model ~ scene.flowLayers[0].emitters[0].speedVariance: 0.35 → 0.24
+app ~ focus: "body" → "#crowd-speed-variance-field"
+storage + routePlotter_lastSection: "motion"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-speed-variance: input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="35%" max="100" min="0" step="1" type="range" value="20" :value="35" → input aria-describedby="crowd-speed-variance-value crowd-speed-variance-tip" aria-valuetext="24%" max="100" min="0" step="1" type="range" value="20" :value="24"
+ui ~ #crowd-speed-variance-field: input aria-describedby="crowd-speed-variance-tip" aria-labelledby="crowd-speed-variance-label crowd-speed-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="35" → input aria-describedby="crowd-speed-variance-tip" aria-labelledby="crowd-speed-variance-label crowd-speed-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="24"
+settled:
+  emit animation:durationChange 27929.352554
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, 3993de01]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
+
+## #crowd-speed-variance-field · enter 99999
+announced "Enter a pace variation from 0 to 100%; the crowd keeps 35% until you do."
+app ~ focus: "body" → "#crowd-speed-variance-field"
+storage + routePlotter_lastSection: "motion"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a pace variation from 0 to 100%; the crowd keeps 35% until you do."
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-speed-variance-field: input aria-describedby="crowd-speed-variance-tip" aria-labelledby="crowd-speed-variance-label crowd-speed-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="35" → input aria-describedby="crowd-speed-variance-field-error crowd-speed-variance-tip" aria-invalid="true" aria-labelledby="crowd-speed-variance-label crowd-speed-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="99999"
+ui ~ #crowd-speed-variance-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a pace variation from 0 to 100%; the crowd keeps 35% until you do."
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a pace variation from 0 to 100%; the crowd keeps 35% until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
 ## #section-motion-content>button[2] · click
 app ~ focus: "body" → "#section-motion-content>button[2]"
+storage + routePlotter_lastSection: "motion"
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #section-motion-content>button[2]: button aria-describedby="crowd-lifecycle-tip" aria-expanded="false" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button" → button aria-describedby="crowd-lifecycle-tip" aria-expanded="true" aria-label="Help: At journey end" class="param-hint-trigger" style="position-anchor: --crowd-lifecycle-tip;" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start sends a new dot from the start with its own pace and walking variation; Repeat journey follows the same paths again at the same pace"
@@ -1006,6 +1376,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].lifecycleMode: "disappear" → "respawn"
 app ~ focus: "body" → "#crowd-lifecycle"
+storage + routePlotter_lastSection: "motion"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -1029,6 +1400,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].lifecycleMode: "disappear" → "loop"
 app ~ focus: "body" → "#crowd-lifecycle"
+storage + routePlotter_lastSection: "motion"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -1052,6 +1424,7 @@ emit crowd:param-changed {journeys: false}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].emitters[0].lifecycleMode: "disappear" → "collect"
 app ~ focus: "body" → "#crowd-lifecycle"
+storage + routePlotter_lastSection: "motion"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"

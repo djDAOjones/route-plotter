@@ -100,15 +100,13 @@ const MISSING_ELEMENTS = {
 const MISSING_IDS = Object.values(MISSING_ELEMENTS).map(({ id }) => id);
 
 /**
- * Ids the running app asks for that no page declares, by design. The crowd
- * card's readout helper also looks up the control a readout belongs to
- * (`crowd-seed-value` → `crowd-seed`) to update its `aria-valuetext`; the seed
- * is shown as text with no control, so the lookup finds nothing and the
- * update is skipped, as intended.
+ * Ids the running app asks for that no page declares, by design: none now.
+ * (Reason for the change: the crowd card's readout helper, which looked up
+ * the control a readout belongs to and so asked for `crowd-seed`, the seed
+ * readout's, is gone: each crowd slider's readout is written with it
+ * (DEF-86), and the seed is a field of its own (CROWD-07 F16).)
  */
-const DERIVED_LOOKUPS = {
-  'crowd-seed': 'the seed readout has no control; syncCrowdEditor skips its aria-valuetext (crowds.js)'
-};
+const DERIVED_LOOKUPS = {};
 
 /**
  * Every `getElementById` in `src/` whose id is built at run time, by file and
@@ -118,12 +116,13 @@ const DERIVED_LOOKUPS = {
  * for; a call it does not reach is checked as the reason says, or not at all.
  */
 const DYNAMIC_LOOKUPS = {
-  'src/app/crowds.js id': { calls: 3, runs: true,
-    what: "each crowd slider wiring itself (_wireCrowdSlider), and syncCrowdEditor's writes to the sliders " +
-      'and readouts' },
-  'src/app/crowds.js `${id}-value`': { calls: 1, runs: true, what: "a crowd slider's readout" },
-  "src/app/crowds.js id.slice(0, -'-value'.length)": { calls: 1, runs: true,
-    what: "the control a crowd readout belongs to, for its aria-valuetext (DERIVED_LOOKUPS)" },
+  // DEF-86 (reason for the change): a crowd slider's row is looked up whole,
+  // its slider, field, readout, reason and error by their suffixes on the
+  // slider's id; syncCrowdEditor writes its other controls by id.
+  'src/app/crowds.js id': { calls: 1, runs: true,
+    what: "syncCrowdEditor's writes to the guide, colour, journey-end and seed controls" },
+  'src/app/crowds.js `${id}${suffix}`': { calls: 1, runs: true,
+    what: "a crowd slider's row (rangeParts): the slider, its number field, readout, reason and error line" },
   'src/app/privacy.js disclosure.returnFocusId': { calls: 1, runs: true,
     what: 'where focus returns when a share dialog closes: the File or the Export menu button' },
   'src/app/wiringDom.js `${tabName}-tab`': { calls: 1, runs: false,
@@ -174,13 +173,16 @@ const words = text => text.trim().split(/\s+/);
 const LOOKED_UP = {
   'src/app/camera.js': words('camera-zoom-warning camera-zoom-warning'),
   // CROWD-07 F18: Reset to even's reason line, written with its state and cleared for a crowd with no emitter.
+  // CROWD-07 F16: the seed's field, wired for its change and cleared with its error line as a crowd is shown,
+  // and the error line, written by the change.
   'src/app/crowds.js': words(`
     add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-add-reason crowd-busyness-graph crowd-busyness-graph
     crowd-busyness-graph
     crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
     crowd-busyness-reset-reason crowd-busyness-reset-reason
     crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-lifecycle-hint
-    crowd-no-emitter crowd-pattern-hint crowd-reroll-btn crowd-scope layers-strip
+    crowd-no-emitter crowd-pattern-hint crowd-reroll-btn crowd-scope crowd-seed-error crowd-seed-error
+    crowd-seed-value crowd-seed-value layers-strip
   `),
   'src/app/editorPanel.js': words('area-draw-reason waypoint-scope'),
   // UI-06 B-18: the export items' reason line and its two spans.
@@ -191,13 +193,17 @@ const LOOKED_UP = {
   'src/app/helpDialog.js': words(`
     help-close-x help-modal help-report-bug help-sections help-show-welcome help-source help-version
   `),
+  // DEF-86: the Share row's parts, looked up together (edgeWeightParts), where the slider was looked up
+  // for its listener and its value: its weight's field, the field's error line and the slider's reason.
+  // CROWD-07 X-05: the Node card's title, the span its header button holds.
   'src/app/network.js': words(`
     crowd-guide-hint crowd-trace-route-btn crowd-trace-route-reason network-edge-delete network-edge-direction
     network-edge-direction network-edge-hint network-edge-swap network-edge-swap network-edge-weight
-    network-edge-weight network-edge-weight network-edge-weight-value network-edit-btn network-node-delete
+    network-edge-weight network-edge-weight-field network-edge-weight-field-error network-edge-weight-reason
+    network-edge-weight-value network-edit-btn network-node-delete
     network-node-hint
     network-node-type network-node-type network-path-weight-rows network-path-weight-rows
-    network-path-weights
+    network-path-weights node-section-title
   `),
   // UI-06 B-17: the header's status line and the decorative unsaved mark.
   'src/app/persistence.js': words('app-status app-title title-indicator'),

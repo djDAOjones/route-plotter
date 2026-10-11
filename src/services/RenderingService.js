@@ -1283,22 +1283,6 @@ export class RenderingService {
       },
     },
     {
-      // Guide network of the selected graph-guided crowd (Phase 4) —
-      // authoring scaffolding, so edit mode only, and beneath the dots
-      // that ride it. During network edit mode the bound layer draws
-      // even while selection events are still settling.
-      name: 'network-guide',
-      draw(svc, ctx, state, frame) {
-        if (state.previewMode || !state.networkEditService || !state.swarmEngine) return;
-        const net = state.networkEditService;
-        const layer = net.active
-          ? net.layer
-          : (state.selectedCrowd?.guideType === 'graph' ? state.selectedCrowd : null);
-        if (!layer) return;
-        net.renderGuide(svc, ctx, state, layer);
-      },
-    },
-    {
       // Flow-layer swarms (Phase 3) — beneath the hero route, above area
       // highlights. Scene order: layer index 0 draws bottom-most.
       name: 'flow-layers',
@@ -1352,6 +1336,23 @@ export class RenderingService {
       draw(svc, ctx, state, frame) {
         if (!frame.hasPath || !frame.shouldRenderPath) return;
         svc.renderPath(ctx, state.pathPoints, state.waypoints, state.styles, state.animationEngine, frame.applyMotion ? state.motionSettings : null, state.motionVisibilityService, state.waypointProgressValues, state.imageToCanvas);
+      },
+    },
+    {
+      // Guide network of the selected graph-guided crowd (Phase 4) —
+      // authoring scaffolding, so edit mode only. Over the path, cased, so a
+      // network traced from the route shows on it, and under the head and
+      // the markers (CROWD-07 X-04). During network edit mode the bound
+      // layer draws even while selection events are still settling.
+      name: 'network-guide',
+      draw(svc, ctx, state, frame) {
+        if (state.previewMode || !state.networkEditService || !state.swarmEngine) return;
+        const net = state.networkEditService;
+        const layer = net.active
+          ? net.layer
+          : (state.selectedCrowd?.guideType === 'graph' ? state.selectedCrowd : null);
+        if (!layer) return;
+        net.renderGuide(svc, ctx, state, layer);
       },
     },
     {

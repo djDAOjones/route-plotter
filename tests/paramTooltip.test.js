@@ -632,9 +632,14 @@ function parameterControlsIn(root) {
 }
 
 function hintOf(control) {
+  // A field with no label of its own is named by the words it is labelled by:
+  // a crowd slider's number field by its row's label (DEF-86, Carbon's slider
+  // with an input), whose hint then describes the field too.
+  const labelledBy = (control.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean)
+    .map(id => document.getElementById(id));
   const namers = control.matches('fieldset')
     ? [control.querySelector(':scope > legend')]
-    : [...control.labels];
+    : [...control.labels, ...labelledBy];
   const trigger = namers.filter(Boolean)
     .map(namer => (namer.matches('[data-tip]') ? namer : namer.querySelector('[data-tip]')))
     .find(Boolean);
@@ -670,7 +675,7 @@ describe('every parameter control has a hint', () => {
       // boot and would take a later test's Escape.
       document.getElementById('splash-close').click();
       // No route: a new crowd walks a custom network of its own.
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       document.getElementById('crowd-busyness-add').click();
 
       const layer = app.selectedCrowd;
@@ -743,8 +748,9 @@ describe('the scene outline’s fields have hints, drawn as the outline is', () 
     const fields = parameterControlsIn(container);
     const kinds = new Set(fields.map(field => `${field.form.dataset.outlineAction}:${field.name}`));
 
-    // Vacuous unless all 46 fields of the 13 forms were drawn.
-    expect(kinds.size).toBe(46);
+    // Vacuous unless all 47 fields of the 13 forms were drawn (47, was 46:
+    // Release bias is a direction and an amount since CROWD-07 F15).
+    expect(kinds.size).toBe(47);
     expect(withoutHint(fields)).toEqual([]);
   });
 
@@ -845,15 +851,22 @@ describe('Release bias says which way is earlier', () => {
     expect(hint).not.toMatch(/busyness graph/);
   });
 
-  test('the outline’s Release bias field says below 0 is earlier', async () => {
+  // CROWD-07 F15 (reason for the change): the outline no longer takes a
+  // signed number, whose hint said "Below 0 is earlier"; it takes a direction,
+  // in the readout's words, and an amount, whose hints say which is which.
+  test('the outline’s Release bias says Earlier and Later in its direction, and how far in its amount', async () => {
     mountShell();
     initParamTooltips();
     const { container } = await drawWholeOutline();
-    const field = container.querySelector('form[data-outline-action="update-emitter"]').elements.intensityRamp;
+    const { elements } = container.querySelector('form[data-outline-action="update-emitter"]');
+    const direction = elements.intensityRampDirection;
+    const amount = elements.intensityRampAmount;
 
-    expect(Number(field.min)).toBeLessThan(0);
-    expect(hintOf(field)).toMatch(/^Below 0 is earlier\b/);
-    expect(hintOf(field)).toMatch(/\babove 0 is later\b/);
+    expect([...direction.options].map(option => option.textContent)).toEqual(['Earlier', 'Even', 'Later']);
+    expect(hintOf(direction)).toMatch(/^Earlier sets more dots off near the start of the release\b/);
+    expect(hintOf(direction)).toMatch(/\bLater near its end\b/);
+    expect(Number(amount.min)).toBe(0);
+    expect(hintOf(amount)).toMatch(/^How far the release leans towards the chosen end\b/);
   });
 });
 
@@ -959,7 +972,7 @@ describe('UI-04: every hint has a “?” trigger of its own', () => {
     try {
       await app.ready;
       document.getElementById('splash-close').click();
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       document.getElementById('crowd-busyness-add').click();
       const layer = app.selectedCrowd;
       const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
@@ -1297,7 +1310,7 @@ describe('UI-04 review: no row’s rule reaches inside a hint’s trigger', () =
     try {
       await app.ready;
       document.getElementById('splash-close').click();
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       document.getElementById('crowd-busyness-add').click();
       const layer = app.selectedCrowd;
       const junction = layer.graph.addNode({ x: 0.5, y: 0.5 });
@@ -1523,7 +1536,7 @@ describe('UI-06: a button carries its own hint, reachable by keyboard', () => {
     try {
       await app.ready;
       document.getElementById('splash-close').click();
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       document.getElementById('crowd-busyness-add').click();
       await Promise.resolve();
 
@@ -1637,8 +1650,8 @@ describe('CROWD-07 (F17): the crowd’s and network’s button hints open by key
       document.getElementById('splash-close').click();
       app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
       app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
-      app.addCrowd({ enterNetworkEditor: false });
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
+      app.addCrowd();
       const layer = app.selectedCrowd;
       layer.setGuideType('graph');
       app.syncCrowdEditor();

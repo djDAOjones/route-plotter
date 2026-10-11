@@ -2052,11 +2052,19 @@ function emitterCommand(app, changes) {
     action: 'update-emitter', layerId: layer.id, emitterId: emitter.id, outlineOriginalValues: {},
   };
   const percentFields = [
-    'releaseStart', 'releaseDuration', 'onsetVariance', 'speedVariance', 'wobble', 'intensityRamp',
+    'releaseStart', 'releaseDuration', 'onsetVariance', 'speedVariance', 'wobble',
   ];
   for (const field of percentFields) {
     command[field] = String(emitter[field] * 100);
     command.outlineOriginalValues[field] = { display: command[field], canonical: emitter[field] };
+  }
+  // Release bias as a direction and an amount since CROWD-07 F15 (reason for
+  // the change): Even sends no amount, as its field is off.
+  const ramp = emitter.intensityRamp;
+  command.intensityRampDirection = ramp < 0 ? 'earlier' : (ramp > 0 ? 'later' : 'even');
+  if (ramp !== 0) {
+    command.intensityRampAmount = String(Math.abs(ramp) * 100);
+    command.outlineOriginalValues.intensityRampAmount = { display: command.intensityRampAmount, canonical: Math.abs(ramp) };
   }
   return Object.assign(command, {
     dotCount: emitter.dotCount, speed: emitter.speed, dotSize: emitter.dotSize,

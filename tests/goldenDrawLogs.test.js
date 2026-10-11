@@ -447,6 +447,120 @@ describe('golden draw logs (TST-02)', () => {
     }
   });
 
+  /**
+   * CROWD-07 X-04: a selected crowd's network was drawn beneath the route, so
+   * a network traced from it vanished under it. It is drawn above the path,
+   * cased in a lighter line one reference px wider on each side, and below
+   * the path's head and the markers; it is authoring scaffolding, so preview
+   * and the export canvas carry none. The fixtures above select no crowd, so
+   * their goldens do not see it: Open day's traced crowd is selected here.
+   */
+  describe('a selected crowd\'s network is drawn over the path (CROWD-07 X-04)', () => {
+    const INK = '#56B4E9';
+    const ROUTE = '#E69F00';
+    const field = (line, name) => new RegExp(`(?:^| )${name}=(\\S+)`).exec(line.split(' | ')[1] ?? '')?.[1];
+
+    /** Open day in `mode`, its crowd selected; the vector surface's drawn lines at the middle of the timeline. */
+    async function openDayWithItsCrowd(mode) {
+      const app = await appWithFixture(fixtures().find(each => each.id === 'uon-open-day'));
+      enterMode(app, mode);
+      const layer = app.scene.getFlowLayer('ex-uon-crowd');
+      expect(layer.guideType).toBe('graph');
+      app.eventBus.emit('crowd:selected', layer);
+      expect(app.selectedCrowd).toBe(layer);
+      const lines = frameAt(app, 0.5, { state: 'drawn' }).filter(line => line.startsWith('vector '));
+      return { app, layer, lines };
+    }
+
+    /** Where the route's strokes, the guide's, its casings and the head's first fill are. */
+    function landmarks(lines) {
+      const strokes = lines.map((line, index) => ({ line, index })).filter(({ line }) => / stroke @/.test(line));
+      const route = strokes.filter(({ line }) => field(line, 'strokeStyle') === ROUTE).map(({ index }) => index);
+      const guide = strokes.filter(({ line }) => field(line, 'strokeStyle') === INK);
+      const lastRoute = Math.max(...route);
+      const head = lines.findIndex((line, index) => index > lastRoute && / fill @/.test(line)
+        && field(line, 'fillStyle') === ROUTE);
+      return { strokes, route, guide, lastRoute, head };
+    }
+
+    test('in the editor, the guide comes after the path\'s strokes and before its head and the markers, cased', async () => {
+      const { app, layer, lines } = await openDayWithItsCrowd('edit');
+      const { strokes, route, guide, lastRoute, head } = landmarks(lines);
+      const edges = layer.graph.getEdges().length;
+      expect(route.length).toBeGreaterThan(0);
+      expect(guide).toHaveLength(edges);
+      expect(head).toBeGreaterThan(lastRoute);
+      // Above the path, below the head (and so below the markers drawn after it).
+      expect(guide[0].index).toBeGreaterThan(lastRoute);
+      expect(guide.at(-1).index).toBeLessThan(head);
+      // Each guide stroke has its casing stroked just before it: the lighter ink, a reference px wider each side.
+      const casing = app.renderingService.scaleSizeClamped(1);
+      for (const { line, index } of guide) {
+        const before = strokes[strokes.findIndex(stroke => stroke.index === index) - 1];
+        expect(before, line).toBeDefined();
+        expect(field(before.line, 'strokeStyle'), before.line).toBe('#FFFFFF');
+        expect(Number(field(before.line, 'lineWidth')) - Number(field(line, 'lineWidth')))
+          .toBeCloseTo(2 * casing, 3);
+        expect(field(line, 'globalAlpha')).toBe('0.55');
+      }
+    });
+
+    // CROWD-07 X-05: in Edit network each named node's label is drawn beside
+    // its glyph, in the guide's own layer, 14 reference px of the UI's
+    // primary text ink over a 2 px casing of its background [Q8]. A node with
+    // no name draws none, and neither does a network only inspected, nor
+    // preview, nor the export canvas.
+    test('in Edit network a named node\'s label is drawn beside its glyph, cased; an unnamed node, inspection and export draw none', async () => {
+      const labelsIn = lines => lines.filter(line => / (strokeText|fillText) /.test(line));
+      const { app, layer } = await openDayWithItsCrowd('edit');
+      const named = layer.graph.getNodes().filter(node => node.label);
+      expect(named.length).toBeGreaterThan(1);
+      const unnamed = layer.graph.addNode({ x: 0.5, y: 0.9 });
+      expect(unnamed.label).toBe('');
+
+      // Inspected, not drawn: the guide carries no label.
+      const inspected = frameAt(app, 0.5, { state: 'drawn' }).filter(line => line.startsWith('vector '));
+      const { lastRoute, head } = landmarks(inspected);
+      expect(labelsIn(inspected.slice(lastRoute, head))).toEqual([]);
+
+      app.enterNetworkEditMode();
+      expect(app.networkEditService.active).toBe(true);
+      const editing = frameAt(app, 0.5, { state: 'drawn' }).filter(line => line.startsWith('vector '));
+      const marks = landmarks(editing);
+      const drawn = labelsIn(editing.slice(marks.lastRoute, marks.head));
+      const size = app.renderingService.scaleLabelSize(14);
+      for (const node of named) {
+        const strokeLine = drawn.find(line => line.includes(` strokeText ${node.label} `));
+        const fillLine = drawn.find(line => line.includes(` fillText ${node.label} `));
+        expect(strokeLine, node.label).toBeDefined();
+        expect(fillLine, node.label).toBeDefined();
+        expect(drawn.indexOf(strokeLine)).toBeLessThan(drawn.indexOf(fillLine));
+        expect(field(strokeLine, 'strokeStyle')).toBe('#FFFFFF');
+        expect(field(strokeLine, 'lineWidth')).toBe('4');
+        expect(field(fillLine, 'fillStyle')).toBe('#0F0F0F');
+        expect(fillLine).toContain(`font=${size}px `);
+      }
+      expect(drawn).toHaveLength(2 * named.length);
+      expect(drawn.some(line => / (strokeText|fillText) Node /.test(line))).toBe(false);
+
+      // Nothing else in the app strokes text: preview and export, whose waypoint labels are filled, stroke none.
+      for (const mode of ['preview', 'export']) {
+        const shown = await openDayWithItsCrowd(mode);
+        expect(shown.lines.filter(line => / strokeText /.test(line)), mode).toEqual([]);
+        expect(shown.lines.some(line => / fillText Main entrance /.test(line)), mode).toBe(true);
+      }
+    });
+
+    test('preview and the export canvas draw no guide, cased or not', async () => {
+      for (const mode of ['preview', 'export']) {
+        const { lines } = await openDayWithItsCrowd(mode);
+        const { guide, route } = landmarks(lines);
+        expect(route.length, mode).toBeGreaterThan(0);
+        expect(guide, mode).toEqual([]);
+      }
+    });
+  });
+
   describe('fixed defects stay fixed', () => {
 
     test('DEF-02: the exported player follows a moved anchor waypoint', async () => {

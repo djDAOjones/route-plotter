@@ -1085,7 +1085,7 @@
               <button type="button" class="section-header" aria-expanded="false" aria-controls="section-guide-content">Guide<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
             </h2>
             <div id="section-guide-content" class="section-content">
-              <label for="crowd-guide-type">
+              <label class="label-stacked" for="crowd-guide-type">
                 <span data-tip="What the dots travel along">Guide</span>
                 <select id="crowd-guide-type">
                   <option value="route">Follow route</option>
@@ -1119,18 +1119,22 @@
 
               <div class="range-row">
                 <label for="crowd-dot-size">
-                  <span data-tip="Dot diameter in project reference pixels; exports scale it from the project's reference short edge">Size</span>
+                  <span id="crowd-dot-size-label" data-tip="Dot diameter in project reference pixels; exports scale it from the project's reference short edge">Size</span>
                   <input type="range" id="crowd-dot-size" min="5" max="200" value="40" step="5" aria-describedby="crowd-dot-size-value" aria-valuetext="8 reference px">
                 </label>
-                <span id="crowd-dot-size-value" class="range-readout">8 reference px</span>
+                <span id="crowd-dot-size-value" class="range-readout range-field"><input type="number" id="crowd-dot-size-field" min="0.2" max="2000" step="any" value="8" aria-labelledby="crowd-dot-size-label crowd-dot-size-unit" aria-describedby="crowd-dot-size-tip"> <span id="crowd-dot-size-unit" class="range-field-unit">reference px</span></span>
+                <p id="crowd-dot-size-reason" class="section-hint range-reason" hidden></p>
+                <p id="crowd-dot-size-field-error" class="section-hint range-field-error" hidden></p>
               </div>
 
               <div class="range-row">
                 <label for="crowd-wobble">
-                  <span data-tip="Sideways walking variation as dots travel — 0% follows the line exactly">Walking variation</span>
+                  <span id="crowd-wobble-label" data-tip="Sideways walking variation as dots travel — 0% follows the line exactly">Walking variation</span>
                   <input type="range" id="crowd-wobble" min="0" max="100" value="0" step="1" aria-describedby="crowd-wobble-value" aria-valuetext="0%">
                 </label>
-                <span id="crowd-wobble-value" class="range-readout">0%</span>
+                <span id="crowd-wobble-value" class="range-readout range-field"><input type="number" id="crowd-wobble-field" min="0" max="100" step="any" value="0" aria-labelledby="crowd-wobble-label crowd-wobble-unit" aria-describedby="crowd-wobble-tip"><span id="crowd-wobble-unit" class="range-field-unit">%</span></span>
+                <p id="crowd-wobble-reason" class="section-hint range-reason" hidden></p>
+                <p id="crowd-wobble-field-error" class="section-hint range-field-error" hidden></p>
               </div>
             </div>
           </div>
@@ -1144,26 +1148,32 @@
               <div class="section-primary">
               <div class="range-row">
                 <label for="crowd-count">
-                  <span data-tip="Total dots released across the window">Count</span>
+                  <span id="crowd-count-label" data-tip="Total dots released across the window">Count</span>
                   <input type="range" id="crowd-count" min="1" max="500" value="50" step="1" aria-describedby="crowd-count-value" aria-valuetext="50">
                 </label>
-                <span id="crowd-count-value" class="range-readout">50</span>
+                <span id="crowd-count-value" class="range-readout range-field"><input type="number" id="crowd-count-field" min="1" max="5000" step="1" value="50" inputmode="numeric" aria-labelledby="crowd-count-label" aria-describedby="crowd-count-tip"></span>
+                <p id="crowd-count-reason" class="section-hint range-reason" hidden></p>
+                <p id="crowd-count-field-error" class="section-hint range-field-error" hidden></p>
               </div>
 
               <div class="range-row">
                 <label for="crowd-release-start">
-                  <span data-tip="When the first dots set off, as a position in the timeline">Window start</span>
+                  <span id="crowd-release-start-label" data-tip="When the first dots set off, as a position in the timeline">Window start</span>
                   <input type="range" id="crowd-release-start" min="0" max="100" value="0" step="1" aria-describedby="crowd-release-start-value" aria-valuetext="0%">
                 </label>
-                <span id="crowd-release-start-value" class="range-readout">0%</span>
+                <span id="crowd-release-start-value" class="range-readout range-field"><input type="number" id="crowd-release-start-field" min="0" max="100" step="any" value="0" aria-labelledby="crowd-release-start-label crowd-release-start-unit" aria-describedby="crowd-release-start-tip"><span id="crowd-release-start-unit" class="range-field-unit">%</span></span>
+                <p id="crowd-release-start-reason" class="section-hint range-reason" hidden></p>
+                <p id="crowd-release-start-field-error" class="section-hint range-field-error" hidden></p>
               </div>
 
               <div class="range-row">
                 <label for="crowd-release-duration">
-                  <span data-tip="How much of the timeline the release is spread across">Window length</span>
+                  <span id="crowd-release-duration-label" data-tip="How much of the timeline the release is spread across">Window length</span>
                   <input type="range" id="crowd-release-duration" min="0" max="100" value="100" step="1" aria-describedby="crowd-release-duration-value" aria-valuetext="100%">
                 </label>
-                <span id="crowd-release-duration-value" class="range-readout">100%</span>
+                <span id="crowd-release-duration-value" class="range-readout range-field"><input type="number" id="crowd-release-duration-field" min="0" max="100" step="any" value="100" aria-labelledby="crowd-release-duration-label crowd-release-duration-unit" aria-describedby="crowd-release-duration-tip"><span id="crowd-release-duration-unit" class="range-field-unit">%</span></span>
+                <p id="crowd-release-duration-reason" class="section-hint range-reason" hidden></p>
+                <p id="crowd-release-duration-field-error" class="section-hint range-field-error" hidden></p>
               </div>
               </div>
 
@@ -1172,18 +1182,23 @@
                 <div class="section-more-content">
                   <div class="range-row">
                     <label class="crowd-variation-control" for="crowd-onset-variance">
-                      <span data-tip="How unevenly individual dots set off within the release window">Release timing</span>
-                      <input type="range" id="crowd-onset-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-onset-variance-value" aria-valuetext="20% uneven">
+                      <span id="crowd-onset-variance-label" data-tip="How unevenly individual dots set off within the release window">Release timing</span>
+                      <input type="range" id="crowd-onset-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-onset-variance-value" aria-valuetext="20%">
                     </label>
-                    <span id="crowd-onset-variance-value" class="range-readout">20% uneven</span>
+                    <span id="crowd-onset-variance-value" class="range-readout range-field"><input type="number" id="crowd-onset-variance-field" min="0" max="100" step="any" value="20" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" aria-describedby="crowd-onset-variance-tip"><span id="crowd-onset-variance-unit" class="range-field-unit">%</span></span>
+                    <p id="crowd-onset-variance-reason" class="section-hint range-reason" hidden></p>
+                    <p id="crowd-onset-variance-field-error" class="section-hint range-field-error" hidden></p>
                   </div>
 
                   <div class="range-row">
                     <label class="crowd-variation-control" for="crowd-intensity-ramp">
-                      <span data-tip="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither">Release bias</span>
+                      <span id="crowd-intensity-ramp-label" data-tip="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither">Release bias</span>
                       <input type="range" id="crowd-intensity-ramp" min="-100" max="100" value="0" step="1" aria-describedby="crowd-intensity-ramp-value" aria-valuetext="Even">
                     </label>
+                    <span class="range-field"><input type="number" id="crowd-intensity-ramp-field" min="-100" max="100" step="any" value="0" aria-labelledby="crowd-intensity-ramp-label crowd-intensity-ramp-unit" aria-describedby="crowd-intensity-ramp-value crowd-intensity-ramp-tip"><span id="crowd-intensity-ramp-unit" class="range-field-unit">%</span></span>
                     <span id="crowd-intensity-ramp-value" class="range-readout">Even</span>
+                    <p id="crowd-intensity-ramp-reason" class="section-hint range-reason" hidden></p>
+                    <p id="crowd-intensity-ramp-field-error" class="section-hint range-field-error" hidden></p>
                   </div>
 
                   <div class="crowd-busyness-editor" role="group" aria-labelledby="crowd-busyness-label" aria-describedby="crowd-busyness-hint">
@@ -1206,10 +1221,12 @@
 
                   <div class="crowd-pattern-controls" role="group" aria-labelledby="crowd-seed-label" aria-describedby="crowd-pattern-hint">
                     <div class="crowd-seed-row">
-                      <!-- CROWD-07 F18: a label for the output (an output is labelable) with its hint -->
+                      <!-- CROWD-07 F18: the seed's label, with its hint; F16 makes the seed a field it names -->
                       <label id="crowd-seed-label" for="crowd-seed-value"><span data-tip="The same seed always gives the same walking and set-off variation">Pattern seed</span></label>
-                      <output id="crowd-seed-value">0</output>
+                      <input type="number" id="crowd-seed-value" inputmode="numeric" min="0" max="4294967295" step="1" value="0">
                     </div>
+                    <!-- CROWD-07 F16: what is wrong with a seed typed, read as the field's description while it shows -->
+                    <p id="crowd-seed-error" class="section-hint range-field-error" hidden></p>
                     <button id="crowd-reroll-btn" class="btn btn-secondary" type="button">Re-roll pattern</button>
                     <p id="crowd-pattern-hint" class="section-hint">Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path.</p>
                   </div>
@@ -1226,21 +1243,25 @@
             <div id="section-motion-content" class="section-content">
               <div class="range-row">
                 <label for="crowd-speed">
-                  <span data-tip="Dot travel speed in image lengths per second: 1 is the image's width across or its height down">Speed</span>
+                  <span id="crowd-speed-label" data-tip="Dot travel speed in image lengths per second: 1 is the image's width across or its height down">Speed</span>
                   <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1" aria-describedby="crowd-speed-value" aria-valuetext="0.15 image lengths/s">
                 </label>
-                <span id="crowd-speed-value" class="range-readout">0.15 image lengths/s</span>
+                <span id="crowd-speed-value" class="range-readout range-field"><input type="number" id="crowd-speed-field" min="0.001" max="1000" step="0.001" value="0.15" aria-labelledby="crowd-speed-label crowd-speed-unit" aria-describedby="crowd-speed-tip"> <span id="crowd-speed-unit" class="range-field-unit">image lengths/s</span></span>
+                <p id="crowd-speed-reason" class="section-hint range-reason" hidden></p>
+                <p id="crowd-speed-field-error" class="section-hint range-field-error" hidden></p>
               </div>
 
               <div class="range-row">
                 <label for="crowd-speed-variance">
-                  <span data-tip="Per-dot pace variation — 0% moves every dot at the same speed">Pace variation</span>
+                  <span id="crowd-speed-variance-label" data-tip="Per-dot pace variation — 0% moves every dot at the same speed">Pace variation</span>
                   <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-speed-variance-value" aria-valuetext="20%">
                 </label>
-                <span id="crowd-speed-variance-value" class="range-readout">20%</span>
+                <span id="crowd-speed-variance-value" class="range-readout range-field"><input type="number" id="crowd-speed-variance-field" min="0" max="100" step="any" value="20" aria-labelledby="crowd-speed-variance-label crowd-speed-variance-unit" aria-describedby="crowd-speed-variance-tip"><span id="crowd-speed-variance-unit" class="range-field-unit">%</span></span>
+                <p id="crowd-speed-variance-reason" class="section-hint range-reason" hidden></p>
+                <p id="crowd-speed-variance-field-error" class="section-hint range-field-error" hidden></p>
               </div>
 
-              <label for="crowd-lifecycle">
+              <label class="label-stacked" for="crowd-lifecycle">
                 <span data-tip="Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start sends a new dot from the start with its own pace and walking variation; Repeat journey follows the same paths again at the same pace">At journey end</span>
                 <select id="crowd-lifecycle" aria-describedby="crowd-lifecycle-hint">
                   <option value="respawn">Respawn at the start</option>
@@ -1264,7 +1285,7 @@
 
           <div class="settings-section" data-section="node">
             <h2 class="section-title">
-              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-node-content">Node<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+              <button type="button" class="section-header" aria-expanded="false" aria-controls="section-node-content"><span id="node-section-title">Node</span><span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
             </h2>
             <div id="section-node-content" class="section-content">
               <label for="network-node-type">
@@ -1311,12 +1332,16 @@
               <button id="network-edge-swap" class="btn btn-secondary" type="button" hidden
                       data-tip="Reverse which way this one-way path carries dots">Swap direction</button>
 
-              <div class="range-row">
+              <div class="range-row range-row-wide">
                 <label for="network-edge-weight">
                   <span data-tip="How strongly dots prefer this path where paths meet, shown as the share of departures that take it">Share</span>
                   <input type="range" id="network-edge-weight" min="1" max="50" value="10" step="1" aria-describedby="network-edge-weight-value" aria-valuetext="100% of departures">
                 </label>
+                <!-- DEF-86: the raw weight, a quantity of its own beside the share it gives, named and helped as the outline's Path weight is -->
+                <span class="range-field"><label class="range-field-label" for="network-edge-weight-field"><span data-tip="How strongly dots prefer this path at a node where paths meet: between the paths a dot can take, weight 2 is twice as likely to be picked as weight 1. Arriving dots avoid turning straight back when another path is available">Weight</span></label><input type="number" id="network-edge-weight-field" min="0.01" step="any" value="1" aria-describedby="network-edge-weight-value"></span>
                 <span id="network-edge-weight-value" class="range-readout">100% of departures</span>
+                <p id="network-edge-weight-reason" class="section-hint range-reason" hidden></p>
+                <p id="network-edge-weight-field-error" class="section-hint range-field-error" hidden></p>
               </div>
               <p id="network-edge-hint" class="section-hint">
                 Share of the dots leaving each end. Use Direction and Share to edit this path, or Delete path to

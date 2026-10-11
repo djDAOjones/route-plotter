@@ -481,7 +481,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       expect(await loadSnapshot(app, project)).toBe(true);
       expect(app.waypoints.map(waypoint => waypoint.id.length)).toEqual([253, 253]);
 
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
       const { graph } = app._buildProjectSnapshot().scene.flowLayers[0];
       const ids = [...graph.nodes, ...graph.edges].map(each => each.id);
@@ -515,7 +515,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       };
       expect(await loadSnapshot(app, project)).toBe(true);
 
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
       const saved = app._buildProjectSnapshot();
       expect(saved.scene.flowLayers[0].graph.edges[0].controlPoints).toEqual([{ x: 1.25, y: 0.15 }]);
@@ -549,7 +549,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
         ],
       };
       expect(await loadSnapshot(app, project)).toBe(true);
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
       const saved = app._buildProjectSnapshot();
       const withBend = (point) => {
@@ -587,7 +587,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
           { id: 'wp-b', imgX: end.x, imgY: end.y, isMajor: true },
         ],
       })).toBe(true);
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
       return app;
     }
@@ -682,7 +682,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
           { id: 'wp-c', imgX: 0.4, imgY: 0.6, isMajor: true },
         ],
       })).toBe(true);
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
       const nextTask = () => new Promise(resolve => setTimeout(resolve, 0));
       const graph = () => app.scene.getFlowLayers()[0].graph;

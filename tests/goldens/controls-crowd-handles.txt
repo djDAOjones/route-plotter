@@ -81,7 +81,7 @@ emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.24
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[2]>input[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -102,7 +102,7 @@ emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.99
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[2]>input[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -118,7 +118,7 @@ settled:
 
 ## #crowd-busyness-handles>div[1]>button[7] · click
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>button[7]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[1]>button[7]: button aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" aria-expanded="false" aria-label="Help: Change" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[9]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[1]>span[9]}" aria-expanded="true" aria-label="Help: Change" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[1]>span[9]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How busyness changes from this handle to the next: Gradual slides there evenly; Sudden holds this level, then jumps"
@@ -130,7 +130,7 @@ emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].transition: "gradual" → "step"
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[8]>select[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -152,7 +152,7 @@ model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].transition: "gradual"
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[5]>input[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -184,7 +184,7 @@ settled:
 
 ## #crowd-busyness-handles>div[2]>button[1] · click
 app ~ focus: "body" → "#crowd-busyness-handles>div[2]>button[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[2]>button[1]: button aria-describedby="{#crowd-busyness-handles>div[2]>span[3]}" aria-expanded="false" aria-label="Help: Time" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[2]>span[3]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[2]>span[3]}" aria-expanded="true" aria-label="Help: Time" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[2]>span[3]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Where this handle sits in the window: 0% at its start, 100% at its end. The first and last handles stay put"
@@ -193,7 +193,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #crowd-busyness-handles>div[2]>button[4] · click
 app ~ focus: "body" → "#crowd-busyness-handles>div[2]>button[4]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[2]>button[4]: button aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-expanded="false" aria-label="Help: Busy" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[2]>span[6]};" type="button" → button aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-expanded="true" aria-label="Help: Busy" class="param-hint-trigger" style="position-anchor: --{#crowd-busyness-handles>div[2]>span[6]};" type="button"
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="How busy the release is at this handle: higher sets more dots off around it, 0% none"
@@ -205,7 +205,7 @@ emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1 → 0.24
 app ~ focus: "body" → "#crowd-busyness-handles>div[2]>label[5]>input[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness pattern updated. Undo is available."
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
@@ -225,7 +225,7 @@ settled:
 
 ## #crowd-busyness-handles>div[2]>label[5]>input[1] · enter 99999
 app ~ focus: "body" → "#crowd-busyness-handles>div[2]>label[5]>input[1]"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 ui ~ #crowd-busyness-handles>div[2]>label[5]>input[1]: input aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="100" → input aria-describedby="{#crowd-busyness-handles>div[2]>span[6]}" aria-label="Busy for busyness handle 3, percent" data-busyness-field="value" data-busyness-index="2" inputmode="decimal" max="100" min="0" step="0.1" type="number" :value="99999"
 
@@ -238,7 +238,7 @@ model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].transition: "gradual"
-storage ~ routePlotter_lastSection: "motion" → "release"
+storage + routePlotter_lastSection: "release"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Busyness reset to even. Undo is available."
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"

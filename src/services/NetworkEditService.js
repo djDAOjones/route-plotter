@@ -42,6 +42,28 @@ const SELECTION_OUTER = '#FFFFFF';
 const SELECTION_INNER = '#111111';
 
 /**
+ * UI tokens the guide draws with, which a canvas cannot read as CSS: the
+ * casing under its paths and labels (`--ui-background`) and a label's ink
+ * (`--text-01`). Read from the page once; the fallbacks are tokens.css's
+ * values (tests/networkEdit.test.js holds them equal), for a page whose
+ * stylesheet gives none.
+ */
+export const GUIDE_TOKENS = Object.freeze({ '--ui-background': '#FFFFFF', '--text-01': '#0F0F0F' });
+const guideTokenCache = new Map();
+function guideToken(name) {
+  if (!guideTokenCache.has(name)) {
+    let value = '';
+    try {
+      value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    } catch {
+      value = '';
+    }
+    guideTokenCache.set(name, value || GUIDE_TOKENS[name]);
+  }
+  return guideTokenCache.get(name);
+}
+
+/**
  * The control to give focus to, or, when the card holding it is collapsed
  * (its content is display:none, so a browser cannot focus it), the card's
  * header button: the visible control that reveals it. The card is not
@@ -890,22 +912,29 @@ export class NetworkEditService {
 
     ctx.save();
 
-    // Edges
-    ctx.strokeStyle = ink;
-    ctx.lineWidth = lineWidth;
-    ctx.globalAlpha = 0.55;
+    // Edges, each over a casing in the lighter UI background, a reference
+    // px wider on each side, so the network reads over the route it is
+    // drawn above, where a traced one lies on it (CROWD-07 X-04)
+    const casing = 2 * svc.scaleSizeClamped(1);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     for (const edge of graph.getEdges()) {
       const pts = this._edgeCanvasPoints(state, graph, edge);
       if (pts.length < 2) continue;
       const share = shareByEdgeId.get(edge.id);
-      ctx.lineWidth = share === undefined
+      const width = share === undefined
         ? lineWidth
         : svc.scaleSizeClamped(2 + 6 * Math.sqrt(share));
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.strokeStyle = guideToken('--ui-background');
+      ctx.lineWidth = width + casing;
+      ctx.globalAlpha = 1;
+      ctx.stroke();
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = width;
+      ctx.globalAlpha = 0.55;
       ctx.stroke();
 
       if (edge.direction === 'one-way') {
@@ -921,10 +950,42 @@ export class NetworkEditService {
       this._drawNodeGlyph(ctx, p, node.type, r, ink);
     }
 
+    // While drawing, each named node says which it is beside its glyph
+    // (CROWD-07 X-05): a traced node keeps its waypoint's name
+    if (this.active && this.layer === layer) this._drawNodeLabels(svc, ctx, state, nodes, r);
+
     if (!this.active && this.layer === layer) {
       this._drawSelectionAffordances(svc, ctx, state, graph, ink, r);
     }
 
+    ctx.restore();
+  }
+
+  /**
+   * A named node's label, beside its glyph: 14 reference px (the editor's
+   * legible label size) of the UI's primary text ink, over a 2 px casing of
+   * its background so it reads on any map [Q8]. A node with no name has
+   * none: it is not numbered on the map.
+   * @private
+   */
+  _drawNodeLabels(svc, ctx, state, nodes, r) {
+    const named = nodes.filter(node => typeof node.label === 'string' && node.label.trim());
+    if (named.length === 0) return;
+    ctx.save();
+    ctx.font = `${svc.scaleLabelSize(14)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = guideToken('--ui-background');
+    ctx.fillStyle = guideToken('--text-01');
+    for (const node of named) {
+      const p = state.imageToCanvas(node.position().x, node.position().y);
+      const x = p.x + r + 4;
+      const label = node.label.trim();
+      ctx.strokeText(label, x, p.y);
+      ctx.fillText(label, x, p.y);
+    }
     ctx.restore();
   }
 

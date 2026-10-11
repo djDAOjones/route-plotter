@@ -913,7 +913,7 @@ describe('one live region (UI-06 J-05, C-5)', () => {
     expect(announced().at(-1)).toEqual(['Branch cancelled', 'polite']);
 
     const before = announced().length;
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     app.selectedCrowd.setGuideType('graph');
     expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
     const traced = announced().slice(before).filter(([message]) => /^Traced the route into/.test(message));
@@ -1007,7 +1007,7 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
       scene: { flowLayers: [{ id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] }] },
     })).toBe(true);
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     const full = app.selectedCrowd;
     expect(full.emitters).toHaveLength(1);
     const line = id('crowd-no-emitter');
@@ -1020,12 +1020,15 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
     expect(line.hidden).toBe(false);
     // What to do, in the panel's words (reason: UI-06 B-31, glossary §D, the owner's words [Q4]).
     expect(line.textContent).toBe('This crowd has no dots. To start again, delete it in Layers and choose + Add crowd.');
-    // Every control that edits the crowd is disabled, all 24 of them, as
-    // many as before help was told apart: only the 12 hints' triggers are
-    // left out ([editable, help] per card). (Reason for 12, was 11: the
-    // Pattern seed's label has a hint now, CROWD-07 F18.)
+    // Every control that edits the crowd is disabled, all 34 of them: only
+    // the 12 hints' triggers are left out ([editable, help] per card).
+    // (Reason for 12, was 11: the Pattern seed's label has a hint now,
+    // CROWD-07 F18. Reason for 34, was 24: DEF-86's number field beside each
+    // of the nine sliders, and the Pattern seed, a field now (CROWD-07 F16).
+    // A number field is named and described by its slider's label and hint,
+    // so it brings no trigger of its own.)
     expect(Object.fromEntries(CARDS.map(name => [name, [editableOf(name).length, helpOf(name).length]])))
-      .toEqual({ dots: [13, 3], release: [8, 6], motion: [3, 3] });
+      .toEqual({ dots: [15, 3], release: [14, 6], motion: [5, 3] });
     for (const name of CARDS) {
       expect(editableOf(name).filter(control => !control.disabled), `${name} controls left enabled`).toEqual([]);
       expect(card(name).querySelector('.section-header').getAttribute('aria-describedby')).toBe('crowd-no-emitter');
@@ -1117,7 +1120,7 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
       scene: { flowLayers: [{ id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] }] },
     })).toBe(true);
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     const full = app.selectedCrowd;
     // The hints' "?" triggers stay enabled, help on an empty crowd (Codex
     // r3), so they are not among the disabled controls looked at here.

@@ -173,7 +173,11 @@ describe('card headers are native buttons inside their headings (UI-06 B-21)', (
 });
 
 describe('Done gives focus back to a control that is on screen (UI-06 B-29, Codex round 1)', () => {
-  /** A crowd on its own network, in the shell; the Guide card as it starts, collapsed. */
+  /**
+   * A crowd on its own network, in the shell; the Guide card as it starts,
+   * expanded since CROWD-07 X-09 (it started collapsed): a test that wants it
+   * collapsed collapses it first.
+   */
   async function drawing() {
     const app = await editor();
     app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.5, isMajor: true });
@@ -191,6 +195,9 @@ describe('Done gives focus back to a control that is on screen (UI-06 B-29, Code
 
   test('with the Guide card collapsed, Done focuses the card\'s header, the visible control that reveals the button, and opens nothing', async () => {
     const { app, guide, header, button } = await drawing();
+    // Collapsed first: it starts open now (CROWD-07 X-09).
+    expect(header.getAttribute('aria-expanded')).toBe('true');
+    header.click();
     expect(header.getAttribute('aria-expanded')).toBe('false');
     app.enterNetworkEditMode();
     expect(button.disabled).toBe(true);
@@ -212,6 +219,8 @@ describe('Done gives focus back to a control that is on screen (UI-06 B-29, Code
     // header can take focus (Codex round 2). The Route button is always shown
     // and, since this PR, never disabled.
     const { app, guide, header, button } = await drawing();
+    header.click(); // collapsed, as it started before CROWD-07 X-09 opened it
+    expect(header.getAttribute('aria-expanded')).toBe('false');
     app.enterNetworkEditMode();
     done().focus();
     app.eventBus.emit('crowd:deselected');
@@ -234,7 +243,7 @@ describe('Done gives focus back to a control that is on screen (UI-06 B-29, Code
 
   test('with the Guide card expanded, Done focuses the Edit network button itself', async () => {
     const { app, header, button } = await drawing();
-    header.click();
+    // Expanded as it starts (CROWD-07 X-09): no click needed to open it.
     expect(header.getAttribute('aria-expanded')).toBe('true');
     app.enterNetworkEditMode();
     done().focus();
@@ -248,7 +257,8 @@ describe('Done gives focus back to a control that is on screen (UI-06 B-29, Code
   // banner's Done [Q2, the owner's call], which gives it back as above.
   test('entered from the Edit network button, focus goes to the banner\'s Done, and Done gives it back (UI-06 B-34)', async () => {
     const { app, header, button } = await drawing();
-    header.click();
+    // Expanded as it starts (CROWD-07 X-09), so the button can be focused.
+    expect(header.getAttribute('aria-expanded')).toBe('true');
     button.focus();
     button.click();
     expect(app.networkEditService.active).toBe(true);
@@ -260,23 +270,24 @@ describe('Done gives focus back to a control that is on screen (UI-06 B-29, Code
   });
 
   test('entered with focus nowhere, it goes to Done; Custom network chosen for an empty network keeps the select (UI-06 B-34)', async () => {
-    const { app, header } = await drawing();
+    const { app } = await drawing();
     document.activeElement?.blur();
     expect(document.activeElement).toBe(document.body);
     app.enterNetworkEditMode();
     expect(document.activeElement).toBe(done());
     done().click();
-    // A second crowd, on the route: choosing Custom network for it hands
-    // over the pen at once, and the select the user is on keeps focus.
+    // A second crowd, on the route: choosing Custom network for it is a
+    // setting, and the select the user is on keeps focus. (Reason for the
+    // changed expectation, CROWD-07 X-02: the select no longer hands over the
+    // pen, so the mode stays off; Edit network is the request.)
     app.addCrowd();
-    header.click();
     const select = document.getElementById('crowd-guide-type');
     expect(select.value).toBe('route');
     select.focus();
     select.value = 'graph';
     select.dispatchEvent(new Event('change', { bubbles: true }));
-    expect(app.networkEditService.active).toBe(true);
-    expect(app.networkEditService.layer).toBe(app.selectedCrowd);
+    expect(app.networkEditService.active).toBe(false);
+    expect(document.getElementById('network-edit-banner')).toBeNull();
     expect(document.activeElement).toBe(select);
   });
 });
@@ -395,6 +406,96 @@ describe('a readout never overlaps its slider (UI-06 B-06, Codex round 1)', () =
       expect(cascade(label, 'min-width', { media: [media] })?.value, media).toBe('min-content');
       expect(cascade(row, 'flex-wrap', { media: [media] })?.value, media).toBe('wrap');
     }
+  });
+});
+
+/**
+ * CROWD-07's layout (the owner's audit, 2026-10-10, and [Q6]). At 1,200 and
+ * 1,280 px the sidebar is 288 px (the 80rem breakpoint), so each rule is held
+ * there and at the default. jsdom lays nothing out: these pin the rules that
+ * win; the lead's pane pairs show truncation, overlap and the native arrows.
+ */
+describe('the crowd cards\' layout (CROWD-07 layout, DEF-86, X-06, [Q6])', () => {
+  const WIDTHS = [[], ['@media (max-width: 80rem)'], ['@media (max-width: 64rem)'], ['@media (max-width: 30rem)']];
+
+  test('a card\'s helper lines are set at 1.5, as WCAG 1.4.8 asks of a block (was 1.2)', () => {
+    const scope = mount(fragment('#crowd-scope'), '#crowd-guide-hint');
+    const lines = [scope, document.getElementById('crowd-count-reason'), document.getElementById('crowd-count-field-error'),
+      document.getElementById('crowd-seed-error')];
+    const outline = mount('<div class="control-group"><p class="scene-outline-hint">Help</p><p class="scene-outline-empty">None</p></div>',
+      '.scene-outline-hint');
+    const weightError = mount('<div class="section-content"><div class="network-path-weight-row"><span class="network-path-weight-error">No</span></div></div>',
+      '.network-path-weight-error');
+    for (const media of WIDTHS) {
+      for (const line of [...lines, outline, outline.nextElementSibling, weightError]) {
+        expect(winning(line, 'line-height', { media }), `${line.id || line.className} ${media}`).toBe('1.5');
+      }
+    }
+  });
+
+  test('the Guide and At journey end selects take the whole row on a line under their label', () => {
+    for (const id of ['crowd-guide-type', 'crowd-lifecycle']) {
+      const select = mount(fragment('#crowd-scope'), `#${id}`);
+      const label = select.closest('label');
+      expect(label.getAttribute('for')).toBe(id);
+      for (const media of WIDTHS) {
+        expect(cascade(label, 'flex-wrap', { media })?.value, `${id} ${media}`).toBe('wrap');
+        expect(cascade(select, 'flex', { media })?.value, `${id} ${media}`).toBe('1 0 100%');
+        expect(cascade(select, 'width', { media })?.value, `${id} ${media}`).toBe('100%');
+        // Still a 44 px target.
+        expect(winning(select, 'min-height', { media }), `${id} ${media}`).toBe('2.75rem');
+      }
+      document.body.innerHTML = '';
+    }
+    // Only these two: the Node card's Type keeps its place beside its label.
+    const type = mount(fragment('#node-scope'), '#network-node-type');
+    expect(cascade(type, 'flex')?.value).toBe('1');
+    expect(cascade(type.closest('label'), 'flex-wrap')).toBeUndefined();
+  });
+
+  test('a number field wraps under its slider at the right, as a long readout does; the slider keeps its 3rem and 44 px band', () => {
+    // At a 288px sidebar the row has ~252px; the label's content is 208px
+    // (see the B-06 test above), and a field is 6rem (96px) with its unit
+    // after it, so it goes under the slider, at the right.
+    for (const id of ['crowd-count', 'crowd-dot-size', 'crowd-speed', 'crowd-intensity-ramp']) {
+      const slider = mount(fragment('#crowd-scope'), `#${id}`);
+      const row = slider.closest('.range-row');
+      const field = document.getElementById(`${id}-field`);
+      const holder = field.closest('.range-field');
+      expect(holder.parentElement).toBe(row);
+      for (const media of WIDTHS) {
+        expect(cascade(row, 'flex-wrap', { media })?.value, `${id} ${media}`).toBe('wrap');
+        expect(cascade(holder, 'flex', { media })?.value, `${id} ${media}`).toBe('0 0 auto');
+        expect(cascade(holder, ['margin-inline-start', 'margin-left', 'margin'], { media })?.value, `${id} ${media}`)
+          .toBe('auto');
+        expect(cascade(field, 'width', { media })?.value, `${id} ${media}`).toBe('6rem');
+        expect(winning(field, 'min-height', { media }), `${id} ${media}`).toBe('2.75rem');
+        expect(cascade(slider, 'width', { media })?.value).toBe('3rem');
+        expect(cascade(slider, 'min-width', { media })?.value).toBe('3rem');
+        expect(winning(slider, 'height', { media })).toBe('2.75rem');
+        // The reason and the error each take a line of the row's own.
+        for (const line of [`${id}-reason`, `${id}-field-error`]) {
+          expect(cascade(document.getElementById(line), 'flex', { media })?.value, line).toBe('1 0 100%');
+        }
+      }
+      document.body.innerHTML = '';
+    }
+  });
+
+  test('Share takes the Path card\'s whole width on a line under its label (X-06); only Share', () => {
+    const slider = mount(fragment('#edge-scope'), '#network-edge-weight');
+    const label = slider.closest('label');
+    expect(label.closest('.range-row').classList.contains('range-row-wide')).toBe(true);
+    for (const media of WIDTHS) {
+      expect(cascade(label, 'flex-wrap', { media })?.value, media).toBe('wrap');
+      expect(cascade(slider, 'flex', { media })?.value, media).toBe('1 0 100%');
+      expect(cascade(slider, ['margin-inline', 'margin-left', 'margin'], { media })?.value, media).toBe('0');
+      expect(winning(slider, 'height', { media }), media).toBe('2.75rem');
+    }
+    document.body.innerHTML = '';
+    // The crowd sliders keep their place beside their labels.
+    const count = mount(fragment('#crowd-scope'), '#crowd-count');
+    expect(cascade(count, 'flex')?.value).toBe('1');
   });
 });
 

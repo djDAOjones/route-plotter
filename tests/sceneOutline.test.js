@@ -994,6 +994,125 @@ describe('native scene outline DOM', () => {
   });
 });
 
+/**
+ * CROWD-07 F15 — the outline's Release bias says which way and how much, as
+ * the card's readout does ("Earlier 40%"), not as the signed internal number
+ * it was (−100…100; UI-STANDARDS: directional readouts instead of internal
+ * signed parameters). A direction (Earlier, Even, Later) and an amount, 0–100%,
+ * each untouched submitting the value it was drawn from. With Even chosen the
+ * amount is 0 and off, its reason said [Q9, the lead's words].
+ */
+describe('the outline\'s Release bias is a direction and an amount (CROWD-07 F15)', () => {
+  let eventBus;
+  let container;
+  let fixture;
+
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    eventBus = new EventBus();
+    container = document.getElementById('scene-outline');
+    new SceneOutlineController(container, eventBus); // eslint-disable-line no-new
+    fixture = makeFixture();
+  });
+
+  /** The primary emitter's form, drawn from `ramp`, with its two fields and the amount's reason. */
+  async function biasForm(ramp) {
+    fixture.routeCrowd.emitters[0].update({ intensityRamp: ramp });
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    await openDisclosure(container, 'crowd:crowd-route');
+    await openDisclosure(container, 'emitters:crowd-route');
+    const emitter = await openDisclosure(container, 'emitter:crowd-route:emitter-primary');
+    const form = emitter.querySelector('form[data-outline-action="update-emitter"]');
+    const direction = form.elements.intensityRampDirection;
+    const amount = form.elements.intensityRampAmount;
+    const reasonOf = () => (amount.getAttribute('aria-describedby') || '').split(/\s+/)
+      .map(id => document.getElementById(id)).find(node => node?.classList.contains('scene-outline-reason')) ?? null;
+    return { form, direction, amount, reasonOf };
+  }
+
+  const submitted = (form) => {
+    const listener = vi.fn();
+    eventBus.on('scene-outline:command', listener);
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    return listener.mock.lastCall[0];
+  };
+
+  test('no signed field: a direction select and a 0–100% amount, drawn from the stored bias', async () => {
+    const { form, direction, amount } = await biasForm(-0.375);
+    expect(form.elements.intensityRamp).toBeUndefined();
+    expect(direction.tagName).toBe('SELECT');
+    expect([...direction.options].map(option => [option.value, option.textContent]))
+      .toEqual([['earlier', 'Earlier'], ['even', 'Even'], ['later', 'Later']]);
+    expect(direction.value).toBe('earlier');
+    expect(direction.closest('label').querySelector('span').textContent).toBe('Release bias');
+    expect(amount.closest('label').querySelector('span').textContent).toBe('Release bias amount (%)');
+    expect([amount.min, amount.max, amount.step, amount.value, amount.disabled]).toEqual(['0', '100', 'any', '37.5', false]);
+
+    const later = await biasForm(0.4);
+    expect([later.direction.value, later.amount.value]).toEqual(['later', '40']);
+  });
+
+  test('untouched, both submit the value they were drawn from: a stored −0.375 survives', async () => {
+    const { form } = await biasForm(-0.375);
+    const command = submitted(form);
+    expect(command.intensityRampDirection).toBe('earlier');
+    expect(command.intensityRampAmount).toBe('37.5');
+    expect(command.outlineOriginalValues.intensityRampAmount).toEqual({ display: '37.5', canonical: 0.375 });
+    expect('intensityRamp' in command).toBe(false);
+  });
+
+  test('Even turns the amount off at 0 and says why; another direction turns it back on [Q9]', async () => {
+    const { form, direction, amount, reasonOf } = await biasForm(0);
+    expect(direction.value).toBe('even');
+    expect([amount.value, amount.disabled]).toEqual(['0', true]);
+    expect(reasonOf()?.textContent).toBe('Shares are already even.');
+    expect(reasonOf().hidden).toBe(false);
+    expect(reasonOf().closest('label')).toBeNull(); // a description, outside the field's label
+
+    direction.value = 'later';
+    direction.dispatchEvent(new Event('change', { bubbles: true }));
+    expect([amount.value, amount.disabled]).toEqual(['0', false]);
+    expect(reasonOf()).toBeNull();
+    amount.value = '60';
+    amount.dispatchEvent(new Event('input', { bubbles: true }));
+
+    direction.value = 'even';
+    direction.dispatchEvent(new Event('change', { bubbles: true }));
+    expect([amount.value, amount.disabled]).toEqual(['0', true]);
+    expect(reasonOf()?.textContent).toBe('Shares are already even.');
+    const command = submitted(form);
+    expect(command.intensityRampDirection).toBe('even');
+    expect('intensityRampAmount' in command).toBe(false); // off, so not sent: Even is 0
+
+    // Escape puts the drawn values back, and the amount's state with them.
+    const stored = await biasForm(-0.2);
+    stored.direction.value = 'even';
+    stored.direction.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(stored.amount.disabled).toBe(true);
+    stored.amount.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    stored.direction.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect([stored.direction.value, stored.amount.value, stored.amount.disabled]).toEqual(['earlier', '20', false]);
+    expect(stored.reasonOf()).toBeNull();
+  });
+
+  test('a second emitter\'s read-only summary says the direction and the amount too', async () => {
+    fixture.routeCrowd.emitters[1].update({ intensityRamp: -0.375 });
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    await openDisclosure(container, 'crowd:crowd-route');
+    await openDisclosure(container, 'emitters:crowd-route');
+    await openDisclosure(container, 'emitter:crowd-route:emitter-extra');
+    // Each redraw replaces the entry: it is read afresh.
+    const read = term => [...disclosure(container, 'emitter:crowd-route:emitter-extra').querySelectorAll('dt')]
+      .find(dt => dt.textContent === term)?.nextElementSibling?.textContent;
+    expect(read('Release bias')).toBe('Earlier 37.5%');
+    for (const [ramp, text] of [[0, 'Even'], [0.4, 'Later 40%'], [-1, 'Earlier 100%']]) {
+      fixture.routeCrowd.emitters[1].update({ intensityRamp: ramp });
+      eventBus.emit('scene-outline:update', snapshotFor(fixture));
+      expect(read('Release bias'), String(ramp)).toBe(text);
+    }
+  });
+});
+
 describe('the outline calls a drawn area an area, and its corners corners (UI-06 low items, one word per concept)', () => {
   // The Area card says "Draw", "Draw area" and "Delete area"; the outline
   // said "polygon" and "vertices" for the same things [Q4, the owner's words].
