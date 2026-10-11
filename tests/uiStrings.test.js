@@ -29,7 +29,7 @@ import { resolve } from 'node:path';
 import { describe, test, expect, vi } from 'vitest';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
 import { bootApp } from './helpers/bootApp.js';
-import { lexedFiles, lineAt } from './helpers/sourceScan.js';
+import { lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
 import { TOOLTIPS } from '../src/config/tooltips.js';
 
 /**
@@ -76,8 +76,20 @@ const endsSegment = token => /[.:;!?]$/.test(token) || token === '—' || token 
 
 const isCapitalisedWord = token => /^[A-Z][a-z]/.test(bare(token));
 
+/**
+ * Key names, as `src/config/keybindings.js` writes them (MODIFIER_DISPLAY,
+ * formatKey): the Mac's modifier symbols and elsewhere words, Esc, Del, Home,
+ * End, Space, the arrows; with Enter and Tab. A letter, a digit or a symbol is
+ * a key by itself. Not ALLOWED_WORDS, which holds names a chord never joins
+ * (Codex r1: "Earlier+Later" passed for one).
+ */
+const KEY_NAMES = new Set([
+  '⌘', '⇧', '⌥', '⌃', 'Ctrl', 'Alt', 'Shift', 'Esc', 'Del', 'Home', 'End', 'Space', 'Enter', 'Tab',
+  '↑', '↓', '←', '→',
+]);
+
 /** A shortcut written as keys joined by "+" ("Ctrl+Shift+Z"): each part a key's name or a single key. */
-const isChord = word => word.includes('+') && word.split('+').every(part => ALLOWED_WORDS.has(part) || part.length === 1);
+const isChord = word => word.includes('+') && word.split('+').every(part => KEY_NAMES.has(part) || part.length === 1);
 
 /**
  * What is wrong with a label, option, button, heading or menu item, or null.
@@ -400,6 +412,13 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
     // A shortcut in parentheses is keys, not Title Case (UI-06 G-10); a word that is not a key still is.
     expect(hintFault('Redo what you undid (Ctrl+Shift+Z)')).toBeNull();
     expect(hintFault('Redo what you undid (Control+Shift+Z)')).toMatch(/capital after an opening parenthesis/);
+    // Keys, not words that may keep a capital elsewhere (Codex r1): a name or a readout word joined by "+" is no chord.
+    expect(isChord('Ctrl+Shift+Z')).toBe(true);
+    expect(isChord('⌘+⇧+Z')).toBe(true);
+    expect(isChord('Earlier+Later')).toBe(false);
+    expect(isChord('Nervous+System')).toBe(false);
+    expect(hintFault('Compare (Earlier+Later)')).toMatch(/capital after an opening parenthesis "\(Earlier\+Later\)"/);
+    expect(hintFault('Use (Nervous+System)')).toMatch(/capital after an opening parenthesis "\(Nervous\+System\)"/);
     expect(hintFault('Export the route (MP4 or WebM)')).toBeNull();
     expect(hintFault('Made with Route Plotter (UoN)')).toBeNull();
     expect(hintFault('Create animated routes with Route Plotter')).toBeNull();
@@ -584,31 +603,74 @@ describe('the glossary spells it centre (UI-06, the lead\'s addendum to PR 8)', 
    * user-facing one, unless it is a CSS keyword, an event's name or an
    * internal key. Read as code (`lex`), so a comment is never one.
    */
-  function centerStringsIn(root) {
+  /**
+   * What lets a lower-case "center" through, and nothing else does (Codex r1:
+   * a colon or a string of its own let prose through): a CSS declaration in a
+   * string or template ("text-align: center", "background-position: left
+   * center"); a string of its own assigned to a style property in code
+   * (`ctx.textAlign = 'center'`, `{ alignItems: 'center' }`); part of a name
+   * ("waypoint:add-at-center"); or the area handle's key, a string of its own
+   * given or compared as a `type` or `dragTarget` (AreaEditService).
+   */
+  const CSS_DECLARED = new RegExp(String.raw`\b(?:text-align|align-items|justify-content|transform-origin|`
+    + String.raw`background-position|object-position|place-[a-z]+)\s*:\s*(?:[\w%.-]+\s+)*$`);
+  const CSS_ASSIGNED = new RegExp(String.raw`\b(?:textAlign|alignItems|justifyContent|transformOrigin|`
+    + String.raw`backgroundPosition|objectPosition|place[A-Z]\w*)\s*[:=]\s*$`);
+  const HANDLE_KEY = /\b(?:type|dragTarget)\s*(?::|={1,3}|!==?)\s*$/;
+
+  function centerStringsInLexed(file, lexed) {
     const found = [];
-    for (const { file, lexed } of lexedFiles(root, 'src')) {
-      const { source, kind } = lexed;
-      for (let start = 0; start < source.length;) {
-        if (kind[start] !== 's' && kind[start] !== 't') { start += 1; continue; }
-        let end = start;
-        while (end < source.length && kind[end] === kind[start]) end += 1;
-        const words = source.slice(start, end).replace(/^['"`]|['"`]$/g, '');
-        for (const match of words.matchAll(/\bcenter\b/gi)) {
-          const before = words.slice(0, match.index);
-          const after = words.slice(match.index + match[0].length);
-          // A CSS value ("align-items: center;"), a keyword alone, or part of a name ("add-at-center").
-          const internal = /[\w-]$|:\s*$/.test(before) || /^[\w-]/.test(after) || /^center$/i.test(words.trim());
-          if (!internal) found.push(`${file}:${lineAt(source, start + 1 + match.index)}: ${words.trim().slice(0, 80)}`);
-        }
-        start = end;
+    const { source, code, kind } = lexed;
+    for (let start = 0; start < source.length;) {
+      if (kind[start] !== 's' && kind[start] !== 't') { start += 1; continue; }
+      let end = start;
+      while (end < source.length && kind[end] === kind[start]) end += 1;
+      const words = source.slice(start, end).replace(/^['"`]|['"`]$/g, '');
+      const codeBefore = code.slice(Math.max(0, start - 80), start);
+      const alone = words.trim() === 'center';
+      for (const match of words.matchAll(/\bcenter\b/gi)) {
+        const before = words.slice(0, match.index);
+        const after = words.slice(match.index + match[0].length);
+        const internal = match[0] === 'center' && (
+          CSS_DECLARED.test(before)
+          || (alone && (CSS_ASSIGNED.test(codeBefore) || HANDLE_KEY.test(codeBefore)))
+          || /[\w-]$/.test(before) || /^[\w-]/.test(after)
+        );
+        if (!internal) found.push(`${file}:${lineAt(source, start + 1 + match.index)}: ${words.trim().slice(0, 80)}`);
       }
+      start = end;
     }
     return found;
   }
 
+  function centerStringsIn(root) {
+    return lexedFiles(root, 'src').flatMap(({ file, lexed }) => centerStringsInLexed(file, lexed));
+  }
+
+  /** The census on a fixture: what it would report for a file holding `source`. */
+  const centerFixture = source => centerStringsInLexed('fixture.js', lex(source));
+
   test('no string src/ shows or says spells "center"', () => {
     expect(centerStringsIn(resolve(process.cwd()))).toEqual([]);
     expect(TOOLTIPS.waypoint_add).toBe('Add a new waypoint at the centre of the map');
+  });
+
+  test('the census reads prose as prose, and lets only CSS and names through (Codex r1)', () => {
+    // Prose, however it is punctuated: a word alone, or after a colon.
+    expect(centerFixture("label.textContent = 'Center';")).toHaveLength(1);
+    expect(centerFixture("hint.textContent = 'Position: center';")).toHaveLength(1);
+    expect(centerFixture("announce(`Centred? No: center ${x}`);")).toHaveLength(1);
+    expect(centerFixture("button.textContent = 'center';")).toHaveLength(1);
+    // CSS: a declaration in a string or a template, or a style property assigned in code.
+    expect(centerFixture("const css = `.a { text-align: center; align-items: center; justify-content: center; }`;"))
+      .toEqual([]);
+    expect(centerFixture("const css = '.a { background-position: left center; place-items: center; }';")).toEqual([]);
+    expect(centerFixture("ctx.textAlign = 'center'; el.style.alignItems = 'center';")).toEqual([]);
+    expect(centerFixture("Object.assign(el.style, { justifyContent: 'center', transformOrigin: 'center' });"))
+      .toEqual([]);
+    // Names: an event or a key, and the area handle's.
+    expect(centerFixture("bus.emit('waypoint:add-at-center');")).toEqual([]);
+    expect(centerFixture("if (this.dragTarget === 'center') return { type: 'center' };")).toEqual([]);
   });
 
   test('a waypoint added at the centre says so', async () => {

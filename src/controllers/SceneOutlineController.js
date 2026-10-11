@@ -11,6 +11,9 @@ import { IMAGE_COORDINATES } from '../config/constants.js';
 import { formatCrowdDotSize } from '../utils/uiReadouts.js';
 
 const OUTLINE_CANONICAL_VALUE = Symbol('outlineCanonicalValue');
+// A field the author has typed in or chosen in (UI-06 W-02, Codex r1): it
+// submits what it holds, though that is the value it was drawn with.
+const OUTLINE_EDITED = Symbol('outlineEdited');
 const OUTLINE_DRAFT_CONTEXT = Symbol('outlineDraftContext');
 const OUTLINE_ERROR_ID_PREFIX = 'scene-outline-error-';
 
@@ -24,14 +27,20 @@ const IMAGE_POSITION_PERCENT = Object.freeze({
 });
 
 /**
- * A bend point's position field: 0–100%, and the value it holds. A traced
- * bend sits where its minor waypoint is, which may be off the image (DEF-41);
- * left as it is, the app keeps it, and a new value is held to the image.
+ * A bend point's position field: 0–100%, and the value it holds, both as
+ * stored and as the field shows it. A traced bend sits where its minor
+ * waypoint is, which may be off the image (DEF-41); left as it is, the app
+ * keeps it, and a new value is held to the image. The field shows two
+ * decimals (UI-06 W-02), -18.92 for -18.916, so bounds from the stored value
+ * alone refused the field as shown, and the whole form with it (Codex r1).
+ * @param {number} value - The stored position, in percent
+ * @param {number} [shown] - The value the field shows
  */
-function bendPercentRange(value) {
+function bendPercentRange(value, shown = value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return { min: 0, max: 100 };
-  return { min: Math.min(0, number), max: Math.max(100, number) };
+  const label = Number.isFinite(Number(shown)) ? Number(shown) : number;
+  return { min: Math.min(0, number, label), max: Math.max(100, number, label) };
 }
 
 /**
@@ -291,9 +300,12 @@ export class SceneOutlineController {
     this._boundSubmit = event => this._onSubmit(event);
     this._boundClick = event => this._onClick(event);
     this._boundKeyDown = event => this._onKeyDown(event);
+    this._boundEdit = event => this._onEdit(event);
     this.container?.addEventListener('submit', this._boundSubmit);
     this.container?.addEventListener('click', this._boundClick);
     this.container?.addEventListener('keydown', this._boundKeyDown);
+    this.container?.addEventListener('input', this._boundEdit);
+    this.container?.addEventListener('change', this._boundEdit);
   }
 
   destroy() {
@@ -301,6 +313,8 @@ export class SceneOutlineController {
     this.container?.removeEventListener('submit', this._boundSubmit);
     this.container?.removeEventListener('click', this._boundClick);
     this.container?.removeEventListener('keydown', this._boundKeyDown);
+    this.container?.removeEventListener('input', this._boundEdit);
+    this.container?.removeEventListener('change', this._boundEdit);
     this._drafts.clear();
   }
 
@@ -441,11 +455,14 @@ export class SceneOutlineController {
         const dirty = checkable
           ? field.checked !== field.defaultChecked
           : field.value !== this._defaultFieldValue(field);
-        if (!dirty) continue;
+        // An edited field is kept though it holds its default: the edit is.
+        const edited = field[OUTLINE_EDITED] === true;
+        if (!dirty && !edited) continue;
         fields.set(fieldKey, {
           name: field.name,
           value: field.value,
           checked: checkable ? field.checked : null,
+          edited,
         });
       }
       const formKey = formEl.dataset.outlineFormKey;
@@ -478,6 +495,7 @@ export class SceneOutlineController {
             || [...field.options].some(option => option.value === fieldDraft.value)) {
           field.value = fieldDraft.value;
         }
+        if (fieldDraft.edited) field[OUTLINE_EDITED] = true;
       }
     }
   }
@@ -536,10 +554,16 @@ export class SceneOutlineController {
     }
   }
 
+  /** A form's fields back to unedited: they submit their stored values again. */
+  _clearEdits(formEl) {
+    for (const field of formEl?.elements ?? []) delete field[OUTLINE_EDITED];
+  }
+
   _resetDrafts() {
     this._drafts.clear();
     for (const formEl of this.container.querySelectorAll('form[data-outline-form-key]')) {
       formEl.reset();
+      this._clearEdits(formEl);
     }
     this._clearCommandError();
   }
@@ -565,6 +589,7 @@ export class SceneOutlineController {
           field.defaultValue = field.value;
         }
       }
+      this._clearEdits(formEl);
     }
     this._drafts.delete(normalizedKey);
     this._clearCommandError();
@@ -1210,12 +1235,12 @@ export class SceneOutlineController {
         index: point.index,
       }, [
         labelledInput('x', 'Horizontal position (%)', point.xLabel, {
-          ...bendPercentRange(point.x), step: 'any', key: `${point.key}:x`, canonicalValue: point.xCanonical,
-          tip: FIELD_HINTS.onImageX,
+          ...bendPercentRange(point.x, point.xLabel), step: 'any', key: `${point.key}:x`,
+          canonicalValue: point.xCanonical, tip: FIELD_HINTS.onImageX,
         }),
         labelledInput('y', 'Vertical position (%)', point.yLabel, {
-          ...bendPercentRange(point.y), step: 'any', key: `${point.key}:y`, canonicalValue: point.yCanonical,
-          tip: FIELD_HINTS.onImageY,
+          ...bendPercentRange(point.y, point.yLabel), step: 'any', key: `${point.key}:y`,
+          canonicalValue: point.yCanonical, tip: FIELD_HINTS.onImageY,
         }),
       ], 'Apply bend', `${point.key}:apply`, controlDraftContext));
       pointContent.appendChild(button('Delete bend', 'delete-control', {
@@ -1257,6 +1282,8 @@ export class SceneOutlineController {
     const outlineOriginalValues = {};
     for (const field of formEl.elements) {
       if (!field.name || !(OUTLINE_CANONICAL_VALUE in field)) continue;
+      // An edited field submits what it holds, whatever it holds (UI-06 W-02, Codex r1).
+      if (field[OUTLINE_EDITED]) continue;
       outlineOriginalValues[field.name] = {
         display: field.defaultValue,
         canonical: field[OUTLINE_CANONICAL_VALUE],
@@ -1301,6 +1328,20 @@ export class SceneOutlineController {
     this._clearCommandError();
     this._drafts.delete(field.form?.dataset?.outlineFormKey);
     field.form?.reset();
+    this._clearEdits(field.form);
     field.form?.querySelector('[type="submit"]')?.focus();
+  }
+
+  /**
+   * An explicit edit, typed or chosen, marks its field (UI-06 W-02, Codex r1).
+   * The mark is kept through the outline's redraws as a draft is, and goes
+   * when the Apply is accepted, on Escape, with a new project, or, for a
+   * corner or a bend, when the point list it was drawn from changes; a
+   * refused Apply keeps it.
+   */
+  _onEdit(event) {
+    const field = event.target;
+    if (!field?.form?.dataset?.outlineFormKey || !this.container.contains(field)) return;
+    if (OUTLINE_CANONICAL_VALUE in field) field[OUTLINE_EDITED] = true;
   }
 }

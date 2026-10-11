@@ -99,12 +99,17 @@ const VIDEO_REFUSED = { message: 'Export MP4 and WebM need at least 2 waypoints.
 /**
  * Whether each export control is disabled: MP4, WebM, HTML and the menu. The
  * items by `aria-disabled`, never natively, so they stay focusable; the menu's
- * toggle alone natively (UI-06 B-18 follow-up).
+ * toggle alone natively (UI-06 B-18 follow-up). An item natively disabled
+ * fails here, in every state: read as "not aria-disabled", a stuck one would
+ * have passed for free (Codex r1).
  */
 const exportButtons = () => ['export-mp4-btn', 'export-webm-btn', 'export-html-btn', 'export-dropdown-btn']
   .map(id => document.getElementById(id))
-  .map(control => (control.id === 'export-dropdown-btn' ? control.disabled
-    : !control.disabled && control.getAttribute('aria-disabled') === 'true'));
+  .map(control => {
+    if (control.id === 'export-dropdown-btn') return control.disabled;
+    expect(control.disabled, `${control.id} is never natively disabled`).toBe(false);
+    return control.getAttribute('aria-disabled') === 'true';
+  });
 /**
  * The controls free of an export: the state the project allows each (UI-06
  * B-18). The authored-extras project has no background, so Export HTML stays

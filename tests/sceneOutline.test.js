@@ -1268,3 +1268,165 @@ describe('an outline entry opens and closes as a browser clicks it (DEF-40)', ()
     expect(document.activeElement).toBe(summaryOf(entry()));
   });
 });
+
+describe('a bend off the image applies as its field shows it (UI-06 W-02, Codex r1)', () => {
+  // A traced bend may sit off the image (DEF-41). Its field shows the
+  // heading's two decimals, -18.92 for -18.916%, but took its bounds from the
+  // stored value alone (min -18.916), so the browser refused the field as
+  // shown, and with it an edit to the bend's other coordinate.
+  let eventBus;
+  let container;
+
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    eventBus = new EventBus();
+    container = document.getElementById('scene-outline');
+    new SceneOutlineController(container, eventBus);
+  });
+
+  const BEND = ['crowd:crowd-route', 'network:crowd-route', 'edges:crowd-route', 'edge:crowd-route:edge-a',
+    'controls:crowd-route:edge-a', 'control:crowd-route:edge-a:0'];
+
+  /** Draw the bend at `point`, open it, change its other coordinate to 70 and Apply. */
+  async function applyOther(point, other) {
+    const fixture = makeFixture();
+    fixture.routeCrowd.graph.getEdge('edge-a').controlPoints[0] = { ...point };
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    for (const key of BEND) await openDisclosure(container, key);
+    const form = container.querySelector('form[data-outline-form-key="control:crowd-route:edge-a:0:apply"]');
+    const untouched = form.reportValidity();
+    form.elements[other].value = '70';
+    const listener = vi.fn();
+    eventBus.on('scene-outline:command', listener);
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    return { form, untouched, listener };
+  }
+
+  test.each([
+    ['below 0%', -0.18916, '-18.92'],
+    ['above 100%', 1.18916, '118.92'],
+  ])('an untouched coordinate %s is valid as shown, and a change to the other is sent', async (_, off, shown) => {
+    for (const [axis, other] of [['x', 'y'], ['y', 'x']]) {
+      const point = { x: 0.4, y: 0.6, [axis]: off };
+      const { form, untouched, listener } = await applyOther(point, other);
+      expect(form.elements[axis].value, axis).toBe(shown);
+      expect(untouched, `${axis} untouched`).toBe(true);
+      expect(listener, axis).toHaveBeenCalledTimes(1);
+      expect(listener.mock.lastCall[0], axis).toMatchObject({
+        action: 'update-control',
+        [axis]: shown,
+        [other]: '70',
+        outlineOriginalValues: { [axis]: { display: shown, canonical: off } },
+      });
+      // A bend on the image keeps 0–100 (DEF-35); one off it, the value stored and the value shown.
+      expect([Number(form.elements[axis].min), Number(form.elements[axis].max)], axis)
+        .toEqual(off < 0 ? [Number(shown), 100] : [0, Number(shown)]);
+      expect([form.elements[other].min, form.elements[other].max], other).toEqual(['0', '100']);
+    }
+  });
+});
+
+describe('an edited field submits what it holds, not the stored value (UI-06 W-02, Codex r1)', () => {
+  // A field that is never edited submits the exact stored value it was drawn
+  // from (round 1). One the author typed in, even back to the value it showed,
+  // submits what it holds: the controller leaves its canonical value out.
+  let eventBus;
+  let container;
+  let fixture;
+  let listener;
+
+  beforeEach(async () => {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    eventBus = new EventBus();
+    container = document.getElementById('scene-outline');
+    new SceneOutlineController(container, eventBus);
+    fixture = makeFixture();
+    fixture.major.imgX = 0.18914301880222837;
+    fixture.routeCrowd.graph.getEdge('edge-a').controlPoints[0] = { x: 0.18914301880222837, y: 0.6 };
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    for (const key of ['waypoint:wp-major', 'crowd:crowd-route', 'network:crowd-route', 'edges:crowd-route',
+      'edge:crowd-route:edge-a', 'controls:crowd-route:edge-a', 'control:crowd-route:edge-a:0']) {
+      await openDisclosure(container, key);
+    }
+    listener = vi.fn();
+    eventBus.on('scene-outline:command', listener);
+  });
+
+  const WAYPOINT = 'waypoint:wp-major:apply';
+  const BEND = 'control:crowd-route:edge-a:0:apply';
+  const formFor = key => container.querySelector(`form[data-outline-form-key="${key}"]`);
+  const fieldOf = (key, name) => formFor(key).elements[name];
+  /** Type the value the field already shows, as the author does, ending with a change event. */
+  const retypeShown = (key, name, type = 'input') => {
+    const field = fieldOf(key, name);
+    const shown = field.value;
+    field.value = '';
+    field.dispatchEvent(new Event(type, { bubbles: true }));
+    field.value = shown;
+    field.dispatchEvent(new Event(type, { bubbles: true }));
+  };
+  const submit = key => {
+    formFor(key).dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    return listener.mock.lastCall[0];
+  };
+  const redraw = () => eventBus.emit('scene-outline:update', snapshotFor(fixture));
+
+  test('an input or change event marks a field edited, and the mark survives a redraw and a failed Apply', async () => {
+    retypeShown(WAYPOINT, 'x');
+    retypeShown(BEND, 'y', 'change');
+    let waypoint = submit(WAYPOINT);
+    expect(waypoint.x).toBe('18.91');
+    expect(Object.keys(waypoint.outlineOriginalValues).sort()).toEqual(['waitSeconds', 'y']);
+    expect(Object.keys(submit(BEND).outlineOriginalValues)).toEqual(['x']);
+
+    // Redrawn, and redrawn with the entry collapsed and reopened.
+    redraw();
+    expect(Object.keys(submit(WAYPOINT).outlineOriginalValues).sort()).toEqual(['waitSeconds', 'y']);
+    await openDisclosure(container, 'waypoint:wp-major');
+    formFor(WAYPOINT).closest('details').querySelector(':scope > summary').click();
+    await Promise.resolve();
+    expect(formFor(WAYPOINT)).toBeNull();
+    await openDisclosure(container, 'waypoint:wp-major');
+    expect(fieldOf(WAYPOINT, 'x').value).toBe('18.91');
+    expect(Object.keys(submit(WAYPOINT).outlineOriginalValues).sort()).toEqual(['waitSeconds', 'y']);
+
+    // The app refused the Apply: the edit stands.
+    eventBus.emit('scene-outline:error', { formKey: WAYPOINT, message: 'That waypoint no longer exists.' });
+    redraw();
+    expect(Object.keys(submit(WAYPOINT).outlineOriginalValues).sort()).toEqual(['waitSeconds', 'y']);
+    // Focus and blur alone are no edit.
+    fieldOf(BEND, 'x').focus();
+    fieldOf(BEND, 'x').blur();
+    expect(Object.keys(submit(BEND).outlineOriginalValues)).toEqual(['x']);
+  });
+
+  test('the mark goes when the Apply is accepted, on Escape, with a new project, and when the bends change', () => {
+    const allOriginals = { x: expect.anything(), y: expect.anything(), waitSeconds: expect.anything() };
+    const edited = () => Object.keys(submit(WAYPOINT).outlineOriginalValues).sort();
+
+    retypeShown(WAYPOINT, 'x');
+    expect(edited()).toEqual(['waitSeconds', 'y']);
+    eventBus.emit('scene-outline:accepted', { formKey: WAYPOINT });
+    redraw();
+    expect(submit(WAYPOINT).outlineOriginalValues).toEqual(allOriginals);
+
+    retypeShown(WAYPOINT, 'x');
+    fieldOf(WAYPOINT, 'x').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(submit(WAYPOINT).outlineOriginalValues).toEqual(allOriginals);
+    redraw();
+    expect(submit(WAYPOINT).outlineOriginalValues).toEqual(allOriginals);
+
+    for (const boundary of ['project:replaced', 'app:cleared']) {
+      retypeShown(WAYPOINT, 'x');
+      eventBus.emit(boundary);
+      redraw();
+      expect(submit(WAYPOINT).outlineOriginalValues, boundary).toEqual(allOriginals);
+    }
+
+    // A bend is named by its place in the list: a list that changed is another bend.
+    retypeShown(BEND, 'x');
+    fixture.routeCrowd.graph.getEdge('edge-a').controlPoints[0] = { x: 0.18914301880222837, y: 0.65 };
+    redraw();
+    expect(Object.keys(submit(BEND).outlineOriginalValues).sort()).toEqual(['x', 'y']);
+  });
+});

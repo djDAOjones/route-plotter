@@ -1226,4 +1226,111 @@ describe('the outline\'s position fields show the heading\'s precision, lossless
     }
     expect(app.announced.filter(message => /must be|no longer exists/.test(message))).toEqual([]);
   });
+
+  test('an untouched bend off the image keeps its stored value as the other coordinate changes (Codex r1)', async () => {
+    // Its field shows -18.92 for -18.916%; bounds from the stored value alone
+    // refused the form as shown, so the edit to the other never arrived.
+    const { app, container, edge, render } = outlined();
+    for (const off of [-0.18916, 1.18916]) {
+      for (const [axis, other] of [['x', 'y'], ['y', 'x']]) {
+        edge.controlPoints[0] = { x: 0.4, y: 0.6, [axis]: off };
+        render();
+        await openAll(container);
+        const form = container.querySelector('form[data-outline-form-key="control:crowd-a:edge-a:0:apply"]');
+        form.elements[other].value = '70';
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        expect(edge.controlPoints[0], `${axis} at ${off}`).toEqual({ x: 0.4, y: 0.6, [axis]: off, [other]: 0.7 });
+      }
+    }
+    expect(app.announced.filter(message => /must be|no longer exists/.test(message))).toEqual([]);
+  });
+
+  /** Clear a field and type `text` into it, as the author does: each keystroke an input event. */
+  function retype(field, text) {
+    field.value = '';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    for (let end = 1; end <= text.length; end += 1) {
+      field.value = text.slice(0, end);
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  const ENTRY = {
+    waypoint: 'waypoint:wp-a', corner: 'vertex:wp-a:0', node: 'node:crowd-a:node-a', bend: 'control:crowd-a:edge-a:0',
+  };
+
+  function storedOf({ waypoint, node, edge }) {
+    return {
+      waypoint: () => waypoint.imgX, corner: () => waypoint.areaHighlight.points[0].x,
+      node: () => node.x, bend: () => edge.controlPoints[0].x,
+    };
+  }
+
+  function putBack({ waypoint, node, edge }, what) {
+    if (what === 'waypoint') waypoint.imgX = EXACT;
+    if (what === 'corner') waypoint.areaHighlight.points[0] = { ...waypoint.areaHighlight.points[0], x: EXACT };
+    if (what === 'node') node.moveTo(EXACT, node.y);
+    if (what === 'bend') edge.controlPoints[0] = { ...edge.controlPoints[0], x: EXACT };
+  }
+
+  test('retyping the value a field shows writes it, for waypoint, corner, node and bend (Codex r1)', async () => {
+    // "18.91" typed is 0.1891, though the field showed 18.91 before: an
+    // explicit edit is written as typed, and only a field never edited
+    // submits the exact stored value.
+    const outline = outlined();
+    const { app, container, render } = outline;
+    const stored = storedOf(outline);
+    for (const [what, [key, formKey]] of Object.entries(FIELDS)) {
+      render();
+      await openAll(container);
+      retype(container.querySelector(`input[data-outline-key="${key}"]`), '18.91');
+      container.querySelector(`form[data-outline-form-key="${formKey}"]`)
+        .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      expect(stored[what](), what).toBe(0.1891);
+      putBack(outline, what);
+    }
+    expect(app.announced.filter(message => /must be|no longer exists/.test(message))).toEqual([]);
+  });
+
+  test('a retyped field keeps its edit through a redraw: collapsed, reopened, then applied (Codex r1)', async () => {
+    const outline = outlined();
+    const { app, container, render } = outline;
+    const stored = storedOf(outline);
+    const summary = key => container.querySelector(`details[data-outline-disclosure="${key}"] > summary`);
+    for (const [what, [key, formKey]] of Object.entries(FIELDS)) {
+      render();
+      await openAll(container);
+      retype(container.querySelector(`input[data-outline-key="${key}"]`), '18.91');
+      // The entry collapsed and reopened: the form is drawn again from the model.
+      summary(ENTRY[what]).click();
+      await Promise.resolve();
+      expect(container.querySelector(`input[data-outline-key="${key}"]`), what).toBeNull();
+      summary(ENTRY[what]).click();
+      await Promise.resolve();
+      expect(container.querySelector(`input[data-outline-key="${key}"]`).value, what).toBe('18.91');
+      container.querySelector(`form[data-outline-form-key="${formKey}"]`)
+        .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      expect(stored[what](), what).toBe(0.1891);
+      putBack(outline, what);
+    }
+    expect(app.announced.filter(message => /must be|no longer exists/.test(message))).toEqual([]);
+  });
+
+  test('a field edited to another value keeps it through a redraw, and Apply writes it', async () => {
+    const outline = outlined();
+    const { container, render } = outline;
+    const stored = storedOf(outline);
+    for (const [what, [key, formKey]] of Object.entries(FIELDS)) {
+      render();
+      await openAll(container);
+      retype(container.querySelector(`input[data-outline-key="${key}"]`), '18.95');
+      render();
+      expect(container.querySelector(`input[data-outline-key="${key}"]`).value, what).toBe('18.95');
+      container.querySelector(`form[data-outline-form-key="${formKey}"]`)
+        .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      expect(stored[what](), what).toBe(0.1895);
+      putBack(outline, what);
+    }
+  });
 });

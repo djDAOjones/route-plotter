@@ -15,8 +15,10 @@ const round = (value, places = 3) => {
 
 // Keep authoring values lossless. Headings and position fields show the
 // rounded companion labels (UI-06 W-02); a field carries the canonical value
-// beside it, which an untouched field submits, so nothing is lost. Other
-// number inputs receive the full JS round-trip value.
+// beside it, which a field never edited submits, so nothing is lost. One the
+// author typed in, even back to what it showed, submits what it holds
+// (SceneOutlineController). Other number inputs receive the full JS
+// round-trip value.
 const percent = value => Number(value) * 100;
 const percentLabel = value => round(Number(value) * 100, 2);
 

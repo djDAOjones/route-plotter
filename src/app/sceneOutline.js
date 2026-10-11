@@ -70,9 +70,10 @@ function imagePercent(value, label) {
   return position;
 }
 
-// An untouched field submits the stored value it was drawn from. One outside
-// the range could only come from a tampered command, so the typed value is
-// checked and used instead.
+// A field never edited submits the stored value it was drawn from (the
+// controller sends no original for one the author typed in, UI-06 W-02). One
+// outside the range could only come from a tampered command, so the typed
+// value is checked and used instead.
 function imagePercentDraft(command, field, label) {
   const canonical = originalCanonical(command, field);
   return isImageCoordinateInRange(canonical) ? canonical : imagePercent(command[field], label);
