@@ -957,6 +957,34 @@ describe('native scene outline DOM', () => {
     expect(container.querySelectorAll('form[data-outline-action="update-node"]')).toHaveLength(1);
     expect(document.activeElement.dataset.outlineKey).toBe('node:crowd-large:node-1999:select');
   });
+
+  // CROWD-07 F1: the card's Size reads reference px; the outline edits the
+  // model's own unit, so it keeps "Dot size (×)" and its hint gives the
+  // reference px the value draws, as the card's readout says it.
+  test('Dot size stays in ×, and its hint gives the reference px it draws (CROWD-07 F1)', async () => {
+    const sizeField = async () => {
+      await openDisclosure(container, 'crowd:crowd-route');
+      await openDisclosure(container, 'emitters:crowd-route');
+      const emitter = await openDisclosure(container, 'emitter:crowd-route:emitter-primary');
+      const input = emitter.querySelector('input[name="dotSize"]');
+      const label = input.closest('label').querySelector('[data-tip]');
+      return { input, label: label.textContent, hint: label.getAttribute('data-tip') };
+    };
+    const emitter = fixture.routeCrowd.emitters[0];
+    expect(emitter.dotSize).toBe(0.4);
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    let field = await sizeField();
+    expect(field.label).toBe('Dot size (×)');
+    expect(field.input.value).toBe('0.4');
+    expect(field.hint).toBe('Dot diameter as a multiple of 20 reference px: 0.4 draws a dot 8 reference px across; '
+      + 'exports scale it from the project’s reference short edge');
+
+    emitter.update({ dotSize: 1.5 });
+    eventBus.emit('scene-outline:update', snapshotFor(fixture));
+    field = await sizeField();
+    expect(field.input.value).toBe('1.5');
+    expect(field.hint).toMatch(/^Dot diameter as a multiple of 20 reference px: 1\.5 draws a dot 30 reference px across;/);
+  });
 });
 
 describe('an outline entry opens and closes as a browser clicks it (DEF-40)', () => {

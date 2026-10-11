@@ -632,6 +632,37 @@ describe('SwarmEngine.evaluate — Respawn against Repeat journey on a network (
   });
 });
 
+describe('SwarmEngine.evaluate — Repeat journey on a network with Walking variation (CROWD-07 F6)', () => {
+  // Codex's case (crowd07-a round 1): one straight Entry → Exit path 0.6 of
+  // the image long, so at Speed 1 a journey takes 600 ms. "At journey end"
+  // promises that Repeat journey follows the same paths again at the same
+  // pace: one journey apart, a dot is at the same place along its path (x,
+  // on this path). How it sways from one journey to the next is not pinned.
+  test('one journey apart, a dot is at the same place along its path', () => {
+    const layer = new FlowLayer({ guideType: 'graph' });
+    const entry = layer.graph.addNode({ x: 0.2, y: 0.5, type: 'entry' });
+    const exit = layer.graph.addNode({ x: 0.8, y: 0.5, type: 'exit' });
+    layer.graph.addEdge({ sourceId: entry.id, targetId: exit.id, direction: 'one-way' });
+    layer.addEmitter({ ...CALM, dotCount: 1, speed: 1, wobble: 1, lifecycleMode: 'loop' });
+    const JOURNEY_MS = 600;
+    const at = t => {
+      const dots = evaluate(layer, t);
+      expect(dots, `${t} ms`).toHaveLength(1);
+      return dots[0];
+    };
+
+    // Walking variation is in play: the dot walks off the line.
+    expect(Math.abs(at(200).y - 0.5)).toBeGreaterThan(1e-3);
+    for (const t of [100, 200, 450]) {
+      const first = at(t);
+      expect(first.x, `${t} ms`).toBeCloseTo(0.2 + t / 1000, 6);
+      for (const journeys of [1, 2, 3]) {
+        expect(at(t + journeys * JOURNEY_MS).x, `${t} ms, ${journeys} journey(s) on`).toBeCloseTo(first.x, 6);
+      }
+    }
+  });
+});
+
 describe('SwarmEngine.evaluate — Respawn varies however long it runs (DEF-77)', () => {
   // The review's case: a route a hundredth of the image long at Speed 1, so a
   // dot respawns about 100 times a second, with 20% Pace and 50% Walking

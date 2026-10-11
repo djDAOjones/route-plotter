@@ -1,4 +1,5 @@
 import { MOTION } from '../config/constants.js';
+import { DOT_BASE_RADIUS_PX } from '../services/DotRenderer.js';
 
 /**
  * Format the project reference-pixel values consumed by RenderingService.
@@ -6,6 +7,19 @@ import { MOTION } from '../config/constants.js';
  */
 export function formatRendererPixels(value, fractionDigits = 0) {
   return `${Number(value).toFixed(fractionDigits)} reference px`;
+}
+
+/**
+ * A crowd's dot Size as drawn (CROWD-07 F1): the diameter DotRenderer gives
+ * `dotSize`, 20 reference px per 1×, so the default 0.40× reads "8 reference
+ * px" as the marker's default does. Whole at the slider's 0.05× steps; to a
+ * tenth for a value set between them in the outline.
+ * @param {number} dotSize - The emitter's own unit (×)
+ * @returns {string}
+ */
+export function formatCrowdDotSize(dotSize) {
+  const diameter = Math.round(Number(dotSize) * DOT_BASE_RADIUS_PX * 2 * 10) / 10;
+  return formatRendererPixels(diameter, Number.isInteger(diameter) ? 0 : 1);
 }
 
 /** Legacy shapeAmplitude stores five units for each effective image percent. */

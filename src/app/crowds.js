@@ -26,6 +26,7 @@ import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
 import { FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
 import { GraphModel } from '../models/GraphModel.js';
 import { stageProjectModel } from './persistence.js';
+import { formatCrowdDotSize } from '../utils/uiReadouts.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
@@ -235,9 +236,10 @@ export const crowdsMixin = {
       this.eventBus.emit('crowd:param-changed', { journeys: false });
     });
 
+    // Read as the diameter drawn, in reference px (CROWD-07 F1); stored in ×.
     this._wireCrowdSlider('crowd-dot-size', (raw) => {
       emitterOf()?.update({ dotSize: raw / 100 });
-      return `${(raw / 100).toFixed(2)}×`;
+      return formatCrowdDotSize(raw / 100);
     }, { journeys: false });
 
     this._wireCrowdSlider('crowd-wobble', (raw) => {
@@ -879,7 +881,7 @@ export const crowdsMixin = {
     set('crowd-dot-color', em.dotColor);
     refreshSwatchPicker('#crowd-dot-color'); // Sync the swatch grid's radios
     set('crowd-dot-size', Math.round(em.dotSize * 100));
-    setText('crowd-dot-size-value', `${em.dotSize.toFixed(2)}×`);
+    setText('crowd-dot-size-value', formatCrowdDotSize(em.dotSize));
     set('crowd-wobble', Math.round(em.wobble * 100));
     setText('crowd-wobble-value', `${Math.round(em.wobble * 100)}%`);
     set('crowd-count', em.dotCount);

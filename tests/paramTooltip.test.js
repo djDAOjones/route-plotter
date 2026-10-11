@@ -1554,6 +1554,95 @@ describe('UI-06: a button carries its own hint, reachable by keyboard', () => {
 });
 
 /**
+ * CROWD-07 F17 — the five controls the crowd review found with pointer-only
+ * help (Edit network, Trace route into network, Swap direction, Add handle,
+ * + Add crowd) and the crowd row's rename hint. PR 2 gave each a hint of its
+ * own; what is pinned here is that a keyboard reaches each one: shown and
+ * enabled where the author meets it (Crowd scope with its cards open, the
+ * Layers strip, the Path card of a one-way path), with no `title`, described
+ * by its hint, and showing that hint when focus arrives by keyboard. Swap
+ * direction and the Layers controls sit outside `#crowd-scope`, so a check
+ * of that scope alone would miss them (Codex).
+ */
+describe('CROWD-07 (F17): the crowd’s and network’s button hints open by keyboard', () => {
+  const tooltip = () => document.getElementById('param-tooltip');
+  const shown = () => (tooltip()?.style.display === 'block' ? tooltip().textContent : null);
+  /** A keyboard's arrival, as jsdom's `:focus-visible` heuristic recognises one. */
+  function tabTo(el) {
+    document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    el.focus();
+  }
+  /** Where an author can reach it: in the page, enabled, and inside nothing hidden. */
+  const reachable = el => el.isConnected && !el.disabled && !el.closest('[hidden]');
+  const expand = (name) => {
+    const header = document.querySelector(`.settings-section[data-section="${name}"] .section-header`);
+    if (header.getAttribute('aria-expanded') !== 'true') header.click();
+    expect(header.getAttribute('aria-expanded'), `${name} card open`).toBe('true');
+  };
+
+  function opensByKeyboard(control, name) {
+    const hint = control.getAttribute('data-tip');
+    expect(hint, `${name}'s hint`).toMatch(/\w/);
+    expect(reachable(control), `${name} is shown and enabled`).toBe(true);
+    expect(control.hasAttribute('title'), `${name} has no title`).toBe(false);
+    expect(describedText(control), `${name} is described by its hint`).toContain(hint);
+    tabTo(control);
+    expect([document.activeElement === control, shown()], `${name}, by keyboard`).toEqual([true, hint]);
+    control.blur();
+    expect(shown(), `${name}'s hint closes as focus leaves`).toBeNull();
+  }
+
+  test('Edit network, Trace route into network, Add handle, + Add crowd, each crowd row and Swap direction', async () => {
+    const app = await bootApp();
+    try {
+      await app.ready;
+      document.getElementById('splash-close').click();
+      app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+      app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
+      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd({ enterNetworkEditor: false });
+      const layer = app.selectedCrowd;
+      layer.setGuideType('graph');
+      app.syncCrowdEditor();
+      await Promise.resolve();
+
+      // Crowd scope, with the Guide and Release cards open and Release's More.
+      expect(document.getElementById('crowd-scope').hidden).toBe(false);
+      expand('guide');
+      expand('release');
+      document.querySelector('#section-release-content details.section-more').open = true;
+      opensByKeyboard(document.getElementById('network-edit-btn'), 'Edit network');
+      opensByKeyboard(document.getElementById('crowd-trace-route-btn'), 'Trace route into network');
+      opensByKeyboard(document.getElementById('crowd-busyness-add'), 'Add handle');
+
+      // The Layers strip: + Add crowd and each crowd's row.
+      opensByKeyboard(document.getElementById('add-crowd-btn'), '+ Add crowd');
+      const rows = [...document.querySelectorAll('#layers-strip .layer-row[data-tip]')];
+      expect(rows.map(row => row.querySelector('.layer-title').textContent)).toEqual(['Crowd 1', 'Crowd 2']);
+      for (const row of rows) {
+        expect(row.getAttribute('data-tip')).toBe('Double-click or press F2 to rename');
+        expect(describedText(row)).toEqual(['Double-click or press F2 to rename']);
+        opensByKeyboard(row, `${row.querySelector('.layer-title').textContent}'s row`);
+      }
+
+      // The Path card of a one-way path, where Swap direction shows.
+      const from = layer.graph.addNode({ x: 0.2, y: 0.5 });
+      const to = layer.graph.addNode({ x: 0.8, y: 0.5 });
+      const path = layer.graph.addEdge({ sourceId: from.id, targetId: to.id, direction: 'one-way' });
+      app.enterNetworkEditMode();
+      app.networkEditService.selectEdge(path);
+      app.syncNetworkCards();
+      await Promise.resolve();
+      expect(document.getElementById('edge-scope').hidden).toBe(false);
+      expand('edge');
+      opensByKeyboard(document.getElementById('network-edge-swap'), 'Swap direction');
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+});
+
+/**
  * UI-06 (Codex round 1) — a button's own hint draws no "?", so it must get no
  * slot for one: the rule that reserves a 44px trailing slot after a wired
  * hint's label text must reach label and legend hosts only. It reached every
