@@ -79,7 +79,6 @@
 - [ ] DEF-78 — Comet tail retimes crowds — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-79 — Render space moves crowd anchors — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-80 — Player retimes constant-time projects — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-- [ ] DEF-82 — Dialog heading passes shortcuts — since 2026-10-08 — (from: DEF-13, 2026-10-08)
 - [ ] DEF-84 — Play silent without route — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-85 — Anchored window start misreads — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-86 — Sliders rewrite stored values — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
@@ -89,6 +88,8 @@
 - [ ] DEF-90 — Window length readout unclipped — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-92 — Crowd sliders undo on timer — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-93 — Journey-end hint misadvises — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
+- [ ] DEF-95 — Network loop sway varies per lap — since 2026-10-11 — (from: CROWD-07, 2026-10-11)
+- [ ] DEF-96 — Marker Size reads the radius as its diameter — since 2026-10-11 — (from: CROWD-07, 2026-10-11)
 
 ## Icebox
 
